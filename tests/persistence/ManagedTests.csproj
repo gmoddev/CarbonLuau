@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion><PlatformTarget>x64</PlatformTarget>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="ManagedTests.cs" />
+    <Compile Include="DerivedWorkerTests.cs" />
+    <Compile Include="QueryQueueTests.cs" />
+    <!-- Private 1A substrate only; 1B host partials belong to runtime/adapter tests. -->
+    <Compile Include="../../src/CarbonLuau/Persistence/*.cs"
+             Exclude="../../src/CarbonLuau/Persistence/NativeStorage.cs;../../src/CarbonLuau/Persistence/StorageFacade.cs" />
+    <Compile Include="../../src/CarbonLuau.Core/Addons/CoreAddonPackage.cs" />
+    <Compile Include="../../src/CarbonLuau.Core/Addons/PackageSources.cs" />
+    <Compile Include="../../src/CarbonLuau.Core/Modules/ModulePath.cs" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+</Project>
