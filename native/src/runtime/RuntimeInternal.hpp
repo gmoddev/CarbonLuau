@@ -1,0 +1,251 @@
+#pragma once
+
+#include "carbonluau_native.h"
+#include "lua.h"
+#include "lualib.h"
+#include "../persistence/Format.hpp"
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iterator>
+#include <limits>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <vector>
+
+namespace CarbonLuau::Runtime {
+constexpr uint64_t MiB = 1024 * 1024;
+
+struct Module { std::string Source; int Reference = LUA_NOREF; bool Loading = false, Loaded = false; };
+struct Domain;
+struct DependencyBinding { std::string Id; Domain* Target = nullptr; };
+struct Callback {
+    uint64_t Due, Sequence; Domain* Owner; lua_State* Thread; int Reference, Arguments; std::string Gate;
+    uint64_t GameplayReservation = 0;
+};
+struct Later {
+    bool operator()(const Callback& A, const Callback& B) const {
+        return A.Due > B.Due || (A.Due == B.Due && A.Sequence > B.Sequence);
+    }
+};
+struct StagedModule { Domain* Owner; Module* Value; int Reference; };
+struct PublicationScope;
+struct StoragePublication {
+    bool Alive = true;
+    std::shared_ptr<StoragePublication> Parent;
+};
+struct StorageName {
+    std::string Name;
+    std::shared_ptr<StoragePublication> Publication;
+};
+struct StorageHint {
+    Domain* Owner = nullptr;
+    std::string Store;
+    std::vector<std::string> Fields;
+};
+struct StorageCallback {
+    uint64_t Route = 0, Due = 0, Sequence = 0;
+    uint32_t Operation = 0, Error = 0;
+    bool Accepted = false, Ready = false, Found = false;
+    lua_State* Thread = nullptr;
+    int Reference = LUA_NOREF;
+    Persistence::Identity Identity;
+    Persistence::Bytes Envelope;
+};
+// Private fixed discovery roots, independent of the ordinary queue capacity.
+struct DiscoveryCallback {
+    uint64_t Route = 0, Expires = 0, Due = 0, Sequence = 0;
+    bool Accepted = false, Ready = false, Notified = false, Submitted = false;
+    lua_State* Thread = nullptr;
+    int Reference = LUA_NOREF;
+};
+struct GameplayReservation { uint64_t Nonce = 0; Domain* Owner = nullptr; };
+
+struct Domain {
+    uint64_t Id = 0;
+    bool Alive = true, Active = false;
+    uint32_t MaxQueued = 0;
+    uint64_t Rejected = 0, Discarded = 0;
+    size_t SourceBytes = 0;
+    std::map<std::string, Module> Modules;
+    std::string PackageId, PackageVersion, MainModule;
+    std::vector<std::string> PublicModules;
+    std::vector<DependencyBinding> Dependencies;
+    std::vector<std::string> Loading;
+    std::vector<Callback> Queue;
+    std::vector<StagedModule> PendingModules;
+    std::vector<Callback> PendingCallbacks;
+    // Separate intake slots: ordinary task/event queues cannot consume these.
+    std::array<uint64_t,8> StorageReservations{};
+    std::array<std::unique_ptr<StorageCallback>,8> StorageCallbacks;
+    std::array<DiscoveryCallback,2> DiscoveryCallbacks{};
+    uint32_t GameplayReserved = 0;
+    std::vector<StorageName> StorageNames;
+    std::vector<StorageHint> StorageHints;
+    ClHostCall Host = nullptr;
+    uint64_t HostIdentity = 0;
+    int Game = LUA_NOREF, Dispatch = LUA_NOREF, GuiBindings = LUA_NOREF;
+    // Only the trusted bootstrap callback map is journaled. Each first facade
+    // use in a publication scope adds one snapshot, under existing nesting.
+    int FacadeCallbackRoots = LUA_NOREF;
+    std::vector<int> FacadeCallbackPublications;
+    std::unique_ptr<std::array<char, 262144>> HostBuffer;
+};
+
+struct AdmissionContext {
+    Domain* Owner = nullptr;
+    uint64_t OperationId = 0;
+    bool Provisional = false;
+};
+
+struct Vm {
+    uint64_t Id = 0;
+    uint64_t GenerationId = 0;
+    std::thread::id Owner = std::this_thread::get_id();
+    uint64_t Used = 0, Limit = 0;
+    bool AllocationFailed = false;
+    lua_State* State = nullptr;
+    lua_State* Thread = nullptr;
+    int Reference = LUA_NOREF;
+    uint64_t ThreadId = 0;
+    Domain* ThreadDomain = nullptr;
+    bool Resumable = false;
+    bool Started = false;
+    std::chrono::steady_clock::time_point Deadline;
+    char Chunk[128]{};
+    char Logs[4096]{};
+    size_t LogSize = 0;
+    bool LogTruncated = false;
+    bool Scripts = false, Sealed = false;
+    uint64_t Sequence = 0, OperationSequence = 0, RetiredDiscarded = 0, SchedulerCursor = 0;
+    std::vector<std::string> ModuleLoads;
+    std::vector<std::unique_ptr<Domain>> Domains;
+    Domain* LegacyDomain = nullptr;
+    AdmissionContext* Admission = nullptr;
+    PublicationScope* Publication = nullptr;
+    bool IntegrityFailed = false;
+    uint32_t StorageReserved = 0;
+    uint64_t StorageSequence = 0;
+    uint32_t DiscoveryReserved = 0;
+    uint64_t DiscoverySequence = 0;
+    // Fixed owner-thread accounting only; existing Queue remains the scheduler.
+    std::array<GameplayReservation,512> GameplayReservations{};
+    uint32_t GameplayReserved = 0;
+    Domain* GameplayInFlightOwner = nullptr;
+    uint64_t GameplayInFlightReservation = 0;
+    std::string* GameplayInFlightPayload = nullptr;
+    int GuiValueEqual = LUA_NOREF;
+    int EntityIdentities = LUA_NOREF;
+    ~Vm();
+};
+
+extern std::recursive_mutex RegistryMutex;
+extern std::array<std::unique_ptr<Vm>, 32> Registry;
+extern uint64_t NextId;
+extern uint64_t NextVmGenerationId;
+
+// Compilation owns no VM data. The owner thread remains synchronously blocked,
+// so its VM/domain lifetime cannot change while unrelated VMs use the registry.
+struct RegistryWaitScope {
+    RegistryWaitScope() { RegistryMutex.unlock(); }
+    ~RegistryWaitScope() { RegistryMutex.lock(); }
+    RegistryWaitScope(const RegistryWaitScope&) = delete;
+    RegistryWaitScope& operator=(const RegistryWaitScope&) = delete;
+};
+
+struct PublicationScope {
+    Vm& Runtime;
+    PublicationScope* Parent;
+    std::vector<StagedModule> Modules;
+    std::vector<Callback> Callbacks;
+    std::vector<Domain*> Facades;
+    std::shared_ptr<StoragePublication> Storage;
+    std::vector<StorageHint> StorageHints;
+    bool Complete = false;
+    PublicationScope(Vm& Runtime) : Runtime(Runtime), Parent(Runtime.Publication) { Runtime.Publication = this; }
+    ~PublicationScope();
+    bool Uses(Domain* Owner) const { return std::find(Facades.begin(), Facades.end(), Owner) != Facades.end(); }
+    void Commit();
+};
+
+#ifdef CARBONLUAU_TESTING
+extern int TestAllocationFailureAfter;
+extern uint64_t TestLiveBytes;
+extern bool TestStorageCopyFailure;
+extern bool TestGameplayCopyFailure;
+#endif
+
+struct DeadlineExceeded {};
+struct CallbackScope {
+    lua_State* State;
+    int Reference = LUA_NOREF;
+    ~CallbackScope() { if (Reference != LUA_NOREF) lua_unref(State, Reference); }
+};
+
+void* Allocate(void* Context, void* Pointer, size_t OldSize, size_t NewSize);
+Vm* GetVm(ClHandle Id);
+Vm* GetThread(ClHandle Id);
+Domain* GetDomain(Vm& Runtime, ClHandle Id, bool Active = false);
+void ReleaseDomain(Vm& Runtime, Domain& Value);
+Domain* AddDomain(Vm& Runtime, uint32_t MaxQueued);
+bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation);
+void ClearFacadeCallbacks(Vm& Runtime, Domain& Owner);
+bool ReserveGameplay(Vm& Runtime, Domain& Owner, uint64_t Nonce);
+bool ReleaseGameplay(Vm& Runtime, Domain& Owner, uint64_t Nonce, bool NotifyHost = true);
+bool ClearGameplayInFlight(Vm& Runtime);
+void ClearGameplay(Vm& Runtime, Domain& Owner);
+bool CanMutateHost(const Vm& Runtime);
+// Private Persistence-1A admission seam. Namespace authority follows the
+// admitted resource owner, never the provenance of a borrowed export closure.
+bool CanDispatchStorage(const Vm& Runtime, const Domain& ResourceOwner);
+bool ReserveStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId);
+bool ReleaseStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId);
+void InstallStorage(lua_State* State, Domain& Owner);
+void ClearStorage(Vm& Runtime, Domain& Owner);
+bool ReleaseStorageHost(Vm& Runtime, Domain& Owner, uint64_t Route);
+bool MergeStorageHint(std::vector<StorageHint>& Hints, Domain& Owner, const std::string& Store,
+    const std::vector<std::string>& Fields);
+bool PublishStorageHint(Vm& Runtime, Domain& Owner, const StorageHint& Hint);
+StorageCallback* NextStorage(Domain& Owner);
+void InstallDiscovery(lua_State* State, Domain& Owner);
+bool CanDispatchDiscovery(const Vm& Runtime, const Domain& Owner);
+void ClearDiscovery(Vm& Runtime, Domain& Owner);
+bool ReleaseDiscovery(Vm& Runtime, Domain& Owner, DiscoveryCallback& Work);
+void ExpireDiscovery(Vm& Runtime, Domain& Owner, uint64_t Now);
+DiscoveryCallback* NextDiscovery(Domain& Owner);
+ClStatus ReadyDiscovery(Vm& Runtime, Domain& Owner, const char* Bytes, uint32_t Length);
+void RollbackPublication(PublicationScope& Scope);
+int FindStaged(Vm& Runtime, Domain* Owner, Module* Value);
+void Interrupt(lua_State* State, int Gc);
+void Append(Vm& Runtime, const char* Text, size_t Length);
+int Print(lua_State* State);
+int Initialize(lua_State* State);
+void Retire(Vm& Runtime);
+void Diagnostic(Vm& Runtime, ClResult& Result, const char* Message, lua_State* Trace = nullptr);
+int CreateThread(lua_State* State);
+int SandboxThread(lua_State* State);
+int Collect(lua_State* State);
+int StepCollect(lua_State* State);
+void ReleaseThread(Vm& Runtime, bool Full = true);
+uint64_t NowNs();
+bool ModuleName(const char* Name, size_t Capacity);
+Domain& BoundDomain(lua_State* State);
+bool PackageName(const char* Name);
+bool PackageVersion(const char* Version);
+int RequireModule(lua_State* State);
+int IsDependencyAvailable(lua_State* State);
+int Schedule(lua_State* State);
+void InstallDomainBindings(lua_State* State, Domain& Owner);
+int InstallScripts(lua_State* State);
+void PushFields(lua_State* State, const char* Bytes, size_t Length);
+int HostPrimitive(lua_State* State);
+int InstallFacade(lua_State* State);
+int EnqueueEvent(lua_State* State);
+} // namespace CarbonLuau::Runtime

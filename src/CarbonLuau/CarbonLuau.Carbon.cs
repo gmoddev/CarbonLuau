@@ -1,0 +1,257 @@
+using System;
+using System.Collections.Generic;
+
+namespace Carbon.Plugins
+{
+    public partial class CarbonLuau
+    {
+        private FacadeWorld Gameplay;
+        private CarbonCommandRegistrar CommandRegistrar;
+        private readonly HashSet<string> RegisteredPermissions = new HashSet<string>(StringComparer.Ordinal);
+        private long PermissionPublication;
+        private bool RegisteringPermissions;
+        private PlayerView ReadPlayer(string UserId)
+        {
+            // Check population before bounded host lookup. No world/entity scan.
+            if (BasePlayer.activePlayerList.Count > FacadePolicy.Players) throw new InvalidOperationException("player population exceeds supported bound");
+            ulong Id;
+            if (!ulong.TryParse(UserId, out Id)) return null;
+            return ViewPlayer(BasePlayer.FindByID(Id));
+        }
+        private PlayerView ViewPlayer(BasePlayer Player)
+        {
+            if (Player == null || !Player.IsConnected || Player.Connection == null) return null;
+            if (!Player.Connection.connected || !Player.Connection.active ||
+                Player.Connection.userid.ToString(System.Globalization.CultureInfo.InvariantCulture) != Player.UserIDString) return null;
+            Network.Connection Connection = Player.Connection;
+            Func<bool> Current = () => Player != null && Player.IsConnected && Player.Connection != null &&
+                Object.ReferenceEquals(Player.Connection, Connection) && Connection.connected && Connection.active &&
+                Object.ReferenceEquals(Connection.player, Player) && Object.ReferenceEquals(BasePlayer.FindByID(Player.userID), Player);
+            return new PlayerView {
+                Identity = Player, Connection = Player.Connection, UserId = Player.UserIDString, Name = Player.displayName,
+                Connected = Player.IsConnected,
+                Send = Message => Player.ChatMessage(Message),
+                Permission = Permission => permission.UserHasPermission(Player.UserIDString, Permission),
+                Position = () => {
+                    var Value = Player.transform.position;
+                    return new PlayerPosition(Value.x, Value.y, Value.z);
+                },
+                Health = () => Player.Health(),
+                MaxHealth = () => Player.MaxHealth(),
+                Inventory = () => ViewInventory(Player),
+                TakeInventory = (Definition, Amount) => Player.inventory.Take(null, ((ItemDefinition)Definition).itemid, Amount),
+                GiveInventory = new RustInventoryGrantHost(Player),
+                Teleport = new PlayerTeleportOperation(
+                    () => {
+                        bool IsCurrent = Current();
+                        return new PlayerTeleportState {
+                            Current = IsCurrent,
+                            Alive = IsCurrent && Player.IsAlive(),
+                            Spectating = IsCurrent && Player.IsSpectating(),
+                            Wounded = IsCurrent && Player.IsWounded(),
+                            Incapacitated = IsCurrent && Player.IsIncapacitated(),
+                            Sleeping = IsCurrent && Player.IsSleeping(),
+                            Mounted = IsCurrent && Player.GetMounted() != null,
+                            Parented = IsCurrent && Player.HasParent()
+                        };
+                    },
+                    (Destination, Before) => {
+                        var Target = new UnityEngine.Vector3(Destination.X, Destination.Y, Destination.Z);
+                        Player.PauseFlyHackDetection(5f);
+                        Player.PauseSpeedHackDetection(5f);
+                        Player.PauseTickDistanceDetection(5f);
+                        Player.ApplyStallProtection(4f);
+                        BaseMountable Mount = Player.GetMounted();
+                        if (Mount != null) Mount.DismountPlayer(Player, true);
+                        if (Player.GetMounted() != null) throw new InvalidOperationException("host refused dismount");
+                        if (Player.HasParent()) Player.SetParent(null, true, true);
+                        if (Player.HasParent()) throw new InvalidOperationException("host refused unparent");
+                        Player.UpdateUnparentTime();
+                        Player.SetServerFall(true);
+                        try {
+                            Player.MovePosition(Target);
+                            Player.UpdateEstimatedVelocity(Target, Target, 1f);
+                            Player.ClientRPC(RpcTarget.Player("ForcePositionTo", Player), Target);
+                            Player.UpdateNetworkGroup();
+                            Player.SendNetworkUpdateImmediate();
+                        } finally {
+                            if (!Before.Sleeping) Player.SetServerFall(false);
+                        }
+                    },
+                    (Destination, Before) => {
+                        if (!Current()) return false;
+                        UnityEngine.Vector3 Actual = Player.transform.position;
+                        return Actual.x == Destination.X && Actual.y == Destination.Y && Actual.z == Destination.Z &&
+                            Player.GetMounted() == null && !Player.HasParent() && Player.IsSleeping() == Before.Sleeping;
+                    })
+            };
+        }
+        private static PhysicalInventoryContainer ViewInventoryContainer(ItemContainer Container)
+        {
+            if (Container == null || Container.itemList == null) throw new InvalidOperationException("Player inventory container is unavailable");
+            return new PhysicalInventoryContainer {
+                Identity = Container,
+                StackCount = Container.itemList.Count,
+                Capacity = Container.capacity,
+                Read = Index => {
+                    Item Value = Container.itemList[Index];
+                    return Value == null ? default(PhysicalInventoryStack) :
+                        new PhysicalInventoryStack(Value.parent, Value.info, Value.amount, Value.IsValid(), Value, Value.position);
+                }
+            };
+        }
+        private static PhysicalInventorySource ViewInventory(BasePlayer Player)
+        {
+            if (Player == null || Player.inventory == null) throw new InvalidOperationException("Player inventory is unavailable");
+            return new PhysicalInventorySource {
+                Main = ViewInventoryContainer(Player.inventory.containerMain),
+                Belt = ViewInventoryContainer(Player.inventory.containerBelt),
+                Wear = ViewInventoryContainer(Player.inventory.containerWear)
+            };
+        }
+        private static object ReadItemDefinition(string ShortName)
+        {
+            ItemDefinition Definition = ItemManager.FindItemDefinition(ShortName);
+            return Definition != null && String.Equals(Definition.shortname, ShortName, StringComparison.Ordinal) ? Definition : null;
+        }
+        private void InitializeGameplay()
+        {
+            CommandRegistrar = new CarbonCommandRegistrar(this);
+            var Players = new PlayerDirectory(ReadPlayer);
+            var Limits = new GuiConfig().Validate();
+            Gameplay = new FacadeWorld(Players, CommandRegistrar, new ItemDirectory(ReadItemDefinition,
+                Definition => ((ItemDefinition)Definition).shortname), Limits,
+                new RustCuiBackend(Limits, new CarbonRustCuiTransport(Players)));
+            BindEntityFacade();
+            Gameplay.InventorySamples.PumpAvailable = () => EntityDiscoveryFramePump != null &&
+                ReferenceEquals(EntityDiscoveryFramePump.Owner, this) && !Stopping;
+        }
+        partial void BindEntityFacade();
+        private void SeedPlayers()
+        {
+            Gameplay.Players.CheckOwner();
+            if (BasePlayer.activePlayerList.Count > FacadePolicy.Players) throw new InvalidOperationException("player population exceeds supported bound");
+            foreach (var Player in BasePlayer.activePlayerList) {
+                var View = ViewPlayer(Player);
+                if (View != null) Gameplay.Players.Connect(View);
+            }
+        }
+        private void OnPlayerConnected(BasePlayer Player)
+        {
+            if (Stopping || Gameplay == null || !Initialized) return;
+            try {
+                Gameplay.Players.CheckOwner();
+                var View = ViewPlayer(Player);
+                if (View == null) return;
+                var Lifetime = Gameplay.Players.Connect(View);
+                Gameplay.Event("added", Lifetime);
+                if (Host != null && !Host.Busy) RequestDrain();
+            } catch (Exception) { PrintWarning("[CarbonLuau:Players] Connection event rejected (context or population/identity bound)."); }
+        }
+        private void OnPlayerDisconnected(BasePlayer Player, string Reason)
+        {
+            if (Stopping || Gameplay == null) return;
+            try {
+                Gameplay.Players.CheckOwner();
+                if (Player == null) return;
+                var Lifetime = Gameplay.Players.Disconnect(Player.UserIDString, Player);
+                GameplayLifecycleDisconnected(Lifetime);
+                Gameplay.DisconnectGui(Lifetime);
+                Gameplay.Event("removing", Lifetime);
+                if (Host != null && !Host.Busy) RequestDrain();
+            } catch (Exception) { PrintWarning("[CarbonLuau:Players] Disconnection event rejected (host context)."); }
+        }
+        [ConsoleCommand("carbonluau.gui.action")]
+        private void GuiActionCommand(ConsoleSystem.Arg Arg)
+        {
+            try {
+                if (Stopping || Gameplay == null || Host == null || Arg == null || Arg.Connection == null) return;
+                BasePlayer Player = Arg.Connection.player as BasePlayer;
+                if (Player == null || !Player.IsConnected || Player.Connection == null ||
+                    !Object.ReferenceEquals(Player.Connection, Arg.Connection)) return;
+                var Arguments = Arg.Args;
+                string Token = Arguments != null && Arguments.Length == 1 ? Arguments[0].ToString() : null;
+                if (Token == null || Token.Length > 32) {
+                    Gameplay.Gui.ActionDiagnostics.Reject(GuiActionRejection.Malformed); return;
+                }
+                PlayerLifetime Lifetime = Gameplay.Players.Find(Player.UserIDString);
+                if (Lifetime == null || !Object.ReferenceEquals(Lifetime.Identity, Player) ||
+                    !Object.ReferenceEquals(Lifetime.Connection, Player.Connection)) return;
+                if (Gameplay.AdmitGuiAction(Lifetime, Token) && !Host.Busy) RequestDrain();
+            } catch (Exception) { /* Untrusted client input is rejected without per-request logging. */ }
+        }
+        private void RegisterActivePermissions()
+        {
+            // Permissions are metadata published only after successful commit.
+            // Failure does not undo a committed generation or bypass checks.
+            if (Stopping || Gameplay == null || PermissionPublication == Gameplay.PublicationVersion || RegisteringPermissions) return;
+            PermissionPublication = Gameplay.PublicationVersion;
+            RegisteringPermissions = true;
+            try {
+                foreach (var Session in Gameplay.Sessions()) foreach (var Command in Session.Commands.Values) if (Command.Permission.Length != 0) {
+                    try {
+                        if (!permission.PermissionExists(Command.Permission)) {
+                            if (RegisteredPermissions.Count >= 256) throw new InvalidOperationException("permission metadata bound");
+                            RegisteredPermissions.Add(Command.Permission);
+                            permission.RegisterPermission(Command.Permission, this);
+                        }
+                    } catch (Exception) { PrintWarning("[CarbonLuau:Permissions] Could not register active permission (host failure or 256-name metadata bound); authorization remains host-enforced."); }
+                }
+            } finally { RegisteringPermissions = false; }
+        }
+        // Carbon's convenience registration returns void and cannot atomically
+        // replace several names. Its SDK exposes the chat list. Prepare a fresh
+        // list and command objects, then publish once on the server thread. No
+        // callbacks, permission hooks, allocations or external calls follow that
+        // assignment in Publish. Late delegates close over the old session.
+        private sealed class CarbonCommandRegistrar : ICommandRegistrar
+        {
+            private readonly CarbonLuau Plugin;
+            public CarbonCommandRegistrar(CarbonLuau Plugin) { this.Plugin = Plugin; }
+            public void Publish(FacadeSession Previous, FacadeSession Next)
+            {
+                Plugin.Gameplay.Players.CheckOwner();
+                var Manager = Carbon.Community.Runtime.CommandManager;
+                if (Next != null && Manager.Chat.Count + Manager.ClientConsole.Count + Manager.RCon.Count > 16384)
+                    throw new InvalidOperationException("host command registry exceeds inspection bound");
+                var Chat = new List<API.Commands.Command>(Manager.Chat.Count + (Next == null ? 0 : Next.Commands.Count));
+                foreach (var Existing in Manager.Chat)
+                    if (Previous == null || !Object.ReferenceEquals(Existing.Token, Previous.CommandOwnership)) Chat.Add(Existing);
+                if (Next != null) foreach (var Definition in Next.Commands.Values) {
+                    foreach (var Factory in new[] {Manager.Chat, Manager.ClientConsole, Manager.RCon})
+                        foreach (var Existing in Factory)
+                            if (String.Equals(Existing.Name, Definition.Name, StringComparison.OrdinalIgnoreCase) &&
+                                (Previous == null || !Object.ReferenceEquals(Existing.Token, Previous.CommandOwnership)))
+                                throw new InvalidOperationException("command name conflicts with an existing host command");
+                    string Name = Definition.Name;
+                    var Command = new API.Commands.Command.Chat {Name = Name, Help = Definition.Description, Reference = Plugin, Token = Next.CommandOwnership};
+                    Command.Callback = Args => {
+                        try {
+                            Plugin.Gameplay.Players.CheckOwner();
+                            if (Plugin.Stopping || Args.IsServer || Args.IsRCon) return;
+                            var PlayerArgs = Args as API.Commands.PlayerArgs;
+                            var Player = PlayerArgs == null ? null : PlayerArgs.Player as BasePlayer;
+                            if (Player == null || !Player.IsConnected) return;
+                            object[] Raw = Args.Arguments ?? new object[0];
+                            if (Raw.Length > FacadePolicy.Arguments) return;
+                            // Bind invocation to this exact current connection,
+                            // not merely to the account named by a stale caller.
+                            var Lifetime = Plugin.Gameplay.Players.Find(Player.UserIDString);
+                            if (Lifetime == null || !Object.ReferenceEquals(Lifetime.Identity, Player) || !Object.ReferenceEquals(Lifetime.Connection, Player.Connection)) return;
+                            var Arguments = new string[Raw.Length];
+                            for (int Index = 0; Index < Arguments.Length; ++Index) {
+                                if (!(Raw[Index] is string)) return;
+                                Arguments[Index] = (string)Raw[Index];
+                            }
+                            Next.Invoke(Name, Player.UserIDString, Arguments);
+                            if (Plugin.Host != null && !Plugin.Host.Busy) Plugin.RequestDrain();
+                        } catch (Exception) { /* Reject malformed/off-thread host calls without exposing internals. */ }
+                    };
+                    Command.Fetch();
+                    Chat.Add(Command);
+                }
+                Manager.Chat = Chat;
+            }
+        }
+    }
+}

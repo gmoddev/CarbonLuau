@@ -1,0 +1,217 @@
+name: CarbonLuau validation
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  probe:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Install Mono
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y mono-devel
+      - name: Configure
+        run: cmake -S native -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release --parallel 2
+      - name: Native test
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Reject host-selected MSVC runtime dependencies
+        if: runner.os == 'Windows'
+        run: |
+          ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_native.dll
+          ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_compiler.exe
+          ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_storage.exe
+      - name: Compile private persistence transport tests
+        run: dotnet build tests/persistence/ManagedTests.csproj -c Release -o dist/persistence
+      - name: Windows private worker and lost-ack tests
+        if: runner.os == 'Windows'
+        working-directory: dist/persistence
+        run: ./ManagedTests.exe --utf8-input "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureLostAck.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureHang.exe" "$env:GITHUB_WORKSPACE/build/Release/DerivedWorkerFixture.exe"
+      - name: Linux private worker and lost-ack tests
+        if: runner.os == 'Linux'
+        working-directory: dist/persistence
+        run: mono ManagedTests.exe "$GITHUB_WORKSPACE/build/carbonluau_storage" "$GITHUB_WORKSPACE/build/StorageFixtureLostAck" "$GITHUB_WORKSPACE/build/StorageFixtureHang" "$GITHUB_WORKSPACE/build/DerivedWorkerFixture"
+      - name: Compile .NET Framework loader tests
+        run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
+      - name: Compile .NET Framework runtime tests
+        run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
+      - name: Storage async completion polling (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --storageasync
+      - name: Storage async completion polling (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --storageasync
+      - name: Private loot rule publication model (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --lootpolicy
+      - name: Private loot rule publication model (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --lootpolicy
+      - name: Public loot declaration bindings (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        run: ./dist/runtime/RuntimeTests.exe --lootpublic "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Public loot declaration bindings (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        run: mono dist/runtime/RuntimeTests.exe --lootpublic "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: Entity death public binding (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        run: ./dist/runtime/RuntimeTests.exe --entitydied "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Entity death public binding (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        run: mono dist/runtime/RuntimeTests.exe --entitydied "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: Private Entity lifetime model
+        run: dotnet run --project tests/entity-lifetime-model/EntityLifetimeModelTests.csproj -c Release
+      - name: Private Entity discovery scheduler model
+        run: dotnet run --project tests/entity-discovery-model/EntityDiscoveryModelTests.csproj -c Release
+      - name: Maximum-catalog discovery closure and fairness
+        run: dotnet run --project tests/entity-discovery-model/EntityDiscoveryModelTests.csproj -c Release --no-build -- --benchmark
+      - name: Bounded Entity position composition
+        run: dotnet run --project tests/entity-position-model/EntityPositionModelTests.csproj -c Release
+      - name: PlayerInventory public binding (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --gameplayc1 "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: PlayerInventory public binding (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --gameplayc1 "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: PlayerInventory C4 breaking migration (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --gameplayc4 "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: PlayerInventory C4 breaking migration (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --gameplayc4 "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: Private sampled inventory candidate (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --inventory-net "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Private sampled inventory candidate (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --inventory-net "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: Sampled ItemChanged public binding (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --inventory-changed "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Sampled ItemChanged public binding (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --inventory-changed "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: Public bounded discovery bindings (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --discovery2b "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Public bounded discovery bindings (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --discovery2b "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: Compile Persistence-1B adapter teardown tests
+        timeout-minutes: 5
+        run: dotnet build tests/persistence-adapter/PersistenceAdapterTests.csproj -c Release -o dist/persistence-adapter -m:2
+      - name: Windows Persistence-1B adapter teardown gate
+        if: runner.os == 'Windows'
+        timeout-minutes: 3
+        shell: pwsh
+        run: |
+          ./dist/persistence-adapter/PersistenceAdapterTests.exe "$env:GITHUB_WORKSPACE/build/Release/carbonluau_native.dll" "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:RUNNER_TEMP/carbonluau-persistence-adapter"
+          if ($LASTEXITCODE -ne 0) { throw 'Persistence-1B adapter teardown gate failed' }
+      - name: Linux Persistence-1B adapter teardown gate
+        if: runner.os == 'Linux'
+        timeout-minutes: 3
+        shell: bash
+        run: mono dist/persistence-adapter/PersistenceAdapterTests.exe "$GITHUB_WORKSPACE/build/libcarbonluau_native.so" "$GITHUB_WORKSPACE/build/carbonluau_storage" "$RUNNER_TEMP/carbonluau-persistence-adapter"
+      - name: Preview versus production GUI compiler (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --preview-equivalence "$pwd"
+      - name: Preview versus production GUI compiler (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --preview-equivalence "$PWD"
+      - name: Windows runtime tests
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongAbi.dll" "$pwd/build/Release/LegacyProbe.dll" "$pwd" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Linux runtime tests
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongAbi.so" "$PWD/build/libLegacyProbe.so" "$PWD" "$PWD/build/carbonluau_compiler"
+      - name: Windows Persistence-1C combined lifecycle and scale
+        if: runner.os == 'Windows'
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          ./dist/runtime/RuntimeTests.exe --persistence1c "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_storage.exe" "$env:RUNNER_TEMP/carbonluau-persistence1c"
+          if ($LASTEXITCODE -ne 0) { throw 'Persistence-1C closure fixture failed' }
+      - name: Linux Persistence-1C combined lifecycle and scale
+        if: runner.os == 'Linux'
+        timeout-minutes: 10
+        shell: bash
+        run: mono dist/runtime/RuntimeTests.exe --persistence1c "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_storage" "$RUNNER_TEMP/carbonluau-persistence1c"
+      - name: Windows loader tests
+        if: runner.os == 'Windows'
+        run: ./dist/tests/LoaderTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongProbe.dll" "$pwd/build/Release/MissingSymbol.dll"
+      - name: Linux loader tests and export
+        if: runner.os == 'Linux'
+        run: |
+          mono dist/tests/LoaderTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongProbe.so" "$PWD/build/libMissingSymbol.so"
+          nm -D --defined-only build/libcarbonluau_native.so | grep -w carbonluau_probe
+      - name: Package plugin sources
+        shell: pwsh
+        run: |
+          ./tools/package.ps1
+          ./tools/Test-Package.ps1 -Package dist/CarbonLuau.cszip
+          ./tools/Test-Api.ps1
+          ./tools/Test-Architecture.ps1
+          $Rid = if ($IsWindows) { 'win-x64' } else { 'linux-x64' }
+          $Native = if ($IsWindows) { 'build/Release/carbonluau_native.dll' } else { 'build/libcarbonluau_native.so' }
+          $Compiler = if ($IsWindows) { 'build/Release/carbonluau_compiler.exe' } else { 'build/carbonluau_compiler' }
+          ./tools/Test-Release.ps1 -Rid $Rid -NativeLibrary $Native -CompilerWorker $Compiler
+          ./tools/New-ReleaseArtifacts.ps1 -Rid $Rid -NativeLibrary $Native -CompilerWorker $Compiler
+      - name: Clean installation from release bundle and bundled examples
+        shell: pwsh
+        run: |
+          if ($IsWindows) { ./dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.7.0-win-x64.zip" }
+          else { mono dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.7.0-linux-x64.zip" }
+          if ($LASTEXITCODE -ne 0) { throw 'Clean bundle installation failed' }
+      - name: Clean extracted private storage worker and import audit
+        shell: pwsh
+        run: |
+          $Rid = if ($IsWindows) { 'win-x64' } else { 'linux-x64' }
+          ./tools/Test-PersistencePackaging.ps1 -Bundle "dist/release/CarbonLuau-v0.7.0-$Rid.zip" -ManagedTests dist/persistence/ManagedTests.exe -WorkDirectory $env:RUNNER_TEMP
+      - uses: actions/upload-artifact@v4
+        with:
+          name: carbonluau-${{ matrix.os }}
+          if-no-files-found: error
+          path: |
+            dist/CarbonLuau.cszip
+            dist/scripts/
+            dist/examples/
+            build/Release/carbonluau_native.dll
+            build/Release/carbonluau_compiler.exe
+            build/Release/carbonluau_storage.exe
+            build/libcarbonluau_native.so
+            build/carbonluau_compiler
+            build/carbonluau_storage
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-v0.7.0-${{ matrix.os }}
+          if-no-files-found: error
+          path: dist/release/
+  sanitizers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configure instrumented runtime and pinned Luau
+        run: cmake -S native -B build-asan -DCMAKE_BUILD_TYPE=Debug -DCARBONLUAU_SANITIZE=ON
+      - name: Build
+        run: cmake --build build-asan --parallel 2
+      - name: ASan, UBSan, leak detection and lifecycle/fault fixtures
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: ctest --test-dir build-asan --output-on-failure
