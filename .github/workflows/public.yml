@@ -1,0 +1,88 @@
+name: Phase 0 through 3
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  probe:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Install Mono
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y mono-devel
+      - name: Configure
+        run: cmake -S native -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release --parallel 2
+      - name: Native test
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Reject host-selected MSVC runtime dependencies
+        if: runner.os == 'Windows'
+        run: ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_native.dll
+      - name: Compile .NET Framework loader tests
+        run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
+      - name: Compile .NET Framework runtime tests
+        run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
+      - name: Windows runtime tests
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongAbi.dll" "$pwd/build/Release/LegacyProbe.dll" "$pwd"
+      - name: Linux runtime tests
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongAbi.so" "$PWD/build/libLegacyProbe.so" "$PWD"
+      - name: Windows loader tests
+        if: runner.os == 'Windows'
+        run: ./dist/tests/LoaderTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongProbe.dll" "$pwd/build/Release/MissingSymbol.dll"
+      - name: Linux loader tests and export
+        if: runner.os == 'Linux'
+        run: |
+          mono dist/tests/LoaderTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongProbe.so" "$PWD/build/libMissingSymbol.so"
+          nm -D --defined-only build/libcarbonluau_native.so | grep -w carbonluau_probe
+      - name: Package plugin sources
+        shell: pwsh
+        run: |
+          ./tools/package.ps1
+          ./tools/Test-Package.ps1 -Package dist/CarbonLuau.cszip
+          ./tools/Test-Api.ps1
+          $Rid = if ($IsWindows) { 'win-x64' } else { 'linux-x64' }
+          $Native = if ($IsWindows) { 'build/Release/carbonluau_native.dll' } else { 'build/libcarbonluau_native.so' }
+          ./tools/Test-Release.ps1 -Rid $Rid -NativeLibrary $Native
+          ./tools/New-ReleaseArtifacts.ps1 -Rid $Rid -NativeLibrary $Native
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase3-${{ matrix.os }}
+          if-no-files-found: error
+          path: |
+            dist/CarbonLuau.cszip
+            dist/scripts/
+            dist/examples/
+            build/Release/carbonluau_native.dll
+            build/libcarbonluau_native.so
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-v0.3.0-${{ matrix.os }}
+          if-no-files-found: error
+          path: dist/release/
+  sanitizers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Configure instrumented runtime and pinned Luau
+        run: cmake -S native -B build-asan -DCMAKE_BUILD_TYPE=Debug -DCARBONLUAU_SANITIZE=ON
+      - name: Build
+        run: cmake --build build-asan --parallel 2
+      - name: ASan, UBSan, leak detection and lifecycle/fault fixtures
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: ctest --test-dir build-asan --output-on-failure
