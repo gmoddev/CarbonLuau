@@ -1,0 +1,23 @@
+{
+  "SchemaVersion": 1,
+  "Api": {
+    "Name": "CarbonLuau",
+    "Version": "0.4.0-experimental",
+    "Status": "Experimental"
+  },
+  "PackageSchema": 1,
+  "RuntimeLuauRevision": "c6b830185af962c82003f86784e2fe036357c830",
+  "Limits": {
+    "Addon.ArchiveBytes": 4194304,
+    "Addon.ExpandedBytes": 8388608,
+    "Addon.ManifestBytes": 65536,
+    "Addon.SourceBytes": 65536,
+    "Addon.AggregateSourceBytes": 4194304,
+    "Addon.Modules": 256,
+    "Addon.Dependencies": 32,
+    "Gui.ObjectsPerScreen": 128,
+    "Gui.ProjectedElementsPerScreen": 257,
+    "Gui.ClipDepth": 4,
+    "Gui.TextBytesPerScreen": 32768
+  }
+}

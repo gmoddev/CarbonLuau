@@ -1,0 +1,27 @@
+# Public documentation
+
+- [Project](../README.md)
+- [Build and test](Build.md)
+- [Installation](Installation.md)
+- [Compatibility and evidence scope](Support.md)
+- [Safety](Safety.md)
+- [Release identity](Release.md)
+
+- [Addon-Providers](api/Addon-Providers.md)
+- [Addons](api/Addons.md)
+- [Compatibility](api/Compatibility.md)
+- [Globals](api/Globals.md)
+- [Gui-Reference](api/Gui-Reference.md)
+- [Gui](api/Gui.md)
+- [Player-Examples](api/Player-Examples.md)
+- [README](api/README.md)
+- [Services/Commands](api/Services/Commands.md)
+- [Services/Items](api/Services/Items.md)
+- [Services/Players](api/Services/Players.md)
+- [Types/CommandContext](api/Types/CommandContext.md)
+- [Types/Connection](api/Types/Connection.md)
+- [Types/GiveItemBehavior](api/Types/GiveItemBehavior.md)
+- [Types/Player](api/Types/Player.md)
+- [Types/Signal](api/Types/Signal.md)
+- [Types/Vector3](api/Types/Vector3.md)
+
