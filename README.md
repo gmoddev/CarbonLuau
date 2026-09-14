@@ -55,6 +55,14 @@ transactional script generations. See the [Phase 2 contract](docs/Phase2.md) and
 Phase 3 adds the gameplay facade described above; its new evidence is separate.
 Shockbyte Phase 1/2/3 remain unqualified.
 
+Phase 4 item conveniences (`Player:GiveItem` and `Items:Exists`, including the Items
+service) are **deferred from v0.1** by [D13](docs/Invariants.md#decision-register).
+The [investigation](docs/Phase4.md) and [evidence](docs/Phase4-Validation.md) are
+preserved; no safe all-path ownership adapter was established. The
+[roadmap](docs/CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases)
+now places Phase 5 hardening/qualification next, ready for a separate task and
+**not started** by this closure.
+
 ## License
 
 Project licensing and third-party attribution are documented in [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

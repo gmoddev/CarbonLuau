@@ -39,3 +39,6 @@ end)
 Deferred/not supported: inventory, entities, health, teleport, moderation/admin
 mutation, UI, networking, HTTP, filesystem APIs, arbitrary hooks/console execution,
 reflection, Roblox hierarchy/replication and `task.wait`. No Phase 4 API is shipped.
+The entire item convenience surface (`Items`, `Items:Exists`, `Player:GiveItem`)
+is deferred from v0.1 by [D13](../Invariants.md#decision-register), not pending
+implementation in this scripting API version.

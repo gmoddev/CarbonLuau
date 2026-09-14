@@ -8,6 +8,11 @@
 
 **Policy routing:** Start at [AICONTEXT.md](../AICONTEXT.md). Durable architecture/security/lifecycle rules are consolidated in [Invariants.md](Invariants.md); compatibility and evidence policy are in [Compatibility.md](Compatibility.md). This document retains the accepted phase plan, planned API direction and initial configuration candidates. Its future features are not claims of current implementation; unresolved details are classified in the invariants document's decision register.
 
+**Approved scope revision (2026-09-14):** D13 defers all Phase 4 item conveniences
+from v0.1, including Player:GiveItem and Items:Exists. They are not outstanding
+v0.1 acceptance requirements. [Section 31](#31-suggested-implementation-phases)
+is the current roadmap; [Phase4.md](Phase4.md) preserves the investigation.
+
 ---
 
 ## 1. Objective
@@ -99,6 +104,7 @@ These features are first-version requirements, not optional hardening.
 
 Do **not** implement the following in the first version:
 
+- item conveniences (Items/Items:Exists and Player:GiveItem), deferred by D13;
 - client-side Luau;
 - Roblox API compatibility;
 - generic access to arbitrary Carbon hooks by string;
@@ -186,7 +192,6 @@ CarbonLuau/
 │       ├── CarbonLuau.Hooks.cs
 │       ├── CarbonLuau.Commands.cs
 │       ├── CarbonLuau.Players.cs
-│       ├── CarbonLuau.Items.cs
 │       ├── CarbonLuau.Permissions.cs
 │       ├── CarbonLuau.Diagnostics.cs
 │       └── Bootstrap.generated.cs
@@ -560,7 +565,6 @@ game
 ├── Players
 ├── Commands
 ├── Permissions
-├── Items
 └── Server
 ```
 
@@ -583,7 +587,6 @@ Required services:
 - `Players`
 - `Commands`
 - `Permissions`
-- `Items`
 - `Server`
 
 Unknown service names throw a clear Luau error.
@@ -638,8 +641,10 @@ player.IsConnected: boolean
 
 player:ChatMessage(message: string)
 player:HasPermission(permission: string) -> boolean
-player:GiveItem(shortName: string, amount: number?) -> boolean, string?
 ```
+
+Player:GiveItem is deferred from v0.1 by D13; it is not part of this proxy's
+required first-version surface.
 
 ### Identity rule
 
@@ -719,32 +724,17 @@ Script command callbacks should be queued through the Luau scheduler, not execut
 
 ---
 
-## 18. Items service
+## 18. Items service — deferred from v0.1
 
-Keep v0.1 deliberately small.
+The original Items/Items:Exists and Player:GiveItem proposal is deferred by
+[D13](Invariants.md#decision-register). No safe, maintainable all-path grant
+adapter was established on the qualified Rust/Carbon build. Items:Exists is
+read-only, but no independent v0.1 use case justifies a standalone Items service.
 
-```lua
-local Items = game:GetService("Items")
-
-Items:Exists(shortName: string) -> boolean
-```
-
-Player convenience:
-
-```lua
-player:GiveItem(shortName: string, amount: number?) -> boolean, string?
-```
-
-Validation:
-
-- resolve item by Rust short name;
-- reject unknown item names;
-- amount must be an integer;
-- default amount = 1;
-- clamp amount to a conservative configurable maximum;
-- return a useful failure message instead of throwing host exceptions through the ABI.
-
-Do not expose raw `Item` or `ItemContainer` objects yet.
+These APIs, their proposed return types/amount bounds and item-specific
+configuration are not implemented or v0.1 requirements. Preserve the
+[investigation](Phase4.md) and [evidence](Phase4-Validation.md) for reconsideration
+under D13, rather than adopting the original clamping/cleanup assumptions.
 
 ---
 
@@ -948,11 +938,9 @@ Suggested initial config:
   "MaxCallbackMilliseconds": 3,
   "MaxDrainMillisecondsPerFrame": 5,
   "MaxQueuedCallbacks": 4096,
-  "MaxGiveItemAmount": 10000,
   "LogScriptTracebacks": true,
   "EnablePlayerService": true,
-  "EnableCommandsService": true,
-  "EnableItemsService": true
+  "EnableCommandsService": true
 }
 ```
 
@@ -1158,6 +1146,20 @@ The `.cszip` must contain only the C# partial source files required by Carbon.
 
 ## 31. Suggested implementation phases
 
+Current accepted roadmap after D13 closure (2026-09-14):
+
+| Phase | Scope | Status |
+|---|---|---|
+| 0 | Native boundary | [PROVEN in tested environments](Phase0-Validation.md) |
+| 1 | Execution core | [PASS within recorded qualification](Phase1-Validation.md) |
+| 2 | Scripts/modules/scheduler | [PASS within recorded qualification](Phase2-Validation.md) |
+| 3 | Gameplay facade | [PASS within recorded qualification](Phase3-Validation.md) |
+| 4 | Item conveniences | DEFERRED from v0.1 by D13; no runtime/API implementation |
+| 5 | v0.1 hardening/qualification | READY for a separate task; not started |
+
+READY is sequencing readiness, not completed hardening, a release verdict or
+provider qualification. Prior phase evidence retains its original limits.
+
 ### Phase 0 — native-load proof
 
 - Carbon plugin loads native probe library on Windows/Linux.
@@ -1192,13 +1194,16 @@ phase; no `game:GetService`, Signals, Player proxies or player hooks are include
 - command cleanup on reload;
 - command collision handling.
 
-### Phase 4 — item conveniences and delayed tasks
+### Phase 4 — item conveniences: deferred from v0.1
 
-- `player:GiveItem`;
-- `Items:Exists`;
-- task primitives moved into the revised Phase 2 substrate; no item API is added there.
+D13 defers Player:GiveItem and Items/Items:Exists together. They are not prerequisites
+for Phase 5 or remaining v0.1 implementation requirements. The historical
+[investigation and rejected adapter](Phase4.md) remain preserved. Existing task
+primitives belong to the qualified Phase 2 substrate, not this deferral.
 
 ### Phase 5 — hardening and live-host validation
+
+Ready for separate authorization; no Phase 5 work was performed in D13 closure.
 
 - 100 reload soak;
 - connect/disconnect soak;
@@ -1215,6 +1220,8 @@ Stop v0.1 here.
 
 After v0.1 is stable, consider:
 
+- item conveniences only if D13's ownership evidence and renewed scope-approval
+  conditions are met; no automatic commitment to implement them after v0.1;
 - `task.wait` with resumable scheduler;
 - local JSON/DataStore service;
 - typed entities and entity events;
@@ -1269,7 +1276,6 @@ The first version is complete when all of the following are true:
 - player chat messaging works;
 - script-defined commands work;
 - Carbon permissions can gate those commands;
-- simple Rust item grants work;
 - task defer/delay/spawn work;
 - script errors are isolated with useful tracebacks;
 - atomic reload works;
@@ -1277,6 +1283,9 @@ The first version is complete when all of the following are true:
 - repeated reload/connect/disconnect testing does not produce unbounded memory growth;
 - Carbon profiler shows negligible idle overhead and bounded dispatch cost;
 - deployment succeeds on the intended hosted Rust server.
+
+Item conveniences are explicitly excluded by D13. Their deferral does not waive
+any ownership/failure invariant or the remaining hardening/qualification criteria.
 
 ---
 

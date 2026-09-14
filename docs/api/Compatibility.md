@@ -13,6 +13,11 @@ change and migration decision. Experimental does not permit silent breaking chan
 No automatic version negotiation, long-term deprecation window or Roblox contract
 is promised. Consult [current qualification](../Phase3-Validation.md).
 
+D13 defers the unshipped Items/Items:Exists and Player:GiveItem proposal from v0.1.
+This is a [roadmap scope revision](../CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases),
+not removal of an implemented API. Package, scripting API and native ABI identities
+are unchanged; no script migration is required for this deferral.
+
 | Resource | Phase 3 bound |
 |---|---|
 | Connected-player population / snapshot | 1024; larger host population fails closed |

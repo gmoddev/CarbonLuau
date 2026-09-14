@@ -1,6 +1,6 @@
 # CarbonLuau AI and contributor policy
 
-This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 is documented in [Phase2.md](docs/Phase2.md), [Phase2-Validation.md](docs/Phase2-Validation.md) and invariant D9. The authorized Phase 3 facade, approved provisional-effect policy and qualification status are in [Phase3.md](docs/Phase3.md), [Phase3-Validation.md](docs/Phase3-Validation.md) and D10–D12. Script authors start at the [public API reference](docs/api/README.md). Phase 4 requires a new task.
+This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 is documented in [Phase2.md](docs/Phase2.md), [Phase2-Validation.md](docs/Phase2-Validation.md) and invariant D9. The authorized Phase 3 facade, approved provisional-effect policy and qualification status are in [Phase3.md](docs/Phase3.md), [Phase3-Validation.md](docs/Phase3-Validation.md) and D10–D12. Script authors start at the [public API reference](docs/api/README.md). Phase 4 is deferred from v0.1 by D13.
 
 ## Authority and reading order
 
@@ -16,6 +16,15 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Phase 1 execution/ABI contract and evidence | [Phase1.md](docs/Phase1.md), [Phase1-Validation.md](docs/Phase1-Validation.md) |
 
 Read this policy, Invariants and Compatibility before implementation; then read the current phase evidence and only the design sections and source needed for the task. The original design remains the accepted phase plan, not a claim that its future features exist. Runtime invariants apply when their owning feature is implemented. Do not implement a later feature simply to satisfy its future invariant now.
+
+The user approved D13 closure on 2026-09-14: the entire Phase 4 item convenience
+surface (Items, Items:Exists and Player:GiveItem) is deferred from v0.1. The
+[canonical roadmap](docs/CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases)
+reflects that scope change. Preserve [Phase4.md](docs/Phase4.md),
+[Phase4-Validation.md](docs/Phase4-Validation.md) and the read-only structural
+checker as historical evidence; deferral is not proof of a safe adapter.
+Phase 5 hardening/qualification is ready for a separate task, not started by this
+closure. No Phase 4 runtime/API additions or weaker ownership rules are authorized.
 
 If documents, code, a task request or upstream evidence conflict, identify the conflict and its rule owner. Preserve accepted decisions while investigating. Stop the affected implementation if it would require silently weakening a rule or making an unsupported architectural decision; report the evidence and proposed resolution. Do not expand documentation to manufacture certainty. An explicit user-approved design change must also update its canonical document.
 
