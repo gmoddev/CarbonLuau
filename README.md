@@ -2,13 +2,22 @@
 
 CarbonLuau is a planned Carbon-only Rust server plugin that embeds the open-source Luau VM behind a small, bounded C ABI.
 
-The first-version architecture and implementation brief is in [`docs/CarbonLuau_FirstVersion_Design.md`](docs/CarbonLuau_FirstVersion_Design.md). It is the source of truth for the v0.1 scope, safety invariants, repository layout, and acceptance criteria.
+Start contribution work at [AICONTEXT.md](AICONTEXT.md), which maps each rule to its canonical document. [Invariants](docs/Invariants.md) owns architecture/security/lifecycle requirements; [Compatibility](docs/Compatibility.md) owns support and validation policy. The [first-version design](docs/CarbonLuau_FirstVersion_Design.md) remains the accepted v0.1 phase plan, API direction and initial configuration reference.
 
 ## Status
 
-This repository is initialized with the design specification and a pinned Luau vendor checkout. Runtime implementation begins with the Phase 0 native-loading proof described in the design.
+Phase 0 remains **PROVEN for its tested environments**, including Shockbyte.
+Phase 1 now implements the bounded Luau execution core and passes native/managed,
+Linux sanitizer, and actual Windows/Linux Carbon worker qualification. It includes
+compilation/execution, sandboxed libraries, bounded logging, VM memory caps,
+monotonic timeouts, and atomic runtime status/reload. See the [Phase 1 contract](docs/Phase1.md)
+and [validation evidence](docs/Phase1-Validation.md) for exact scope, CI status and limitations.
+
+Phase 2 adds configured script loading, controlled modules, bounded tasks and
+transactional script generations. See the [Phase 2 contract](docs/Phase2.md) and
+[qualification record](docs/Phase2-Validation.md) for current results. No gameplay
+bindings or Phase 3 features are included. Shockbyte Phase 1/2 remain unqualified.
 
 ## License
 
 Project licensing and third-party attribution are documented in [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
-
