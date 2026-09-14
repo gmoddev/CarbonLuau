@@ -1,12 +1,13 @@
 # Phase 1 validation — 2026-09-14
 
-**Worker qualification: PASS.** Final-source CI is recorded after the validated
-implementation is pushed. No Phase 2 functionality is included. This record is
+**Phase 1 verdict: PASS for the tested Windows/Linux x64 targets.** Worker
+qualification and final-source CI passed. No Phase 2 functionality is included. This record is
 separate from the unchanged historical [Phase 0 evidence](Phase0-Validation.md).
 
 ## Baseline and source identity
 
 Started from clean `7509aa6`, the policy-only successor to proven `a88f2eb`.
+Implemented and pushed as `0d1d146a7ef02cee66ccc00a35d79139c4c2824c` on `main`.
 The unchanged native and actual managed Phase 0 tests passed on Windows and Linux
 before implementation. An initial command typo named a nonexistent wrong-probe
 fixture; correcting the path required no source change.
@@ -141,6 +142,20 @@ The expected 1→2 timeout recovery is additional to the ten operator replacemen
 CI preserves original Phase 0 coverage and adds runtime interop, allocation faults,
 static-CRT import checking, package-content verification and Linux ASan/UBSan.
 The new GitHub run is started only after worker qualification passes.
+
+Independent implementation CI: [run 34830363923](https://github.com/gmoddev/CarbonLuau/actions/runs/34830363923)
+at `0d1d146a7ef02cee66ccc00a35d79139c4c2824c`: **PASS**, all three jobs.
+Windows completed in 2m10s, Ubuntu in 1m37s, and Linux sanitizers in 38s.
+The subsequent evidence-only documentation commit does not change the tested
+implementation or artifacts.
+
+## Worker cleanup
+
+Both Rust servers exited after validation. Task container `codex-carbonluau-linux`
+is stopped; its image, installed server, source and incremental build/sanitizer
+caches remain available under the existing task-owned worker paths. Unrelated
+`drycreek-bot` and `directus-db` remained running. No global Docker cleanup or
+machine-wide/runtime changes were made.
 
 Shockbyte Phase 1 has not been deployed or qualified; its Phase 0 result does not
 prove the new execution runtime there.
