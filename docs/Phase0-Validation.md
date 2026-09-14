@@ -46,7 +46,9 @@ Linux errors include `file too short` for the invalid image, `undefined symbol: 
 
 ## CI
 
-The `Phase 0` workflow builds the native library and .NET Framework loader tests on Windows and Ubuntu, executes the native/managed tests, packages the C# source and uploads platform artifacts. It does not claim to run Carbon. Remote CI execution is checked after publication.
+**PASS:** [GitHub Actions run 34822946437](https://github.com/gmoddev/CarbonLuau/actions/runs/34822946437) passed both `probe (windows-latest)` and `probe (ubuntu-24.04)` for implementation commit `2c9ce38cce41a37a9a6392fe08ee73fff6720fa6`.
+
+The workflow builds the native library and .NET Framework loader tests, executes the native/managed tests, packages the C# source and uploads platform artifacts. It does not claim to run Carbon; the live results above came from `dockerbox`.
 
 ## Worker storage and operational notes
 
@@ -60,6 +62,19 @@ The `Phase 0` workflow builds the native library and .NET Framework loader tests
 - RCON uses a persistent loopback connection with unique request IDs to avoid rapid reconnect throttling and distinguish replies from asynchronous log broadcasts.
 - The fixture scripts use private, isolated test servers. Do not run them on production: they temporarily replace the probe with invalid fixtures.
 - Both Rust servers shut down after testing. The task image, stopped Linux container/server installation, Windows installation, caches and build artifacts are retained for reuse.
+- Windows' launcher returned exit code 1 after the requested `quit`; its log records Carbon shutdown, native unload and completed saving. Linux's full validation harness returned 0. The Windows server's shutdown exit code is recorded separately from the passing build, loader and live lifecycle tests.
+
+## Tested deployment artifacts
+
+The local ignored `dist` directory contains the tested package and native binaries, copied from the worker:
+
+| Artifact | SHA-256 |
+|---|---|
+| `CarbonLuau.cszip` | `3AE904F9B8909C5064BBF81A5A32217BCD392A94CA3B3EE8BAB0237C2B3D06D2` |
+| `native/win-x64/carbonluau_native.dll` | `ECCC43615D2EC23EE5F60D8ED2885D0C9A31CAFC3EDDED3AD9179FB2BDC7477F` |
+| `native/linux-x64/libcarbonluau_native.so` | `EE8539015DFD162657005B855D5B0387FEF03AEEA4DB7E5E53CC392D54DCCFD3` |
+
+CI artifacts are separately rebuilt and may have different binary/package hashes.
 
 ## Remaining target acceptance
 
