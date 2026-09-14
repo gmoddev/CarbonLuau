@@ -16,11 +16,12 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include "Bootstrap.h"
 
 namespace {
 constexpr uint64_t MiB = 1024 * 1024;
 struct Module { std::string Source; int Reference = LUA_NOREF; bool Loading = false, Loaded = false; };
-struct Callback { uint64_t Due, Sequence; lua_State* Thread; int Reference, Arguments; };
+struct Callback { uint64_t Due, Sequence; lua_State* Thread; int Reference, Arguments; std::string Gate; };
 struct Later { bool operator()(const Callback& A, const Callback& B) const {
     return A.Due > B.Due || (A.Due == B.Due && A.Sequence > B.Sequence); } };
 struct Vm {
@@ -46,6 +47,10 @@ struct Vm {
     std::map<std::string, Module> Modules;
     std::vector<std::string> Loading;
     std::vector<Callback> Queue;
+    ClHostCall Host = nullptr;
+    uint64_t Generation = 0;
+    int Dispatch = LUA_NOREF;
+    std::unique_ptr<std::array<char, 262144>> HostBuffer;
     ~Vm() {
         if (State) {
             lua_callbacks(State)->interrupt = nullptr;
@@ -54,6 +59,7 @@ struct Vm {
             for (const auto& Entry : Modules) if (Entry.second.Loaded) lua_unref(State, Entry.second.Reference);
             Modules.clear();
             if (Reference != LUA_NOREF) lua_unref(State, Reference);
+            if (Dispatch != LUA_NOREF) lua_unref(State, Dispatch);
             lua_close(State);
         }
     }
@@ -195,6 +201,8 @@ void Retire(Vm& Runtime)
     Runtime.ThreadId = 0;
     Runtime.Reference = LUA_NOREF;
     Runtime.Resumable = false;
+    Runtime.Host = nullptr;
+    Runtime.Dispatch = LUA_NOREF;
     lua_State* Owned = Runtime.State;
     Runtime.State = nullptr;
     if (Owned) { lua_callbacks(Owned)->interrupt = nullptr; lua_close(Owned); }
@@ -228,9 +236,10 @@ void ReleaseThread(Vm& Runtime, bool Full = true)
     else lua_settop(Runtime.State, 0);
 }
 #include "Scripts.inl"
+#include "Facade.inl"
 }
 
-uint32_t carbonluau_abi_version(void) { return 0x00010001; }
+uint32_t carbonluau_abi_version(void) { return 0x00010002; }
 ClStatus cl_luau_revision(char* Buffer, uint32_t Capacity)
 {
     if (!Buffer || Capacity < sizeof(CARBONLUAU_REVISION)) return CL_INVALID_ARGUMENT;
@@ -398,11 +407,21 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
     if (!Runtime || !Runtime->State || !Runtime->Scripts || Runtime->ThreadId) return CL_INVALID_ARGUMENT;
     if (Runtime->Queue.empty() || Runtime->Queue.front().Due > CutoffNs || Runtime->Queue.front().Sequence > Sequence) return CL_OK;
     std::pop_heap(Runtime->Queue.begin(), Runtime->Queue.end(), Later{});
-    Callback Work = Runtime->Queue.back(); Runtime->Queue.pop_back();
+    Callback Work = std::move(Runtime->Queue.back()); Runtime->Queue.pop_back();
     *Ran = 1;
     Runtime->Thread = Work.Thread; Runtime->Reference = Work.Reference;
     Runtime->LogSize = 0; Runtime->Logs[0] = 0; Runtime->LogTruncated = false;
     Runtime->AllocationFailed = false;
+    if (!Work.Gate.empty()) {
+        uint32_t Written = 0;
+        if (!Runtime->Host || Runtime->Host(Runtime->Generation, 9, Work.Gate.data(), uint32_t(Work.Gate.size()),
+            Runtime->HostBuffer->data(), uint32_t(Runtime->HostBuffer->size()), &Written) != 0) {
+            ++Runtime->Rejected;
+            ReleaseThread(*Runtime, false);
+            if (!Runtime->State) Result->Flags = 1;
+            return CL_OK;
+        }
+    }
     std::snprintf(Runtime->Chunk, sizeof(Runtime->Chunk), "scheduled-%llu", (unsigned long long)Work.Sequence);
     Runtime->Deadline = std::chrono::steady_clock::now() + std::chrono::nanoseconds(BudgetNs);
     lua_callbacks(Runtime->State)->interrupt = Interrupt;

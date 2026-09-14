@@ -53,6 +53,18 @@ CARBONLUAU_EXPORT ClStatus cl_vm_scheduler(ClHandle Vm, ClSchedulerInfo* Info);
    Cutoff time/sequence from scheduler() prevent same-drain recursive execution. */
 CARBONLUAU_EXPORT ClStatus cl_vm_callback(ClHandle Vm, uint64_t CutoffNs, uint64_t Sequence,
     uint64_t BudgetNs, uint32_t* Ran, ClResult* Result);
+/* ABI 1.2. Callback buffers are borrowed only for the synchronous call; retain
+   no pointer. Context is a generation integer, not a host pointer/GCHandle.
+   Request/response are NUL-delimited UTF-8 fields with explicit byte lengths.
+   Callback returns 0 on success, otherwise a bounded curated error in Response.
+   No exception or VM reentry is permitted. Delegate lives until VM destruction.
+   Output capacity is 262144 bytes; requests/events are bounded to 16384 bytes. */
+typedef uint32_t (*ClHostCall)(uint64_t Generation, uint32_t Operation,
+    const char* Request, uint32_t Length, char* Response, uint32_t Capacity, uint32_t* Written);
+CARBONLUAU_EXPORT ClStatus cl_vm_facade(ClHandle Vm, uint64_t Generation, ClHostCall Host);
+/* Admission constructs a queued thread only; it never executes Lua. Operation 9
+   revalidates this immutable payload immediately before scheduled Lua entry. */
+CARBONLUAU_EXPORT ClStatus cl_vm_event(ClHandle Vm, const char* Payload, uint32_t Length);
 #ifdef __cplusplus
 }
 #endif

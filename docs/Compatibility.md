@@ -22,7 +22,7 @@ Carbon currently documents targeting .NET Framework 4.8 with `Carbon.targets`. D
 
 Keep these identities conceptually separate and record those relevant to a result: Carbon build, Rust server build, pinned Luau commit/build options, CarbonLuau package version, project-owned native ABI compatibility, and CarbonLuau public scripting API compatibility.
 
-Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Public scripting API versioning and deprecation remain deferred in [D8](Invariants.md#decision-register).
+Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Phase 3 introduces package `0.3.0`, additive native ABI `1.2`, and the separate scripting identity `CarbonLuau` / `0.3.0-experimental` / `Experimental`, inspectable through read-only game fields and operator status. D8/D12 own the minimum policy; [public compatibility](api/Compatibility.md) documents it. Additive changes preserve existing contracts; removing/renaming an API or changing its types, lifetime, failures or authorization is breaking and requires an explicit version, documentation and migration decision. A larger deprecation/negotiation framework remains deferred.
 
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
@@ -68,9 +68,9 @@ Validate managed/native result and ownership transport, configuration bounds, an
 
 Resolve the relevant [decision gates](Invariants.md#decision-register) before enabling their behavior and record the selected limits and remaining containment limits. Keep the accepted initial configuration candidates in the design until implementation qualifies them. Do not require Phase 2 gameplay APIs, events, modules or a full task scheduler to complete Phase 1; conversely, do not enable such features without their own validation.
 
-## Phase 0 consistency review
+## Phase 2 and Phase 3 evidence contracts
 
-For current Phase 2 work, use the [Phase 2 contract](Phase2.md) and
+For Phase 2, use the [Phase 2 contract](Phase2.md) and
 [qualification record](Phase2-Validation.md): package 0.2.0, additive native ABI
 1.1, controlled source snapshots/modules and generation-owned scheduling. Required
 coverage includes path/UTF-8/reparse confinement, module cache/cycles, queue and
@@ -78,7 +78,19 @@ frame bounds, timeout recovery allowance, atomic replacement, native allocation
 faults/sanitizers, and live Windows/Linux Carbon reload/unload. Existing Phase 0/1
 fixtures remain in CI; ordinary CI does not claim to run a Rust server. Provider
 qualification remains separate. The historical consistency review below is not a
-description of the current Phase 2 feature set.
+description of the current feature set.
+
+Phase 3 uses the [facade contract](Phase3.md), [public API reference](api/README.md)
+and [qualification record](Phase3-Validation.md). Required evidence includes
+connection-lifetime invalidation, bounded signals and commands, A → failing B →
+successful C registration transactions, permission enforcement before Lua, late
+callback rejection, provisional-message rejection, scheduler/recovery regressions,
+Windows/Linux actual Carbon integration, affected native sanitizers, public
+documentation/examples agreement and green final-source CI. Controlled real host
+objects must be labeled separately from authenticated client/session or delivery
+evidence. Provider qualification remains separate.
+
+## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:
 
