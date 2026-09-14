@@ -2,7 +2,7 @@
 
 CarbonLuau is a planned Carbon-only Rust server plugin that embeds the open-source Luau VM behind a small, bounded C ABI.
 
-The first-version architecture and implementation brief is in [`docs/CarbonLuau_FirstVersion_Design.md`](docs/CarbonLuau_FirstVersion_Design.md). It is the source of truth for the v0.1 scope, safety invariants, repository layout, and acceptance criteria.
+Start contribution work at [AICONTEXT.md](AICONTEXT.md), which maps each rule to its canonical document. [Invariants](docs/Invariants.md) owns architecture/security/lifecycle requirements; [Compatibility](docs/Compatibility.md) owns support and validation policy. The [first-version design](docs/CarbonLuau_FirstVersion_Design.md) remains the accepted v0.1 phase plan, API direction and initial configuration reference.
 
 ## Status
 

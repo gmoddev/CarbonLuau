@@ -6,6 +6,8 @@
 **Language boundary:** Carbon/C# host ↔ native Luau VM  
 **Scope:** server-side Luau only
 
+**Policy routing:** Start at [AICONTEXT.md](../AICONTEXT.md). Durable architecture/security/lifecycle rules are consolidated in [Invariants.md](Invariants.md); compatibility and evidence policy are in [Compatibility.md](Compatibility.md). This document retains the accepted phase plan, planned API direction and initial configuration candidates. Its future features are not claims of current implementation; unresolved details are classified in the invariants document's decision register.
+
 ---
 
 ## 1. Objective
