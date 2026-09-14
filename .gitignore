@@ -1,0 +1,9 @@
+bin/
+obj/
+build/
+dist/
+.vs/
+*.user
+*.suo
+native/third_party/luau/build/
+
