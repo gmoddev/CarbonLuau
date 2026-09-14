@@ -6,9 +6,8 @@ The first-version architecture and implementation brief is in [`docs/CarbonLuau_
 
 ## Status
 
-This repository is initialized with the design specification and a pinned Luau vendor checkout. Runtime implementation begins with the Phase 0 native-loading proof described in the design.
+Phase 0 implements a native-loading probe, an explicit Windows/Linux loader, tests, and CI. Luau remains vendored but is not linked or executed. See [build and deployment instructions](docs/Phase0.md) and [actual validation results](docs/Phase0-Validation.md).
 
 ## License
 
 Project licensing and third-party attribution are documented in [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
-

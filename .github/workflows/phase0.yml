@@ -1,0 +1,45 @@
+name: Phase 0
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  probe:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Install Mono
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y mono-devel
+      - name: Configure
+        run: cmake -S native -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release --parallel 2
+      - name: Native test
+        run: ctest --test-dir build -C Release --output-on-failure
+      - name: Compile .NET Framework loader tests
+        run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
+      - name: Windows loader tests
+        if: runner.os == 'Windows'
+        run: ./dist/tests/LoaderTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongProbe.dll" "$pwd/build/Release/MissingSymbol.dll"
+      - name: Linux loader tests and export
+        if: runner.os == 'Linux'
+        run: |
+          mono dist/tests/LoaderTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongProbe.so" "$PWD/build/libMissingSymbol.so"
+          nm -D --defined-only build/libcarbonluau_native.so | grep -w carbonluau_probe
+      - name: Package plugin sources
+        shell: pwsh
+        run: ./tools/package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase0-${{ matrix.os }}
+          if-no-files-found: error
+          path: |
+            dist/CarbonLuau.cszip
+            build/Release/carbonluau_native.dll
+            build/libcarbonluau_native.so
