@@ -93,6 +93,19 @@ namespace Carbon.Plugins
                 catch (Exception Error) { UnloadError = "native library unload failed: " + Error.Message; }
             }
 
+            // Runtime bindings use the same explicit loaded module; no alternate
+            // probing, DllImport search, or direct Luau exports are introduced.
+            public T Bind<T>(string Name) where T : class
+            {
+                if (!Available || Disposed) throw new ObjectDisposedException("NativeLibraryLoader");
+                if (Rid == "linux-x64") dlerror();
+                IntPtr Symbol = Rid == "win-x64" ? GetProcAddress(Handle, Name) : dlsym(Handle, Name);
+                string Error = Rid == "linux-x64" ? ReadDlError() : null;
+                if (Symbol == IntPtr.Zero || Error != null)
+                    throw new InvalidOperationException("symbol missing: " + Name);
+                return (T)(object)Marshal.GetDelegateForFunctionPointer(Symbol, typeof(T));
+            }
+
             private string GetLoaderError()
             {
                 if (Rid == "linux-x64") return ReadDlError() ?? "dlerror returned no detail";

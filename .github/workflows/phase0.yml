@@ -1,4 +1,4 @@
-name: Phase 0
+name: Phase 0 and 1
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -22,8 +22,19 @@ jobs:
         run: cmake --build build --config Release --parallel 2
       - name: Native test
         run: ctest --test-dir build -C Release --output-on-failure
+      - name: Reject host-selected MSVC runtime dependencies
+        if: runner.os == 'Windows'
+        run: ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_native.dll
       - name: Compile .NET Framework loader tests
         run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
+      - name: Compile .NET Framework runtime tests
+        run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
+      - name: Windows runtime tests
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongAbi.dll" "$pwd/build/Release/LegacyProbe.dll"
+      - name: Linux runtime tests
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongAbi.so" "$PWD/build/libLegacyProbe.so"
       - name: Windows loader tests
         if: runner.os == 'Windows'
         run: ./dist/tests/LoaderTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongProbe.dll" "$pwd/build/Release/MissingSymbol.dll"
@@ -34,12 +45,27 @@ jobs:
           nm -D --defined-only build/libcarbonluau_native.so | grep -w carbonluau_probe
       - name: Package plugin sources
         shell: pwsh
-        run: ./tools/package.ps1
+        run: |
+          ./tools/package.ps1
+          ./tools/Test-Package.ps1 -Package dist/CarbonLuau.cszip
       - uses: actions/upload-artifact@v4
         with:
-          name: phase0-${{ matrix.os }}
+          name: phase1-${{ matrix.os }}
           if-no-files-found: error
           path: |
             dist/CarbonLuau.cszip
             build/Release/carbonluau_native.dll
             build/libcarbonluau_native.so
+  sanitizers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure instrumented runtime and pinned Luau
+        run: cmake -S native -B build-asan -DCMAKE_BUILD_TYPE=Debug -DCARBONLUAU_SANITIZE=ON
+      - name: Build
+        run: cmake --build build-asan --parallel 2
+      - name: ASan, UBSan, leak detection and lifecycle/fault fixtures
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: ctest --test-dir build-asan --output-on-failure

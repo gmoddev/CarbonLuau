@@ -11,7 +11,7 @@ This document owns compatibility promises, version identities and evidence requi
 | Managed runtime | Keep deployed code compatible with the proven .NET Framework/Mono-style Carbon runtime. The `net48` loader test passed on Windows and Mono 6.8. A .NET SDK used for tooling is not the server runtime. |
 | Carbon | CarbonPlugin and source `.cszip` are the integration/package model. Worker evidence is Carbon 2.0.259.0; no unrestricted future Carbon-version guarantee. |
 | Rust server | Worker evidence is Rust 2633 / Steam build 25230300. New server builds need affected compatibility checks, not assumptions based on the same game name. |
-| Luau | Vendored commit is recorded in [LUAU_REVISION.txt](../native/third_party/LUAU_REVISION.txt). It is not yet linked or runtime-qualified by Phase 0. |
+| Luau | Vendored commit is recorded in [LUAU_REVISION.txt](../native/third_party/LUAU_REVISION.txt). Phase 1 links compiler/VM; its platform and containment evidence is separate in [Phase1-Validation.md](Phase1-Validation.md). |
 | Hosting provider | The user's Shockbyte Linux server passed load/probe/unload/reload based on user-provided logs. Other servers/plans and provider policy changes remain unqualified. Its exact Carbon/OS build was not established by those excerpts. |
 
 Dates, source/artifact hashes, runtime paths, CI links and the different depths of worker versus Shockbyte testing are owned by [Phase0-Validation.md](Phase0-Validation.md). PROVEN describes the tested native-load gate, not the safety of the future VM or all features in the design.
@@ -22,7 +22,7 @@ Carbon currently documents targeting .NET Framework 4.8 with `Carbon.targets`. D
 
 Keep these identities conceptually separate and record those relevant to a result: Carbon build, Rust server build, pinned Luau commit/build options, CarbonLuau package version, project-owned native ABI compatibility, and CarbonLuau public scripting API compatibility.
 
-The plugin's `0.0.1` version and the probe magic are not a scripting API version. A package bump does not automatically mean a script break; a host update should not redefine the facade. Before publishing a scripting API, document its version identity, supported behavior and change/migration policy. Before shipping an extended runtime ABI, define how incompatible managed/native pairs are detected before use. Mechanisms and SemVer/deprecation promises remain deferred in [D8](Invariants.md#decision-register).
+Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Public scripting API versioning and deprecation remain deferred in [D8](Invariants.md#decision-register).
 
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
@@ -60,7 +60,7 @@ Harness assertions have limits: the Windows live script waits for a general `Una
 
 ## Phase 1 evidence contract
 
-The feature boundary remains [design section 31](CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases), not a new API specification. The relevant native tests and failure behaviors are in design sections 27 and 29. This section owns their phase-specific qualification; executable Phase 1 fixtures do not exist yet and must accompany implementation.
+The feature boundary remains [design section 31](CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases), not a new API specification. The relevant native tests and failure behaviors are in design sections 27 and 29. This section owns their phase-specific qualification; implemented [Phase 1 fixtures](Phase1.md#qualification-fixtures) and [actual results](Phase1-Validation.md) accompany the execution core.
 
 Before marking the execution core complete, demonstrate compiler/VM create/destroy and source execution; controlled syntax/runtime errors; sandbox allowlist enforcement; configured allocation exhaustion and execution deadline failures; successful permitted execution after recoverable failure; deterministic cleanup after partial initialization/error/timeout; and failure diagnostics. Test the chosen protected-error mode and callback crossing rules, including low-memory error handling. Use sanitizers for the native lifecycle where practical, recording what actually ran.
 

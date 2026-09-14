@@ -2,6 +2,7 @@ param(
     [int]$Port = 28116,
     [string]$SecretPath = 'C:\Sandbox\Codex\Artifacts\CarbonLuau\rcon-win.secret',
     [string]$Command = 'status',
+    [string]$ExpectedMessage = '',
     [Net.WebSockets.ClientWebSocket]$Socket,
     [switch]$KeepOpen
 )
@@ -31,7 +32,8 @@ try {
             [void]$Text.Append([Text.Encoding]::UTF8.GetString($Buffer, 0, $Result.Count))
         } while (!$Result.EndOfMessage)
         $Reply = $Text.ToString() | ConvertFrom-Json
-    } while ($Reply.Identifier -ne $Identifier)
+    } while ($Reply.Identifier -ne $Identifier -or
+        ($ExpectedMessage -and !$Reply.Message.Contains($ExpectedMessage) -and !$Reply.Message.Contains('[CarbonLuau:LiveTest] FAIL:')))
     $Text.ToString()
 } finally {
     if (!$KeepOpen) {

@@ -1,4 +1,4 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'))
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -10,6 +10,10 @@ try {
     try {
         Get-ChildItem (Join-Path $PSScriptRoot '..\src\CarbonLuau') -Filter '*.cs' | Sort-Object Name | ForEach-Object {
             [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($Archive, $_.FullName, $_.Name) | Out-Null
+        }
+        if ($IncludePhase1Fixtures) {
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($Archive,
+                (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.Fixtures.cs'), 'CarbonLuau.Fixtures.cs') | Out-Null
         }
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }

@@ -1,6 +1,6 @@
 # CarbonLuau AI and contributor policy
 
-This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 is cleared to begin but remains unimplemented at this policy baseline.
+This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 requires a new task.
 
 ## Authority and reading order
 
@@ -13,6 +13,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
 | Phase 0 build/deployment commands | [Phase0.md](docs/Phase0.md) |
+| Phase 1 execution/ABI contract and evidence | [Phase1.md](docs/Phase1.md), [Phase1-Validation.md](docs/Phase1-Validation.md) |
 
 Read this policy, Invariants and Compatibility before implementation; then read the current phase evidence and only the design sections and source needed for the task. The original design remains the accepted phase plan, not a claim that its future features exist. Runtime invariants apply when their owning feature is implemented. Do not implement a later feature simply to satisfy its future invariant now.
 

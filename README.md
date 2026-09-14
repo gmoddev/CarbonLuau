@@ -6,7 +6,15 @@ Start contribution work at [AICONTEXT.md](AICONTEXT.md), which maps each rule to
 
 ## Status
 
-Phase 0 is **PROVEN for the tested environments**: Windows x64, Linux x64 on the Docker worker, and the user's Shockbyte server. Native loading, the ABI probe, and unload/reload are confirmed. Phase 1 (the bounded Luau execution core) is cleared to begin. Luau remains vendored but is not yet linked or executed. See [build and deployment instructions](docs/Phase0.md) and [actual validation results](docs/Phase0-Validation.md).
+Phase 0 remains **PROVEN for its tested environments**, including Shockbyte.
+Phase 1 now implements the bounded Luau execution core and passes native/managed,
+Linux sanitizer, and actual Windows/Linux Carbon worker qualification. It includes
+compilation/execution, sandboxed libraries, bounded logging, VM memory caps,
+monotonic timeouts, and atomic runtime status/reload. See the [Phase 1 contract](docs/Phase1.md)
+and [validation evidence](docs/Phase1-Validation.md) for exact scope, CI status and limitations.
+
+Shockbyte Phase 1 is not yet qualified. No player API or other Phase 2 functionality
+is implemented; Phase 2 requires a new task.
 
 ## License
 
