@@ -1,13 +1,14 @@
 # Phase 2 validation — 2026-09-14
 
-**Worker qualification: PASS for the tested Windows/Linux x64 environments.**
-Final-source GitHub CI will be recorded after publishing the worker-validated
-implementation. No Phase 3 functionality is included.
+**Phase 2 verdict: PASS for the tested Windows/Linux x64 environments.**
+Worker qualification and final-source GitHub CI passed. No Phase 3 functionality
+is included.
 
 ## Baseline, approval and source identity
 
-Started from `30bde19b7d3f9112becbe8e979502969ae18dc69` on main. Historical
-[Phase 0](Phase0-Validation.md) and [Phase 1](Phase1-Validation.md) evidence is unchanged.
+Started from `30bde19b7d3f9112becbe8e979502969ae18dc69` on main.
+Implementation published as `6fc97d1c4f4d779b7fbce0bf32be3f2216cbd651` on main.
+Historical [Phase 0](Phase0-Validation.md) and [Phase 1](Phase1-Validation.md) evidence is unchanged.
 Luau remains pinned to `c6b830185af962c82003f86784e2fe036357c830`; vendor files were not changed.
 
 The initial inspection paused at the task's recovery-policy stop condition:
@@ -195,8 +196,12 @@ to ignored local `dist/phase2`, preserving the previous Phase 1 artifacts.
 
 CI preserves existing regressions and runs Phase 2 native/managed tests on Windows
 and Ubuntu plus the instrumented Linux suite. CI is not the source of live Carbon
-evidence. Implementation commit and CI URL/result are recorded after the
-worker-qualified source is published.
+evidence. Independent implementation CI:
+[run 34834974054](https://github.com/gmoddev/CarbonLuau/actions/runs/34834974054)
+at `6fc97d1c4f4d779b7fbce0bf32be3f2216cbd651`: **PASS**, all three jobs.
+Windows completed in 2m3s, Ubuntu in 1m31s and Linux sanitizers in 48s.
+The subsequent evidence-only documentation commit changes no tested runtime,
+fixture, package or artifact and intentionally skips a redundant CI build.
 
 ## Cleanup, limitations and deferred work
 
