@@ -1,8 +1,8 @@
 # CarbonLuau scripting API
 
-The Phase 3 working tree implements the **experimental** `CarbonLuau`
-`0.3.0-experimental` facade. Qualification status is maintained in
-[Phase3-Validation](../Phase3-Validation.md); implementation is not a PASS claim.
+Phase 3 implements the **experimental** `CarbonLuau` `0.3.0-experimental` facade.
+Windows/Linux worker qualification and CI passed; exact scope and limitations are
+maintained in [Phase3-Validation](../Phase3-Validation.md).
 This is server-side Luau, not Roblox API compatibility.
 
 | Implemented surface | Reference |

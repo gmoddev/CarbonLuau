@@ -2,9 +2,10 @@
 
 CarbonLuau adds server-side Luau scripting to Carbon-modded Rust servers through a bounded native bridge.
 
-Start scripting with the [public API reference](docs/api/README.md). The Phase 3
-working tree adds an experimental Players/Signals/Commands facade; qualification
-is still in progress in [Phase3-Validation](docs/Phase3-Validation.md).
+Start scripting with the [public API reference](docs/api/README.md). Phase 3's
+experimental Players/Signals/Commands facade passed Windows/Linux worker
+qualification and CI. See [Phase3-Validation](docs/Phase3-Validation.md) for the
+controlled-host evidence and limits; real-client delivery and Shockbyte are unqualified.
 
 ## Install and write a script
 

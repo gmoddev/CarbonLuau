@@ -1,14 +1,16 @@
 # Phase 3 validation — 2026-09-14
 
-**Verdict: PARTIAL pending publication and final-source CI.** Worker Windows/Linux
-qualification is complete. Controlled real-host integration is not authenticated
-client or provider qualification. No Phase 4 capability is included.
+**Verdict: PASS for the tested Windows/Linux x64 worker environments.** Final-source
+CI and controlled real-host qualification passed. This is not authenticated client,
+provider or long-duration production qualification. No Phase 4 capability is included.
 
 ## Source and release identity
 
 - Starting qualified main: `10c31c21a436dea7cdc506fe842b9a765d697019`.
-- Implementation commit: pending publication of this tested change.
-- Final evidence commit: pending CI follow-up; resolve through this file's Git history.
+- Implementation commit: `f50d4d80ad4746dfe22c214c6316930d8b2749a8`, pushed to main.
+- Final evidence commit: this evidence-only CI follow-up, titled
+  `Record Phase 3 CI qualification [skip ci]`; resolve its exact SHA with
+  `git log -1 --format=%H -- docs/Phase3-Validation.md`. It changes no runtime/tests.
 - Package **0.3.0**; scripting API **CarbonLuau 0.3.0-experimental**, Experimental.
 - Native ABI: additive **1.2** (`0x00010002`); prior layouts/probe unchanged.
 - Luau: `c6b830185af962c82003f86784e2fe036357c830`; vendor unchanged.
@@ -84,7 +86,7 @@ inside actual servers. Upstream SDK inspection and adaptation are in [Phase3.md]
 | Nested stop blocks another callback; outer teardown | PASS | PASS |
 | Signal timeout → one reconstruction → unavailable | PASS at 3 ms | PASS at 3 ms |
 | Both shipped examples | PASS real compiler/VM load | PASS real compiler/VM load |
-| API/version/services/types/relative-link check | PASS | Ordinary CI pending |
+| API/version/services/types/relative-link check | PASS worker and CI | PASS CI |
 
 Final managed build: zero warnings/errors. One earlier manual loader invocation
 used runtime wrong-ABI fixtures and failed its expected wrong-probe assertion;
@@ -195,9 +197,14 @@ deferred APIs. [API index](api/README.md); [implemented contract](Phase3.md).
 
 ## CI, limitations and handoff
 
-CI publication/result: pending. The Phase 0-through-3 workflow builds Windows and
-Ubuntu, runs native/managed regressions and examples, package/API checks and Linux
-sanitizers. It does not launch Rust servers. Final evidence follows green CI.
+[GitHub CI run 34886319913](https://github.com/gmoddev/CarbonLuau/actions/runs/34886319913)
+completed **success** for implementation `f50d4d80ad4746dfe22c214c6316930d8b2749a8`.
+All three jobs passed: Windows, Ubuntu 24.04 and Linux sanitizers. Coverage includes
+native/managed Phase 0–3 regressions, both examples, package/API checks and ASan/UBSan
+with leaks. CI does not launch Rust servers; the live results above are separate.
+This follow-up changes only qualification/onboarding documentation and decision
+status labels, so the tested source remains unchanged. Publication uses the existing
+Windows-profile GitHub identity `gmoddev`; no credential was exported.
 
 The API is experimental. Commands are initialization-only, chat/player-only and
 generation-owned; individual command removal/console callers are unsupported.
