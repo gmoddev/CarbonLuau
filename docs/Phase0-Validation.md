@@ -1,6 +1,6 @@
 # Phase 0 validation — 2026-09-14
 
-Overall verdict: **PARTIAL** until the actual Shockbyte target is tested. The Windows worker and self-managed Linux Docker environment are separate deployment targets from Shockbyte.
+Overall verdict: **PROVEN for the tested environments**. The native-load feasibility gate passes on Windows x64, self-managed Linux Docker, and the user's Shockbyte Linux server. Phase 1 is cleared to begin. Long-term soak testing remains separate from this feasibility verdict.
 
 ## Verified build and loader results
 
@@ -76,6 +76,19 @@ The local ignored `dist` directory contains the tested package and native binari
 
 CI artifacts are separately rebuilt and may have different binary/package hashes.
 
-## Remaining target acceptance
+## Shockbyte runtime evidence
 
-Shockbyte has not been accessed or tested. Follow [the deployment checklist](Phase0.md#shockbyte-acceptance). An enforced restriction must be recorded as a hosting blocker, not bypassed. No Phase 1 features are included.
+The tested Linux probe and plugin package were uploaded through the saved SFTP profile to `/1. Roost/carbon/data/CarbonLuau/native/linux-x64/libcarbonluau_native.so` and `/1. Roost/carbon/plugins/CarbonLuau.cszip`. Both were downloaded back and their SHA-256 hashes matched the tested artifacts above.
+
+The user supplied Shockbyte console evidence dated September 14, 2026 (timestamps as displayed by the hosting panel):
+
+- **04:39:47 AM:** native probe loaded successfully on `linux-x64`, returning `0x4C554155` from `/server/carbon/data/CarbonLuau/native/linux-x64/libcarbonluau_native.so`.
+- **04:40:50 AM and 04:40:51 AM:** `c.reload CarbonLuau` logged successful native unload, plugin unload, plugin load and another successful probe. The plugin version was `0.0.1`.
+
+The SFTP prefix `/1. Roost` maps to the server's runtime root `/server`; the reported absolute native path is consistent with the deployment layout. These observations prove the deployed native library can load, resolve and invoke the C ABI, unload and reload on this hosting environment. No hosting restriction blocked the tested operations.
+
+The console excerpt contains repeated identical lines. They are not counted as additional reload cycles and do not by themselves prove duplicate plugin instances. Shockbyte evidence is user-provided console output, not an agent-run RCON or process-map inspection. Ten-cycle testing, controlled failure fixtures and process-level unload checks were performed on the Docker worker as recorded above; those checks and long-term handle-leak/soak testing are not claimed for Shockbyte.
+
+## Next phase
+
+Proceed to Phase 1: VM creation/destruction, source compilation/execution, logging, sandboxing, memory limits, execution interrupts, and runtime status/reload, within the existing design. No Phase 1 features are included in this documentation update.

@@ -6,7 +6,7 @@ The first-version architecture and implementation brief is in [`docs/CarbonLuau_
 
 ## Status
 
-Phase 0 implements a native-loading probe, an explicit Windows/Linux loader, tests, and CI. Luau remains vendored but is not linked or executed. See [build and deployment instructions](docs/Phase0.md) and [actual validation results](docs/Phase0-Validation.md).
+Phase 0 is **PROVEN for the tested environments**: Windows x64, Linux x64 on the Docker worker, and the user's Shockbyte server. Native loading, the ABI probe, and unload/reload are confirmed. Phase 1 (the bounded Luau execution core) is cleared to begin. Luau remains vendored but is not yet linked or executed. See [build and deployment instructions](docs/Phase0.md) and [actual validation results](docs/Phase0-Validation.md).
 
 ## License
 

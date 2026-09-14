@@ -59,7 +59,9 @@ The probe is trusted project-owned native code. Catching managed exceptions cann
 
 ## Shockbyte acceptance
 
-No Shockbyte credentials or target server access were supplied. Docker validation establishes behavior on the tested self-managed Linux server only. Upload the Linux `.so` and `.cszip` to the exact paths above using the host's permitted file manager/SFTP, then load the plugin and retain the success or failure log. Perform at least ten unload/load cycles and check normal server responses between them. If the provider prohibits custom native libraries or the loader reports an enforced restriction, retain that exact error and mark Phase 0 BLOCKED for that host. Do not change host policy or attempt a bypass.
+The user's Shockbyte target has passed the Phase 0 native-load feasibility gate. The tested artifacts were uploaded and hash-verified beneath the SFTP prefix `/1. Roost/carbon`; the server reports the native path beneath `/server/carbon`. User-provided console logs confirm the correct probe value and successful unload/reload. See the validation record for timestamps and the limits of that evidence.
+
+For a new host or future revalidation, upload the Linux `.so` and `.cszip` to the exact paths above using the host's permitted file manager/SFTP, then retain the load and reload logs. Ten unload/load cycles with normal server responses between them remain the extended validation checklist. If a provider prohibits custom native libraries or reports an enforced restriction, record the exact error and mark that deployment blocked; do not change host policy or attempt a bypass.
 
 Actual run results, paths and limitations are recorded in [Phase0-Validation.md](Phase0-Validation.md).
 
