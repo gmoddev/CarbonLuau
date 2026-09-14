@@ -28,7 +28,7 @@ static ClResult Execute(ClHandle Vm, const char* Source, ClStatus Expected, uint
 int main()
 {
     ClVmConfig Config{16 * 1024 * 1024};
-    Check(carbonluau_abi_version() == 0x00010001, "ABI version (compatible 1.1 extension)");
+    Check(carbonluau_abi_version() == 0x00010002, "ABI version (compatible 1.2 extension)");
     for (int Index = 0; Index < 1000; ++Index) {
         ClHandle Vm = 0;
         Check(cl_vm_create(&Config, &Vm) == CL_OK && Vm, "create");

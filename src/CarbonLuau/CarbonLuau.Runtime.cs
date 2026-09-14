@@ -79,6 +79,7 @@ namespace Carbon.Plugins
             private readonly int Owner = Thread.CurrentThread.ManagedThreadId;
             private readonly HashSet<ulong> Vms = new HashSet<ulong>();
             private bool Disposed;
+            private bool InsideNative;
             public uint AbiVersion { get; private set; }
             public string Rid { get { return Loader.Rid; } }
             public string Revision { get; private set; }
@@ -123,6 +124,7 @@ namespace Carbon.Plugins
             {
                 if (Thread.CurrentThread.ManagedThreadId != Owner) throw new InvalidOperationException("runtime owner-thread required");
                 if (Disposed) throw new ObjectDisposedException("NativeRuntime");
+                if (InsideNative) throw new InvalidOperationException("native callback reentry prohibited");
             }
             private static void Require(RuntimeStatus Status)
             {
@@ -143,6 +145,7 @@ namespace Carbon.Plugins
                 CheckOwner();
                 if (!Vms.Contains(Handle)) return;
                 Require(DestroyVm(Handle));
+                FacadeRoots.Remove(Handle);
                 Vms.Remove(Handle);
                 DestroyedVmCount++;
             }
@@ -163,6 +166,7 @@ namespace Carbon.Plugins
                 ulong ThreadHandle = 0;
                 NativeResult Value = new NativeResult();
                 RuntimeStatus Status;
+                InsideNative = true;
                 try
                 {
                     Status = LoadSource(Handle, Chunk, Bytes, (uint)Bytes.Length, out ThreadHandle, out Value);
@@ -171,11 +175,12 @@ namespace Carbon.Plugins
                 }
                 finally
                 {
-                    if (ThreadHandle != 0)
-                    {
-                        RuntimeStatus Cleanup = DestroyThread(ThreadHandle);
-                        if (Cleanup != RuntimeStatus.OK && !((Value.Flags & 1) != 0 && Cleanup == RuntimeStatus.INVALID_ARGUMENT)) Require(Cleanup);
-                    }
+                    try {
+                        if (ThreadHandle != 0) {
+                            RuntimeStatus Cleanup = DestroyThread(ThreadHandle);
+                            if (Cleanup != RuntimeStatus.OK && !((Value.Flags & 1) != 0 && Cleanup == RuntimeStatus.INVALID_ARGUMENT)) Require(Cleanup);
+                        }
+                    } finally { InsideNative = false; }
                 }
             }
             public void Dispose()

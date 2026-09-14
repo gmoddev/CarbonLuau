@@ -1,4 +1,4 @@
-name: Phase 0, 1 and 2
+name: Phase 0 through 3
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -31,10 +31,10 @@ jobs:
         run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
       - name: Windows runtime tests
         if: runner.os == 'Windows'
-        run: ./dist/runtime/RuntimeTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongAbi.dll" "$pwd/build/Release/LegacyProbe.dll"
+        run: ./dist/runtime/RuntimeTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongAbi.dll" "$pwd/build/Release/LegacyProbe.dll" "$pwd"
       - name: Linux runtime tests
         if: runner.os == 'Linux'
-        run: mono dist/runtime/RuntimeTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongAbi.so" "$PWD/build/libLegacyProbe.so"
+        run: mono dist/runtime/RuntimeTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongAbi.so" "$PWD/build/libLegacyProbe.so" "$PWD"
       - name: Windows loader tests
         if: runner.os == 'Windows'
         run: ./dist/tests/LoaderTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongProbe.dll" "$pwd/build/Release/MissingSymbol.dll"
@@ -48,13 +48,15 @@ jobs:
         run: |
           ./tools/package.ps1
           ./tools/Test-Package.ps1 -Package dist/CarbonLuau.cszip
+          ./tools/Test-Api.ps1
       - uses: actions/upload-artifact@v4
         with:
-          name: phase2-${{ matrix.os }}
+          name: phase3-${{ matrix.os }}
           if-no-files-found: error
           path: |
             dist/CarbonLuau.cszip
             dist/scripts/
+            dist/examples/
             build/Release/carbonluau_native.dll
             build/libcarbonluau_native.so
   sanitizers:

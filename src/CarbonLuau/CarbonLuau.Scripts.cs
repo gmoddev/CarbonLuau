@@ -145,7 +145,10 @@ namespace Carbon.Plugins
             public ExecutionResult Callback(ulong Handle, SchedulerInfo Cutoff, int Milliseconds, out bool Attempted)
             {
                 CheckOwner(); uint Ran; NativeResult Value;
-                RuntimeStatus Status = RunCallback(Handle, Cutoff.NowNs, Cutoff.Sequence, (ulong)Milliseconds * 1000000, out Ran, out Value);
+                RuntimeStatus Status;
+                InsideNative = true;
+                try { Status = RunCallback(Handle, Cutoff.NowNs, Cutoff.Sequence, (ulong)Milliseconds * 1000000, out Ran, out Value); }
+                finally { InsideNative = false; }
                 Attempted = Ran != 0; return ExecutionResult.FromNative(Status, Value);
             }
         }
@@ -162,20 +165,30 @@ namespace Carbon.Plugins
             private readonly NativeRuntime Native;
             private readonly RuntimeConfig Settings;
             private readonly Func<ScriptSnapshot> ReadSnapshot;
+            private readonly FacadeWorld Facade;
             private RuntimeGeneration Current;
             private bool Disposed, Draining, RecoveryAvailable;
+            public bool Busy { get; private set; }
+            private bool StopRequested;
+            public void RequestStop() { StopRequested = true; }
             private long NextGeneration;
             private string Entry = "", Reason = "not initialized", LastReload = "none";
             public ulong Attempted, Completed, Failed, Cancelled, Invalidated, Rejected, BudgetOverruns, Recoveries, Timeouts;
             public long Generation { get { return Current == null ? 0 : Current.Number; } }
-            public bool Ready { get { return !Disposed && Current != null && Current.Info.Ready != 0; } }
-            public bool HasWork { get { return Ready && Current.Scheduler.Queued != 0; } }
-            public ScriptHost(NativeRuntime Native, RuntimeConfig Config, Func<ScriptSnapshot> ReadSnapshot)
-            { this.Native = Native; Settings = Config.Validate(); this.ReadSnapshot = ReadSnapshot; }
+            public bool Ready { get { return !Disposed && !StopRequested && Current != null && Current.Info.Ready != 0; } }
+            public bool HasWork { get { return Ready && (Current.Scheduler.Queued != 0 || (Current.FacadeSession != null && Current.FacadeSession.HasWork)); } }
+            public ScriptHost(NativeRuntime Native, RuntimeConfig Config, Func<ScriptSnapshot> ReadSnapshot, FacadeWorld Facade = null)
+            { this.Native = Native; Settings = Config.Validate(); this.ReadSnapshot = ReadSnapshot; this.Facade = Facade; }
             private void Release(bool Replaced)
             {
                 RuntimeGeneration Old = Current; Current = null;
                 if (Old == null) return;
+                if (Old.FacadeSession != null) {
+                    Cancelled += (ulong)Old.FacadeSession.PendingCount;
+                    if (Replaced) Invalidated += (ulong)Old.FacadeSession.PendingCount;
+                    Rejected += Old.FacadeSession.Rejected;
+                    Facade.Retire(Old.FacadeSession);
+                }
                 var Info = Old.Scheduler;
                 Cancelled += Info.Queued + Info.Discarded;
                 if (Replaced) Invalidated += Info.Queued + Info.Discarded;
@@ -188,20 +201,24 @@ namespace Carbon.Plugins
             private ExecutionResult Replace(bool Operator, string Override)
             {
                 Native.CheckOwner();
-                if (Disposed || !Settings.Enabled) return new ExecutionResult { Status = RuntimeStatus.INVALID_ARGUMENT, Error = "disabled/unloaded" };
+                if (Disposed || StopRequested || !Settings.Enabled || Busy) return new ExecutionResult { Status = RuntimeStatus.INVALID_ARGUMENT, Error = "disabled/unloaded/busy" };
                 RuntimeGeneration Candidate = null;
+                Busy = true;
                 try {
                     ScriptSnapshot Snapshot = ReadSnapshot();
                     Candidate = new RuntimeGeneration(Native, checked(++NextGeneration), Settings);
                     Candidate.Scripts(Settings, Snapshot);
+                    if (Facade != null) Candidate.Facade(new FacadeSession(Facade, Candidate.Number, Settings.MaxQueuedCallbacks));
                     // Chunk identity is logical, not an absolute filesystem path.
                     ExecutionResult Result = Candidate.Execute("entry." + Snapshot.EntryName.Replace('/', '.'), Override ?? Snapshot.EntrySource, Settings.MaxCallbackMilliseconds);
                     Result.Generation = Candidate.Number;
+                    if (StopRequested) { Result.Status = RuntimeStatus.INVALID_ARGUMENT; Result.Error = "host stopping"; }
                     if (Result.Status != RuntimeStatus.OK) {
                         Result.Logs = ""; LastReload = "rejected: " + Result.Status;
                         if (Current == null) Reason = LastReload;
                         return Result;
                     }
+                    if (Facade != null) Facade.Commit(Candidate.FacadeSession);
                     Release(true);
                     Current = Candidate; Candidate = null; Entry = Snapshot.EntryName;
                     Reason = null; LastReload = Operator ? "operator OK" : "recovery OK";
@@ -213,7 +230,13 @@ namespace Carbon.Plugins
                     // emits curated InvalidOperationException diagnostics only.
                     return new ExecutionResult { Status = RuntimeStatus.INTERNAL_ERROR,
                         Error = Error is InvalidOperationException ? Error.Message.Substring(0, Math.Min(1024, Error.Message.Length)) : "source snapshot/native initialization failed" };
-                } finally { if (Candidate != null) Candidate.Dispose(); }
+                } finally {
+                    if (Candidate != null) {
+                        if (Candidate.FacadeSession != null) Facade.Retire(Candidate.FacadeSession);
+                        Candidate.Dispose();
+                    }
+                    Busy = false;
+                }
             }
             private ExecutionResult Recover()
             {
@@ -227,8 +250,12 @@ namespace Carbon.Plugins
             public ExecutionResult Execute(string Chunk, string Source)
             {
                 Native.CheckOwner();
-                if (!Ready) return new ExecutionResult { Status = RuntimeStatus.INVALID_ARGUMENT, Error = Reason };
-                var Result = Current.Execute(Chunk, Source, Settings.MaxCallbackMilliseconds); Result.Generation = Generation;
+                if (!Ready || Busy) return new ExecutionResult { Status = RuntimeStatus.INVALID_ARGUMENT, Error = Reason ?? "runtime busy" };
+                ExecutionResult Result;
+                Busy = true;
+                try { Result = Current.Execute(Chunk, Source, Settings.MaxCallbackMilliseconds); }
+                finally { Busy = false; }
+                Result.Generation = Generation;
                 if (Result.Retired || Current.Info.Ready == 0) {
                     if (Result.Status == RuntimeStatus.TIMEOUT) Timeouts++;
                     var Recovery = Recover(); Result.Error += "; recovery=" + (Recovery == null ? "exhausted" : Recovery.Status.ToString());
@@ -242,9 +269,15 @@ namespace Carbon.Plugins
                 if (!Ready || Draining) return Results;
                 Draining = true;
                 try {
-                    var Watch = Stopwatch.StartNew(); SchedulerInfo Cutoff = Current.Scheduler;
-                    for (int Count = 0; Count < 256 && Watch.Elapsed.TotalMilliseconds < Settings.FrameDrainBudgetMilliseconds; ++Count) {
-                        bool Ran; var Result = Current.Callback(Cutoff, Settings.MaxCallbackMilliseconds, out Ran);
+                    var Watch = Stopwatch.StartNew();
+                    if (Current.FacadeSession != null) Current.FacadeSession.Flush(Current, Watch, Settings.FrameDrainBudgetMilliseconds);
+                    if (Current.Info.Ready == 0) { var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery); return Results; }
+                    SchedulerInfo Cutoff = Current.Scheduler;
+                    for (int Count = 0; Count < 256 && !StopRequested && Watch.Elapsed.TotalMilliseconds < Settings.FrameDrainBudgetMilliseconds; ++Count) {
+                        bool Ran; ExecutionResult Result;
+                        Busy = true;
+                        try { Result = Current.Callback(Cutoff, Settings.MaxCallbackMilliseconds, out Ran); }
+                        finally { Busy = false; }
                         if (!Ran) break;
                         Result.Generation = Generation; Attempted++;
                         if (Result.Status == RuntimeStatus.OK) Completed++; else Failed++;
@@ -265,14 +298,16 @@ namespace Carbon.Plugins
                 Native.CheckOwner(); bool Healthy = Ready;
                 SchedulerInfo Info = Healthy ? Current.Scheduler : new SchedulerInfo();
                 return "CarbonLuau: " + (Healthy ? "ready" : "unavailable") + "\nGeneration: " + Generation + "\nEntrypoint: " + Entry
-                    + "\nNative ABI: 1.1 OK\nLuau: " + Native.Revision + "\nReason: " + (Reason ?? "none")
+                    + "\nNative ABI: " + (Native.AbiVersion >> 16) + "." + (Native.AbiVersion & 65535) + " OK\nLuau: " + Native.Revision + "\nReason: " + (Reason ?? "none")
+                    + (Facade == null ? "" : "\nScripting API: " + FacadePolicy.ApiName + " " + FacadePolicy.ApiVersion)
                     + "\nVM bytes: " + (Healthy ? Current.Info.MemoryBytes : 0) + " / " + ((long)Settings.MaxVmMemoryMiB * 1048576)
                     + "\nCallback deadline: " + Settings.MaxCallbackMilliseconds + " ms; frame budget: " + Settings.FrameDrainBudgetMilliseconds + " ms"
                     + "\nQueued: " + Info.Queued + "; modules: " + Info.Modules + "; last reload: " + LastReload
-                    + "\nCallbacks attempted/completed/failed/cancelled/invalidated/rejected: " + Attempted + "/" + Completed + "/" + Failed + "/" + Cancelled + "/" + Invalidated + "/" + (Rejected + Info.Rejected)
+                    + "\nCallbacks attempted/completed/failed/cancelled/invalidated/rejected: " + Attempted + "/" + Completed + "/" + Failed + "/" + Cancelled + "/" + Invalidated + "/" + (Rejected + Info.Rejected + (Healthy && Current.FacadeSession != null ? Current.FacadeSession.Rejected : 0))
+                    + (Healthy && Current.FacadeSession != null ? "\nFacade pending/listeners/commands: " + Current.FacadeSession.PendingCount + "/" + Current.FacadeSession.ListenerCount + "/" + Current.FacadeSession.Commands.Count : "")
                     + "\nTimeouts: " + Timeouts + "; recoveries: " + Recoveries + "; recovery available: " + RecoveryAvailable + "; budget overruns: " + BudgetOverruns;
             }
-            public void Dispose() { if (Disposed) return; Native.CheckOwner(); Disposed = true; RecoveryAvailable = false; Release(false); Reason = "unloaded"; }
+            public void Dispose() { if (Disposed) return; Native.CheckOwner(); if (Busy) throw new InvalidOperationException("runtime busy; defer teardown until execution returns"); Disposed = true; RecoveryAvailable = false; Release(false); Reason = "unloaded"; }
         }
     }
 }

@@ -7,6 +7,22 @@ static void Check(bool Condition, const char* Message)
 {
     if (!Condition) { std::fprintf(stderr, "[CarbonLuau:FaultTest] FAIL: %s\n", Message); std::exit(1); }
 }
+static unsigned FixtureRegistration = 0;
+static uint32_t FixtureHost(uint64_t, uint32_t Operation, const char*, uint32_t, char* Output, uint32_t Capacity, uint32_t* Written)
+{
+    const char* Value = ""; size_t Length = 0;
+    static const char Player[] = "1\00076561198000000001\000Fixture\000";
+    static const char Info[] = "1\000Fixture\000";
+    static const char Id[] = "1\000";
+    if (Operation == 1 || Operation == 2) { Value = Player; Length = sizeof(Player) - 1; }
+    else if (Operation == 3) { Value = Info; Length = sizeof(Info) - 1; }
+    else if (Operation == 5) { Value = Id; Length = sizeof(Id) - 1; }
+    else if (Operation == 6 || Operation == 8) {
+        *Written = uint32_t(std::snprintf(Output, Capacity, "%u", ++FixtureRegistration) + 1); return 0;
+    }
+    if (Length > Capacity) return 1;
+    std::memcpy(Output, Value, Length); *Written = uint32_t(Length); return 0;
+}
 int main()
 {
     Vm Budget;
@@ -75,5 +91,50 @@ int main()
         TestAllocationFailureAfter = -1;
         Check(cl_vm_destroy(Handle) == CL_OK && !TestLiveBytes, "script partial teardown retains zero bytes");
     }
-    std::printf("[CarbonLuau:FaultTest] PASS: realloc growth/shrink/failure/overflow/free; 256 init fault positions (%d failed); 64 load; 768 script/module/callback fault positions; zero retained allocator bytes\n", Failed);
+    for (int Mode = 0; Mode < 4; ++Mode) for (int Position = 0; Position < 256; ++Position) {
+        TestAllocationFailureAfter = -1;
+        ClHandle Handle = 0, ThreadHandle = 0; ClResult Result{};
+        Check(cl_vm_create(&Config, &Handle) == CL_OK && cl_vm_scripts(Handle, 256) == CL_OK, "facade fault VM");
+        if (Mode == 0) TestAllocationFailureAfter = Position;
+        FixtureRegistration = 0;
+        ClStatus Status = cl_vm_facade(Handle, 1, FixtureHost);
+        Check(Status == CL_OK || Status == CL_MEMORY_LIMIT, "facade installation fault contained");
+        if (Status == CL_OK && Mode != 0) {
+            const char* Source = "local P=game:GetService('Players'); local V=P:GetPlayers()[1]; assert(V.IsConnected); P.PlayerAdded:Connect(function(A) assert(A.UserId==V.UserId); A:SendMessage('ok') end); game:GetService('Commands'):Register('hello',{},function(C) assert(C.Player.IsConnected) end)";
+            Check(cl_vm_load_source(Handle,"facade.fault",Source,uint32_t(std::strlen(Source)),&ThreadHandle,&Result)==CL_OK,"facade source");
+            if (Mode == 1) TestAllocationFailureAfter = Position;
+            Status = cl_thread_resume(ThreadHandle,100000000,&Result);
+            Check(Status==CL_OK || Status==CL_MEMORY_LIMIT || Status==CL_RUNTIME_ERROR,"facade entry allocation contained");
+            TestAllocationFailureAfter = -1;
+            cl_thread_destroy(ThreadHandle);
+            if (Mode >= 2) {
+                static const char Event[] = "added\0001\0001\00076561198000000001\000Fixture\000";
+                if (Mode == 2) TestAllocationFailureAfter = Position;
+                Status=cl_vm_event(Handle,Event,sizeof(Event)-1);
+                Check(Status==CL_OK || Status==CL_MEMORY_LIMIT,"facade admission allocation contained");
+                if (Status==CL_OK && Mode == 3) {
+                    ClSchedulerInfo Info{}; Check(cl_vm_scheduler(Handle,&Info)==CL_OK,"facade queue");
+                    TestAllocationFailureAfter = Position; uint32_t Ran=0;
+                    Status=cl_vm_callback(Handle,Info.NowNs,Info.Sequence,100000000,&Ran,&Result);
+                    Check(Ran && (Status==CL_OK || Status==CL_MEMORY_LIMIT || Status==CL_RUNTIME_ERROR),"facade callback allocation contained");
+                }
+            }
+        }
+        TestAllocationFailureAfter=-1;
+        Check(cl_vm_destroy(Handle)==CL_OK && !TestLiveBytes,"facade teardown has zero retained bytes");
+    }
+    {
+        ClHandle Handle=0, ThreadHandle=0; ClResult Result{}; FixtureRegistration=0;
+        Check(cl_vm_create(&Config,&Handle)==CL_OK && cl_vm_scripts(Handle,64)==CL_OK && cl_vm_facade(Handle,1,FixtureHost)==CL_OK,"facade timeout VM");
+        const char* Source="game:GetService('Players').PlayerAdded:Connect(function(P) assert(P.IsConnected); while true do end end)";
+        Check(cl_vm_load_source(Handle,"facade.timeout",Source,uint32_t(std::strlen(Source)),&ThreadHandle,&Result)==CL_OK && cl_thread_resume(ThreadHandle,100000000,&Result)==CL_OK,"facade timeout setup");
+        Check(cl_thread_destroy(ThreadHandle)==CL_OK,"facade timeout host thread release");
+        static const char Event[]="added\0001\0001\00076561198000000001\000Fixture\000";
+        Check(cl_vm_event(Handle,Event,sizeof(Event)-1)==CL_OK,"facade timeout admission");
+        ClSchedulerInfo Info{}; cl_vm_scheduler(Handle,&Info); uint32_t Ran=0;
+        Check(cl_vm_callback(Handle,Info.NowNs,Info.Sequence,3000000,&Ran,&Result)==CL_TIMEOUT && Ran && (Result.Flags&1),"facade callback timeout retires whole VM");
+        Check(cl_vm_event(Handle,Event,sizeof(Event)-1)==CL_INVALID_ARGUMENT,"retired facade rejects late event");
+        Check(cl_vm_destroy(Handle)==CL_OK && !TestLiveBytes,"facade timeout teardown zero bytes");
+    }
+    std::printf("[CarbonLuau:FaultTest] PASS: realloc growth/shrink/failure/overflow/free; 256 init fault positions (%d failed); 64 load; 768 script/module/callback + 1024 facade fault positions; facade event timeout; zero retained allocator bytes\n", Failed);
 }

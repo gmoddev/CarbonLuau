@@ -62,6 +62,7 @@ internal static class Program
                 Generation.Dispose(); Generation.Dispose();
                 Check(Generation.Execute("stale", "return 3", 3).Status == Runtime.RuntimeStatus.INVALID_ARGUMENT, "stale managed generation");
                 ScriptTests.Run(Native, Root);
+                FacadeTests.Run(Native, Args.Length > 3 ? Args[3] : null);
                 Native.Dispose(); Native.Dispose();
             }
             File.Delete(Library);
