@@ -12,9 +12,17 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <map>
+#include <vector>
+#include <algorithm>
+#include <cmath>
 
 namespace {
 constexpr uint64_t MiB = 1024 * 1024;
+struct Module { std::string Source; int Reference = LUA_NOREF; bool Loading = false, Loaded = false; };
+struct Callback { uint64_t Due, Sequence; lua_State* Thread; int Reference, Arguments; };
+struct Later { bool operator()(const Callback& A, const Callback& B) const {
+    return A.Due > B.Due || (A.Due == B.Due && A.Sequence > B.Sequence); } };
 struct Vm {
     uint64_t Id = 0;
     std::thread::id Owner = std::this_thread::get_id();
@@ -31,7 +39,24 @@ struct Vm {
     char Logs[4096]{};
     size_t LogSize = 0;
     bool LogTruncated = false;
-    ~Vm() { if (State) lua_close(State); }
+    bool Scripts = false, Sealed = false;
+    uint32_t MaxQueued = 0;
+    uint64_t Sequence = 0, Rejected = 0, Discarded = 0;
+    size_t SourceBytes = 0;
+    std::map<std::string, Module> Modules;
+    std::vector<std::string> Loading;
+    std::vector<Callback> Queue;
+    ~Vm() {
+        if (State) {
+            lua_callbacks(State)->interrupt = nullptr;
+            for (const auto& Work : Queue) lua_unref(State, Work.Reference);
+            Queue.clear();
+            for (const auto& Entry : Modules) if (Entry.second.Loaded) lua_unref(State, Entry.second.Reference);
+            Modules.clear();
+            if (Reference != LUA_NOREF) lua_unref(State, Reference);
+            lua_close(State);
+        }
+    }
 };
 std::mutex RegistryMutex;
 std::array<std::unique_ptr<Vm>, 32> Registry;
@@ -162,6 +187,10 @@ int Initialize(lua_State* State)
 
 void Retire(Vm& Runtime)
 {
+    Runtime.Discarded += Runtime.Queue.size();
+    Runtime.Queue.clear();
+    Runtime.Modules.clear();
+    Runtime.Loading.clear();
     Runtime.Thread = nullptr;
     Runtime.ThreadId = 0;
     Runtime.Reference = LUA_NOREF;
@@ -185,7 +214,8 @@ int CreateThread(lua_State* State)
 }
 int SandboxThread(lua_State* State) { luaL_sandboxthread(State); return 0; }
 int Collect(lua_State* State) { lua_gc(State, LUA_GCCOLLECT, 0); return 0; }
-void ReleaseThread(Vm& Runtime)
+int StepCollect(lua_State* State) { lua_gc(State, LUA_GCSTEP, 16); return 0; }
+void ReleaseThread(Vm& Runtime, bool Full = true)
 {
     Runtime.Thread = nullptr;
     Runtime.ThreadId = 0;
@@ -194,12 +224,13 @@ void ReleaseThread(Vm& Runtime)
     Runtime.Reference = LUA_NOREF;
     // No script callbacks/finalizers exist in this surface. Reclaim failed
     // execution environments, coroutine stacks and allocation-bomb objects.
-    if (lua_cpcall(Runtime.State, Collect, nullptr) != LUA_OK) Retire(Runtime);
+    if (lua_cpcall(Runtime.State, Full ? Collect : StepCollect, nullptr) != LUA_OK) Retire(Runtime);
     else lua_settop(Runtime.State, 0);
 }
+#include "Scripts.inl"
 }
 
-uint32_t carbonluau_abi_version(void) { return 0x00010000; }
+uint32_t carbonluau_abi_version(void) { return 0x00010001; }
 ClStatus cl_luau_revision(char* Buffer, uint32_t Capacity)
 {
     if (!Buffer || Capacity < sizeof(CARBONLUAU_REVISION)) return CL_INVALID_ARGUMENT;
@@ -269,6 +300,7 @@ ClStatus cl_vm_load_source(ClHandle Id, const char* Chunk, const char* Source, u
     Vm* Runtime = GetVm(Id);
     if (!Runtime || Runtime->ThreadId) return CL_INVALID_ARGUMENT;
     if (!Runtime->State) { Result->Flags = 1; return CL_INTERNAL_ERROR; }
+    Runtime->Sealed = true;
     std::memcpy(Runtime->Chunk, Chunk, ChunkLength + 1);
     Runtime->AllocationFailed = false;
     try {
@@ -311,6 +343,94 @@ ClStatus cl_vm_load_source(ClHandle Id, const char* Chunk, const char* Source, u
         Result->Flags = 1;
         return Memory ? CL_MEMORY_LIMIT : CL_INTERNAL_ERROR;
     }
+} catch (...) { return CL_INTERNAL_ERROR; }
+
+ClStatus cl_vm_scripts(ClHandle Id, uint32_t MaxQueued) try
+{
+    std::lock_guard<std::mutex> Lock(RegistryMutex);
+    Vm* Runtime = GetVm(Id);
+    if (!Runtime || !Runtime->State || Runtime->Sealed || Runtime->Scripts || MaxQueued < 1 || MaxQueued > 4096) return CL_INVALID_ARGUMENT;
+    Runtime->Queue.reserve(MaxQueued);
+    Runtime->Loading.reserve(32);
+    Runtime->MaxQueued = MaxQueued;
+    if (lua_cpcall(Runtime->State, InstallScripts, nullptr) != LUA_OK) { Retire(*Runtime); return CL_MEMORY_LIMIT; }
+    lua_settop(Runtime->State, 0);
+    Runtime->Scripts = true;
+    return CL_OK;
+} catch (...) { return CL_INTERNAL_ERROR; }
+
+ClStatus cl_vm_module(ClHandle Id, const char* Name, const char* Source, uint32_t Length) try
+{
+    if (!Name || !Source || Length > 65536) return CL_INVALID_ARGUMENT;
+    std::lock_guard<std::mutex> Lock(RegistryMutex);
+    Vm* Runtime = GetVm(Id);
+    if (!Runtime || !Runtime->State || !Runtime->Scripts || Runtime->Sealed || Runtime->Modules.size() >= 256 ||
+        Runtime->SourceBytes + Length > 4 * MiB || !ModuleName(Name, 128)) return CL_INVALID_ARGUMENT;
+    auto Added = Runtime->Modules.emplace(Name, Module{std::string(Source, Length)});
+    if (!Added.second) return CL_INVALID_ARGUMENT;
+    Runtime->SourceBytes += Length;
+    return CL_OK;
+} catch (...) { return CL_INTERNAL_ERROR; }
+
+ClStatus cl_vm_scheduler(ClHandle Id, ClSchedulerInfo* Info) try
+{
+    if (!Info) return CL_INVALID_ARGUMENT;
+    *Info = {};
+    std::lock_guard<std::mutex> Lock(RegistryMutex);
+    Vm* Runtime = GetVm(Id);
+    if (!Runtime || !Runtime->Scripts) return CL_INVALID_ARGUMENT;
+    Info->NowNs = NowNs(); Info->Sequence = Runtime->Sequence;
+    Info->Queued = Runtime->Queue.size(); Info->Rejected = Runtime->Rejected;
+    Info->Discarded = Runtime->Discarded;
+    Info->NextDueNs = Runtime->Queue.empty() ? 0 : Runtime->Queue.front().Due;
+    for (const auto& Entry : Runtime->Modules) if (Entry.second.Loaded) ++Info->Modules;
+    return CL_OK;
+} catch (...) { return CL_INTERNAL_ERROR; }
+
+ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint64_t BudgetNs,
+    uint32_t* Ran, ClResult* Result) try
+{
+    if (Ran) *Ran = 0;
+    if (Result) *Result = {};
+    if (!Ran || !Result || BudgetNs < 1000000 || BudgetNs > 100000000) return CL_INVALID_ARGUMENT;
+    std::lock_guard<std::mutex> Lock(RegistryMutex);
+    Vm* Runtime = GetVm(Id);
+    if (!Runtime || !Runtime->State || !Runtime->Scripts || Runtime->ThreadId) return CL_INVALID_ARGUMENT;
+    if (Runtime->Queue.empty() || Runtime->Queue.front().Due > CutoffNs || Runtime->Queue.front().Sequence > Sequence) return CL_OK;
+    std::pop_heap(Runtime->Queue.begin(), Runtime->Queue.end(), Later{});
+    Callback Work = Runtime->Queue.back(); Runtime->Queue.pop_back();
+    *Ran = 1;
+    Runtime->Thread = Work.Thread; Runtime->Reference = Work.Reference;
+    Runtime->LogSize = 0; Runtime->Logs[0] = 0; Runtime->LogTruncated = false;
+    Runtime->AllocationFailed = false;
+    std::snprintf(Runtime->Chunk, sizeof(Runtime->Chunk), "scheduled-%llu", (unsigned long long)Work.Sequence);
+    Runtime->Deadline = std::chrono::steady_clock::now() + std::chrono::nanoseconds(BudgetNs);
+    lua_callbacks(Runtime->State)->interrupt = Interrupt;
+    ClStatus Status;
+    try {
+        int Code = lua_resume(Work.Thread, nullptr, Work.Arguments);
+        lua_callbacks(Runtime->State)->interrupt = nullptr;
+        if (Runtime->AllocationFailed || Code == LUA_ERRMEM) {
+            Status = CL_MEMORY_LIMIT; Diagnostic(*Runtime, *Result, "callback memory limit", Work.Thread);
+        } else if (Code == LUA_OK) Status = CL_OK;
+        else {
+            Status = CL_RUNTIME_ERROR;
+            const char* Message = Code == LUA_YIELD ? "scheduled callbacks cannot yield" :
+                (lua_type(Work.Thread, -1) == LUA_TSTRING ? lua_tostring(Work.Thread, -1) : "callback non-string error");
+            Diagnostic(*Runtime, *Result, Message, Work.Thread);
+        }
+        ReleaseThread(*Runtime, Status == CL_MEMORY_LIMIT);
+        if (!Runtime->State) Result->Flags |= 1;
+    } catch (const DeadlineExceeded&) {
+        Status = CL_TIMEOUT; Diagnostic(*Runtime, *Result, "callback deadline exceeded; VM retired");
+        Retire(*Runtime); Result->Flags |= 1;
+    } catch (...) {
+        Status = CL_INTERNAL_ERROR; Diagnostic(*Runtime, *Result, "callback native failure; VM retired");
+        Retire(*Runtime); Result->Flags |= 1;
+    }
+    std::memcpy(Result->Logs, Runtime->Logs, sizeof(Result->Logs));
+    if (Runtime->LogTruncated) Result->Flags |= 2;
+    return Status;
 } catch (...) { return CL_INTERNAL_ERROR; }
 
 ClStatus cl_thread_resume(ClHandle Id, uint64_t BudgetNs, ClResult* Result) try

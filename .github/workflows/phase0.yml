@@ -1,4 +1,4 @@
-name: Phase 0 and 1
+name: Phase 0, 1 and 2
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -50,10 +50,11 @@ jobs:
           ./tools/Test-Package.ps1 -Package dist/CarbonLuau.cszip
       - uses: actions/upload-artifact@v4
         with:
-          name: phase1-${{ matrix.os }}
+          name: phase2-${{ matrix.os }}
           if-no-files-found: error
           path: |
             dist/CarbonLuau.cszip
+            dist/scripts/
             build/Release/carbonluau_native.dll
             build/libcarbonluau_native.so
   sanitizers:

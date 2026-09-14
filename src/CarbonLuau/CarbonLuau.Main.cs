@@ -2,14 +2,17 @@ using System;
 
 namespace Carbon.Plugins
 {
-    [Info("CarbonLuau", "gmoddev", "0.1.0")]
-    [Description("Phase 1 bounded sandboxed Luau execution core")]
+    [Info("CarbonLuau", "gmoddev", "0.2.0")]
+    [Description("Bounded Luau scripts, modules and generation-owned tasks")]
     public partial class CarbonLuau : CarbonPlugin
     {
         private NativeRuntime Native;
-        private RuntimeHost Host;
+        private ScriptHost Host;
         private RuntimeConfig Settings;
         private bool Attempted, Initialized;
+        private bool Stopping, DrainScheduled;
+        private long ErrorWindow;
+        private int ErrorCount;
         private string UnavailableReason = "not initialized";
 
         protected override void LoadDefaultConfig() { Config.WriteObject(new RuntimeConfig(), true); }
@@ -37,8 +40,8 @@ namespace Carbon.Plugins
             try
             {
                 Native = new NativeRuntime(Oxide.Core.Interface.Oxide.DataDirectory);
-                Host = new RuntimeHost(Native, Settings);
-                Puts("[CarbonLuau:Native] Native probe loaded successfully. Platform: " + Native.Rid + "; ABI: 1.0");
+                Host = new ScriptHost(Native, Settings, () => ScriptSnapshot.Load(Oxide.Core.Interface.Oxide.DataDirectory, Settings));
+                Puts("[CarbonLuau:Native] Native probe loaded successfully. Platform: " + Native.Rid + "; ABI: 1.1");
             }
             catch (Exception Error)
             {
@@ -59,6 +62,7 @@ namespace Carbon.Plugins
                 ExecutionResult Result = Host.Reload();
                 Report("bootstrap", Result);
                 if (Result.Status == RuntimeStatus.OK) Puts("[CarbonLuau:Runtime] Ready; generation=" + Host.Generation);
+                RequestDrain();
             }
             catch (Exception Error) { PrintError("[CarbonLuau:Runtime] Initialization failed: " + Error.Message); }
         }
@@ -87,6 +91,7 @@ namespace Carbon.Plugins
             {
                 ExecutionResult Result = Host.Reload();
                 Report("bootstrap", Result);
+                RequestDrain();
                 Arg.ReplyWith("CarbonLuau: reload " + Result.Status + "; generation=" + Host.Generation);
             }
             catch (Exception Error)
@@ -100,6 +105,7 @@ namespace Carbon.Plugins
 
         private void ReleaseNative()
         {
+            Stopping = true;
             try
             {
                 if (Host != null) { Host.Dispose(); Host = null; }
@@ -110,6 +116,40 @@ namespace Carbon.Plugins
                 Native = null;
             }
             catch (Exception Error) { PrintError("[CarbonLuau:Native] Teardown failed; library retained for safety: " + Error.Message); }
+        }
+
+        private void RequestDrain()
+        {
+            if (Stopping || DrainScheduled || Host == null || !Host.HasWork) return;
+            DrainScheduled = true;
+            ScriptHost ExpectedHost = Host;
+            long ExpectedGeneration = Host.Generation;
+            NextFrame(() => {
+                DrainScheduled = false;
+                if (Stopping || Host != ExpectedHost) return;
+                try {
+                    if (Host.Generation == ExpectedGeneration) {
+                        int Logged = 0;
+                        foreach (ExecutionResult Result in Host.Drain()) {
+                            if (Result.Status != RuntimeStatus.OK) {
+                                long Now = System.Diagnostics.Stopwatch.GetTimestamp();
+                                if (Now - ErrorWindow >= System.Diagnostics.Stopwatch.Frequency * 60) { ErrorWindow = Now; ErrorCount = 0; }
+                                if (ErrorCount >= 5) {
+                                    if (ErrorCount == 5) { ErrorCount = 6; PrintWarning("[CarbonLuau:Scheduler] Further callback errors suppressed for this 60-second window; see status counters."); }
+                                    continue;
+                                }
+                                ErrorCount++;
+                            }
+                            if (Logged++ < 8) Report("scheduler", Result);
+                        }
+                        if (Logged > 8) PrintWarning("[CarbonLuau:Scheduler] Drain output limited to eight records.");
+                    }
+                    RequestDrain();
+                } catch (Exception) {
+                    PrintError("[CarbonLuau:Scheduler] Drain stopped after host-context failure; reload the plugin.");
+                    Stopping = true;
+                }
+            });
         }
     }
 }

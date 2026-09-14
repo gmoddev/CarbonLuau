@@ -6,6 +6,7 @@
   <ItemGroup>
     <Compile Include="../../src/CarbonLuau/CarbonLuau.Native.cs" Link="CarbonLuau.Native.cs" />
     <Compile Include="../../src/CarbonLuau/CarbonLuau.Runtime.cs" Link="CarbonLuau.Runtime.cs" />
+    <Compile Include="../../src/CarbonLuau/CarbonLuau.Scripts.cs" Link="CarbonLuau.Scripts.cs" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
 </Project>

@@ -13,8 +13,10 @@ compilation/execution, sandboxed libraries, bounded logging, VM memory caps,
 monotonic timeouts, and atomic runtime status/reload. See the [Phase 1 contract](docs/Phase1.md)
 and [validation evidence](docs/Phase1-Validation.md) for exact scope, CI status and limitations.
 
-Shockbyte Phase 1 is not yet qualified. No player API or other Phase 2 functionality
-is implemented; Phase 2 requires a new task.
+Phase 2 adds configured script loading, controlled modules, bounded tasks and
+transactional script generations. See the [Phase 2 contract](docs/Phase2.md) and
+[qualification record](docs/Phase2-Validation.md) for current results. No gameplay
+bindings or Phase 3 features are included. Shockbyte Phase 1/2 remain unqualified.
 
 ## License
 

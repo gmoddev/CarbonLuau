@@ -70,6 +70,16 @@ Resolve the relevant [decision gates](Invariants.md#decision-register) before en
 
 ## Phase 0 consistency review
 
+For current Phase 2 work, use the [Phase 2 contract](Phase2.md) and
+[qualification record](Phase2-Validation.md): package 0.2.0, additive native ABI
+1.1, controlled source snapshots/modules and generation-owned scheduling. Required
+coverage includes path/UTF-8/reparse confinement, module cache/cycles, queue and
+frame bounds, timeout recovery allowance, atomic replacement, native allocation
+faults/sanitizers, and live Windows/Linux Carbon reload/unload. Existing Phase 0/1
+fixtures remain in CI; ordinary CI does not claim to run a Rust server. Provider
+qualification remains separate. The historical consistency review below is not a
+description of the current Phase 2 feature set.
+
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:
 
 | Area | Finding |

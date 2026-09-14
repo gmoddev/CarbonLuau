@@ -46,5 +46,34 @@ int main()
         TestAllocationFailureAfter = -1;
         Check(cl_vm_destroy(Handle) == CL_OK && !TestLiveBytes, "load partial teardown");
     }
-    std::printf("[CarbonLuau:FaultTest] PASS: realloc growth/shrink/failure/overflow/free; 256 init fault positions (%d failed); 64 load fault positions; zero retained allocator bytes\n", Failed);
+    for (int Mode = 0; Mode < 3; ++Mode) for (int Position = 0; Position < 256; ++Position) {
+        TestAllocationFailureAfter = -1;
+        ClHandle Handle = 0, ThreadHandle = 0; ClResult Result{};
+        Check(cl_vm_create(&Config, &Handle) == CL_OK, "script fault VM");
+        if (Mode == 0) TestAllocationFailureAfter = Position;
+        ClStatus Status = cl_vm_scripts(Handle, 64);
+        Check(Status == CL_OK || Status == CL_MEMORY_LIMIT, "script setup failure contained");
+        if (Status == CL_OK && Mode != 0) {
+            const char* ModuleSource = "return {Value=42}";
+            Check(cl_vm_module(Handle, "value", ModuleSource, uint32_t(std::strlen(ModuleSource))) == CL_OK, "fault module source");
+            const char* Source = Mode == 1 ? "local V=require('value'); task.defer(function(A) assert(A==42) end,V.Value)" :
+                "task.defer(function() local V=require('value'); task.defer(function() assert(V.Value==42) end) end)";
+            Check(cl_vm_load_source(Handle,"fault",Source,uint32_t(std::strlen(Source)),&ThreadHandle,&Result)==CL_OK,"fault source load");
+            if (Mode == 1) TestAllocationFailureAfter = Position;
+            Status=cl_thread_resume(ThreadHandle,100000000,&Result);
+            Check(Status==CL_OK || Status==CL_MEMORY_LIMIT,"module/schedule fault contained");
+            TestAllocationFailureAfter=-1;
+            Check(cl_thread_destroy(ThreadHandle)==CL_OK,"fault thread release");
+            if (Mode == 2) {
+                ClSchedulerInfo Info{}; Check(cl_vm_scheduler(Handle,&Info)==CL_OK,"fault queue");
+                TestAllocationFailureAfter=Position;
+                uint32_t Ran=0;
+                Status=cl_vm_callback(Handle,Info.NowNs,Info.Sequence,100000000,&Ran,&Result);
+                Check(Ran && (Status==CL_OK || Status==CL_MEMORY_LIMIT),"callback module/schedule allocation contained");
+            }
+        }
+        TestAllocationFailureAfter = -1;
+        Check(cl_vm_destroy(Handle) == CL_OK && !TestLiveBytes, "script partial teardown retains zero bytes");
+    }
+    std::printf("[CarbonLuau:FaultTest] PASS: realloc growth/shrink/failure/overflow/free; 256 init fault positions (%d failed); 64 load; 768 script/module/callback fault positions; zero retained allocator bytes\n", Failed);
 }

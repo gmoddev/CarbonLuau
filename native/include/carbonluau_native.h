@@ -40,6 +40,19 @@ CARBONLUAU_EXPORT ClStatus cl_vm_load_source(ClHandle Vm, const char* Chunk, con
    Allowed 1..100 ms. A fresh budget is mandatory on every resume. */
 CARBONLUAU_EXPORT ClStatus cl_thread_resume(ClHandle Thread, uint64_t BudgetNs, ClResult* Result);
 CARBONLUAU_EXPORT ClStatus cl_thread_destroy(ClHandle Thread);
+/* ABI 1.1 additions. Script sources are snapshotted by the host before execution.
+   Native callback references never escape their owning VM. The managed scheduler
+   captures a cutoff and drives one callback per call, enforcing its frame budget. */
+typedef struct ClSchedulerInfo {
+    uint64_t NowNs, NextDueNs, Sequence, Queued, Modules, Rejected, Discarded;
+} ClSchedulerInfo;
+CARBONLUAU_EXPORT ClStatus cl_vm_scripts(ClHandle Vm, uint32_t MaxQueued);
+CARBONLUAU_EXPORT ClStatus cl_vm_module(ClHandle Vm, const char* Name, const char* Source, uint32_t Length);
+CARBONLUAU_EXPORT ClStatus cl_vm_scheduler(ClHandle Vm, ClSchedulerInfo* Info);
+/* No eligible callback: OK with Ran=0. Otherwise consumes/releases exactly one.
+   Cutoff time/sequence from scheduler() prevent same-drain recursive execution. */
+CARBONLUAU_EXPORT ClStatus cl_vm_callback(ClHandle Vm, uint64_t CutoffNs, uint64_t Sequence,
+    uint64_t BudgetNs, uint32_t* Ran, ClResult* Result);
 #ifdef __cplusplus
 }
 #endif

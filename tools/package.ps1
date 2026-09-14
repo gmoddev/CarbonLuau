@@ -18,3 +18,4 @@ try {
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }
 Write-Output $OutputPath
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../examples/scripts') -Destination $OutputDirectory -Recurse -Force

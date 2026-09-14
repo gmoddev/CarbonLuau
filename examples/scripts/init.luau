@@ -1,0 +1,8 @@
+local Message = require("message")
+print(Message)
+task.defer(function()
+    print("deferred callback")
+end)
+task.delay(0.1, function()
+    print("delayed callback")
+end)

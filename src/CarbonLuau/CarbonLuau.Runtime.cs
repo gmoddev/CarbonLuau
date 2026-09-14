@@ -14,13 +14,18 @@ namespace Carbon.Plugins
             public bool Enabled = true;
             public int MaxVmMemoryMiB = 64;
             public int MaxCallbackMilliseconds = 3;
+            public string ScriptRoot = "scripts", EntryScript = "init.luau", ModuleRoot = "modules";
+            public int FrameDrainBudgetMilliseconds = 5, MaxQueuedCallbacks = 4096;
 
             public RuntimeConfig Validate()
             {
                 return new RuntimeConfig {
                     Enabled = Enabled,
                     MaxVmMemoryMiB = Math.Max(16, Math.Min(256, MaxVmMemoryMiB)),
-                    MaxCallbackMilliseconds = Math.Max(1, Math.Min(100, MaxCallbackMilliseconds))
+                    MaxCallbackMilliseconds = Math.Max(1, Math.Min(100, MaxCallbackMilliseconds)),
+                    ScriptRoot = ScriptRoot, EntryScript = EntryScript, ModuleRoot = ModuleRoot,
+                    FrameDrainBudgetMilliseconds = Math.Max(1, Math.Min(20, FrameDrainBudgetMilliseconds)),
+                    MaxQueuedCallbacks = Math.Max(1, Math.Min(4096, MaxQueuedCallbacks))
                 };
             }
         }
@@ -68,7 +73,7 @@ namespace Carbon.Plugins
 
         // Owns the loaded library and all ABI bindings. No finalizer: destruction
         // must run on the owner thread, never on the managed GC thread.
-        public sealed class NativeRuntime : IDisposable
+        public sealed partial class NativeRuntime : IDisposable
         {
             private readonly NativeLibraryLoader Loader = new NativeLibraryLoader();
             private readonly int Owner = Thread.CurrentThread.ManagedThreadId;
@@ -184,7 +189,7 @@ namespace Carbon.Plugins
             }
         }
 
-        public sealed class RuntimeGeneration : IDisposable
+        public sealed partial class RuntimeGeneration : IDisposable
         {
             private readonly NativeRuntime Native;
             private ulong Handle;

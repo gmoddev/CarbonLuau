@@ -1175,14 +1175,15 @@ The `.cszip` must contain only the C# partial source files required by Carbon.
 
 No player APIs yet.
 
-### Phase 2 — bootstrap and event bridge
+### Phase 2 — scripts, modules and scheduler (revised by user task, 2026-09-14)
 
-- bundled bootstrap;
-- `game:GetService`;
-- `Signal`;
-- scheduler queue;
-- player connect/disconnect events;
-- player proxy and chat message.
+- configured entrypoint and controlled module snapshots/cache;
+- generation-owned bounded `task.defer`, `task.spawn`, `task.delay`;
+- transactional script replacement and one-attempt recovery (approved invariant D9);
+- no gameplay bindings. [Phase 2 contract](Phase2.md) owns exact qualified semantics.
+
+The old Phase 2 gameplay/event bridge is deferred to a separately authorized API
+phase; no `game:GetService`, Signals, Player proxies or player hooks are included.
 
 ### Phase 3 — commands and permissions
 
@@ -1195,7 +1196,7 @@ No player APIs yet.
 
 - `player:GiveItem`;
 - `Items:Exists`;
-- `task.defer` / `task.spawn` / `task.delay`.
+- task primitives moved into the revised Phase 2 substrate; no item API is added there.
 
 ### Phase 5 — hardening and live-host validation
 

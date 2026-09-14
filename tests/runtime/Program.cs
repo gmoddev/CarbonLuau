@@ -61,6 +61,7 @@ internal static class Program
                 var Generation = new Runtime.RuntimeGeneration(Native, 999, Default);
                 Generation.Dispose(); Generation.Dispose();
                 Check(Generation.Execute("stale", "return 3", 3).Status == Runtime.RuntimeStatus.INVALID_ARGUMENT, "stale managed generation");
+                ScriptTests.Run(Native, Root);
                 Native.Dispose(); Native.Dispose();
             }
             File.Delete(Library);
