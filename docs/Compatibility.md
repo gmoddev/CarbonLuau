@@ -12,7 +12,7 @@ This document owns compatibility promises, version identities and evidence requi
 | Carbon | CarbonPlugin and source `.cszip` are the integration/package model. Worker evidence is Carbon 2.0.259.0; no unrestricted future Carbon-version guarantee. |
 | Rust server | Worker evidence is Rust 2633 / Steam build 25230300. New server builds need affected compatibility checks, not assumptions based on the same game name. |
 | Luau | Vendored commit is recorded in [LUAU_REVISION.txt](../native/third_party/LUAU_REVISION.txt). Phase 1 links compiler/VM; its platform and containment evidence is separate in [Phase1-Validation.md](Phase1-Validation.md). |
-| Hosting provider | The user's Shockbyte Linux server passed load/probe/unload/reload based on user-provided logs. Other servers/plans and provider policy changes remain unqualified. Its exact Carbon/OS build was not established by those excerpts. |
+| Hosting provider | The user's Shockbyte Linux server passed only the historical Phase 0 load/probe/unload/reload gate based on user-provided logs. Phase 1-5 full-runtime behavior remains unqualified there. By user decision on 2026-09-15, Shockbyte full-runtime qualification is deferred and is not a Phase 5/v0.1 gate; this is not a support claim, and requalification is required before advertising Shockbyte as qualified or supported. Other servers/plans and provider policy changes remain unqualified. |
 
 Dates, source/artifact hashes, runtime paths, CI links and the different depths of worker versus Shockbyte testing are owned by [Phase0-Validation.md](Phase0-Validation.md). PROVEN describes the tested native-load gate, not the safety of the future VM or all features in the design.
 
@@ -23,6 +23,14 @@ Carbon currently documents targeting .NET Framework 4.8 with `Carbon.targets`. D
 Keep these identities conceptually separate and record those relevant to a result: Carbon build, Rust server build, pinned Luau commit/build options, CarbonLuau package version, project-owned native ABI compatibility, and CarbonLuau public scripting API compatibility.
 
 Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Phase 3 introduces package `0.3.0`, additive native ABI `1.2`, and the separate scripting identity `CarbonLuau` / `0.3.0-experimental` / `Experimental`, inspectable through read-only game fields and operator status. D8/D12 own the minimum policy; [public compatibility](api/Compatibility.md) documents it. Additive changes preserve existing contracts; removing/renaming an API or changing its types, lifetime, failures or authorization is breaking and requires an explicit version, documentation and migration decision. A larger deprecation/negotiation framework remains deferred.
+
+The first qualified experimental release candidate deliberately maps tag
+`v0.3.0` to package `0.3.0`; the roadmap's “v0.1” label is a scope name, not a
+second semantic version. The scripting API remains `0.3.0-experimental`, native
+ABI remains `1.2`, and Luau remains pinned to
+`c6b830185af962c82003f86784e2fe036357c830`. The machine-readable mapping is
+[release.json](../release.json), with build and provenance instructions in the
+[release guide](Release.md).
 
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
@@ -89,6 +97,23 @@ Windows/Linux actual Carbon integration, affected native sanitizers, public
 documentation/examples agreement and green final-source CI. Controlled real host
 objects must be labeled separately from authenticated client/session or delivery
 evidence. Provider qualification remains separate.
+
+Phase 5 uses the [hardening contract](Phase5.md) and
+[qualification record](Phase5-Validation.md). It adds no scripting capability.
+Its canonical matrix combines production-facade reload and failed-candidate
+soaks, controlled-host connection churn, pressure and timeout boundaries, actual
+plugin/native unload, sustained status/memory sampling and Carbon's profiler.
+Windows/Linux live results, CI, provider deployment and authenticated real-client
+evidence remain separate claims. Shockbyte full-runtime deployment is deferred
+and non-gating by the recorded user decision, without converting its Phase 0
+probe evidence into support. By user decision on 2026-09-15, authenticated
+real-client qualification is also deferred and non-gating for Phase 5/v0.1; this
+is a qualification deferral, not evidence. Authenticated Steam/network
+establishment, visible client `Player:SendMessage` receipt, network-driven
+PlayerAdded/PlayerRemoving and real same-account reconnect remain unqualified and
+require future requalification before any support claim. A task-scoped Linux
+worker substitution does not change the repository's general worker policy or
+qualify another operating system.
 
 ## Phase 0 consistency review
 

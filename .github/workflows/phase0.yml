@@ -49,6 +49,10 @@ jobs:
           ./tools/package.ps1
           ./tools/Test-Package.ps1 -Package dist/CarbonLuau.cszip
           ./tools/Test-Api.ps1
+          $Rid = if ($IsWindows) { 'win-x64' } else { 'linux-x64' }
+          $Native = if ($IsWindows) { 'build/Release/carbonluau_native.dll' } else { 'build/libcarbonluau_native.so' }
+          ./tools/Test-Release.ps1 -Rid $Rid -NativeLibrary $Native
+          ./tools/New-ReleaseArtifacts.ps1 -Rid $Rid -NativeLibrary $Native
       - uses: actions/upload-artifact@v4
         with:
           name: phase3-${{ matrix.os }}
@@ -59,6 +63,7 @@ jobs:
             dist/examples/
             build/Release/carbonluau_native.dll
             build/libcarbonluau_native.so
+            dist/release/
   sanitizers:
     runs-on: ubuntu-24.04
     steps:

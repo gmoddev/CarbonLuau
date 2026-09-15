@@ -1,0 +1,107 @@
+# Installation
+
+CarbonLuau is an experimental server-side Luau runtime for Carbon-modded Rust
+servers. Use the release bundle matching the server process: Windows x64 or
+glibc Linux x64. ARM, x86, macOS and non-glibc Linux are not qualified.
+
+## Requirements
+
+- A Carbon-modded Rust server.
+- An x64 server process.
+- A matching `win-x64` or `linux-x64` CarbonLuau release bundle.
+- File and console/RCON access sufficient to install a Carbon plugin and run
+  administrator commands.
+
+Qualification used Carbon `2.0.259.0` and Rust `2633` / Steam build `25230300`.
+Other versions are not automatically supported; review the
+[compatibility policy](https://gmoddev.github.io/CarbonLuau/#/Compatibility)
+before deploying.
+
+## Production layout
+
+Install only the native library matching the server platform:
+
+```text
+carbon/
+|-- plugins/
+|   `-- CarbonLuau.cszip
+`-- data/
+    `-- CarbonLuau/
+        |-- native/
+        |   `-- win-x64/
+        |       `-- carbonluau_native.dll
+        `-- scripts/
+            |-- init.luau
+            `-- modules/
+```
+
+For Linux, replace the `win-x64` subtree with:
+
+```text
+native/
+`-- linux-x64/
+    `-- libcarbonluau_native.so
+```
+
+Do not install both binaries “just in case,” and never install files from a test
+fixture package. The plugin loads one normalized, platform-specific path.
+
+## Install and start
+
+1. Stop the Rust server or follow your normal safe Carbon plugin-maintenance
+   procedure.
+2. Copy `CarbonLuau.cszip` to `carbon/plugins/CarbonLuau.cszip`.
+3. Copy the matching native library to the exact platform path above.
+4. Create `carbon/data/CarbonLuau/scripts/modules`, even if it is initially empty.
+5. Create `carbon/data/CarbonLuau/scripts/init.luau` or copy one of the bundled
+   examples deliberately. Do not overwrite existing scripts without a backup.
+6. Start the server. CarbonLuau creates its default configuration and loads the
+   entry script during server initialization.
+7. Run `carbonluau.status` from the server console or authenticated RCON. A ready
+   runtime reports its generation, API identity, native ABI, Luau revision and
+   bounded-resource counters.
+
+After editing scripts, run `carbonluau.reload`. A successful candidate atomically
+replaces the active generation. A compile or initialization failure preserves the
+previous working generation.
+
+## Configuration
+
+Carbon writes the plugin configuration in its normal configuration directory.
+The defaults are:
+
+```json
+{
+  "Enabled": true,
+  "MaxVmMemoryMiB": 64,
+  "MaxCallbackMilliseconds": 3,
+  "ScriptRoot": "scripts",
+  "EntryScript": "init.luau",
+  "ModuleRoot": "modules",
+  "FrameDrainBudgetMilliseconds": 5,
+  "MaxQueuedCallbacks": 4096
+}
+```
+
+Memory is clamped to 16–256 MiB per VM, callback deadlines to 1–100 ms, frame
+drain budget to 1–20 ms and queued callbacks to 1–4096. Paths are confined under
+`carbon/data/CarbonLuau`; absolute paths, traversal and reparse/symlink escapes are
+rejected.
+
+## Diagnostics
+
+- `carbonluau.status`: current availability, generation, identities and counters.
+- `carbonluau.reload`: compile and initialize a new candidate generation.
+- Carbon server log: messages beginning with `[CarbonLuau:Config]`,
+  `[CarbonLuau:Native]`, `[CarbonLuau:Runtime]` or `[CarbonLuau:Scheduler]`.
+- `native library missing`: verify the exact platform directory and filename.
+- `ABI/platform/library`: verify that the archive matches the server OS/x64
+  process and was not mixed with files from another version.
+- `COMPILE_ERROR` or `RUNTIME_ERROR`: inspect the logged chunk/error and fix the
+  Luau source; a failed candidate does not replace the active generation.
+- `TIMEOUT` or `MEMORY_LIMIT`: the configured safety boundary stopped execution;
+  inspect status before reloading rather than raising limits blindly.
+
+Continue with the [quick start](https://gmoddev.github.io/CarbonLuau/#/README?id=quick-start),
+[public API](https://gmoddev.github.io/CarbonLuau/#/api/README) and
+[known compatibility limits](https://gmoddev.github.io/CarbonLuau/#/api/Compatibility).

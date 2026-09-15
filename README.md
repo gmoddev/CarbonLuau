@@ -2,25 +2,29 @@
 
 CarbonLuau adds server-side Luau scripting to Carbon-modded Rust servers through a bounded native bridge.
 
-Start scripting with the [public API reference](docs/api/README.md). Phase 3's
-experimental Players/Signals/Commands facade passed Windows/Linux worker
-qualification and CI. See [Phase3-Validation](docs/Phase3-Validation.md) for the
-controlled-host evidence and limits; real-client delivery and Shockbyte are unqualified.
+**Release candidate:** `v0.3.0` — first qualified experimental release. Read the
+[hosted documentation](https://gmoddev.github.io/CarbonLuau/),
+[installation guide](docs/Installation.md), or [public API reference](docs/api/README.md).
+The Players/Signals/Commands facade passed Windows/Linux controlled-worker
+qualification and CI. Real-client delivery and Shockbyte full-runtime behavior
+remain unqualified.
 
 ## Install and write a script
 
 Target environments are Windows x64 and glibc Linux x64 with Carbon. The qualified
 worker baseline is Carbon 2.0.259.0 / Rust 2633; see [compatibility](docs/Compatibility.md).
 
-Build/package using the [existing build instructions](docs/Phase0.md). Install
-matching `CarbonLuau.cszip` in `carbon/plugins` and the native DLL/SO separately in
-`carbon/data/CarbonLuau/native/win-x64` or `native/linux-x64`. Put your entrypoint at
-`carbon/data/CarbonLuau/scripts/init.luau` and create its `modules` directory, even
-when empty. Do not overwrite existing server scripts accidentally.
+Use the release archive matching the server OS. Install `CarbonLuau.cszip` in
+`carbon/plugins` and its single native DLL/SO in
+`carbon/data/CarbonLuau/native/win-x64` or `native/linux-x64`. Put your entrypoint
+at `carbon/data/CarbonLuau/scripts/init.luau` and create its `modules` directory,
+even when empty. Do not install both native binaries or overwrite existing scripts.
 
 ```lua
 local Players = game:GetService("Players")
+
 Players.PlayerAdded:Connect(function(Player)
+    print(`Connected: {Player.Name}`)
     Player:SendMessage("Hello from CarbonLuau")
 end)
 ```
@@ -29,6 +33,9 @@ Use administrator commands `carbonluau.status` and `carbonluau.reload`. See
 [player-event](examples/player-events/init.luau) and
 [permission-protected command](examples/hello-command/init.luau) examples.
 Startup messages must use `task.defer`; provisional generations cannot send them.
+For clean-checkout builds, checksums and provenance, see the
+[release reproducibility guide](docs/Release.md). Current changes prepare the
+candidate only; no tag or GitHub Release exists yet.
 
 ## Limits
 
@@ -60,8 +67,16 @@ service) are **deferred from v0.1** by [D13](docs/Invariants.md#decision-registe
 The [investigation](docs/Phase4.md) and [evidence](docs/Phase4-Validation.md) are
 preserved; no safe all-path ownership adapter was established. The
 [roadmap](docs/CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases)
-now places Phase 5 hardening/qualification next, ready for a separate task and
-**not started** by this closure.
+places Phase 5 hardening/qualification after the implemented facade. Its committed
+Windows/Linux live matrices, profiler, latency-distribution and sustained-soak
+evidence are in [Phase5-Validation](docs/Phase5-Validation.md). The execution
+verdict is complete within the recorded controlled-host qualification envelope.
+Authenticated real-client qualification is user-deferred and non-gating, but
+authenticated Steam/network establishment, visible client chat receipt,
+network-driven player lifecycle events and real same-account reconnect remain
+unqualified. Shockbyte full-runtime qualification is separately user-deferred and
+non-gating, but remains unqualified and unsupported beyond its historical Phase 0
+probe. This is not the independent v0.1 release decision.
 
 ## License
 

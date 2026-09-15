@@ -38,6 +38,18 @@ internal static class ScriptTests
         File.WriteAllBytes(Entry, new byte[] {65,0,66}); Reject(() => Runtime.ScriptSnapshot.Load(Root,Config),"NUL rejected");
         File.WriteAllBytes(Entry, new byte[65537]); Reject(() => Runtime.ScriptSnapshot.Load(Root,Config),"oversized source");
         Source("return");
+        string LimitDirectory = Path.Combine(Scripts, "modules", "limits");
+        Directory.CreateDirectory(LimitDirectory);
+        string MaximumSource = new string('a', 65536);
+        for (int Index = 0; Index < 65; ++Index)
+            File.WriteAllText(Path.Combine(LimitDirectory, "source" + Index.ToString("D3") + ".luau"), MaximumSource, Utf8);
+        Reject(() => Runtime.ScriptSnapshot.Load(Root, Config), "aggregate source exceeds 4 MiB");
+        Directory.Delete(LimitDirectory, true);
+        Directory.CreateDirectory(LimitDirectory);
+        for (int Index = 0; Index < 256; ++Index)
+            File.WriteAllText(Path.Combine(LimitDirectory, "module" + Index.ToString("D3") + ".luau"), "return true", Utf8);
+        Reject(() => Runtime.ScriptSnapshot.Load(Root, Config), "module count exceeds 256");
+        Directory.Delete(LimitDirectory, true);
         Check(Marshal.SizeOf(typeof(Runtime.SchedulerInfo))==56,"scheduler ABI layout");
         string Outside = Path.Combine(Root, "outside"); Directory.CreateDirectory(Outside);
         File.WriteAllText(Path.Combine(Outside,"escape.luau"),"return 99",Utf8);
