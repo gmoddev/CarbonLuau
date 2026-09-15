@@ -39,6 +39,13 @@ If documents, code, a task request or upstream evidence conflict, identify the c
 
 ## Working rules
 
+Post-v0.3.0 addon exploration is recorded in the
+[imported addon design proposal](docs/CarbonLuau_Addon_Decisions_and_Invariants.md)
+and [design validation](docs/Addon-Design-Validation.md). These are non-operative
+design/review material, not amendments to the canonical decision register or
+authorization to implement addons. Shared-VM cancellation and the additional
+export/transaction/ownership contracts remain open.
+
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.
 - Use PascalCase for project-owned identifiers by default. Preserve required OS/upstream names and accepted public API spellings; `self = setmetatable(...)` is the stated local exception. Use `GetFolder`/`GetObj`, not `GetOrCreateFolder`/`GetOrCreateObj`.
