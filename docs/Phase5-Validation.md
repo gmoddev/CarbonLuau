@@ -269,12 +269,17 @@ start a Rust/Carbon server and is not labeled Windows live qualification.
 Earlier final-production-source run
 [`34935991022`](https://github.com/gmoddev/CarbonLuau/actions/runs/34935991022)
 also passed all three jobs after the profiler-only fixture/runner commit.
+Closure-evidence commit `abc6c31` run
+[`34943142473`](https://github.com/gmoddev/CarbonLuau/actions/runs/34943142473)
+passed Windows, Ubuntu and sanitizer jobs, including native/managed regressions,
+Windows import policy, API/docs links and production-package checks. Its only
+annotations were upstream GitHub Action Node.js deprecation notices.
 
 | Target | Result and limit |
 |---|---|
 | Linux x64 live | PASS full matrix: reloads, rejected candidates, connection churn, pressure/D9, 10 plugin cycles, p95, profiler, final 30-minute command-bearing soak; launcher exit 137 retained |
 | Windows x64 live | PASS full matrix: reloads, rejected candidates, connection churn, pressure/D9, 10 plugin cycles, p95, profiler, final 30-minute command-bearing soak; process absent after teardown, numeric exit unavailable |
-| Windows/Linux CI and sanitizers | PASS on the earlier final production source; final fixture/docs CI recorded below after completion |
+| Windows/Linux CI and sanitizers | PASS on final fixture/evidence content in run `34943142473` |
 | Shockbyte intended host | DEFERRED/NON-GATING by user decision; only historical Phase 0 probe evidence exists, Phase 1-5 full runtime is unqualified, and no support claim is made |
 | Authenticated real client | PENDING/GATING — no authorized client/session automation was available; controlled-host evidence does not prove chat receipt required by the current definition of done |
 
