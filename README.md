@@ -60,11 +60,13 @@ service) are **deferred from v0.1** by [D13](docs/Invariants.md#decision-registe
 The [investigation](docs/Phase4.md) and [evidence](docs/Phase4-Validation.md) are
 preserved; no safe all-path ownership adapter was established. The
 [roadmap](docs/CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases)
-places Phase 5 hardening/qualification next. Its committed Linux worker matrix,
-profiler and sustained-soak evidence are in [Phase5-Validation](docs/Phase5-Validation.md).
-The execution verdict is partial because Windows live, Shockbyte and an
-authenticated real client remain pending; it is not the independent v0.1 release
-decision.
+places Phase 5 hardening/qualification after the implemented facade. Its committed
+Windows/Linux live matrices, profiler, latency-distribution and sustained-soak
+evidence are in [Phase5-Validation](docs/Phase5-Validation.md). The execution
+verdict remains partial solely because authenticated real-client chat receipt is
+still a canonical gate. Shockbyte full-runtime qualification is user-deferred and
+non-gating, but remains unqualified and unsupported beyond its historical Phase 0
+probe. This is not the independent v0.1 release decision.
 
 ## License
 

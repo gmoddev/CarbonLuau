@@ -1,0 +1,80 @@
+{
+  "recordedOn": "2026-09-15",
+  "productionSource": "ae612c9ca86619d5e9d9591a17fd917a3e5b6645",
+  "fixtureSource": "e1a7e64bebd55faffd32fbeda01d89d070ff21e8",
+  "productionSourceChangedByFixture": false,
+  "versions": {
+    "package": "0.3.0",
+    "scriptingApi": "CarbonLuau 0.3.0-experimental",
+    "nativeAbi": "1.2",
+    "luau": "c6b830185af962c82003f86784e2fe036357c830",
+    "rustProtocol": "2633.288.1",
+    "rustSteamBuild": "25230300",
+    "carbon": "2.0.259.0 [2026.09.03.0] 21063e8"
+  },
+  "windows": {
+    "environment": "Windows 11 Pro 64-bit build 26200; DockerPC/HostPC",
+    "soakMinutes": 30,
+    "soakSamples": 30,
+    "commandBearingPulses": 30,
+    "workingSetFirst": 3195707392,
+    "workingSetLast": 3221749760,
+    "workingSetDelta": 26042368,
+    "workingSetFirstFiveAverage": 3202641920.0,
+    "workingSetLastFiveAverage": 3221718630.4,
+    "vmBytesMin": 632928,
+    "vmBytesMax": 632928,
+    "sustainedTimeouts": 0,
+    "sustainedRecoveries": 0,
+    "sustainedBudgetOverruns": 0,
+    "latencyMilliseconds": {
+      "count": 2000,
+      "p50": 0.0124,
+      "p95": 0.0881,
+      "p99": 0.2065,
+      "max": 11.1957
+    },
+    "sha256": {
+      "samples": "c771577e5ab40c1e60451f5015dcbf980cd89a59041766f21da7975bf3ae7607",
+      "runnerLog": "707c08650af72765f60f82ef873b6304ac7f4ce01fcad2c2e944ec13f6975593",
+      "serverLog": "64700e408d3fd9be46e046c837bf7d838219adab90fdebc16de1d89689d90f5c",
+      "profilerIdle": "64c548786fd3cff3e18bb4faf3219e42c5a288a1d9607b48faaf6cd9ee6613ff",
+      "profilerActive": "47cef0a232b0dfab1b0aba587995192027d85293819f8529d015c2b2616c85a7"
+    }
+  },
+  "linux": {
+    "environment": "Ubuntu 24.04.5 LTS x86_64; capped Docker on BigVPS",
+    "soakMinutes": 30,
+    "soakSamples": 30,
+    "commandBearingPulses": 30,
+    "vmRssFirstKiB": 3049820,
+    "vmRssLastKiB": 3091780,
+    "vmRssDeltaKiB": 41960,
+    "vmRssFirstFiveAverageKiB": 3052808.0,
+    "vmRssLastFiveAverageKiB": 3091721.6,
+    "vmBytesMin": 632928,
+    "vmBytesMax": 632928,
+    "sustainedTimeouts": 0,
+    "sustainedRecoveries": 0,
+    "sustainedBudgetOverruns": 1,
+    "latencyMilliseconds": {
+      "count": 2000,
+      "p50": 0.0272,
+      "p95": 0.0387,
+      "p99": 0.0789,
+      "max": 1.8419
+    },
+    "sha256": {
+      "samples": "53802783d05d1b7f57429d34e66af54a64f9a19f894c721beb9eaa43cfaa3fe5",
+      "runnerLog": "b93490fe02d1c8a4465255f12644fa66b0cb9ee7983682e16866687b581cd490",
+      "serverLog": "840c6c3105d7530cca694a94461b6730f4471a47db288fb02f6ad2f50fa9af5b",
+      "profilerIdle": "376ce72042b1cbe2d7e3fa2af2bc19561253aebdd26f3cf83976f30b8e7c53f6",
+      "profilerActive": "2fa4dcce7c2bff0d54b4f09769660d26bd1c62bd7bb7962e21ad7239276aad1a"
+    }
+  },
+  "acceptance": {
+    "shockbyteFullRuntime": "deferred, non-gating, unqualified, not a support claim",
+    "authenticatedClientReceipt": "pending and gating under the current definition of done",
+    "phase5ExecutionVerdict": "PARTIAL"
+  }
+}

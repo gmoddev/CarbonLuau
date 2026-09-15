@@ -1155,7 +1155,7 @@ Current accepted roadmap after D13 closure (2026-09-14):
 | 2 | Scripts/modules/scheduler | [PASS within recorded qualification](Phase2-Validation.md) |
 | 3 | Gameplay facade | [PASS within recorded qualification](Phase3-Validation.md) |
 | 4 | Item conveniences | DEFERRED from v0.1 by D13; no runtime/API implementation |
-| 5 | v0.1 hardening/qualification | READY for a separate task; not started |
+| 5 | v0.1 hardening/qualification | PARTIAL; Windows/Linux worker evidence complete, authenticated-client receipt pending |
 
 READY is sequencing readiness, not completed hardening, a release verdict or
 provider qualification. Prior phase evidence retains its original limits.
@@ -1203,7 +1203,8 @@ primitives belong to the qualified Phase 2 substrate, not this deferral.
 
 ### Phase 5 — hardening and live-host validation
 
-Ready for separate authorization; no Phase 5 work was performed in D13 closure.
+Executed separately after D13 closure; current evidence and remaining limits are
+recorded in [Phase5-Validation.md](Phase5-Validation.md).
 
 - 100 reload soak;
 - connect/disconnect soak;
@@ -1282,7 +1283,9 @@ The first version is complete when all of the following are true:
 - unload/reload does not leave duplicate commands, timers, callbacks, or native handles;
 - repeated reload/connect/disconnect testing does not produce unbounded memory growth;
 - Carbon profiler shows negligible idle overhead and bounded dispatch cost;
-- deployment succeeds on the intended hosted Rust server.
+- Shockbyte full-runtime deployment is deferred and non-gating by user decision
+  on 2026-09-15. Its Phase 0 probe remains historical evidence, not full-runtime
+  support; requalification is required before advertising provider support.
 
 Item conveniences are explicitly excluded by D13. Their deferral does not waive
 any ownership/failure invariant or the remaining hardening/qualification criteria.

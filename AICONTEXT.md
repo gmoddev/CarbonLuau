@@ -23,8 +23,8 @@ surface (Items, Items:Exists and Player:GiveItem) is deferred from v0.1. The
 reflects that scope change. Preserve [Phase4.md](docs/Phase4.md),
 [Phase4-Validation.md](docs/Phase4-Validation.md) and the read-only structural
 checker as historical evidence; deferral is not proof of a safe adapter.
-Phase 5 hardening/qualification execution and its remaining platform/provider
-gaps are recorded in [Phase5.md](docs/Phase5.md) and
+Phase 5 hardening/qualification execution and its remaining authenticated-client
+gap are recorded in [Phase5.md](docs/Phase5.md) and
 [Phase5-Validation.md](docs/Phase5-Validation.md). No Phase 4 runtime/API
 additions or weaker ownership rules are authorized.
 

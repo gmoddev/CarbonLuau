@@ -12,7 +12,7 @@ This document owns compatibility promises, version identities and evidence requi
 | Carbon | CarbonPlugin and source `.cszip` are the integration/package model. Worker evidence is Carbon 2.0.259.0; no unrestricted future Carbon-version guarantee. |
 | Rust server | Worker evidence is Rust 2633 / Steam build 25230300. New server builds need affected compatibility checks, not assumptions based on the same game name. |
 | Luau | Vendored commit is recorded in [LUAU_REVISION.txt](../native/third_party/LUAU_REVISION.txt). Phase 1 links compiler/VM; its platform and containment evidence is separate in [Phase1-Validation.md](Phase1-Validation.md). |
-| Hosting provider | The user's Shockbyte Linux server passed load/probe/unload/reload based on user-provided logs. Other servers/plans and provider policy changes remain unqualified. Its exact Carbon/OS build was not established by those excerpts. |
+| Hosting provider | The user's Shockbyte Linux server passed only the historical Phase 0 load/probe/unload/reload gate based on user-provided logs. Phase 1-5 full-runtime behavior remains unqualified there. By user decision on 2026-09-15, Shockbyte full-runtime qualification is deferred and is not a Phase 5/v0.1 gate; this is not a support claim, and requalification is required before advertising Shockbyte as qualified or supported. Other servers/plans and provider policy changes remain unqualified. |
 
 Dates, source/artifact hashes, runtime paths, CI links and the different depths of worker versus Shockbyte testing are owned by [Phase0-Validation.md](Phase0-Validation.md). PROVEN describes the tested native-load gate, not the safety of the future VM or all features in the design.
 
@@ -96,7 +96,10 @@ Its canonical matrix combines production-facade reload and failed-candidate
 soaks, controlled-host connection churn, pressure and timeout boundaries, actual
 plugin/native unload, sustained status/memory sampling and Carbon's profiler.
 Windows/Linux live results, CI, provider deployment and authenticated real-client
-evidence remain separate claims. A task-scoped Linux worker substitution does not
+evidence remain separate claims. Shockbyte full-runtime deployment is deferred
+and non-gating by the recorded user decision, without converting its Phase 0
+probe evidence into support. Authenticated-client receipt remains required by the
+current v0.1 definition of done. A task-scoped Linux worker substitution does not
 change the repository's general worker policy or qualify another operating system.
 
 ## Phase 0 consistency review

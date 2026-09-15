@@ -32,6 +32,11 @@ test-only partial plugin source, included only when `package.ps1` receives
 It exercises the real Phase 3 facade with modules, scheduled work, Players,
 Signals, commands and permissions.
 
+[Test-Phase5Windows.ps1](../tools/Test-Phase5Windows.ps1) is the corresponding
+Windows live runner. Both runners also measure 2,000 warmed no-op player-event
+callbacks through facade admission and the native callback drain, reporting the
+count and p50/p95/p99/max distribution against the existing p95 target.
+
 [Test-Phase5Linux.py](../tools/Test-Phase5Linux.py) deploys the fixture and native
 library into an already prepared, isolated Linux server tree. Its default run is:
 
@@ -91,11 +96,14 @@ Luau, package, API and ABI identities. Native release tests, managed tests and
 ASan/UBSan/leak/allocation-fault tests run against the final affected source.
 
 Windows x64 requires an actual Windows Rust/Carbon run; CI or a Linux host is not
-a replacement. Shockbyte receives production artifacts only and only when the
-authorized profile and safe operational verification are available. Provider
-policy is never bypassed. Real-client evidence requires an authorized actual Rust
-client and is reported separately from controlled-host fixtures. Missing safe
-access is recorded as pending rather than inferred.
+a replacement. The user deferred Shockbyte full-runtime qualification on
+2026-09-15; it is not a Phase 5/v0.1 gate, does not extend the historical Phase 0
+probe result into a support claim, and requires requalification before support is
+advertised. Provider policy is never bypassed. Real-client evidence requires an
+authorized actual Rust client and is reported separately from controlled-host
+fixtures. The current definition of done still requires player chat messaging,
+so missing authenticated receipt evidence remains a gate rather than being
+inferred from a controlled `BasePlayer`.
 
 ## Correction and stop policy
 
