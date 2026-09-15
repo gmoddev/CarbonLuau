@@ -117,7 +117,7 @@ def RunProfiler():
         return
     print('[CarbonLuau:Phase5] profiler commands: ' + Send('c.find profile'), flush=True)
     for Label, Active in [('idle', False), ('active', True)]:
-        Reply = Send('c.profile ' + str(ProfilerSeconds) + ' -c -m -t')
+        Reply = Send('c.profile ' + str(ProfilerSeconds) + ' -c -m -t -gc')
         if 'disabled' in Reply.lower():
             raise RuntimeError('Carbon profiler unexpectedly disabled: ' + Reply)
         print('[CarbonLuau:Phase5] profiler ' + Label + ' start: ' + Reply, flush=True)
@@ -127,7 +127,7 @@ def RunProfiler():
                 print(Send('carbonluau.phase5pulse', 'Phase5 pulse PASS'), flush=True)
             time.sleep(min(1, max(0.1, Deadline - time.monotonic())))
         print('[CarbonLuau:Phase5] profiler ' + Label + ' status: ' + Send('c.profilestatus'), flush=True)
-        print('[CarbonLuau:Phase5] profiler ' + Label + ' result: ' + Send('c.profiler.print -t=Table'), flush=True)
+        print('[CarbonLuau:Phase5] profiler ' + Label + ' result: ' + Send('c.profiler.print -j'), flush=True)
 
 
 Library.parent.mkdir(parents=True, exist_ok=True)

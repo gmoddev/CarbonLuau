@@ -65,6 +65,7 @@ namespace Carbon.Plugins
                     "P.PlayerAdded:Connect(function(V) assert(V.IsConnected) end); P.PlayerRemoving:Connect(function(V) assert(not V.IsConnected) end); " +
                     "game:GetService('Commands'):Register('" + Phase5CommandName + "',{},function() end); task.defer(function() assert(M=='CarbonLuau Phase 2 module loading works') end)");
                 DrainPhase5();
+                CheckPhase5(InvokePhase5(Player, Phase5CommandName, new[] { "phase5-profile" }) == "", "pulse command dispatch");
                 Arg.ReplyWith("CarbonLuau Phase5 pulse PASS; generation=" + Host.Generation);
             }
             catch (Exception Error) { PrintError("[CarbonLuau:Phase5Fixture] FAIL pulse " + Error); }
