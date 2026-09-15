@@ -29,6 +29,11 @@ envelope in [Phase5.md](docs/Phase5.md) and
 qualification is explicitly deferred, non-gating and unqualified; that decision
 is not evidence of network delivery or a support claim. No Phase 4 runtime/API
 additions or weaker ownership rules are authorized.
+The release-candidate identity and reproducibility procedure are owned by
+[release.json](release.json) and [Release.md](docs/Release.md). Public setup starts
+at [Installation.md](docs/Installation.md); release preparation must not reinterpret
+the first-version roadmap label as a second package version or weaken recorded
+qualification limits.
 
 If documents, code, a task request or upstream evidence conflict, identify the conflict and its rule owner. Preserve accepted decisions while investigating. Stop the affected implementation if it would require silently weakening a rule or making an unsupported architectural decision; report the evidence and proposed resolution. Do not expand documentation to manufacture certainty. An explicit user-approved design change must also update its canonical document.
 

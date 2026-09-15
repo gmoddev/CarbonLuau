@@ -24,6 +24,14 @@ Keep these identities conceptually separate and record those relevant to a resul
 
 Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Phase 3 introduces package `0.3.0`, additive native ABI `1.2`, and the separate scripting identity `CarbonLuau` / `0.3.0-experimental` / `Experimental`, inspectable through read-only game fields and operator status. D8/D12 own the minimum policy; [public compatibility](api/Compatibility.md) documents it. Additive changes preserve existing contracts; removing/renaming an API or changing its types, lifetime, failures or authorization is breaking and requires an explicit version, documentation and migration decision. A larger deprecation/negotiation framework remains deferred.
 
+The first qualified experimental release candidate deliberately maps tag
+`v0.3.0` to package `0.3.0`; the roadmap's “v0.1” label is a scope name, not a
+second semantic version. The scripting API remains `0.3.0-experimental`, native
+ABI remains `1.2`, and Luau remains pinned to
+`c6b830185af962c82003f86784e2fe036357c830`. The machine-readable mapping is
+[release.json](../release.json), with build and provenance instructions in the
+[release guide](Release.md).
+
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
 ## Dependency and host upgrades

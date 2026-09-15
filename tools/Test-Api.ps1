@@ -14,11 +14,12 @@ foreach ($Service in @('Players','Commands')) {
 foreach ($Type in @('Player','CommandContext','Signal','Connection')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "docs/api/Types/$Type.md"))) { throw "Missing type reference: $Type" }
 }
-$Documents = @(Get-Item (Join-Path $Root 'README.md')) + @(Get-ChildItem (Join-Path $Root 'docs/api') -Recurse -Filter '*.md')
+$Documents = @(Get-Item (Join-Path $Root 'README.md')) + @(Get-Item (Join-Path $Root 'CHANGELOG.md')) +
+    @(Get-ChildItem (Join-Path $Root 'docs') -Recurse -Filter '*.md')
 foreach ($Document in $Documents) {
     foreach ($Match in [regex]::Matches((Get-Content -Raw -LiteralPath $Document.FullName), '\]\(([^)]+)\)')) {
         $Target = $Match.Groups[1].Value
-        if ($Target -match '^(https?://|#)') { continue }
+        if ($Target -match '^(https?://|mailto:|#)') { continue }
         $Target = ($Target -split '#')[0]
         if (!(Test-Path -LiteralPath (Join-Path $Document.DirectoryName $Target))) { throw "Broken relative link: $($Document.Name): $Target" }
     }

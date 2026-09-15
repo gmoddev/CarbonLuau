@@ -1,0 +1,10 @@
+{
+  "releaseVersion": "0.3.0",
+  "tag": "v0.3.0",
+  "packageVersion": "0.3.0",
+  "apiName": "CarbonLuau",
+  "apiVersion": "0.3.0-experimental",
+  "apiStatus": "Experimental",
+  "nativeAbi": "1.2",
+  "luauRevision": "c6b830185af962c82003f86784e2fe036357c830"
+}

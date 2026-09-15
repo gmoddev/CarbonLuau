@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(CarbonLuauNative VERSION 0.1.0 LANGUAGES CXX)
+project(CarbonLuauNative VERSION 0.3.0 LANGUAGES CXX)
 
 # Rust/Unity can preload an older app-local MSVCP140 than our compiler requires.
 # Keep C++ runtime allocation/exceptions private to this DLL and pinned Luau.
