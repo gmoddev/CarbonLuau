@@ -63,7 +63,12 @@ jobs:
             dist/examples/
             build/Release/carbonluau_native.dll
             build/libcarbonluau_native.so
-            dist/release/
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-v0.3.0-${{ matrix.os }}
+          if-no-files-found: error
+          path: dist/release/
   sanitizers:
     runs-on: ubuntu-24.04
     steps:
