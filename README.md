@@ -60,8 +60,11 @@ service) are **deferred from v0.1** by [D13](docs/Invariants.md#decision-registe
 The [investigation](docs/Phase4.md) and [evidence](docs/Phase4-Validation.md) are
 preserved; no safe all-path ownership adapter was established. The
 [roadmap](docs/CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases)
-now places Phase 5 hardening/qualification next, ready for a separate task and
-**not started** by this closure.
+places Phase 5 hardening/qualification next. Its committed Linux worker matrix,
+profiler and sustained-soak evidence are in [Phase5-Validation](docs/Phase5-Validation.md).
+The execution verdict is partial because Windows live, Shockbyte and an
+authenticated real client remain pending; it is not the independent v0.1 release
+decision.
 
 ## License
 

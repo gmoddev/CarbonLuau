@@ -23,8 +23,10 @@ surface (Items, Items:Exists and Player:GiveItem) is deferred from v0.1. The
 reflects that scope change. Preserve [Phase4.md](docs/Phase4.md),
 [Phase4-Validation.md](docs/Phase4-Validation.md) and the read-only structural
 checker as historical evidence; deferral is not proof of a safe adapter.
-Phase 5 hardening/qualification is ready for a separate task, not started by this
-closure. No Phase 4 runtime/API additions or weaker ownership rules are authorized.
+Phase 5 hardening/qualification execution and its remaining platform/provider
+gaps are recorded in [Phase5.md](docs/Phase5.md) and
+[Phase5-Validation.md](docs/Phase5-Validation.md). No Phase 4 runtime/API
+additions or weaker ownership rules are authorized.
 
 If documents, code, a task request or upstream evidence conflict, identify the conflict and its rule owner. Preserve accepted decisions while investigating. Stop the affected implementation if it would require silently weakening a rule or making an unsupported architectural decision; report the evidence and proposed resolution. Do not expand documentation to manufacture certainty. An explicit user-approved design change must also update its canonical document.
 

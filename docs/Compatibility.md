@@ -90,6 +90,15 @@ documentation/examples agreement and green final-source CI. Controlled real host
 objects must be labeled separately from authenticated client/session or delivery
 evidence. Provider qualification remains separate.
 
+Phase 5 uses the [hardening contract](Phase5.md) and
+[qualification record](Phase5-Validation.md). It adds no scripting capability.
+Its canonical matrix combines production-facade reload and failed-candidate
+soaks, controlled-host connection churn, pressure and timeout boundaries, actual
+plugin/native unload, sustained status/memory sampling and Carbon's profiler.
+Windows/Linux live results, CI, provider deployment and authenticated real-client
+evidence remain separate claims. A task-scoped Linux worker substitution does not
+change the repository's general worker policy or qualify another operating system.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:
