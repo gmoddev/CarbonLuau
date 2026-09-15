@@ -1,176 +1,130 @@
-# Addon design review — 2026-09-15
+# Addon design review — revised 2026-09-15
 
-**Verdict: suitable to retain as a research-gated proposal; not implementation-ready
-or runtime-qualified.** The shared-VM preference is accurately labeled conditional.
-Cancellation is necessary but is not the only unresolved architectural gate.
+**Verdict: the AI review supports a substantially simpler shared-VM proposal.
+Documentation validation only; not canonical adoption or implementation readiness.**
 
-## Scope and authority
+The [revised proposal](CarbonLuau_Addon_Decisions_and_Invariants.md) removes
+requirements for addon-local cancellation, deep export revocation, per-closure
+budget switching and rollback of shared Luau state. It retains concrete ownership,
+provisional-effect and integration gates. No runtime, vendor, public API, release
+identity or canonical I1–I11/D1–D13 changes were made.
 
-The user requested adding and validating the supplied
-[decisions/invariants document](CarbonLuau_Addon_Decisions_and_Invariants.md).
-The accompanying conversation is source material, not authority to implement its
-Phase A–J plans, patch Luau, adopt every proposed rule, or reopen completed phases.
-Its earlier isolated-VM/source-export design is superseded by the attachment's
-shared-state preference. The two export models must not be combined implicitly.
+## Provenance and scope
 
-The imported D-A/I-A labels identify proposed design requirements. They do not
-replace [I1–I11 or D1–D13](Invariants.md). No canonical decision is silently changed
-by this review. Promoting the proposal requires explicit decisions in that register,
-including revisions to runtime ownership, cancellation, replacement and recovery.
-The source document is preserved apart from a repository authority note and
-conversion of its plain-text version table to Markdown. No source discussion is
-presented as a completed experiment.
+Reviewed the entire user-supplied AI review attachment
+`0c6fb42d-2855-4111-be23-ec3d73f7d35a/pasted-text.txt` against checkout
+`3b086f43db3eb8e700513c8836d794603b295c9b`.
+Runtime/release baseline remains `3046390b5ee668f02c20bcde01d10138f5ca7489`:
+package `0.3.0`, API `0.3.0-experimental`, native ABI `1.2`,
+Luau `c6b830185af962c82003f86784e2fe036357c830`.
 
-## Baseline facts checked
+The [original imported proposal](https://github.com/gmoddev/CarbonLuau/blob/3b086f43db3eb8e700513c8836d794603b295c9b/docs/CarbonLuau_Addon_Decisions_and_Invariants.md)
+and [original V1–V8 review](https://github.com/gmoddev/CarbonLuau/blob/3b086f43db3eb8e700513c8836d794603b295c9b/docs/Addon-Design-Validation.md)
+are preserved in immutable history. This revision intentionally consolidates their
+repeated sections and supersedes their D-A/I-A proposal labels, rather than
+silently giving those labels new meanings. The original attachment is no longer
+claimed to be textually unchanged. The AI review is evaluated source material,
+not authority to implement its suggestions.
 
-Inspected checkout: `3046390b5ee668f02c20bcde01d10138f5ca7489`, matching the attachment.
-[release.json](../release.json) records package `0.3.0`, API
-`0.3.0-experimental`, ABI `1.2`, and Luau
-`c6b830185af962c82003f86784e2fe036357c830`. The repository calls this an experimental
-release candidate; the design is not a new release or API version.
+## AI recommendation disposition
 
-| Claim | Evidence and limit |
+| Recommendation | Disposition and reason |
 |---|---|
-| Current timeout retires the VM | [Runtime.cpp](../native/src/Runtime.cpp): Interrupt throws non-std DeadlineExceeded; scheduled/thread resume catches it and calls Retire, which closes the complete lua_State. This does not prove a safe smaller unwind. |
-| Protected-call behavior matters | Pinned [ldo.cpp](../native/third_party/luau/VM/src/ldo.cpp), luaD_rawrunprotected, catches lua_exception and std::exception. The project's private cancellation intentionally bypasses those catches. Ordinary Luau error handling is not a substitute for D1. |
-| Multiple handles, 32 live slots | Runtime.cpp has an array of 32 VM registry entries. Increasing it is relevant to a fallback/scaling plan, not proof of addon isolation or a task authorized here. |
-| Memory categories exist | Pinned [lua.h](../native/third_party/luau/VM/include/lua.h) and [lapi.cpp](../native/third_party/luau/VM/src/lapi.cpp) expose lua_setmemcat/lua_totalbytes. They label/query shared-heap accounting, not addon ownership or quota enforcement. |
-| Allocation instrumentation is not an admission hook | [lmem.cpp](../native/third_party/luau/VM/src/lmem.cpp), luaM_new_/luaM_realloc_, allocates and updates accounting before onallocate. Small objects may use allocator pages. The allocator receives context/pointer/sizes, not a per-object addon ID. Rejecting from instrumentation is not a demonstrated safe quota mechanism. |
-| Sandbox environments and cached module results exist | [Scripts.inl](../native/src/Scripts.inl) uses sandboxed module threads and caches a Lua reference per module in one Vm. No addon owner switching, export membrane or per-addon cache/lifetime exists yet. |
-| Facade coordination is currently single-active | [CarbonLuau.Facade.cs](../src/CarbonLuau/CarbonLuau.Facade.cs), FacadeWorld.Active/Commit, maintains one active session. SendMessage checks that session's committed state. |
-| Root replacement currently owns a new runtime | [CarbonLuau.Scripts.cs](../src/CarbonLuau/CarbonLuau.Scripts.cs), ScriptHost.Replace, constructs a candidate RuntimeGeneration and disposes the old generation after publication. A shared VM needs a different domain-level lifetime mechanism. |
-| 632,928 allocator bytes is recorded evidence | [Phase5-Validation.md](Phase5-Validation.md) records that controlled-root reading. It is not an addon benchmark or process-memory baseline. Scaling it to 100 yields about 60.36 MiB of that measure only. Likewise 100 × 64 MiB is 6.25 GiB, not a measured addon envelope. |
+| One VM, ordinary errors local, fatal timeout global | Adopt in proposal. Matches current VM retirement scope; does not promise isolation or safe addon-local cancellation. |
+| Remove automatic per-addon-VM fallback | Adopt. Source copies/RPC would change canonical shared-state semantics. |
+| Plain shared values, no export membrane | Adopt. New imports and host handles become stale; escaped plain tables/closures can survive. |
+| Budget follows scheduled operation | Adopt. Entire synchronous call chain consumes original deadline; provenance and host lifetime remain separate. |
+| Transactional publication, not shared state | Adopt. Explicitly document candidate mutations/cache effects that survive ordinary failure and global effects of candidate timeout. |
+| Global heap cap; diagnostic attribution | Adopt. Healthy-VM allocation errors need not always retire the VM, but unrelated domains have no hard memory isolation. |
+| Package-aware require aliases | Adopt as proposed syntax, not current support or full Luau filesystem-resolver parity. |
+| Local ./ and ../ paths | Do not adopt. Existing D5/custom resolver prohibits them; package-root-relative logical paths remain adequate. |
+| Tiny id/version-only manifest; public/ implies visibility | Modify. Keep schema, explicit exports and ID-only required/optional lists for defensive validation, preflight and stable privacy. Fixed entrypoint and optional declared main reduce metadata. |
+| Runtime-discovered dependencies | Do not adopt as lifecycle authority. Conditional/caught imports do not reliably describe required startup/loss/retry behavior. |
+| Defer version ranges | Adopt as a scope tradeoff. One active version still benefits from compatibility checks; removing ranges deliberately leaves version compatibility to operators. |
+| Immutable snapshot primary; ZIP transport | Adopt. Single-file registration must normalize to the same model. |
+| Keep provider ownership/fair scheduling/readiness gate | Retain. These require coordinated host implementation and real evidence, not merely one VM. |
 
-Upstream [sandbox guidance](https://luau.org/sandbox/) supports separate environments
-and cooperative interruption but does not certify CarbonLuau's proposed addon-local
-uncatchable cancellation. Its [C API reference](https://luau.org/api/) documents
-threads, memory and callbacks; pinned local code remains the build-specific evidence.
-The Roblox analogy in the conversation is not an acceptance test for this host.
+This is a design recommendation, not a claim that every simplification is cost-free.
+Ordinary shared values mean shared mutable state can be damaged by an error, old
+code/data may remain reachable, and a fatal callback can interrupt every domain.
 
-## Unresolved contracts found during validation
+## Evidence and factual corrections
 
-These are review findings, not newly accepted implementation policies. References
-are to the attachment's proposal IDs. Resolve affected decisions canonically before
-implementing the relevant surface; do not weaken existing contracts to mark PASS.
+| Source inspected | What it establishes |
+|---|---|
+| [Runtime.cpp](../native/src/Runtime.cpp), Interrupt/Retire/resume catches | Private non-std deadline cancellation retires the complete VM. One VM's allocator tracks Used/Limit; the registry has 32 VM slots, not 32 addon slots. |
+| [ldo.cpp](../native/third_party/luau/VM/src/ldo.cpp), luaD_rawrunprotected | Lua/std exception handling is distinct from the current private cancellation. An ordinary catchable Lua error is not a qualified substitute. |
+| [Scripts.inl](../native/src/Scripts.inl), ModuleName/RequireModule | Canonical logical paths reject @ and dot-relative forms today. Loaded modules return their cached Lua reference; private sandbox threads and controlled cycle errors already exist. |
+| [CarbonLuau.Scripts.cs](../src/CarbonLuau/CarbonLuau.Scripts.cs), Replace/Recover | Current replacement creates a separate RuntimeGeneration; current D9 recovery is bounded. Neither implements shared-VM domain replacement/reconstruction. |
+| [CarbonLuau.Facade.cs](../src/CarbonLuau/CarbonLuau.Facade.cs), FacadeWorld.Active/Commit/SendMessage | Single-active-session guard is insufficient for provisional B calling active A's captured facade. Operation context and multi-domain coordination are still needed. |
+| Pinned [lua.h](../native/third_party/luau/VM/include/lua.h), [lapi.cpp](../native/third_party/luau/VM/src/lapi.cpp), [lmem.cpp](../native/third_party/luau/VM/src/lmem.cpp) | Categories/accounting are not hard addon quotas. Allocator input has no addon identity; allocation instrumentation follows allocation/accounting. |
+| [Phase5-Validation.md](Phase5-Validation.md) | 632,928 allocator bytes describes a controlled root workload, not addon/process memory or scaling qualification. |
 
-### V1 — Cancellation must cover the complete cross-addon stack
+The [Luau alias RFC](https://rfcs.luau.org/require-by-string-aliases.html) supports
+`@name` and subpath syntax and separates aliases from versioning. It describes
+case-insensitive aliases and filesystem configuration, not CarbonLuau's custom
+resolver or its lowercase-only identity contract. Adopting syntax does not adopt
+those different resolution semantics.
 
-D-A03/R-A01 is correctly open. For B → A → B callbacks, specify which frames are
-aborted, whether B's current callback can finish, how ordinary errors differ from
-host cancellation, and which domains become unavailable. Killing A's registrations
-does not by itself repair suspended B frames or shared values already mutated.
-Fault tests must establish VM consistency, not only that the next callback runs.
-No cancellation implementation or impossibility proof was produced here.
+The official [Roblox ModuleScript source documentation](https://github.com/Roblox/creator-docs/blob/main/content/en-us/reference/engine/classes/ModuleScript.yaml)
+supports cached identical return values within an environment. It explicitly says
+cyclic imports hang rather than generate errors. The AI review's claim that Roblox
+rejects recursive cycles with errors is incorrect. CarbonLuau should retain its own
+controlled cycle errors and non-yielding module-load contract, not imitate that
+behavior or claim full Roblox parity.
 
-### V2 — Export revocation conflicts with unrestricted shared values
+[Luau sandbox guidance](https://luau.org/sandbox/) distinguishes environment
+separation from guaranteed VM isolation and describes cooperative interruption.
+It does not prove addon-local cancellation or hard preemption of C#/native calls.
+Trusted installation does not eliminate bounds, reentrancy hazards or host checks.
 
-D-A18/19/45/46 need a complete export value/operation contract. Checking only
-Dependency:Require or a top-level method does not invalidate a previously saved
-nested table, returned closure, bound method, coroutine or callback. Define reads,
-writes, iteration, equality, metatables, function results and callback arguments,
-including identity preservation and cycle handling. Raw tables are not transparently
-revocable. A proxy can preserve shared underlying state, but it is not automatically
-indistinguishable from a normal module value. Do not promise both without proof.
+The comparison to package managers is design opinion, not evidence that explicit
+dependency/export metadata is unnecessary. No Wally behavior is needed to justify
+CarbonLuau's retained preflight and visibility requirements.
 
-### V3 — Execution ownership is not automatic closure attribution
+## Disposition of the original findings
 
-D-A07/I-A16 need an enforceable ownership rule for every crossing, including B's
-callback called by A, tail calls, metamethods, escaped closures and yields. A wrapper
-around one entry method does not observe every call. Define caller versus executing
-owner, stack restoration on error/cancellation, and cumulative call-chain budgets:
-changing owner must not refresh a deadline indefinitely. Current code has VM-wide
-deadline/context and generation-scoped host transport, not this machinery.
+| Finding | Current resolution or remaining gate |
+|---|---|
+| V1 — cross-addon cancellation | Remove local-cancellation requirement. Fatal cancellation retires the whole shared VM/call stack. Global reconstruction still needs G3 evidence. |
+| V2 — export revocation | Remove deep revocation. Ordinary escaped values survive; new imports and host-backed lifetimes remain enforceable (G1). |
+| V3 — closure ownership | Remove dynamic CPU-owner switching. One admitted call-chain budget; cross-domain resource admission/provisional context remains G2. |
+| V4 — candidate transaction | Narrow to CarbonLuau publication. Shared table/cache mutations are explicitly not rolled back. Host-effect laundering still must be prevented (G2). |
+| V5 — heap locality | Accept shared hard heap boundary and delayed reclamation. Aggregate limits and memory-failure/stress evidence remain G4/G5. |
+| V6 — root replacement/fallback | Remove topology fallback and fatal root independence. Healthy root domain replacement differs from current D7; G3 requires canonical migration and qualification. |
+| V7 — bindings/retries/protocol | Remove ranges; retain explicit lifetime-bound dependencies, bounded restoration and no implicit retry of Failed registrations. Exact protocol and public version negotiation remain G4. |
+| V8 — phase ordering | Retain. No production addon activation before global scheduler/facade/lifecycle coordination and required qualification. |
 
-### V4 — Provisional code can mutate an active dependency before commit
+The old “all V1–V8 must be solved while preserving every original guarantee”
+interpretation is superseded. Some guarantees were deliberately removed from the
+proposal; the remaining gates are not solved by calling the design simpler.
 
-D-A22/23 and I-A27/I-A50 do not yet establish a transaction for shared mutable
-dependencies. A provisional B can call an active A's SetBalance, then fail its own
-initialization; A's shared table has already changed. Even a first require could
-initialize A's module and publish retained state. Staging B's commands does not
-undo those effects. Choose an explicit initialization/import/effect policy before
-claiming failed candidates preserve active dependency state.
+## Canonical adoption boundary
 
-Owner switching also creates a host-effect risk: provisional B → active A →
-SendMessage must not lose B's provisional restriction merely because A is active.
-The current single-session D10 check cannot simply be reused unchanged in that
-call chain. Preserve execution owner, caller authorization and provisional-effect
-context as distinct policy questions; no new effect permission is accepted here.
+Before implementation, record approved changes in [Invariants.md](Invariants.md),
+especially D5 import syntax, D7 candidate/domain preservation, D9 global recovery
+and D10 operation-wide provisional enforcement; D12 governs version/migration.
+Shared-VM generation-wide failure is compatible with I9's existing caution, but
+does not automatically approve every addon lifecycle rule.
 
-### V5 — Shared heap lifetime and resource-failure locality remain unproven
+G2 still needs an explicit ownership decision for tasks/listeners/commands created
+through foreign captured facades or lazy module initialization. G3 needs the
+operator rearm action and safe root/domain migration. G4 needs exact provider
+transport, compatibility negotiation and aggregate limits. These are genuine
+remaining design/integration decisions, not a mandate for revocation membranes,
+version solvers or a Luau cancellation fork.
 
-R-A02 correctly distinguishes attribution from refusal, but the design must also
-define retained cross-domain objects, shared/interned allocations, reallocation,
-GC work attribution, category reuse and aggregate exhaustion behavior. Removing
-A's registry references need not reclaim values still reachable from optional B.
-Specify deterministic logical teardown versus delayed heap reclamation, retention
-bounds and what happens to unrelated domains at the global heap cap. A successful
-cancellation experiment alone cannot establish memory-failure locality.
+## Validation scope
 
-### V6 — Root replacement and fallback change ownership semantics
+Documentation/policy validation selected through [Compatibility.md](Compatibility.md):
+review source evidence, rule ownership, examples, links, balanced fences, JSON,
+diff scope and `tools/Test-Api.ps1`. Checks passed: API version/reference/example
+presence and repository relative links; changed-document relative links, balanced
+code fences and manifest JSON parsing; `git diff --check`. Diff scope is exactly
+the proposal, this review and AICONTEXT routing. Markdown uses proposed examples
+only; no addon API is advertised as implemented in the public reference.
 
-D-A24 must preserve root reload and failed-candidate behavior while addon domains
-survive. Existing replacement owns/disposes an entire RuntimeGeneration; calling
-that teardown on the proposed shared VM would not preserve unrelated addons.
-Design candidate domain staging, root recovery and native-library teardown explicitly.
-
-D-A04's topology-independent public API cannot mean topology-independent semantics
-for live shared modules. The attachment's fallback warning correctly requires a
-separate module-contract decision. Per-consumer source copies are not a transparent
-fallback for shared authoritative state; neither RPC nor hidden copies is approved.
-
-### V7 — Snapshot bindings, retries and protocol details need freezing
-
-D-A37/44 and I-A42 should explicitly settle whether repeated optional lookup returns
-nil after an already-bound provider retires, how retained exports fail, and whether
-an initially absent dependency can bind later. The earlier source-copy model's
-surviving consumer-owned values must not be carried into the new A-owned model.
-Define ID reservation release, replacement during stopping, recovery rearming on
-dependency restoration and bounded failed-dependent retry triggers.
-
-The attachment leaves ID limits, comparator grammar, package limits and response
-transport partly conditional. Its `scriptingApi: "0.3"` family matcher does not
-exist in the baseline; D12's exact identity is not such a matcher. Public schema/API
-versions and compatibility acceptance need their own decisions before publication.
-R-A04 remains open: no current Carbon provider-authentication/lifecycle experiment
-was performed here. A passed Plugin object must not be advertised as authenticated
-caller provenance or hostile-managed-plugin isolation without supporting evidence.
-
-### V8 — Phase ordering must not expose partially coordinated addons
-
-Section 15 delays initial support until research, while section 34 permits
-topology-neutral foundation work. Clarify this distinction in the eventual task.
-Phases B–E may build internal data models/test harnesses, but production activation
-cannot precede the global scheduler/facade/lifetime protections placed in Phase F.
-Until those exist, no addon may obtain an independently full frame budget or publish
-commands through the root's single-active-session coordinator.
-
-Owner-thread serialization avoids simultaneous execution, not reentrant calls,
-cross-callback ordering hazards or partially mutated shared state. Fairness, event
-fanout and bounds remain qualification requirements, not consequences of one VM.
-
-## Validation performed and not performed
-
-Performed: read the complete attachment; compare the baseline identities and the
-specific source paths above; review against canonical ownership/compatibility
-policy; check Markdown structure, decision/invariant IDs, JSON example syntax,
-relative links and unchanged runtime/API scope. The imported version table is
-formatted for the repository's Markdown renderer. The author example remains a
-future example, not a runnable example for v0.3.0.
-
-Checks passed: all 60 D-A decision IDs and 58 I-A invariant IDs are present once,
-all 34 numbered sections are ordered, code fences are balanced, the manifest JSON
-parses, Test-Api.ps1 passes documentation/link/version checks, and git diff has no
-whitespace errors. Source-preservation comparison confirms only the declared
-authority note and table formatting differ from the attachment (apart from line
-endings/trailing file whitespace). Runtime/native/scripts/tests/examples and
-release.json are unchanged. These structural passes do not resolve V1–V8.
-
-Not performed: addon implementation, VM patches, cancellation/quota experiments,
-provider registration, Carbon server runs, scale tests, sanitizers/fuzzing, CI,
-deployment, commit or push. Prior Phase 0–5 evidence remains historical evidence
-for its original scope and does not qualify addons. Per Compatibility.md this
-documentation review does not require rerunning those matrices.
-
-**Next permissible design step:** resolve V1–V8 through scoped decisions/research
-with explicit authorization. The document is saved and reviewed; its open gates
-are not resolved merely by being written as invariants.
+No runtime tests, server runs, cancellation experiments, quota experiments,
+sanitizers, provider lifecycle experiments, CI, deployment, commit or push were
+performed for this revision. Existing Phase 0–5 evidence remains valid for its
+recorded unchanged implementation, not for addons.

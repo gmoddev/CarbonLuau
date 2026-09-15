@@ -40,11 +40,12 @@ If documents, code, a task request or upstream evidence conflict, identify the c
 ## Working rules
 
 Post-v0.3.0 addon exploration is recorded in the
-[imported addon design proposal](docs/CarbonLuau_Addon_Decisions_and_Invariants.md)
+[reviewed addon design proposal](docs/CarbonLuau_Addon_Decisions_and_Invariants.md)
 and [design validation](docs/Addon-Design-Validation.md). These are non-operative
 design/review material, not amendments to the canonical decision register or
-authorization to implement addons. Shared-VM cancellation and the additional
-export/transaction/ownership contracts remain open.
+authorization to implement addons. The proposal now retains VM-wide fatal failure,
+ordinary shared module values and publication-only transactions; domain/facade
+ownership, recovery migration and provider protocol gates remain open.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.
