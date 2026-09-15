@@ -1,4 +1,4 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -18,6 +18,10 @@ try {
         if ($IncludePhase3Fixtures) {
             [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($Archive,
                 (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.FacadeFixtures.cs'), 'CarbonLuau.FacadeFixtures.cs') | Out-Null
+        }
+        if ($IncludePhase5Fixtures) {
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($Archive,
+                (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.Phase5Fixtures.cs'), 'CarbonLuau.Phase5Fixtures.cs') | Out-Null
         }
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }
