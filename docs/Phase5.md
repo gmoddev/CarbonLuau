@@ -101,9 +101,12 @@ a replacement. The user deferred Shockbyte full-runtime qualification on
 probe result into a support claim, and requires requalification before support is
 advertised. Provider policy is never bypassed. Real-client evidence requires an
 authorized actual Rust client and is reported separately from controlled-host
-fixtures. The current definition of done still requires player chat messaging,
-so missing authenticated receipt evidence remains a gate rather than being
-inferred from a controlled `BasePlayer`.
+fixtures. By user decision on 2026-09-15, authenticated real-client qualification
+is deferred and non-gating for Phase 5/v0.1. This decision supplies no evidence:
+authenticated Steam/network establishment, visible client `Player:SendMessage`
+receipt, network-driven PlayerAdded/PlayerRemoving and real same-account reconnect
+remain unqualified. The controlled `BasePlayer` results must not be represented as
+proof of any of those paths.
 
 ## Correction and stop policy
 
@@ -116,3 +119,6 @@ corrected narrowly.
 
 Phase 5's execution verdict may be complete, partial or blocked. It is not the
 independent v0.1 release-readiness verdict, and this phase creates no release tag.
+With all remaining gates satisfied and authenticated real-client qualification
+explicitly deferred, the recorded Phase 5 execution verdict is complete within
+the controlled-host qualification envelope.

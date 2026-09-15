@@ -74,7 +74,7 @@
   },
   "acceptance": {
     "shockbyteFullRuntime": "deferred, non-gating, unqualified, not a support claim",
-    "authenticatedClientReceipt": "pending and gating under the current definition of done",
-    "phase5ExecutionVerdict": "PARTIAL"
+    "authenticatedClientReceipt": "deferred, non-gating and unqualified; no authenticated Steam/network, visible receipt, network-driven lifecycle or real reconnect evidence",
+    "phase5ExecutionVerdict": "PASS / COMPLETE within the recorded controlled-host qualification envelope"
   }
 }

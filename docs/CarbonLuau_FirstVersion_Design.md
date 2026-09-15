@@ -1155,7 +1155,7 @@ Current accepted roadmap after D13 closure (2026-09-14):
 | 2 | Scripts/modules/scheduler | [PASS within recorded qualification](Phase2-Validation.md) |
 | 3 | Gameplay facade | [PASS within recorded qualification](Phase3-Validation.md) |
 | 4 | Item conveniences | DEFERRED from v0.1 by D13; no runtime/API implementation |
-| 5 | v0.1 hardening/qualification | PARTIAL; Windows/Linux worker evidence complete, authenticated-client receipt pending |
+| 5 | v0.1 hardening/qualification | COMPLETE within the recorded controlled-host envelope; authenticated real-client qualification deferred and unqualified |
 
 READY is sequencing readiness, not completed hardening, a release verdict or
 provider qualification. Prior phase evidence retains its original limits.
@@ -1274,7 +1274,7 @@ The first version is complete when all of the following are true:
 - memory cap works;
 - infinite loops are interrupted;
 - player connect/disconnect signals work;
-- player chat messaging works;
+- controlled-host `Player:SendMessage` eligibility and dispatch work;
 - script-defined commands work;
 - Carbon permissions can gate those commands;
 - task defer/delay/spawn work;
@@ -1286,6 +1286,11 @@ The first version is complete when all of the following are true:
 - Shockbyte full-runtime deployment is deferred and non-gating by user decision
   on 2026-09-15. Its Phase 0 probe remains historical evidence, not full-runtime
   support; requalification is required before advertising provider support.
+- Authenticated real-client qualification is deferred and non-gating by user
+  decision on 2026-09-15. This is not evidence: authenticated Steam/network
+  establishment, visible client `Player:SendMessage` receipt, network-driven
+  PlayerAdded/PlayerRemoving and real same-account reconnect remain unqualified
+  pending future requalification.
 
 Item conveniences are explicitly excluded by D13. Their deferral does not waive
 any ownership/failure invariant or the remaining hardening/qualification criteria.

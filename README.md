@@ -63,8 +63,11 @@ preserved; no safe all-path ownership adapter was established. The
 places Phase 5 hardening/qualification after the implemented facade. Its committed
 Windows/Linux live matrices, profiler, latency-distribution and sustained-soak
 evidence are in [Phase5-Validation](docs/Phase5-Validation.md). The execution
-verdict remains partial solely because authenticated real-client chat receipt is
-still a canonical gate. Shockbyte full-runtime qualification is user-deferred and
+verdict is complete within the recorded controlled-host qualification envelope.
+Authenticated real-client qualification is user-deferred and non-gating, but
+authenticated Steam/network establishment, visible client chat receipt,
+network-driven player lifecycle events and real same-account reconnect remain
+unqualified. Shockbyte full-runtime qualification is separately user-deferred and
 non-gating, but remains unqualified and unsupported beyond its historical Phase 0
 probe. This is not the independent v0.1 release decision.
 

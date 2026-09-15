@@ -1,12 +1,14 @@
 # Phase 5 qualification — 2026-09-15
 
-Execution verdict: **PARTIAL**. The committed Windows and Linux live matrices,
+Execution verdict: **PASS / COMPLETE** within the recorded controlled-host
+qualification envelope. The committed Windows and Linux live matrices,
 final command-bearing sustained soaks, actual p95 measurement and profiler
-captures passed. Authenticated real-client chat receipt remains unqualified and
-is still required by the canonical v0.1 definition of done. Shockbyte
-full-runtime qualification is deferred and non-gating by explicit user decision;
-that does not make it supported. This execution verdict is deliberately not the
-independent v0.1 release-readiness decision.
+captures passed. By explicit user decision on 2026-09-15, authenticated
+real-client qualification is deferred and non-gating; it remains unqualified and
+this decision supplies no evidence. Shockbyte full-runtime qualification is
+separately deferred and non-gating; that does not make either target supported.
+This execution verdict is deliberately not the independent v0.1 release-readiness
+decision.
 
 ## Revision and identities
 
@@ -281,7 +283,7 @@ annotations were upstream GitHub Action Node.js deprecation notices.
 | Windows x64 live | PASS full matrix: reloads, rejected candidates, connection churn, pressure/D9, 10 plugin cycles, p95, profiler, final 30-minute command-bearing soak; process absent after teardown, numeric exit unavailable |
 | Windows/Linux CI and sanitizers | PASS on final fixture/evidence content in run `34943142473` |
 | Shockbyte intended host | DEFERRED/NON-GATING by user decision; only historical Phase 0 probe evidence exists, Phase 1-5 full runtime is unqualified, and no support claim is made |
-| Authenticated real client | PENDING/GATING — no authorized client/session automation was available; controlled-host evidence does not prove chat receipt required by the current definition of done |
+| Authenticated real client | DEFERRED/NON-GATING by user decision; no authorized client/session automation was available, and authenticated Steam/network establishment, visible client `Player:SendMessage` receipt, network-driven PlayerAdded/PlayerRemoving and real same-account reconnect remain unqualified |
 
 | Criterion | Windows | Linux |
 |---|---|---|
@@ -334,8 +336,10 @@ CarbonLuau source correction was made.
   requested GC/allocation evidence.
 - Controlled host objects do not establish authenticated networking or visible
   chat delivery.
-- Authenticated real-client chat receipt remains unqualified and gates the current
-  definition of done.
+- Authenticated real-client qualification is deferred and non-gating. This is not
+  evidence: authenticated Steam/network establishment, visible client
+  `Player:SendMessage` receipt, network-driven PlayerAdded/PlayerRemoving and real
+  same-account reconnect remain unqualified pending future requalification.
 - Shockbyte Phase 1-5 full runtime is deferred and non-gating, but unqualified and
   unsupported; Phase 0 probe evidence remains historical.
 - Mutable upstream setup installed the exact Rust/Carbon builds recorded above;
@@ -347,3 +351,12 @@ CarbonLuau source correction was made.
 
 Phase 4 remains deferred under D13. No Items/GiveItem surface, other gameplay API,
 post-v0.1 work, tag or GitHub Release was created.
+
+## Approved acceptance closure
+
+The evidence-content revision originally recorded authenticated-client receipt as
+pending and gating. On 2026-09-15, the user approved deferring that qualification
+as non-gating for Phase 5/v0.1. No measurement, artifact, hash, invariant,
+production source, API or support boundary changed. The preserved controlled-host
+evidence therefore closes Phase 5 as PASS / COMPLETE only within its stated
+qualification envelope.

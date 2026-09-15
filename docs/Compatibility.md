@@ -98,9 +98,14 @@ plugin/native unload, sustained status/memory sampling and Carbon's profiler.
 Windows/Linux live results, CI, provider deployment and authenticated real-client
 evidence remain separate claims. Shockbyte full-runtime deployment is deferred
 and non-gating by the recorded user decision, without converting its Phase 0
-probe evidence into support. Authenticated-client receipt remains required by the
-current v0.1 definition of done. A task-scoped Linux worker substitution does not
-change the repository's general worker policy or qualify another operating system.
+probe evidence into support. By user decision on 2026-09-15, authenticated
+real-client qualification is also deferred and non-gating for Phase 5/v0.1; this
+is a qualification deferral, not evidence. Authenticated Steam/network
+establishment, visible client `Player:SendMessage` receipt, network-driven
+PlayerAdded/PlayerRemoving and real same-account reconnect remain unqualified and
+require future requalification before any support claim. A task-scoped Linux
+worker substitution does not change the repository's general worker policy or
+qualify another operating system.
 
 ## Phase 0 consistency review
 
