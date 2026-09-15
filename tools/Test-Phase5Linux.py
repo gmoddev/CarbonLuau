@@ -164,6 +164,7 @@ with Console.open('w') as Output:
         print(Send('carbonluau.phase5fixture', 'CarbonLuau Phase5 fixture scheduled'), flush=True)
         WaitLog(Offset, 'PASS complete Phase 5 controlled-host fixture', 900)
         Sample('composite-fixture')
+        print(Send('carbonluau.phase5latency', 'Phase5 latency PASS'), flush=True)
 
         for Cycle in range(1, LifecycleCycles + 1):
             print(Send('carbonluau.phase5arm', 'Phase5 armed'), flush=True)

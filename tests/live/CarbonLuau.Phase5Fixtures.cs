@@ -78,6 +78,36 @@ namespace Carbon.Plugins
             Arg.ReplyWith("CarbonLuau Phase5 controlled player removed");
         }
 
+        [ConsoleCommand("carbonluau.phase5latency"), AuthLevel(2)]
+        private void Phase5Latency(ConsoleSystem.Arg Arg)
+        {
+            try
+            {
+                BasePlayer Player = EnsurePhase5Player();
+                LoadPhase5("game:GetService('Players').PlayerAdded:Connect(function() end)");
+                var Lifetime = Gameplay.Players.Find(Player.UserIDString);
+                var Latencies = new List<double>(2000);
+                for (int Index = -100; Index < 2000; ++Index)
+                {
+                    long Started = Stopwatch.GetTimestamp();
+                    Gameplay.Event("added", Lifetime);
+                    var Results = Host.Drain();
+                    double Elapsed = (Stopwatch.GetTimestamp() - Started) * 1000.0 / Stopwatch.Frequency;
+                    CheckPhase5(Results.Count == 1 && Results[0].Status == RuntimeStatus.OK && !Host.HasWork,
+                        "one no-op event callback per latency sample");
+                    if (Index >= 0) Latencies.Add(Elapsed);
+                }
+                Latencies.Sort();
+                double P50 = Latencies[999], P95 = Latencies[1899], P99 = Latencies[1979], Max = Latencies[1999];
+                CheckPhase5(P95 < 0.25, "no-op event dispatch p95 below 0.25 ms; observed " +
+                    P95.ToString("F6", CultureInfo.InvariantCulture));
+                Arg.ReplyWith("CarbonLuau Phase5 latency PASS; path=facade admission+native callback drain; count=2000; p50/p95/p99/max ms=" +
+                    P50.ToString("F6", CultureInfo.InvariantCulture) + "/" + P95.ToString("F6", CultureInfo.InvariantCulture) + "/" +
+                    P99.ToString("F6", CultureInfo.InvariantCulture) + "/" + Max.ToString("F6", CultureInfo.InvariantCulture));
+            }
+            catch (Exception Error) { PrintError("[CarbonLuau:Phase5Fixture] FAIL latency " + Error); }
+        }
+
         private void RunPhase5Fixture()
         {
             BasePlayer Player = null;

@@ -158,6 +158,7 @@ try {
     Write-Output (Send 'carbonluau.phase5fixture' 'CarbonLuau Phase5 fixture scheduled')
     WaitLog $Offset 'PASS complete Phase 5 controlled-host fixture' 900
     Sample 'composite-fixture'
+    Write-Output (Send 'carbonluau.phase5latency' 'Phase5 latency PASS')
 
     for ($Cycle = 1; $Cycle -le $LifecycleCycles; ++$Cycle) {
         Write-Output (Send 'carbonluau.phase5arm' 'Phase5 armed')
