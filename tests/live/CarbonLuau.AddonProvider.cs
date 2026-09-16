@@ -6,7 +6,7 @@ using Oxide.Core.Plugins;
 namespace Carbon.Plugins
 {
     [Info("CarbonLuauAddonProvider", "gmoddev", "1.0.0")]
-    [Description("Foundation B live provider lifecycle fixture")]
+    [Description("Addon provider lifecycle regression fixture")]
     public sealed class CarbonLuauAddonProvider : CarbonPlugin
     {
         [PluginReference] private Plugin CarbonLuau;
@@ -28,7 +28,7 @@ namespace Carbon.Plugins
             try {
                 string[] Protocol = CarbonLuau.Call("CarbonLuau_AddonProtocol") as string[];
                 Check(Protocol != null && Protocol.Length == 4 && Protocol[0] == "OK" &&
-                    Protocol[1] == "CarbonLuau.Addons" && Protocol[2] == "1.0", "protocol query");
+                    Protocol[1] == "CarbonLuau.Addons" && Protocol[2] == "1.1" && Protocol[3].Contains("dependencies"), "protocol query");
                 byte[] Source = new UTF8Encoding(false, true).GetBytes(
                     "game:GetService('Commands'):Register('clfoundationb',{},function() end); " +
                     "task.delay(86400,function() error('provider teardown failed') end); return true");

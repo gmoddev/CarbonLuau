@@ -148,10 +148,31 @@ domain lifecycle checks, Phase 0-3 regressions, Windows/Linux managed runtime te
 live Carbon load/unload ordering and the existing native sanitizer suite. Historical
 Phase 0-5 records are not rewritten by these results.
 
-Foundation B does not qualify dependency resolution, package-qualified `require`,
+At the Foundation B revision, dependency resolution, package-qualified `require`,
 public module exports, provider C# capabilities, multiple versions, remote package
-transport, scale/fairness policy or a public addon scripting API identity. Manifests
-that declare dependencies remain `Blocked` and are never partially resolved.
+transport, scale/fairness policy and a public addon scripting API identity were not
+qualified. Manifests declaring dependencies remained `Blocked` and were never
+partially resolved; the Foundation C contract below supersedes only that dependency
+lifecycle limitation.
+
+## Foundation C evidence contract
+
+[Foundation C](FoundationC.md) makes D14 required and optional declarations
+operational as host/runtime lifecycle bindings. Its affected evidence is exact
+VM-generation/domain-lifetime binding, deterministic required activation and
+restoration order, required and optional loss, bounded SCC detection, one-attempt
+restoration failure, dependency-aware transactional replacement, provider
+unload/reload propagation, stale-binding rejection, graph bounds and teardown to
+baseline. Re-run the Foundation A/B and Phase 0-3 regressions, Windows/Linux
+managed runtime tests, live Carbon provider ordering and the existing native
+sanitizer suite. Historical Phase 0-5 and Foundation A/B records are not rewritten
+by these results.
+
+Foundation C does not qualify package-qualified `require`, public module exports,
+`addon:IsDependencyAvailable`, root-to-addon imports, provider capabilities,
+version solving, multiple versions, downloads/registries, scale/fairness policy or
+a public addon scripting API identity. Dependency declarations are lifecycle
+relationships only; caught errors and runtime behavior never mutate the graph.
 
 ## Phase 0 consistency review
 

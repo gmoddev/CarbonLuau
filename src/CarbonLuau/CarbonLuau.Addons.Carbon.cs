@@ -11,7 +11,7 @@ namespace Carbon.Plugins
         private string[] CarbonLuau_AddonProtocol()
         {
             return new[] {"OK", AddonPolicy.ProtocolName, AddonPolicy.ProtocolVersion,
-                Addons == null ? "unavailable" : "archive,source,status,replace,unregister"};
+                Addons == null ? "unavailable" : "archive,source,status,replace,unregister,dependencies"};
         }
         private string[] CarbonLuau_RegisterAddonArchive(Plugin Provider, byte[] Archive)
         {

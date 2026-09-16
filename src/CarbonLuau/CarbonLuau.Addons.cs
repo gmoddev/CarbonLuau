@@ -18,11 +18,12 @@ namespace Carbon.Plugins
 
         public static class AddonPolicy
         {
-            public const string ProtocolName = "CarbonLuau.Addons", ProtocolVersion = "1.0";
+            public const string ProtocolName = "CarbonLuau.Addons", ProtocolVersion = "1.1";
             public const int Schema = 1, MaxArchiveBytes = 4 * 1024 * 1024, MaxExpandedBytes = 8 * 1024 * 1024;
             public const int MaxManifestBytes = 65536, MaxSourceBytes = 65536, MaxAggregateSourceBytes = 4 * 1024 * 1024;
             public const int MaxSourceModules = 256, MaxArchiveEntries = 512, MaxPathCharacters = 127, MaxPathDepth = 32;
             public const int MaxDependencies = 32, MaxRegistrations = 128, MaxRegistrationsPerProvider = 32;
+            public const int MaxGraphEdges = MaxRegistrations * MaxDependencies;
             public const int MaxAggregateSnapshotBytes = 32 * 1024 * 1024, MaxDiagnosticCharacters = 1024, MaxTombstones = 1024;
             public static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
 
@@ -77,6 +78,7 @@ namespace Carbon.Plugins
                 this.Id = Id; this.Version = Version; this.EntrySource = EntrySource;
                 ModuleSources = new SortedDictionary<string, string>(Modules, StringComparer.Ordinal);
                 RequiredDependencies = Required.ToArray(); OptionalDependencies = Optional.ToArray();
+                Array.Sort(RequiredDependencies, StringComparer.Ordinal); Array.Sort(OptionalDependencies, StringComparer.Ordinal);
                 this.Hash = Hash; this.SourceBytes = SourceBytes;
             }
             public ScriptSnapshot ToScriptSnapshot()
@@ -324,6 +326,13 @@ namespace Carbon.Plugins
             {
                 public object Provider; public string Token; public AddonPackageSnapshot Snapshot, PendingSnapshot;
                 public AddonRegistrationState State; public RuntimeDomain Domain; public string Failure;
+                public readonly Dictionary<string, DependencyBinding> Bindings = new Dictionary<string, DependencyBinding>(StringComparer.Ordinal);
+                public bool RestorationPending;
+            }
+            private sealed class DependencyBinding
+            {
+                public string Id; public bool Optional; public Registration Target;
+                public long VmGenerationId, DomainLifetimeId;
             }
             private readonly ScriptHost Host;
             private readonly long HostLifetimeId;
@@ -331,20 +340,13 @@ namespace Carbon.Plugins
             private readonly Dictionary<string, Registration> Registrations = new Dictionary<string, Registration>(StringComparer.Ordinal);
             private readonly Dictionary<string, Registration> Ids = new Dictionary<string, Registration>(StringComparer.Ordinal);
             private readonly Dictionary<object, int> ProviderCounts = new Dictionary<object, int>(ReferenceComparer.Instance);
-            private readonly Queue<string> Pending = new Queue<string>();
-            private readonly HashSet<string> PendingSet = new HashSet<string>(StringComparer.Ordinal);
             private readonly Dictionary<string, object> Tombstones = new Dictionary<string, object>(StringComparer.Ordinal);
             private readonly Queue<string> TombstoneOrder = new Queue<string>();
             private long NextToken;
             private int AggregateSnapshotBytes;
             private bool Disposed;
             public AddonRegistry(ScriptHost Host, long HostLifetimeId) { this.Host = Host; this.HostLifetimeId = HostLifetimeId; }
-            public bool HasPending { get {
-                if (Pending.Count != 0) return true;
-                foreach (Registration Value in Registrations.Values)
-                    if (Value.State == AddonRegistrationState.Active && (Value.Domain == null || !Value.Domain.Alive)) return true;
-                return false;
-            } }
+            public bool HasPending { get { CheckOwner(); if (Disposed) return false; RefreshGraph(); return FindNext() != null; } }
             public int Count { get { return Registrations.Count; } }
             public string[] RegisterArchive(object Provider, byte[] Archive)
             { try { return Register(Provider, AddonPackageSnapshot.FromArchive(Archive)); } catch (Exception Error) { return ErrorResponse(Error); } }
@@ -362,16 +364,15 @@ namespace Carbon.Plugins
                 if (NextToken == Int64.MaxValue) throw new InvalidOperationException("registration token space exhausted");
                 string Token = HostLifetimeId.ToString("x16", CultureInfo.InvariantCulture) + "-" + (++NextToken).ToString("x16", CultureInfo.InvariantCulture);
                 var Value = new Registration {Provider = Provider, Token = Token, Snapshot = Snapshot,
-                    State = Snapshot.DependencyCount == 0 ? AddonRegistrationState.Registered : AddonRegistrationState.Blocked,
-                    Failure = Snapshot.DependencyCount == 0 ? "" : "dependency resolution is deferred in Foundation B"};
+                    State = AddonRegistrationState.Registered, Failure = ""};
                 Registrations.Add(Token, Value); Ids.Add(Snapshot.Id, Value); ProviderCounts[Provider] = ProviderCount + 1;
                 AggregateSnapshotBytes += Snapshot.SourceBytes;
-                if (Value.State == AddonRegistrationState.Registered) Enqueue(Value);
+                RefreshGraph();
                 return Response(Value);
             }
             public string[] Status(object Provider, string Token)
             {
-                try { CheckOwner(); CheckLive(); Registration Value = FindOwned(Provider, Token); Reconcile(Value); return Response(Value); }
+                try { CheckOwner(); CheckLive(); Registration Value = FindOwned(Provider, Token); RefreshGraph(); return Response(Value); }
                 catch (Exception Error) { return ErrorResponse(Error); }
             }
             public string[] ReplaceArchive(object Provider, string Token, byte[] Archive)
@@ -388,12 +389,13 @@ namespace Carbon.Plugins
                 CheckOwner(); CheckLive(); Registration Value = FindOwned(Provider, Token);
                 if (Value.State == AddonRegistrationState.Stopping) throw new InvalidOperationException("registration is stopping");
                 if (!String.Equals(Value.Snapshot.Id, Snapshot.Id, StringComparison.Ordinal)) throw new InvalidOperationException("replacement id must match reserved id");
-                if (Snapshot.DependencyCount != 0) throw new InvalidOperationException("dependency-bearing replacement is blocked until dependency resolution exists");
                 if (Value.PendingSnapshot != null || Value.State == AddonRegistrationState.Initializing) throw new InvalidOperationException("replacement is already pending");
                 if (AggregateSnapshotBytes > AddonPolicy.MaxAggregateSnapshotBytes - Snapshot.SourceBytes)
                     throw new InvalidOperationException("aggregate package snapshots exceed 32 MiB");
                 AggregateSnapshotBytes += Snapshot.SourceBytes;
-                Value.PendingSnapshot = Snapshot; Value.Failure = ""; Enqueue(Value); return Response(Value);
+                Value.PendingSnapshot = Snapshot; Value.Failure = ""; Value.RestorationPending = Value.Domain == null;
+                if (Value.Domain == null) Value.State = AddonRegistrationState.Blocked;
+                RefreshGraph(); return Response(Value);
             }
             public string[] Unregister(object Provider, string Token)
             {
@@ -406,7 +408,7 @@ namespace Carbon.Plugins
                         throw new InvalidOperationException("stale registration token");
                     }
                     if (!Object.ReferenceEquals(Value.Provider, Provider)) throw new InvalidOperationException("registration owner mismatch");
-                    Stop(Value); return new[] {"OK", Token, "Stopping", Value.Snapshot.Id, Value.Snapshot.Version, "", Value.Snapshot.Hash, "", ""};
+                    Stop(Value, true); return new[] {"OK", Token, "Stopping", Value.Snapshot.Id, Value.Snapshot.Version, "", Value.Snapshot.Hash, "", ""};
                 } catch (Exception Error) { return ErrorResponse(Error); }
             }
             public int UnloadProvider(object Provider)
@@ -414,51 +416,201 @@ namespace Carbon.Plugins
                 CheckOwner(); if (Disposed || Provider == null) return 0;
                 var Owned = new List<Registration>();
                 foreach (Registration Value in Registrations.Values) if (Object.ReferenceEquals(Value.Provider, Provider)) Owned.Add(Value);
-                foreach (Registration Value in Owned) Stop(Value);
+                Owned.Sort((Left, Right) => StringComparer.Ordinal.Compare(Left.Snapshot.Id, Right.Snapshot.Id));
+                foreach (Registration Value in Owned) Stop(Value, false);
+                RefreshGraph();
                 return Owned.Count;
             }
             public bool ProcessOne()
             {
-                CheckOwner(); if (Disposed) return false; ReconcileAll();
+                CheckOwner(); if (Disposed) return false; RefreshGraph();
                 if (!Host.Ready || Host.Busy) return false;
-                Registration Value = null;
-                while (Pending.Count != 0 && Value == null) {
-                    string Token = Pending.Dequeue(); PendingSet.Remove(Token);
-                    Registration Candidate;
-                    if (Registrations.TryGetValue(Token, out Candidate) && Candidate.State != AddonRegistrationState.Stopping &&
-                        (Candidate.State == AddonRegistrationState.Registered || Candidate.PendingSnapshot != null)) Value = Candidate;
-                }
+                Registration Value = FindNext();
                 if (Value == null) return false;
                 AddonPackageSnapshot CandidateSnapshot = Value.PendingSnapshot ?? Value.Snapshot;
+                bool PendingReplacement = Value.PendingSnapshot != null;
                 RuntimeDomain Previous = Value.Domain; bool Replacing = Previous != null && Previous.Alive;
+                if (HasRequiredCycle(Value, CandidateSnapshot)) {
+                    if (PendingReplacement) {
+                        AggregateSnapshotBytes -= CandidateSnapshot.SourceBytes; Value.PendingSnapshot = null;
+                        Value.Failure = "replacement blocked: required dependency cycle/SCC";
+                        Value.State = Replacing ? AddonRegistrationState.Active : AddonRegistrationState.Blocked;
+                    }
+                    RefreshGraph(); return true;
+                }
+                string Missing = MissingRequired(CandidateSnapshot);
+                if (Missing != null) { RefreshGraph(); return false; }
+                Dictionary<string, DependencyBinding> CandidateBindings = BuildBindings(CandidateSnapshot);
                 Value.State = AddonRegistrationState.Initializing; Value.Failure = "";
                 AddonActivation Activation = Host.ActivateAddon(CandidateSnapshot, Previous);
                 if (!Registrations.ContainsKey(Value.Token) || Value.State == AddonRegistrationState.Stopping) {
                     if (Activation.Domain != null) Host.RetireAddon(Activation.Domain); return true;
                 }
                 if (Activation.Result.Status == RuntimeStatus.OK && Activation.Domain != null) {
-                    AggregateSnapshotBytes -= Value.Snapshot.SourceBytes;
+                    if (!BindingsCurrent(CandidateBindings) || Activation.Domain.VmGenerationId != Host.VmGenerationId) {
+                        Host.RetireAddon(Activation.Domain);
+                        throw new InvalidOperationException("dependency binding changed during serialized addon activation");
+                    }
+                    if (PendingReplacement) AggregateSnapshotBytes -= Value.Snapshot.SourceBytes;
                     Value.Snapshot = CandidateSnapshot; Value.PendingSnapshot = null; Value.Domain = Activation.Domain;
-                    Value.State = AddonRegistrationState.Active; Value.Failure = "";
+                    Value.Bindings.Clear(); foreach (var Binding in CandidateBindings) Value.Bindings.Add(Binding.Key, Binding.Value);
+                    Value.State = AddonRegistrationState.Active; Value.RestorationPending = false; Value.Failure = ActiveBindingDiagnostic(Value);
                 } else {
-                    if (Value.PendingSnapshot != null) AggregateSnapshotBytes -= CandidateSnapshot.SourceBytes;
+                    if (PendingReplacement) AggregateSnapshotBytes -= CandidateSnapshot.SourceBytes;
                     Value.PendingSnapshot = null;
-                    Value.Failure = AddonPolicy.Diagnostic((Replacing ? "replacement failed: " : "initialization failed: ") +
+                    Value.Failure = AddonPolicy.Diagnostic((Replacing ? "replacement failed: " : Value.RestorationPending ? "restoration failed: " : "initialization failed: ") +
                         Activation.Result.Status + (String.IsNullOrEmpty(Activation.Result.Error) ? "" : " " + Activation.Result.Error));
+                    Value.RestorationPending = false;
                     if (Replacing && Previous.Alive) { Value.Domain = Previous; Value.State = AddonRegistrationState.Active; }
                     else { Value.Domain = null; Value.State = AddonRegistrationState.Failed; }
                 }
+                RefreshGraph();
                 return true;
             }
-            private void ReconcileAll() { foreach (Registration Value in Registrations.Values) Reconcile(Value); }
-            private void Reconcile(Registration Value)
+            private void RefreshGraph()
             {
-                if (Value.State == AddonRegistrationState.Active && (Value.Domain == null || !Value.Domain.Alive)) {
-                    Value.Domain = null; Value.State = AddonRegistrationState.Registered;
-                    Value.Failure = "VM generation retired; reconstruction queued"; Enqueue(Value);
+                bool Changed; int Passes = 0;
+                do {
+                    if (++Passes > AddonPolicy.MaxRegistrations + 1) throw new InvalidOperationException("dependency loss propagation bound exceeded");
+                    Changed = false;
+                    foreach (Registration Value in OrderedRegistrations()) {
+                        if (Value.State != AddonRegistrationState.Active) continue;
+                        string Lost = null;
+                        if (Value.Domain == null || !Value.Domain.Alive) Lost = "VM generation retired";
+                        else foreach (string Id in Value.Snapshot.Dependencies(false)) {
+                            DependencyBinding Binding;
+                            if (!Value.Bindings.TryGetValue(Id, out Binding) || !BindingCurrent(Binding)) {
+                                Lost = "required dependency binding lost or stale: " + Id; break;
+                            }
+                        }
+                        if (Lost == null) {
+                            if (Value.PendingSnapshot != null) {
+                                string PendingMissing = MissingRequired(Value.PendingSnapshot);
+                                if (HasRequiredCycle(Value, Value.PendingSnapshot)) Value.Failure = "replacement blocked: required dependency cycle/SCC";
+                                else if (PendingMissing != null) Value.Failure = "replacement blocked: required dependency unavailable: " + PendingMissing;
+                                else if (String.IsNullOrEmpty(Value.Failure) || Value.Failure.StartsWith("replacement blocked", StringComparison.Ordinal))
+                                    Value.Failure = "replacement dependencies ready; activation queued";
+                            } else if (String.IsNullOrEmpty(Value.Failure) || Value.Failure.StartsWith("optional dependency", StringComparison.Ordinal))
+                                Value.Failure = ActiveBindingDiagnostic(Value);
+                            continue;
+                        }
+                        if (Value.Domain != null && Value.Domain.Alive) Host.RetireAddon(Value.Domain);
+                        Value.Domain = null; Value.State = AddonRegistrationState.Blocked; Value.RestorationPending = true;
+                        Value.Failure = Lost + "; deterministic restoration pending"; Changed = true;
+                    }
+                } while (Changed);
+                foreach (Registration Value in OrderedRegistrations()) {
+                    if (Value.State == AddonRegistrationState.Active || Value.State == AddonRegistrationState.Failed ||
+                        Value.State == AddonRegistrationState.Stopping || Value.State == AddonRegistrationState.Initializing) continue;
+                    AddonPackageSnapshot Candidate = Value.PendingSnapshot ?? Value.Snapshot;
+                    if (HasRequiredCycle(Value, Candidate)) {
+                        Value.State = AddonRegistrationState.Blocked; Value.Failure = "required dependency cycle/SCC blocks activation"; continue;
+                    }
+                    string Missing = MissingRequired(Candidate);
+                    if (Missing != null) {
+                        Value.State = AddonRegistrationState.Blocked;
+                        Value.Failure = "required dependency unavailable: " + Missing; continue;
+                    }
+                    if (Value.State == AddonRegistrationState.Blocked) Value.RestorationPending = true;
+                    Value.State = AddonRegistrationState.Registered;
+                    Value.Failure = Value.RestorationPending ? "required dependencies restored; one activation attempt queued" : "";
                 }
             }
-            private void Enqueue(Registration Value) { if (PendingSet.Add(Value.Token)) Pending.Enqueue(Value.Token); }
+            private List<Registration> OrderedRegistrations()
+            {
+                var Values = new List<Registration>(Registrations.Values);
+                Values.Sort((Left, Right) => StringComparer.Ordinal.Compare(Left.Snapshot.Id, Right.Snapshot.Id)); return Values;
+            }
+            private Registration FindNext()
+            {
+                foreach (Registration Value in OrderedRegistrations()) {
+                    if (Value.State == AddonRegistrationState.Registered) return Value;
+                    if (Value.PendingSnapshot != null && Value.State == AddonRegistrationState.Active &&
+                        (HasRequiredCycle(Value, Value.PendingSnapshot) || MissingRequired(Value.PendingSnapshot) == null)) return Value;
+                }
+                return null;
+            }
+            private string MissingRequired(AddonPackageSnapshot Snapshot)
+            {
+                foreach (string Id in Snapshot.Dependencies(false)) {
+                    Registration Target;
+                    if (!Ids.TryGetValue(Id, out Target) || Target.State != AddonRegistrationState.Active ||
+                        Target.Domain == null || !Target.Domain.Alive) return Id;
+                }
+                return null;
+            }
+            private Dictionary<string, DependencyBinding> BuildBindings(AddonPackageSnapshot Snapshot)
+            {
+                var Result = new Dictionary<string, DependencyBinding>(StringComparer.Ordinal);
+                foreach (string Id in Snapshot.Dependencies(false)) Result.Add(Id, CreateBinding(Id, false, true));
+                foreach (string Id in Snapshot.Dependencies(true)) Result.Add(Id, CreateBinding(Id, true, false));
+                return Result;
+            }
+            private DependencyBinding CreateBinding(string Id, bool Optional, bool Required)
+            {
+                Registration Target;
+                bool Available = Ids.TryGetValue(Id, out Target) && Target.State == AddonRegistrationState.Active &&
+                    Target.Domain != null && Target.Domain.Alive;
+                if (Required && !Available) throw new InvalidOperationException("required dependency changed before activation: " + Id);
+                return new DependencyBinding {Id = Id, Optional = Optional, Target = Available ? Target : null,
+                    VmGenerationId = Available ? Target.Domain.VmGenerationId : 0,
+                    DomainLifetimeId = Available ? Target.Domain.DomainLifetimeId : 0};
+            }
+            private static bool BindingCurrent(DependencyBinding Binding)
+            {
+                return Binding.Target != null && Binding.Target.State == AddonRegistrationState.Active &&
+                    Binding.Target.Domain != null && Binding.Target.Domain.Alive &&
+                    Binding.Target.Domain.VmGenerationId == Binding.VmGenerationId &&
+                    Binding.Target.Domain.DomainLifetimeId == Binding.DomainLifetimeId;
+            }
+            private static bool BindingsCurrent(Dictionary<string, DependencyBinding> Bindings)
+            {
+                foreach (DependencyBinding Binding in Bindings.Values) if (!Binding.Optional && !BindingCurrent(Binding)) return false;
+                return true;
+            }
+            private static string ActiveBindingDiagnostic(Registration Value)
+            {
+                foreach (string Id in Value.Snapshot.Dependencies(true)) {
+                    DependencyBinding Binding; if (!Value.Bindings.TryGetValue(Id, out Binding)) continue;
+                    if (Binding.Target == null) return "optional dependency absent for this domain: " + Binding.Id;
+                    if (!BindingCurrent(Binding)) return "optional dependency binding unavailable/stale: " + Binding.Id;
+                }
+                return "";
+            }
+            private bool HasRequiredCycle(Registration Start, AddonPackageSnapshot Candidate)
+            {
+                var Visiting = new HashSet<Registration>(); var Visited = new HashSet<Registration>(); int Edges = 0;
+                return VisitRequired(Start, Start, Candidate, Visiting, Visited, ref Edges);
+            }
+            private bool VisitRequired(Registration Current, Registration Start, AddonPackageSnapshot Candidate,
+                HashSet<Registration> Visiting, HashSet<Registration> Visited, ref int Edges)
+            {
+                if (!Visiting.Add(Current)) return Object.ReferenceEquals(Current, Start);
+                AddonPackageSnapshot Snapshot = Object.ReferenceEquals(Current, Start) ? Candidate :
+                    Current.State == AddonRegistrationState.Active ? Current.Snapshot : Current.PendingSnapshot ?? Current.Snapshot;
+                foreach (string Id in Snapshot.Dependencies(false)) {
+                    if (++Edges > AddonPolicy.MaxGraphEdges) throw new InvalidOperationException("dependency graph edge bound exceeded");
+                    Registration Target; if (!Ids.TryGetValue(Id, out Target)) continue;
+                    if (Object.ReferenceEquals(Target, Start)) return true;
+                    if (!Visited.Contains(Target) && VisitRequired(Target, Start, Candidate, Visiting, Visited, ref Edges)) return true;
+                }
+                Visiting.Remove(Current); Visited.Add(Current); return false;
+            }
+            internal string[] BindingStatus(object Provider, string Token, string DependencyId)
+            {
+                CheckOwner(); CheckLive(); Registration Value = FindOwned(Provider, Token); RefreshGraph();
+                DependencyBinding Binding;
+                if (!Value.Bindings.TryGetValue(DependencyId ?? "", out Binding)) return new[] {"undeclared", "", "", ""};
+                return new[] {Binding.Optional ? "optional" : "required",
+                    Binding.Target == null ? "absent" : BindingCurrent(Binding) ? "available" : "stale",
+                    Binding.VmGenerationId.ToString(CultureInfo.InvariantCulture), Binding.DomainLifetimeId.ToString(CultureInfo.InvariantCulture)};
+            }
+            internal bool ValidateBinding(object Provider, string Token, string DependencyId, long VmGenerationId, long DomainLifetimeId)
+            {
+                string[] Status = BindingStatus(Provider, Token, DependencyId);
+                return Status[1] == "available" && Status[2] == VmGenerationId.ToString(CultureInfo.InvariantCulture) &&
+                    Status[3] == DomainLifetimeId.ToString(CultureInfo.InvariantCulture);
+            }
             private Registration FindOwned(object Provider, string Token)
             {
                 Registration Value;
@@ -466,9 +618,9 @@ namespace Carbon.Plugins
                 if (!Object.ReferenceEquals(Value.Provider, Provider)) throw new InvalidOperationException("registration owner mismatch");
                 return Value;
             }
-            private void Stop(Registration Value)
+            private void Stop(Registration Value, bool Refresh)
             {
-                Value.State = AddonRegistrationState.Stopping; RemovePending(Value.Token);
+                Value.State = AddonRegistrationState.Stopping;
                 if (Value.Domain != null) { Host.RetireAddon(Value.Domain); Value.Domain = null; }
                 Registrations.Remove(Value.Token); Ids.Remove(Value.Snapshot.Id);
                 int Count = ProviderCounts[Value.Provider] - 1;
@@ -476,21 +628,13 @@ namespace Carbon.Plugins
                 AggregateSnapshotBytes -= Value.Snapshot.SourceBytes;
                 if (Value.PendingSnapshot != null) AggregateSnapshotBytes -= Value.PendingSnapshot.SourceBytes;
                 AddTombstone(Value.Token, Value.Provider);
-                Value.PendingSnapshot = null;
+                Value.PendingSnapshot = null; Value.Bindings.Clear();
+                if (Refresh) RefreshGraph();
             }
             private void AddTombstone(string Token, object Provider)
             {
                 Tombstones[Token] = Provider; TombstoneOrder.Enqueue(Token);
                 while (TombstoneOrder.Count > AddonPolicy.MaxTombstones) Tombstones.Remove(TombstoneOrder.Dequeue());
-            }
-            private void RemovePending(string Token)
-            {
-                if (!PendingSet.Remove(Token)) return;
-                int Count = Pending.Count;
-                for (int Index = 0; Index < Count; ++Index) {
-                    string Value = Pending.Dequeue();
-                    if (!String.Equals(Value, Token, StringComparison.Ordinal)) Pending.Enqueue(Value);
-                }
             }
             private string[] Response(Registration Value)
             {
@@ -506,8 +650,9 @@ namespace Carbon.Plugins
             {
                 CheckOwner(); if (Disposed) return;
                 var Values = new List<Registration>(Registrations.Values);
-                foreach (Registration Value in Values) Stop(Value);
-                Disposed = true; Pending.Clear(); PendingSet.Clear(); Tombstones.Clear(); TombstoneOrder.Clear(); ProviderCounts.Clear(); Ids.Clear();
+                Values.Sort((Left, Right) => StringComparer.Ordinal.Compare(Left.Snapshot.Id, Right.Snapshot.Id));
+                foreach (Registration Value in Values) Stop(Value, false);
+                Disposed = true; Tombstones.Clear(); TombstoneOrder.Clear(); ProviderCounts.Clear(); Ids.Clear();
             }
         }
 

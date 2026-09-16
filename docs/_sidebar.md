@@ -16,4 +16,5 @@
   - [Support policy](Compatibility.md)
   - [Foundation A](FoundationA.md)
   - [Foundation B](FoundationB.md)
+  - [Foundation C](FoundationC.md)
   - [Phase 5 evidence](Phase5-Validation.md)
