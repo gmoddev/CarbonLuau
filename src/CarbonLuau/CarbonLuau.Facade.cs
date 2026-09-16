@@ -262,9 +262,11 @@ namespace Carbon.Plugins
                 }
             }
             public void Flush(RuntimeDomain Runtime, System.Diagnostics.Stopwatch Watch, int Milliseconds)
+            { Flush(Runtime, Watch, Milliseconds, 64); }
+            internal void Flush(RuntimeDomain Runtime, System.Diagnostics.Stopwatch Watch, int Milliseconds, int Maximum)
             {
                 World.Players.CheckOwner();
-                for (int Count = 0; Count < 64 && Pending.Count != 0 && Watch.Elapsed.TotalMilliseconds < Milliseconds; ++Count) {
+                for (int Count = 0; Count < Maximum && Pending.Count != 0 && Watch.Elapsed.TotalMilliseconds < Milliseconds; ++Count) {
                     if (Runtime.Event(Pending.Dequeue()) != RuntimeStatus.OK) Rejected++;
                     if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
                 }

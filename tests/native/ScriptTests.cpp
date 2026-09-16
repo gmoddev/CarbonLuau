@@ -99,6 +99,20 @@ int main() try {
     Check(Run(Shared,Info(Shared),Result)==CL_OK && std::string(Result.Logs)=="second-domain\n","surviving domain callback");
     Check(cl_domain_destroy(Shared,Second)==CL_OK && cl_vm_destroy(Shared)==CL_OK,"shared VM/domain teardown");
 
+    ClHandle Fair=0; Check(cl_vm_create(&DomainConfig,&Fair)==CL_OK,"fair scheduler VM create");
+    ClHandle Saturated=Domain(Fair), Unrelated=Domain(Fair);
+    Check(DomainExecute(Fair,Saturated,
+        "task.defer(function() print('saturated-1') end); task.defer(function() print('saturated-2') end)",Result)==CL_OK &&
+        cl_domain_commit(Fair,Saturated)==CL_OK,"saturated domain queue");
+    Check(DomainExecute(Fair,Unrelated,"task.defer(function() print('unrelated') end)",Result)==CL_OK &&
+        cl_domain_commit(Fair,Unrelated)==CL_OK,"unrelated domain queue");
+    auto FairCutoff=Info(Fair);
+    Check(Run(Fair,FairCutoff,Result)==CL_OK && std::string(Result.Logs)=="saturated-1\n","round robin starts at first domain");
+    Check(Run(Fair,FairCutoff,Result)==CL_OK && std::string(Result.Logs)=="unrelated\n","saturated domain does not starve unrelated domain");
+    Check(Run(Fair,FairCutoff,Result)==CL_OK && std::string(Result.Logs)=="saturated-2\n","per-domain FIFO survives round robin");
+    Check(cl_domain_destroy(Fair,Saturated)==CL_OK && cl_domain_destroy(Fair,Unrelated)==CL_OK && cl_vm_destroy(Fair)==CL_OK,
+        "fair scheduler teardown");
+
     ClHandle Packages=0; Check(cl_vm_create(&DomainConfig,&Packages)==CL_OK,"package VM create");
     ClHandle Economy=Domain(Packages);
     DomainModule(Packages,Economy,"api","local Secret=41; return {Count=0,Read=function() return Secret end}");

@@ -307,6 +307,27 @@ namespace Carbon.Plugins
             public long VmGenerationId { get { return Current == null ? 0 : Current.VmGenerationId; } }
             public bool Ready { get { return !Disposed && !StopRequested && Vm != null && Current != null && Current.Alive && Vm.Info.Ready != 0; } }
             public bool HasWork { get { return Ready && (Vm.Scheduler.Queued != 0 || (Facade != null && Facade.HasWork)); } }
+            public bool HasReadyWork {
+                get {
+                    if (!Ready) return false;
+                    if (Facade != null && Facade.HasWork) return true;
+                    SchedulerInfo Info = Vm.Scheduler;
+                    return Info.Queued != 0 && Info.NextDueNs <= Info.NowNs;
+                }
+            }
+            internal bool TryGetNextDue(out ulong DueNs, out double DelaySeconds)
+            {
+                DueNs = 0; DelaySeconds = 0;
+                if (!Ready || (Facade != null && Facade.HasWork)) return false;
+                SchedulerInfo Info = Vm.Scheduler;
+                if (Info.Queued == 0 || Info.NextDueNs == 0 || Info.NextDueNs <= Info.NowNs) return false;
+                DueNs = Info.NextDueNs;
+                DelaySeconds = (Info.NextDueNs - Info.NowNs) / 1000000000.0;
+                return true;
+            }
+            internal ulong VmMemoryBytes { get { return Ready ? Vm.Info.MemoryBytes : 0; } }
+            internal ulong VmMemoryLimitBytes { get { return Ready ? Vm.Info.MemoryLimitBytes : 0; } }
+            internal SchedulerInfo SchedulerSnapshot { get { return Ready ? Vm.Scheduler : new SchedulerInfo(); } }
             public ScriptHost(NativeRuntime Native, RuntimeConfig Config, Func<ScriptSnapshot> ReadSnapshot, FacadeWorld Facade = null)
             { this.Native = Native; Settings = Config.Validate(); this.ReadSnapshot = ReadSnapshot; this.Facade = Facade; }
             private void ReleaseDomain(bool Replaced, SchedulerInfo? Snapshot = null)
@@ -415,8 +436,7 @@ namespace Carbon.Plugins
                 Draining = true;
                 try {
                     var Watch = Stopwatch.StartNew();
-                    if (Current.FacadeSession != null) Current.FacadeSession.Flush(Current, Watch, Settings.FrameDrainBudgetMilliseconds);
-                    FlushAddonFacades(Watch);
+                    FlushDomainFacades(Watch);
                     if (Vm.Info.Ready == 0) { var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery); return Results; }
                     SchedulerInfo Cutoff = Vm.Scheduler;
                     for (int Count = 0; Count < 256 && !StopRequested && Watch.Elapsed.TotalMilliseconds < Settings.FrameDrainBudgetMilliseconds; ++Count) {

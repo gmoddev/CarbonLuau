@@ -11,6 +11,7 @@ namespace Carbon.Plugins
         private RuntimeConfig Settings;
         private bool Attempted, Initialized;
         private bool Stopping, DrainScheduled;
+        private ulong DrainWakeToken, DrainWakeDueNs;
         private bool TeardownPending;
         private long ErrorWindow;
         private int ErrorCount;
@@ -118,6 +119,7 @@ namespace Carbon.Plugins
         private void ReleaseNative()
         {
             Stopping = true;
+            DrainWakeDueNs = 0; DrainWakeToken++;
             if ((Host != null && Host.Busy) || RegisteringPermissions) {
                 if (Host != null) Host.RequestStop();
                 TeardownPending = true;
@@ -139,7 +141,19 @@ namespace Carbon.Plugins
 
         private void RequestDrain()
         {
-            if (Stopping || DrainScheduled || Host == null || Host.Busy || !Host.HasWork) return;
+            if (Stopping || DrainScheduled || Host == null || Host.Busy) return;
+            if (!Host.HasReadyWork) {
+                ulong DueNs; double DelaySeconds;
+                if (!Host.TryGetNextDue(out DueNs, out DelaySeconds)) return;
+                if (DrainWakeDueNs != 0 && DrainWakeDueNs <= DueNs) return;
+                DrainWakeDueNs = DueNs; ulong Token = ++DrainWakeToken;
+                timer.Once((float)Math.Max(0.001, DelaySeconds), () => {
+                    if (Stopping || Token != DrainWakeToken) return;
+                    DrainWakeDueNs = 0; RequestDrain();
+                });
+                return;
+            }
+            DrainWakeDueNs = 0; DrainWakeToken++;
             DrainScheduled = true;
             ScriptHost ExpectedHost = Host;
             long ExpectedGeneration = Host.Generation;

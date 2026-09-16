@@ -15,7 +15,7 @@ namespace Carbon.Plugins
         [PluginReference] private Plugin CarbonLuau;
         private bool Started, RequiredWasBlocked;
         private int ReferenceAttempts;
-        private string RequiredToken, OptionalToken, RequiredDomain, OptionalDomain;
+        private string RequiredToken, OptionalToken, RequiredDomain, OptionalDomain, StaleRequiredToken;
 
         private void Loaded() { NextFrame(StartFixture); }
         private void OnServerInitialized() { NextFrame(StartFixture); }
@@ -29,6 +29,12 @@ namespace Carbon.Plugins
             }
             Started = true;
             try {
+                if (StaleRequiredToken != null) {
+                    string[] Stale = CarbonLuau.Call("CarbonLuau_GetAddonStatus", this, StaleRequiredToken) as string[];
+                    Check(Stale != null && Stale[0] == "ERROR", "old consumer token must be stale");
+                    Puts("[CarbonLuau:AddonConsumerLive] PASS stale token rejected after CarbonLuau reload"); StaleRequiredToken = null;
+                }
+                RequiredWasBlocked = false; RequiredDomain = null; OptionalDomain = null;
                 RequiredToken = Register("qualification.consumer", "required", "clfoundationcrequired");
                 OptionalToken = Register("qualification.optional", "optional", "clfoundationcoptional");
                 Poll(0);
@@ -44,6 +50,7 @@ namespace Carbon.Plugins
 
         private void Poll(int Attempt)
         {
+            if (!Started || CarbonLuau == null || !CarbonLuau.IsLoaded) return;
             try {
                 string[] Required = Status(RequiredToken), Optional = Status(OptionalToken);
                 if (Required[2] == "Failed" || Optional[2] == "Failed" || Attempt >= 2400)
@@ -115,5 +122,16 @@ namespace Carbon.Plugins
         }
 
         private static void Check(bool Condition, string Message) { if (!Condition) throw new InvalidOperationException(Message); }
+        private void OnPluginUnloaded(Plugin Plugin)
+        {
+            if (Plugin == null || Plugin.Name != "CarbonLuau") return;
+            StaleRequiredToken = RequiredToken; Started = false; CarbonLuau = null;
+            Puts("[CarbonLuau:AddonConsumerLive] observed CarbonLuau unload");
+        }
+        private void OnPluginLoaded(Plugin Plugin)
+        {
+            if (Plugin == null || Plugin.Name != "CarbonLuau") return;
+            CarbonLuau = Plugin; ReferenceAttempts = 0; NextFrame(StartFixture);
+        }
     }
 }

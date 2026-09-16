@@ -384,6 +384,7 @@ namespace Carbon.Plugins
             public AddonRegistry(ScriptHost Host, long HostLifetimeId) { this.Host = Host; this.HostLifetimeId = HostLifetimeId; }
             public bool HasPending { get { CheckOwner(); if (Disposed) return false; RefreshGraph(); return FindNext() != null; } }
             public int Count { get { return Registrations.Count; } }
+            internal int SnapshotBytes { get { return AggregateSnapshotBytes; } }
             public string[] RegisterArchive(object Provider, byte[] Archive)
             { try { return Register(Provider, AddonPackageSnapshot.FromArchive(Archive)); } catch (Exception Error) { return ErrorResponse(Error); } }
             public string[] RegisterSource(object Provider, string Id, string Version, byte[] Source)
@@ -710,6 +711,7 @@ namespace Carbon.Plugins
         public sealed partial class ScriptHost
         {
             private readonly SortedDictionary<long, RuntimeDomain> AddonDomains = new SortedDictionary<long, RuntimeDomain>();
+            private long FacadeDrainCursor;
             public ulong DomainCount { get { return Vm == null || !Vm.Alive ? 0 : Native.GenerationInfo(Vm.Handle).Domains; } }
             internal AddonActivation ActivateAddon(AddonPackageSnapshot Package, RuntimeDomain Previous, AddonDomainBinding[] Bindings)
             {
@@ -762,11 +764,21 @@ namespace Carbon.Plugins
                     Domain.Dispose();
                 }
             }
-            private void FlushAddonFacades(Stopwatch Watch)
+            private void FlushDomainFacades(Stopwatch Watch)
             {
-                foreach (RuntimeDomain Domain in AddonDomains.Values) {
-                    if (Watch.Elapsed.TotalMilliseconds >= Settings.FrameDrainBudgetMilliseconds) break;
-                    if (Domain.Alive && Domain.FacadeSession != null) Domain.FacadeSession.Flush(Domain, Watch, Settings.FrameDrainBudgetMilliseconds);
+                var Domains = new List<RuntimeDomain>();
+                if (Current != null && Current.Alive && Current.FacadeSession != null) Domains.Add(Current);
+                foreach (RuntimeDomain Domain in AddonDomains.Values)
+                    if (Domain.Alive && Domain.FacadeSession != null) Domains.Add(Domain);
+                for (int Admitted = 0; Admitted < 256 && Watch.Elapsed.TotalMilliseconds < Settings.FrameDrainBudgetMilliseconds; ++Admitted) {
+                    RuntimeDomain Selected = null;
+                    foreach (RuntimeDomain Domain in Domains) if (Domain.FacadeSession.PendingCount != 0 &&
+                        Domain.DomainLifetimeId > FacadeDrainCursor && (Selected == null || Domain.DomainLifetimeId < Selected.DomainLifetimeId)) Selected = Domain;
+                    if (Selected == null) foreach (RuntimeDomain Domain in Domains) if (Domain.FacadeSession.PendingCount != 0 &&
+                        (Selected == null || Domain.DomainLifetimeId < Selected.DomainLifetimeId)) Selected = Domain;
+                    if (Selected == null) break;
+                    Selected.FacadeSession.Flush(Selected, Watch, Settings.FrameDrainBudgetMilliseconds, 1);
+                    FacadeDrainCursor = Selected.DomainLifetimeId;
                 }
             }
         }

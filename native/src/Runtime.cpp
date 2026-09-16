@@ -72,7 +72,7 @@ struct Vm {
     size_t LogSize = 0;
     bool LogTruncated = false;
     bool Scripts = false, Sealed = false;
-    uint64_t Sequence = 0, OperationSequence = 0, RetiredDiscarded = 0;
+    uint64_t Sequence = 0, OperationSequence = 0, RetiredDiscarded = 0, SchedulerCursor = 0;
     std::vector<std::string> ModuleLoads;
     std::vector<std::unique_ptr<Domain>> Domains;
     Domain* LegacyDomain = nullptr;
@@ -727,9 +727,13 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
     for (const auto& Item : Runtime->Domains) if (Item && Item->Alive && Item->Active && !Item->Queue.empty()) {
         const Callback& Candidate = Item->Queue.front();
         if (Candidate.Due > CutoffNs || Candidate.Sequence > Sequence) continue;
-        if (!Selected || Later{}(Selected->Queue.front(), Candidate)) Selected = Item.get();
+        bool CandidateAfterCursor = Item->Id > Runtime->SchedulerCursor;
+        bool SelectedAfterCursor = Selected && Selected->Id > Runtime->SchedulerCursor;
+        if (!Selected || (CandidateAfterCursor && !SelectedAfterCursor) ||
+            (CandidateAfterCursor == SelectedAfterCursor && Item->Id < Selected->Id)) Selected = Item.get();
     }
     if (!Selected) return CL_OK;
+    Runtime->SchedulerCursor = Selected->Id;
     std::pop_heap(Selected->Queue.begin(), Selected->Queue.end(), Later{});
     Callback Work = std::move(Selected->Queue.back()); Selected->Queue.pop_back();
     *Ran = 1;

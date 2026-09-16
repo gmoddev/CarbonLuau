@@ -66,6 +66,7 @@ internal static class Program
                 ScriptTests.Run(Native, Root);
                 FacadeTests.Run(Native, Args.Length > 3 ? Args[3] : null);
                 AddonTests.Run(Native);
+                FoundationETests.Run(Native);
                 Native.Dispose(); Native.Dispose();
             }
             File.Delete(Library);

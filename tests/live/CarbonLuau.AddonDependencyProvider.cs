@@ -15,7 +15,7 @@ namespace Carbon.Plugins
         [PluginReference] private Plugin CarbonLuau;
         private bool Started;
         private int ReferenceAttempts;
-        private string Token, Domain;
+        private string Token, Domain, StaleToken;
 
         private void Loaded() { NextFrame(StartFixture); }
         private void OnServerInitialized() { NextFrame(StartFixture); }
@@ -29,6 +29,11 @@ namespace Carbon.Plugins
             }
             Started = true;
             try {
+                if (StaleToken != null) {
+                    string[] Stale = CarbonLuau.Call("CarbonLuau_GetAddonStatus", this, StaleToken) as string[];
+                    Check(Stale != null && Stale[0] == "ERROR", "old dependency token must be stale");
+                    Puts("[CarbonLuau:AddonDependencyLive] PASS stale token rejected after CarbonLuau reload"); StaleToken = null;
+                }
                 string[] Result = CarbonLuau.Call("CarbonLuau_RegisterAddonArchive", this, Archive("1.0.0", "1")) as string[];
                 Check(Result != null && Result.Length == 9 && Result[0] == "OK", "dependency registration");
                 Token = Result[1]; PollActive(false, 0);
@@ -48,6 +53,7 @@ namespace Carbon.Plugins
 
         private void PollActive(bool Replacement, int Attempt)
         {
+            if (!Started || CarbonLuau == null || !CarbonLuau.IsLoaded) return;
             try {
                 string[] Status = CarbonLuau.Call("CarbonLuau_GetAddonStatus", this, Token) as string[];
                 Check(Status != null && Status.Length == 9 && Status[0] == "OK", "dependency status");
@@ -78,6 +84,17 @@ namespace Carbon.Plugins
             using (Stream Stream = Entry.Open()) Stream.Write(Bytes, 0, Bytes.Length);
         }
         private static void Check(bool Condition, string Message) { if (!Condition) throw new InvalidOperationException(Message); }
+        private void OnPluginUnloaded(Plugin Plugin)
+        {
+            if (Plugin == null || Plugin.Name != "CarbonLuau") return;
+            StaleToken = Token; Started = false; CarbonLuau = null;
+            Puts("[CarbonLuau:AddonDependencyLive] observed CarbonLuau unload");
+        }
+        private void OnPluginLoaded(Plugin Plugin)
+        {
+            if (Plugin == null || Plugin.Name != "CarbonLuau") return;
+            CarbonLuau = Plugin; ReferenceAttempts = 0; NextFrame(StartFixture);
+        }
         private void Unload() { Puts("[CarbonLuau:AddonDependencyLive] provider Unload reached"); }
     }
 }

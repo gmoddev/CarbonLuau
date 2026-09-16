@@ -12,7 +12,7 @@ namespace Carbon.Plugins
         [PluginReference] private Plugin CarbonLuau;
         private bool Started;
         private int ReferenceAttempts;
-        private string Token;
+        private string Token, StaleToken, Domain;
 
         private void Loaded() { NextFrame(StartFixture); }
         private void OnServerInitialized() { NextFrame(StartFixture); }
@@ -26,6 +26,11 @@ namespace Carbon.Plugins
             }
             Started = true;
             try {
+                if (StaleToken != null) {
+                    string[] Stale = CarbonLuau.Call("CarbonLuau_GetAddonStatus", this, StaleToken) as string[];
+                    Check(Stale != null && Stale.Length == 9 && Stale[0] == "ERROR", "old host token must be stale");
+                    Puts("[CarbonLuau:AddonLive] PASS stale token rejected after CarbonLuau reload"); StaleToken = null;
+                }
                 string[] Protocol = CarbonLuau.Call("CarbonLuau_AddonProtocol") as string[];
                 Check(Protocol != null && Protocol.Length == 4 && Protocol[0] == "OK" &&
                     Protocol[1] == "CarbonLuau.Addons" && Protocol[2] == "1.2" && Protocol[3].Contains("dependencies") &&
@@ -46,6 +51,7 @@ namespace Carbon.Plugins
                 string[] Status = CarbonLuau.Call("CarbonLuau_GetAddonStatus", this, Token) as string[];
                 Check(Status != null && Status.Length == 9 && Status[0] == "OK", "status response");
                 if (Status[2] == "Active") {
+                    Domain = Status[7];
                     Puts("[CarbonLuau:AddonLive] PASS Active; token=" + Token + "; domain=" + Status[7]);
                     return;
                 }
@@ -56,6 +62,63 @@ namespace Carbon.Plugins
 
         private static void Check(bool Condition, string Message)
         { if (!Condition) throw new InvalidOperationException(Message); }
+
+        [ConsoleCommand("clfoundatione.providerreplace"), AuthLevel(2)]
+        private void ReplaceCommand(ConsoleSystem.Arg Arg)
+        {
+            try {
+                string[] Result = CarbonLuau.Call("CarbonLuau_ReplaceAddonSource", this, Token, "2.0.0",
+                    new UTF8Encoding(false, true).GetBytes("return true")) as string[];
+                Check(Result != null && Result[0] == "OK", "provider replacement");
+                string Previous = Domain; PollReplacement(Previous, 0); Arg.ReplyWith("CarbonLuau Foundation E provider replacement queued");
+            } catch (Exception Error) { PrintError("[CarbonLuau:AddonLive] FAIL " + Error.Message); }
+        }
+        private void PollReplacement(string Previous, int Attempt)
+        {
+            if (!Started || CarbonLuau == null || !CarbonLuau.IsLoaded) return;
+            string[] Status = CarbonLuau.Call("CarbonLuau_GetAddonStatus", this, Token) as string[];
+            if (Status != null && Status[0] == "OK" && Status[2] == "Active" && Status[7] != Previous) {
+                Domain = Status[7]; Puts("[CarbonLuau:AddonLive] PASS same-provider replacement"); return;
+            }
+            if (Attempt >= 600) { PrintError("[CarbonLuau:AddonLive] FAIL provider replacement timeout"); return; }
+            timer.Once(0.25f, () => PollReplacement(Previous, Attempt + 1));
+        }
+
+        [ConsoleCommand("clfoundatione.providerunregister"), AuthLevel(2)]
+        private void UnregisterCommand(ConsoleSystem.Arg Arg)
+        {
+            try {
+                string[] Removed = CarbonLuau.Call("CarbonLuau_UnregisterAddon", this, Token) as string[];
+                string[] Stale = CarbonLuau.Call("CarbonLuau_GetAddonStatus", this, Token) as string[];
+                Check(Removed != null && Removed[0] == "OK" && Stale != null && Stale[0] == "ERROR", "provider unregister/stale token");
+                string[] Result = CarbonLuau.Call("CarbonLuau_RegisterAddonSource", this, "qualification.provider", "3.0.0",
+                    new UTF8Encoding(false, true).GetBytes("return true")) as string[];
+                Check(Result != null && Result[0] == "OK", "provider explicit re-registration");
+                Token = Result[1]; PollReregistered(0); Arg.ReplyWith("CarbonLuau Foundation E provider unregister and re-registration queued");
+            } catch (Exception Error) { PrintError("[CarbonLuau:AddonLive] FAIL " + Error.Message); }
+        }
+        private void PollReregistered(int Attempt)
+        {
+            if (!Started || CarbonLuau == null || !CarbonLuau.IsLoaded) return;
+            string[] Status = CarbonLuau.Call("CarbonLuau_GetAddonStatus", this, Token) as string[];
+            if (Status != null && Status[0] == "OK" && Status[2] == "Active") {
+                Domain = Status[7]; Puts("[CarbonLuau:AddonLive] PASS unregister and explicit re-registration"); return;
+            }
+            if (Attempt >= 600) { PrintError("[CarbonLuau:AddonLive] FAIL provider re-registration timeout"); return; }
+            timer.Once(0.25f, () => PollReregistered(Attempt + 1));
+        }
+
+        private void OnPluginUnloaded(Plugin Plugin)
+        {
+            if (Plugin == null || Plugin.Name != "CarbonLuau") return;
+            StaleToken = Token; Started = false; CarbonLuau = null;
+            Puts("[CarbonLuau:AddonLive] observed CarbonLuau unload; explicit re-registration required");
+        }
+        private void OnPluginLoaded(Plugin Plugin)
+        {
+            if (Plugin == null || Plugin.Name != "CarbonLuau") return;
+            CarbonLuau = Plugin; ReferenceAttempts = 0; NextFrame(StartFixture);
+        }
 
         private void Unload()
         { Puts("[CarbonLuau:AddonLive] provider Unload reached; CarbonLuau must retire token " + (Token ?? "none")); }
