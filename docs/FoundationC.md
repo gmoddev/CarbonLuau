@@ -109,8 +109,12 @@ Foundation C was qualified on 2026-09-16 from starting baseline
   as domain 16; the optional consumer remained domain 8. The runner shut down the
   server and restored every temporary plugin/package/native deployment.
 
-GitHub CI remains required for the published implementation commit. Compile-only
-CI is not the live Carbon evidence above.
+- Published implementation commit
+  [`2f0481bd80505e8d6752060369dbe216393d2b5d`](https://github.com/gmoddev/CarbonLuau/commit/2f0481bd80505e8d6752060369dbe216393d2b5d)
+  passed the complete Windows/Linux/sanitizer
+  [GitHub Actions matrix](https://github.com/gmoddev/CarbonLuau/actions/runs/35072050975).
+  Its separate [documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/35072050885)
+  also passed. Compile-only CI is not the live Carbon evidence above.
 
 ## Deliberately deferred
 
