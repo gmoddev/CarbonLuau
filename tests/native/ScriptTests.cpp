@@ -32,6 +32,15 @@ static ClHandle Domain(ClHandle Vm, uint32_t Capacity = 4096) {
 static void DomainModule(ClHandle Vm, ClHandle DomainId, const char* Name, const char* Source) {
     Check(cl_domain_module(Vm, DomainId, Name, Source, uint32_t(std::strlen(Source))) == CL_OK, "domain module");
 }
+static void Addon(ClHandle Vm, ClHandle DomainId, const char* Id, const char* Version = "1.0.0", const char* Main = "") {
+    Check(cl_domain_addon(Vm, DomainId, Id, Version, Main) == CL_OK, "domain addon metadata");
+}
+static void PublicModule(ClHandle Vm, ClHandle DomainId, const char* Name) {
+    Check(cl_domain_public_module(Vm, DomainId, Name) == CL_OK, "domain public module");
+}
+static void Dependency(ClHandle Vm, ClHandle DomainId, const char* Id, ClHandle Target = 0) {
+    Check(cl_domain_dependency(Vm, DomainId, Id, Target) == CL_OK, "domain dependency");
+}
 static ClStatus DomainExecute(ClHandle Vm, ClHandle DomainId, const char* Source, ClResult& Result) {
     ClHandle Thread = 0;
     ClStatus Status = cl_domain_load_source(Vm, DomainId, "domain-entry", Source, uint32_t(std::strlen(Source)), &Thread, &Result);
@@ -53,6 +62,9 @@ static uint32_t ReentryHost(uint64_t, uint32_t Operation, const char*, uint32_t,
         cl_thread_destroy(ReentryThread) == CL_INVALID_ARGUMENT &&
         cl_domain_create(ReentryVm, 1, &DomainId) == CL_INVALID_ARGUMENT && DomainId == 0 &&
         cl_domain_module(ReentryVm, ReentryDomain, "late", ModuleSource, uint32_t(std::strlen(ModuleSource))) == CL_INVALID_ARGUMENT &&
+        cl_domain_addon(ReentryVm, ReentryDomain, "reentry", "1.0.0", "") == CL_INVALID_ARGUMENT &&
+        cl_domain_public_module(ReentryVm, ReentryDomain, "late") == CL_INVALID_ARGUMENT &&
+        cl_domain_dependency(ReentryVm, ReentryDomain, "owner", ReentryOwner) == CL_INVALID_ARGUMENT &&
         cl_domain_commit(ReentryVm, ReentryDomain) == CL_INVALID_ARGUMENT &&
         cl_domain_destroy(ReentryVm, ReentryDomain) == CL_INVALID_ARGUMENT &&
         cl_domain_facade(ReentryVm, ReentryDomain, ReentryHost) == CL_INVALID_ARGUMENT &&
@@ -86,6 +98,54 @@ int main() try {
     Check(Info(Shared).Modules==1 && Info(Shared).Queued==1,"domain-owned cache and queue retired independently");
     Check(Run(Shared,Info(Shared),Result)==CL_OK && std::string(Result.Logs)=="second-domain\n","surviving domain callback");
     Check(cl_domain_destroy(Shared,Second)==CL_OK && cl_vm_destroy(Shared)==CL_OK,"shared VM/domain teardown");
+
+    ClHandle Packages=0; Check(cl_vm_create(&DomainConfig,&Packages)==CL_OK,"package VM create");
+    ClHandle Economy=Domain(Packages);
+    DomainModule(Packages,Economy,"api","local Secret=41; return {Count=0,Read=function() return Secret end}");
+    DomainModule(Packages,Economy,"private/hidden","return true");
+    DomainModule(Packages,Economy,"failed","task.defer(function() error('leak') end); error('public failure')");
+    DomainModule(Packages,Economy,"rollback","task.defer(function() print('foreign-rollback') end); return true");
+    Addon(Packages,Economy,"economy","1.0.0","api"); PublicModule(Packages,Economy,"failed"); PublicModule(Packages,Economy,"rollback");
+    Check(DomainExecute(Packages,Economy,"assert(addon.Id=='economy' and addon.Version=='1.0.0'); local V=require('api'); V.Local=true",Result)==CL_OK,
+        "addon metadata and local require");
+    Check(cl_domain_commit(Packages,Economy)==CL_OK && Info(Packages).Modules==1,"provider main cache commit");
+
+    ClHandle ConsumerOne=Domain(Packages); Addon(Packages,ConsumerOne,"consumerone"); Dependency(Packages,ConsumerOne,"economy",Economy);
+    Check(DomainExecute(Packages,ConsumerOne,
+        "assert(addon:IsDependencyAvailable('economy') and not addon:IsDependencyAvailable('other')); local A=require('@economy'); assert(A==require('@economy/api') and A.Local and A.Read()==41 and A.Count==0); A.Count+=1; assert(not pcall(require,'@economy/private/hidden')); assert(not pcall(require,'@other/api')); assert(not pcall(require,'../bad'))",Result)==CL_OK,
+        "package main/path resolution and visibility");
+    Check(cl_domain_commit(Packages,ConsumerOne)==CL_OK,"first consumer commit");
+    ClHandle ConsumerTwo=Domain(Packages); Addon(Packages,ConsumerTwo,"consumertwo"); Dependency(Packages,ConsumerTwo,"economy",Economy);
+    Check(DomainExecute(Packages,ConsumerTwo,
+        "local A=require('@economy/api'); assert(A.Count==1 and A.Read()==41); A.Count+=1; assert(not pcall(require,'@economy/failed')); assert(not pcall(require,'@economy/failed'))",Result)==CL_OK,
+        "shared mutable public value and failed public retry");
+    Check(cl_domain_commit(Packages,ConsumerTwo)==CL_OK && Info(Packages).Modules==1 && Info(Packages).Queued==0,
+        "failed public module publishes no cache or task");
+
+    ClHandle Rollback=Domain(Packages); Addon(Packages,Rollback,"rollbackconsumer"); Dependency(Packages,Rollback,"economy",Economy);
+    Check(DomainExecute(Packages,Rollback,"assert(require('@economy/rollback')); error('outer rollback')",Result)==CL_RUNTIME_ERROR,
+        "successful foreign lazy load inside failed candidate");
+    Check(Info(Packages).Modules==1 && Info(Packages).Queued==0,"foreign lazy load rollback discards cache and resource");
+    Check(cl_domain_destroy(Packages,Rollback)==CL_OK,"failed consumer cleanup");
+    ClHandle Retry=Domain(Packages); Addon(Packages,Retry,"retryconsumer"); Dependency(Packages,Retry,"economy",Economy);
+    Check(DomainExecute(Packages,Retry,"assert(require('@economy/rollback'))",Result)==CL_OK && cl_domain_commit(Packages,Retry)==CL_OK,
+        "foreign lazy load retries and commits");
+    Check(Info(Packages).Modules==2 && Info(Packages).Queued==1,"foreign cache and resource publish together");
+    Check(Run(Packages,Info(Packages),Result)==CL_OK && std::string(Result.Logs)=="foreign-rollback\n","foreign module task runs after commit");
+
+    ClHandle NoMain=Domain(Packages); DomainModule(Packages,NoMain,"api","return 7"); Addon(Packages,NoMain,"nomain"); PublicModule(Packages,NoMain,"api");
+    Check(DomainExecute(Packages,NoMain,"return true",Result)==CL_OK && cl_domain_commit(Packages,NoMain)==CL_OK,"no-main provider commit");
+    ClHandle NoMainConsumer=Domain(Packages); Addon(Packages,NoMainConsumer,"nomainconsumer"); Dependency(Packages,NoMainConsumer,"nomain",NoMain);
+    Check(DomainExecute(Packages,NoMainConsumer,"assert(not pcall(require,'@nomain')); assert(require('@nomain/api')==7)",Result)==CL_OK,
+        "missing main controlled failure and explicit export success");
+    Check(cl_domain_commit(Packages,NoMainConsumer)==CL_OK,"no-main consumer commit");
+
+    Check(cl_domain_destroy(Packages,Economy)==CL_OK,"dependency A1 retirement");
+    Check(DomainExecute(Packages,ConsumerOne,"assert(not addon:IsDependencyAvailable('economy')); assert(not pcall(require,'@economy/api'))",Result)==CL_OK,
+        "stale exact binding fails closed");
+    Check(cl_domain_destroy(Packages,ConsumerOne)==CL_OK && cl_domain_destroy(Packages,ConsumerTwo)==CL_OK &&
+        cl_domain_destroy(Packages,Retry)==CL_OK && cl_domain_destroy(Packages,NoMainConsumer)==CL_OK &&
+        cl_domain_destroy(Packages,NoMain)==CL_OK && cl_vm_destroy(Packages)==CL_OK,"package fixture teardown");
 
     Check(cl_vm_create(&DomainConfig,&ReentryVm)==CL_OK,"reentry VM create");
     ReentryOwner=Domain(ReentryVm); ReentryDomain=Domain(ReentryVm);

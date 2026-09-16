@@ -80,6 +80,14 @@ CARBONLUAU_EXPORT ClStatus cl_domain_load_source(ClHandle Vm, ClHandle Domain, c
     const char* Source, uint32_t SourceLength, ClHandle* OutThread, ClResult* Result);
 CARBONLUAU_EXPORT ClStatus cl_domain_facade(ClHandle Vm, ClHandle Domain, ClHostCall Host);
 CARBONLUAU_EXPORT ClStatus cl_domain_event(ClHandle Vm, ClHandle Domain, const char* Payload, uint32_t Length);
+/* ABI 1.4. Addon metadata, explicit public modules and exact same-VM dependency
+   domain bindings are installed only while the consumer domain is provisional.
+   TargetDomain 0 records a declared-but-unavailable optional dependency. */
+CARBONLUAU_EXPORT ClStatus cl_domain_addon(ClHandle Vm, ClHandle Domain, const char* PackageId,
+    const char* Version, const char* MainModule);
+CARBONLUAU_EXPORT ClStatus cl_domain_public_module(ClHandle Vm, ClHandle Domain, const char* Name);
+CARBONLUAU_EXPORT ClStatus cl_domain_dependency(ClHandle Vm, ClHandle Domain, const char* PackageId,
+    ClHandle TargetDomain);
 #ifdef __cplusplus
 }
 #endif

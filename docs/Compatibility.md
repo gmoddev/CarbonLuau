@@ -37,6 +37,11 @@ ABI `1.3`. This does not alter the already-published v0.3.0/ABI 1.2 artifacts or
 assign a new scripting API identity. A future release must deliberately map its
 package, native ABI and still-pending addon scripting/protocol identities.
 
+Foundation D development source adds additive native ABI `1.4` and provider
+protocol `CarbonLuau.Addons` / `1.2` for exact-bound public modules. Package schema
+remains 1. This still does not alter published v0.3.0 artifacts or assign the
+addon-capable scripting API identity required before public addon release.
+
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
 ## Dependency and host upgrades
@@ -173,6 +178,24 @@ Foundation C does not qualify package-qualified `require`, public module exports
 version solving, multiple versions, downloads/registries, scale/fairness policy or
 a public addon scripting API identity. Dependency declarations are lifecycle
 relationships only; caught errors and runtime behavior never mutate the graph.
+
+## Foundation D evidence contract
+
+[Foundation D](FoundationD.md) makes D4/D5 public-module composition operational
+on exact Foundation C bindings. Its affected evidence is strict `main` and
+`publicModules` ingestion; local/public cache identity; same-reference values and
+state; private visibility; ordinary error/retry/cycle/depth/yield behavior;
+cross-domain module publication commit and rollback; stale A1 import rejection;
+retained ordinary values versus stale host facades; required A2 reconstruction;
+optional non-rebinding; addon metadata and dependency availability. Re-run the
+Foundation A–C and Phase 0–3 regressions, Windows/Linux managed runtime tests,
+affected native sanitizers and live Carbon provider/dependency ordering. Historical
+records are not rewritten.
+
+Foundation D does not qualify provider C# capabilities, root imports, addons
+depending on root, version ranges or solving, multiple versions/instances,
+downloads/registries, restricted exposure, async capabilities, Foundation E,
+multi-domain fairness or a public addon scripting API identity.
 
 ## Phase 0 consistency review
 

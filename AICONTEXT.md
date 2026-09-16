@@ -49,8 +49,11 @@ the internal shared-VM/domain primitives recorded in
 registration, bounded package transport and lifecycle implementation is recorded in
 [FoundationB.md](docs/FoundationB.md). Foundation C's bounded dependency graph,
 exact lifetime binding, loss/restoration and dependency-aware replacement behavior
-is recorded in [FoundationC.md](docs/FoundationC.md). It does not authorize public
-modules/imports, provider capabilities or a public addon scripting identity.
+is recorded in [FoundationC.md](docs/FoundationC.md). Foundation D's explicit
+exports, exact-bound package-qualified imports and addon context are recorded in
+[FoundationD.md](docs/FoundationD.md). It does not authorize provider capabilities,
+root imports, package/version solving, Foundation E or a public addon scripting
+identity.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

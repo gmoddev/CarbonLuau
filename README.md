@@ -62,6 +62,14 @@ transactional script generations. See the [Phase 2 contract](docs/Phase2.md) and
 Phase 3 adds the gameplay facade described above; its new evidence is separate.
 Shockbyte Phase 1/2/3 remain unqualified.
 
+Post-release development Foundations A–D now implement a shared-VM multi-domain
+runtime, bounded provider/package registration, exact dependency lifetimes and
+explicit public addon modules with `require("@id[/path]")`. This source-line work
+is documented in [Foundation D](docs/FoundationD.md); it is not included in the
+published v0.3.0 artifacts and does not yet have a public addon scripting API
+identity. Provider capabilities, root imports and package/version solving remain
+deferred.
+
 Phase 4 item conveniences (`Player:GiveItem` and `Items:Exists`, including the Items
 service) are **deferred from v0.1** by [D13](docs/Invariants.md#decision-register).
 The [investigation](docs/Phase4.md) and [evidence](docs/Phase4-Validation.md) are

@@ -13,8 +13,8 @@ $Checks = @(
     @{ Path = 'src/CarbonLuau/CarbonLuau.Facade.cs'; Text = "ApiVersion = `"$($Release.apiVersion)`"" },
     @{ Path = 'native/CMakeLists.txt'; Text = "project(CarbonLuauNative VERSION $($Release.packageVersion)" },
     # The published v0.3.0 artifact remains ABI 1.2. Post-release Foundation A
-    # source is the additive ABI 1.3 development line and does not rewrite that tag.
-    @{ Path = 'native/src/Runtime.cpp'; Text = 'carbonluau_abi_version(void) { return 0x00010003; }' },
+    # source is the additive post-release ABI development line and does not rewrite that tag.
+    @{ Path = 'native/src/Runtime.cpp'; Text = 'carbonluau_abi_version(void) { return 0x00010004; }' },
     @{ Path = 'native/third_party/LUAU_REVISION.txt'; Text = "Pinned commit: $($Release.luauRevision)" },
     @{ Path = 'docs/Release.md'; Text = $Release.tag }
 )

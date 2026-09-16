@@ -15,6 +15,7 @@ This is server-side Luau, not Roblox API compatibility.
 | Event subscription | [Signal](Types/Signal.md), [Connection](Types/Connection.md) |
 | Versions and limits | [Compatibility](Compatibility.md) |
 | Existing `require` and `task.spawn/defer/delay` | [Phase 2 script contract](../Phase2.md) |
+| Foundation D addon composition development surface | [Addon composition](Addons.md) |
 
 All facade APIs below are available beginning with API `0.3.0-experimental`.
 They are implemented but experimental; see the evidence record before deploying.
@@ -42,3 +43,8 @@ reflection, Roblox hierarchy/replication and `task.wait`. No Phase 4 API is ship
 The entire item convenience surface (`Items`, `Items:Exists`, `Player:GiveItem`)
 is deferred from v0.1 by [D13](../Invariants.md#decision-register), not pending
 implementation in this scripting API version.
+
+Post-v0.3.0 Foundation D source also implements package-qualified addon imports,
+explicit exports and the `addon` context. That work is documented separately as a
+development surface and is not assigned to `0.3.0-experimental` or included in the
+published v0.3.0 artifacts.

@@ -28,7 +28,8 @@ namespace Carbon.Plugins
             try {
                 string[] Protocol = CarbonLuau.Call("CarbonLuau_AddonProtocol") as string[];
                 Check(Protocol != null && Protocol.Length == 4 && Protocol[0] == "OK" &&
-                    Protocol[1] == "CarbonLuau.Addons" && Protocol[2] == "1.1" && Protocol[3].Contains("dependencies"), "protocol query");
+                    Protocol[1] == "CarbonLuau.Addons" && Protocol[2] == "1.2" && Protocol[3].Contains("dependencies") &&
+                    Protocol[3].Contains("public-modules"), "protocol query");
                 byte[] Source = new UTF8Encoding(false, true).GetBytes(
                     "game:GetService('Commands'):Register('clfoundationb',{},function() end); " +
                     "task.delay(86400,function() error('provider teardown failed') end); return true");

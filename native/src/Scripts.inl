@@ -22,40 +22,103 @@ Domain& BoundDomain(lua_State* State)
     if (!Value || !GetDomain(Runtime, Value->Id)) luaL_error(State, "stale domain lifetime");
     return *Value;
 }
+bool PackageName(const char* Name)
+{
+    size_t Length = 0, Segment = 0, Segments = 1;
+    while (Length < 66 && Name[Length]) {
+        char C = Name[Length++];
+        if (C == '.') {
+            if (!Segment || Segments == 2) return false;
+            Segment = 0; ++Segments;
+        } else if ((C >= 'a' && C <= 'z') || (C >= '0' && C <= '9') || C == '_' || C == '-') {
+            if (!Segment && (C == '_' || C == '-')) return false;
+            if (++Segment > 32) return false;
+        } else return false;
+    }
+    if (!Length || Length > 65 || !Segment || Name[Length] || Name[Length - 1] == '_' || Name[Length - 1] == '-') return false;
+    return std::strcmp(Name, "carbonluau") != 0 && std::strncmp(Name, "carbonluau.", 11) != 0;
+}
+bool PackageVersion(const char* Version)
+{
+    size_t Length = 0;
+    while (Length < 33 && Version[Length]) ++Length;
+    if (!Length || Length > 32 || Version[Length]) return false;
+    const char* Cursor = Version;
+    for (int Part = 0; Part < 3; ++Part) {
+        const char* Start = Cursor; uint64_t Value = 0;
+        while (*Cursor && *Cursor != '.') {
+            if (*Cursor < '0' || *Cursor > '9' || Cursor - Start >= 10) return false;
+            Value = Value * 10 + uint64_t(*Cursor++ - '0');
+            if (Value > UINT32_MAX) return false;
+        }
+        if (Cursor == Start || (Cursor - Start > 1 && *Start == '0')) return false;
+        if (Part < 2) { if (*Cursor != '.') return false; ++Cursor; }
+        else if (*Cursor) return false;
+    }
+    return true;
+}
 void InstallDomainBindings(lua_State* State, Domain& Owner);
 int RequireModule(lua_State* State)
 {
     Vm& Runtime = *static_cast<Vm*>(lua_callbacks(State)->userdata);
-    Domain& Owner = BoundDomain(State);
+    Domain& Consumer = BoundDomain(State);
     if (lua_type(State, 1) != LUA_TSTRING) luaL_error(State, "module INVALID_ARGUMENT: expected logical name");
     size_t Length = 0;
     const char* Name = lua_tolstring(State, 1, &Length);
-    if (Length >= 128 || std::strlen(Name) != Length || !ModuleName(Name, Length + 1))
-        luaL_error(State, "module INVALID_ARGUMENT: use lowercase segments joined by single '/'; no extension or traversal");
-    auto Found = Owner.Modules.find(Name);
-    if (Found == Owner.Modules.end()) luaL_error(State, "module %s: NOT_FOUND", Name);
+    if (Length >= 196 || std::strlen(Name) != Length)
+        luaL_error(State, "module INVALID_ARGUMENT: expected a bounded canonical logical name");
+    Domain* Owner = &Consumer;
+    std::string LogicalName;
+    if (Length && Name[0] == '@') {
+        const char* Slash = std::strchr(Name + 1, '/');
+        std::string Package(Name + 1, Slash ? size_t(Slash - Name - 1) : Length - 1);
+        if (!PackageName(Package.c_str())) luaL_error(State, "package %s: INVALID_ARGUMENT", Name);
+        DependencyBinding* Binding = nullptr;
+        for (auto& Candidate : Consumer.Dependencies) if (Candidate.Id == Package) { Binding = &Candidate; break; }
+        if (!Binding) luaL_error(State, "package @%s: UNDECLARED_DEPENDENCY", Package.c_str());
+        if (!Binding->Target || !GetDomain(Runtime, Binding->Target->Id, true))
+            luaL_error(State, "package @%s: DEPENDENCY_UNAVAILABLE", Package.c_str());
+        Owner = Binding->Target;
+        if (!Slash) {
+            if (Owner->MainModule.empty()) luaL_error(State, "package @%s: MAIN_NOT_DECLARED", Package.c_str());
+            LogicalName = Owner->MainModule;
+        } else {
+            LogicalName.assign(Slash + 1);
+            if (!ModuleName(LogicalName.c_str(), 128))
+                luaL_error(State, "package %s: INVALID_ARGUMENT", Name);
+            if (std::find(Owner->PublicModules.begin(), Owner->PublicModules.end(), LogicalName) == Owner->PublicModules.end())
+                luaL_error(State, "package %s: MODULE_NOT_PUBLIC", Name);
+        }
+    } else {
+        if (Length >= 128 || !ModuleName(Name, Length + 1))
+            luaL_error(State, "module INVALID_ARGUMENT: use lowercase segments joined by single '/'; no extension or traversal");
+        LogicalName.assign(Name, Length);
+    }
+    auto Found = Owner->Modules.find(LogicalName);
+    if (Found == Owner->Modules.end()) luaL_error(State, "module %s: NOT_FOUND", Name);
     Module& Value = Found->second;
     if (Value.Loaded) { lua_getref(State, Value.Reference); return 1; }
-    int Staged = FindStaged(Runtime, &Owner, &Value);
+    int Staged = FindStaged(Runtime, Owner, &Value);
     if (Staged != LUA_NOREF) { lua_getref(State, Staged); return 1; }
     if (Value.Loading) {
         char Chain[768]{};
-        for (const auto& Item : Owner.Loading) {
+        for (const auto& Item : Runtime.ModuleLoads) {
             size_t Used = std::strlen(Chain);
             std::snprintf(Chain + Used, sizeof(Chain) - Used, "%s -> ", Item.c_str());
         }
         luaL_error(State, "module %s: CYCLE: %s%s", Name, Chain, Name);
     }
-    if (Owner.Loading.size() >= 32) luaL_error(State, "module %s: dependency depth exceeds 32", Name);
-    Owner.Loading.emplace_back(Name);
+    if (Runtime.ModuleLoads.size() >= 32) luaL_error(State, "module %s: dependency depth exceeds 32", Name);
+    Runtime.ModuleLoads.emplace_back(Name, Length);
+    Owner->Loading.emplace_back(LogicalName);
     Value.Loading = true;
     struct LoadingScope {
         Vm& Runtime; Domain& Owner; Module& Value; int ThreadReference = LUA_NOREF;
         ~LoadingScope() {
-            Value.Loading = false; Owner.Loading.pop_back();
+            Value.Loading = false; Owner.Loading.pop_back(); Runtime.ModuleLoads.pop_back();
             if (ThreadReference != LUA_NOREF && Runtime.State) lua_unref(Runtime.State, ThreadReference);
         }
-    } Loading{Runtime, Owner, Value};
+    } Loading{Runtime, *Owner, Value};
     PublicationScope Publication(Runtime);
     Luau::CompileOptions Options; Options.optimizationLevel = 1; Options.debugLevel = 1;
     std::string Bytecode = Luau::compile(Value.Source, Options);
@@ -65,8 +128,9 @@ int RequireModule(lua_State* State)
     Loading.ThreadReference = lua_ref(Runtime.State, -1);
     lua_pop(Runtime.State, 1);
     luaL_sandboxthread(Thread);
-    InstallDomainBindings(Thread, Owner);
-    std::string Chunk = "modules/" + Found->first + ".luau";
+    InstallDomainBindings(Thread, *Owner);
+    std::string Chunk = Owner->PackageId.empty() ? "modules/" + Found->first + ".luau" :
+        "addons/" + Owner->PackageId + "/modules/" + Found->first + ".luau";
     int Code = luau_load(Thread, Chunk.c_str(), Bytecode.data(), Bytecode.size(), 0);
     if (Code == LUA_OK) Code = lua_resume(Thread, State, 0);
     if (Runtime.AllocationFailed || Code == LUA_ERRMEM) luaL_error(State, "module %s: MEMORY_LIMIT", Name);
@@ -79,10 +143,26 @@ int RequireModule(lua_State* State)
     if (lua_gettop(Thread) == 0 || lua_isnil(Thread, 1)) lua_pushboolean(State, true);
     else { lua_pushvalue(Thread, 1); lua_xmove(Thread, State, 1); }
     int Reference = lua_ref(State, -1);
-    Publication.Modules.push_back(StagedModule{&Owner, &Value, Reference});
+    Publication.Modules.push_back(StagedModule{Owner, &Value, Reference});
     lua_getref(State, Reference);
     Publication.Commit();
     if (Runtime.IntegrityFailed) luaL_error(State, "module publication integrity failure");
+    return 1;
+}
+int IsDependencyAvailable(lua_State* State)
+{
+    Vm& Runtime = *static_cast<Vm*>(lua_callbacks(State)->userdata);
+    Domain& Owner = BoundDomain(State);
+    if (lua_gettop(State) != 2 || lua_type(State, 1) != LUA_TTABLE || lua_type(State, 2) != LUA_TSTRING)
+        luaL_error(State, "addon:IsDependencyAvailable expects a dependency id");
+    size_t Length = 0; const char* Id = lua_tolstring(State, 2, &Length);
+    if (Length > 65 || std::strlen(Id) != Length || !PackageName(Id))
+        luaL_error(State, "addon:IsDependencyAvailable expects a canonical dependency id");
+    bool Available = false;
+    for (const auto& Binding : Owner.Dependencies) if (Binding.Id == Id) {
+        Available = Binding.Target && GetDomain(Runtime, Binding.Target->Id, true); break;
+    }
+    lua_pushboolean(State, Available);
     return 1;
 }
 struct CallbackScope {
@@ -151,5 +231,15 @@ void InstallDomainBindings(lua_State* State, Domain& Owner)
     lua_setreadonly(State, -1, true);
     lua_setglobal(State, "task");
     if (Owner.Game != LUA_NOREF) { lua_getref(State, Owner.Game); lua_setglobal(State, "game"); }
+    if (!Owner.PackageId.empty()) {
+        lua_newtable(State);
+        lua_pushlstring(State, Owner.PackageId.data(), Owner.PackageId.size()); lua_setfield(State, -2, "Id");
+        lua_pushlstring(State, Owner.PackageVersion.data(), Owner.PackageVersion.size()); lua_setfield(State, -2, "Version");
+        lua_pushlightuserdata(State, &Owner);
+        lua_pushcclosure(State, IsDependencyAvailable, "IsDependencyAvailable", 1);
+        lua_setfield(State, -2, "IsDependencyAvailable");
+        lua_setreadonly(State, -1, true);
+        lua_setglobal(State, "addon");
+    }
 }
 int InstallScripts(lua_State*) { return 0; }

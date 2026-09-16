@@ -1,5 +1,8 @@
-// EXCLUDED from production packages. Foundation C live dependency fixture only.
+// Reference: System.IO.Compression
+// EXCLUDED from production packages. Foundation C/D live dependency fixture only.
 using System;
+using System.IO;
+using System.IO.Compression;
 using System.Text;
 using Oxide.Core.Plugins;
 
@@ -26,8 +29,7 @@ namespace Carbon.Plugins
             }
             Started = true;
             try {
-                string[] Result = CarbonLuau.Call("CarbonLuau_RegisterAddonSource", this,
-                    "qualification.dependency", "1.0.0", Bytes("return true")) as string[];
+                string[] Result = CarbonLuau.Call("CarbonLuau_RegisterAddonArchive", this, Archive("1.0.0", "1")) as string[];
                 Check(Result != null && Result.Length == 9 && Result[0] == "OK", "dependency registration");
                 Token = Result[1]; PollActive(false, 0);
             } catch (Exception Error) { PrintError("[CarbonLuau:AddonDependencyLive] FAIL " + Error.Message); }
@@ -38,8 +40,7 @@ namespace Carbon.Plugins
         {
             try {
                 Check(Token != null && Domain != null, "dependency is not active");
-                string[] Result = CarbonLuau.Call("CarbonLuau_ReplaceAddonSource", this, Token,
-                    "2.0.0", Bytes("return true")) as string[];
+                string[] Result = CarbonLuau.Call("CarbonLuau_ReplaceAddonArchive", this, Token, Archive("2.0.0", "2")) as string[];
                 Check(Result != null && Result.Length == 9 && Result[0] == "OK", "dependency replacement");
                 PollActive(true, 0); Arg.ReplyWith("CarbonLuau Foundation C dependency replacement queued");
             } catch (Exception Error) { PrintError("[CarbonLuau:AddonDependencyLive] FAIL " + Error.Message); }
@@ -60,7 +61,22 @@ namespace Carbon.Plugins
             } catch (Exception Error) { PrintError("[CarbonLuau:AddonDependencyLive] FAIL " + Error.Message); }
         }
 
-        private static byte[] Bytes(string Source) { return new UTF8Encoding(false, true).GetBytes(Source); }
+        private static byte[] Archive(string Version, string Generation)
+        {
+            string Manifest = "{\"schema\":1,\"id\":\"qualification.dependency\",\"version\":\"" + Version + "\",\"main\":\"api\"}";
+            using (var Output = new MemoryStream()) {
+                using (var Zip = new ZipArchive(Output, ZipArchiveMode.Create, true)) {
+                    Write(Zip, "addon.json", Manifest); Write(Zip, "init.luau", "assert(addon.Id=='qualification.dependency'); return true");
+                    Write(Zip, "api.luau", "return {Generation='" + Generation + "'}");
+                }
+                return Output.ToArray();
+            }
+        }
+        private static void Write(ZipArchive Zip, string Name, string Text)
+        {
+            ZipArchiveEntry Entry = Zip.CreateEntry(Name, CompressionLevel.Optimal); byte[] Bytes = new UTF8Encoding(false, true).GetBytes(Text);
+            using (Stream Stream = Entry.Open()) Stream.Write(Bytes, 0, Bytes.Length);
+        }
         private static void Check(bool Condition, string Message) { if (!Condition) throw new InvalidOperationException(Message); }
         private void Unload() { Puts("[CarbonLuau:AddonDependencyLive] provider Unload reached"); }
     }

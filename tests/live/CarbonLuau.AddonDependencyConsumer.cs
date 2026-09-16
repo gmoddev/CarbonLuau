@@ -1,5 +1,5 @@
 // Reference: System.IO.Compression
-// EXCLUDED from production packages. Foundation C live dependency fixture only.
+// EXCLUDED from production packages. Foundation C/D live dependency fixture only.
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -96,7 +96,9 @@ namespace Carbon.Plugins
             string Manifest = "{\"schema\":1,\"id\":\"" + Id + "\",\"version\":\"1.0.0\",\"dependencies\":{\"required\":" +
                 (Kind == "required" ? "[\"qualification.dependency\"]" : "[]") + ",\"optional\":" +
                 (Kind == "optional" ? "[\"qualification.dependency\"]" : "[]") + "}}";
-            string Source = "game:GetService('Commands'):Register('" + Command + "',{},function() end); return true";
+            string Source = "assert(addon.Id=='" + Id + "' and addon:IsDependencyAvailable('qualification.dependency')); " +
+                "local Api=require('@qualification.dependency'); assert(Api.Generation=='1' or Api.Generation=='2'); " +
+                "game:GetService('Commands'):Register('" + Command + "',{},function() end); return true";
             using (var Output = new MemoryStream()) {
                 using (var Zip = new ZipArchive(Output, ZipArchiveMode.Create, true)) {
                     Write(Zip, "addon.json", Manifest); Write(Zip, "init.luau", Source);

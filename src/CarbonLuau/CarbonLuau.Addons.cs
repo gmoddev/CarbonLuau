@@ -18,7 +18,7 @@ namespace Carbon.Plugins
 
         public static class AddonPolicy
         {
-            public const string ProtocolName = "CarbonLuau.Addons", ProtocolVersion = "1.1";
+            public const string ProtocolName = "CarbonLuau.Addons", ProtocolVersion = "1.2";
             public const int Schema = 1, MaxArchiveBytes = 4 * 1024 * 1024, MaxExpandedBytes = 8 * 1024 * 1024;
             public const int MaxManifestBytes = 65536, MaxSourceBytes = 65536, MaxAggregateSourceBytes = 4 * 1024 * 1024;
             public const int MaxSourceModules = 256, MaxArchiveEntries = 512, MaxPathCharacters = 127, MaxPathDepth = 32;
@@ -69,16 +69,20 @@ namespace Carbon.Plugins
             private readonly string EntrySource;
             private readonly SortedDictionary<string, string> ModuleSources;
             private readonly string[] RequiredDependencies, OptionalDependencies;
-            public readonly string Id, Version, Hash;
+            private readonly string[] PublicModulePaths;
+            public readonly string Id, Version, Hash, Main;
             public readonly int SourceBytes;
             public int DependencyCount { get { return RequiredDependencies.Length + OptionalDependencies.Length; } }
             private AddonPackageSnapshot(string Id, string Version, string EntrySource,
-                SortedDictionary<string, string> Modules, List<string> Required, List<string> Optional, string Hash, int SourceBytes)
+                SortedDictionary<string, string> Modules, List<string> Required, List<string> Optional,
+                string Main, List<string> PublicModules, string Hash, int SourceBytes)
             {
                 this.Id = Id; this.Version = Version; this.EntrySource = EntrySource;
                 ModuleSources = new SortedDictionary<string, string>(Modules, StringComparer.Ordinal);
                 RequiredDependencies = Required.ToArray(); OptionalDependencies = Optional.ToArray();
+                this.Main = Main; PublicModulePaths = PublicModules.ToArray();
                 Array.Sort(RequiredDependencies, StringComparer.Ordinal); Array.Sort(OptionalDependencies, StringComparer.Ordinal);
+                Array.Sort(PublicModulePaths, StringComparer.Ordinal);
                 this.Hash = Hash; this.SourceBytes = SourceBytes;
             }
             public ScriptSnapshot ToScriptSnapshot()
@@ -89,6 +93,8 @@ namespace Carbon.Plugins
             }
             public string[] Dependencies(bool Optional)
             { return (string[])(Optional ? OptionalDependencies : RequiredDependencies).Clone(); }
+            public string[] PublicModules()
+            { return (string[])PublicModulePaths.Clone(); }
 
             public static AddonPackageSnapshot FromSource(string Id, string Version, byte[] Source)
             {
@@ -99,7 +105,7 @@ namespace Carbon.Plugins
                 string Text = Decode(Copy, "source");
                 byte[] Identity = AddonPolicy.Utf8.GetBytes(Id + "\0" + Version + "\0" + Text);
                 return new AddonPackageSnapshot(Id, Version, Text, new SortedDictionary<string, string>(StringComparer.Ordinal),
-                    new List<string>(), new List<string>(), HashBytes(Identity), Copy.Length);
+                    new List<string>(), new List<string>(), null, new List<string>(), HashBytes(Identity), Copy.Length);
             }
 
             public static AddonPackageSnapshot FromArchive(byte[] ArchiveBytes)
@@ -148,11 +154,14 @@ namespace Carbon.Plugins
                 if (ManifestBytes == null) throw new InvalidOperationException("archive is missing addon.json");
                 if (EntrySource == null) throw new InvalidOperationException("archive is missing init.luau");
                 string ManifestText = Decode(ManifestBytes, "manifest");
-                string Id, Version; List<string> Required, Optional;
-                try { ParseManifest(ManifestText, out Id, out Version, out Required, out Optional); }
+                string Id, Version, Main; List<string> Required, Optional, PublicModules;
+                try { ParseManifest(ManifestText, out Id, out Version, out Required, out Optional, out Main, out PublicModules); }
                 catch (InvalidOperationException) { throw; }
                 catch (JsonException) { throw new InvalidOperationException("manifest JSON is malformed"); }
-                return new AddonPackageSnapshot(Id, Version, EntrySource, Modules, Required, Optional,
+                if (Main != null && !Modules.ContainsKey(Main)) throw new InvalidOperationException("main module does not exist: " + Main);
+                foreach (string Module in PublicModules)
+                    if (!Modules.ContainsKey(Module)) throw new InvalidOperationException("public module does not exist: " + Module);
+                return new AddonPackageSnapshot(Id, Version, EntrySource, Modules, Required, Optional, Main, PublicModules,
                     HashBytes(Copy), SourceBytes);
             }
 
@@ -252,9 +261,10 @@ namespace Carbon.Plugins
             }
 
             private static void ParseManifest(string Text, out string Id, out string Version,
-                out List<string> Required, out List<string> Optional)
+                out List<string> Required, out List<string> Optional, out string Main, out List<string> PublicModules)
             {
-                Id = null; Version = null; Required = new List<string>(); Optional = new List<string>(); int? Schema = null;
+                Id = null; Version = null; Main = null; Required = new List<string>(); Optional = new List<string>();
+                PublicModules = new List<string>(); int? Schema = null;
                 var Seen = new HashSet<string>(StringComparer.Ordinal);
                 using (var Reader = new JsonTextReader(new StringReader(Text))) {
                     Reader.DateParseHandling = DateParseHandling.None; Reader.FloatParseHandling = FloatParseHandling.Decimal; Reader.MaxDepth = 8;
@@ -270,6 +280,8 @@ namespace Carbon.Plugins
                         } else if (Name == "id") Id = ReadString(Reader, "id");
                         else if (Name == "version") Version = ReadString(Reader, "version");
                         else if (Name == "dependencies") ParseDependencies(Reader, Required, Optional);
+                        else if (Name == "main") { Main = ReadString(Reader, "main"); ValidateModulePath(Main, "main"); }
+                        else if (Name == "publicModules") ParsePublicModules(Reader, PublicModules);
                         else throw new InvalidOperationException("unknown manifest property: " + Name);
                     }
                     if (Reader.TokenType != JsonToken.EndObject || ReadToken(Reader)) throw new InvalidOperationException("manifest contains trailing JSON");
@@ -277,6 +289,25 @@ namespace Carbon.Plugins
                 if (Schema != AddonPolicy.Schema) throw new InvalidOperationException("unsupported addon schema");
                 AddonPolicy.ValidateId(Id); AddonPolicy.ValidateVersion(Version);
                 if (Required.Contains(Id) || Optional.Contains(Id)) throw new InvalidOperationException("addon cannot depend on itself");
+                if (Main != null && PublicModules.Contains(Main)) throw new InvalidOperationException("main must not be duplicated in publicModules");
+            }
+            private static void ParsePublicModules(JsonTextReader Reader, List<string> PublicModules)
+            {
+                Expect(Reader, JsonToken.StartArray, "publicModules must be an array");
+                var Seen = new HashSet<string>(StringComparer.Ordinal);
+                while (ReadToken(Reader) && Reader.TokenType != JsonToken.EndArray) {
+                    string Path = ReadString(Reader, "public module"); ValidateModulePath(Path, "public module");
+                    if (!Seen.Add(Path)) throw new InvalidOperationException("duplicate public module: " + Path);
+                    PublicModules.Add(Path);
+                    if (PublicModules.Count > AddonPolicy.MaxSourceModules) throw new InvalidOperationException("publicModules exceed 256");
+                }
+                if (Reader.TokenType != JsonToken.EndArray) throw new InvalidOperationException("unterminated publicModules list");
+            }
+            private static void ValidateModulePath(string Path, string Label)
+            {
+                try { ScriptSnapshot.ValidatePath(Path, false); }
+                catch (InvalidOperationException) { throw new InvalidOperationException(Label + " path is noncanonical"); }
+                if (Path.Split('/').Length > AddonPolicy.MaxPathDepth) throw new InvalidOperationException(Label + " path depth exceeds 32");
             }
             private static void ParseDependencies(JsonTextReader Reader, List<string> Required, List<string> Optional)
             {
@@ -312,6 +343,11 @@ namespace Carbon.Plugins
             }
             private static void Expect(JsonTextReader Reader, JsonToken Token, string Message)
             { if (Reader.TokenType != Token) throw new InvalidOperationException(Message); }
+        }
+
+        internal sealed class AddonDomainBinding
+        {
+            public string Id; public RuntimeDomain Target;
         }
 
         public sealed class AddonRegistry : IDisposable
@@ -442,7 +478,7 @@ namespace Carbon.Plugins
                 if (Missing != null) { RefreshGraph(); return false; }
                 Dictionary<string, DependencyBinding> CandidateBindings = BuildBindings(CandidateSnapshot);
                 Value.State = AddonRegistrationState.Initializing; Value.Failure = "";
-                AddonActivation Activation = Host.ActivateAddon(CandidateSnapshot, Previous);
+                AddonActivation Activation = Host.ActivateAddon(CandidateSnapshot, Previous, RuntimeBindings(CandidateBindings));
                 if (!Registrations.ContainsKey(Value.Token) || Value.State == AddonRegistrationState.Stopping) {
                     if (Activation.Domain != null) Host.RetireAddon(Activation.Domain); return true;
                 }
@@ -568,6 +604,16 @@ namespace Carbon.Plugins
                 foreach (DependencyBinding Binding in Bindings.Values) if (!Binding.Optional && !BindingCurrent(Binding)) return false;
                 return true;
             }
+            private static AddonDomainBinding[] RuntimeBindings(Dictionary<string, DependencyBinding> Bindings)
+            {
+                var Ordered = new List<DependencyBinding>(Bindings.Values);
+                Ordered.Sort((Left, Right) => StringComparer.Ordinal.Compare(Left.Id, Right.Id));
+                var Result = new AddonDomainBinding[Ordered.Count];
+                for (int Index = 0; Index < Ordered.Count; ++Index)
+                    Result[Index] = new AddonDomainBinding {Id = Ordered[Index].Id,
+                        Target = BindingCurrent(Ordered[Index]) ? Ordered[Index].Target.Domain : null};
+                return Result;
+            }
             private static string ActiveBindingDiagnostic(Registration Value)
             {
                 foreach (string Id in Value.Snapshot.Dependencies(true)) {
@@ -665,7 +711,7 @@ namespace Carbon.Plugins
         {
             private readonly SortedDictionary<long, RuntimeDomain> AddonDomains = new SortedDictionary<long, RuntimeDomain>();
             public ulong DomainCount { get { return Vm == null || !Vm.Alive ? 0 : Native.GenerationInfo(Vm.Handle).Domains; } }
-            internal AddonActivation ActivateAddon(AddonPackageSnapshot Package, RuntimeDomain Previous)
+            internal AddonActivation ActivateAddon(AddonPackageSnapshot Package, RuntimeDomain Previous, AddonDomainBinding[] Bindings)
             {
                 Native.CheckOwner(); var Activation = new AddonActivation {Result = new ExecutionResult {Status = RuntimeStatus.INVALID_ARGUMENT, Error = "runtime unavailable or busy"}};
                 if (!Ready || Busy) return Activation;
@@ -673,6 +719,7 @@ namespace Carbon.Plugins
                 try {
                     ScriptSnapshot Snapshot = Package.ToScriptSnapshot();
                     Candidate = new RuntimeDomain(Native, Vm, Settings, Snapshot);
+                    Candidate.Addon(Package, Bindings);
                     if (Facade != null) Candidate.Facade(new FacadeSession(Facade, Candidate.VmGenerationId, Candidate.DomainLifetimeId, Settings.MaxQueuedCallbacks));
                     ExecutionResult Result = Candidate.Execute("addon." + Package.Id + ".init", Snapshot.EntrySource, Settings.MaxCallbackMilliseconds);
                     Activation.Result = Result;

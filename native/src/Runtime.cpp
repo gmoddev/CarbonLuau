@@ -23,6 +23,7 @@ namespace {
 constexpr uint64_t MiB = 1024 * 1024;
 struct Module { std::string Source; int Reference = LUA_NOREF; bool Loading = false, Loaded = false; };
 struct Domain;
+struct DependencyBinding { std::string Id; Domain* Target = nullptr; };
 struct Callback { uint64_t Due, Sequence; Domain* Owner; lua_State* Thread; int Reference, Arguments; std::string Gate; };
 struct Later { bool operator()(const Callback& A, const Callback& B) const {
     return A.Due > B.Due || (A.Due == B.Due && A.Sequence > B.Sequence); } };
@@ -35,6 +36,9 @@ struct Domain {
     uint64_t Rejected = 0, Discarded = 0;
     size_t SourceBytes = 0;
     std::map<std::string, Module> Modules;
+    std::string PackageId, PackageVersion, MainModule;
+    std::vector<std::string> PublicModules;
+    std::vector<DependencyBinding> Dependencies;
     std::vector<std::string> Loading;
     std::vector<Callback> Queue;
     std::vector<StagedModule> PendingModules;
@@ -69,6 +73,7 @@ struct Vm {
     bool LogTruncated = false;
     bool Scripts = false, Sealed = false;
     uint64_t Sequence = 0, OperationSequence = 0, RetiredDiscarded = 0;
+    std::vector<std::string> ModuleLoads;
     std::vector<std::unique_ptr<Domain>> Domains;
     Domain* LegacyDomain = nullptr;
     AdmissionContext* Admission = nullptr;
@@ -181,7 +186,9 @@ void ReleaseDomain(Vm& Runtime, Domain& Value)
         if (Value.Dispatch != LUA_NOREF) lua_unref(Runtime.State, Value.Dispatch);
     }
     Value.Queue.clear(); Value.PendingCallbacks.clear(); Value.PendingModules.clear();
-    Value.Modules.clear(); Value.Loading.clear(); Value.Game = LUA_NOREF; Value.Dispatch = LUA_NOREF;
+    Value.Modules.clear(); Value.PublicModules.clear(); Value.Dependencies.clear(); Value.Loading.clear();
+    Value.PackageId.clear(); Value.PackageVersion.clear(); Value.MainModule.clear();
+    Value.Game = LUA_NOREF; Value.Dispatch = LUA_NOREF;
     Value.Host = nullptr; Value.HostBuffer.reset();
 }
 
@@ -395,7 +402,7 @@ void ReleaseThread(Vm& Runtime, bool Full = true)
 #include "Facade.inl"
 }
 
-uint32_t carbonluau_abi_version(void) { return 0x00010003; }
+uint32_t carbonluau_abi_version(void) { return 0x00010004; }
 ClStatus cl_luau_revision(char* Buffer, uint32_t Capacity)
 {
     if (!Buffer || Capacity < sizeof(CARBONLUAU_REVISION)) return CL_INVALID_ARGUMENT;
@@ -571,6 +578,55 @@ ClStatus cl_domain_module(ClHandle Id, ClHandle DomainId, const char* Name, cons
     auto Added = Owner->Modules.emplace(Name, Module{std::string(Source, Length)});
     if (!Added.second) return CL_INVALID_ARGUMENT;
     Owner->SourceBytes += Length;
+    return CL_OK;
+} catch (...) { return CL_INTERNAL_ERROR; }
+
+ClStatus cl_domain_addon(ClHandle Id, ClHandle DomainId, const char* PackageId, const char* Version,
+    const char* MainModule) try
+{
+    if (!PackageId || !Version || !MainModule) return CL_INVALID_ARGUMENT;
+    std::lock_guard<std::recursive_mutex> Lock(RegistryMutex);
+    Vm* Runtime = GetVm(Id);
+    Domain* Owner = Runtime ? GetDomain(*Runtime, DomainId) : nullptr;
+    if (!Runtime || !Runtime->State || Runtime->Admission || Runtime->ThreadId || !Owner || Owner->Active ||
+        !Owner->PackageId.empty() || !PackageName(PackageId) || !PackageVersion(Version)) return CL_INVALID_ARGUMENT;
+    if (*MainModule) {
+        if (!ModuleName(MainModule, 128) || Owner->Modules.find(MainModule) == Owner->Modules.end()) return CL_INVALID_ARGUMENT;
+        Owner->MainModule = MainModule;
+        Owner->PublicModules.push_back(MainModule);
+    }
+    Owner->PackageId = PackageId;
+    Owner->PackageVersion = Version;
+    return CL_OK;
+} catch (...) { return CL_INTERNAL_ERROR; }
+
+ClStatus cl_domain_public_module(ClHandle Id, ClHandle DomainId, const char* Name) try
+{
+    if (!Name) return CL_INVALID_ARGUMENT;
+    std::lock_guard<std::recursive_mutex> Lock(RegistryMutex);
+    Vm* Runtime = GetVm(Id);
+    Domain* Owner = Runtime ? GetDomain(*Runtime, DomainId) : nullptr;
+    if (!Runtime || !Runtime->State || Runtime->Admission || Runtime->ThreadId || !Owner || Owner->Active ||
+        Owner->PackageId.empty() || !ModuleName(Name, 128) || Owner->Modules.find(Name) == Owner->Modules.end() ||
+        std::find(Owner->PublicModules.begin(), Owner->PublicModules.end(), Name) != Owner->PublicModules.end() ||
+        Owner->PublicModules.size() >= 256) return CL_INVALID_ARGUMENT;
+    Owner->PublicModules.emplace_back(Name);
+    return CL_OK;
+} catch (...) { return CL_INTERNAL_ERROR; }
+
+ClStatus cl_domain_dependency(ClHandle Id, ClHandle DomainId, const char* PackageId,
+    ClHandle TargetDomainId) try
+{
+    if (!PackageId) return CL_INVALID_ARGUMENT;
+    std::lock_guard<std::recursive_mutex> Lock(RegistryMutex);
+    Vm* Runtime = GetVm(Id);
+    Domain* Owner = Runtime ? GetDomain(*Runtime, DomainId) : nullptr;
+    Domain* Target = TargetDomainId && Runtime ? GetDomain(*Runtime, TargetDomainId, true) : nullptr;
+    if (!Runtime || !Runtime->State || Runtime->Admission || Runtime->ThreadId || !Owner || Owner->Active ||
+        Owner->PackageId.empty() || !PackageName(PackageId) || (TargetDomainId && !Target) ||
+        (Target && Target->PackageId != PackageId) || Owner->Dependencies.size() >= 32) return CL_INVALID_ARGUMENT;
+    for (const auto& Binding : Owner->Dependencies) if (Binding.Id == PackageId) return CL_INVALID_ARGUMENT;
+    Owner->Dependencies.push_back(DependencyBinding{PackageId, Target});
     return CL_OK;
 } catch (...) { return CL_INTERNAL_ERROR; }
 

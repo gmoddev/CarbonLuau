@@ -36,10 +36,19 @@ internal static class AddonTests
     private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception("Addon foundations: " + Message); }
     private static byte[] Bytes(string Text) { return Utf8.GetBytes(Text); }
-    private static string Manifest(string Id, string Version = "1.0.0", string Dependencies = null)
+    private static string Manifest(string Id, string Version = "1.0.0", string Dependencies = null,
+        string Main = null, string[] PublicModules = null)
     {
-        return "{\"schema\":1,\"id\":\"" + Id + "\",\"version\":\"" + Version + "\"" +
-            (Dependencies == null ? "" : ",\"dependencies\":" + Dependencies) + "}";
+        var Result = new StringBuilder("{\"schema\":1,\"id\":\"").Append(Id).Append("\",\"version\":\"").Append(Version).Append('"');
+        if (Dependencies != null) Result.Append(",\"dependencies\":").Append(Dependencies);
+        if (Main != null) Result.Append(",\"main\":\"").Append(Main).Append('"');
+        if (PublicModules != null) {
+            Result.Append(",\"publicModules\":[");
+            for (int Index = 0; Index < PublicModules.Length; ++Index)
+                Result.Append(Index == 0 ? "\"" : ",\"").Append(PublicModules[Index]).Append('"');
+            Result.Append(']');
+        }
+        return Result.Append('}').ToString();
     }
     private static byte[] Archive(string ManifestText, params EntrySpec[] Sources)
     {
@@ -207,10 +216,17 @@ internal static class AddonTests
         }
         Check(Native.LiveVmCount == 0, "Foundation B host teardown returns VM count to baseline");
         RunDependencyLifecycle(Native);
+        RunPublicModules(Native);
 
         InvalidArchive(Archive("{", new EntrySpec("init.luau", "return true")), "malformed JSON rejected");
         InvalidArchive(Archive("{\"schema\":1,\"id\":\"dup\",\"id\":\"dup\",\"version\":\"1.0.0\"}", new EntrySpec("init.luau", "return true")), "duplicate JSON key rejected");
-        InvalidArchive(Archive("{\"schema\":1,\"id\":\"unknown\",\"version\":\"1.0.0\",\"main\":\"api\"}", new EntrySpec("init.luau", "return true")), "out-of-scope manifest field rejected");
+        InvalidArchive(Archive(Manifest("missingmain", "1.0.0", null, "api"), new EntrySpec("init.luau", "return true")), "nonexistent main rejected");
+        InvalidArchive(Archive(Manifest("missingpublic", "1.0.0", null, null, new[] {"api"}), new EntrySpec("init.luau", "return true")), "nonexistent public module rejected");
+        InvalidArchive(Archive(Manifest("badexport", "1.0.0", null, null, new[] {"../api"}), new EntrySpec("init.luau", "return true")), "noncanonical public module rejected");
+        InvalidArchive(Archive(Manifest("duplicateexport", "1.0.0", null, null, new[] {"api", "api"}),
+            new EntrySpec("init.luau", "return true"), new EntrySpec("api.luau", "return true")), "duplicate public module rejected");
+        InvalidArchive(Archive(Manifest("duplicatemain", "1.0.0", null, "api", new[] {"api"}),
+            new EntrySpec("init.luau", "return true"), new EntrySpec("api.luau", "return true")), "main duplication rejected");
         InvalidArchive(Archive(Manifest("badpath"), new EntrySpec("init.luau", "return true"), new EntrySpec("../bad.luau", "return true")), "traversal path rejected");
         InvalidArchive(Archive(Manifest("abspath"), new EntrySpec("init.luau", "return true"), new EntrySpec("/bad.luau", "return true")), "absolute path rejected");
         InvalidArchive(Archive(Manifest("backslash"), new EntrySpec("init.luau", "return true"), new EntrySpec("bad\\name.luau", "return true")), "backslash path rejected");
@@ -235,7 +251,144 @@ internal static class AddonTests
         InvalidArchive(Archive(Manifest("manydeps", "1.0.0", ManyDependencies), new EntrySpec("init.luau", "return true")), "dependency limit rejected");
         InvalidArchive(Archive(Manifest("selfdep", "1.0.0", "{\"required\":[\"selfdep\"],\"optional\":[]}"),
             new EntrySpec("init.luau", "return true")), "self dependency rejected");
-        Console.WriteLine("[CarbonLuau:AddonTest] PASS package/parser bounds; ownership; dependency lifecycle; Active/Blocked/Failed; replacement; unload; graph bounds and stress");
+        Console.WriteLine("[CarbonLuau:AddonTest] PASS package/parser bounds; ownership; dependency lifecycle; public modules; exact imports; replacement; unload; graph bounds and stress");
+    }
+
+    private static string Dependencies(string[] Required, string[] Optional)
+    {
+        var Text = new StringBuilder("{\"required\":[");
+        for (int Index = 0; Index < Required.Length; ++Index) Text.Append(Index == 0 ? "\"" : ",\"").Append(Required[Index]).Append('"');
+        Text.Append("],\"optional\":[");
+        for (int Index = 0; Index < Optional.Length; ++Index) Text.Append(Index == 0 ? "\"" : ",\"").Append(Optional[Index]).Append('"');
+        return Text.Append("]}").ToString();
+    }
+
+    private static byte[] PublicPackage(string Id, string Version, string[] Required, string[] Optional,
+        string Init, string Main, string[] PublicModules, params EntrySpec[] Modules)
+    {
+        var Sources = new EntrySpec[Modules.Length + 1]; Sources[0] = new EntrySpec("init.luau", Init);
+        Array.Copy(Modules, 0, Sources, 1, Modules.Length);
+        return Archive(Manifest(Id, Version, Dependencies(Required, Optional), Main, PublicModules), Sources);
+    }
+
+    private static Runtime.FacadeSession Session(Runtime.FacadeWorld World, string Domain)
+    {
+        foreach (Runtime.FacadeSession Value in World.Sessions())
+            if (Value.DomainLifetimeId.ToString() == Domain) return Value;
+        return null;
+    }
+
+    private static string Drain(Runtime.ScriptHost Host)
+    {
+        string Logs = ""; foreach (Runtime.ExecutionResult Result in Host.Drain()) Logs += Result.Logs; return Logs;
+    }
+
+    private static void RunPublicModules(Runtime.NativeRuntime Native)
+    {
+        var Registrar = new Registrar();
+        var World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Registrar);
+        var Config = new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20};
+        Func<Runtime.ScriptSnapshot> Root = () => new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = "return true"};
+        object Provider = new object(), Consumers = new object();
+        using (var Host = new Runtime.ScriptHost(Native, Config, Root, World)) {
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "Foundation D root baseline");
+            using (var Registry = new Runtime.AddonRegistry(Host, Native.HostLifetimeId)) {
+                var EconomyModules = new List<EntrySpec> {
+                    new EntrySpec("api.luau", "assert(EntrySecret==nil); local Secret=41; return {Count=0,Read=function() return Secret end,Host=function() return #game:GetService('Players'):GetPlayers() end}"),
+                    new EntrySpec("private/hidden.luau", "return {Hidden=true}"),
+                    new EntrySpec("nilvalue.luau", "return nil"),
+                    new EntrySpec("novalue.luau", "return"),
+                    new EntrySpec("freshprivate.luau", "assert(EntrySecret==nil); local Hidden=73; return function() return Hidden end"),
+                    new EntrySpec("failed.luau", "task.defer(function() error('leaked') end); game:GetService('Players').PlayerAdded:Connect(function() end); error('public failure')"),
+                    new EntrySpec("commit.luau", "task.defer(function() print('foreign-commit') end); return true"),
+                    new EntrySpec("rollback.luau", "task.defer(function() print('foreign-rollback') end); return true"),
+                    new EntrySpec("yielding.luau", "coroutine.yield()"),
+                    new EntrySpec("cycle/a.luau", "return require('cycle/b')"),
+                    new EntrySpec("cycle/b.luau", "return require('cycle/a')")
+                };
+                for (int Index = 1; Index <= 32; ++Index)
+                    EconomyModules.Add(new EntrySpec("depth/d" + Index.ToString("D2") + ".luau",
+                        Index == 32 ? "return true" : "return require('depth/d" + (Index + 1).ToString("D2") + "')"));
+                for (int Index = 1; Index <= 33; ++Index)
+                    EconomyModules.Add(new EntrySpec("deep/e" + Index.ToString("D2") + ".luau",
+                        Index == 33 ? "return true" : "return require('deep/e" + (Index + 1).ToString("D2") + "')"));
+                string[] Public = {"nilvalue", "novalue", "freshprivate", "failed", "commit", "rollback", "yielding", "cycle/a", "depth/d01", "deep/e01"};
+                byte[] Economy = PublicPackage("economy", "1.0.0", new string[0], new string[0],
+                    "assert(addon.Id=='economy' and addon.Version=='1.0.0'); assert(not addon:IsDependencyAvailable('unknown')); local V=require('api'); V.FromLocal=true; return true",
+                    "api", Public, EconomyModules.ToArray());
+                string[] EconomyRegistration = Registry.RegisterArchive(Provider, Economy); Process(Registry);
+                IsState(Registry.Status(Provider, EconomyRegistration[1]), "Active", "public package activates");
+                string EconomyDomain = Registry.Status(Provider, EconomyRegistration[1])[7];
+                Runtime.FacadeSession EconomySession = Session(World, EconomyDomain);
+                Check(EconomySession != null, "public package facade is identifiable");
+
+                string ConsumerSource = "assert(addon.Id=='consumerone' and addon.Version=='1.0.0'); assert(not pcall(function() addon.Id='changed' end)); assert(addon:IsDependencyAvailable('economy')); assert(not addon:IsDependencyAvailable('undeclared')); EntrySecret=99; local A=require('@economy'); local PrivateClosure=require('@economy/freshprivate'); assert(A==require('@economy/api') and A.FromLocal and A.Read()==41 and A.Count==0 and PrivateClosure()==73); A.Count+=1; assert(not pcall(require,'@economy/private/hidden')); assert(not pcall(require,'@undeclared/api')); assert(not pcall(require,'../bad'))";
+                string[] ConsumerOne = Registry.RegisterArchive(Consumers, PublicPackage("consumerone", "1.0.0", new[] {"economy"}, new string[0], ConsumerSource, null, new string[0])); Process(Registry);
+                IsState(Registry.Status(Consumers, ConsumerOne[1]), "Active", "main and path import succeed through required exact binding");
+                string[] ConsumerTwo = Registry.RegisterArchive(Consumers, PublicPackage("consumertwo", "1.0.0", new[] {"economy"}, new string[0],
+                    "local A=require('@economy/api'); assert(A.Count==1 and A.Read()==41); A.Count+=1; assert(require('@economy/nilvalue')==true and require('@economy/novalue')==true)", null, new string[0])); Process(Registry);
+                IsState(Registry.Status(Consumers, ConsumerTwo[1]), "Active", "two consumers share canonical module value and mutable state");
+
+                string[] NoMain = Registry.RegisterArchive(Provider, PublicPackage("nomain", "1.0.0", new string[0], new string[0], "return true", null,
+                    new[] {"api"}, new EntrySpec("api.luau", "return 7"))); Process(Registry);
+                string[] NoMainConsumer = Registry.RegisterArchive(Consumers, PublicPackage("nomainconsumer", "1.0.0", new[] {"nomain"}, new string[0],
+                    "assert(not pcall(require,'@nomain')); assert(require('@nomain/api')==7)", null, new string[0])); Process(Registry);
+                IsState(Registry.Status(Consumers, NoMainConsumer[1]), "Active", "missing main is controlled while explicit public path works");
+
+                int Listeners = EconomySession.ListenerCount;
+                string[] Caught = Registry.RegisterArchive(Consumers, PublicPackage("caughtpublic", "1.0.0", new[] {"economy"}, new string[0],
+                    "assert(not pcall(require,'@economy/failed')); assert(not pcall(require,'@economy/failed'))", null, new string[0])); Process(Registry);
+                IsState(Registry.Status(Consumers, Caught[1]), "Active", "caught failed public module keeps candidate active");
+                Check(EconomySession.ListenerCount == Listeners && !Host.HasWork, "caught failed public loads publish no cache, listener, or task and retry cleanly");
+
+                string[] Commit = Registry.RegisterArchive(Consumers, PublicPackage("commitconsumer", "1.0.0", new[] {"economy"}, new string[0],
+                    "assert(require('@economy/commit'))", null, new string[0])); Process(Registry);
+                IsState(Registry.Status(Consumers, Commit[1]), "Active", "provisional foreign lazy load commits");
+                Check(Drain(Host) == "foreign-commit\n", "foreign module-created task publishes only after candidate commit");
+                string[] Rollback = Registry.RegisterArchive(Consumers, PublicPackage("rollbackconsumer", "1.0.0", new[] {"economy"}, new string[0],
+                    "assert(require('@economy/rollback')); error('discard candidate')", null, new string[0])); Process(Registry);
+                IsState(Registry.Status(Consumers, Rollback[1]), "Failed", "foreign lazy load candidate rollback fails normally");
+                Check(!Host.HasWork, "failed outer candidate discards foreign module task and cache publication");
+                string[] RollbackRetry = Registry.RegisterArchive(Consumers, PublicPackage("rollbackretry", "1.0.0", new[] {"economy"}, new string[0],
+                    "assert(require('@economy/rollback'))", null, new string[0])); Process(Registry);
+                Check(Drain(Host) == "foreign-rollback\n", "discarded foreign module retries and publishes on later successful candidate");
+
+                string[] GuardConsumer = Registry.RegisterArchive(Consumers, PublicPackage("guardconsumer", "1.0.0", new[] {"economy"}, new string[0],
+                    "assert(not pcall(require,'@economy/cycle/a')); assert(require('@economy/depth/d01')==true); assert(not pcall(require,'@economy/deep/e01')); assert(not pcall(require,'@economy/yielding'))", null, new string[0])); Process(Registry);
+                IsState(Registry.Status(Consumers, GuardConsumer[1]), "Active", "cross-addon cycle, depth boundary, and yield failures remain catchable");
+
+                byte[] LifeOne = PublicPackage("life", "1.0.0", new string[0], new string[0], "return true", "api", new string[0],
+                    new EntrySpec("api.luau", "return {Generation='1',Pure=5,Host=function() return #game:GetService('Players'):GetPlayers() end}"));
+                string[] Life = Registry.RegisterArchive(Provider, LifeOne); Process(Registry);
+                string[] Optional = Registry.RegisterArchive(Consumers, PublicPackage("lifeoptional", "1.0.0", new string[0], new[] {"life"},
+                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); task.defer(function() assert(V.Generation=='1' and V.Pure==5); V.Pure+=1; assert(not pcall(V.Host)); assert(not pcall(require,'@life')); assert(not addon:IsDependencyAvailable('life')); print('retained-a1') end)", null, new string[0])); Process(Registry);
+                string[] Required = Registry.RegisterArchive(Consumers, PublicPackage("liferequired", "1.0.0", new[] {"life"}, new string[0],
+                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); task.defer(function() print('required-'..V.Generation) end)", null, new string[0])); Process(Registry);
+                string OldOptional = Registry.Status(Consumers, Optional[1])[7], OldRequired = Registry.Status(Consumers, Required[1])[7];
+                byte[] LifeTwo = PublicPackage("life", "2.0.0", new string[0], new string[0], "return true", "api", new string[0],
+                    new EntrySpec("api.luau", "return {Generation='2',Pure=9,Host=function() return #game:GetService('Players'):GetPlayers() end}"));
+                Registry.ReplaceArchive(Provider, Life[1], LifeTwo);
+                Check(Registry.ProcessOne(), "dependency A2 replacement commits");
+                IsState(Registry.Status(Consumers, Optional[1]), "Active", "optional consumer remains active after A1 retirement");
+                Check(Registry.Status(Consumers, Optional[1])[7] == OldOptional && Registry.BindingStatus(Consumers, Optional[1], "life")[1] == "stale",
+                    "optional consumer remains on stale A1 binding without hot-rebind");
+                Check(Registry.ProcessOne(), "required consumer reconstructs against A2");
+                Check(Registry.Status(Consumers, Required[1])[7] != OldRequired && Registry.BindingStatus(Consumers, Required[1], "life")[1] == "available",
+                    "required consumer receives fresh A2 exact binding");
+                Check(Drain(Host) == "retained-a1\nrequired-2\n", "retained A1 pure value survives while its host facade and stale import fail; required consumer resolves A2");
+
+                string[] Retained = Registry.RegisterArchive(Consumers, PublicPackage("retainedoptional", "1.0.0", new string[0], new[] {"life"},
+                    "local V=require('@life'); task.defer(function() assert(V.Generation=='2' and V.Pure==9); print('retained-a2') end)", null, new string[0])); Process(Registry);
+                Registry.ReplaceArchive(Provider, Life[1], PublicPackage("life", "3.0.0", new string[0], new string[0], "return true", "api", new string[0],
+                    new EntrySpec("api.luau", "return {Generation='3',Pure=11}")));
+                Process(Registry);
+                Check(Drain(Host).Contains("retained-a2"), "ordinary A2 value remains usable after retirement and never targets A3");
+
+                Check(Registry.Count > 0 && Host.DomainCount > 1, "Foundation D domains coexist in one VM");
+            }
+            Check(Host.DomainCount == 1, "Foundation D teardown returns to root domain");
+        }
+        Check(Native.LiveVmCount == 0, "Foundation D host teardown returns VM baseline");
     }
 
     private static void RunDependencyLifecycle(Runtime.NativeRuntime Native)

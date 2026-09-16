@@ -4,7 +4,10 @@ Identity: `CarbonLuau`, API `0.3.0-experimental`, status `Experimental`.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
 `carbonluau.status`. This identity is distinct from package 0.3.0, the published
 v0.3.0 native ABI 1.2, the post-release internal Foundation A ABI 1.3,
-the pinned Luau revision and the installed Rust/Carbon builds.
+the Foundation D development ABI 1.4/provider protocol 1.2, the pinned Luau
+revision and the installed Rust/Carbon builds. Foundation D's addon-facing names
+are implemented in development source but still have no assigned public scripting
+API identity and are not part of `0.3.0-experimental`.
 
 The canonical compatibility policy lives in [Compatibility.md](../Compatibility.md)
 and decisions D8/D12. Additive means preserving existing contracts while adding

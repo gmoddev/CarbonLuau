@@ -37,6 +37,7 @@ UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
 ctest --test-dir /work/build/asan --output-on-failure
 echo '[CarbonLuau:FoundationCWorker] LINUX AND SANITIZERS PASS'
 '@
+$Script = $Script -replace "`r", ""
 
 & docker run --rm `
     --volume "${Source}:/work/src" `

@@ -196,7 +196,7 @@ A domain-bound facade retains bounded identity snapshots and opaque project toke
 
 The already-qualified gameplay facade remains `CarbonLuau` scripting API `0.3.0-experimental`. Canonical addon adoption does not redefine that API or claim addon behavior exists in it.
 
-The intended addon-facing additions are package-qualified `require("@id")` and `require("@id/path")`, existing local `require("path")`, metadata such as `addon.Id`/`addon.Version`, `addon:IsDependencyAvailable(id)` for a declared binding, and inherently public `main`. These names are architecture decisions, not implementation claims.
+Foundation D development source implements package-qualified `require("@id")` and `require("@id/path")`, existing local `require("path")`, `addon.Id`/`addon.Version`, `addon:IsDependencyAvailable(id)` for a declared binding, and inherently public `main`. This implementation status is not a public release/support claim and does not assign the addon-capable scripting identity.
 
 Before public exposure, Compatibility and public API documentation must assign the addon-capable scripting API identity and determine whether D4/D7 lifetime/failure behavior requires a new version. Additive APIs preserve accepted names, types, authorization and lifetime/failure behavior unless an explicit breaking-version/migration decision says otherwise. Experimental status does not authorize silent breaks. Package release, scripting API, package schema, provider protocol, native ABI and pinned Luau revision remain separate identities. No addon scripting version is assigned by this adoption.
 

@@ -11,6 +11,11 @@ All notable public changes to CarbonLuau are recorded here.
   isolation; domain-bound ownership and admission; and transactional module
   cache/resource publication. This is internal infrastructure only and does not
   expose public addon loading or assign an addon scripting API version.
+- Added Foundations B–D development infrastructure: bounded provider/package
+  registration, exact dependency lifetimes, explicit public exports,
+  package-qualified `require`, readonly addon metadata and dependency availability.
+  Foundation D uses additive native ABI 1.4 and provider protocol 1.2; no public
+  addon scripting API version or release support claim is assigned yet.
 
 ## 0.3.0
 

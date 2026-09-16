@@ -127,6 +127,13 @@ namespace Carbon.Plugins
                 [MarshalAs(UnmanagedType.LPStr)] string Name, byte[] Source, uint Length);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainLoadDelegate(ulong Vm, ulong Domain,
                 [MarshalAs(UnmanagedType.LPStr)] string Chunk, byte[] Source, uint Length, out ulong ThreadHandle, out NativeResult Result);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainAddonDelegate(ulong Vm, ulong Domain,
+                [MarshalAs(UnmanagedType.LPStr)] string Id, [MarshalAs(UnmanagedType.LPStr)] string Version,
+                [MarshalAs(UnmanagedType.LPStr)] string Main);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainNameDelegate(ulong Vm, ulong Domain,
+                [MarshalAs(UnmanagedType.LPStr)] string Name);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainDependencyDelegate(ulong Vm, ulong Domain,
+                [MarshalAs(UnmanagedType.LPStr)] string Id, ulong TargetDomain);
             private ScriptsDelegate InstallScripts;
             private ModuleDelegate InstallModule;
             private SchedulerDelegate ReadScheduler;
@@ -135,6 +142,9 @@ namespace Carbon.Plugins
             private DomainOperationDelegate DestroyDomain, CommitDomain;
             private DomainModuleDelegate InstallDomainModule;
             private DomainLoadDelegate LoadDomainSource;
+            private DomainAddonDelegate InstallDomainAddon;
+            private DomainNameDelegate InstallDomainPublicModule;
+            private DomainDependencyDelegate InstallDomainDependency;
             private void BindDomains()
             {
                 if ((AbiVersion & 65535) < 3) throw new InvalidOperationException("Foundation A requires native ABI 1.3 or later");
@@ -148,6 +158,15 @@ namespace Carbon.Plugins
                 CommitDomain = Loader.Bind<DomainOperationDelegate>("cl_domain_commit");
                 InstallDomainModule = Loader.Bind<DomainModuleDelegate>("cl_domain_module");
                 LoadDomainSource = Loader.Bind<DomainLoadDelegate>("cl_domain_load_source");
+            }
+            private void BindAddonDomains()
+            {
+                BindDomains();
+                if ((AbiVersion & 65535) < 4) throw new InvalidOperationException("Foundation D requires native ABI 1.4 or later");
+                if (InstallDomainAddon != null) return;
+                InstallDomainAddon = Loader.Bind<DomainAddonDelegate>("cl_domain_addon");
+                InstallDomainPublicModule = Loader.Bind<DomainNameDelegate>("cl_domain_public_module");
+                InstallDomainDependency = Loader.Bind<DomainDependencyDelegate>("cl_domain_dependency");
             }
             public void Scripts(ulong Handle, RuntimeConfig Config, ScriptSnapshot Snapshot)
             {
@@ -187,6 +206,16 @@ namespace Carbon.Plugins
                 } catch { DestroyDomain(Vm, Domain); throw; }
             }
             public void DomainCommit(ulong Vm, ulong Domain) { CheckOwner(); BindDomains(); Require(CommitDomain(Vm, Domain), "domain commit"); }
+            internal void DomainAddon(ulong Vm, ulong Domain, AddonPackageSnapshot Package, AddonDomainBinding[] Bindings)
+            {
+                CheckOwner(); BindAddonDomains();
+                Require(InstallDomainAddon(Vm, Domain, Package.Id, Package.Version, Package.Main ?? ""), "domain addon metadata");
+                foreach (string Module in Package.PublicModules())
+                    Require(InstallDomainPublicModule(Vm, Domain, Module), "domain public module " + Module);
+                foreach (AddonDomainBinding Binding in Bindings)
+                    Require(InstallDomainDependency(Vm, Domain, Binding.Id,
+                        Binding.Target == null ? 0 : Binding.Target.NativeHandle), "domain dependency " + Binding.Id);
+            }
             public void DomainDestroy(ulong Vm, ulong Domain)
             {
                 CheckOwner(); if (Domain == 0) return; BindDomains(); Require(DestroyDomain(Vm, Domain), "domain destroy"); ReleaseDomainFacade(Domain);
@@ -227,6 +256,7 @@ namespace Carbon.Plugins
             private readonly NativeRuntime Native;
             private readonly RuntimeGeneration Vm;
             private ulong Handle;
+            internal ulong NativeHandle { get { return Handle; } }
             public readonly long VmGenerationId, DomainLifetimeId;
             public FacadeSession FacadeSession { get; private set; }
             public bool Alive { get { return Handle != 0 && Vm.Alive; } }
@@ -239,6 +269,8 @@ namespace Carbon.Plugins
                 DomainLifetimeId = checked((long)Handle);
             }
             public void Facade(FacadeSession Session) { FacadeSession = Session; Native.DomainFacade(Vm.Handle, Handle, Session); }
+            internal void Addon(AddonPackageSnapshot Package, AddonDomainBinding[] Bindings)
+            { if (!Alive) throw new InvalidOperationException("stale domain"); Native.DomainAddon(Vm.Handle, Handle, Package, Bindings); }
             public ExecutionResult Execute(string Chunk, string Source, int Milliseconds)
             {
                 if (!Alive) return new ExecutionResult { Status = RuntimeStatus.INVALID_ARGUMENT };
