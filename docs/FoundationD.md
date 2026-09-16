@@ -118,5 +118,33 @@ state, defining environments, nil normalization, retry, runtime cycle/depth/yiel
 guards, caught failure rollback, provisional foreign commit/rollback, A1/A2
 replacement behavior, retained pure values versus stale facades,
 `IsDependencyAvailable`, repeated replacement and Foundation A–C regressions.
-Final platform, sanitizer, live Carbon and CI evidence is recorded below after
-qualification of the final source revision.
+
+## Qualification evidence
+
+Foundation D was qualified on 2026-09-16 from starting commit
+`d5a17817fb0c1497cac22fbf2352196eb4444127`. The tested implementation revision
+is `2e635c3136d0cd05ee5f4520271068abcc0f864a`.
+
+- Windows: the established worker release matrix passed the MSVC Release build,
+  all four native CTest fixtures, dynamic CRT rejection, the complete managed
+  runtime/addon suite, 100 loader cycles, packaging and API documentation checks.
+- Linux: the established worker matrix passed the Ubuntu 24.04 GCC 13.3 Release
+  build, all four native CTest fixtures, the complete Mono runtime/addon suite,
+  exported-package probe and packaging checks.
+- Sanitizers: ASan, UBSan and leak detection passed all four native fixtures on
+  the Linux worker.
+- Live Carbon: the isolated Windows server passed initial public-module import,
+  addon identity and availability checks, required-loss propagation, optional
+  preservation, required-consumer reconstruction and replacement generation 2.
+  The retained optional consumer did not hot-rebind.
+- GitHub Actions: [Phase 0 through 3 run 35078222710](https://github.com/gmoddev/CarbonLuau/actions/runs/35078222710)
+  passed Windows, Ubuntu and sanitizer jobs; [Documentation run
+  35078222868](https://github.com/gmoddev/CarbonLuau/actions/runs/35078222868)
+  passed.
+
+The worker scripts retain their historical Foundation B/C names because they are
+the repository's established full-platform runners. Their Foundation D runs used
+fresh source and build directories. The live server was stopped and its fixture
+state restored after qualification. No authenticated real-client behavior is
+introduced by Foundation D, so that previously approved deferred surface remains
+outside this qualification.
