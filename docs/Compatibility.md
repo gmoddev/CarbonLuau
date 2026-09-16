@@ -32,6 +32,11 @@ ABI remains `1.2`, and Luau remains pinned to
 [release.json](../release.json), with build and provenance instructions in the
 [release guide](Release.md).
 
+Post-release Foundation A source adds internal domain exports as additive native
+ABI `1.3`. This does not alter the already-published v0.3.0/ABI 1.2 artifacts or
+assign a new scripting API identity. A future release must deliberately map its
+package, native ABI and still-pending addon scripting/protocol identities.
+
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
 ## Dependency and host upgrades
@@ -114,6 +119,23 @@ PlayerAdded/PlayerRemoving and real same-account reconnect remain unqualified an
 require future requalification before any support claim. A task-scoped Linux
 worker substitution does not change the repository's general worker policy or
 qualify another operating system.
+
+## Foundation A evidence contract
+
+[Foundation A](FoundationA.md) is an internal post-v0.3.0 runtime foundation, not
+a public addon release or scripting API assignment. Its affected evidence is native
+domain/cache/publication tests, real managed/native root-domain replacement and
+facade-resource rollback tests, existing Phase 1–3 regressions, allocation faults,
+Windows/Linux native and managed builds, and affected Linux sanitizers. Healthy
+reload must retain `VmGenerationId` while changing `DomainLifetimeId`; fatal
+retirement/reconstruction must change both. A caught failed first module load must
+publish no cache entry and no CarbonLuau-owned module-created task, command or
+listener. Historical Phase 0–5 records are not rewritten by these new results.
+
+Foundation A does not qualify public addon registration, provider lifecycle,
+package/archive parsing, dependency graph behavior, `@id` resolution, multi-domain
+scale/fairness policy or an addon scripting identity. Those remain future gates in
+D2/D5/D12/D14.
 
 ## Phase 0 consistency review
 

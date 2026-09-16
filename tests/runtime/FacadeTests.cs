@@ -33,17 +33,25 @@ internal static class FacadeTests
             Name = "Fixture Player", Connected = true, Send = Message => Messages.Add(Message), Permission = Permission => Allowed };
         var Directory = new Runtime.PlayerDirectory(Id => Views.ContainsKey(Id) ? Views[Id] : null);
         var Registrar = new Registrar(); var World = new Runtime.FacadeWorld(Directory, Registrar);
-        string Source = "";
+        string Source = "", FailureModule = null;
         var Config = new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20};
         Func<Runtime.ScriptSnapshot> SnapshotSource = () => {
             var Snapshot = new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = Source};
-            Snapshot.Modules.Add("state", "return {}"); return Snapshot;
+            Snapshot.Modules.Add("state", "return {}");
+            if (FailureModule != null) Snapshot.Modules.Add("caughtresource", FailureModule);
+            return Snapshot;
         };
         const string ReadState = "local State=require('state'); local P,Old,Snapshot,C=State.P,State.Old,State.Snapshot,State.C; ";
         using (var Host = new Runtime.ScriptHost(Native, Config, SnapshotSource, World)) {
             Action<string> Load = Text => { Source = ReadState + Text + "; State.P=P; State.Old=Old; State.Snapshot=Snapshot; State.C=C"; var Result = Host.Reload(); Check(Result.Status == Runtime.RuntimeStatus.OK, "load: " + Result.Error); };
             Action<string> Execute = Text => { var Result = Host.Execute("facade.test", ReadState + Text); Check(Result.Status == Runtime.RuntimeStatus.OK, "execute: " + Result.Error); };
             Load("local P=game:GetService('Players'); assert(#P:GetPlayers()==0); assert(P==game:GetService('Players')); assert(game:GetService('Commands')==game:GetService('Commands')); assert(game.ApiVersion=='0.3.0-experimental'); assert(not pcall(function() game:GetService('X') end)); assert(not pcall(function() game:GetService(1) end)); assert(not pcall(function() P:GetPlayerByUserId(123) end)); assert(P:GetPlayerByUserId('123')==nil); assert(__hostcall==nil and debug==nil and getfenv==nil)");
+            FailureModule = "print('module-attempt'); game:GetService('Commands'):Register('moduleleak',{},function() end); task.defer(function() error('module task leaked') end); error('caught resource failure')";
+            Source = "assert(not pcall(require,'caughtresource')); assert(not pcall(require,'caughtresource'))";
+            var FailedModule = Host.Reload();
+            Check(FailedModule.Status == Runtime.RuntimeStatus.OK && FailedModule.Logs == "module-attempt\nmodule-attempt\n", "caught failed module retries inside successful candidate");
+            Check(!Registrar.Active.Commands.ContainsKey("moduleleak") && !Host.HasWork && Host.Status().Contains("modules: 0"), "caught failed module publishes no cache, command or task");
+            FailureModule = null;
             Views[UserId] = View(); var Lifetime = Directory.Connect(Views[UserId]);
             Load("P=game:GetService('Players'); Old=P:GetPlayers()[1]; Snapshot=P:GetPlayers(); assert(Old==P:GetPlayerByUserId('" + UserId + "')); assert(Old.UserId=='" + UserId + "' and type(Old.UserId)=='string'); assert(Old.Name=='Fixture Player' and Old.IsConnected); assert(not pcall(function() Old.Name='forged' end)); assert(not pcall(function() Old.SendMessage({},'forged') end)); assert(not pcall(function() Old:SendMessage('provisional') end)); task.defer(function() Old:SendMessage('committed') end)");
             Check(Messages.Count == 0, "D10 caught provisional message has no effect"); Drain(Host); Check(Messages.Count == 1 && Messages[0] == "committed", "D10 deferred delivery after commit");

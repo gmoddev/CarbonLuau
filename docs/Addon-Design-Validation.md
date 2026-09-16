@@ -1,7 +1,8 @@
 # Addon design review — revised 2026-09-15
 
-**Verdict: the AI review supports a substantially simpler shared-VM proposal.
-Documentation validation only; not canonical adoption or implementation readiness.**
+**Status:** supporting validation evidence for the canonical amendments adopted in
+[Invariants.md](Invariants.md) on 2026-09-16. Historical observations remain useful,
+but unresolved proposal gates here do not override the adopted register.
 
 The [revised proposal](CarbonLuau_Addon_Decisions_and_Invariants.md) removes
 requirements for addon-local cancellation, deep export revocation, per-closure

@@ -41,6 +41,8 @@ namespace Carbon.Plugins
         [StructLayout(LayoutKind.Sequential)]
         public struct VmInfo { public ulong MemoryBytes, MemoryLimitBytes, Ready; }
         [StructLayout(LayoutKind.Sequential)]
+        public struct VmGenerationInfo { public ulong VmGenerationId, Domains; }
+        [StructLayout(LayoutKind.Sequential)]
         public struct NativeResult
         {
             public double Number;
@@ -53,6 +55,7 @@ namespace Carbon.Plugins
         {
             public RuntimeStatus Status;
             public long Generation;
+            public long VmGenerationId, DomainLifetimeId;
             public string Error = "", Logs = "";
             public bool Retired, LogTruncated, HasNumber;
             public double Number;
@@ -78,8 +81,10 @@ namespace Carbon.Plugins
             private readonly NativeLibraryLoader Loader = new NativeLibraryLoader();
             private readonly int Owner = Thread.CurrentThread.ManagedThreadId;
             private readonly HashSet<ulong> Vms = new HashSet<ulong>();
+            private static long NextHostLifetimeId;
             private bool Disposed;
             private bool InsideNative;
+            public long HostLifetimeId { get; private set; }
             public uint AbiVersion { get; private set; }
             public string Rid { get { return Loader.Rid; } }
             public string Revision { get; private set; }
@@ -92,12 +97,14 @@ namespace Carbon.Plugins
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus CreateDelegate(ref VmConfig Config, out ulong Vm);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DestroyDelegate(ulong Handle);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus InfoDelegate(ulong Vm, out VmInfo Info);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus GenerationInfoDelegate(ulong Vm, out VmGenerationInfo Info);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus LoadDelegate(ulong Vm,
                 [MarshalAs(UnmanagedType.LPStr)] string Chunk, byte[] Source, uint Length, out ulong ThreadHandle, out NativeResult Result);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus ResumeDelegate(ulong ThreadHandle, ulong BudgetNs, out NativeResult Result);
             private CreateDelegate CreateVm;
             private DestroyDelegate DestroyVm, DestroyThread;
             private InfoDelegate ReadInfo;
+            private GenerationInfoDelegate ReadGenerationInfo;
             private LoadDelegate LoadSource;
             private ResumeDelegate Resume;
 
@@ -114,9 +121,12 @@ namespace Carbon.Plugins
                     CreateVm = Loader.Bind<CreateDelegate>("cl_vm_create");
                     DestroyVm = Loader.Bind<DestroyDelegate>("cl_vm_destroy");
                     ReadInfo = Loader.Bind<InfoDelegate>("cl_vm_info");
+                    if ((AbiVersion & 65535) >= 3) ReadGenerationInfo = Loader.Bind<GenerationInfoDelegate>("cl_vm_generation");
                     LoadSource = Loader.Bind<LoadDelegate>("cl_vm_load_source");
                     Resume = Loader.Bind<ResumeDelegate>("cl_thread_resume");
                     DestroyThread = Loader.Bind<DestroyDelegate>("cl_thread_destroy");
+                    HostLifetimeId = Interlocked.Increment(ref NextHostLifetimeId);
+                    if (HostLifetimeId <= 0) throw new InvalidOperationException("host lifetime identity exhausted");
                 }
                 catch { Loader.Dispose(); Disposed = true; throw; }
             }
@@ -129,6 +139,10 @@ namespace Carbon.Plugins
             private static void Require(RuntimeStatus Status)
             {
                 if (Status != RuntimeStatus.OK) throw new InvalidOperationException("native operation failed: " + Status);
+            }
+            private static void Require(RuntimeStatus Status, string Operation)
+            {
+                if (Status != RuntimeStatus.OK) throw new InvalidOperationException(Operation + " failed: " + Status);
             }
             public ulong Create(RuntimeConfig Config)
             {
@@ -155,6 +169,12 @@ namespace Carbon.Plugins
                 VmInfo Value;
                 Require(ReadInfo(Handle, out Value));
                 return Value;
+            }
+            public VmGenerationInfo GenerationInfo(ulong Handle)
+            {
+                CheckOwner();
+                if (ReadGenerationInfo == null) throw new InvalidOperationException("Foundation A requires native ABI 1.3 or later");
+                VmGenerationInfo Value; Require(ReadGenerationInfo(Handle, out Value)); return Value;
             }
             public ExecutionResult Execute(ulong Handle, string Chunk, string Source, int Milliseconds)
             {
@@ -189,7 +209,7 @@ namespace Carbon.Plugins
                 CheckOwner();
                 foreach (ulong Handle in new List<ulong>(Vms)) Destroy(Handle);
                 Disposed = true;
-                CreateVm = null; DestroyVm = null; DestroyThread = null; ReadInfo = null; LoadSource = null; Resume = null;
+                CreateVm = null; DestroyVm = null; DestroyThread = null; ReadInfo = null; ReadGenerationInfo = null; LoadSource = null; Resume = null;
                 Loader.Dispose();
             }
         }
@@ -197,7 +217,7 @@ namespace Carbon.Plugins
         public sealed partial class RuntimeGeneration : IDisposable
         {
             private readonly NativeRuntime Native;
-            private ulong Handle;
+            internal ulong Handle;
             public readonly long Number;
             public bool Alive { get { return Handle != 0; } }
             public RuntimeGeneration(NativeRuntime Native, long Number, RuntimeConfig Config)

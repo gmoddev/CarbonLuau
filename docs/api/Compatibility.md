@@ -2,7 +2,8 @@
 
 Identity: `CarbonLuau`, API `0.3.0-experimental`, status `Experimental`.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
-`carbonluau.status`. This identity is distinct from package 0.3.0, native ABI 1.2,
+`carbonluau.status`. This identity is distinct from package 0.3.0, the published
+v0.3.0 native ABI 1.2, the post-release internal Foundation A ABI 1.3,
 the pinned Luau revision and the installed Rust/Carbon builds.
 
 The canonical compatibility policy lives in [Compatibility.md](../Compatibility.md)

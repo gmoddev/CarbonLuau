@@ -39,13 +39,15 @@ If documents, code, a task request or upstream evidence conflict, identify the c
 
 ## Working rules
 
-Post-v0.3.0 addon exploration is recorded in the
-[reviewed addon design proposal](docs/CarbonLuau_Addon_Decisions_and_Invariants.md)
-and [design validation](docs/Addon-Design-Validation.md). These are non-operative
-design/review material, not amendments to the canonical decision register or
-authorization to implement addons. The proposal now retains VM-wide fatal failure,
-ordinary shared module values and publication-only transactions; domain/facade
-ownership, recovery migration and provider protocol gates remain open.
+Post-v0.3.0 addon architecture is canonically owned by the addon amendments in
+[Invariants.md](docs/Invariants.md), including D14. The
+[addon design proposal](docs/CarbonLuau_Addon_Decisions_and_Invariants.md) and
+[design validation](docs/Addon-Design-Validation.md) are supporting design/review
+evidence and do not override the canonical register. Foundation A authorizes only
+the internal shared-VM/domain primitives recorded in
+[FoundationA.md](docs/FoundationA.md); public addon registration, package transport,
+dependency APIs and addon scripting exposure remain unauthorized until the
+compatibility, provider-integration, numeric-limit and qualification gates are met.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

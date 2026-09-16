@@ -1,13 +1,18 @@
 # CarbonLuau addon architecture — revised design proposal
 
-**Status:** design only, revised after AI review on 2026-09-15. No addon implementation,
-canonical policy amendment, API release or runtime qualification is authorized here.
+**Status:** supporting design rationale retained after canonical adoption on 2026-09-16.
+The final rules are owned by [Invariants.md](Invariants.md), including D14. This
+document is evidence for that adoption and does not independently authorize public
+addon APIs, assign a scripting version or override the canonical register.
 Runtime baseline: package `0.3.0`, revision
 `3046390b5ee668f02c20bcde01d10138f5ca7489`.
 Review baseline: `3b086f43db3eb8e700513c8836d794603b295c9b`.
 
-[Invariants.md](Invariants.md) remains authoritative. This document proposes changes
-for a future addon release; examples below do not run on the current public API.
+[Invariants.md](Invariants.md) remains authoritative. Its adopted amendments
+supersede unresolved wording in this proposal, including one-environment-per-domain,
+unstaged lazy-cache publication, G2/G3 ownership/rearm questions, duplicate `main`
+export declarations, `IsPackageAvailable`, and registration-handle survival across
+CarbonLuau reload. Examples below do not run on the current public API.
 See [validation and remaining gates](Addon-Design-Validation.md).
 The [original proposal](https://github.com/gmoddev/CarbonLuau/blob/3b086f43db3eb8e700513c8836d794603b295c9b/docs/CarbonLuau_Addon_Decisions_and_Invariants.md)
 and [first review](https://github.com/gmoddev/CarbonLuau/blob/3b086f43db3eb8e700513c8836d794603b295c9b/docs/Addon-Design-Validation.md)

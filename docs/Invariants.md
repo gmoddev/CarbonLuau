@@ -25,19 +25,21 @@ Do not expose arbitrary filesystem/network/process access, native loading, .NET 
 
 ## I3 — Stable proxies, not host objects
 
-Scripts receive simple values and validated proxies based on stable identity, never raw `BasePlayer`, `BaseEntity`, `Item`, Unity/Carbon objects, managed references, native pointers or GCHandles. Every operation re-resolves the live object and checks validity and authority. Runtime generation invalidation must reject stale references; a reused identifier must not accidentally target another lifetime/object. Phase 3's player encoding/lifetime contract is D11; other object kinds remain deferred.
+Scripts receive simple values and validated proxies based on stable identity, never raw `BasePlayer`, `BaseEntity`, `Item`, Unity/Carbon objects, managed references, native pointers or GCHandles. Every operation re-resolves the live object and checks validity and authority. Host-backed script references are also bound to their owning script lifetime: VM-generation retirement invalidates every domain in that VM, while root/addon domain retirement invalidates host-backed references owned by that domain even when the shared VM remains healthy. A reused host identifier, replacement domain or later VM generation must never accidentally validate a reference from an earlier object or domain lifetime. Phase 3's player connection identity contract remains D11; other object kinds remain deferred.
 
 Steam/user IDs remain strings in the public API, as accepted in design section 15; upstream numeric features do not silently change that contract. D11 binds proxies to one connection, not future connections from the same account. Neither proxy retention nor Lua garbage collection transfers ownership of the host object.
 
 ## I4 — Runtime ownership and thread context
 
-The managed runtime generation owns one native VM and all its script threads, references, callbacks, commands and timers. The native implementation owns allocation/destruction of Luau state. Generation-scoped resources become unusable when that generation ends.
+CarbonLuau distinguishes the loaded **CarbonLuau host lifetime**, a **VM generation**, and the **domain lifetimes** hosted inside that VM. One VM generation owns exactly one native Luau VM. In addon-capable operation, that VM may contain one operator-root domain and multiple addon domains. Each root/addon activation receives a distinct opaque domain lifetime which owns its source namespace, dependency bindings, domain-bound host facade, queues, registrations and module-cache namespace. Healthy root/addon replacement may retire a domain without retiring the VM; fatal VM retirement invalidates every domain in that VM.
 
-The accepted first-version direction is one global VM per runtime generation, sandboxed script execution environments, and module results cached per generation (design sections 9, 11). This is not per-script VM or process isolation. Stronger trust separation would require a deliberate design revision.
+A domain is not one shared mutable globals table. The operator/addon entry chunk and every first module execution receive separate private mutable sandbox environments. Closures retain their defining environment. The VM provides the protected standard-library base; each execution environment receives the appropriate domain-bound host bindings such as `require`, `task`, services, Signals and Commands. Successful module values may be shared by reference according to D4.
 
-All CarbonLuau VM access and Rust/Unity state access belongs to the server main thread and is serialized, including lifecycle, compilation through the runtime and callback teardown. No background thread enters the VM. Luau coroutines are not parallel OS threads. Verify each incoming hook/completion's context; do not infer that every Carbon API callback runs on the main thread. Marshal an off-thread result as bounded data back through an explicit host dispatch boundary before touching the VM or game state. Avoid reentrant script execution from nested host callbacks.
+All CarbonLuau VM access and Rust/Unity state access belongs to the server main thread and is serialized, including lifecycle, compilation through the runtime, module publication and callback teardown. No background thread enters the VM. Luau coroutines are not parallel OS threads. Verify each incoming hook/completion's context; do not infer that every Carbon API callback runs on the main thread. Marshal an off-thread result as bounded data back through an explicit host dispatch boundary before touching the VM or game state.
 
-Carbon documents `NextFrame`/`NextTick` and cancellable timers, but this is not blanket evidence for all hook thread contexts. The future scheduler should use those host primitives. Phase 1 needs only its scoped dispatch/lifecycle integration, not the full scheduling API. [Carbon timers](https://carbonmod.gg/devs/features/timers), [Luau thread API](https://luau.org/api/#threads).
+**Host-driven recursive VM entry is prohibited globally.** While Luau is executing, or while CarbonLuau is servicing that execution through a native-to-managed host callback, any Carbon/provider/timer/command/event path capable of causing further Luau execution must only validate/admit bounded work for later execution; it must not recursively enter the VM. Ordinary synchronous Luau-to-Luau calls, synchronous module loading and coroutine execution already inside the admitted operation remain part of that operation rather than new VM admission.
+
+Carbon's scheduling primitives remain host integration mechanisms, not evidence that every callback arrives on the correct thread. The scheduler must preserve owner-thread serialization and the no-reentrant-entry rule. [Carbon timers](https://carbonmod.gg/devs/features/timers), [Luau thread API](https://luau.org/api/#threads).
 
 ## I5 — Project-owned ABI
 
@@ -75,9 +77,15 @@ Report category, script/callback identity and generation when available, with tr
 
 ## I10 — Deterministic teardown and replacement
 
-On unload: stop intake; disconnect/unregister host callbacks and commands; cancel timers; invalidate queued work and proxies; ensure no execution is active; release script references and threads; destroy VM state; release native runtime resources; unload the library last. Invalidation need not execute queued user code. Cancellation alone is insufficient: a late completion must check generation validity before entry. Partial startup and repeated unload must be safe.
+**VM-generation teardown** stops intake; prevents further script admission; disconnects/unregisters host callbacks and commands; cancels and invalidates queued work and host-backed proxies; ensures no execution remains active; releases domain references, module/cache references and threads; destroys VM state; releases native runtime resources; and unloads the native library last during CarbonLuau unload. A late completion must validate the current host/VM/domain lifetime before admission. Partial startup and repeated teardown must be safe.
 
-Script/runtime reload prepares a new generation; failure to compile/load the candidate preserves the current generation. Only a validated candidate may replace it, and each resource must have an unambiguous owner throughout the transition. No state preservation is required in v0.1. This future reload is distinct from Carbon's proven plugin unload/load (design sections 10, 23).
+**Domain teardown** performs the corresponding cleanup for one root/addon lifetime without requiring destruction of an otherwise healthy shared VM. CarbonLuau releases its references and host registrations for that domain; ordinary Luau values retained by another live domain are not recursively discovered or revoked.
+
+In addon-capable operation, normal `carbonluau.reload` prepares a new operator-root domain inside the current healthy VM generation. The previous root remains published while the candidate initializes. An ordinary candidate failure preserves the previous published root lifetime but does not promise rollback of arbitrary same-VM Luau mutations performed by the candidate. Successful publication atomically replaces the root at an owner-thread safe point and then retires the previous root lifetime.
+
+Addon replacement follows the same domain-replacement model for that addon and its affected dependency graph.
+
+A timeout or other integrity-invalidating failure during any root/addon/candidate operation retires the **complete VM generation**. No previous root or addon domain is promised to survive a fatal VM retirement. No general user-state preservation requirement is introduced.
 
 ## I11 — Intentional scripting facade
 
@@ -92,18 +100,117 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | ID / status | Retained decision and unresolved detail | Resolve by |
 |---|---|---|
 | D1 — resolved for Phase 1 | Default Luau C++ protected errors; private non-standard deadline cancellation crosses only internal native frames and immediately retires the entire VM. Caller-owned fixed result buffers; no script-to-managed callbacks. Full contract and upgrade qualification in [Phase1.md](Phase1.md#budgets-containment-and-recovery). | Requalify on VM/error-mode changes |
-| D2 — resolved Phase 1 limits | Defaults 64 MiB/3 ms; clamp 16..256 MiB and 1..100 ms. Source 64 KiB, loaded bytecode 1 MiB, log buffer 4 KiB, 32 live VMs and one host thread per VM. Compiler/bridge memory is outside the VM cap; no compilation deadline or whole-process cap is claimed. | Revisit before broader ingestion or host work |
+| D2 — resolved Phase 1 limits; addon aggregate pending | Existing limits remain unchanged. Addon-capable operation uses one VM-wide heap cap, never a hard per-domain quota; see the canonical D2 detail below. | Requalify before addon-capable public runtime support or any VM/memory-policy change |
 | D3 — resolved Phase 1 allowlist | Explicit base allowlist plus math/string/table/coroutine/bit32/utf8/buffer/vector and bounded print. No getfenv/setfenv, os/debug, loaders or host objects. Shared state and per-chunk thread sandbox helpers are mandatory. Exact list in [Phase1.md](Phase1.md#sandbox-surface). | Revalidate any exposed capability change |
-| D4 — resolved Phase 2 | One global VM per generation; private entry/module environments; callback closures retain their defining environment. Successful module values are shared within a generation, nil/no return maps to true; failures retry; cycles and depth 32 are bounded. Native references/heap belong to the VM; managed Carbon drain owns admission to execution. | Requalify changes to [Phase2.md](Phase2.md) |
-| D5 — resolved Phase 2 | Host snapshots UTF-8 source before execution: 64 KiB/file, 256 modules, 4 MiB total, 1024 tree entries. Canonical lowercase ASCII segments and single slash only; no aliases, absolute paths or traversal. Reject symlinks/reparse points including ancestors. Filesystem owner is trusted against concurrent rewrites. | Requalify resolver changes |
+| D4 — resolved shared-VM module semantics | Module cache and publication semantics are owned by the canonical D4 detail below. Historical Phase 2 semantics remain preserved exactly. | Requalify module/publication changes and addon module behavior before public support |
+| D5 — resolved package/module resolution direction | Existing local resolution is preserved and addon dependencies add only the canonical package-qualified namespace described below. | Requalify resolver/source-ingestion changes and addon package resolution before public support |
 | D6 — resolved Phase 3 first facade | Narrow Players/Commands facade with generation-owned Signals, bounded player identity/message/permission operations, and the private bundled Luau bootstrap. Exact first surface is in [Phase3.md](Phase3.md) and [API reference](api/README.md); D11/D12 resolve its identity/version gates. Other services remain deferred. | Requalify facade changes |
-| D7 — resolved Phase 2 transaction, extended Phase 3 | Production candidate executes its configured entrypoint before swap; initialization work queues but does not drain until committed. Candidate output/queue are discarded on failure; the complete healthy old generation remains. Success destroys old resources. Phase 1 smoke remains a regression fixture. Phase 3 stages signal/command definitions and atomically publishes commands through the contract in [Phase3.md](Phase3.md#transactions-and-permissions); D10 gates provisional messages. | Requalify any new host effect |
+| D7 — resolved CarbonLuau-owned publication transaction | Candidate and nested module publication cover only CarbonLuau-owned cache/resource state; see the canonical D7 detail below. | Requalify any new host effect or publication kind |
 | D8 — native ABI and minimum scripting identity resolved | Native ABI encodes major/minor in uint32; managed validates major before runtime binding. Phase 3 adds ABI 1.2 without changing existing layouts. Package version and exact Luau revision remain separate identities. D12 specifies the minimum experimental scripting API identity and additive/breaking policy; a larger deprecation/negotiation framework remains deferred. | Requalify affected ABI/API changes |
-| D9 — approved Phase 2 recovery | User approved on 2026-09-14: one automatic entrypoint/module-tree reconstruction per successful operator load/reload; failed reconstruction or another retirement leaves the scripting runtime unavailable until operator intervention. Automatic recovery and failed operator reload do not rearm the allowance. Never resume the failed callback or transfer old queued work. Initialization can recreate callbacks, but the host-level allowance prevents an automatic restart loop. | Qualify through [Phase2-Validation.md](Phase2-Validation.md) |
-| D10 — approved Phase 3 provisional effects | User approved on 2026-09-14: reject `Player:SendMessage` with a controlled Luau error while its generation is provisional, including entry/module initialization during initial load, operator reload and D9 reconstruction. Reads and generation-local registrations remain available; `task.defer` may request a message after commit, subject to fresh connection/generation checks. Failed candidates never drain that work. No exactly-once external-effect guarantee across D9 reconstruction is introduced. | Requalify provisional-effect changes |
-| D11 — resolved Phase 3 identity contract | Each host-observed connection event receives a monotonically increasing token, never reused within its owning plugin instance, bound to exact managed player/connection identities plus string user ID. The host verifies connection flags and account identity on every operation; once invalidity is observed, that token stays invalid even if the host objects are reused. Only a new connection event creates a new token. A generation-owned facade retains bounded identity snapshots and opaque project tokens. Disconnect preserves readable snapshot identity but invalidates mutation. Plugin reload destroys old VMs and old sessions cannot enter the new host instance. Exhaustion fails closed. | Requalify host identity/adapter changes |
-| D12 — resolved Phase 3 API identity | First experimental gameplay facade identifies as `CarbonLuau`, scripting API `0.3.0-experimental`, through read-only game fields and operator status. Additive APIs preserve existing contracts; changing/removing names, types, failure, permission or lifetime semantics is breaking and requires an explicit version/documentation/migration decision. Experimental does not mean silent breaks. Native ABI and package versions remain separate. Bootstrap is bundled into the native build from project-owned Luau source; it does not expose its host primitive to scripts. | Preserve runtime/docs/examples agreement |
+| D9 — approved shared-VM recovery | One automatic reconstruction allowance exists for the complete VM, governed by the canonical D9 detail below. | Requalify shared-VM reconstruction and operator rearm before addon public support |
+| D10 — approved admitted-operation and provisional-effect model | Admission, resource ownership, publication and deadline are orthogonal as specified in the canonical D10 detail below. | Requalify admitted-operation, cross-domain facade or provisional-effect changes |
+| D11 — resolved Phase 3 identity contract; domain binding added | Existing exact connection-token semantics remain, with host-backed facade validity now also bound to the owning domain lifetime; see D11 detail below. | Requalify host identity/adapter or domain-lifetime changes |
+| D12 — resolved compatibility rule; addon scripting identity pending | `0.3.0-experimental` remains the qualified current API. Addon-facing names are architecture only until an explicit identity is assigned; see D12 detail below. | Assign and document addon-capable scripting API/provider/package protocol identities before public implementation or release |
 | D13 — resolved/deferred for v0.1 | User approved deferral on 2026-09-14. No maintainable supported path has been established that guarantees deterministic ownership and cleanup across qualified Rust item construction, insertion, partial mutation and removal callbacks. Player:GiveItem and the entire Phase 4 item convenience surface, including Items/Items:Exists, are deferred from v0.1; no independent read-only Items use case is accepted. Preserve I1–I11 unchanged rather than excluding failure paths. [Phase4.md](Phase4.md#ownership-gate-d13) records the rejected candidate and evidence; [roadmap](CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases) records the revised scope. | Reconsider only with a stronger supported Rust/Carbon transactional item API or evidence of a safe adapter, followed by explicit scope approval and qualification |
+| D14 — approved addon package/dependency/provider lifecycle baseline | Stable package identity, lifecycle states, exact dependency bindings, provider ownership and immutable package snapshots are specified in the canonical D14 detail below. | Qualify provider lifecycle/order, parser/aggregate limits, dependency transitions and public protocol/version identity before production addon exposure |
+
+### Canonical detail for addon-amended decisions
+
+#### D2 — limits in addon-capable operation
+
+Defaults remain 64 MiB/3 ms; clamps remain 16..256 MiB and 1..100 ms. Source remains 64 KiB, loaded bytecode 1 MiB, log buffer 4 KiB, with the existing native registry bound of 32 live VMs and one host thread per VM. Compiler/bridge/managed/source-snapshot memory remains outside the VM heap cap; no compilation deadline or whole-process cap is claimed.
+
+In addon-capable operation the hard Luau allocation boundary remains **one VM-wide heap cap**, not a per-addon quota. Memory categories or equivalent accounting may be used for diagnostics but do not establish hard retained-memory isolation or guaranteed per-addon reclamation. The 32-live-VM registry bound limits VM instances, not the number of domains inside one shared VM.
+
+The current 64 MiB default is qualified only for the existing pre-addon runtime evidence. Before addon support is exposed, representative multi-domain measurements must either requalify the existing default/clamp or support an explicit D2 numeric amendment. No numeric change is adopted from estimates alone.
+
+#### D4 — shared-VM module semantics
+
+One global Luau VM exists per VM generation. Each root/addon activation has a distinct domain lifetime. Entry chunks and every first module execution receive separate private mutable sandbox environments; modules do not inherit the requiring entrypoint's mutable globals, and closures retain their defining module environment.
+
+Module-cache identity is **VM generation + defining domain lifetime + logical module path**. Local and public access to the same module in the same defining domain lifetime use the same cache entry.
+
+Preserve the qualified Phase 2 module contract:
+
+- Once a module cache entry is successfully published, the module executes once for that cache lifetime.
+- Exactly the first return value is cached by reference.
+- `nil` or no return caches `true`; additional returns are ignored.
+- Failed loads are not cached and may be retried.
+- Recursive loading raises a controlled cycle error; recursive module depth remains bounded at 32.
+- Module initialization may not yield.
+- Module mutable globals remain private to that execution environment; returned closures retain it.
+
+Public modules return ordinary same-VM Luau values. CarbonLuau does not recursively copy, proxy, inspect or revoke their object graphs. Ordinary Luau values retained by another domain may survive retirement of the defining domain while the VM remains alive; they never silently become values from a replacement domain. Any captured host-backed facade or handle still validates its original domain lifetime.
+
+Every first-load attempt has a nested module-publication scope for its cache entry and CarbonLuau-owned resources created synchronously during initialization. On module failure, no cache entry is published and all resources staged by that attempt are discarded, including when `pcall`/`xpcall` catches the ordinary module error. A successful first load during an ordinary committed operation publishes its cache entry and module-created resources at module completion. During a provisional root/addon operation it merges them into the outer provisional publication; outer commit publishes both and outer failure discards both.
+
+These rules are not a transaction over arbitrary Luau memory. Ordinary table/global mutations and plain references leaked into already-reachable shared state are not rolled back, are not canonical cache entries, and are not deeply discovered or revoked.
+
+#### D5 — package/module resolution
+
+Preserve bounded UTF-8 source snapshots, canonical lowercase ASCII logical segments separated by one `/`, no absolute/traversal/dot-relative path, filesystem fallback, search path or implicit loader, and existing filesystem/reparse-point confinement for operator snapshots. Unqualified `require("private/util")` remains a logical module path in the current defining source namespace.
+
+Addon dependencies extend resolution only with `require("@addon")`, `require("@addon/path")`, `require("@creator.addon")` and `require("@creator.addon/path")`. The text after `@` is the declared stable package ID, not a resolver alias. Resolution requires the caller's declared binding and targets the exact committed dependency lifetime bound to that consumer. `@id/path` may resolve only a public module; `@id` resolves the declared `main` and errors if none exists. `main` is inherently public, resolves a module, and never implicitly executes `init.luau`.
+
+No `./`, `../`, arbitrary filesystem access, fallback search, undeclared dependency import, user-defined alias or `GetDependency():Require()` layer is introduced. The operator root remains outside the addon dependency graph for the first addon release: addons cannot depend on it and root-to-addon consumption remains deferred.
+
+#### D7 — candidate and module publication
+
+Root/addon candidate initialization is transactional only over **CarbonLuau-owned publication**, not arbitrary same-VM Luau memory. A candidate stages its domain/package visibility, commands, subscriptions/listeners, queued-work admission and other host-owned registrations. D4 also stages first-load cache entries and module-created host resources required by the active publication scope.
+
+An ordinary candidate failure discards every uncommitted CarbonLuau-owned publication from that candidate while preserving the previously committed domain lifetime. Plain same-VM Luau mutations may remain. A failed first-load module scope never merges its cache entry or staged resources into a containing candidate, even if its error is caught and the candidate later succeeds.
+
+A successful candidate commits at an owner-thread safe point and only then retires the previous domain. Commit revalidates every resource-owner domain lifetime. A timeout or integrity-invalidating failure retires the complete VM generation under D1/I9/I10; an old domain is not preserved across that fatal retirement. Historical Phase 1–3 candidate fixtures remain evidence only for the implementations they tested.
+
+#### D9 — global recovery
+
+Exactly one automatic reconstruction allowance exists for the complete shared VM generation, never one per domain. A successful initial operator load arms it; a successful explicit operator reload/rebuild rearms it; a failed operator action does not.
+
+Fatal VM retirement consumes the allowance and, when available, creates a fresh generation from committed immutable state: discard old work and VM-local references; reconstruct the operator root; reconstruct addons from snapshots owned by still-live provider registrations; then activate addons in deterministic required-dependency order. The failed operation is never resumed or replayed.
+
+An ordinary addon reconstruction failure marks that registration Failed and blocks required dependents while unrelated eligible addons may continue if the VM stays healthy. Root reconstruction failure, or a fatal failure during reconstruction, aborts it and leaves scripting unavailable. Automatic recovery, successful automatic reconstruction, addon/dependency/provider activity and provider churn do not rearm the allowance.
+
+When healthy, `carbonluau.reload` replaces the root domain. When unavailable, it requests a full reconstruction. Only a successful explicit operator action arms/rearms one future automatic reconstruction. No callback replay, host-effect rollback or exactly-once guarantee is introduced.
+
+#### D10 — admitted-operation and provisional-effect model
+
+Every Luau entry admitted by CarbonLuau has one operation context containing deadline/budget ownership, provisional/publication state and diagnostic identity. It follows the entire synchronous chain, including exported dependency calls, nested modules and synchronous coroutine execution. Crossing a domain boundary does not reset the deadline or remove provisional restrictions.
+
+- `ResourceOwner` is the domain lifetime bound to the API/facade object used.
+- `PublicationContext` is the current admitted operation/module/candidate publication scope.
+- `Deadline` belongs to the original admitted operation.
+- `LifetimeCheck` uses the owning domain lifetime associated with the bound host object.
+- `Diagnostics` combine admitted-operation identity with source provenance.
+
+If provisional B calls active A and A uses A's captured facade, the resource is A-owned but remains subject to B's provisional publication context. It cannot publish merely because A is active. Explicit use of a valid B-bound facade makes the resource B-owned under the same admitted operation. Failed nested publication scopes never become eligible for parent commit.
+
+Irreversible host mutation remains prohibited while the operation is provisional. Deferred candidate work cannot run before commit, failed candidates never drain it, and dependencies or scheduling cannot launder a provisional effect. Ordinary errors remain catchable by `pcall`/`xpcall`; only an uncaught ordinary error escaping the admitted boundary fails the operation. D1 deadline cancellation remains uncatchable and VM-fatal. CarbonLuau does not roll back ordinary Luau mutations or promise exactly-once host effects.
+
+#### D11 — player identity and domain lifetime
+
+Each host-observed connection still receives a monotonically increasing token, never reused within the CarbonLuau plugin instance, bound to exact managed player identity, exact connection identity and string user ID. Every operation re-resolves and validates connection/account identity; invalidity latches, disconnect preserves readable snapshot identity but invalidates mutation, only a new connection creates a new token, and exhaustion fails closed.
+
+A domain-bound facade retains bounded identity snapshots and opaque project tokens. Root/addon retirement invalidates host-backed Player/facade mutation through that domain even when the shared VM remains healthy. An ordinary retained Player/table value may keep a readable script-side snapshot, but mutation/permission operations through its retired owning facade fail closed. Complete VM retirement invalidates every domain. CarbonLuau reload destroys the VM and no new host instance accepts old host/domain/provider tokens.
+
+#### D12 — scripting and protocol identity
+
+The already-qualified gameplay facade remains `CarbonLuau` scripting API `0.3.0-experimental`. Canonical addon adoption does not redefine that API or claim addon behavior exists in it.
+
+The intended addon-facing additions are package-qualified `require("@id")` and `require("@id/path")`, existing local `require("path")`, metadata such as `addon.Id`/`addon.Version`, `addon:IsDependencyAvailable(id)` for a declared binding, and inherently public `main`. These names are architecture decisions, not implementation claims.
+
+Before public exposure, Compatibility and public API documentation must assign the addon-capable scripting API identity and determine whether D4/D7 lifetime/failure behavior requires a new version. Additive APIs preserve accepted names, types, authorization and lifetime/failure behavior unless an explicit breaking-version/migration decision says otherwise. Experimental status does not authorize silent breaks. Package release, scripting API, package schema, provider protocol, native ABI and pinned Luau revision remain separate identities. No addon scripting version is assigned by this adoption.
+
+#### D14 — addon package, dependency and provider lifecycle
+
+Stable addon IDs are `addonname` or `creator.addonname`. Each lowercase ASCII segment is 1–32 characters, starts and ends alphanumeric, and may contain internal `_`/`-`; the two-segment form is at most 65 characters. `carbonluau` and `carbonluau.*` are reserved. Noncanonical case is rejected, not aliased. Exactly one registration owns an ID; package version is informational/provenance. Parallel versions, ranges, solving, downloads, registries and lockfiles are deferred.
+
+The internal registration states are `Registered`, `Blocked`, `Initializing`, `Active`, `Failed` and `Stopping`. Acceptance reserves the ID. Missing required dependencies block before execution. Successful initialization creates a fresh opaque domain lifetime and becomes Active. An uncaught ordinary initialization error becomes Failed. Failed registrations do not retry on unrelated activity. A relevant required-dependency restoration may schedule one bounded activation attempt during that graph transition; failure then requires explicit retry/reload/replacement. Stopping retains the ID until cleanup completes.
+
+Activation binds declared dependencies to exact committed Active domain lifetimes. Required absence blocks; optional absence is fixed for that consumer lifetime. Required loss retires/blocks the affected required-dependent graph. Optional loss leaves the consumer active but makes availability false and new imports fail. Already returned ordinary values may remain. Replacement never retargets old bindings. Successful required-dependency replacement reinitializes eligible required dependents in deterministic topological order; optional consumers do not automatically rebind. Required cycles block their strongly connected component; optional edges alone do not. Runtime module cycles remain D4 errors. Declarations, not caught imports, define lifecycle requirements.
+
+A provider lifetime is the concrete loaded Carbon `Plugin` object plus the current CarbonLuau host lifetime. It controls lifecycle ownership, replacement/unregister authority and stale-token detection, not authentication against other trusted in-process plugins. Only the owner may replace/unregister. Provider unload retires its registrations. CarbonLuau unload invalidates all provider tokens; a surviving provider must explicitly register again with the new CarbonLuau instance. Old tokens stay stale and Luau never receives the `Plugin` object.
+
+The primary package input is an immutable CarbonLuau-owned source snapshot. Archive and single-source/provider transports normalize to it, and accepted provider input is copied before registration returns. Parsing rejects malformed UTF-8/JSON, duplicate keys, unknown semantic fields, noncanonical/duplicate normalized paths, absolute/traversal/dot/backslash paths, encrypted/unsupported/symlink-style entries and nested archives. Packages are bounded snapshots, never mounted or extracted. Exact parser, archive, source and registration aggregate limits remain qualification candidates. Authors use D5 `require` plus `addon:IsDependencyAvailable`; tokens, IDs, graph transitions and lifecycle machinery stay internal.
 
 **Evidence separation:** [Phase1-Validation.md](Phase1-Validation.md) owns the scoped execution-core results. [Phase2-Validation.md](Phase2-Validation.md) owns module/callback/recovery qualification; Phase 1 does not establish their safety. [Phase3-Validation.md](Phase3-Validation.md) owns first-facade qualification; [Phase4-Validation.md](Phase4-Validation.md) records the blocked item investigation, not an implemented item API.
 

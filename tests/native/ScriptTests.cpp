@@ -26,6 +26,41 @@ static ClStatus Run(ClHandle Vm, ClSchedulerInfo Cutoff, ClResult& Result, bool 
     uint32_t Ran = 99; ClStatus Status = cl_vm_callback(Vm, Cutoff.NowNs, Cutoff.Sequence, 3000000, &Ran, &Result);
     Check(Ran == uint32_t(Expected), "attempt count"); return Status;
 }
+static ClHandle Domain(ClHandle Vm, uint32_t Capacity = 4096) {
+    ClHandle Value = 0; Check(cl_domain_create(Vm, Capacity, &Value) == CL_OK && Value != 0, "domain create"); return Value;
+}
+static void DomainModule(ClHandle Vm, ClHandle DomainId, const char* Name, const char* Source) {
+    Check(cl_domain_module(Vm, DomainId, Name, Source, uint32_t(std::strlen(Source))) == CL_OK, "domain module");
+}
+static ClStatus DomainExecute(ClHandle Vm, ClHandle DomainId, const char* Source, ClResult& Result) {
+    ClHandle Thread = 0;
+    ClStatus Status = cl_domain_load_source(Vm, DomainId, "domain-entry", Source, uint32_t(std::strlen(Source)), &Thread, &Result);
+    if (Status == CL_OK) Status = cl_thread_resume(Thread, 100000000, &Result);
+    if (Thread) Check(cl_thread_destroy(Thread) == ((Result.Flags & 1) ? CL_INVALID_ARGUMENT : CL_OK), "domain thread cleanup");
+    return Status;
+}
+static ClHandle ReentryVm = 0, ReentryOwner = 0, ReentryDomain = 0, ReentryThread = 0;
+static bool ReentryRejected = false;
+static uint32_t ReentryHost(uint64_t, uint32_t Operation, const char*, uint32_t, char*, uint32_t, uint32_t* Written) {
+    *Written = 0;
+    if (Operation != 1) return 0;
+    ClHandle DomainId = 0, ThreadId = 0; ClResult Result{}; uint32_t Ran = 0;
+    const char Event[] = {'p', 0};
+    const char* ModuleSource = "return 1";
+    ReentryRejected =
+        cl_vm_destroy(ReentryVm) == CL_INVALID_ARGUMENT &&
+        cl_thread_resume(ReentryThread, 3000000, &Result) == CL_INVALID_ARGUMENT &&
+        cl_thread_destroy(ReentryThread) == CL_INVALID_ARGUMENT &&
+        cl_domain_create(ReentryVm, 1, &DomainId) == CL_INVALID_ARGUMENT && DomainId == 0 &&
+        cl_domain_module(ReentryVm, ReentryDomain, "late", ModuleSource, uint32_t(std::strlen(ModuleSource))) == CL_INVALID_ARGUMENT &&
+        cl_domain_commit(ReentryVm, ReentryDomain) == CL_INVALID_ARGUMENT &&
+        cl_domain_destroy(ReentryVm, ReentryDomain) == CL_INVALID_ARGUMENT &&
+        cl_domain_facade(ReentryVm, ReentryDomain, ReentryHost) == CL_INVALID_ARGUMENT &&
+        cl_domain_load_source(ReentryVm, ReentryDomain, "nested", "return 1", 8, &ThreadId, &Result) == CL_INVALID_ARGUMENT && ThreadId == 0 &&
+        cl_domain_event(ReentryVm, ReentryOwner, Event, sizeof(Event)) == CL_INVALID_ARGUMENT &&
+        cl_vm_callback(ReentryVm, UINT64_MAX, UINT64_MAX, 3000000, &Ran, &Result) == CL_INVALID_ARGUMENT && Ran == 0;
+    return 0;
+}
 int main() try {
     ClResult Result{};
     ClVmConfig BareConfig{16*1024*1024}; ClHandle Bare=0;
@@ -33,6 +68,36 @@ int main() try {
     Check(cl_vm_scripts(Bare,0)==CL_INVALID_ARGUMENT && cl_vm_scripts(Bare,4097)==CL_INVALID_ARGUMENT,"queue config bounds");
     Check(cl_vm_scheduler(Bare,nullptr)==CL_INVALID_ARGUMENT,"null scheduler output");
     Check(cl_vm_destroy(Bare)==CL_OK && cl_vm_scripts(Bare,1)==CL_INVALID_ARGUMENT,"stale VM script install");
+
+    ClVmConfig DomainConfig{64*1024*1024}; ClHandle Shared=0;
+    Check(cl_vm_create(&DomainConfig,&Shared)==CL_OK,"shared VM create");
+    ClVmGenerationInfo Identity{}; Check(cl_vm_generation(Shared,&Identity)==CL_OK && Identity.VmGenerationId!=0 && Identity.Domains==0,"VM generation identity");
+    ClHandle First=Domain(Shared), Second=Domain(Shared);
+    DomainModule(Shared,First,"value","task.defer(function() print('first-domain') end); return {Value=1}");
+    DomainModule(Shared,Second,"value","task.defer(function() print('second-domain') end); return {Value=2}");
+    Check(DomainExecute(Shared,First,"local V=require('value'); assert(V.Value==1 and V==require('value'))",Result)==CL_OK,"first provisional domain");
+    Check(Info(Shared).Modules==0 && Info(Shared).Queued==0,"provisional cache/resources hidden");
+    Check(cl_domain_commit(Shared,First)==CL_OK && Info(Shared).Modules==1 && Info(Shared).Queued==1,"first domain commit publishes atomically");
+    Check(DomainExecute(Shared,Second,"assert(require('value').Value==2)",Result)==CL_OK,"same logical path isolated by domain");
+    Check(cl_domain_commit(Shared,Second)==CL_OK && Info(Shared).Modules==2 && Info(Shared).Queued==2,"second domain shares VM with distinct cache");
+    Check(cl_vm_generation(Shared,&Identity)==CL_OK && Identity.Domains==2,"multiple live domains reported");
+    Check(cl_domain_destroy(Shared,First)==CL_OK,"domain retirement");
+    Check(DomainExecute(Shared,First,"return 1",Result)==CL_INVALID_ARGUMENT,"stale domain rejected");
+    Check(Info(Shared).Modules==1 && Info(Shared).Queued==1,"domain-owned cache and queue retired independently");
+    Check(Run(Shared,Info(Shared),Result)==CL_OK && std::string(Result.Logs)=="second-domain\n","surviving domain callback");
+    Check(cl_domain_destroy(Shared,Second)==CL_OK && cl_vm_destroy(Shared)==CL_OK,"shared VM/domain teardown");
+
+    Check(cl_vm_create(&DomainConfig,&ReentryVm)==CL_OK,"reentry VM create");
+    ReentryOwner=Domain(ReentryVm); ReentryDomain=Domain(ReentryVm);
+    Check(cl_domain_facade(ReentryVm,ReentryOwner,ReentryHost)==CL_OK,"reentry facade install");
+    Check(cl_domain_commit(ReentryVm,ReentryOwner)==CL_OK,"reentry owner commit");
+    const char* ReentrySource="assert(#game:GetService('Players'):GetPlayers()==0)";
+    Check(cl_domain_load_source(ReentryVm,ReentryOwner,"reentry-entry",ReentrySource,uint32_t(std::strlen(ReentrySource)),&ReentryThread,&Result)==CL_OK,"reentry source load");
+    Check(cl_thread_resume(ReentryThread,100000000,&Result)==CL_OK && ReentryRejected,"all host-driven recursive VM entry rejected");
+    Check(cl_thread_destroy(ReentryThread)==CL_OK,"reentry thread cleanup"); ReentryThread=0;
+    Check(cl_domain_destroy(ReentryVm,ReentryDomain)==CL_OK && cl_domain_destroy(ReentryVm,ReentryOwner)==CL_OK && cl_vm_destroy(ReentryVm)==CL_OK,"reentry fixture cleanup");
+    ReentryVm=ReentryOwner=ReentryDomain=0;
+
     ClHandle Vm = Create();
     Module(Vm, "counter", "print('once'); return {Value=42}");
     Module(Vm, "util/adder", "return function(A,B) return A+B end");
@@ -43,6 +108,7 @@ int main() try {
     Module(Vm, "badcompile", "local =");
     Module(Vm, "badruntime", "error('module boom')");
     Module(Vm, "yielding", "coroutine.yield()");
+    Module(Vm,"caughtfailure","task.defer(function() error('leaked module resource') end); error('caught module failure')");
     Module(Vm, "a", "return require('b')"); Module(Vm, "b", "return require('c')"); Module(Vm, "c", "return require('a')");
     Check(Execute(Vm,
         "EntrySecret=123; assert(require('private')==7); local A=require('counter'); assert(A==require('counter'));"
@@ -67,6 +133,10 @@ int main() try {
     Check(Execute(Vm, "require('yielding')", Result) == CL_RUNTIME_ERROR && std::strstr(Result.Error, "must not yield"), "module yield rejected");
     for (int Retry = 0; Retry < 3; ++Retry) Check(Execute(Vm, "require('a')", Result) == CL_RUNTIME_ERROR && std::strstr(Result.Error, "a -> b -> c -> a"), "cycle retry");
     Check(Info(Vm).Modules == 6, "failed modules not cached");
+    Check(Execute(Vm,"local Ok=pcall(require,'caughtfailure'); assert(not Ok); task.defer(function() print('parent survives') end)",Result)==CL_OK,"caught failed module operation continues");
+    Check(Info(Vm).Queued==1 && Info(Vm).Modules==6,"caught failed module publishes no cache or resource");
+    Check(Run(Vm,Info(Vm),Result)==CL_OK && std::string(Result.Logs)=="parent survives\n","only surrounding operation resource publishes");
+    Check(Execute(Vm,"assert(not pcall(require,'caughtfailure'))",Result)==CL_OK && Info(Vm).Modules==6,"failed module retry remains uncached");
     Check(Execute(Vm, "task.defer(function(A,B,C,D) assert(A==nil and B==true and C==2 and D=='hi'); print('first'); task.spawn(function() print('later') end) end,nil,true,2,'hi'); task.spawn(function() print('second') end)", Result) == CL_OK, "enqueue");
     auto Cutoff = Info(Vm);
     Check(Run(Vm, Cutoff, Result) == CL_OK && std::string(Result.Logs) == "first\n", "FIFO first/arguments");

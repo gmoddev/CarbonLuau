@@ -26,6 +26,8 @@ internal static class Program
             using (var Native = new Runtime.NativeRuntime(Root))
             {
                 Check(Native.Revision == "c6b830185af962c82003f86784e2fe036357c830", "native Luau pin");
+                using (var OtherHostLifetime = new Runtime.NativeRuntime(Root))
+                    Check(Native.HostLifetimeId > 0 && OtherHostLifetime.HostLifetimeId > Native.HostLifetimeId, "distinct CarbonLuau host lifetimes");
                 using (var Disabled = new Runtime.RuntimeHost(Native, new Runtime.RuntimeConfig { Enabled = false }))
                     Check(Disabled.Reload().Status == Runtime.RuntimeStatus.INVALID_ARGUMENT && Native.LiveVmCount == 0, "disabled");
                 using (var Partial = new Runtime.RuntimeHost(Native, Default)) { }

@@ -149,10 +149,22 @@ namespace Carbon.Plugins
         }
         public sealed class FacadeSession
         {
-            public readonly long Generation;
+            public readonly long VmGenerationId, DomainLifetimeId;
+            public long Generation { get { return DomainLifetimeId; } }
             public readonly SortedDictionary<string, ScriptCommand> Commands = new SortedDictionary<string, ScriptCommand>(StringComparer.Ordinal);
             private readonly SortedDictionary<ulong, string> Listeners = new SortedDictionary<ulong, string>();
             private readonly Queue<byte[]> Pending = new Queue<byte[]>();
+            private sealed class PublicationCheckpoint
+            {
+                public readonly SortedDictionary<ulong, string> Listeners;
+                public readonly SortedDictionary<string, ScriptCommand> Commands;
+                public PublicationCheckpoint(SortedDictionary<ulong, string> Listeners, SortedDictionary<string, ScriptCommand> Commands)
+                {
+                    this.Listeners = new SortedDictionary<ulong, string>(Listeners);
+                    this.Commands = new SortedDictionary<string, ScriptCommand>(Commands, StringComparer.Ordinal);
+                }
+            }
+            private readonly Stack<PublicationCheckpoint> Publications = new Stack<PublicationCheckpoint>();
             private readonly FacadeWorld World;
             private readonly int Capacity;
             private ulong NextRegistration;
@@ -163,7 +175,10 @@ namespace Carbon.Plugins
             public int ListenerCount { get { return Listeners.Count; } }
             public readonly NativeRuntime.HostDelegate Callback;
             public FacadeSession(FacadeWorld World, long Generation, int Capacity)
-            { this.World = World; this.Generation = Generation; this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents); Callback = HostCall; }
+                : this(World, Generation, Generation, Capacity) { }
+            public FacadeSession(FacadeWorld World, long VmGenerationId, long DomainLifetimeId, int Capacity)
+            { this.World = World; this.VmGenerationId = VmGenerationId; this.DomainLifetimeId = DomainLifetimeId;
+                this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents); Callback = HostCall; }
             private string Id()
             {
                 if (NextRegistration == ulong.MaxValue) throw new FacadeException("registration identity exhausted");
@@ -208,7 +223,15 @@ namespace Carbon.Plugins
                     if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
                 }
             }
-            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); }
+            public void Flush(RuntimeDomain Runtime, System.Diagnostics.Stopwatch Watch, int Milliseconds)
+            {
+                World.Players.CheckOwner();
+                for (int Count = 0; Count < 64 && Pending.Count != 0 && Watch.Elapsed.TotalMilliseconds < Milliseconds; ++Count) {
+                    if (Runtime.Event(Pending.Dequeue()) != RuntimeStatus.OK) Rejected++;
+                    if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
+                }
+            }
+            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); }
             private bool Gate(string[] Fields)
             {
                 if (!Active || World.Active != this || Disposed || Fields.Length < 5) return false;
@@ -233,6 +256,22 @@ namespace Carbon.Plugins
                     Operation(7, new[]{Listener});
                     Operation(8, new[]{"clprepare", "carbonluau.prepare", ""});
                     Commands.Clear();
+                    return new string[0];
+                }
+                if (Code == 10) {
+                    if (Fields.Length != 0) throw new FacadeException("invalid publication begin");
+                    Publications.Push(new PublicationCheckpoint(Listeners, Commands));
+                    return new string[0];
+                }
+                if (Code == 11) {
+                    if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication commit");
+                    Publications.Pop(); return new string[0];
+                }
+                if (Code == 12) {
+                    if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication rollback");
+                    PublicationCheckpoint Checkpoint = Publications.Pop();
+                    Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
+                    Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
                     return new string[0];
                 }
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
@@ -286,12 +325,12 @@ namespace Carbon.Plugins
                     default: throw new FacadeException("invalid host operation");
                 }
             }
-            private uint HostCall(ulong ExpectedGeneration, uint Code, IntPtr Request, uint Length, IntPtr Response, uint Capacity, out uint Written)
+            private uint HostCall(ulong ExpectedDomainLifetime, uint Code, IntPtr Request, uint Length, IntPtr Response, uint Capacity, out uint Written)
             {
                 Written = 0;
                 try {
                     World.Players.CheckOwner();
-                    if (Disposed || ExpectedGeneration != (ulong)Generation || Length > 16384 || Capacity != 262144) return 1;
+                    if (Disposed || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;
                     var Bytes = new byte[Length]; if (Length != 0) Marshal.Copy(Request, Bytes, 0, (int)Length);
                     var Result = FacadePolicy.Pack(Operation(Code, FacadePolicy.Unpack(Bytes)));
                     if (Result.Length > Capacity) throw new FacadeException("host response exceeds bound");
@@ -316,9 +355,14 @@ namespace Carbon.Plugins
             public delegate uint HostDelegate(ulong Generation, uint Operation, IntPtr Request, uint Length, IntPtr Response, uint Capacity, out uint Written);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus FacadeDelegate(ulong Vm, ulong Generation, HostDelegate Host);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus EventDelegate(ulong Vm, byte[] Payload, uint Length);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainFacadeDelegate(ulong Vm, ulong Domain, HostDelegate Host);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainEventDelegate(ulong Vm, ulong Domain, byte[] Payload, uint Length);
             private FacadeDelegate InstallFacade;
             private EventDelegate AdmitEvent;
+            private DomainFacadeDelegate InstallDomainFacade;
+            private DomainEventDelegate AdmitDomainEvent;
             private readonly Dictionary<ulong, FacadeSession> FacadeRoots = new Dictionary<ulong, FacadeSession>();
+            private readonly Dictionary<ulong, FacadeSession> DomainFacadeRoots = new Dictionary<ulong, FacadeSession>();
             public void Facade(ulong Handle, FacadeSession Session)
             {
                 CheckOwner();
@@ -330,6 +374,24 @@ namespace Carbon.Plugins
                 finally { InsideNative = false; }
             }
             public RuntimeStatus Event(ulong Handle, byte[] Payload) { CheckOwner(); return AdmitEvent(Handle, Payload, (uint)Payload.Length); }
+            public void DomainFacade(ulong Vm, ulong Domain, FacadeSession Session)
+            {
+                CheckOwner();
+                if ((AbiVersion & 65535) < 3) throw new FacadeException("Foundation A requires native ABI 1.3 or later");
+                if (InstallDomainFacade == null) {
+                    InstallDomainFacade = Loader.Bind<DomainFacadeDelegate>("cl_domain_facade");
+                    AdmitDomainEvent = Loader.Bind<DomainEventDelegate>("cl_domain_event");
+                }
+                if ((ulong)Session.DomainLifetimeId != Domain) throw new FacadeException("facade/domain lifetime mismatch");
+                DomainFacadeRoots.Add(Domain, Session);
+                InsideNative = true;
+                try { Require(InstallDomainFacade(Vm, Domain, Session.Callback), "domain facade"); }
+                catch { DomainFacadeRoots.Remove(Domain); throw; }
+                finally { InsideNative = false; }
+            }
+            public RuntimeStatus DomainEvent(ulong Vm, ulong Domain, byte[] Payload)
+            { CheckOwner(); return AdmitDomainEvent(Vm, Domain, Payload, (uint)Payload.Length); }
+            public void ReleaseDomainFacade(ulong Domain) { DomainFacadeRoots.Remove(Domain); }
         }
         public sealed partial class RuntimeGeneration
         {

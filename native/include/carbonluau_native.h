@@ -65,6 +65,21 @@ CARBONLUAU_EXPORT ClStatus cl_vm_facade(ClHandle Vm, uint64_t Generation, ClHost
 /* Admission constructs a queued thread only; it never executes Lua. Operation 9
    revalidates this immutable payload immediately before scheduled Lua entry. */
 CARBONLUAU_EXPORT ClStatus cl_vm_event(ClHandle Vm, const char* Payload, uint32_t Length);
+/* ABI 1.3. A VM generation may host multiple independently retired domains.
+   Domain handles are opaque, VM-local lifetime identities and are never reused.
+   A domain is provisional until commit. Legacy cl_vm_scripts/module/facade/event
+   calls remain compatibility wrappers over one implicit root domain. */
+typedef struct ClVmGenerationInfo { uint64_t VmGenerationId, Domains; } ClVmGenerationInfo;
+CARBONLUAU_EXPORT ClStatus cl_vm_generation(ClHandle Vm, ClVmGenerationInfo* Info);
+CARBONLUAU_EXPORT ClStatus cl_domain_create(ClHandle Vm, uint32_t MaxQueued, ClHandle* OutDomain);
+CARBONLUAU_EXPORT ClStatus cl_domain_destroy(ClHandle Vm, ClHandle Domain);
+CARBONLUAU_EXPORT ClStatus cl_domain_commit(ClHandle Vm, ClHandle Domain);
+CARBONLUAU_EXPORT ClStatus cl_domain_module(ClHandle Vm, ClHandle Domain, const char* Name,
+    const char* Source, uint32_t Length);
+CARBONLUAU_EXPORT ClStatus cl_domain_load_source(ClHandle Vm, ClHandle Domain, const char* Chunk,
+    const char* Source, uint32_t SourceLength, ClHandle* OutThread, ClResult* Result);
+CARBONLUAU_EXPORT ClStatus cl_domain_facade(ClHandle Vm, ClHandle Domain, ClHostCall Host);
+CARBONLUAU_EXPORT ClStatus cl_domain_event(ClHandle Vm, ClHandle Domain, const char* Payload, uint32_t Length);
 #ifdef __cplusplus
 }
 #endif

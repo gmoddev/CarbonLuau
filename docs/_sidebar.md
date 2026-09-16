@@ -14,4 +14,5 @@
   - [Compatibility](api/Compatibility.md)
 - Qualification
   - [Support policy](Compatibility.md)
+  - [Foundation A](FoundationA.md)
   - [Phase 5 evidence](Phase5-Validation.md)

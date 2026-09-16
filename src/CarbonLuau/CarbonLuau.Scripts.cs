@@ -121,10 +121,34 @@ namespace Carbon.Plugins
                 [MarshalAs(UnmanagedType.LPStr)] string Name, byte[] Source, uint Length);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus SchedulerDelegate(ulong Vm, out SchedulerInfo Info);
             [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus CallbackDelegate(ulong Vm, ulong CutoffNs, ulong Sequence, ulong BudgetNs, out uint Ran, out NativeResult Result);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainCreateDelegate(ulong Vm, uint MaxQueued, out ulong Domain);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainOperationDelegate(ulong Vm, ulong Domain);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainModuleDelegate(ulong Vm, ulong Domain,
+                [MarshalAs(UnmanagedType.LPStr)] string Name, byte[] Source, uint Length);
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus DomainLoadDelegate(ulong Vm, ulong Domain,
+                [MarshalAs(UnmanagedType.LPStr)] string Chunk, byte[] Source, uint Length, out ulong ThreadHandle, out NativeResult Result);
             private ScriptsDelegate InstallScripts;
             private ModuleDelegate InstallModule;
             private SchedulerDelegate ReadScheduler;
             private CallbackDelegate RunCallback;
+            private DomainCreateDelegate CreateDomain;
+            private DomainOperationDelegate DestroyDomain, CommitDomain;
+            private DomainModuleDelegate InstallDomainModule;
+            private DomainLoadDelegate LoadDomainSource;
+            private void BindDomains()
+            {
+                if ((AbiVersion & 65535) < 3) throw new InvalidOperationException("Foundation A requires native ABI 1.3 or later");
+                if (ReadScheduler == null) {
+                    ReadScheduler = Loader.Bind<SchedulerDelegate>("cl_vm_scheduler");
+                    RunCallback = Loader.Bind<CallbackDelegate>("cl_vm_callback");
+                }
+                if (CreateDomain != null) return;
+                CreateDomain = Loader.Bind<DomainCreateDelegate>("cl_domain_create");
+                DestroyDomain = Loader.Bind<DomainOperationDelegate>("cl_domain_destroy");
+                CommitDomain = Loader.Bind<DomainOperationDelegate>("cl_domain_commit");
+                InstallDomainModule = Loader.Bind<DomainModuleDelegate>("cl_domain_module");
+                LoadDomainSource = Loader.Bind<DomainLoadDelegate>("cl_domain_load_source");
+            }
             public void Scripts(ulong Handle, RuntimeConfig Config, ScriptSnapshot Snapshot)
             {
                 CheckOwner();
@@ -151,6 +175,44 @@ namespace Carbon.Plugins
                 finally { InsideNative = false; }
                 Attempted = Ran != 0; return ExecutionResult.FromNative(Status, Value);
             }
+            public ulong DomainCreate(ulong Vm, RuntimeConfig Config, ScriptSnapshot Snapshot)
+            {
+                CheckOwner(); BindDomains(); ulong Domain; Require(CreateDomain(Vm, (uint)Config.MaxQueuedCallbacks, out Domain), "domain create");
+                try {
+                    foreach (var Module in Snapshot.Modules) {
+                        byte[] Bytes = Encoding.UTF8.GetBytes(Module.Value);
+                        Require(InstallDomainModule(Vm, Domain, Module.Key, Bytes, (uint)Bytes.Length), "domain module " + Module.Key);
+                    }
+                    return Domain;
+                } catch { DestroyDomain(Vm, Domain); throw; }
+            }
+            public void DomainCommit(ulong Vm, ulong Domain) { CheckOwner(); BindDomains(); Require(CommitDomain(Vm, Domain), "domain commit"); }
+            public void DomainDestroy(ulong Vm, ulong Domain)
+            {
+                CheckOwner(); if (Domain == 0) return; BindDomains(); Require(DestroyDomain(Vm, Domain), "domain destroy"); ReleaseDomainFacade(Domain);
+            }
+            public ExecutionResult DomainExecute(ulong Vm, ulong Domain, string Chunk, string Source, int Milliseconds)
+            {
+                CheckOwner(); BindDomains();
+                if (!Vms.Contains(Vm) || Domain == 0 || Source == null || Source.Length > 65536 || Milliseconds < 1 || Milliseconds > 100)
+                    return new ExecutionResult { Status = RuntimeStatus.INVALID_ARGUMENT };
+                byte[] Bytes = Encoding.UTF8.GetBytes(Source);
+                if (Bytes.Length > 65536) return new ExecutionResult { Status = RuntimeStatus.INVALID_ARGUMENT };
+                ulong ThreadHandle = 0; NativeResult Value = new NativeResult(); RuntimeStatus Status;
+                InsideNative = true;
+                try {
+                    Status = LoadDomainSource(Vm, Domain, Chunk, Bytes, (uint)Bytes.Length, out ThreadHandle, out Value);
+                    if (Status == RuntimeStatus.OK) Status = Resume(ThreadHandle, (ulong)Milliseconds * 1000000, out Value);
+                    return ExecutionResult.FromNative(Status, Value);
+                } finally {
+                    try {
+                        if (ThreadHandle != 0) {
+                            RuntimeStatus Cleanup = DestroyThread(ThreadHandle);
+                            if (Cleanup != RuntimeStatus.OK && !((Value.Flags & 1) != 0 && Cleanup == RuntimeStatus.INVALID_ARGUMENT)) Require(Cleanup);
+                        }
+                    } finally { InsideNative = false; }
+                }
+            }
         }
         public sealed partial class RuntimeGeneration
         {
@@ -160,28 +222,64 @@ namespace Carbon.Plugins
             { return Native.Callback(Handle, Cutoff, Milliseconds, out Attempted); }
         }
 
+        public sealed class RuntimeDomain : IDisposable
+        {
+            private readonly NativeRuntime Native;
+            private readonly RuntimeGeneration Vm;
+            private ulong Handle;
+            public readonly long VmGenerationId, DomainLifetimeId;
+            public FacadeSession FacadeSession { get; private set; }
+            public bool Alive { get { return Handle != 0 && Vm.Alive; } }
+            public VmInfo Info { get { return Vm.Info; } }
+            public RuntimeDomain(NativeRuntime Native, RuntimeGeneration Vm, RuntimeConfig Config, ScriptSnapshot Snapshot)
+            {
+                this.Native = Native; this.Vm = Vm;
+                VmGenerationId = checked((long)Native.GenerationInfo(Vm.Handle).VmGenerationId);
+                Handle = Native.DomainCreate(Vm.Handle, Config, Snapshot);
+                DomainLifetimeId = checked((long)Handle);
+            }
+            public void Facade(FacadeSession Session) { FacadeSession = Session; Native.DomainFacade(Vm.Handle, Handle, Session); }
+            public ExecutionResult Execute(string Chunk, string Source, int Milliseconds)
+            {
+                if (!Alive) return new ExecutionResult { Status = RuntimeStatus.INVALID_ARGUMENT };
+                ExecutionResult Result = Native.DomainExecute(Vm.Handle, Handle, Chunk, Source, Milliseconds);
+                Result.Generation = DomainLifetimeId; Result.VmGenerationId = VmGenerationId; Result.DomainLifetimeId = DomainLifetimeId;
+                return Result;
+            }
+            public void Commit() { if (!Alive) throw new InvalidOperationException("stale domain"); Native.DomainCommit(Vm.Handle, Handle); }
+            public RuntimeStatus Event(byte[] Payload) { return Alive ? Native.DomainEvent(Vm.Handle, Handle, Payload) : RuntimeStatus.INVALID_ARGUMENT; }
+            public void Dispose()
+            {
+                if (Handle == 0) return;
+                ulong Owned = Handle; Handle = 0;
+                if (Vm.Alive) Native.DomainDestroy(Vm.Handle, Owned); else Native.ReleaseDomainFacade(Owned);
+            }
+        }
+
         public sealed class ScriptHost : IDisposable
         {
             private readonly NativeRuntime Native;
             private readonly RuntimeConfig Settings;
             private readonly Func<ScriptSnapshot> ReadSnapshot;
             private readonly FacadeWorld Facade;
-            private RuntimeGeneration Current;
+            private RuntimeGeneration Vm;
+            private RuntimeDomain Current;
             private bool Disposed, Draining, RecoveryAvailable;
             public bool Busy { get; private set; }
             private bool StopRequested;
             public void RequestStop() { StopRequested = true; }
-            private long NextGeneration;
+            private long NextVmGeneration;
             private string Entry = "", Reason = "not initialized", LastReload = "none";
             public ulong Attempted, Completed, Failed, Cancelled, Invalidated, Rejected, BudgetOverruns, Recoveries, Timeouts;
-            public long Generation { get { return Current == null ? 0 : Current.Number; } }
-            public bool Ready { get { return !Disposed && !StopRequested && Current != null && Current.Info.Ready != 0; } }
-            public bool HasWork { get { return Ready && (Current.Scheduler.Queued != 0 || (Current.FacadeSession != null && Current.FacadeSession.HasWork)); } }
+            public long Generation { get { return Current == null ? 0 : Current.DomainLifetimeId; } }
+            public long VmGenerationId { get { return Current == null ? 0 : Current.VmGenerationId; } }
+            public bool Ready { get { return !Disposed && !StopRequested && Vm != null && Current != null && Current.Alive && Vm.Info.Ready != 0; } }
+            public bool HasWork { get { return Ready && (Vm.Scheduler.Queued != 0 || (Current.FacadeSession != null && Current.FacadeSession.HasWork)); } }
             public ScriptHost(NativeRuntime Native, RuntimeConfig Config, Func<ScriptSnapshot> ReadSnapshot, FacadeWorld Facade = null)
             { this.Native = Native; Settings = Config.Validate(); this.ReadSnapshot = ReadSnapshot; this.Facade = Facade; }
-            private void Release(bool Replaced)
+            private void ReleaseDomain(bool Replaced, SchedulerInfo? Snapshot = null)
             {
-                RuntimeGeneration Old = Current; Current = null;
+                RuntimeDomain Old = Current; Current = null;
                 if (Old == null) return;
                 if (Old.FacadeSession != null) {
                     Cancelled += (ulong)Old.FacadeSession.PendingCount;
@@ -189,37 +287,48 @@ namespace Carbon.Plugins
                     Rejected += Old.FacadeSession.Rejected;
                     Facade.Retire(Old.FacadeSession);
                 }
-                var Info = Old.Scheduler;
+                var Info = Snapshot ?? (Vm != null && Vm.Alive ? Vm.Scheduler : new SchedulerInfo());
                 Cancelled += Info.Queued + Info.Discarded;
                 if (Replaced) Invalidated += Info.Queued + Info.Discarded;
                 Rejected += Info.Rejected;
                 Old.Dispose();
             }
-            public ExecutionResult Reload() { return Replace(true, null); }
+            private void ReleaseVm(bool Replaced)
+            {
+                SchedulerInfo Info = Vm != null && Vm.Alive ? Vm.Scheduler : new SchedulerInfo();
+                ReleaseDomain(Replaced, Info);
+                RuntimeGeneration Old = Vm; Vm = null;
+                if (Old != null) Old.Dispose();
+            }
+            public ExecutionResult Reload() { ExecutionResult Result = Replace(true, null); if (Result.Status != RuntimeStatus.OK && Current == null) ReleaseVm(false); return Result; }
             // Only used by isolated Phase 1 regression fixtures, never exposed to scripts.
-            public ExecutionResult Reload(string Source) { return Replace(true, Source); }
+            public ExecutionResult Reload(string Source) { ExecutionResult Result = Replace(true, Source); if (Result.Status != RuntimeStatus.OK && Current == null) ReleaseVm(false); return Result; }
             private ExecutionResult Replace(bool Operator, string Override)
             {
                 Native.CheckOwner();
                 if (Disposed || StopRequested || !Settings.Enabled || Busy) return new ExecutionResult { Status = RuntimeStatus.INVALID_ARGUMENT, Error = "disabled/unloaded/busy" };
-                RuntimeGeneration Candidate = null;
+                RuntimeDomain Candidate = null;
                 Busy = true;
                 try {
                     ScriptSnapshot Snapshot = ReadSnapshot();
-                    Candidate = new RuntimeGeneration(Native, checked(++NextGeneration), Settings);
-                    Candidate.Scripts(Settings, Snapshot);
-                    if (Facade != null) Candidate.Facade(new FacadeSession(Facade, Candidate.Number, Settings.MaxQueuedCallbacks));
+                    if (Vm == null) Vm = new RuntimeGeneration(Native, checked(++NextVmGeneration), Settings);
+                    Candidate = new RuntimeDomain(Native, Vm, Settings, Snapshot);
+                    if (Facade != null) Candidate.Facade(new FacadeSession(Facade, Candidate.VmGenerationId,
+                        Candidate.DomainLifetimeId, Settings.MaxQueuedCallbacks));
                     // Chunk identity is logical, not an absolute filesystem path.
                     ExecutionResult Result = Candidate.Execute("entry." + Snapshot.EntryName.Replace('/', '.'), Override ?? Snapshot.EntrySource, Settings.MaxCallbackMilliseconds);
-                    Result.Generation = Candidate.Number;
+                    Result.Generation = Candidate.DomainLifetimeId;
                     if (StopRequested) { Result.Status = RuntimeStatus.INVALID_ARGUMENT; Result.Error = "host stopping"; }
                     if (Result.Status != RuntimeStatus.OK) {
                         Result.Logs = ""; LastReload = "rejected: " + Result.Status;
+                        if (Result.Retired) ReleaseVm(true);
                         if (Current == null) Reason = LastReload;
                         return Result;
                     }
+                    SchedulerInfo PreviousInfo = Vm.Scheduler;
+                    Candidate.Commit();
                     if (Facade != null) Facade.Commit(Candidate.FacadeSession);
-                    Release(true);
+                    ReleaseDomain(true, PreviousInfo);
                     Current = Candidate; Candidate = null; Entry = Snapshot.EntryName;
                     Reason = null; LastReload = Operator ? "operator OK" : "recovery OK";
                     if (Operator) RecoveryAvailable = true;
@@ -240,11 +349,14 @@ namespace Carbon.Plugins
             }
             private ExecutionResult Recover()
             {
-                Release(true);
+                ReleaseVm(true);
                 if (!RecoveryAvailable) { Reason = "automatic recovery exhausted; fix scripts and use carbonluau.reload"; return null; }
                 RecoveryAvailable = false; Recoveries++;
                 var Result = Replace(false, null);
-                if (Result.Status != RuntimeStatus.OK) Reason = "automatic recovery failed; fix scripts and use carbonluau.reload";
+                if (Result.Status != RuntimeStatus.OK) {
+                    if (Current == null) ReleaseVm(true);
+                    Reason = "automatic recovery failed; fix scripts and use carbonluau.reload";
+                }
                 return Result;
             }
             public ExecutionResult Execute(string Chunk, string Source)
@@ -255,8 +367,8 @@ namespace Carbon.Plugins
                 Busy = true;
                 try { Result = Current.Execute(Chunk, Source, Settings.MaxCallbackMilliseconds); }
                 finally { Busy = false; }
-                Result.Generation = Generation;
-                if (Result.Retired || Current.Info.Ready == 0) {
+                Result.Generation = Generation; Result.VmGenerationId = VmGenerationId; Result.DomainLifetimeId = Generation;
+                if (Result.Retired || Vm.Info.Ready == 0) {
                     if (Result.Status == RuntimeStatus.TIMEOUT) Timeouts++;
                     var Recovery = Recover(); Result.Error += "; recovery=" + (Recovery == null ? "exhausted" : Recovery.Status.ToString());
                 }
@@ -271,19 +383,19 @@ namespace Carbon.Plugins
                 try {
                     var Watch = Stopwatch.StartNew();
                     if (Current.FacadeSession != null) Current.FacadeSession.Flush(Current, Watch, Settings.FrameDrainBudgetMilliseconds);
-                    if (Current.Info.Ready == 0) { var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery); return Results; }
-                    SchedulerInfo Cutoff = Current.Scheduler;
+                    if (Vm.Info.Ready == 0) { var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery); return Results; }
+                    SchedulerInfo Cutoff = Vm.Scheduler;
                     for (int Count = 0; Count < 256 && !StopRequested && Watch.Elapsed.TotalMilliseconds < Settings.FrameDrainBudgetMilliseconds; ++Count) {
                         bool Ran; ExecutionResult Result;
                         Busy = true;
-                        try { Result = Current.Callback(Cutoff, Settings.MaxCallbackMilliseconds, out Ran); }
+                        try { Result = Vm.Callback(Cutoff, Settings.MaxCallbackMilliseconds, out Ran); }
                         finally { Busy = false; }
                         if (!Ran) break;
-                        Result.Generation = Generation; Attempted++;
+                        Result.Generation = Generation; Result.VmGenerationId = VmGenerationId; Result.DomainLifetimeId = Generation; Attempted++;
                         if (Result.Status == RuntimeStatus.OK) Completed++; else Failed++;
                         // At most 256 fixed-size results, additionally bounded by time.
                         Results.Add(Result);
-                        if (Result.Retired || Current.Info.Ready == 0) {
+                        if (Result.Retired || Vm.Info.Ready == 0) {
                             if (Result.Status == RuntimeStatus.TIMEOUT) Timeouts++;
                             var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery);
                             break; // Never use the retired drain's cutoff/handles for a new generation.
@@ -296,18 +408,19 @@ namespace Carbon.Plugins
             public string Status()
             {
                 Native.CheckOwner(); bool Healthy = Ready;
-                SchedulerInfo Info = Healthy ? Current.Scheduler : new SchedulerInfo();
-                return "CarbonLuau: " + (Healthy ? "ready" : "unavailable") + "\nGeneration: " + Generation + "\nEntrypoint: " + Entry
+                SchedulerInfo Info = Healthy ? Vm.Scheduler : new SchedulerInfo();
+                return "CarbonLuau: " + (Healthy ? "ready" : "unavailable") + "\nGeneration: " + Generation
+                    + "\nVM generation: " + VmGenerationId + "; root domain: " + Generation + "\nEntrypoint: " + Entry
                     + "\nNative ABI: " + (Native.AbiVersion >> 16) + "." + (Native.AbiVersion & 65535) + " OK\nLuau: " + Native.Revision + "\nReason: " + (Reason ?? "none")
                     + (Facade == null ? "" : "\nScripting API: " + FacadePolicy.ApiName + " " + FacadePolicy.ApiVersion)
-                    + "\nVM bytes: " + (Healthy ? Current.Info.MemoryBytes : 0) + " / " + ((long)Settings.MaxVmMemoryMiB * 1048576)
+                    + "\nVM bytes: " + (Healthy ? Vm.Info.MemoryBytes : 0) + " / " + ((long)Settings.MaxVmMemoryMiB * 1048576)
                     + "\nCallback deadline: " + Settings.MaxCallbackMilliseconds + " ms; frame budget: " + Settings.FrameDrainBudgetMilliseconds + " ms"
                     + "\nQueued: " + Info.Queued + "; modules: " + Info.Modules + "; last reload: " + LastReload
                     + "\nCallbacks attempted/completed/failed/cancelled/invalidated/rejected: " + Attempted + "/" + Completed + "/" + Failed + "/" + Cancelled + "/" + Invalidated + "/" + (Rejected + Info.Rejected + (Healthy && Current.FacadeSession != null ? Current.FacadeSession.Rejected : 0))
                     + (Healthy && Current.FacadeSession != null ? "\nFacade pending/listeners/commands: " + Current.FacadeSession.PendingCount + "/" + Current.FacadeSession.ListenerCount + "/" + Current.FacadeSession.Commands.Count : "")
                     + "\nTimeouts: " + Timeouts + "; recoveries: " + Recoveries + "; recovery available: " + RecoveryAvailable + "; budget overruns: " + BudgetOverruns;
             }
-            public void Dispose() { if (Disposed) return; Native.CheckOwner(); if (Busy) throw new InvalidOperationException("runtime busy; defer teardown until execution returns"); Disposed = true; RecoveryAvailable = false; Release(false); Reason = "unloaded"; }
+            public void Dispose() { if (Disposed) return; Native.CheckOwner(); if (Busy) throw new InvalidOperationException("runtime busy; defer teardown until execution returns"); Disposed = true; RecoveryAvailable = false; ReleaseVm(false); Reason = "unloaded"; }
         }
     }
 }

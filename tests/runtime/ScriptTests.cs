@@ -67,12 +67,13 @@ internal static class ScriptTests
         using (var Host = new Runtime.ScriptHost(Native, Config, () => Runtime.ScriptSnapshot.Load(Root,Config))) {
             Source("local V=require('util/value'); print(V.Value); task.defer(function() print('old callback') end)");
             Check(Host.Reload().Status==Runtime.RuntimeStatus.OK && Host.Ready,"valid entry");
-            long Old = Host.Generation;
+            long Old = Host.Generation, SharedVm = Host.VmGenerationId;
+            Check(SharedVm != 0 && Host.Status().Contains("VM generation: "+SharedVm),"distinct VM/domain identity reported");
             Source("print('discard'); task.defer(function() print('candidate leak') end); error('bad entry')");
-            var Result=Host.Reload(); Check(Result.Status==Runtime.RuntimeStatus.RUNTIME_ERROR && Result.Logs=="" && Host.Generation==Old,"runtime candidate rollback");
-            Source("local ="); Check(Host.Reload().Status==Runtime.RuntimeStatus.COMPILE_ERROR && Host.Generation==Old,"compile rollback");
+            var Result=Host.Reload(); Check(Result.Status==Runtime.RuntimeStatus.RUNTIME_ERROR && Result.Logs=="" && Host.Generation==Old && Host.VmGenerationId==SharedVm,"runtime candidate rollback in same VM");
+            Source("local ="); Check(Host.Reload().Status==Runtime.RuntimeStatus.COMPILE_ERROR && Host.Generation==Old && Host.VmGenerationId==SharedVm,"compile rollback in same VM");
             Check(Drain(Host)=="old callback\n","old queue preserved, candidate discarded");
-            Source("assert(require('util/value').Value==42)"); Check(Host.Reload().Status==Runtime.RuntimeStatus.OK,"cache generation");
+            Source("assert(require('util/value').Value==42)"); Check(Host.Reload().Status==Runtime.RuntimeStatus.OK && Host.Generation!=Old && Host.VmGenerationId==SharedVm,"healthy root domain replacement keeps VM generation");
             File.WriteAllText(Path.Combine(Scripts,"modules","util","value.luau"),"return {Value=43}",Utf8);
             Check(Host.Execute("cached","return require('util/value').Value").Number==42,"active snapshot unaffected by disk change");
             Source("assert(require('util/value').Value==43)"); Check(Host.Reload().Status==Runtime.RuntimeStatus.OK,"new generation fresh module value");
@@ -96,7 +97,7 @@ internal static class ScriptTests
                 Check(Host.Reload().Status==Runtime.RuntimeStatus.OK,"stress scheduled generation");
                 Old=Host.Generation; Source("require('missing')");
                 Check(Host.Reload().Status!=Runtime.RuntimeStatus.OK && Host.Generation==Old && Host.Status().Contains("Queued: 1000"),"stress rejected candidate queue intact");
-                Source("assert(require('util/value').Value==42)"); Check(Host.Reload().Status==Runtime.RuntimeStatus.OK,"stress replacement");
+                Source("assert(require('util/value').Value==42)"); var Replacement=Host.Reload(); Check(Replacement.Status==Runtime.RuntimeStatus.OK,"stress replacement: "+Replacement.Status+" "+Replacement.Error);
                 Check(!Host.HasWork && Host.Status().Contains("modules: 1"),"fresh cache and cancelled callbacks");
                 ulong Memory=ulong.Parse(Regex.Match(Host.Status(), @"VM bytes: (\d+)").Groups[1].Value);
                 MinimumMemory=Math.Min(MinimumMemory,Memory); MaximumMemory=Math.Max(MaximumMemory,Memory);

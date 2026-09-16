@@ -2,6 +2,16 @@
 
 All notable public changes to CarbonLuau are recorded here.
 
+## Unreleased
+
+### Internal
+
+- Adopted the canonical addon architecture amendments and added Foundation A:
+  host, VM-generation and domain-lifetime identities; shared-VM domain
+  isolation; domain-bound ownership and admission; and transactional module
+  cache/resource publication. This is internal infrastructure only and does not
+  expose public addon loading or assign an addon scripting API version.
+
 ## 0.3.0
 
 First qualified experimental release candidate. The intended future tag is
