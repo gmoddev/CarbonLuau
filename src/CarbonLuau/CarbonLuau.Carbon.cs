@@ -8,7 +8,7 @@ namespace Carbon.Plugins
         private FacadeWorld Gameplay;
         private CarbonCommandRegistrar CommandRegistrar;
         private readonly HashSet<string> RegisteredPermissions = new HashSet<string>(StringComparer.Ordinal);
-        private long PermissionGeneration;
+        private long PermissionPublication;
         private bool RegisteringPermissions;
         private PlayerView ReadPlayer(string UserId)
         {
@@ -71,11 +71,11 @@ namespace Carbon.Plugins
         {
             // Permissions are metadata published only after successful commit.
             // Failure does not undo a committed generation or bypass checks.
-            if (Stopping || Gameplay == null || Gameplay.Active == null || PermissionGeneration == Gameplay.Active.Generation || RegisteringPermissions) return;
-            PermissionGeneration = Gameplay.Active.Generation;
+            if (Stopping || Gameplay == null || PermissionPublication == Gameplay.PublicationVersion || RegisteringPermissions) return;
+            PermissionPublication = Gameplay.PublicationVersion;
             RegisteringPermissions = true;
             try {
-                foreach (var Command in Gameplay.Active.Commands.Values) if (Command.Permission.Length != 0) {
+                foreach (var Session in Gameplay.Sessions()) foreach (var Command in Session.Commands.Values) if (Command.Permission.Length != 0) {
                     try {
                         if (!permission.PermissionExists(Command.Permission)) {
                             if (RegisteredPermissions.Count >= 256) throw new InvalidOperationException("permission metadata bound");
@@ -94,7 +94,6 @@ namespace Carbon.Plugins
         private sealed class CarbonCommandRegistrar : ICommandRegistrar
         {
             private readonly CarbonLuau Plugin;
-            private readonly object Ownership = new object();
             public CarbonCommandRegistrar(CarbonLuau Plugin) { this.Plugin = Plugin; }
             public void Publish(FacadeSession Previous, FacadeSession Next)
             {
@@ -103,14 +102,16 @@ namespace Carbon.Plugins
                 if (Next != null && Manager.Chat.Count + Manager.ClientConsole.Count + Manager.RCon.Count > 16384)
                     throw new InvalidOperationException("host command registry exceeds inspection bound");
                 var Chat = new List<API.Commands.Command>(Manager.Chat.Count + (Next == null ? 0 : Next.Commands.Count));
-                foreach (var Existing in Manager.Chat) if (!Object.ReferenceEquals(Existing.Token, Ownership)) Chat.Add(Existing);
+                foreach (var Existing in Manager.Chat)
+                    if (Previous == null || !Object.ReferenceEquals(Existing.Token, Previous.CommandOwnership)) Chat.Add(Existing);
                 if (Next != null) foreach (var Definition in Next.Commands.Values) {
                     foreach (var Factory in new[] {Manager.Chat, Manager.ClientConsole, Manager.RCon})
                         foreach (var Existing in Factory)
-                            if (String.Equals(Existing.Name, Definition.Name, StringComparison.OrdinalIgnoreCase) && !Object.ReferenceEquals(Existing.Token, Ownership))
+                            if (String.Equals(Existing.Name, Definition.Name, StringComparison.OrdinalIgnoreCase) &&
+                                (Previous == null || !Object.ReferenceEquals(Existing.Token, Previous.CommandOwnership)))
                                 throw new InvalidOperationException("command name conflicts with an existing host command");
                     string Name = Definition.Name;
-                    var Command = new API.Commands.Command.Chat {Name = Name, Help = Definition.Description, Reference = Plugin, Token = Ownership};
+                    var Command = new API.Commands.Command.Chat {Name = Name, Help = Definition.Description, Reference = Plugin, Token = Next.CommandOwnership};
                     Command.Callback = Args => {
                         try {
                             Plugin.Gameplay.Players.CheckOwner();

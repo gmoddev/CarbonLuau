@@ -137,6 +137,22 @@ package/archive parsing, dependency graph behavior, `@id` resolution, multi-doma
 scale/fairness policy or an addon scripting identity. Those remain future gates in
 D2/D5/D12/D14.
 
+## Foundation B evidence contract
+
+[Foundation B](FoundationB.md) is the experimental managed-provider/package
+registration layer above Foundation A. Its affected evidence is strict bounded ZIP
+and JSON ingestion, copy-before-return snapshots, provider/reference ownership,
+registration state transitions, transactional addon activation/replacement,
+deterministic unregister/provider-unload teardown, stale-token rejection, repeated
+domain lifecycle checks, Phase 0-3 regressions, Windows/Linux managed runtime tests,
+live Carbon load/unload ordering and the existing native sanitizer suite. Historical
+Phase 0-5 records are not rewritten by these results.
+
+Foundation B does not qualify dependency resolution, package-qualified `require`,
+public module exports, provider C# capabilities, multiple versions, remote package
+transport, scale/fairness policy or a public addon scripting API identity. Manifests
+that declare dependencies remain `Blocked` and are never partially resolved.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:

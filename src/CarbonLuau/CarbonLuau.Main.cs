@@ -43,7 +43,9 @@ namespace Carbon.Plugins
                 Native = new NativeRuntime(Oxide.Core.Interface.Oxide.DataDirectory);
                 InitializeGameplay();
                 Host = new ScriptHost(Native, Settings, () => ScriptSnapshot.Load(Oxide.Core.Interface.Oxide.DataDirectory, Settings), Gameplay);
-                Puts("[CarbonLuau:Native] Native probe loaded successfully. Platform: " + Native.Rid + "; ABI: 1.2");
+                Addons = new AddonRegistry(Host, Native.HostLifetimeId);
+                Puts("[CarbonLuau:Native] Native probe loaded successfully. Platform: " + Native.Rid + "; ABI: " +
+                    (Native.AbiVersion >> 16) + "." + (Native.AbiVersion & 65535));
             }
             catch (Exception Error)
             {
@@ -67,6 +69,7 @@ namespace Carbon.Plugins
                 Report("bootstrap", Result);
                 if (Result.Status == RuntimeStatus.OK) Puts("[CarbonLuau:Runtime] Ready; generation=" + Host.Generation);
                 RequestDrain();
+                QueueAddonWork();
             }
             catch (Exception Error) { PrintError("[CarbonLuau:Runtime] Initialization failed: " + Error.Message); }
             finally { if (TeardownPending) ReleaseNative(); }
@@ -99,6 +102,7 @@ namespace Carbon.Plugins
                 if (Result.Status == RuntimeStatus.OK) RegisterActivePermissions();
                 Report("bootstrap", Result);
                 RequestDrain();
+                QueueAddonWork();
                 Arg.ReplyWith("CarbonLuau: reload " + Result.Status + "; generation=" + Host.Generation);
             }
             catch (Exception Error)
@@ -122,6 +126,7 @@ namespace Carbon.Plugins
             TeardownPending = false;
             try
             {
+                if (Addons != null) { Addons.Dispose(); Addons = null; }
                 if (Host != null) { Host.Dispose(); Host = null; }
                 if (Native == null) return;
                 Native.Dispose();
@@ -157,6 +162,7 @@ namespace Carbon.Plugins
                             if (Logged++ < 8) Report("scheduler", Result);
                         }
                         RegisterActivePermissions();
+                        QueueAddonWork();
                         if (Logged > 8) PrintWarning("[CarbonLuau:Scheduler] Drain output limited to eight records.");
                     }
                     RequestDrain();

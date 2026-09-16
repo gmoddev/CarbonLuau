@@ -8,6 +8,10 @@
     <Compile Include="../../src/CarbonLuau/CarbonLuau.Runtime.cs" Link="CarbonLuau.Runtime.cs" />
     <Compile Include="../../src/CarbonLuau/CarbonLuau.Scripts.cs" Link="CarbonLuau.Scripts.cs" />
     <Compile Include="../../src/CarbonLuau/CarbonLuau.Facade.cs" Link="CarbonLuau.Facade.cs" />
+    <Compile Include="../../src/CarbonLuau/CarbonLuau.Addons.cs" Link="CarbonLuau.Addons.cs" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
 </Project>

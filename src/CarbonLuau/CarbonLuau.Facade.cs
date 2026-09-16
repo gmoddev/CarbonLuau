@@ -129,6 +129,15 @@ namespace Carbon.Plugins
             public readonly PlayerDirectory Players;
             public readonly ICommandRegistrar Registrar;
             public FacadeSession Active { get; private set; }
+            private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
+            public long PublicationVersion { get; private set; }
+            public bool HasWork {
+                get {
+                    if (Active != null && Active.HasWork) return true;
+                    foreach (FacadeSession Session in Addons.Values) if (Session.HasWork) return true;
+                    return false;
+                }
+            }
             public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar) { this.Players = Players; this.Registrar = Registrar; }
             public void Commit(FacadeSession Next)
             {
@@ -137,14 +146,42 @@ namespace Carbon.Plugins
                 if (Active != null) Active.Active = false;
                 Active = Next;
                 if (Next != null) Next.Active = true;
+                PublicationVersion++;
+            }
+            public void CommitAddon(FacadeSession Previous, FacadeSession Next)
+            {
+                Players.CheckOwner(); Registrar.Publish(Previous, Next);
+                if (Previous != null) {
+                    Addons.Remove(Previous.DomainLifetimeId); Previous.Active = false; Previous.Disposed = true; Previous.Clear();
+                }
+                if (Next != null) {
+                    if (Addons.ContainsKey(Next.DomainLifetimeId)) throw new FacadeException("duplicate active addon domain");
+                    Addons.Add(Next.DomainLifetimeId, Next); Next.Active = true;
+                }
+                PublicationVersion++;
             }
             public void Retire(FacadeSession Value)
-            { Players.CheckOwner(); if (Active == Value) Commit(null); Value.Active = false; Value.Disposed = true; Value.Clear(); }
+            {
+                Players.CheckOwner();
+                if (Active == Value) Commit(null);
+                else if (Value != null && Addons.ContainsKey(Value.DomainLifetimeId)) CommitAddon(Value, null);
+                if (Value != null) { Value.Active = false; Value.Disposed = true; Value.Clear(); }
+            }
+            public bool IsActive(FacadeSession Value)
+            { return Value != null && (Active == Value || (Addons.ContainsKey(Value.DomainLifetimeId) && Addons[Value.DomainLifetimeId] == Value)); }
+            public List<FacadeSession> Sessions()
+            {
+                var Result = new List<FacadeSession>(); if (Active != null) Result.Add(Active);
+                Result.AddRange(Addons.Values); return Result;
+            }
             public void Event(string Kind, PlayerLifetime Player)
             {
                 Players.CheckOwner();
-                if (Active == null || Player == null) return;
-                Active.Event(Kind, Player);
+                if (Player == null) return;
+                Exception Failure = null;
+                if (Active != null) try { Active.Event(Kind, Player); } catch (Exception Error) { Failure = Error; }
+                foreach (FacadeSession Session in Addons.Values) try { Session.Event(Kind, Player); } catch (Exception Error) { if (Failure == null) Failure = Error; }
+                if (Failure != null) throw Failure;
             }
         }
         public sealed class FacadeSession
@@ -167,6 +204,7 @@ namespace Carbon.Plugins
             private readonly Stack<PublicationCheckpoint> Publications = new Stack<PublicationCheckpoint>();
             private readonly FacadeWorld World;
             private readonly int Capacity;
+            internal readonly object CommandOwnership = new object();
             private ulong NextRegistration;
             public bool Active, Disposed;
             public ulong Rejected;
@@ -200,7 +238,7 @@ namespace Carbon.Plugins
             public bool Invoke(string Name, string UserId, string[] Arguments)
             {
                 World.Players.CheckOwner(); ScriptCommand Command;
-                if (!Active || Disposed || World.Active != this || !Commands.TryGetValue(Name, out Command)) return false;
+                if (!Active || Disposed || !World.IsActive(this) || !Commands.TryGetValue(Name, out Command)) return false;
                 PlayerLifetime Player = World.Players.Find(UserId);
                 if (Player == null || Arguments == null || Arguments.Length > FacadePolicy.Arguments) { Rejected++; return false; }
                 try {
@@ -234,7 +272,7 @@ namespace Carbon.Plugins
             public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); }
             private bool Gate(string[] Fields)
             {
-                if (!Active || World.Active != this || Disposed || Fields.Length < 5) return false;
+                if (!Active || !World.IsActive(this) || Disposed || Fields.Length < 5) return false;
                 if (Fields[0] == "command") {
                     ScriptCommand Command;
                     if (Fields.Length < 6 || !Commands.TryGetValue(Fields[5], out Command) || Command.Id != Fields[1]) return false;
@@ -292,7 +330,7 @@ namespace Carbon.Plugins
                         return View == null ? new[] {"0", ""} : new[] {"1", View.Name};
                     }
                     case 4: case 5: {
-                        if (Code == 4 && (!Active || World.Active != this)) throw new FacadeException("SendMessage requires a committed generation; use task.defer for startup delivery");
+                        if (Code == 4 && (!Active || !World.IsActive(this))) throw new FacadeException("SendMessage requires a committed generation; use task.defer for startup delivery");
                         var View = World.Players.Resolve(Fields[0], Fields[1]);
                         if (View == null) throw new FacadeException("Player is no longer connected");
                         if (Code == 4) {

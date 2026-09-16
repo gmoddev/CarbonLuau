@@ -15,4 +15,5 @@
 - Qualification
   - [Support policy](Compatibility.md)
   - [Foundation A](FoundationA.md)
+  - [Foundation B](FoundationB.md)
   - [Phase 5 evidence](Phase5-Validation.md)

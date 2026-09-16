@@ -45,9 +45,10 @@ Post-v0.3.0 addon architecture is canonically owned by the addon amendments in
 [design validation](docs/Addon-Design-Validation.md) are supporting design/review
 evidence and do not override the canonical register. Foundation A authorizes only
 the internal shared-VM/domain primitives recorded in
-[FoundationA.md](docs/FoundationA.md); public addon registration, package transport,
-dependency APIs and addon scripting exposure remain unauthorized until the
-compatibility, provider-integration, numeric-limit and qualification gates are met.
+[FoundationA.md](docs/FoundationA.md). Foundation B's experimental managed-provider
+registration, bounded package transport and lifecycle implementation is recorded in
+[FoundationB.md](docs/FoundationB.md); it does not authorize dependency resolution,
+public modules/imports, provider capabilities or a public addon scripting identity.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.
