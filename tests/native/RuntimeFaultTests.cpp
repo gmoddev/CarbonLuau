@@ -1,7 +1,8 @@
 // White-box executable only; no test controls are exported by the production DLL.
-#define CARBONLUAU_TESTING
-#include "../../native/src/Runtime.cpp"
+#include "../../native/src/runtime/RuntimeInternal.hpp"
 #include <cstdio>
+
+using namespace CarbonLuau::Runtime;
 
 static void Check(bool Condition, const char* Message)
 {

@@ -215,6 +215,22 @@ async capabilities, per-addon hard heap isolation or adversarial multi-tenant
 containment. Historical Phase 0–5 and Foundation A–D evidence remains scoped to
 the revisions it tested.
 
+## Foundation F evidence contract
+
+[Foundation F](FoundationF.md) reorganizes implementation ownership without an
+intentional semantic change. Its required evidence is the complete native and
+managed regression matrix, ABI/interoperability checks, module/publication and
+addon lifecycle coverage, the 100-addon representative fixture, package and API
+checks, Windows and Linux builds, and ASan/UBSan/leak detection. Structural
+review must also identify remaining shared state and responsibility
+concentrations rather than treating smaller files as proof of safety.
+
+Foundation F does not change the scripting API, native ABI, provider protocol,
+package schema, Luau revision, limits or package format. It creates a synchronous
+compiler owner for future work but does not qualify compiler containment,
+off-thread compilation, compile deadlines, bytecode transport or lock-scope
+changes. Historical evidence remains scoped to the revisions it tested.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:

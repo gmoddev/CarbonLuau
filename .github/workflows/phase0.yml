@@ -49,6 +49,7 @@ jobs:
           ./tools/package.ps1
           ./tools/Test-Package.ps1 -Package dist/CarbonLuau.cszip
           ./tools/Test-Api.ps1
+          ./tools/Test-Architecture.ps1
           $Rid = if ($IsWindows) { 'win-x64' } else { 'linux-x64' }
           $Native = if ($IsWindows) { 'build/Release/carbonluau_native.dll' } else { 'build/libcarbonluau_native.so' }
           ./tools/Test-Release.ps1 -Rid $Rid -NativeLibrary $Native

@@ -43,3 +43,5 @@ Items/inventory, arbitrary Rust hooks, filesystem/network access, Roblox
 replication and `task.wait` are not included. See the [0.3.0 release notes](releases/0.3.0.md)
 for the published baseline and the [0.4.0 release notes](releases/0.4.0.md)
 plus [Foundation E qualification](FoundationE.md) for the addon-capable envelope.
+The current source ownership map is recorded in
+[Foundation F](FoundationF.md).

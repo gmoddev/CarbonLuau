@@ -19,7 +19,8 @@ $Stream = [IO.File]::Open($OutputPath, [IO.FileMode]::Create)
 try {
     $Archive = New-Object IO.Compression.ZipArchive($Stream, [IO.Compression.ZipArchiveMode]::Create, $true)
     try {
-        Get-ChildItem (Join-Path $PSScriptRoot '..\src\CarbonLuau') -Filter '*.cs' | Sort-Object Name | ForEach-Object {
+        $SourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\src\CarbonLuau'))
+        Get-ChildItem $SourceRoot -Recurse -File -Filter '*.cs' | Sort-Object FullName | ForEach-Object {
             Add-DeterministicEntry $Archive $_.FullName $_.Name
         }
         if ($IncludePhase1Fixtures) {

@@ -1,4 +1,7 @@
-// Included inside Runtime.cpp's private namespace; no Luau symbols cross the ABI.
+#include "../runtime/RuntimeInternal.hpp"
+#include "Compiler.hpp"
+
+namespace CarbonLuau::Runtime {
 uint64_t NowNs()
 {
     return uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -120,8 +123,7 @@ int RequireModule(lua_State* State)
         }
     } Loading{Runtime, *Owner, Value};
     PublicationScope Publication(Runtime);
-    Luau::CompileOptions Options; Options.optimizationLevel = 1; Options.debugLevel = 1;
-    std::string Bytecode = Luau::compile(Value.Source, Options);
+    std::string Bytecode = CompileSource(Value.Source);
     if (Bytecode.empty() || Bytecode.size() > 1024 * 1024) luaL_error(State, "module %s: compiled size exceeds bound", Name);
     if (Bytecode[0] == 0) luaL_error(State, "module %s: COMPILE_ERROR: %.1024s", Name, Bytecode.c_str() + 1);
     lua_State* Thread = lua_newthread(Runtime.State);
@@ -165,10 +167,6 @@ int IsDependencyAvailable(lua_State* State)
     lua_pushboolean(State, Available);
     return 1;
 }
-struct CallbackScope {
-    lua_State* State; int Reference = LUA_NOREF;
-    ~CallbackScope() { if (Reference != LUA_NOREF) lua_unref(State, Reference); }
-};
 int Schedule(lua_State* State)
 {
     Vm& Runtime = *static_cast<Vm*>(lua_callbacks(State)->userdata);
@@ -243,3 +241,6 @@ void InstallDomainBindings(lua_State* State, Domain& Owner)
     }
 }
 int InstallScripts(lua_State*) { return 0; }
+
+} // namespace CarbonLuau::Runtime
+

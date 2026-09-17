@@ -1,3 +1,8 @@
+#include "../runtime/RuntimeInternal.hpp"
+#include "../scripts/Compiler.hpp"
+#include "Bootstrap.h"
+
+namespace CarbonLuau::Runtime {
 // Private native half of the build-embedded Luau facade.
 void PushFields(lua_State* State, const char* Bytes, size_t Length)
 {
@@ -53,8 +58,7 @@ int InstallFacade(lua_State* State)
 {
     auto& Input = *static_cast<FacadeInput*>(lua_touserdata(State, 1));
     Domain& Owner = *Input.Owner;
-    Luau::CompileOptions Options; Options.optimizationLevel = 1; Options.debugLevel = 1;
-    std::string Bytecode = Luau::compile(BootstrapSource, Options);
+    std::string Bytecode = CompileSource(BootstrapSource);
     if (luau_load(State, "carbonluau.facade", Bytecode.data(), Bytecode.size(), 0) != LUA_OK) lua_error(State);
     lua_pushlightuserdata(State, &Owner);
     lua_pushcclosure(State, HostPrimitive, "host", 1);
@@ -79,7 +83,9 @@ int EnqueueEvent(lua_State* State)
     std::push_heap(Owner.Queue.begin(), Owner.Queue.end(), Later{});
     return 0;
 }
-} // exports have C linkage from the public header
+} // namespace CarbonLuau::Runtime
+
+using namespace CarbonLuau::Runtime;
 
 ClStatus cl_domain_facade(ClHandle Id, ClHandle DomainId, ClHostCall Host) try
 {
@@ -136,4 +142,3 @@ ClStatus cl_vm_event(ClHandle Id, const char* Payload, uint32_t Length) try
     return cl_domain_event(Id, DomainId, Payload, Length);
 } catch (...) { return CL_INTERNAL_ERROR; }
 
-namespace {

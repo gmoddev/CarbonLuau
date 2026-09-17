@@ -41,7 +41,15 @@ if(NOT WIN32 AND NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(FATAL_ERROR "Phase 0 supports Windows and Linux only")
 endif()
 
-add_library(carbonluau_native SHARED src/probe.cpp src/Runtime.cpp)
+set(CARBONLUAU_RUNTIME_SOURCES
+    src/runtime/VmRegistry.cpp
+    src/runtime/VmState.cpp
+    src/runtime/Publication.cpp
+    src/runtime/Deadline.cpp
+    src/scripts/Compiler.cpp
+    src/scripts/ModuleLoader.cpp
+    src/facade/FacadeBridge.cpp)
+add_library(carbonluau_native SHARED src/probe.cpp src/Runtime.cpp ${CARBONLUAU_RUNTIME_SOURCES})
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../scripts/bootstrap.luau" CARBONLUAU_BOOTSTRAP)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../scripts/bootstrap.luau")
 configure_file(src/Bootstrap.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/Bootstrap.h" @ONLY)
@@ -65,9 +73,9 @@ if(BUILD_TESTING)
     target_link_libraries(ScriptTests PRIVATE carbonluau_native)
     add_test(NAME ScriptCore COMMAND ScriptTests)
     set_tests_properties(ScriptCore PROPERTIES TIMEOUT 180)
-    add_executable(RuntimeFaultTests ../tests/native/RuntimeFaultTests.cpp)
-    target_include_directories(RuntimeFaultTests PRIVATE include)
-    target_compile_definitions(RuntimeFaultTests PRIVATE CARBONLUAU_REVISION="${LUAU_REVISION}")
+    add_executable(RuntimeFaultTests ../tests/native/RuntimeFaultTests.cpp src/Runtime.cpp ${CARBONLUAU_RUNTIME_SOURCES})
+    target_include_directories(RuntimeFaultTests PRIVATE include "${CMAKE_CURRENT_BINARY_DIR}/generated")
+    target_compile_definitions(RuntimeFaultTests PRIVATE CARBONLUAU_REVISION="${LUAU_REVISION}" CARBONLUAU_TESTING)
     target_link_libraries(RuntimeFaultTests PRIVATE Luau.Compiler Luau.VM)
     add_test(NAME RuntimeAllocationFaults COMMAND RuntimeFaultTests)
     set_tests_properties(RuntimeAllocationFaults PROPERTIES TIMEOUT 120)
