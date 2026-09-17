@@ -62,8 +62,21 @@ fixture package. The plugin loads one normalized, platform-specific path.
    bounded-resource counters.
 
 After editing scripts, run `carbonluau.reload`. A successful candidate atomically
-replaces the active generation. A compile or initialization failure preserves the
-previous working generation.
+replaces the operator-root domain in the healthy shared VM. A compile or
+initialization failure preserves the previous working root.
+
+## Addon packages
+
+The v0.4.0 candidate accepts schema-1 addon snapshots from a loaded Carbon
+provider plugin through `CarbonLuau.Addons` protocol 1.2. CarbonLuau does not scan
+a directory for addon archives, so copying a `.claddon` file into the server is
+not enough. Install and configure the provider that owns those packages, then use
+`carbonluau.status` and the provider's own diagnostics to confirm activation.
+
+Package authors can start from the bundled `examples/addons/economy` and
+`examples/addons/shop` layouts. See [addon composition](api/Addons.md) and the
+[provider protocol](api/Addon-Providers.md). CarbonLuau unload invalidates every
+provider token; a provider that remains loaded must register again after reload.
 
 ## Configuration
 
@@ -101,6 +114,8 @@ rejected.
   Luau source; a failed candidate does not replace the active generation.
 - `TIMEOUT` or `MEMORY_LIMIT`: the configured safety boundary stopped execution;
   inspect status before reloading rather than raising limits blindly.
+- `Blocked` addon: one or more required dependency IDs are not active; inspect
+  the provider status response and dependency registration order.
 
 Continue with the [quick start](https://gmoddev.github.io/CarbonLuau/#/README?id=quick-start),
 [public API](https://gmoddev.github.io/CarbonLuau/#/api/README) and

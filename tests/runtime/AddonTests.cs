@@ -110,7 +110,7 @@ internal static class AddonTests
         string[] Required, string[] Optional, string Source = "return true", string Version = "1.0.0")
     { return Registry.RegisterArchive(Provider, Package(Id, Required, Optional, Source, Version)); }
 
-    public static void Run(Runtime.NativeRuntime Native)
+    public static void Run(Runtime.NativeRuntime Native, string SourceRoot = null)
     {
         var Views = new Dictionary<string, Runtime.PlayerView>();
         const string UserId = "76561198000000009";
@@ -217,6 +217,7 @@ internal static class AddonTests
         Check(Native.LiveVmCount == 0, "Foundation B host teardown returns VM count to baseline");
         RunDependencyLifecycle(Native);
         RunPublicModules(Native);
+        if (SourceRoot != null) RunExamples(Native, Config, Root, SourceRoot);
 
         InvalidArchive(Archive("{", new EntrySpec("init.luau", "return true")), "malformed JSON rejected");
         InvalidArchive(Archive("{\"schema\":1,\"id\":\"dup\",\"id\":\"dup\",\"version\":\"1.0.0\"}", new EntrySpec("init.luau", "return true")), "duplicate JSON key rejected");
@@ -570,6 +571,33 @@ internal static class AddonTests
         }
         Check(Native.LiveVmCount == 0, "Foundation C lifecycle host teardown returns VM baseline");
         RunGraphBounds(Native, Config, Root);
+    }
+
+    private static void RunExamples(Runtime.NativeRuntime Native, Runtime.RuntimeConfig Config,
+        Func<Runtime.ScriptSnapshot> Root, string SourceRoot)
+    {
+        string EconomyRoot = Path.Combine(SourceRoot, "examples", "addons", "economy");
+        string ShopRoot = Path.Combine(SourceRoot, "examples", "addons", "shop");
+        foreach (string PathValue in new[] {EconomyRoot, ShopRoot}) Check(Directory.Exists(PathValue), "addon example directory exists");
+        byte[] Economy = Archive(File.ReadAllText(Path.Combine(EconomyRoot, "addon.json")),
+            new EntrySpec("init.luau", File.ReadAllText(Path.Combine(EconomyRoot, "init.luau"))),
+            new EntrySpec("api.luau", File.ReadAllText(Path.Combine(EconomyRoot, "api.luau"))),
+            new EntrySpec("formatting.luau", File.ReadAllText(Path.Combine(EconomyRoot, "formatting.luau"))));
+        byte[] Shop = Archive(File.ReadAllText(Path.Combine(ShopRoot, "addon.json")),
+            new EntrySpec("init.luau", File.ReadAllText(Path.Combine(ShopRoot, "init.luau"))));
+        var World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), new Registrar());
+        using (var Host = new Runtime.ScriptHost(Native, Config, Root, World)) {
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "addon example root baseline");
+            using (var Registry = new Runtime.AddonRegistry(Host, Native.HostLifetimeId)) {
+                object Provider = new object();
+                string[] EconomyResult = Registry.RegisterArchive(Provider, Economy); Process(Registry);
+                IsState(Registry.Status(Provider, EconomyResult[1]), "Active", "economy example activates");
+                string[] ShopResult = Registry.RegisterArchive(Provider, Shop); Process(Registry);
+                IsState(Registry.Status(Provider, ShopResult[1]), "Active", "shop example imports public economy modules");
+                Check(Host.DomainCount == 3, "both public addon examples share the root VM");
+            }
+        }
+        Console.WriteLine("[CarbonLuau:AddonTest] PASS bundled economy/shop examples through real parser/compiler/VM");
     }
 
     private static void RunGraphBounds(Runtime.NativeRuntime Native, Runtime.RuntimeConfig Config, Func<Runtime.ScriptSnapshot> Root)

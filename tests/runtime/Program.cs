@@ -65,7 +65,7 @@ internal static class Program
                 Check(Generation.Execute("stale", "return 3", 3).Status == Runtime.RuntimeStatus.INVALID_ARGUMENT, "stale managed generation");
                 ScriptTests.Run(Native, Root);
                 FacadeTests.Run(Native, Args.Length > 3 ? Args[3] : null);
-                AddonTests.Run(Native);
+                AddonTests.Run(Native, Args.Length > 3 ? Args[3] : null);
                 FoundationETests.Run(Native);
                 Native.Dispose(); Native.Dispose();
             }

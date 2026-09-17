@@ -2,10 +2,11 @@ using System;
 
 namespace Carbon.Plugins
 {
-    [Info("CarbonLuau", "gmoddev", "0.3.0")]
-    [Description("Experimental bounded Luau gameplay facade")]
+    [Info("CarbonLuau", "gmoddev", "0.4.0")]
+    [Description("Experimental bounded Luau runtime with addon composition")]
     public partial class CarbonLuau : CarbonPlugin
     {
+        private const string PackageVersion = "0.4.0";
         private NativeRuntime Native;
         private ScriptHost Host;
         private RuntimeConfig Settings;
@@ -88,7 +89,14 @@ namespace Carbon.Plugins
         [ConsoleCommand("carbonluau.status"), AuthLevel(2)]
         private void StatusCommand(ConsoleSystem.Arg Arg)
         {
-            try { Arg.ReplyWith(Host == null ? "CarbonLuau: unavailable\nReason: " + UnavailableReason : Host.Status()); }
+            try {
+                if (Host == null) { Arg.ReplyWith("CarbonLuau: unavailable\nReason: " + UnavailableReason); return; }
+                string Status = Host.Status() + "\nCarbonLuau package: " + PackageVersion;
+                if (Addons != null) Status += "\nAddon protocol: " + AddonPolicy.ProtocolName + " " + AddonPolicy.ProtocolVersion +
+                    "; package schema: " + AddonPolicy.Schema + "\nAddons: " + Addons.Count + "; snapshot bytes: " +
+                    Addons.SnapshotBytes + " / " + AddonPolicy.MaxAggregateSnapshotBytes;
+                Arg.ReplyWith(Status);
+            }
             catch (Exception) { Arg.ReplyWith("CarbonLuau: unavailable\nReason: runtime context failure; see server log"); }
         }
 

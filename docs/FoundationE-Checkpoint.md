@@ -1,6 +1,7 @@
 # Foundation E checkpoint
 
-Status: implementation and local qualification in progress. This checkpoint is not the Foundation E completion record and does not qualify the addon surface for release.
+Status: superseded by the completed [Foundation E qualification record](FoundationE.md).
+This file preserves the pre-worker checkpoint and is not the completion record.
 
 Starting commit: `d9bc2bba7844c0a837d1af80f7e88ee18bdeb5ba`.
 

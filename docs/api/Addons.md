@@ -1,9 +1,32 @@
-# Addon composition (development)
+# Addon composition
 
-This page documents the implemented Foundation D source surface. It is not part
-of the published v0.3.0 artifacts and does not yet have an assigned public addon
-scripting API identity. See [Foundation D](../FoundationD.md) for lifetime,
-qualification and version details.
+Availability: experimental API `0.4.0-experimental`. This surface is in the
+qualified v0.4.0 candidate and is not part of published v0.3.0 artifacts. See
+[Foundation E](../FoundationE.md) for qualification and [addon providers](Addon-Providers.md)
+for package registration.
+
+## Manifest
+
+An addon is an immutable schema-1 source snapshot. Archive packages use this
+shape:
+
+```json
+{
+  "schema": 1,
+  "id": "economy",
+  "version": "1.0.0",
+  "main": "api",
+  "publicModules": ["formatting"],
+  "dependencies": {
+    "required": ["database"],
+    "optional": ["metrics"]
+  }
+}
+```
+
+`init.luau` is the activation entrypoint. `main` and every `publicModules` value
+are canonical module paths without `.luau`; `main` is automatically public.
+Importing a module never activates the package or executes `init.luau`.
 
 An addon's archive manifest declares `main` and/or `publicModules`. Consumers may
 import only through their own declared Foundation C dependencies:
@@ -34,3 +57,14 @@ after retirement.
 `addon:IsDependencyAvailable(id)` returns `false` for undeclared, absent or stale
 bindings and `true` only for the current exact active binding. Optional
 dependencies do not hot-bind or hot-rebind.
+
+## Limits and deferred work
+
+Packages are provider-registered snapshots. There is no addon-directory scan,
+download registry, lockfile, version solver or parallel package version. IDs are
+one or two lowercase ASCII segments such as `economy` or `creator.economy`.
+Provider-defined C# capabilities, root-to-addon imports, addons depending on the
+operator root, restricted exposure profiles and async capabilities are deferred.
+
+The [economy and shop examples](https://github.com/gmoddev/CarbonLuau/tree/main/examples/addons) show the
+complete required and optional import pattern.

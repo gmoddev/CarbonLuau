@@ -1,13 +1,11 @@
 # Scripting compatibility and limits
 
-Identity: `CarbonLuau`, API `0.3.0-experimental`, status `Experimental`.
+Identity: `CarbonLuau`, API `0.4.0-experimental`, status `Experimental`.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
-`carbonluau.status`. This identity is distinct from package 0.3.0, the published
-v0.3.0 native ABI 1.2, the post-release internal Foundation A ABI 1.3,
-the Foundation D development ABI 1.4/provider protocol 1.2, the pinned Luau
-revision and the installed Rust/Carbon builds. Foundation D's addon-facing names
-are implemented in development source but still have no assigned public scripting
-API identity and are not part of `0.3.0-experimental`.
+`carbonluau.status`. This identity is distinct from package `0.4.0`, native ABI
+`1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
+pinned Luau revision and the installed Rust/Carbon builds. Published v0.3.0
+artifacts remain API `0.3.0-experimental` with native ABI `1.2`.
 
 The canonical compatibility policy lives in [Compatibility.md](../Compatibility.md)
 and decisions D8/D12. Additive means preserving existing contracts while adding
@@ -22,7 +20,7 @@ This is a [roadmap scope revision](../CarbonLuau_FirstVersion_Design.md#31-sugge
 not removal of an implemented API. Package, scripting API and native ABI identities
 are unchanged; no script migration is required for this deferral.
 
-| Resource | Phase 3 bound |
+| Resource | Bound |
 |---|---|
 | Connected-player population / snapshot | 1024; larger host population fails closed |
 | Player name / user ID | 128 UTF-8 bytes / 20 ASCII decimal digits |
@@ -36,6 +34,11 @@ are unchanged; no script migration is required for this deferral.
 | Event ingestion per frame | Up to 64, within the existing frame-drain stopwatch |
 | New permission metadata | 256 names per plugin lifetime |
 | Host command-registry inspection | 16384 existing total chat/client-console/RCON entries |
+| Addon archive / expanded bytes | 4 MiB / 8 MiB |
+| Addon manifest / each source / package source total | 64 KiB / 64 KiB / 4 MiB |
+| Addon modules / archive entries / dependencies | 256 / 512 / 32 |
+| Addon registrations / one provider | 128 / 32 |
+| Aggregate immutable addon snapshots | 32 MiB |
 
 NUL is rejected in API strings; malformed UTF-8 is rejected by host transport.
 Wrong types are not implicitly coerced. Registration/input failures raise script

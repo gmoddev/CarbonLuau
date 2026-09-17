@@ -5,6 +5,10 @@ qualified Foundation C graph. It is a post-v0.3.0 development feature, not part 
 the published `v0.3.0` artifacts and not an assignment of a public addon scripting
 API version.
 
+Subsequent Foundation E qualification assigns this additive surface to
+`CarbonLuau 0.4.0-experimental`; the statements below preserve Foundation D's
+status at its tested revision.
+
 ## Package exports
 
 Archive manifests may add two schema-1 fields:

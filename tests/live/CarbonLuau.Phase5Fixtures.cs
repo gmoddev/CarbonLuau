@@ -121,7 +121,7 @@ namespace Carbon.Plugins
                     "P.PlayerAdded:Connect(function(V) assert(V.IsConnected) end); " +
                     "P.PlayerRemoving:Connect(function(V) assert(not V.IsConnected) end); " +
                     "game:GetService('Commands'):Register('" + Phase5CommandName + "',{permission='carbonluau.phase5'},function(C) print(C.Arguments[1] or 'empty') end); " +
-                    "task.defer(function() assert(game.ApiVersion=='0.3.0-experimental') end)";
+                    "task.defer(function() assert(game.ApiVersion=='0.4.0-experimental') end)";
 
                 RunSuccessfulReloadSoak(Stable, Prefix);
                 RunConnectionSoak(Player, UserId, Prefix);

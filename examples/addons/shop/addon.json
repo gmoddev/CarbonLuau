@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "id": "shop",
+  "version": "1.0.0",
+  "dependencies": {
+    "required": ["economy"],
+    "optional": ["metrics"]
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "recordedOn": "2026-09-17",
+  "startingCommit": "d9bc2bba7844c0a837d1af80f7e88ee18bdeb5ba",
+  "implementationCheckpoint": "14d920c69cb343d0bab15df40b9c1d24fb48eb2d",
+  "verdict": "PASS within the experimental addon support boundary documented in FoundationE.md",
+  "identities": {
+    "package": "0.4.0",
+    "scriptingApi": "CarbonLuau 0.4.0-experimental",
+    "nativeAbi": "1.4",
+    "providerProtocol": "CarbonLuau.Addons/1.2",
+    "packageSchema": 1,
+    "luauRevision": "c6b830185af962c82003f86784e2fe036357c830"
+  },
+  "representative100Addons": {
+    "windows": {
+      "vmBytes": 1949081,
+      "snapshotBytes": 21829,
+      "managedBytes": 1203808,
+      "processRssBytes": 74612736,
+      "activationMilliseconds": 44.585,
+      "replacementMilliseconds": 0.633,
+      "serviceOrdinals": "50/95/99/100"
+    },
+    "linux": {
+      "vmBytes": 1949081,
+      "snapshotBytes": 21829,
+      "managedBytes": 4765224,
+      "processRssBytes": 92770304,
+      "activationMilliseconds": 45.248,
+      "replacementMilliseconds": 0.84,
+      "serviceOrdinals": "50/95/99/100"
+    },
+    "liveCarbon": {
+      "vmBytes": 1752713,
+      "snapshotBytes": 10883,
+      "activationMilliseconds": 70.161,
+      "rustProcessRssDeltaBytes": 38748160
+    }
+  },
+  "heap": {
+    "limitBytes": 67108864,
+    "usedAtControlledRejectionBytes": 63628320,
+    "retainedFourMiBAddons": 15,
+    "defaultDecision": "retain 64 MiB"
+  },
+  "artifacts": {
+    "dockerPcRoot": "C:/Sandbox/Codex/Artifacts/CarbonLuauFoundationE-20260917",
+    "windowsWorkerLogSha256": "436622734d1573ca836e9ca15a4c5a701791702950027901020de685aa63654f",
+    "liveServerLogSha256": "4948d610e6f29483660c52fbdf5b241bc72daf9ddc9b0f57d14816c1f94d3a2b"
+  },
+  "deferred": [
+    "provider-defined C# capabilities",
+    "root-to-addon imports",
+    "addons depending on root",
+    "version solving and parallel instances",
+    "downloads, registries and lockfiles",
+    "restricted exposure profiles",
+    "async capabilities",
+    "per-addon hard heap isolation"
+  ]
+}

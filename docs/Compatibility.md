@@ -24,23 +24,22 @@ Keep these identities conceptually separate and record those relevant to a resul
 
 Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Phase 3 introduces package `0.3.0`, additive native ABI `1.2`, and the separate scripting identity `CarbonLuau` / `0.3.0-experimental` / `Experimental`, inspectable through read-only game fields and operator status. D8/D12 own the minimum policy; [public compatibility](api/Compatibility.md) documents it. Additive changes preserve existing contracts; removing/renaming an API or changing its types, lifetime, failures or authorization is breaking and requires an explicit version, documentation and migration decision. A larger deprecation/negotiation framework remains deferred.
 
-The first qualified experimental release candidate deliberately maps tag
-`v0.3.0` to package `0.3.0`; the roadmap's “v0.1” label is a scope name, not a
-second semantic version. The scripting API remains `0.3.0-experimental`, native
-ABI remains `1.2`, and Luau remains pinned to
-`c6b830185af962c82003f86784e2fe036357c830`. The machine-readable mapping is
-[release.json](../release.json), with build and provenance instructions in the
-[release guide](Release.md).
+The published `v0.3.0` release maps package `0.3.0`, scripting API
+`0.3.0-experimental` and native ABI `1.2`. The roadmap's “v0.1” label is a scope
+name, not another semantic version.
 
 Post-release Foundation A source adds internal domain exports as additive native
 ABI `1.3`. This does not alter the already-published v0.3.0/ABI 1.2 artifacts or
 assign a new scripting API identity. A future release must deliberately map its
 package, native ABI and still-pending addon scripting/protocol identities.
 
-Foundation D development source adds additive native ABI `1.4` and provider
-protocol `CarbonLuau.Addons` / `1.2` for exact-bound public modules. Package schema
-remains 1. This still does not alter published v0.3.0 artifacts or assign the
-addon-capable scripting API identity required before public addon release.
+The qualified v0.4.0 candidate assigns the additive addon-capable identity
+`CarbonLuau 0.4.0-experimental`. It maps package `0.4.0`, native ABI `1.4`,
+provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and pinned Luau
+revision `c6b830185af962c82003f86784e2fe036357c830`. The identities remain separate,
+and v0.3.0 artifacts are unchanged. The machine-readable mapping is
+[release.json](../release.json), with build and provenance instructions in the
+[release guide](Release.md).
 
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
@@ -196,6 +195,25 @@ Foundation D does not qualify provider C# capabilities, root imports, addons
 depending on root, version ranges or solving, multiple versions/instances,
 downloads/registries, restricted exposure, async capabilities, Foundation E,
 multi-domain fairness or a public addon scripting API identity.
+
+## Foundation E evidence contract
+
+[Foundation E](FoundationE.md) closes the first experimental public addon
+surface without adding another major capability. Its required evidence is
+root-only, 1, 10, 50 and 100-addon resource and latency measurement; bounded
+global scheduling and progress under saturation; shared-heap exhaustion;
+package/parser boundaries; provider and CarbonLuau lifecycle ordering; stale
+token and exact dependency behavior; Windows/Linux regression workers; affected
+ASan/UBSan/leak tests; public identity assignment; documentation and examples.
+
+Foundation E qualifies the existing 64 MiB default for the tested representative
+configurations and makes D4/D5/D7/D10/D14 addon behavior public under
+`0.4.0-experimental`. It does not qualify provider-defined C# capabilities,
+root-to-addon imports, addons depending on root, version solving, multiple
+versions/instances, package downloads/registries, restricted exposure profiles,
+async capabilities, per-addon hard heap isolation or adversarial multi-tenant
+containment. Historical Phase 0–5 and Foundation A–D evidence remains scoped to
+the revisions it tested.
 
 ## Phase 0 consistency review
 

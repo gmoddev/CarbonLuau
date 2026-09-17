@@ -51,16 +51,17 @@ registration, bounded package transport and lifecycle implementation is recorded
 exact lifetime binding, loss/restoration and dependency-aware replacement behavior
 is recorded in [FoundationC.md](docs/FoundationC.md). Foundation D's explicit
 exports, exact-bound package-qualified imports and addon context are recorded in
-[FoundationD.md](docs/FoundationD.md). It does not authorize provider capabilities,
-root imports, package/version solving, Foundation E or a public addon scripting
-identity.
+[FoundationD.md](docs/FoundationD.md). Foundation E's scale, fairness, lifecycle,
+parser and public-identity closure is recorded in [FoundationE.md](docs/FoundationE.md).
+It assigns `0.4.0-experimental` to the qualified addon surface but does not
+authorize provider-defined capabilities, root imports or package/version solving.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.
 - Use PascalCase for project-owned identifiers by default. Preserve required OS/upstream names and accepted public API spellings; `self = setmetatable(...)` is the stated local exception. Use `GetFolder`/`GetObj`, not `GetOrCreateFolder`/`GetOrCreateObj`.
 - Use `[System:SubSystem]` logging, e.g. `[CarbonLuau:Native]`, with concise relevant diagnostics. Prevent task processes from showing error dialogs or stealing focus; use headless/hidden server and helper launches.
 - Preserve user changes and concurrent work. Use `apply_patch` and the available CodexLock workflow; do not bypass another task's claims.
-- Run native builds and test servers on `dockerbox` through the authorized Windows profile connection. Keep worker host files under `C:\Sandbox\Codex`, bound resource use, reuse caches, and leave unrelated workloads alone. Use Linux containers for Linux tests. Do not silently move sustained builds or servers to the controlling PC.
+- Run native builds and test servers on `DockerPC` through the authorized Windows profile connection. Keep worker host files under `C:\Sandbox\Codex`, bound resource use, reuse caches, and leave unrelated workloads alone. Use Linux containers on that host for Linux tests. Do not silently move sustained builds or servers to the controlling PC.
 - Keep credentials in their existing profile helpers, out of code/logs/artifacts. Deployment and destructive fixture tests have different scopes: production uploads never authorize replacing live libraries with failure fixtures or modifying host policy.
 - Select validation through Compatibility.md. Preserve valid previous evidence; rerun affected checks after implementation changes. Report source revision, results, environment, remaining uncertainty and any persistent task processes.
 - Add durable accepted rules to their canonical owner and link them from task notes. Do not duplicate them across prompts or create parallel policy documents.

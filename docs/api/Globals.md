@@ -9,7 +9,7 @@ not modify the shared facade or grant host authority.
 |---|---|---|
 | `game:GetService(Name)` | string -> Players or Commands service | Exact case-sensitive names `Players` and `Commands`; repeated retrieval returns the same service within this generation. |
 | `game.ApiName` | read-only string | `CarbonLuau` |
-| `game.ApiVersion` | read-only string | `0.3.0-experimental` |
+| `game.ApiVersion` | read-only string | Current candidate: `0.4.0-experimental` |
 | `game.ApiStatus` | read-only string | `Experimental` |
 
 Wrong receiver, non-string service name or unknown service raises a Luau error.

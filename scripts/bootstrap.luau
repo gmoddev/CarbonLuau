@@ -88,7 +88,7 @@ function Commands.Register(Self, Name, Options, Callback)
     Callbacks[Id] = Callback
 end
 table.freeze(Commands)
-local Game = {ApiName = "CarbonLuau", ApiVersion = "0.3.0-experimental", ApiStatus = "Experimental"}
+local Game = {ApiName = "CarbonLuau", ApiVersion = "0.4.0-experimental", ApiStatus = "Experimental"}
 function Game.GetService(Self, Name)
     if Self ~= Game then Fail("invalid game facade") end
     String(Name, "service name")

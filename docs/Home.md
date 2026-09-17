@@ -1,9 +1,9 @@
 # CarbonLuau documentation
 
 CarbonLuau embeds a pinned Luau VM for bounded, server-side scripting on
-Carbon-modded Rust servers. Release candidate `v0.3.0` is the first qualified
-experimental release: Windows x64 and glibc Linux x64 passed the recorded
-controlled-worker matrix.
+Carbon-modded Rust servers. Published `v0.3.0` contains the first gameplay facade.
+The qualified `v0.4.0` candidate adds the first experimental public addon surface;
+Windows x64, glibc Linux x64, sanitizers and live Carbon passed the recorded matrix.
 
 Start with [installation](Installation.md), then use the
 [experimental API reference](api/README.md). Read the
@@ -36,8 +36,10 @@ receipt by an authenticated client was not tested and is not claimed.
 - Players, Player proxies, Signals/Connections and Commands.
 - Carbon permission checks and administrator status/reload commands.
 - VM memory, callback, queue, payload and logging bounds.
+- Provider-owned addon packages, exact dependency lifetimes and public modules.
+- `require("@addon")`, `require("@addon/path")` and dependency availability.
 
 Items/inventory, arbitrary Rust hooks, filesystem/network access, Roblox
-replication and `task.wait` are not included. See the [0.3.0 release-note
-draft](releases/0.3.0.md) and [qualification record](Phase5-Validation.md) for the
-precise envelope.
+replication and `task.wait` are not included. See the [0.3.0 release notes](releases/0.3.0.md)
+for the published baseline and the [0.4.0 release notes](releases/0.4.0.md)
+plus [Foundation E qualification](FoundationE.md) for the addon-capable envelope.

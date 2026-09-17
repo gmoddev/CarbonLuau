@@ -2,7 +2,8 @@ $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
 $Bootstrap = Get-Content -Raw -LiteralPath (Join-Path $Root 'scripts/bootstrap.luau')
 $Managed = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/CarbonLuau.Facade.cs')
-$Version = '0.3.0-experimental'
+$Release = Get-Content -Raw -LiteralPath (Join-Path $Root 'release.json') | ConvertFrom-Json
+$Version = $Release.apiVersion
 foreach ($Text in @($Bootstrap,$Managed,(Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Globals.md')),
     (Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Compatibility.md')))) {
     if (!$Text.Contains($Version)) { throw 'API version differs between runtime and documentation' }
@@ -26,5 +27,10 @@ foreach ($Document in $Documents) {
 }
 foreach ($Example in @('player-events','hello-command')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
+}
+foreach ($Path in @('examples/addons/economy/addon.json','examples/addons/economy/init.luau',
+        'examples/addons/economy/api.luau','examples/addons/economy/formatting.luau',
+        'examples/addons/shop/addon.json','examples/addons/shop/init.luau')) {
+    if (!(Test-Path -LiteralPath (Join-Path $Root $Path))) { throw "Missing addon example file: $Path" }
 }
 Write-Output '[CarbonLuau:ApiTest] PASS version identity, canonical services/types, example presence and relative links; runtime suite loads examples'

@@ -1,8 +1,10 @@
 # CarbonLuau scripting API
 
-Phase 3 implements the **experimental** `CarbonLuau` `0.3.0-experimental` facade.
-Windows/Linux worker qualification and CI passed; exact scope and limitations are
-maintained in [Phase3-Validation](../Phase3-Validation.md).
+The current candidate implements the **experimental** `CarbonLuau`
+`0.4.0-experimental` scripting API. It preserves the gameplay facade introduced
+in 0.3.0-experimental and adds the qualified addon composition surface.
+Windows/Linux workers, sanitizers and live Carbon qualification passed; exact
+scope and limitations are maintained in [Foundation E](../FoundationE.md).
 This is server-side Luau, not Roblox API compatibility.
 
 | Implemented surface | Reference |
@@ -15,7 +17,8 @@ This is server-side Luau, not Roblox API compatibility.
 | Event subscription | [Signal](Types/Signal.md), [Connection](Types/Connection.md) |
 | Versions and limits | [Compatibility](Compatibility.md) |
 | Existing `require` and `task.spawn/defer/delay` | [Phase 2 script contract](../Phase2.md) |
-| Foundation D addon composition development surface | [Addon composition](Addons.md) |
+| Addon manifests, dependencies and package-qualified imports | [Addon composition](Addons.md) |
+| Carbon provider registration protocol | [Addon providers](Addon-Providers.md) |
 
 All facade APIs below are available beginning with API `0.3.0-experimental`.
 They are implemented but experimental; see the evidence record before deploying.
@@ -24,8 +27,9 @@ API misuse and failed player operations raise controlled Luau errors; catch with
 `pcall` when appropriate. Lookup absence returns nil; `IsConnected` returns false.
 No API returns a host object or transfers ownership of a Rust player to Lua.
 
-Successful reload replaces the whole generation. Failed candidate initialization
-preserves the old one, including its listeners, commands and queued callbacks.
+Successful healthy reload replaces the operator-root domain inside the current VM.
+Failed candidate initialization preserves the old root, including its listeners,
+commands and queued callbacks.
 Callbacks run later through a bounded main-thread scheduler, not inline in hooks.
 Timeout may retire the entire generation under the existing one-attempt recovery
 policy. Previously delivered messages are not undone or deduplicated on recovery.
@@ -44,7 +48,6 @@ The entire item convenience surface (`Items`, `Items:Exists`, `Player:GiveItem`)
 is deferred from v0.1 by [D13](../Invariants.md#decision-register), not pending
 implementation in this scripting API version.
 
-Post-v0.3.0 Foundation D source also implements package-qualified addon imports,
-explicit exports and the `addon` context. That work is documented separately as a
-development surface and is not assigned to `0.3.0-experimental` or included in the
-published v0.3.0 artifacts.
+Addon packages use exact dependency bindings, explicit exports and the readonly
+`addon` context. They are public experimental behavior beginning with
+`0.4.0-experimental`; they are not present in published v0.3.0 artifacts.

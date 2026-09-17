@@ -10,11 +10,12 @@ if ($Release.tag -cne "v$($Release.releaseVersion)" -or $Release.packageVersion 
 }
 $Checks = @(
     @{ Path = 'src/CarbonLuau/CarbonLuau.Main.cs'; Text = "[Info(`"CarbonLuau`", `"gmoddev`", `"$($Release.packageVersion)`")]" },
+    @{ Path = 'src/CarbonLuau/CarbonLuau.Main.cs'; Text = "PackageVersion = `"$($Release.packageVersion)`"" },
     @{ Path = 'src/CarbonLuau/CarbonLuau.Facade.cs'; Text = "ApiVersion = `"$($Release.apiVersion)`"" },
     @{ Path = 'native/CMakeLists.txt'; Text = "project(CarbonLuauNative VERSION $($Release.packageVersion)" },
-    # The published v0.3.0 artifact remains ABI 1.2. Post-release Foundation A
-    # source is the additive post-release ABI development line and does not rewrite that tag.
     @{ Path = 'native/src/Runtime.cpp'; Text = 'carbonluau_abi_version(void) { return 0x00010004; }' },
+    @{ Path = 'src/CarbonLuau/CarbonLuau.Addons.cs'; Text = "ProtocolName = `"$($Release.providerProtocolName)`", ProtocolVersion = `"$($Release.providerProtocolVersion)`"" },
+    @{ Path = 'src/CarbonLuau/CarbonLuau.Addons.cs'; Text = "Schema = $($Release.packageSchema)" },
     @{ Path = 'native/third_party/LUAU_REVISION.txt'; Text = "Pinned commit: $($Release.luauRevision)" },
     @{ Path = 'docs/Release.md'; Text = $Release.tag }
 )

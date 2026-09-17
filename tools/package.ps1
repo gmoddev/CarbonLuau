@@ -43,3 +43,4 @@ New-Item -ItemType Directory -Force -Path $Examples | Out-Null
 foreach ($Name in @('player-events','hello-command')) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "../examples/$Name") -Destination $Examples -Recurse -Force
 }
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../examples/addons') -Destination $Examples -Recurse -Force
