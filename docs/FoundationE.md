@@ -9,6 +9,8 @@ boundary for the v0.4.0 candidate.
 
 Starting commit: `d9bc2bba7844c0a837d1af80f7e88ee18bdeb5ba`.
 Implementation checkpoint: `14d920c69cb343d0bab15df40b9c1d24fb48eb2d`.
+Qualified implementation and documentation commit:
+`8e0754eff36216230782b41acd4bcc44d4f0db69`.
 Qualification date: 2026-09-17.
 
 ## Scheduler closure
@@ -134,7 +136,9 @@ log SHA-256: `4948d610e6f29483660c52fbdf5b241bc72daf9ddc9b0f57d14816c1f94d3a2b`.
 
 Windows worker log SHA-256:
 `436622734d1573ca836e9ca15a4c5a701791702950027901020de685aa63654f`.
-GitHub Actions evidence is added after the final-source push.
+[GitHub Actions validation run 35273700477](https://github.com/gmoddev/CarbonLuau/actions/runs/35273700477)
+passed Windows, Ubuntu and sanitizer jobs. [Documentation run 35273700388](https://github.com/gmoddev/CarbonLuau/actions/runs/35273700388)
+successfully deployed the hosted documentation.
 
 ## Public identities and remaining limits
 

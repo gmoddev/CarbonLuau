@@ -2,6 +2,7 @@
   "recordedOn": "2026-09-17",
   "startingCommit": "d9bc2bba7844c0a837d1af80f7e88ee18bdeb5ba",
   "implementationCheckpoint": "14d920c69cb343d0bab15df40b9c1d24fb48eb2d",
+  "qualifiedCommit": "8e0754eff36216230782b41acd4bcc44d4f0db69",
   "verdict": "PASS within the experimental addon support boundary documented in FoundationE.md",
   "identities": {
     "package": "0.4.0",
@@ -47,6 +48,10 @@
     "dockerPcRoot": "C:/Sandbox/Codex/Artifacts/CarbonLuauFoundationE-20260917",
     "windowsWorkerLogSha256": "436622734d1573ca836e9ca15a4c5a701791702950027901020de685aa63654f",
     "liveServerLogSha256": "4948d610e6f29483660c52fbdf5b241bc72daf9ddc9b0f57d14816c1f94d3a2b"
+  },
+  "githubActions": {
+    "validation": "https://github.com/gmoddev/CarbonLuau/actions/runs/35273700477",
+    "documentation": "https://github.com/gmoddev/CarbonLuau/actions/runs/35273700388"
   },
   "deferred": [
     "provider-defined C# capabilities",
