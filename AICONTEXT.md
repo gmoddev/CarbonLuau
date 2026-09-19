@@ -13,6 +13,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 1 rationale and implementation guidance | [GuiFoundation1.md](docs/GuiFoundation1.md) |
 | GUI Foundation 1A internal substrate and evidence | [GuiFoundation1A.md](docs/GuiFoundation1A.md) |
 | GUI Foundation 1B retained runtime and evidence | [GuiFoundation1B.md](docs/GuiFoundation1B.md) |
+| GUI Foundation 1C presentation/CUI projection and evidence | [GuiFoundation1C.md](docs/GuiFoundation1C.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -67,8 +68,8 @@ It does not authorize unrelated post-v0.4 features.
 GUI Foundation 1 architecture is canonically owned by D15 in
 [Invariants.md](docs/Invariants.md#d15--gui-foundation-1-retained-presentation-model).
 [GuiFoundation1.md](docs/GuiFoundation1.md) is the supporting design and
-implementation-guidance record; it does not override D15 or claim that GUI is
-implemented. Future GUI phases must preserve that public model and stop rather
+implementation-guidance record; it does not override D15 or by itself prove an
+implementation phase. Future GUI phases must preserve that public model and stop rather
 than invent conflicting semantics. GUI package/API identity remains unassigned
 until implementation, qualification and release planning; D12's current
 `0.4.0-experimental` identity does not include GUI.
@@ -80,6 +81,10 @@ GUI Foundation 1B's retained objects, immutable value userdata, ownership,
 tree lifecycle, GUI Signals and D7/D10 publication journal are recorded in
 [GuiFoundation1B.md](docs/GuiFoundation1B.md). They do not authorize
 presentations, client rendering/event ingress or a GUI-capable release identity.
+GUI Foundation 1C's internal presentations, public ScreenGui visibility methods,
+full retained-tree compilation and production Rust CUI projection are recorded
+in [GuiFoundation1C.md](docs/GuiFoundation1C.md). It does not authorize GUI-1D
+dirty synchronization, client action ingress or a GUI-capable release identity.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

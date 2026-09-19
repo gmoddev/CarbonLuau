@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Security.Cryptography;
 
 namespace Carbon.Plugins
 {
@@ -65,12 +66,16 @@ namespace Carbon.Plugins
         {
             internal readonly Dictionary<ulong, GuiRetainedNode> Nodes = new Dictionary<ulong, GuiRetainedNode>();
             internal readonly Dictionary<string, ulong> Connections = new Dictionary<string, ulong>(StringComparer.Ordinal);
+            internal readonly Dictionary<string, GuiPresentation> Presentations = new Dictionary<string, GuiPresentation>(StringComparer.Ordinal);
+            internal readonly Queue<GuiBackendTarget> PendingDestroys = new Queue<GuiBackendTarget>();
             internal int Screens;
             internal GuiRetainedState Copy()
             {
                 var Result = new GuiRetainedState {Screens = Screens};
                 foreach (var Value in Nodes) Result.Nodes.Add(Value.Key, Value.Value.Copy());
                 foreach (var Value in Connections) Result.Connections.Add(Value.Key, Value.Value);
+                foreach (var Value in Presentations) Result.Presentations.Add(Value.Key, Value.Value.Copy());
+                foreach (GuiBackendTarget Value in PendingDestroys) Result.PendingDestroys.Enqueue(Value);
                 return Result;
             }
         }
@@ -78,8 +83,14 @@ namespace Carbon.Plugins
         internal sealed class GuiRetainedWorld
         {
             internal readonly GuiLimits Limits;
+            internal readonly PlayerDirectory Players;
+            internal readonly IGuiBackend Backend;
             internal int LiveObjects { get; private set; }
-            internal GuiRetainedWorld(GuiLimits Limits) { this.Limits = Limits ?? throw new ArgumentNullException("Limits"); }
+            internal int LivePresentations { get; private set; }
+            private readonly Dictionary<string, int> PlayerPresentations = new Dictionary<string, int>(StringComparer.Ordinal);
+            internal GuiRetainedWorld(GuiLimits Limits) : this(Limits, null, new InMemoryGuiBackend()) { }
+            internal GuiRetainedWorld(GuiLimits Limits, PlayerDirectory Players, IGuiBackend Backend)
+            { this.Limits = Limits ?? throw new ArgumentNullException("Limits"); this.Players = Players; this.Backend = Backend ?? throw new ArgumentNullException("Backend"); }
             internal void Adjust(int Change)
             {
                 long Next = (long)LiveObjects + Change;
@@ -92,6 +103,35 @@ namespace Carbon.Plugins
                 if (Next < 0 || Next > Int32.MaxValue) throw new FacadeException("invalid GUI publication restoration");
                 LiveObjects = (int)Next;
             }
+            internal void AddPresentation(string PlayerToken)
+            {
+                int PlayerCount; PlayerPresentations.TryGetValue(PlayerToken, out PlayerCount);
+                if (LivePresentations >= Limits.MaxPresentationsGlobal) throw new FacadeException("global GUI presentation limit reached");
+                if (PlayerCount >= Limits.MaxScreensPerPlayerConnection) throw new FacadeException("Player GUI presentation limit reached");
+                LivePresentations++; PlayerPresentations[PlayerToken] = PlayerCount + 1;
+            }
+            internal void RemovePresentation(string PlayerToken)
+            {
+                int PlayerCount;
+                if (LivePresentations <= 0 || !PlayerPresentations.TryGetValue(PlayerToken, out PlayerCount) || PlayerCount <= 0)
+                    throw new FacadeException("invalid GUI presentation accounting");
+                LivePresentations--; if (PlayerCount == 1) PlayerPresentations.Remove(PlayerToken); else PlayerPresentations[PlayerToken] = PlayerCount - 1;
+            }
+            internal void RestorePresentations(IEnumerable<GuiPresentation> Current, IEnumerable<GuiPresentation> Previous)
+            {
+                foreach (GuiPresentation Value in Current) RemovePresentation(Value.PlayerToken);
+                foreach (GuiPresentation Value in Previous) {
+                    int Count; PlayerPresentations.TryGetValue(Value.PlayerToken, out Count);
+                    LivePresentations++; PlayerPresentations[Value.PlayerToken] = Count + 1;
+                }
+            }
+            internal PlayerView Resolve(string Token, string UserId)
+            { return Players == null ? null : Players.Resolve(Token, UserId); }
+            internal string NewClientPrefix()
+            {
+                var Bytes = new byte[16]; using (RandomNumberGenerator Random = RandomNumberGenerator.Create()) Random.GetBytes(Bytes);
+                return "cluau_" + BitConverter.ToString(Bytes).Replace("-", "").ToLowerInvariant() + "_";
+            }
         }
 
         internal sealed class GuiRetainedRegistry : IGuiRetainedRegistry, IDisposable
@@ -102,6 +142,7 @@ namespace Carbon.Plugins
             private readonly Stack<GuiRetainedState> Publications = new Stack<GuiRetainedState>();
             private GuiRetainedState State = new GuiRetainedState();
             private ulong NextObjectId = 1;
+            private ulong NextPresentationEpoch = 1;
             private bool Disposed;
 
             internal GuiRetainedRegistry(GuiRetainedWorld World, ulong VmGenerationId, ulong DomainLifetimeId)
@@ -113,7 +154,15 @@ namespace Carbon.Plugins
             internal int LiveObjectCount { get { return State.Nodes.Count; } }
             internal int ScreenCount { get { return State.Screens; } }
             internal int ConnectionCount { get { return State.Connections.Count; } }
+            internal int PresentationCount { get { return State.Presentations.Count; } }
             internal int PublicationDepth { get { return Publications.Count; } }
+            internal bool HasWork {
+                get {
+                    if (State.PendingDestroys.Count != 0) return true;
+                    foreach (GuiPresentation Value in State.Presentations.Values) if (Value.NeedsReplace) return true;
+                    return false;
+                }
+            }
 
             public bool IsDomainLive(ulong Vm, ulong Domain) { return !Disposed && Vm == VmGenerationId && Domain == DomainLifetimeId; }
             public bool TryGetClass(GuiObjectIdentity Identity, out GuiClassId ClassId)
@@ -135,7 +184,8 @@ namespace Carbon.Plugins
             internal void RollbackPublication()
             {
                 RequireLive(); if (Publications.Count == 0) throw new FacadeException("invalid GUI publication rollback");
-                GuiRetainedState Previous = Publications.Pop(); World.Restore(Previous.Nodes.Count - State.Nodes.Count); State = Previous;
+                GuiRetainedState Previous = Publications.Pop(); World.Restore(Previous.Nodes.Count - State.Nodes.Count);
+                World.RestorePresentations(State.Presentations.Values, Previous.Presentations.Values); State = Previous;
             }
 
             internal string[] Query(string[] Fields)
@@ -161,6 +211,11 @@ namespace Carbon.Plugins
                         RequireFields(Fields, 3); GuiRetainedNode Value = Node(Id(Fields[1]));
                         if (Fields[2] != "Activated" || Value.ClassId != GuiClassId.TextButton) throw new FacadeException("event is not available on GUI object");
                         return new string[0];
+                    }
+                    case "shown": {
+                        RequireFields(Fields, 4); GuiRetainedNode Screen = Node(Id(Fields[1])); RequireScreen(Screen);
+                        if (World.Resolve(Fields[2], Fields[3]) == null) throw new FacadeException("Player is no longer connected");
+                        return new[] {State.Presentations.ContainsKey(PresentationKey(Screen.Identity.GuiObjectId, Fields[2])) ? "1" : "0"};
                     }
                     default: throw new FacadeException("unknown GUI query");
                 }
@@ -190,6 +245,8 @@ namespace Carbon.Plugins
                         if (State.Connections.TryGetValue(Fields[2], out Owner) && Owner == ObjectId) State.Connections.Remove(Fields[2]);
                         return new string[0];
                     }
+                    case "show": RequireFields(Fields, 4); Show(Node(Id(Fields[1])), Fields[2], Fields[3]); return new string[0];
+                    case "hide": RequireFields(Fields, 4); Hide(Node(Id(Fields[1])), Fields[2], Fields[3]); return new string[0];
                     default: throw new FacadeException("unknown GUI mutation");
                 }
             }
@@ -210,7 +267,7 @@ namespace Carbon.Plugins
                 World.Adjust(1); ulong ObjectId = NextObjectId++;
                 var Result = new GuiRetainedNode(new GuiObjectIdentity(VmGenerationId, DomainLifetimeId, ObjectId), Descriptor.Id);
                 ApplyDefaults(Result); State.Nodes.Add(ObjectId, Result); if (Descriptor.Id == GuiClassId.ScreenGui) State.Screens++;
-                if (Parent != null) Attach(Result, Parent);
+                if (Parent != null) { Attach(Result, Parent); MarkScreenForFull(RootScreen(Parent)); }
                 return Result;
             }
 
@@ -245,6 +302,8 @@ namespace Carbon.Plugins
                     throw new FacadeException("unknown GUI object identity");
                 }
                 var RemovedIds = new List<ulong>(); Collect(Root, RemovedIds); var RemovedConnections = new List<string>();
+                GuiRetainedNode AffectedScreen = Root.ClassId == GuiClassId.ScreenGui ? Root : RootScreen(Root);
+                if (Root.ClassId == GuiClassId.ScreenGui) RemovePresentationsForScreen(Root.Identity.GuiObjectId);
                 if (Root.ParentId.HasValue) State.Nodes[Root.ParentId.Value].Children.Remove(ObjectId);
                 foreach (ulong RemovedId in RemovedIds) {
                     GuiRetainedNode Removed = State.Nodes[RemovedId];
@@ -254,7 +313,8 @@ namespace Carbon.Plugins
                     }
                     State.Nodes.Remove(RemovedId);
                 }
-                World.Adjust(-RemovedIds.Count); return RemovedConnections.ToArray();
+                World.Adjust(-RemovedIds.Count); if (AffectedScreen != null && Root.ClassId != GuiClassId.ScreenGui) MarkScreenForFull(AffectedScreen);
+                return RemovedConnections.ToArray();
             }
 
             private void SetProperty(GuiRetainedNode Node, string Name, string[] Fields, int KindIndex)
@@ -271,6 +331,7 @@ namespace Carbon.Plugins
                     }
                 }
                 Node.Properties[Use.Descriptor.Id] = Value;
+                if (Use.Descriptor.MutationKind == GuiMutationKind.Structural) MarkScreenForFull(RootScreen(Node));
             }
 
             private void SetParent(GuiRetainedNode Child, string[] Fields, int KindIndex)
@@ -286,9 +347,95 @@ namespace Carbon.Plugins
                 if (Parent != null && Child.ParentId == Parent.Identity.GuiObjectId) return;
                 int Objects = SubtreeCount(Child), Depth = SubtreeDepth(Child), Buttons = SubtreeButtons(Child), TextBytes = SubtreeTextBytes(Child);
                 if (Parent != null) ValidateAttachment(Child, Child.ClassId, Parent, Objects, Depth, Buttons, TextBytes);
+                GuiRetainedNode OldScreen = RootScreen(Child), NewScreen = Parent == null ? null : RootScreen(Parent);
                 if (Child.ParentId.HasValue) State.Nodes[Child.ParentId.Value].Children.Remove(Child.Identity.GuiObjectId);
                 Child.ParentId = null; if (Parent != null) Attach(Child, Parent);
+                MarkScreenForFull(OldScreen); if (NewScreen != OldScreen) MarkScreenForFull(NewScreen);
             }
+
+            private void Show(GuiRetainedNode Screen, string PlayerToken, string PlayerUserId)
+            {
+                RequireScreen(Screen); if (World.Resolve(PlayerToken, PlayerUserId) == null) throw new FacadeException("Player is no longer connected");
+                string Key = PresentationKey(Screen.Identity.GuiObjectId, PlayerToken); GuiPresentation Existing;
+                if (State.Presentations.TryGetValue(Key, out Existing)) {
+                    if (Existing.SynchronizationUncertain) Existing.NeedsReplace = true;
+                    return;
+                }
+                int Viewers = 0; foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) Viewers++;
+                if (Viewers >= Limits.MaxViewersPerScreen) throw new FacadeException("ScreenGui viewer limit reached");
+                if (State.Presentations.Count >= Limits.MaxPresentationsPerDomain) throw new FacadeException("domain GUI presentation limit reached");
+                if (NextPresentationEpoch == ulong.MaxValue) throw new FacadeException("GUI presentation epoch exhausted");
+                var Presentation = new GuiPresentation(Screen.Identity.GuiObjectId, NextPresentationEpoch++, PlayerToken, PlayerUserId, World.NewClientPrefix());
+                GuiRenderCompiler.Compile(State, Screen, Presentation, Limits);
+                World.AddPresentation(PlayerToken);
+                try { State.Presentations.Add(Key, Presentation); }
+                catch { World.RemovePresentation(PlayerToken); throw; }
+            }
+            private void Hide(GuiRetainedNode Screen, string PlayerToken, string PlayerUserId)
+            {
+                RequireScreen(Screen); if (World.Resolve(PlayerToken, PlayerUserId) == null) throw new FacadeException("Player is no longer connected");
+                string Key = PresentationKey(Screen.Identity.GuiObjectId, PlayerToken); GuiPresentation Presentation;
+                if (!State.Presentations.TryGetValue(Key, out Presentation)) return;
+                State.Presentations.Remove(Key); World.RemovePresentation(Presentation.PlayerToken);
+                if (Presentation.WasSent) State.PendingDestroys.Enqueue(Presentation.Target);
+            }
+            internal void Disconnect(PlayerLifetime Player)
+            {
+                RequireLive(); if (Player == null) return;
+                var Keys = new List<string>(); foreach (var Value in State.Presentations) if (Value.Value.PlayerToken == Player.Token) Keys.Add(Value.Key);
+                foreach (string Key in Keys) { World.RemovePresentation(State.Presentations[Key].PlayerToken); State.Presentations.Remove(Key); }
+                if (State.PendingDestroys.Count != 0) {
+                    var Keep = new Queue<GuiBackendTarget>(); while (State.PendingDestroys.Count != 0) {
+                        GuiBackendTarget Target = State.PendingDestroys.Dequeue(); if (Target.ExactPlayerConnectionToken != Player.Token) Keep.Enqueue(Target);
+                    }
+                    while (Keep.Count != 0) State.PendingDestroys.Enqueue(Keep.Dequeue());
+                }
+            }
+            internal int FlushOne(int RemainingBytes)
+            {
+                RequireLive(); if (Publications.Count != 0) return 0;
+                if (State.PendingDestroys.Count != 0) { World.Backend.Destroy(State.PendingDestroys.Dequeue()); return 0; }
+                string SelectedKey = null; GuiPresentation Selected = null;
+                foreach (var Value in State.Presentations) if (Value.Value.NeedsReplace && (SelectedKey == null || StringComparer.Ordinal.Compare(Value.Key, SelectedKey) < 0)) {
+                    SelectedKey = Value.Key; Selected = Value.Value;
+                }
+                if (Selected == null) return 0;
+                if (World.Resolve(Selected.PlayerToken, Selected.PlayerUserId) == null) {
+                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); return 0;
+                }
+                GuiRetainedNode Screen;
+                if (!State.Nodes.TryGetValue(Selected.ScreenId, out Screen)) {
+                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); return 0;
+                }
+                GuiRenderPlan Plan;
+                try { Plan = GuiRenderCompiler.Compile(State, Screen, Selected, Limits); }
+                catch { Selected.NeedsReplace = false; Selected.SynchronizationUncertain = true; return 0; }
+                if (Plan.EstimatedSerializedBytes > RemainingBytes) return -Plan.EstimatedSerializedBytes;
+                GuiBackendResult Result = World.Backend.Replace(Selected.Target, Plan);
+                if (Result.Code == GuiBackendResultCode.TargetUnavailable) {
+                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken);
+                } else if (Result.Accepted) {
+                    Selected.WasSent = true; Selected.NeedsReplace = false; Selected.SynchronizationUncertain = false;
+                } else { Selected.NeedsReplace = false; Selected.SynchronizationUncertain = true; }
+                return Plan.EstimatedSerializedBytes;
+            }
+            private void RemovePresentationsForScreen(ulong ScreenId)
+            {
+                var Keys = new List<string>(); foreach (var Value in State.Presentations) if (Value.Value.ScreenId == ScreenId) Keys.Add(Value.Key);
+                foreach (string Key in Keys) {
+                    GuiPresentation Presentation = State.Presentations[Key]; State.Presentations.Remove(Key); World.RemovePresentation(Presentation.PlayerToken);
+                    if (Presentation.WasSent) State.PendingDestroys.Enqueue(Presentation.Target);
+                }
+            }
+            private void MarkScreenForFull(GuiRetainedNode Screen)
+            {
+                if (Screen == null) return;
+                foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) Value.NeedsReplace = true;
+            }
+            private static void RequireScreen(GuiRetainedNode Screen)
+            { if (Screen.ClassId != GuiClassId.ScreenGui) throw new FacadeException("Show, Hide and IsShown require ScreenGui"); }
+            private static string PresentationKey(ulong ScreenId, string PlayerToken)
+            { return ScreenId.ToString(CultureInfo.InvariantCulture) + ":" + PlayerToken; }
 
             private void ValidateAttachment(GuiRetainedNode Child, GuiClassId ChildClass, GuiRetainedNode Parent, int Objects, int Depth, int Buttons, int TextBytes)
             {
@@ -423,8 +570,17 @@ namespace Carbon.Plugins
             private void RequireLive() { if (Disposed) throw new FacadeException("stale GUI domain lifetime"); }
             public void Dispose()
             {
-                if (Disposed) return; Disposed = true; World.Adjust(-State.Nodes.Count); State = new GuiRetainedState(); Publications.Clear();
+                if (Disposed) return; Disposed = true;
+                var Destroyed = new HashSet<string>(StringComparer.Ordinal);
+                foreach (GuiPresentation Value in State.Presentations.Values) {
+                    World.RemovePresentation(Value.PlayerToken);
+                    if (Value.WasSent && Destroyed.Add(Value.Target.Key)) TryDestroy(Value.Target);
+                }
+                foreach (GuiBackendTarget Value in State.PendingDestroys) if (Destroyed.Add(Value.Key)) TryDestroy(Value);
+                World.Adjust(-State.Nodes.Count); State = new GuiRetainedState(); Publications.Clear();
             }
+            private void TryDestroy(GuiBackendTarget Target)
+            { try { World.Backend.Destroy(Target); } catch { } }
         }
     }
 }

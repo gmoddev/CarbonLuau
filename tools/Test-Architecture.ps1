@@ -20,9 +20,12 @@ $Expected = @(
     'src/CarbonLuau/Gui/GuiModelContracts.cs',
     'src/CarbonLuau/Gui/GuiRetainedRegistry.cs',
     'src/CarbonLuau/Gui/GuiRenderPlan.cs',
+    'src/CarbonLuau/Gui/GuiPresentation.cs',
     'src/CarbonLuau/Gui/IGuiBackend.cs',
     'src/CarbonLuau/Gui/InMemoryGuiBackend.cs',
+    'src/CarbonLuau/Gui/RustCuiBackend.cs',
     'src/CarbonLuau/Gui/GuiHostCapabilities.cs',
+    'src/CarbonLuau/CarbonLuau.Gui.Carbon.cs',
     'native/src/runtime/RuntimeInternal.hpp',
     'native/src/runtime/VmRegistry.cpp',
     'native/src/runtime/VmState.cpp',
@@ -59,7 +62,7 @@ foreach ($GuiSource in $GuiSources) {
     if ($GuiText -match 'System\.Reflection|GetProperties\s*\(|GetMethods\s*\(|GetEvents\s*\(') {
         throw "GUI schema must not discover public members through reflection: $($GuiSource.Name)"
     }
-    if ($GuiText -match '\bCui|\bLui|BasePlayer|UnityEngine') {
+    if ($GuiText -match 'using\s+Oxide\.Game\.Rust\.Cui|\bBasePlayer\b|\bCuiHelper\b|\bCuiElement\b|using\s+UnityEngine') {
         throw "GUI retained/backend contracts leaked host CUI types: $($GuiSource.Name)"
     }
 }
@@ -67,11 +70,21 @@ $Bootstrap = Get-Content -Raw -LiteralPath (Join-Path $Root 'scripts/bootstrap.l
 if (!$Bootstrap.Contains('if Name == "Gui" then return Gui end') -or !$Bootstrap.Contains('MakeUserdata')) {
     throw 'GUI Foundation 1B must install the domain-bound Gui service and opaque userdata boundary'
 }
-foreach ($Deferred in @('GuiObjectMethods.Show','GuiObjectMethods.Hide','GuiObjectMethods.IsShown','Presentation','RustCuiBackend')) {
-    if ($Bootstrap.Contains($Deferred)) { throw "GUI Foundation 1B crossed into deferred presentation/render behavior: $Deferred" }
+foreach ($Required in @('GuiObjectMethods.Show','GuiObjectMethods.Hide','GuiObjectMethods.IsShown')) {
+    if (!$Bootstrap.Contains($Required)) { throw "GUI Foundation 1C public screen lifecycle is missing: $Required" }
 }
-if (Test-Path -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/RustCuiBackend.cs')) {
-    throw 'GUI Foundation 1A must not implement the production Rust CUI backend'
+foreach ($Deferred in @('MaxActionTokensPerPresentation','MaxTrackedDirtyObjectsPerDomain')) {
+    if ($Bootstrap.Contains($Deferred)) { throw "GUI Foundation 1C crossed into deferred GUI-1D behavior: $Deferred" }
+}
+$Presentation = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiPresentation.cs')
+$Registry = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiRetainedRegistry.cs')
+if (!$Presentation.Contains('GuiRenderCompiler') -or !$Registry.Contains('RandomNumberGenerator')) {
+    throw 'GUI Foundation 1C must own deterministic render compilation and opaque presentation identity'
+}
+$Transport = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/CarbonLuau.Gui.Carbon.cs')
+if (!$Transport.Contains('CuiHelper.AddUi') -or !$Transport.Contains('CuiHelper.DestroyUi') -or
+    !$Transport.Contains('ExactPlayerConnectionToken')) {
+    throw 'GUI Foundation 1C Carbon adapter must use Rust CUI and exact Player connection identity'
 }
 
 $Worker = Get-Content -Raw -LiteralPath (Join-Path $Root 'native/src/scripts/CompilerWorker.cpp')
@@ -88,4 +101,4 @@ foreach ($Path in $Expected | Where-Object { $_ -like 'native/src/*.cpp' -or $_ 
     if (!$CMake.Contains($Relative)) { throw "Native owner missing from build graph: $Relative" }
 }
 
-Write-Output '[CarbonLuau:ArchitectureTest] PASS: managed/native invariant owners, retained GUI boundary, deferred rendering, compiler boundary and native build graph'
+Write-Output '[CarbonLuau:ArchitectureTest] PASS: managed/native invariant owners, retained GUI/presentation boundary, exact Rust CUI adapter, deferred GUI-1D behavior, compiler boundary and native build graph'

@@ -16,6 +16,7 @@ namespace Carbon.Plugins
             internal readonly GuiRetainedWorld Gui;
             public FacadeSession Active { get; private set; }
             private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
+            private long GuiFlushCursor;
             public long PublicationVersion { get; private set; }
             public bool HasWork {
                 get {
@@ -25,7 +26,12 @@ namespace Carbon.Plugins
                 }
             }
             public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar)
-            { this.Players = Players; this.Registrar = Registrar; Gui = new GuiRetainedWorld(new GuiConfig().Validate()); }
+                : this(Players, Registrar, null) { }
+            internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, IGuiBackend Backend)
+            {
+                this.Players = Players ?? throw new ArgumentNullException("Players"); this.Registrar = Registrar;
+                GuiLimits Limits = new GuiConfig().Validate(); Gui = new GuiRetainedWorld(Limits, Players, Backend ?? new InMemoryGuiBackend());
+            }
             public void Commit(FacadeSession Next)
             {
                 Players.CheckOwner();
@@ -70,6 +76,32 @@ namespace Carbon.Plugins
                 foreach (FacadeSession Session in Addons.Values) try { Session.Event(Kind, Player); } catch (Exception Error) { if (Failure == null) Failure = Error; }
                 if (Failure != null) throw Failure;
             }
+            internal void DisconnectGui(PlayerLifetime Player)
+            {
+                Players.CheckOwner(); if (Player == null) return;
+                if (Active != null) Active.Gui.Disconnect(Player);
+                foreach (FacadeSession Session in Addons.Values) Session.Gui.Disconnect(Player);
+            }
+            internal void FlushGui(System.Diagnostics.Stopwatch Watch, int Milliseconds)
+            {
+                Players.CheckOwner(); int Sends = 0, Bytes = 0, WithoutProgress = 0;
+                double DeadlineMilliseconds = Math.Min(Milliseconds,
+                    Watch.Elapsed.TotalMilliseconds + Gui.Limits.GuiFlushBudgetMicroseconds / 1000.0);
+                var SessionValues = Sessions();
+                while (Sends < Gui.Limits.MaxPresentationSendsPerFlush && Bytes < Gui.Limits.MaxSerializedBytesPerFlush &&
+                    Watch.Elapsed.TotalMilliseconds < DeadlineMilliseconds && SessionValues.Count != 0) {
+                    FacadeSession Selected = null;
+                    foreach (FacadeSession Session in SessionValues) if (Session.Gui.HasWork && Session.DomainLifetimeId > GuiFlushCursor &&
+                        (Selected == null || Session.DomainLifetimeId < Selected.DomainLifetimeId)) Selected = Session;
+                    if (Selected == null) foreach (FacadeSession Session in SessionValues) if (Session.Gui.HasWork &&
+                        (Selected == null || Session.DomainLifetimeId < Selected.DomainLifetimeId)) Selected = Session;
+                    if (Selected == null) break;
+                    GuiFlushCursor = Selected.DomainLifetimeId;
+                    int Used = Selected.Gui.FlushOne(Gui.Limits.MaxSerializedBytesPerFlush - Bytes);
+                    if (Used < 0) { if (++WithoutProgress >= SessionValues.Count) break; continue; }
+                    WithoutProgress = 0; Sends++; Bytes += Used;
+                }
+            }
         }
         public sealed class FacadeSession
         {
@@ -96,7 +128,7 @@ namespace Carbon.Plugins
             private ulong NextRegistration;
             public bool Active, Disposed;
             public ulong Rejected;
-            public bool HasWork { get { return Pending.Count != 0; } }
+            public bool HasWork { get { return Pending.Count != 0 || Gui.HasWork; } }
             public int PendingCount { get { return Pending.Count; } }
             public int ListenerCount { get { return Listeners.Count; } }
             public readonly NativeRuntime.HostDelegate Callback;

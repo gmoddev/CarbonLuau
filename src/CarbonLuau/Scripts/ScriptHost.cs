@@ -157,6 +157,7 @@ namespace Carbon.Plugins
                 Draining = true;
                 try {
                     var Watch = Stopwatch.StartNew();
+                    if (Facade != null) Facade.FlushGui(Watch, Settings.FrameDrainBudgetMilliseconds);
                     FlushDomainFacades(Watch);
                     if (Vm.Info.Ready == 0) { var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery); return Results; }
                     SchedulerInfo Cutoff = Vm.Scheduler;
@@ -199,4 +200,3 @@ namespace Carbon.Plugins
         }
     }
 }
-

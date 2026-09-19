@@ -238,10 +238,25 @@ function GuiObjectMethods.Destroy(Self)
     local Fields = Host(21, "destroy", GuiRecord(Self).Id)
     for _, Id in Fields do Callbacks[Id] = nil end
 end
+function GuiObjectMethods.Show(Self, Player)
+    local RecordValue = GuiRecord(Self); local PlayerValue = Record(Player)
+    Host(21, "show", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)
+end
+function GuiObjectMethods.Hide(Self, Player)
+    local RecordValue = GuiRecord(Self); local PlayerValue = Record(Player)
+    Host(21, "hide", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)
+end
+function GuiObjectMethods.IsShown(Self, Player)
+    local RecordValue = GuiRecord(Self); local PlayerValue = Record(Player)
+    return Host(20, "shown", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)[1] == "1"
+end
 table.freeze(GuiObjectMethods)
 GuiObjectMeta.__index = function(Object, Key)
     local RecordValue = GuiRecord(Object)
     if Key == "Activated" then return GuiSignal(Object) end
+    if (Key == "Show" or Key == "Hide" or Key == "IsShown") and RecordValue.ClassName ~= "ScreenGui" then
+        return DecodeGuiValue(Host(20, "get", RecordValue.Id, String(Key, "GUI property name")))
+    end
     if GuiObjectMethods[Key] then return GuiObjectMethods[Key] end
     return DecodeGuiValue(Host(20, "get", RecordValue.Id, String(Key, "GUI property name")))
 end

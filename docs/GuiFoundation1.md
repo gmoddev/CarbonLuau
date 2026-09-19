@@ -178,7 +178,11 @@ Implementation is split into explicitly scoped phases. [GUI Foundation 1A](GuiFo
 owns only the internal descriptor, limit, render-contract and deterministic mock
 backend substrate. [GUI Foundation 1B](GuiFoundation1B.md) owns the retained
 objects, values, lifecycle, ownership, Signal presence and publication journal;
-it does not implement presentations or client rendering.
+it does not implement presentations or client rendering. [GUI Foundation 1C](GuiFoundation1C.md)
+owns internal presentations, exact Player-bound Show/Hide state, deterministic
+full-plan compilation and the production Rust CUI projection. It remains a
+static projection phase: GUI-1D owns automatic property synchronization and
+client interaction ingress.
 Before public support, qualification must cover retained model and value semantics, layout golden cases, mutation ordering, shared-domain ownership, provisional foreign-owner publication, exact Player/token attacks and reconnects, bounds/queue exhaustion, no reentrant entry, backend fault injection, replacement/recovery cleanup, sanitizer coverage, live current Carbon/Rust rendering with an authenticated client, multi-viewer cost and host-upgrade adapter checks.
 
 Authenticated-client evidence is required for claims about actual visual layout, click receipt, cursor behavior and client reconciliation. Controlled `BasePlayer` fixtures alone cannot establish those results. Exact supported Carbon/Rust revisions and any host-specific adapter assumptions belong in qualification evidence and compatibility documentation, not D15.

@@ -144,7 +144,7 @@ internal static class GuiFoundation1ATests
     private static void RunBackend(Runtime.GuiLimits Limits)
     {
         var Backend = new Runtime.InMemoryGuiBackend();
-        var Target = new Runtime.GuiBackendTarget("connection-7", "root-9");
+        var Target = new Runtime.GuiBackendTarget("connection-7", "76561190000000007", "root-9");
         var Plan = new Runtime.GuiRenderPlan(Limits, 64, Root(Limits, Visible(true)));
         var Patch = new Runtime.GuiRenderPatch(Limits, 16, Root(Limits, Visible(false)));
         Check(Backend.Replace(Target, Plan).Accepted && Backend.IsLive(Target) && Object.ReferenceEquals(Backend.CurrentPlan(Target), Plan),
