@@ -54,4 +54,6 @@ unimplemented GUI Foundation 1 contract is decision
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model), with
 detailed rationale and future implementation guidance in
 [GUI Foundation 1 architecture](GuiFoundation1.md). GUI is not part of the
-current public API and its release identity remains unassigned.
+current public API and its release identity remains unassigned. The internal
+descriptor/render/backend substrate is recorded separately in
+[GUI Foundation 1A](GuiFoundation1A.md).

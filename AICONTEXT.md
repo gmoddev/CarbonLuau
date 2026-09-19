@@ -11,6 +11,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Provisional/open/deferred decisions and implementation gates | [Decision register in Invariants.md](docs/Invariants.md#decision-register) |
 | Canonical GUI Foundation 1 semantics | [D15 in Invariants.md](docs/Invariants.md#d15--gui-foundation-1-retained-presentation-model) |
 | GUI Foundation 1 rationale and implementation guidance | [GuiFoundation1.md](docs/GuiFoundation1.md) |
+| GUI Foundation 1A internal substrate and evidence | [GuiFoundation1A.md](docs/GuiFoundation1A.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -70,6 +71,10 @@ implemented. Future GUI phases must preserve that public model and stop rather
 than invent conflicting semantics. GUI package/API identity remains unassigned
 until implementation, qualification and release planning; D12's current
 `0.4.0-experimental` identity does not include GUI.
+The internal descriptors, limit snapshot, Carbon-independent render/backend
+contracts and deterministic mock backend implemented by GUI Foundation 1A are
+recorded in [GuiFoundation1A.md](docs/GuiFoundation1A.md). They do not authorize
+public GUI bindings, retained-object behavior, presentations or CUI rendering.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.
