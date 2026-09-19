@@ -1,8 +1,9 @@
 # GUI Foundation 1C: presentations and Rust CUI projection
 
-Status: **implemented; final qualification in progress**.
+Verdict: **PASS for the scoped Foundation 1C implementation**.
 
 Starting commit: `45b01ae252097ed20c7d7403945716cdeeeda5a9`.
+Implementation and tested-source commit: `686749c92a819a2189f53487b780a6632350c89d`.
 
 Foundation 1C connects the retained GUI authority from Foundation 1B to a
 bounded Rust CUI projection. It implements the internal Presentation lifecycle,
@@ -136,6 +137,29 @@ absence. Rust backend checks cover deterministic JSON, full replacement,
 controlled results and payload rejection. The native suite exercises the actual
 Luau methods, publication timing and candidate rollback.
 
-Final platform, sanitizer, live Carbon and CI results will be recorded against
-the immutable implementation revision after those gates complete.
+Final qualification on 2026-09-19 produced the following results:
 
+- Local Windows .NET Framework Release compilation completed with zero warnings
+  and errors. The focused GUI-1C model suite, architecture contract, API
+  contract, deterministic release/package checks and `git diff --check` passed.
+- Hosted Windows built all native targets and the isolated compiler worker. All
+  five native tests passed, followed by the complete real compiler/VM managed
+  suite. GUI-1A, GUI-1B model/native, GUI-1C model/native, Foundations A-G,
+  package/parser, addon scale/fairness and Phase 0-3 regressions passed.
+- Hosted Ubuntu 24.04 passed the equivalent five native tests, complete
+  managed/native suite, packaging and release checks.
+- The ASan/UBSan/leak lane passed ScriptCore, RuntimeAllocationFaults,
+  CompilerContainment, RuntimeCore and NativeLoadUnload with all sanitizer halt
+  and leak checks enabled.
+- The immutable implementation source passed the complete matrix in
+  [validation run 35434634667](https://github.com/gmoddev/CarbonLuau/actions/runs/35434634667).
+  Documentation validation passed in
+  [run 35434634495](https://github.com/gmoddev/CarbonLuau/actions/runs/35434634495).
+
+Live Carbon was unavailable for this qualification: the configured DockerPC
+worker tunnel refused the connection, and read-only BigVPS inspection found no
+Rust server container. No host configuration or unrelated workload was changed.
+The production adapter therefore retains the GUI-1A pinned-source basis, but no
+new live AddUI/DestroyUI result is claimed. There was also no authenticated
+client, so actual visual layout, cursor presentation, click receipt and client
+reconciliation remain unqualified exactly as required by D15.
