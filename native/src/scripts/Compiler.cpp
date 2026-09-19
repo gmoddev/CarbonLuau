@@ -238,6 +238,12 @@ private:
     bool ReadAll(uint8_t* Bytes, size_t Length, Deadline End)
     {
         size_t Offset = 0;
+        // Anonymous pipes do not support overlapped reads. Give the already
+        // running worker a short cooperative window before using timed sleeps;
+        // otherwise Windows' coarse scheduler tick adds one full tick to every
+        // small module compile. A pathological compile reaches the sleeping
+        // path after this bounded window and remains governed by End.
+        Deadline CooperativeEnd = std::min(End, Clock::now() + std::chrono::milliseconds(5));
         while (Offset < Length && Clock::now() < End) {
             DWORD Available = 0;
             if (!PeekNamedPipe(Output, nullptr, 0, nullptr, &Available, nullptr)) return false;
@@ -249,6 +255,7 @@ private:
                 continue;
             }
             if (!Alive()) return false;
+            if (Clock::now() < CooperativeEnd) { SwitchToThread(); continue; }
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         return Offset == Length;
