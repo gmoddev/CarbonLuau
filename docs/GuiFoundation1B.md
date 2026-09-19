@@ -1,8 +1,9 @@
 # GUI Foundation 1B: retained runtime
 
-Status: **implemented; qualification pending final-source evidence**.
+Status: **implemented and qualified on the Foundation 1B boundary**.
 
 Starting commit: `deb035e20065fa27515fae8d536db66c064e0487`.
+Implementation commit: `7550f252f7f76b2ee3a1713bab1244b3960d4594`.
 
 Foundation 1B implements D15's server-side retained GUI and Luau object/value
 semantics. It deliberately stops before presentations, client identities,
@@ -109,7 +110,27 @@ Focused model and real compiler/VM facade tests cover the retained tree, value
 userdata, every class/property family, equality, parenting, clone/destroy,
 bounds, Signal ownership, nested/caught rollback, foreign-owner commit/rollback,
 cross-domain parenting rejection, stale teardown and prior regressions. Exact
-local and hosted results are recorded after the final tested revision exists.
+qualification completed on 2026-09-19:
+
+- Windows-local .NET Framework Release compilation completed with zero warnings
+  or errors. The GUI-1A and GUI-1B model suites, architecture contract, API
+  contract and deterministic release checks passed.
+- An isolated Linux worker built the Release native runtime and compiler worker.
+  All five native CTest targets passed, followed by the complete managed/native
+  runtime suite. That suite included GUI-1A, both GUI-1B suites, Foundations A-G,
+  addon lifecycle, scale/fairness, package and Phase 0-3 regressions.
+- The isolated Linux ASan/UBSan/leak build passed all five native CTest targets
+  with `detect_leaks=1` and halt-on-error enabled. No sanitizer or leak failure
+  was reported.
+- Hosted validation for the implementation commit passed Windows, Ubuntu and
+  sanitizers in [run 35432914596](https://github.com/gmoddev/CarbonLuau/actions/runs/35432914596).
+  The Windows job compiled and exercised the real native/userdata runtime suite;
+  the Ubuntu job exercised the equivalent Linux runtime and packaging path.
+- Documentation validation and deployment passed in
+  [run 35432914637](https://github.com/gmoddev/CarbonLuau/actions/runs/35432914637).
+
+No live Carbon GUI claim is made. Foundation 1B intentionally has no Carbon/Rust
+rendering or client-event path to qualify; those gates belong to GUI-1C and later.
 
 ## Deferred work
 
