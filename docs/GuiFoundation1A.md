@@ -109,7 +109,22 @@ replace/update/destroy, missing targets, failure injection and documentation
 identity consistency. `Test-Architecture.ps1` owns the new implementation paths
 and rejects managed reflection APIs in the GUI component.
 
-Final local and hosted results are added after the tested commit is available.
+Implementation commit `d2bb1527d749ea4fe1b4de8cc26aa472a3bb6b69`
+passed the following final-source checks:
+
+- Release managed build with zero warnings and zero errors;
+- focused `--gui-only` descriptor, limit, plan, mock-backend and capability tests;
+- architecture, API and deterministic release/package checks; and
+- `git diff --check`.
+
+Hosted [validation run 35430231936](https://github.com/gmoddev/CarbonLuau/actions/runs/35430231936)
+passed the Windows and Ubuntu native/runtime matrices, packaging, and the
+ASan/UBSan/leak job. The Windows matrix needed two failed-job retries because
+the pre-existing Foundation G compiler-containment memory-limit test failed on
+the first two attempts; the unchanged revision passed that test and the full
+Windows lane on attempt 3. Hosted
+[documentation run 35430231906](https://github.com/gmoddev/CarbonLuau/actions/runs/35430231906)
+also passed.
 
 ## Deferred work
 
