@@ -8,6 +8,7 @@ invariants without changing scripting behavior, the ABI, provider protocol,
 package schema, limits or the pinned Luau revision.
 
 Starting commit: `f54d7678aa56bea1ad5104ed31350cd13e409169`.
+Qualified implementation commit: `0530e578c9903888440de16918134ec62f1ecfe6`.
 
 ## Managed ownership
 
@@ -127,3 +128,8 @@ Windows release bundle check passed using the qualified native DLL. No live
 Carbon rerun was required because this phase changed no host integration or
 runtime semantics; Foundation E's live evidence remains scoped to its tested
 commit rather than being relabeled as Foundation F evidence.
+
+[GitHub Actions validation run 35278320215](https://github.com/gmoddev/CarbonLuau/actions/runs/35278320215)
+passed the Windows, Ubuntu and sanitizer jobs for the qualified implementation.
+[Documentation run 35278319941](https://github.com/gmoddev/CarbonLuau/actions/runs/35278319941)
+successfully deployed the Foundation F documentation to GitHub Pages.
