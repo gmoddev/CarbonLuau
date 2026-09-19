@@ -24,17 +24,19 @@ jobs:
         run: ctest --test-dir build -C Release --output-on-failure
       - name: Reject host-selected MSVC runtime dependencies
         if: runner.os == 'Windows'
-        run: ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_native.dll
+        run: |
+          ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_native.dll
+          ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_compiler.exe
       - name: Compile .NET Framework loader tests
         run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
       - name: Compile .NET Framework runtime tests
         run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
       - name: Windows runtime tests
         if: runner.os == 'Windows'
-        run: ./dist/runtime/RuntimeTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongAbi.dll" "$pwd/build/Release/LegacyProbe.dll" "$pwd"
+        run: ./dist/runtime/RuntimeTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongAbi.dll" "$pwd/build/Release/LegacyProbe.dll" "$pwd" "$pwd/build/Release/carbonluau_compiler.exe"
       - name: Linux runtime tests
         if: runner.os == 'Linux'
-        run: mono dist/runtime/RuntimeTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongAbi.so" "$PWD/build/libLegacyProbe.so" "$PWD"
+        run: mono dist/runtime/RuntimeTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongAbi.so" "$PWD/build/libLegacyProbe.so" "$PWD" "$PWD/build/carbonluau_compiler"
       - name: Windows loader tests
         if: runner.os == 'Windows'
         run: ./dist/tests/LoaderTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongProbe.dll" "$pwd/build/Release/MissingSymbol.dll"
@@ -52,8 +54,9 @@ jobs:
           ./tools/Test-Architecture.ps1
           $Rid = if ($IsWindows) { 'win-x64' } else { 'linux-x64' }
           $Native = if ($IsWindows) { 'build/Release/carbonluau_native.dll' } else { 'build/libcarbonluau_native.so' }
-          ./tools/Test-Release.ps1 -Rid $Rid -NativeLibrary $Native
-          ./tools/New-ReleaseArtifacts.ps1 -Rid $Rid -NativeLibrary $Native
+          $Compiler = if ($IsWindows) { 'build/Release/carbonluau_compiler.exe' } else { 'build/carbonluau_compiler' }
+          ./tools/Test-Release.ps1 -Rid $Rid -NativeLibrary $Native -CompilerWorker $Compiler
+          ./tools/New-ReleaseArtifacts.ps1 -Rid $Rid -NativeLibrary $Native -CompilerWorker $Compiler
       - uses: actions/upload-artifact@v4
         with:
           name: carbonluau-${{ matrix.os }}
@@ -63,7 +66,9 @@ jobs:
             dist/scripts/
             dist/examples/
             build/Release/carbonluau_native.dll
+            build/Release/carbonluau_compiler.exe
             build/libcarbonluau_native.so
+            build/carbonluau_compiler
       - name: Upload release candidate
         uses: actions/upload-artifact@v4
         with:

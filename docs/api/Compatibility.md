@@ -39,6 +39,7 @@ are unchanged; no script migration is required for this deferral.
 | Addon modules / archive entries / dependencies | 256 / 512 / 32 |
 | Addon registrations / one provider | 128 / 32 |
 | Aggregate immutable addon snapshots | 32 MiB |
+| Compiler request / response / wall time | 64 KiB / 1 MiB / 1 second |
 
 NUL is rejected in API strings; malformed UTF-8 is rejected by host transport.
 Wrong types are not implicitly coerced. Registration/input failures raise script
@@ -48,5 +49,8 @@ unbounded work. Permission and lifetime rejection before Lua means no user callb
 The native callback queue and managed intake are separately bounded, not one shared
 memory cap. Source ingestion, native host-response storage (256 KiB per facade VM),
 compiler memory and managed/Carbon resources are outside the Lua VM heap cap.
+The compiler runs in a killable sibling process with a production 256 MiB process
+limit; timeout or invalid protocol response discards the worker and starts clean
+on the next compilation request.
 Deadlines remain cooperative; a bounded host operation can exceed a frame budget.
 No multi-tenant, real-time, client-delivery or exactly-once replay guarantee exists.

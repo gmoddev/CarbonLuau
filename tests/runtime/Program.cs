@@ -23,6 +23,9 @@ internal static class Program
             string Library = Runtime.NativeLibraryLoader.GetLibraryPath(Root, Rid);
             Directory.CreateDirectory(Path.GetDirectoryName(Library));
             File.Copy(Args[0], Library);
+            string Compiler = Path.Combine(Path.GetDirectoryName(Library), Rid == "win-x64" ? "carbonluau_compiler.exe" : "carbonluau_compiler");
+            File.Copy(Args[4], Compiler);
+            if (Rid == "linux-x64") Check(chmod(Compiler, 493) == 0, "compiler worker executable mode");
             using (var Native = new Runtime.NativeRuntime(Root))
             {
                 Check(Native.Revision == "c6b830185af962c82003f86784e2fe036357c830", "native Luau pin");
@@ -88,4 +91,7 @@ internal static class Program
         catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         finally { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
     }
+
+    [DllImport("libc", SetLastError = true)]
+    private static extern int chmod(string Path, uint Mode);
 }

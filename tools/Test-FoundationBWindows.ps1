@@ -29,7 +29,8 @@ try {
     & dotnet build tests\runtime\RuntimeTests.csproj -c Release -o "$Artifacts\runtime"
     Assert-Exit 'Runtime test build'
     & "$Artifacts\runtime\RuntimeTests.exe" "$NativeOutput\carbonluau_native.dll" `
-        "$NativeOutput\WrongAbi.dll" "$NativeOutput\LegacyProbe.dll" $Source
+        "$NativeOutput\WrongAbi.dll" "$NativeOutput\LegacyProbe.dll" $Source `
+        "$NativeOutput\carbonluau_compiler.exe"
     Assert-Exit 'Runtime tests'
     & "$Artifacts\loader\LoaderTests.exe" "$NativeOutput\carbonluau_native.dll" `
         "$NativeOutput\WrongProbe.dll" "$NativeOutput\MissingSymbol.dll"

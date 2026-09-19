@@ -8,7 +8,7 @@ The latest published release is [v0.3.0](https://github.com/gmoddev/CarbonLuau/r
 
 CarbonLuau targets Windows x64 and glibc Linux x64 servers running Carbon. The qualified worker baseline is Carbon 2.0.259.0 with Rust 2633. See [compatibility](docs/Compatibility.md) for the complete support policy.
 
-Use the release archive matching the server OS. Install `CarbonLuau.cszip` in `carbon/plugins` and its single native DLL or SO in `carbon/data/CarbonLuau/native/win-x64` or `native/linux-x64`. Put your entrypoint at `carbon/data/CarbonLuau/scripts/init.luau` and create its `modules` directory, even when empty. Do not install both native binaries or overwrite existing scripts.
+Use the release archive matching the server OS. Install `CarbonLuau.cszip` in `carbon/plugins` and both matching native files, the runtime DLL or SO and its compiler worker, in `carbon/data/CarbonLuau/native/win-x64` or `native/linux-x64`. On Linux, run `chmod 0755 carbon/data/CarbonLuau/native/linux-x64/carbonluau_compiler` after extraction. Put your entrypoint at `carbon/data/CarbonLuau/scripts/init.luau` and create its `modules` directory, even when empty. Do not mix platform binaries or overwrite existing scripts.
 
 ```lua
 local Players = game:GetService("Players")
@@ -25,7 +25,7 @@ For clean-checkout builds, checksums, and provenance, see the [release reproduci
 
 ## What is included
 
-The v0.4.0 candidate provides sandboxed Luau execution, bounded logging and memory, deadlines, reloads, controlled modules and tasks, and the Players, Signals, and Commands gameplay facade. It also provides bounded provider-owned addon packages, exact dependency lifetimes, explicit public modules, and package-qualified `require("@id[/path]")` inside one shared VM. The scripting identity is `CarbonLuau 0.4.0-experimental`.
+The v0.4.0 candidate provides sandboxed Luau execution, bounded logging and memory, execution and compilation deadlines, reloads, controlled modules and tasks, and the Players, Signals, and Commands gameplay facade. It also provides bounded provider-owned addon packages, exact dependency lifetimes, explicit public modules, and package-qualified `require("@id[/path]")` inside one shared VM. The scripting identity is `CarbonLuau 0.4.0-experimental`.
 
 Addon packages are registered by a loaded Carbon provider plugin. CarbonLuau does not scan an addon directory or download packages. See [addon composition](docs/api/Addons.md), the [provider protocol](docs/api/Addon-Providers.md), and the [Foundation E qualification record](docs/FoundationE.md).
 

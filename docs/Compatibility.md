@@ -70,7 +70,7 @@ The build commands live in [Phase0.md](Phase0.md). Reuse these existing fixtures
 - [ProbeHost.cpp](../tests/native/ProbeHost.cpp): dynamic export resolution, expected probe value, 100 native load/unload cycles through CTest.
 - [Managed loader tests](../tests/managed/Program.cs): actual loader, RID/path checks, failure fixtures and 100 disposal cycles; Windows file deletion and Linux process-map checks.
 - [Windows live fixture](../tools/Test-WindowsRuntime.ps1) and [Linux live fixture](../tools/Test-LinuxRuntime.py): ten plugin cycles, library release checks, controlled failure/recovery, reload and health evidence in isolated servers.
-- [CI workflow](../.github/workflows/phase0.yml): Windows/Ubuntu builds, native/managed tests and packaging. The package contains C# source only; the native library is deployed separately.
+- [CI workflow](../.github/workflows/phase0.yml): Windows/Ubuntu builds, native/managed tests and packaging. The `.cszip` contains C# source only; the native runtime and compiler worker are deployed beside each other outside it.
 - [Provider acceptance procedure](Phase0.md#shockbyte-acceptance): load/probe and unload/reload logs on the actual authorized target. Do not run destructive fixtures on a live user server.
 
 Harness assertions have limits: the Windows live script waits for a general `Unavailable:` message and prints status replies; the recorded run was reviewed for exact error categories and normal replies. Linux explicitly checks expected failure text and health. Neither runner proves long-term leak freedom. Use current-run logs/offsets when reusing a server; a prior run's startup line is not new evidence. These limitations do not invalidate the recorded Phase 0 run or justify a policy-only harness refactor.
@@ -230,6 +230,29 @@ package schema, Luau revision, limits or package format. It creates a synchronou
 compiler owner for future work but does not qualify compiler containment,
 off-thread compilation, compile deadlines, bytecode transport or lock-scope
 changes. Historical evidence remains scoped to the revisions it tested.
+
+## Foundation G evidence contract
+
+[Foundation G](FoundationG.md) contains Luau compilation in a shipped helper
+process built from the pinned vendor revision. Required evidence covers bounded
+normal and adversarial source compilation, a real wall timeout, crash and
+malformed-protocol recovery, exact provenance checks, publication rollback,
+deterministic process teardown, Windows/Linux regressions, sanitizers and release
+packaging. Compilation remains synchronous to the admitting owner thread, but no
+Luau VM state crosses the worker boundary and the global VM registry lock is not
+held while the worker is awaited.
+
+Foundation G does not change the scripting API, native ABI, provider protocol,
+package schema, source/package limits or pinned Luau revision. It does not add a
+general bytecode or IPC surface and does not qualify unrelated post-v0.4 work.
+
+The current Foundation G verdict is **PARTIAL** solely because Windows live/local
+qualification is **DEFERRED / UNQUALIFIED**. Hosted Windows CI is recorded
+separately and cannot close that gate. The later Windows supplement must cover
+worker creation, wall termination, the 256 MiB job limit, crash/restart,
+IPC/protocol rejection, packaging/deployment, live Carbon integration and
+teardown without an orphan process. This Foundation-G-specific deferral neither
+rewrites nor invalidates the historical Windows qualification of Foundations A-F.
 
 ## Phase 0 consistency review
 

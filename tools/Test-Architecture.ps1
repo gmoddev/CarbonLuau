@@ -21,6 +21,8 @@ $Expected = @(
     'native/src/runtime/Publication.cpp',
     'native/src/runtime/Deadline.cpp',
     'native/src/scripts/Compiler.cpp',
+    'native/src/scripts/CompilerProtocol.hpp',
+    'native/src/scripts/CompilerWorker.cpp',
     'native/src/scripts/ModuleLoader.cpp',
     'native/src/facade/FacadeBridge.cpp'
 )
@@ -43,9 +45,9 @@ if (Get-ChildItem (Join-Path $Root 'native/src') -Recurse -File -Filter '*.inl')
     throw 'Private native .inl implementation coupling returned'
 }
 
-$Compiler = Get-Content -Raw -LiteralPath (Join-Path $Root 'native/src/scripts/Compiler.cpp')
-if ([regex]::Matches($Compiler, 'Luau::compile').Count -ne 1) { throw 'Compiler boundary must own the Luau compile call' }
-foreach ($Path in @('native/src/Runtime.cpp','native/src/scripts/ModuleLoader.cpp','native/src/facade/FacadeBridge.cpp')) {
+$Worker = Get-Content -Raw -LiteralPath (Join-Path $Root 'native/src/scripts/CompilerWorker.cpp')
+if ([regex]::Matches($Worker, 'Luau::compile').Count -ne 1) { throw 'Isolated compiler worker must own the Luau compile call' }
+foreach ($Path in @('native/src/scripts/Compiler.cpp','native/src/Runtime.cpp','native/src/scripts/ModuleLoader.cpp','native/src/facade/FacadeBridge.cpp')) {
     if ((Get-Content -Raw -LiteralPath (Join-Path $Root $Path)).Contains('Luau::compile')) {
         throw "Luau compile call escaped compiler owner: $Path"
     }

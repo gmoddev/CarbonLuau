@@ -35,7 +35,7 @@ CarbonLuau distinguishes the loaded **CarbonLuau host lifetime**, a **VM generat
 
 A domain is not one shared mutable globals table. The operator/addon entry chunk and every first module execution receive separate private mutable sandbox environments. Closures retain their defining environment. The VM provides the protected standard-library base; each execution environment receives the appropriate domain-bound host bindings such as `require`, `task`, services, Signals and Commands. Successful module values may be shared by reference according to D4.
 
-All CarbonLuau VM access and Rust/Unity state access belongs to the server main thread and is serialized, including lifecycle, compilation through the runtime, module publication and callback teardown. No background thread enters the VM. Luau coroutines are not parallel OS threads. Verify each incoming hook/completion's context; do not infer that every Carbon API callback runs on the main thread. Marshal an off-thread result as bounded data back through an explicit host dispatch boundary before touching the VM or game state.
+All CarbonLuau VM access and Rust/Unity state access belongs to the server main thread and is serialized, including lifecycle, bytecode loading, module publication and callback teardown. Source compilation is requested synchronously by that owner thread but executes only in the isolated pinned compiler worker; the worker receives bounded source, returns bounded bytecode and never receives or enters a VM. No background thread enters the VM. Luau coroutines are not parallel OS threads. Verify each incoming hook/completion's context; do not infer that every Carbon API callback runs on the main thread. Marshal an off-thread result as bounded data back through an explicit host dispatch boundary before touching the VM or game state.
 
 **Host-driven recursive VM entry is prohibited globally.** While Luau is executing, or while CarbonLuau is servicing that execution through a native-to-managed host callback, any Carbon/provider/timer/command/event path capable of causing further Luau execution must only validate/admit bounded work for later execution; it must not recursively enter the VM. Ordinary synchronous Luau-to-Luau calls, synchronous module loading and coroutine execution already inside the admitted operation remain part of that operation rather than new VM admission.
 
@@ -61,13 +61,13 @@ Admin-installed native binaries and their OS dependencies are trusted process co
 
 Install only the intended standard-library/host surface, protect shared tables, and apply `luaL_sandbox` and `luaL_sandboxthread` before executing server scripts. Keep diagnostic access in the host; do not equate upstream defaults with the project's script allowlist. Privileged bootstrap code must not rely on mutable script globals for authorization. Environment manipulation and shared module values need explicit review.
 
-Server input is Luau source compiled by the trusted pinned compiler. Never accept arbitrary user-supplied bytecode as validated source. Luau assumes compiler-produced bytecode; sandboxing alone does not establish its safety. [Luau sandbox guidance](https://luau.org/sandbox/).
+Server input is Luau source compiled by CarbonLuau's shipped worker built from the exact pinned compiler. The bounded private protocol validates its version, Luau revision, request nonce and response size before the owner thread loads bytecode. Never accept arbitrary user-supplied bytecode as validated source. Luau assumes compiler-produced bytecode; sandboxing alone does not establish its safety. [Luau sandbox guidance](https://luau.org/sandbox/).
 
 ## I8 — Bounded work is correctness
 
 Create no runtime VM without allocation accounting and a configured cap. Execute/resume no script without a monotonic deadline enforced through the VM interrupt mechanism. Bound callback queues, host-call argument sizes/work, recursive module work and retained registrations/handles as those features appear. Reject or invalidate excess work with controlled diagnostics. Numeric defaults are policy candidates, not immutable architecture.
 
-Do not describe a VM heap cap as a cap on compiler, managed, bridge or whole-process memory. Compilation and source/module ingestion need their own bounded-input/work strategy. An interrupt does not preempt a long C#/native function, so host operations and exposed standard-library work need review. Deadline enforcement is cooperative at safepoints, not a hard real-time guarantee. [Luau sandbox guidance](https://luau.org/sandbox/).
+Do not describe a VM heap cap as a cap on compiler, managed, bridge or whole-process memory. Compilation has a 64 KiB request bound, 1 MiB response bound, fixed one-second wall deadline and a killable worker with a 256 MiB process-memory limit in production. A timeout or invalid response terminates the worker; the next request starts a clean worker. Execution deadlines remain cooperative at VM safepoints. An interrupt does not preempt a long C#/native host operation, so host operations and exposed standard-library work still need review. [Luau sandbox guidance](https://luau.org/sandbox/).
 
 ## I9 — Failure scope and diagnostics
 
@@ -118,7 +118,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 
 #### D2 — limits in addon-capable operation
 
-Defaults remain 64 MiB/3 ms; clamps remain 16..256 MiB and 1..100 ms. Source remains 64 KiB, loaded bytecode 1 MiB, log buffer 4 KiB, with the existing native registry bound of 32 live VMs and one host thread per VM. Compiler/bridge/managed/source-snapshot memory remains outside the VM heap cap; no compilation deadline or whole-process cap is claimed.
+Defaults remain 64 MiB/3 ms; clamps remain 16..256 MiB and 1..100 ms. Source remains 64 KiB, loaded bytecode 1 MiB, log buffer 4 KiB, with the existing native registry bound of 32 live VMs and one host thread per VM. Compiler/bridge/managed/source-snapshot memory remains outside the VM heap cap. Foundation G adds a fixed one-second compiler wall deadline and a production 256 MiB worker-process memory limit; neither is a whole-process cap.
 
 In addon-capable operation the hard Luau allocation boundary remains **one VM-wide heap cap**, not a per-addon quota. Memory categories or equivalent accounting may be used for diagnostics but do not establish hard retained-memory isolation or guaranteed per-addon reclamation. The 32-live-VM registry bound limits VM instances, not the number of domains inside one shared VM.
 

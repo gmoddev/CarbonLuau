@@ -1,5 +1,7 @@
 // White-box executable only; no test controls are exported by the production DLL.
 #include "../../native/src/runtime/RuntimeInternal.hpp"
+#include "../../native/src/scripts/Compiler.hpp"
+#include <atomic>
 #include <cstdio>
 
 using namespace CarbonLuau::Runtime;
@@ -24,7 +26,7 @@ static uint32_t FixtureHost(uint64_t, uint32_t Operation, const char*, uint32_t,
     if (Length > Capacity) return 1;
     std::memcpy(Output, Value, Length); *Written = uint32_t(Length); return 0;
 }
-int main()
+int main(int ArgumentCount, char** Arguments)
 {
     Vm Budget;
     Budget.Limit = 128;
@@ -136,6 +138,81 @@ int main()
         Check(cl_vm_callback(Handle,Info.NowNs,Info.Sequence,3000000,&Ran,&Result)==CL_TIMEOUT && Ran && (Result.Flags&1),"facade callback timeout retires whole VM");
         Check(cl_vm_event(Handle,Event,sizeof(Event)-1)==CL_INVALID_ARGUMENT,"retired facade rejects late event");
         Check(cl_vm_destroy(Handle)==CL_OK && !TestLiveBytes,"facade timeout teardown zero bytes");
+    }
+    if (ArgumentCount == 4) {
+        ResetCompilerForTesting();
+        ClHandle Handle=0, ThreadHandle=0; ClResult Result{};
+        Check(cl_vm_create(&Config,&Handle)==CL_OK && cl_vm_scripts(Handle,64)==CL_OK,"compile containment VM");
+        const char* ModuleSource="task.defer(function() error('must not publish') end); return 17";
+        Check(cl_vm_module(Handle,"delayed",ModuleSource,uint32_t(std::strlen(ModuleSource)))==CL_OK,"compile containment module");
+        Check(cl_vm_module(Handle,"fatal","return 23",9)==CL_OK,"compile timeout module");
+        const char* Entry="local Ok=pcall(require,'delayed'); assert(not Ok); task.defer(function() print('parent') end)";
+        Check(cl_vm_load_source(Handle,"compile.timeout",Entry,uint32_t(std::strlen(Entry)),&ThreadHandle,&Result)==CL_OK,"compile timeout entry prepared");
+        SetCompilerExecutableForTesting(Arguments[3]);
+        Check(cl_thread_resume(ThreadHandle,100000000,&Result)==CL_OK,"caught module compiler crash remains ordinary");
+        ClSchedulerInfo Info{}; Check(cl_vm_scheduler(Handle,&Info)==CL_OK && Info.Modules==0 && Info.Queued==1,
+            "caught compiler crash publishes no module cache or module resource");
+        Check(cl_thread_destroy(ThreadHandle)==CL_OK,"compile crash thread cleanup");
+        SetCompilerExecutableForTesting(Arguments[1]);
+        ThreadHandle=0;
+        const char* RetrySource="assert(require('delayed')==17)";
+        Check(cl_vm_load_source(Handle,"compile.retry",RetrySource,uint32_t(std::strlen(RetrySource)),&ThreadHandle,&Result)==CL_OK &&
+            cl_thread_resume(ThreadHandle,100000000,&Result)==CL_OK,"module compile retries after worker restart");
+        Check(cl_thread_destroy(ThreadHandle)==CL_OK,"compile retry thread cleanup");
+        Check(cl_vm_scheduler(Handle,&Info)==CL_OK && Info.Modules==1 && Info.Queued==2,"retry publishes cache and resource once");
+        SetCompilerExecutableForTesting(Arguments[2]);
+        ThreadHandle=999;
+        std::atomic<bool> UnrelatedProgress{false}, WrongOwnerRejected{false};
+        std::thread Unrelated([&] {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            ClHandle Other=0;
+            WrongOwnerRejected = cl_vm_destroy(Handle)==CL_INVALID_ARGUMENT;
+            UnrelatedProgress = cl_vm_create(&Config,&Other)==CL_OK && cl_vm_destroy(Other)==CL_OK;
+        });
+        Check(cl_vm_load_source(Handle,"entry.timeout","return 1",8,&ThreadHandle,&Result)==CL_TIMEOUT && ThreadHandle==0 && !(Result.Flags&1),
+            "entry compiler timeout preserves healthy VM");
+        Unrelated.join();
+        Check(UnrelatedProgress && WrongOwnerRejected,"compiler wait releases registry without weakening VM owner validation");
+        SetCompilerExecutableForTesting(Arguments[1]);
+        Check(cl_vm_load_source(Handle,"entry.recovery","return 2",8,&ThreadHandle,&Result)==CL_OK,"entry compile recovers with same VM");
+        Check(cl_thread_destroy(ThreadHandle)==CL_OK,"entry recovery thread cleanup");
+
+        ClHandle Provider=0, Consumer=0;
+        Check(cl_domain_create(Handle,64,&Provider)==CL_OK,"compiler public provider domain");
+        const char* PublicSource="task.defer(function() error('public must not publish') end); return 19";
+        Check(cl_domain_module(Handle,Provider,"late",PublicSource,uint32_t(std::strlen(PublicSource)))==CL_OK &&
+            cl_domain_addon(Handle,Provider,"provider","1.0.0","")==CL_OK &&
+            cl_domain_public_module(Handle,Provider,"late")==CL_OK && cl_domain_commit(Handle,Provider)==CL_OK,
+            "compiler public provider setup");
+        Check(cl_domain_create(Handle,64,&Consumer)==CL_OK && cl_domain_addon(Handle,Consumer,"consumer","1.0.0","")==CL_OK &&
+            cl_domain_dependency(Handle,Consumer,"provider",Provider)==CL_OK,"compiler public consumer setup");
+        const char* PublicEntry="assert(require('@provider/late')==19)";
+        Check(cl_domain_load_source(Handle,Consumer,"public.failure",PublicEntry,uint32_t(std::strlen(PublicEntry)),&ThreadHandle,&Result)==CL_OK,
+            "public compiler-failure entry prepared");
+        Check(cl_vm_scheduler(Handle,&Info)==CL_OK,"public compiler-failure baseline");
+        uint64_t BaselineModules=Info.Modules, BaselineQueued=Info.Queued;
+        SetCompilerExecutableForTesting(Arguments[3]);
+        Check(cl_thread_resume(ThreadHandle,100000000,&Result)==CL_RUNTIME_ERROR,"provisional public compiler failure controlled");
+        Check(cl_thread_destroy(ThreadHandle)==CL_OK && cl_vm_scheduler(Handle,&Info)==CL_OK &&
+            Info.Modules==BaselineModules && Info.Queued==BaselineQueued,"public compiler failure publishes no cache or resource");
+        SetCompilerExecutableForTesting(Arguments[1]);
+        Check(cl_domain_load_source(Handle,Consumer,"public.retry",PublicEntry,uint32_t(std::strlen(PublicEntry)),&ThreadHandle,&Result)==CL_OK &&
+            cl_thread_resume(ThreadHandle,100000000,&Result)==CL_OK && cl_thread_destroy(ThreadHandle)==CL_OK &&
+            cl_domain_commit(Handle,Consumer)==CL_OK,"provisional public compile retries and commits");
+        Check(cl_vm_scheduler(Handle,&Info)==CL_OK && Info.Modules==BaselineModules+1 && Info.Queued==BaselineQueued+1,
+            "public retry publishes cache and resource once");
+        Check(cl_domain_destroy(Handle,Consumer)==CL_OK && cl_domain_destroy(Handle,Provider)==CL_OK,"compiler public domains teardown");
+
+        const char* FatalEntry="local Ok=pcall(require,'fatal'); assert(not Ok); task.defer(function() error('deadline must retire') end)";
+        Check(cl_vm_load_source(Handle,"module.timeout",FatalEntry,uint32_t(std::strlen(FatalEntry)),&ThreadHandle,&Result)==CL_OK,
+            "module timeout entry prepared");
+        SetCompilerExecutableForTesting(Arguments[2]);
+        Check(cl_thread_resume(ThreadHandle,100000000,&Result)==CL_TIMEOUT && (Result.Flags&1),
+            "caught module compiler timeout cannot extend original admitted deadline");
+        Check(cl_thread_destroy(ThreadHandle)==CL_INVALID_ARGUMENT,"retired timeout thread is stale");
+        SetCompilerExecutableForTesting(Arguments[1]);
+        Check(cl_vm_destroy(Handle)==CL_OK && !TestLiveBytes,"compile containment teardown");
+        ResetCompilerForTesting();
     }
     std::printf("[CarbonLuau:FaultTest] PASS: realloc growth/shrink/failure/overflow/free; 256 init fault positions (%d failed); 64 load; 768 script/module/callback + 1024 facade fault positions; facade event timeout; zero retained allocator bytes\n", Failed);
 }

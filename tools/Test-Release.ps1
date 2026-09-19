@@ -1,6 +1,7 @@
 param(
     [ValidateSet('win-x64','linux-x64')][string]$Rid,
-    [string]$NativeLibrary
+    [string]$NativeLibrary,
+    [string]$CompilerWorker
 )
 $ErrorActionPreference = 'Stop'
 $Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -38,17 +39,29 @@ try {
     if ((Get-FileHash -Algorithm SHA256 $FirstPackage).Hash -cne (Get-FileHash -Algorithm SHA256 $SecondPackage).Hash) {
         throw 'Production package is not byte-for-byte reproducible'
     }
-    if ($Rid -or $NativeLibrary) {
-        if (!$Rid -or !$NativeLibrary) { throw 'Rid and NativeLibrary must be supplied together' }
+    if ($Rid -or $NativeLibrary -or $CompilerWorker) {
+        if (!$Rid -or !$NativeLibrary -or !$CompilerWorker) { throw 'Rid, NativeLibrary and CompilerWorker must be supplied together' }
         $FirstRelease = Join-Path $Temp 'release-first'
         $SecondRelease = Join-Path $Temp 'release-second'
-        & (Join-Path $PSScriptRoot 'New-ReleaseArtifacts.ps1') -Rid $Rid -NativeLibrary $NativeLibrary -OutputDirectory $FirstRelease | Out-Null
-        & (Join-Path $PSScriptRoot 'New-ReleaseArtifacts.ps1') -Rid $Rid -NativeLibrary $NativeLibrary -OutputDirectory $SecondRelease | Out-Null
+        & (Join-Path $PSScriptRoot 'New-ReleaseArtifacts.ps1') -Rid $Rid -NativeLibrary $NativeLibrary -CompilerWorker $CompilerWorker -OutputDirectory $FirstRelease | Out-Null
+        & (Join-Path $PSScriptRoot 'New-ReleaseArtifacts.ps1') -Rid $Rid -NativeLibrary $NativeLibrary -CompilerWorker $CompilerWorker -OutputDirectory $SecondRelease | Out-Null
         $Name = "CarbonLuau-v$($Release.releaseVersion)-$Rid.zip"
         if ((Get-FileHash -Algorithm SHA256 (Join-Path $FirstRelease $Name)).Hash -cne
             (Get-FileHash -Algorithm SHA256 (Join-Path $SecondRelease $Name)).Hash) {
             throw "Release bundle for $Rid is not byte-for-byte reproducible"
         }
+        $ExpectedCompiler = if ($Rid -eq 'win-x64') { 'carbonluau_compiler.exe' } else { 'carbonluau_compiler' }
+        $Bundle = [IO.Compression.ZipFile]::OpenRead((Join-Path $FirstRelease $Name))
+        try {
+            $WorkerEntry = "carbon/data/CarbonLuau/native/$Rid/$ExpectedCompiler"
+            if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $WorkerEntry })) {
+                throw "Release bundle is missing compiler worker: $WorkerEntry"
+            }
+            $ProvenanceEntry = $Bundle.Entries | Where-Object { $_.FullName -ceq 'PROVENANCE.json' }
+            $Reader = New-Object IO.StreamReader($ProvenanceEntry.Open())
+            try { $BundleProvenance = $Reader.ReadToEnd() | ConvertFrom-Json } finally { $Reader.Dispose() }
+            if (!$BundleProvenance.compilerSha256) { throw 'Release provenance is missing compiler worker hash' }
+        } finally { $Bundle.Dispose() }
     }
 } finally {
     if (Test-Path -LiteralPath $Temp) { Remove-Item -LiteralPath $Temp -Recurse -Force }

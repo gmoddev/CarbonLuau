@@ -82,7 +82,13 @@ static ClStatus LoadSourceLocked(Vm* Runtime, Domain* Owner, const char* Chunk, 
     Runtime->AllocationFailed = false;
     Runtime->IntegrityFailed = false;
     try {
-        std::string Bytecode = CompileSource(std::string(Source, Length));
+        CompileResult Compilation;
+        { RegistryWaitScope Wait; Compilation = CompileSource(std::string(Source, Length)); }
+        if (Compilation.Status != CompileStatus::Success) {
+            Diagnostic(*Runtime, *Result, Compilation.Diagnostic.c_str());
+            return Compilation.Status == CompileStatus::Timeout ? CL_TIMEOUT : CL_COMPILE_ERROR;
+        }
+        std::string& Bytecode = Compilation.Payload;
         if (Bytecode.size() > 1024 * 1024) {
             Diagnostic(*Runtime, *Result, "compiled bytecode exceeds 1 MiB ingestion bound");
             return CL_INVALID_ARGUMENT;

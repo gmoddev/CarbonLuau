@@ -57,7 +57,9 @@ It assigns `0.4.0-experimental` to the qualified addon surface but does not
 authorize provider-defined capabilities, root imports or package/version solving.
 Foundation F's behavior-preserving invariant-owner decomposition and current
 implementation routing are recorded in [FoundationF.md](docs/FoundationF.md).
-It does not authorize compiler containment or any Foundation G behavior.
+Foundation G's isolated pinned compiler, deadline, protocol, deployment and
+qualification scope are recorded in [FoundationG.md](docs/FoundationG.md).
+It does not authorize unrelated post-v0.4 features.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

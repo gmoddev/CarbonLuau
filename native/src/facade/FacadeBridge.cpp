@@ -53,13 +53,12 @@ int HostPrimitive(lua_State* State)
     return 1;
 }
 
-struct FacadeInput { Domain* Owner; };
+struct FacadeInput { Domain* Owner; const std::string* Bytecode; };
 int InstallFacade(lua_State* State)
 {
     auto& Input = *static_cast<FacadeInput*>(lua_touserdata(State, 1));
     Domain& Owner = *Input.Owner;
-    std::string Bytecode = CompileSource(BootstrapSource);
-    if (luau_load(State, "carbonluau.facade", Bytecode.data(), Bytecode.size(), 0) != LUA_OK) lua_error(State);
+    if (luau_load(State, "carbonluau.facade", Input.Bytecode->data(), Input.Bytecode->size(), 0) != LUA_OK) lua_error(State);
     lua_pushlightuserdata(State, &Owner);
     lua_pushcclosure(State, HostPrimitive, "host", 1);
     lua_call(State, 1, 2);
@@ -94,6 +93,10 @@ ClStatus cl_domain_facade(ClHandle Id, ClHandle DomainId, ClHostCall Host) try
     Domain* Owner = Runtime ? GetDomain(*Runtime, DomainId) : nullptr;
     if (!Runtime || !Runtime->State || Runtime->Admission || Runtime->ThreadId || !Owner || Owner->Host || !Host)
         return CL_INVALID_ARGUMENT;
+    CompileResult Compilation;
+    { RegistryWaitScope Wait; Compilation = CompileSource(BootstrapSource); }
+    if (Compilation.Status != CompileStatus::Success || Compilation.Payload.empty() || Compilation.Payload[0] == 0)
+        return Compilation.Status == CompileStatus::Timeout ? CL_TIMEOUT : CL_INTERNAL_ERROR;
     Owner->HostBuffer = std::make_unique<std::array<char, 262144>>();
     Owner->Host = Host;
     if (!Owner->HostIdentity) Owner->HostIdentity = Owner->Id;
@@ -101,7 +104,7 @@ ClStatus cl_domain_facade(ClHandle Id, ClHandle DomainId, ClHostCall Host) try
     if (Host(Owner->HostIdentity, 0, "", 0, Owner->HostBuffer->data(), uint32_t(Owner->HostBuffer->size()), &Written) != 0) {
         ReleaseDomain(*Runtime, *Owner); return CL_INTERNAL_ERROR;
     }
-    FacadeInput Input{Owner};
+    FacadeInput Input{Owner, &Compilation.Payload};
     if (lua_cpcall(Runtime->State, InstallFacade, &Input) != LUA_OK) { ReleaseDomain(*Runtime, *Owner); return CL_MEMORY_LIMIT; }
     lua_settop(Runtime->State, 0);
     return CL_OK;
@@ -141,4 +144,3 @@ ClStatus cl_vm_event(ClHandle Id, const char* Payload, uint32_t Length) try
     Lock.unlock();
     return cl_domain_event(Id, DomainId, Payload, Length);
 } catch (...) { return CL_INTERNAL_ERROR; }
-

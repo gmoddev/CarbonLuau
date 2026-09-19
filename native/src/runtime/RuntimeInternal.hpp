@@ -94,6 +94,15 @@ extern std::array<std::unique_ptr<Vm>, 32> Registry;
 extern uint64_t NextId;
 extern uint64_t NextVmGenerationId;
 
+// Compilation owns no VM data. The owner thread remains synchronously blocked,
+// so its VM/domain lifetime cannot change while unrelated VMs use the registry.
+struct RegistryWaitScope {
+    RegistryWaitScope() { RegistryMutex.unlock(); }
+    ~RegistryWaitScope() { RegistryMutex.lock(); }
+    RegistryWaitScope(const RegistryWaitScope&) = delete;
+    RegistryWaitScope& operator=(const RegistryWaitScope&) = delete;
+};
+
 struct PublicationScope {
     Vm& Runtime;
     PublicationScope* Parent;
@@ -154,4 +163,3 @@ int HostPrimitive(lua_State* State);
 int InstallFacade(lua_State* State);
 int EnqueueEvent(lua_State* State);
 } // namespace CarbonLuau::Runtime
-

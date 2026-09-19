@@ -19,7 +19,7 @@ before deploying.
 
 ## Production layout
 
-Install only the native library matching the server platform:
+Install only the native runtime and compiler worker matching the server platform:
 
 ```text
 carbon/
@@ -29,7 +29,8 @@ carbon/
     `-- CarbonLuau/
         |-- native/
         |   `-- win-x64/
-        |       `-- carbonluau_native.dll
+        |       |-- carbonluau_native.dll
+        |       `-- carbonluau_compiler.exe
         `-- scripts/
             |-- init.luau
             `-- modules/
@@ -40,18 +41,24 @@ For Linux, replace the `win-x64` subtree with:
 ```text
 native/
 `-- linux-x64/
-    `-- libcarbonluau_native.so
+    |-- libcarbonluau_native.so
+    `-- carbonluau_compiler
 ```
 
-Do not install both binaries “just in case,” and never install files from a test
-fixture package. The plugin loads one normalized, platform-specific path.
+Do not mix Windows and Linux files, and never install files from a test fixture
+package. The plugin loads one normalized, platform-specific runtime path;
+that runtime launches only its sibling compiler worker.
 
 ## Install and start
 
 1. Stop the Rust server or follow your normal safe Carbon plugin-maintenance
    procedure.
 2. Copy `CarbonLuau.cszip` to `carbon/plugins/CarbonLuau.cszip`.
-3. Copy the matching native library to the exact platform path above.
+3. Copy the matching native runtime and compiler worker to the exact platform path above. On Linux, make the extracted worker executable:
+
+   ```bash
+   chmod 0755 carbon/data/CarbonLuau/native/linux-x64/carbonluau_compiler
+   ```
 4. Create `carbon/data/CarbonLuau/scripts/modules`, even if it is initially empty.
 5. Create `carbon/data/CarbonLuau/scripts/init.luau` or copy one of the bundled
    examples deliberately. Do not overwrite existing scripts without a backup.
@@ -108,6 +115,7 @@ rejected.
 - Carbon server log: messages beginning with `[CarbonLuau:Config]`,
   `[CarbonLuau:Native]`, `[CarbonLuau:Runtime]` or `[CarbonLuau:Scheduler]`.
 - `native library missing`: verify the exact platform directory and filename.
+- `compiler worker could not start`: verify the matching compiler worker is beside the native runtime and executable on Linux.
 - `ABI/platform/library`: verify that the archive matches the server OS/x64
   process and was not mixed with files from another version.
 - `COMPILE_ERROR` or `RUNTIME_ERROR`: inspect the logged chunk/error and fix the

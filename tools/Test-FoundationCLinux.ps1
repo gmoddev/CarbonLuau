@@ -24,7 +24,8 @@ mono /work/artifacts/runtime/RuntimeTests.exe \
     /work/build/release/libcarbonluau_native.so \
     /work/build/release/libWrongAbi.so \
     /work/build/release/libLegacyProbe.so \
-    /work/src
+    /work/src \
+    /work/build/release/carbonluau_compiler
 mono /work/artifacts/loader/LoaderTests.exe \
     /work/build/release/libcarbonluau_native.so \
     /work/build/release/libWrongProbe.so \

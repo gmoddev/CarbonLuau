@@ -30,7 +30,8 @@ library for the target platform, then run:
 ```powershell
 ./tools/New-ReleaseArtifacts.ps1 `
   -Rid win-x64 `
-  -NativeLibrary ./build/win-x64/Release/carbonluau_native.dll
+  -NativeLibrary ./build/win-x64/Release/carbonluau_native.dll `
+  -CompilerWorker ./build/win-x64/Release/carbonluau_compiler.exe
 ```
 
 On Linux with PowerShell 7:
@@ -38,7 +39,8 @@ On Linux with PowerShell 7:
 ```powershell
 ./tools/New-ReleaseArtifacts.ps1 `
   -Rid linux-x64 `
-  -NativeLibrary ./build/linux-x64/libcarbonluau_native.so
+  -NativeLibrary ./build/linux-x64/libcarbonluau_native.so `
+  -CompilerWorker ./build/linux-x64/carbonluau_compiler
 ```
 
 The command creates a platform archive, provenance JSON and SHA-256 checksum in
@@ -46,7 +48,7 @@ The command creates a platform archive, provenance JSON and SHA-256 checksum in
 target from a clean checkout, creates the archive twice and rejects a packaging
 hash mismatch before uploading the release-candidate artifacts.
 
-The archive contains only the production `.cszip`, the matching native library,
+The archive contains only the production `.cszip`, the matching native runtime and compiler worker,
 examples, installation/release notes, license/attribution and generated
 provenance. It never contains live qualification fixtures or both platform
 binaries.

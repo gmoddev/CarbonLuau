@@ -2,6 +2,7 @@ param(
     [string]$Server = 'C:\Sandbox\Codex\Builds\CarbonLuauPhase5Windows\server-win',
     [Parameter(Mandatory)][string]$Package,
     [Parameter(Mandatory)][string]$NativeLibrary,
+    [Parameter(Mandatory)][string]$CompilerWorker,
     [Parameter(Mandatory)][string]$ProviderFixture,
     [Parameter(Mandatory)][string]$DependencyFixture,
     [Parameter(Mandatory)][string]$ConsumerFixture,
@@ -77,6 +78,7 @@ New-Item -ItemType Directory -Force $NativeDirectory,$PluginDirectory | Out-Null
 $Deployments = @(
     @{Source=$Package; Target=(Join-Path $PluginDirectory 'CarbonLuau.cszip')},
     @{Source=$NativeLibrary; Target=(Join-Path $NativeDirectory 'carbonluau_native.dll')},
+    @{Source=$CompilerWorker; Target=(Join-Path $NativeDirectory 'carbonluau_compiler.exe')},
     @{Source=$ProviderFixture; Target=(Join-Path $PluginDirectory 'CarbonLuauAddonProvider.cs')},
     @{Source=$DependencyFixture; Target=(Join-Path $PluginDirectory 'CarbonLuauAddonDependencyProvider.cs')},
     @{Source=$ConsumerFixture; Target=(Join-Path $PluginDirectory 'CarbonLuauAddonDependencyConsumer.cs')}
@@ -164,6 +166,7 @@ try {
     if (!(Send-Rcon 'status').Contains('hostname: CarbonLuauFoundationE')) { throw 'Rust server became unresponsive after CarbonLuau teardown' }
     $ServerProcess.Refresh()
     if ($ServerProcess.Modules.ModuleName -contains 'carbonluau_native.dll') { throw 'Native library remained mapped after CarbonLuau teardown' }
+    if (Get-Process -Name 'carbonluau_compiler' -ErrorAction SilentlyContinue) { throw 'Compiler worker remained after CarbonLuau teardown' }
     Write-Output '[CarbonLuau:FoundationEWorker] PASS full CarbonLuau teardown with 100 addons while providers remained loaded'
 
     $Offset = (Read-ServerLog).Length

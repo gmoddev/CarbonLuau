@@ -123,7 +123,11 @@ int RequireModule(lua_State* State)
         }
     } Loading{Runtime, *Owner, Value};
     PublicationScope Publication(Runtime);
-    std::string Bytecode = CompileSource(Value.Source);
+    CompileResult Compilation;
+    { RegistryWaitScope Wait; Compilation = CompileSource(Value.Source); }
+    if (Compilation.Status != CompileStatus::Success)
+        luaL_error(State, "module %s: COMPILE_ERROR: %.1024s", Name, Compilation.Diagnostic.c_str());
+    std::string& Bytecode = Compilation.Payload;
     if (Bytecode.empty() || Bytecode.size() > 1024 * 1024) luaL_error(State, "module %s: compiled size exceeds bound", Name);
     if (Bytecode[0] == 0) luaL_error(State, "module %s: COMPILE_ERROR: %.1024s", Name, Bytecode.c_str() + 1);
     lua_State* Thread = lua_newthread(Runtime.State);
@@ -243,4 +247,3 @@ void InstallDomainBindings(lua_State* State, Domain& Owner)
 int InstallScripts(lua_State*) { return 0; }
 
 } // namespace CarbonLuau::Runtime
-

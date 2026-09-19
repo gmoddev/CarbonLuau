@@ -23,4 +23,5 @@
   - [Foundation D](FoundationD.md)
   - [Foundation E](FoundationE.md)
   - [Foundation F](FoundationF.md)
+  - [Foundation G](FoundationG.md)
   - [Phase 5 evidence](Phase5-Validation.md)

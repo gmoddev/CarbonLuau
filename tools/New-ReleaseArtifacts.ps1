@@ -1,23 +1,30 @@
 param(
     [Parameter(Mandatory)][ValidateSet('win-x64','linux-x64')][string]$Rid,
     [Parameter(Mandatory)][string]$NativeLibrary,
+    [Parameter(Mandatory)][string]$CompilerWorker,
     [string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist\release')
 )
 $ErrorActionPreference = 'Stop'
 $Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $NativePath = (Resolve-Path -LiteralPath $NativeLibrary).Path
+$CompilerPath = (Resolve-Path -LiteralPath $CompilerWorker).Path
 $Release = Get-Content -Raw -LiteralPath (Join-Path $Root 'release.json') | ConvertFrom-Json
 $ExpectedNativeName = if ($Rid -eq 'win-x64') { 'carbonluau_native.dll' } else { 'libcarbonluau_native.so' }
+$ExpectedCompilerName = if ($Rid -eq 'win-x64') { 'carbonluau_compiler.exe' } else { 'carbonluau_compiler' }
 if ([IO.Path]::GetFileName($NativePath) -cne $ExpectedNativeName) {
     throw "Native library for $Rid must be named $ExpectedNativeName"
+}
+if ([IO.Path]::GetFileName($CompilerPath) -cne $ExpectedCompilerName) {
+    throw "Compiler worker for $Rid must be named $ExpectedCompilerName"
 }
 
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 function Add-DeterministicEntry {
-    param([IO.Compression.ZipArchive]$Archive, [string]$Source, [string]$Name)
+    param([IO.Compression.ZipArchive]$Archive, [string]$Source, [string]$Name, [bool]$Executable = $false)
     $Entry = $Archive.CreateEntry($Name.Replace('\','/'), [IO.Compression.CompressionLevel]::Optimal)
     $Entry.LastWriteTime = [DateTimeOffset]::Parse('2000-01-01T00:00:00Z')
+    if ($Executable) { $Entry.ExternalAttributes = -2115174400 } # Unix regular file, mode 0755.
     $InputStream = [IO.File]::OpenRead($Source)
     $OutputStream = $Entry.Open()
     try { $InputStream.CopyTo($OutputStream) }
@@ -47,6 +54,7 @@ try {
         sourceRevision = $SourceRevision
         packageSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $PackagePath).Hash.ToLowerInvariant()
         nativeSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $NativePath).Hash.ToLowerInvariant()
+        compilerSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $CompilerPath).Hash.ToLowerInvariant()
     }
     $ProvenancePath = Join-Path $Work 'PROVENANCE.json'
     [IO.File]::WriteAllText($ProvenancePath, (($Provenance | ConvertTo-Json) + "`n"), (New-Object Text.UTF8Encoding($false)))
@@ -60,6 +68,7 @@ try {
             $Files = @(
                 @{ Source = $PackagePath; Name = 'carbon/plugins/CarbonLuau.cszip' },
                 @{ Source = $NativePath; Name = "carbon/data/CarbonLuau/native/$Rid/$ExpectedNativeName" },
+                @{ Source = $CompilerPath; Name = "carbon/data/CarbonLuau/native/$Rid/$ExpectedCompilerName"; Executable = ($Rid -eq 'linux-x64') },
                 @{ Source = (Join-Path $Root 'examples/hello-command/init.luau'); Name = 'examples/hello-command/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/player-events/init.luau'); Name = 'examples/player-events/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/scripts/init.luau'); Name = 'examples/scripts/init.luau' },
@@ -77,7 +86,7 @@ try {
                 @{ Source = $ProvenancePath; Name = 'PROVENANCE.json' }
             )
             foreach ($File in ($Files | Sort-Object Name)) {
-                Add-DeterministicEntry $Archive $File.Source $File.Name
+                Add-DeterministicEntry $Archive $File.Source $File.Name ([bool]$File.Executable)
             }
         } finally { $Archive.Dispose() }
     } finally { $Stream.Dispose() }

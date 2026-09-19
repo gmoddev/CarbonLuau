@@ -44,4 +44,5 @@ replication and `task.wait` are not included. See the [0.3.0 release notes](rele
 for the published baseline and the [0.4.0 release notes](releases/0.4.0.md)
 plus [Foundation E qualification](FoundationE.md) for the addon-capable envelope.
 The current source ownership map is recorded in
-[Foundation F](FoundationF.md).
+[Foundation F](FoundationF.md), and compiler containment is recorded in
+[Foundation G](FoundationG.md).
