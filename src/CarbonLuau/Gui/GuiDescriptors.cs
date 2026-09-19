@@ -161,6 +161,26 @@ namespace Carbon.Plugins
                 foreach (GuiClassDescriptor Value in ClassValues) if (Value.Id == Id) return Value;
                 throw new InvalidOperationException("unknown GUI class descriptor");
             }
+            internal static bool TryGetClass(string Name, out GuiClassDescriptor Result)
+            {
+                foreach (GuiClassDescriptor Value in ClassValues) if (Value.Name == Name) { Result = Value; return true; }
+                Result = null; return false;
+            }
+            internal static bool TryGetProperty(GuiClassId ClassId, string Name, out GuiPropertyUse Result)
+            {
+                foreach (GuiPropertyUse Value in GetClass(ClassId).Properties)
+                    if (Value.Descriptor.Name == Name) { Result = Value; return true; }
+                Result = null; return false;
+            }
+            internal static bool IsA(GuiClassId ClassId, string Name)
+            {
+                GuiClassDescriptor Value = GetClass(ClassId);
+                while (Value != null) {
+                    if (Value.Name == Name) return true;
+                    Value = Value.BaseClass.HasValue ? GetClass(Value.BaseClass.Value) : null;
+                }
+                return false;
+            }
             internal static GuiValueTypeDescriptor GetValueType(GuiValueTypeId Id)
             {
                 foreach (GuiValueTypeDescriptor Value in ValueValues) if (Value.Id == Id) return Value;

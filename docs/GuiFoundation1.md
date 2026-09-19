@@ -1,7 +1,7 @@
 # GUI Foundation 1 architecture
 
-Status: **approved architecture; Foundation 1A internal substrate implemented,
-public GUI runtime not begun**.
+Status: **approved architecture; Foundations 1A and 1B implemented through the
+retained Luau runtime, with presentations/rendering still deferred**.
 
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model) is the canonical policy owner. This record preserves the detailed rationale and implementation guidance for future GUI phases. If this record and D15 conflict, D15 wins and both documents must be reconciled before implementation continues.
 
@@ -176,7 +176,9 @@ GUI Foundation 1's package and scripting API identity is **UNASSIGNED / release-
 
 Implementation is split into explicitly scoped phases. [GUI Foundation 1A](GuiFoundation1A.md)
 owns only the internal descriptor, limit, render-contract and deterministic mock
-backend substrate; it does not make GUI public or implement GUI-1B behavior.
+backend substrate. [GUI Foundation 1B](GuiFoundation1B.md) owns the retained
+objects, values, lifecycle, ownership, Signal presence and publication journal;
+it does not implement presentations or client rendering.
 Before public support, qualification must cover retained model and value semantics, layout golden cases, mutation ordering, shared-domain ownership, provisional foreign-owner publication, exact Player/token attacks and reconnects, bounds/queue exhaustion, no reentrant entry, backend fault injection, replacement/recovery cleanup, sanitizer coverage, live current Carbon/Rust rendering with an authenticated client, multi-viewer cost and host-upgrade adapter checks.
 
 Authenticated-client evidence is required for claims about actual visual layout, click receipt, cursor behavior and client reconciliation. Controlled `BasePlayer` fixtures alone cannot establish those results. Exact supported Carbon/Rust revisions and any host-specific adapter assumptions belong in qualification evidence and compatibility documentation, not D15.

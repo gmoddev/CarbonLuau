@@ -13,8 +13,10 @@ Vm::~Vm()
             for (const auto& Entry : Value.PendingModules) lua_unref(State, Entry.Reference);
             if (Value.Game != LUA_NOREF) lua_unref(State, Value.Game);
             if (Value.Dispatch != LUA_NOREF) lua_unref(State, Value.Dispatch);
+            if (Value.GuiBindings != LUA_NOREF) lua_unref(State, Value.GuiBindings);
         }
         Domains.clear();
+        if (GuiValueEqual != LUA_NOREF) lua_unref(State, GuiValueEqual);
         if (Reference != LUA_NOREF) lua_unref(State, Reference);
         lua_close(State);
     }
@@ -71,11 +73,12 @@ void ReleaseDomain(Vm& Runtime, Domain& Value)
         for (const auto& Entry : Value.PendingModules) lua_unref(Runtime.State, Entry.Reference);
         if (Value.Game != LUA_NOREF) lua_unref(Runtime.State, Value.Game);
         if (Value.Dispatch != LUA_NOREF) lua_unref(Runtime.State, Value.Dispatch);
+        if (Value.GuiBindings != LUA_NOREF) lua_unref(Runtime.State, Value.GuiBindings);
     }
     Value.Queue.clear(); Value.PendingCallbacks.clear(); Value.PendingModules.clear();
     Value.Modules.clear(); Value.PublicModules.clear(); Value.Dependencies.clear(); Value.Loading.clear();
     Value.PackageId.clear(); Value.PackageVersion.clear(); Value.MainModule.clear();
-    Value.Game = LUA_NOREF; Value.Dispatch = LUA_NOREF;
+    Value.Game = LUA_NOREF; Value.Dispatch = LUA_NOREF; Value.GuiBindings = LUA_NOREF;
     Value.Host = nullptr; Value.HostBuffer.reset();
 }
 

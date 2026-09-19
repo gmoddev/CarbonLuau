@@ -128,8 +128,9 @@ also passed.
 
 ## Deferred work
 
-GUI-1B and later still own retained registry implementation, public userdata and
-value constructors, `Create`/parenting/clone/destroy behavior, presentations,
-Show/Hide, real Rust CUI rendering, dirty synchronization, action tokens,
-`Activated` Signals and the D15 publication journal. No package, scripting API,
-native ABI, provider protocol, package schema or Luau revision changed.
+[GUI Foundation 1B](GuiFoundation1B.md) now owns the retained registry, public
+userdata/value constructors, `Create`/parenting/clone/destroy behavior, GUI
+Signal presence and the D15 publication journal. GUI-1C and later still own
+presentations, Show/Hide, real Rust CUI rendering, dirty synchronization, action
+tokens and `Activated` ingress/delivery. No package, scripting API, native ABI,
+provider protocol, package schema or Luau revision changed.

@@ -13,6 +13,7 @@ namespace Carbon.Plugins
         {
             public readonly PlayerDirectory Players;
             public readonly ICommandRegistrar Registrar;
+            internal readonly GuiRetainedWorld Gui;
             public FacadeSession Active { get; private set; }
             private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
             public long PublicationVersion { get; private set; }
@@ -23,7 +24,8 @@ namespace Carbon.Plugins
                     return false;
                 }
             }
-            public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar) { this.Players = Players; this.Registrar = Registrar; }
+            public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar)
+            { this.Players = Players; this.Registrar = Registrar; Gui = new GuiRetainedWorld(new GuiConfig().Validate()); }
             public void Commit(FacadeSession Next)
             {
                 Players.CheckOwner();
@@ -88,6 +90,7 @@ namespace Carbon.Plugins
             }
             private readonly Stack<PublicationCheckpoint> Publications = new Stack<PublicationCheckpoint>();
             private readonly FacadeWorld World;
+            internal readonly GuiRetainedRegistry Gui;
             private readonly int Capacity;
             internal readonly object CommandOwnership = new object();
             private ulong NextRegistration;
@@ -101,7 +104,8 @@ namespace Carbon.Plugins
                 : this(World, Generation, Generation, Capacity) { }
             public FacadeSession(FacadeWorld World, long VmGenerationId, long DomainLifetimeId, int Capacity)
             { this.World = World; this.VmGenerationId = VmGenerationId; this.DomainLifetimeId = DomainLifetimeId;
-                this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents); Callback = HostCall; }
+                this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents);
+                Gui = new GuiRetainedRegistry(World.Gui, checked((ulong)VmGenerationId), checked((ulong)DomainLifetimeId)); Callback = HostCall; }
             private string Id()
             {
                 if (NextRegistration == ulong.MaxValue) throw new FacadeException("registration identity exhausted");
@@ -156,7 +160,7 @@ namespace Carbon.Plugins
                     if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
                 }
             }
-            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); }
+            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); Gui.Dispose(); }
             private bool Gate(string[] Fields)
             {
                 if (!Active || !World.IsActive(this) || Disposed || Fields.Length < 5) return false;
@@ -185,21 +189,27 @@ namespace Carbon.Plugins
                 }
                 if (Code == 10) {
                     if (Fields.Length != 0) throw new FacadeException("invalid publication begin");
-                    Publications.Push(new PublicationCheckpoint(Listeners, Commands));
+                    PublicationCheckpoint Checkpoint = new PublicationCheckpoint(Listeners, Commands);
+                    Gui.BeginPublication();
+                    try { Publications.Push(Checkpoint); }
+                    catch { Gui.RollbackPublication(); throw; }
                     return new string[0];
                 }
                 if (Code == 11) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication commit");
-                    Publications.Pop(); return new string[0];
+                    Gui.CommitPublication(); Publications.Pop(); return new string[0];
                 }
                 if (Code == 12) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication rollback");
+                    Gui.RollbackPublication();
                     PublicationCheckpoint Checkpoint = Publications.Pop();
                     Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
                     Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
                     return new string[0];
                 }
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
+                if (Code == 20) return Gui.Query(Fields);
+                if (Code == 21) return Gui.Mutate(Fields, Id);
                 int Expected = Code == 1 ? 0 : Code == 3 ? 2 : (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
                 if (Fields.Length != Expected) throw new FacadeException("invalid host arguments");
                 switch (Code) {
@@ -275,4 +285,3 @@ namespace Carbon.Plugins
         }
     }
 }
-

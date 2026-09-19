@@ -18,6 +18,7 @@ $Expected = @(
     'src/CarbonLuau/Gui/GuiConfig.cs',
     'src/CarbonLuau/Gui/GuiDescriptors.cs',
     'src/CarbonLuau/Gui/GuiModelContracts.cs',
+    'src/CarbonLuau/Gui/GuiRetainedRegistry.cs',
     'src/CarbonLuau/Gui/GuiRenderPlan.cs',
     'src/CarbonLuau/Gui/IGuiBackend.cs',
     'src/CarbonLuau/Gui/InMemoryGuiBackend.cs',
@@ -63,8 +64,11 @@ foreach ($GuiSource in $GuiSources) {
     }
 }
 $Bootstrap = Get-Content -Raw -LiteralPath (Join-Path $Root 'scripts/bootstrap.luau')
-if ($Bootstrap -match 'GetService.*Gui|Name\s*==\s*["'']Gui["'']') {
-    throw 'GUI Foundation 1A must not install the public Gui service'
+if (!$Bootstrap.Contains('if Name == "Gui" then return Gui end') -or !$Bootstrap.Contains('MakeUserdata')) {
+    throw 'GUI Foundation 1B must install the domain-bound Gui service and opaque userdata boundary'
+}
+foreach ($Deferred in @('GuiObjectMethods.Show','GuiObjectMethods.Hide','GuiObjectMethods.IsShown','Presentation','RustCuiBackend')) {
+    if ($Bootstrap.Contains($Deferred)) { throw "GUI Foundation 1B crossed into deferred presentation/render behavior: $Deferred" }
 }
 if (Test-Path -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/RustCuiBackend.cs')) {
     throw 'GUI Foundation 1A must not implement the production Rust CUI backend'
@@ -84,4 +88,4 @@ foreach ($Path in $Expected | Where-Object { $_ -like 'native/src/*.cpp' -or $_ 
     if (!$CMake.Contains($Relative)) { throw "Native owner missing from build graph: $Relative" }
 }
 
-Write-Output '[CarbonLuau:ArchitectureTest] PASS: managed and native invariant owners, retired god files, compiler boundary and native build graph'
+Write-Output '[CarbonLuau:ArchitectureTest] PASS: managed/native invariant owners, retained GUI boundary, deferred rendering, compiler boundary and native build graph'

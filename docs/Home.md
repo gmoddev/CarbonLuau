@@ -49,11 +49,13 @@ The current source ownership map is recorded in
 
 ## Architecture direction
 
-[Invariants](Invariants.md) owns canonical runtime policy. The approved,
-unimplemented GUI Foundation 1 contract is decision
+[Invariants](Invariants.md) owns canonical runtime policy. The approved GUI
+Foundation 1 contract is decision
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model), with
 detailed rationale and future implementation guidance in
 [GUI Foundation 1 architecture](GuiFoundation1.md). GUI is not part of the
-current public API and its release identity remains unassigned. The internal
-descriptor/render/backend substrate is recorded separately in
-[GUI Foundation 1A](GuiFoundation1A.md).
+assigned release API and its release identity remains unassigned. The internal
+substrate is recorded in [GUI Foundation 1A](GuiFoundation1A.md), and the
+retained Luau runtime through object lifecycle/publication is recorded in
+[GUI Foundation 1B](GuiFoundation1B.md). Presentations and rendering remain
+deferred.

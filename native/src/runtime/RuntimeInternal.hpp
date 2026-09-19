@@ -50,7 +50,7 @@ struct Domain {
     std::vector<Callback> PendingCallbacks;
     ClHostCall Host = nullptr;
     uint64_t HostIdentity = 0;
-    int Game = LUA_NOREF, Dispatch = LUA_NOREF;
+    int Game = LUA_NOREF, Dispatch = LUA_NOREF, GuiBindings = LUA_NOREF;
     std::unique_ptr<std::array<char, 262144>> HostBuffer;
 };
 
@@ -86,6 +86,7 @@ struct Vm {
     AdmissionContext* Admission = nullptr;
     PublicationScope* Publication = nullptr;
     bool IntegrityFailed = false;
+    int GuiValueEqual = LUA_NOREF;
     ~Vm();
 };
 
