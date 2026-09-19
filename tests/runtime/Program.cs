@@ -23,9 +23,14 @@ internal static class Program
             string Library = Runtime.NativeLibraryLoader.GetLibraryPath(Root, Rid);
             Directory.CreateDirectory(Path.GetDirectoryName(Library));
             File.Copy(Args[0], Library);
+            string Compiler = Path.Combine(Path.GetDirectoryName(Library), Rid == "win-x64" ? "carbonluau_compiler.exe" : "carbonluau_compiler");
+            File.Copy(Args[4], Compiler);
+            if (Rid == "linux-x64") Check(chmod(Compiler, 493) == 0, "compiler worker executable mode");
             using (var Native = new Runtime.NativeRuntime(Root))
             {
                 Check(Native.Revision == "c6b830185af962c82003f86784e2fe036357c830", "native Luau pin");
+                using (var OtherHostLifetime = new Runtime.NativeRuntime(Root))
+                    Check(Native.HostLifetimeId > 0 && OtherHostLifetime.HostLifetimeId > Native.HostLifetimeId, "distinct CarbonLuau host lifetimes");
                 using (var Disabled = new Runtime.RuntimeHost(Native, new Runtime.RuntimeConfig { Enabled = false }))
                     Check(Disabled.Reload().Status == Runtime.RuntimeStatus.INVALID_ARGUMENT && Native.LiveVmCount == 0, "disabled");
                 using (var Partial = new Runtime.RuntimeHost(Native, Default)) { }
@@ -63,6 +68,8 @@ internal static class Program
                 Check(Generation.Execute("stale", "return 3", 3).Status == Runtime.RuntimeStatus.INVALID_ARGUMENT, "stale managed generation");
                 ScriptTests.Run(Native, Root);
                 FacadeTests.Run(Native, Args.Length > 3 ? Args[3] : null);
+                AddonTests.Run(Native, Args.Length > 3 ? Args[3] : null);
+                FoundationETests.Run(Native);
                 Native.Dispose(); Native.Dispose();
             }
             File.Delete(Library);
@@ -84,4 +91,7 @@ internal static class Program
         catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         finally { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
     }
+
+    [DllImport("libc", SetLastError = true)]
+    private static extern int chmod(string Path, uint Mode);
 }

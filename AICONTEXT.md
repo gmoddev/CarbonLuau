@@ -39,12 +39,34 @@ If documents, code, a task request or upstream evidence conflict, identify the c
 
 ## Working rules
 
+Post-v0.3.0 addon architecture is canonically owned by the addon amendments in
+[Invariants.md](docs/Invariants.md), including D14. The
+[addon design proposal](docs/CarbonLuau_Addon_Decisions_and_Invariants.md) and
+[design validation](docs/Addon-Design-Validation.md) are supporting design/review
+evidence and do not override the canonical register. Foundation A authorizes only
+the internal shared-VM/domain primitives recorded in
+[FoundationA.md](docs/FoundationA.md). Foundation B's experimental managed-provider
+registration, bounded package transport and lifecycle implementation is recorded in
+[FoundationB.md](docs/FoundationB.md). Foundation C's bounded dependency graph,
+exact lifetime binding, loss/restoration and dependency-aware replacement behavior
+is recorded in [FoundationC.md](docs/FoundationC.md). Foundation D's explicit
+exports, exact-bound package-qualified imports and addon context are recorded in
+[FoundationD.md](docs/FoundationD.md). Foundation E's scale, fairness, lifecycle,
+parser and public-identity closure is recorded in [FoundationE.md](docs/FoundationE.md).
+It assigns `0.4.0-experimental` to the qualified addon surface but does not
+authorize provider-defined capabilities, root imports or package/version solving.
+Foundation F's behavior-preserving invariant-owner decomposition and current
+implementation routing are recorded in [FoundationF.md](docs/FoundationF.md).
+Foundation G's isolated pinned compiler, deadline, protocol, deployment and
+qualification scope are recorded in [FoundationG.md](docs/FoundationG.md).
+It does not authorize unrelated post-v0.4 features.
+
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.
 - Use PascalCase for project-owned identifiers by default. Preserve required OS/upstream names and accepted public API spellings; `self = setmetatable(...)` is the stated local exception. Use `GetFolder`/`GetObj`, not `GetOrCreateFolder`/`GetOrCreateObj`.
 - Use `[System:SubSystem]` logging, e.g. `[CarbonLuau:Native]`, with concise relevant diagnostics. Prevent task processes from showing error dialogs or stealing focus; use headless/hidden server and helper launches.
 - Preserve user changes and concurrent work. Use `apply_patch` and the available CodexLock workflow; do not bypass another task's claims.
-- Run native builds and test servers on `dockerbox` through the authorized Windows profile connection. Keep worker host files under `C:\Sandbox\Codex`, bound resource use, reuse caches, and leave unrelated workloads alone. Use Linux containers for Linux tests. Do not silently move sustained builds or servers to the controlling PC.
+- Run native builds and test servers on `DockerPC` through the authorized Windows profile connection. Keep worker host files under `C:\Sandbox\Codex`, bound resource use, reuse caches, and leave unrelated workloads alone. Use Linux containers on that host for Linux tests. Do not silently move sustained builds or servers to the controlling PC.
 - Keep credentials in their existing profile helpers, out of code/logs/artifacts. Deployment and destructive fixture tests have different scopes: production uploads never authorize replacing live libraries with failure fixtures or modifying host policy.
 - Select validation through Compatibility.md. Preserve valid previous evidence; rerun affected checks after implementation changes. Report source revision, results, environment, remaining uncertainty and any persistent task processes.
 - Add durable accepted rules to their canonical owner and link them from task notes. Do not duplicate them across prompts or create parallel policy documents.

@@ -2,10 +2,34 @@
 
 All notable public changes to CarbonLuau are recorded here.
 
+## Unreleased
+
+### Added
+
+- Experimental addon composition under scripting API `0.4.0-experimental`.
+- Bounded provider-owned schema-1 packages and immutable source snapshots.
+- Required and optional dependency lifetimes with exact replacement bindings.
+- Explicit public modules and `require("@id")` / `require("@id/path")`.
+- Readonly `addon.Id`, `addon.Version` and `addon:IsDependencyAvailable(id)`.
+- Cross-domain fair scheduling and delayed wakeups without persistent idle-frame work.
+
+### Validation
+
+- Qualified root-only, 1, 10, 50 and 100-addon configurations on Windows and Linux.
+- Qualified shared-heap exhaustion, parser boundaries, scheduler saturation,
+  provider lifecycle, CarbonLuau reload with providers retained, and native teardown.
+- Passed Windows, Ubuntu, ASan, UBSan and leak-detection regressions.
+
+### Limits
+
+- The addon API is experimental, not stable or 1.0.
+- Provider-defined C# capabilities, root imports, downloads, registries, version
+  solving, multiple instances, restricted exposure and async capabilities remain deferred.
+- The 64 MiB cap is shared across the VM; there is no per-addon hard heap isolation.
+
 ## 0.3.0
 
-First qualified experimental release candidate. The intended future tag is
-`v0.3.0`; no release tag has been created yet.
+First qualified experimental release, published as prerelease `v0.3.0`.
 
 ### Added
 

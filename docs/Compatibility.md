@@ -24,11 +24,20 @@ Keep these identities conceptually separate and record those relevant to a resul
 
 Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Phase 3 introduces package `0.3.0`, additive native ABI `1.2`, and the separate scripting identity `CarbonLuau` / `0.3.0-experimental` / `Experimental`, inspectable through read-only game fields and operator status. D8/D12 own the minimum policy; [public compatibility](api/Compatibility.md) documents it. Additive changes preserve existing contracts; removing/renaming an API or changing its types, lifetime, failures or authorization is breaking and requires an explicit version, documentation and migration decision. A larger deprecation/negotiation framework remains deferred.
 
-The first qualified experimental release candidate deliberately maps tag
-`v0.3.0` to package `0.3.0`; the roadmap's “v0.1” label is a scope name, not a
-second semantic version. The scripting API remains `0.3.0-experimental`, native
-ABI remains `1.2`, and Luau remains pinned to
-`c6b830185af962c82003f86784e2fe036357c830`. The machine-readable mapping is
+The published `v0.3.0` release maps package `0.3.0`, scripting API
+`0.3.0-experimental` and native ABI `1.2`. The roadmap's “v0.1” label is a scope
+name, not another semantic version.
+
+Post-release Foundation A source adds internal domain exports as additive native
+ABI `1.3`. This does not alter the already-published v0.3.0/ABI 1.2 artifacts or
+assign a new scripting API identity. A future release must deliberately map its
+package, native ABI and still-pending addon scripting/protocol identities.
+
+The qualified v0.4.0 candidate assigns the additive addon-capable identity
+`CarbonLuau 0.4.0-experimental`. It maps package `0.4.0`, native ABI `1.4`,
+provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and pinned Luau
+revision `c6b830185af962c82003f86784e2fe036357c830`. The identities remain separate,
+and v0.3.0 artifacts are unchanged. The machine-readable mapping is
 [release.json](../release.json), with build and provenance instructions in the
 [release guide](Release.md).
 
@@ -61,7 +70,7 @@ The build commands live in [Phase0.md](Phase0.md). Reuse these existing fixtures
 - [ProbeHost.cpp](../tests/native/ProbeHost.cpp): dynamic export resolution, expected probe value, 100 native load/unload cycles through CTest.
 - [Managed loader tests](../tests/managed/Program.cs): actual loader, RID/path checks, failure fixtures and 100 disposal cycles; Windows file deletion and Linux process-map checks.
 - [Windows live fixture](../tools/Test-WindowsRuntime.ps1) and [Linux live fixture](../tools/Test-LinuxRuntime.py): ten plugin cycles, library release checks, controlled failure/recovery, reload and health evidence in isolated servers.
-- [CI workflow](../.github/workflows/phase0.yml): Windows/Ubuntu builds, native/managed tests and packaging. The package contains C# source only; the native library is deployed separately.
+- [CI workflow](../.github/workflows/phase0.yml): Windows/Ubuntu builds, native/managed tests and packaging. The `.cszip` contains C# source only; the native runtime and compiler worker are deployed beside each other outside it.
 - [Provider acceptance procedure](Phase0.md#shockbyte-acceptance): load/probe and unload/reload logs on the actual authorized target. Do not run destructive fixtures on a live user server.
 
 Harness assertions have limits: the Windows live script waits for a general `Unavailable:` message and prints status replies; the recorded run was reviewed for exact error categories and normal replies. Linux explicitly checks expected failure text and health. Neither runner proves long-term leak freedom. Use current-run logs/offsets when reusing a server; a prior run's startup line is not new evidence. These limitations do not invalidate the recorded Phase 0 run or justify a policy-only harness refactor.
@@ -114,6 +123,138 @@ PlayerAdded/PlayerRemoving and real same-account reconnect remain unqualified an
 require future requalification before any support claim. A task-scoped Linux
 worker substitution does not change the repository's general worker policy or
 qualify another operating system.
+
+## Foundation A evidence contract
+
+[Foundation A](FoundationA.md) is an internal post-v0.3.0 runtime foundation, not
+a public addon release or scripting API assignment. Its affected evidence is native
+domain/cache/publication tests, real managed/native root-domain replacement and
+facade-resource rollback tests, existing Phase 1–3 regressions, allocation faults,
+Windows/Linux native and managed builds, and affected Linux sanitizers. Healthy
+reload must retain `VmGenerationId` while changing `DomainLifetimeId`; fatal
+retirement/reconstruction must change both. A caught failed first module load must
+publish no cache entry and no CarbonLuau-owned module-created task, command or
+listener. Historical Phase 0–5 records are not rewritten by these new results.
+
+Foundation A does not qualify public addon registration, provider lifecycle,
+package/archive parsing, dependency graph behavior, `@id` resolution, multi-domain
+scale/fairness policy or an addon scripting identity. Those remain future gates in
+D2/D5/D12/D14.
+
+## Foundation B evidence contract
+
+[Foundation B](FoundationB.md) is the experimental managed-provider/package
+registration layer above Foundation A. Its affected evidence is strict bounded ZIP
+and JSON ingestion, copy-before-return snapshots, provider/reference ownership,
+registration state transitions, transactional addon activation/replacement,
+deterministic unregister/provider-unload teardown, stale-token rejection, repeated
+domain lifecycle checks, Phase 0-3 regressions, Windows/Linux managed runtime tests,
+live Carbon load/unload ordering and the existing native sanitizer suite. Historical
+Phase 0-5 records are not rewritten by these results.
+
+At the Foundation B revision, dependency resolution, package-qualified `require`,
+public module exports, provider C# capabilities, multiple versions, remote package
+transport, scale/fairness policy and a public addon scripting API identity were not
+qualified. Manifests declaring dependencies remained `Blocked` and were never
+partially resolved; the Foundation C contract below supersedes only that dependency
+lifecycle limitation.
+
+## Foundation C evidence contract
+
+[Foundation C](FoundationC.md) makes D14 required and optional declarations
+operational as host/runtime lifecycle bindings. Its affected evidence is exact
+VM-generation/domain-lifetime binding, deterministic required activation and
+restoration order, required and optional loss, bounded SCC detection, one-attempt
+restoration failure, dependency-aware transactional replacement, provider
+unload/reload propagation, stale-binding rejection, graph bounds and teardown to
+baseline. Re-run the Foundation A/B and Phase 0-3 regressions, Windows/Linux
+managed runtime tests, live Carbon provider ordering and the existing native
+sanitizer suite. Historical Phase 0-5 and Foundation A/B records are not rewritten
+by these results.
+
+Foundation C does not qualify package-qualified `require`, public module exports,
+`addon:IsDependencyAvailable`, root-to-addon imports, provider capabilities,
+version solving, multiple versions, downloads/registries, scale/fairness policy or
+a public addon scripting API identity. Dependency declarations are lifecycle
+relationships only; caught errors and runtime behavior never mutate the graph.
+
+## Foundation D evidence contract
+
+[Foundation D](FoundationD.md) makes D4/D5 public-module composition operational
+on exact Foundation C bindings. Its affected evidence is strict `main` and
+`publicModules` ingestion; local/public cache identity; same-reference values and
+state; private visibility; ordinary error/retry/cycle/depth/yield behavior;
+cross-domain module publication commit and rollback; stale A1 import rejection;
+retained ordinary values versus stale host facades; required A2 reconstruction;
+optional non-rebinding; addon metadata and dependency availability. Re-run the
+Foundation A–C and Phase 0–3 regressions, Windows/Linux managed runtime tests,
+affected native sanitizers and live Carbon provider/dependency ordering. Historical
+records are not rewritten.
+
+Foundation D does not qualify provider C# capabilities, root imports, addons
+depending on root, version ranges or solving, multiple versions/instances,
+downloads/registries, restricted exposure, async capabilities, Foundation E,
+multi-domain fairness or a public addon scripting API identity.
+
+## Foundation E evidence contract
+
+[Foundation E](FoundationE.md) closes the first experimental public addon
+surface without adding another major capability. Its required evidence is
+root-only, 1, 10, 50 and 100-addon resource and latency measurement; bounded
+global scheduling and progress under saturation; shared-heap exhaustion;
+package/parser boundaries; provider and CarbonLuau lifecycle ordering; stale
+token and exact dependency behavior; Windows/Linux regression workers; affected
+ASan/UBSan/leak tests; public identity assignment; documentation and examples.
+
+Foundation E qualifies the existing 64 MiB default for the tested representative
+configurations and makes D4/D5/D7/D10/D14 addon behavior public under
+`0.4.0-experimental`. It does not qualify provider-defined C# capabilities,
+root-to-addon imports, addons depending on root, version solving, multiple
+versions/instances, package downloads/registries, restricted exposure profiles,
+async capabilities, per-addon hard heap isolation or adversarial multi-tenant
+containment. Historical Phase 0–5 and Foundation A–D evidence remains scoped to
+the revisions it tested.
+
+## Foundation F evidence contract
+
+[Foundation F](FoundationF.md) reorganizes implementation ownership without an
+intentional semantic change. Its required evidence is the complete native and
+managed regression matrix, ABI/interoperability checks, module/publication and
+addon lifecycle coverage, the 100-addon representative fixture, package and API
+checks, Windows and Linux builds, and ASan/UBSan/leak detection. Structural
+review must also identify remaining shared state and responsibility
+concentrations rather than treating smaller files as proof of safety.
+
+Foundation F does not change the scripting API, native ABI, provider protocol,
+package schema, Luau revision, limits or package format. It creates a synchronous
+compiler owner for future work but does not qualify compiler containment,
+off-thread compilation, compile deadlines, bytecode transport or lock-scope
+changes. Historical evidence remains scoped to the revisions it tested.
+
+## Foundation G evidence contract
+
+[Foundation G](FoundationG.md) contains Luau compilation in a shipped helper
+process built from the pinned vendor revision. Required evidence covers bounded
+normal and adversarial source compilation, a real wall timeout, crash and
+malformed-protocol recovery, exact provenance checks, publication rollback,
+deterministic process teardown, Windows/Linux regressions, sanitizers and release
+packaging. Compilation remains synchronous to the admitting owner thread, but no
+Luau VM state crosses the worker boundary and the global VM registry lock is not
+held while the worker is awaited.
+
+Foundation G does not change the scripting API, native ABI, provider protocol,
+package schema, source/package limits or pinned Luau revision. It does not add a
+general bytecode or IPC surface and does not qualify unrelated post-v0.4 work.
+
+The current Foundation G verdict is **PARTIAL** solely because Windows live/local
+qualification is **DEFERRED / UNQUALIFIED**. Hosted Windows CI is recorded
+separately and cannot close that gate. The later Windows supplement must cover
+worker creation, wall termination, the 256 MiB job limit, crash/restart,
+IPC/protocol rejection, packaging/deployment, live Carbon integration and
+teardown without an orphan process. This Foundation-G-specific deferral neither
+rewrites nor invalidates the historical Windows qualification of Foundations A-F.
+The exact compiler-worker implementation revision requiring that supplement is
+`e3025401c3085f0552bbfe3d045c3143c4ded005`.
 
 ## Phase 0 consistency review
 

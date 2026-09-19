@@ -121,7 +121,7 @@ namespace Carbon.Plugins
                     "P.PlayerAdded:Connect(function(V) assert(V.IsConnected) end); " +
                     "P.PlayerRemoving:Connect(function(V) assert(not V.IsConnected) end); " +
                     "game:GetService('Commands'):Register('" + Phase5CommandName + "',{permission='carbonluau.phase5'},function(C) print(C.Arguments[1] or 'empty') end); " +
-                    "task.defer(function() assert(game.ApiVersion=='0.3.0-experimental') end)";
+                    "task.defer(function() assert(game.ApiVersion=='0.4.0-experimental') end)";
 
                 RunSuccessfulReloadSoak(Stable, Prefix);
                 RunConnectionSoak(Player, UserId, Prefix);
@@ -276,8 +276,10 @@ namespace Carbon.Plugins
         {
             string UserId = Player.UserIDString;
             LoadPhase5("return");
-            long Generation = Host.Generation;
-            CheckPhase5(Host.Reload("while true do end").Status == RuntimeStatus.TIMEOUT && Host.Generation == Generation && Host.Ready, "candidate entry timeout preserves active generation");
+            CheckPhase5(Host.Reload("while true do end").Status == RuntimeStatus.TIMEOUT && !Host.Ready && Native.LiveVmCount == 0,
+                "candidate entry timeout retires the shared VM generation");
+            CheckPhase5(Host.Reload().Status == RuntimeStatus.OK && Host.Ready,
+                "operator reload restores the shared VM after candidate timeout");
 
             LoadPhase5("task.defer(function() while true do end end); task.defer(function() print('stale scheduled work') end)");
             ulong Recoveries = Host.Recoveries, Timeouts = Host.Timeouts;

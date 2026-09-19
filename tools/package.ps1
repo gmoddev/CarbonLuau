@@ -1,4 +1,4 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -19,7 +19,8 @@ $Stream = [IO.File]::Open($OutputPath, [IO.FileMode]::Create)
 try {
     $Archive = New-Object IO.Compression.ZipArchive($Stream, [IO.Compression.ZipArchiveMode]::Create, $true)
     try {
-        Get-ChildItem (Join-Path $PSScriptRoot '..\src\CarbonLuau') -Filter '*.cs' | Sort-Object Name | ForEach-Object {
+        $SourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\src\CarbonLuau'))
+        Get-ChildItem $SourceRoot -Recurse -File -Filter '*.cs' | Sort-Object FullName | ForEach-Object {
             Add-DeterministicEntry $Archive $_.FullName $_.Name
         }
         if ($IncludePhase1Fixtures) {
@@ -31,6 +32,9 @@ try {
         if ($IncludePhase5Fixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.Phase5Fixtures.cs') 'CarbonLuau.Phase5Fixtures.cs'
         }
+        if ($IncludeFoundationEFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.FoundationEFixtures.cs') 'CarbonLuau.FoundationEFixtures.cs'
+        }
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }
 Write-Output $OutputPath
@@ -40,3 +44,4 @@ New-Item -ItemType Directory -Force -Path $Examples | Out-Null
 foreach ($Name in @('player-events','hello-command')) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "../examples/$Name") -Destination $Examples -Recurse -Force
 }
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../examples/addons') -Destination $Examples -Recurse -Force

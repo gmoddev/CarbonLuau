@@ -21,6 +21,7 @@ Console = Artifacts / ('phase5-console-linux-' + RunId + '.log')
 Samples = Artifacts / ('phase5-samples-linux-' + RunId + '.jsonl')
 RunnerLog = Artifacts / ('phase5-runner-linux-' + RunId + '.log')
 Library = Root / 'carbon/data/CarbonLuau/native/linux-x64/libcarbonluau_native.so'
+Compiler = Root / 'carbon/data/CarbonLuau/native/linux-x64/carbonluau_compiler'
 Fixture = Artifacts / 'phase5-fixture'
 LifecycleCycles = int(os.environ.get('PHASE5_LIFECYCLE_CYCLES', '10'))
 SoakMinutes = int(os.environ.get('PHASE5_SOAK_MINUTES', '30'))
@@ -96,6 +97,28 @@ def CheckUnmapped():
         raise RuntimeError('Native library remained mapped after plugin unload')
 
 
+def CompilerPids():
+    Result = []
+    for Process in Path('/proc').iterdir():
+        if not Process.name.isdigit():
+            continue
+        try:
+            if (Process / 'exe').resolve() == Compiler:
+                Result.append(int(Process.name))
+        except (FileNotFoundError, PermissionError):
+            pass
+    return Result
+
+
+def WaitCompilerExit(Seconds=10):
+    Deadline = time.monotonic() + Seconds
+    while time.monotonic() < Deadline:
+        if not CompilerPids():
+            return
+        time.sleep(0.1)
+    raise RuntimeError('Compiler worker remained after CarbonLuau teardown: ' + str(CompilerPids()))
+
+
 def Sample(Label):
     Process = Path('/proc') / str(RustPid())
     Status = {}
@@ -139,6 +162,8 @@ ProfilerSettings.update({'Enabled': True, 'TrackCalls': True, 'SourceViewer': Fa
                          'Extensions': [], 'Harmony': []})
 ProfilerConfig.write_text(json.dumps(ProfilerSettings, indent=2) + '\n')
 shutil.copy2(Build / 'libcarbonluau_native.so', Library)
+shutil.copy2(Build / 'carbonluau_compiler', Compiler)
+Compiler.chmod(0o755)
 shutil.copy2(Fixture / 'CarbonLuau.cszip', Root / 'carbon/plugins/CarbonLuau.cszip')
 shutil.copytree(Fixture / 'scripts', Root / 'carbon/data/CarbonLuau/scripts', dirs_exist_ok=True)
 
@@ -157,7 +182,9 @@ with Console.open('w') as Output:
         WaitLog(0, 'Server startup complete', 600)
         Secret = next(Argument for Index, Argument in enumerate(Server.args) if Server.args[Index - 1] == '+rcon.password')
         Socket = websocket.create_connection('ws://127.0.0.1:28216/' + Secret, timeout=30)
-        WaitLog(0, 'Ready; generation=1', 120)
+        WaitLog(0, 'Ready; generation=', 120)
+        if not CompilerPids():
+            raise RuntimeError('Compiler worker was not running after CarbonLuau bootstrap')
         Sample('startup')
 
         Offset = len(ReadLog())
@@ -175,11 +202,12 @@ with Console.open('w') as Output:
             Send('c.unload CarbonLuau')
             WaitLog(Offset, 'Unloaded plugin CarbonLuau')
             CheckUnmapped()
+            WaitCompilerExit()
             if 'hostname: CarbonLuauPhase5' not in Send('status'):
                 raise RuntimeError('Server unresponsive after unload')
             Offset = len(ReadLog())
             Send('c.load CarbonLuau')
-            WaitLog(Offset, 'Ready; generation=1', 120)
+            WaitLog(Offset, 'Ready; generation=', 120)
             print('[CarbonLuau:Phase5] PASS plugin unload/load cycle ' + str(Cycle) + '; native unmapped and server responsive', flush=True)
         Sample('lifecycle-soak')
 
@@ -207,6 +235,7 @@ with Console.open('w') as Output:
         try:
             Code = Server.wait(timeout=60)
             print('[CarbonLuau:Phase5] server exit code: ' + str(Code), flush=True)
+            WaitCompilerExit()
         except subprocess.TimeoutExpired:
             os.killpg(Server.pid, signal.SIGTERM)
             Server.wait(timeout=15)

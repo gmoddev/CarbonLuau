@@ -1,9 +1,11 @@
 # Scripting compatibility and limits
 
-Identity: `CarbonLuau`, API `0.3.0-experimental`, status `Experimental`.
+Identity: `CarbonLuau`, API `0.4.0-experimental`, status `Experimental`.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
-`carbonluau.status`. This identity is distinct from package 0.3.0, native ABI 1.2,
-the pinned Luau revision and the installed Rust/Carbon builds.
+`carbonluau.status`. This identity is distinct from package `0.4.0`, native ABI
+`1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
+pinned Luau revision and the installed Rust/Carbon builds. Published v0.3.0
+artifacts remain API `0.3.0-experimental` with native ABI `1.2`.
 
 The canonical compatibility policy lives in [Compatibility.md](../Compatibility.md)
 and decisions D8/D12. Additive means preserving existing contracts while adding
@@ -18,7 +20,7 @@ This is a [roadmap scope revision](../CarbonLuau_FirstVersion_Design.md#31-sugge
 not removal of an implemented API. Package, scripting API and native ABI identities
 are unchanged; no script migration is required for this deferral.
 
-| Resource | Phase 3 bound |
+| Resource | Bound |
 |---|---|
 | Connected-player population / snapshot | 1024; larger host population fails closed |
 | Player name / user ID | 128 UTF-8 bytes / 20 ASCII decimal digits |
@@ -32,6 +34,12 @@ are unchanged; no script migration is required for this deferral.
 | Event ingestion per frame | Up to 64, within the existing frame-drain stopwatch |
 | New permission metadata | 256 names per plugin lifetime |
 | Host command-registry inspection | 16384 existing total chat/client-console/RCON entries |
+| Addon archive / expanded bytes | 4 MiB / 8 MiB |
+| Addon manifest / each source / package source total | 64 KiB / 64 KiB / 4 MiB |
+| Addon modules / archive entries / dependencies | 256 / 512 / 32 |
+| Addon registrations / one provider | 128 / 32 |
+| Aggregate immutable addon snapshots | 32 MiB |
+| Compiler request / response / wall time | 64 KiB / 1 MiB / 1 second |
 
 NUL is rejected in API strings; malformed UTF-8 is rejected by host transport.
 Wrong types are not implicitly coerced. Registration/input failures raise script
@@ -41,5 +49,8 @@ unbounded work. Permission and lifetime rejection before Lua means no user callb
 The native callback queue and managed intake are separately bounded, not one shared
 memory cap. Source ingestion, native host-response storage (256 KiB per facade VM),
 compiler memory and managed/Carbon resources are outside the Lua VM heap cap.
+The compiler runs in a killable sibling process with a production 256 MiB process
+limit; timeout or invalid protocol response discards the worker and starts clean
+on the next compilation request.
 Deadlines remain cooperative; a bounded host operation can exceed a frame budget.
 No multi-tenant, real-time, client-delivery or exactly-once replay guarantee exists.

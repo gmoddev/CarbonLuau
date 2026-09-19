@@ -9,126 +9,20 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
-        private sealed class FacadeException : InvalidOperationException
-        { public FacadeException(string Message) : base(Message) { } }
-        public static class FacadePolicy
-        {
-            public const string ApiName = "CarbonLuau", ApiVersion = "0.3.0-experimental";
-            public const int Players = 1024, ListenersPerSignal = 128, Listeners = 256, Commands = 64, PendingEvents = 256;
-            public const int CommandBytes = 32, PermissionBytes = 128, DescriptionBytes = 256;
-            public const int MessageBytes = 1024, Arguments = 16, ArgumentBytes = 512, TotalArgumentBytes = 4096;
-            public static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
-            public static void Text(string Value, int Bytes, string Label)
-            {
-                if (Value == null || Value.Length > Bytes || Value.IndexOf('\0') >= 0 || Utf8.GetByteCount(Value) > Bytes)
-                    throw new FacadeException(Label + " exceeds limit or contains NUL");
-            }
-            public static void Identifier(string Value, bool Permission)
-            {
-                Text(Value, Permission ? PermissionBytes : CommandBytes, Permission ? "permission name" : "command name");
-                if (Value.Length == 0 || Value[0] < 'a' || Value[0] > 'z') throw new FacadeException("name is invalid");
-                foreach (char C in Value)
-                    if (!(C >= 'a' && C <= 'z') && !(C >= '0' && C <= '9') && C != '_' && C != '-' && !(Permission && C == '.'))
-                        throw new FacadeException("name is invalid");
-                if (Permission && (Value.EndsWith(".", StringComparison.Ordinal) || Value.Contains("..") || !Value.Contains(".")))
-                    throw new FacadeException("permission requires nonempty dotted namespace");
-                if (!Permission && (Value.StartsWith("carbon", StringComparison.Ordinal) || Value.StartsWith("oxide", StringComparison.Ordinal) ||
-                    Value.StartsWith("rcon", StringComparison.Ordinal) || Value == "c" || Value == "quit" || Value == "restart" || Value == "server"))
-                    throw new FacadeException("protected command name");
-            }
-            public static void UserId(string Value)
-            {
-                if (String.IsNullOrEmpty(Value) || Value.Length > 20) throw new FacadeException("invalid user ID string");
-                foreach (char C in Value) if (C < '0' || C > '9') throw new FacadeException("invalid user ID string");
-            }
-            public static byte[] Pack(params string[] Fields)
-            { return Utf8.GetBytes(String.Join("\0", Fields) + (Fields.Length == 0 ? "" : "\0")); }
-            public static string[] Unpack(byte[] Bytes)
-            {
-                if (Bytes.Length == 0) return new string[0];
-                if (Bytes[Bytes.Length - 1] != 0) throw new FacadeException("invalid host payload");
-                return Utf8.GetString(Bytes, 0, Bytes.Length - 1).Split('\0');
-            }
-        }
-
-        // These managed-only views are never serialized to Lua. Fresh views must
-        // be obtained from the actual host on every resolution.
-        public sealed class PlayerView
-        {
-            public object Identity, Connection;
-            public string UserId, Name;
-            public bool Connected;
-            public Action<string> Send;
-            public Func<string, bool> Permission;
-        }
-        public sealed class PlayerLifetime
-        {
-            public string Token, UserId, Name;
-            internal object Identity, Connection;
-            internal bool Invalid;
-        }
-        public sealed class PlayerDirectory
-        {
-            private readonly Func<string, PlayerView> Lookup;
-            private readonly Dictionary<string, PlayerLifetime> Live = new Dictionary<string, PlayerLifetime>(StringComparer.Ordinal);
-            private ulong NextToken;
-            private readonly int Owner = Thread.CurrentThread.ManagedThreadId;
-            public PlayerDirectory(Func<string, PlayerView> Lookup) { this.Lookup = Lookup; }
-            public void CheckOwner() { if (Thread.CurrentThread.ManagedThreadId != Owner) throw new FacadeException("facade owner-thread required"); }
-            public PlayerLifetime Connect(PlayerView View)
-            {
-                CheckOwner();
-                if (View == null || View.Identity == null || View.Connection == null || !View.Connected) throw new FacadeException("invalid player connection");
-                FacadePolicy.UserId(View.UserId); FacadePolicy.Text(View.Name, 128, "player name");
-                if (!Live.ContainsKey(View.UserId) && Live.Count >= FacadePolicy.Players) throw new FacadeException("player population exceeds supported bound");
-                if (NextToken == ulong.MaxValue) throw new FacadeException("connection lifetime exhausted");
-                var Value = new PlayerLifetime { Token = (++NextToken).ToString(CultureInfo.InvariantCulture), UserId = View.UserId,
-                    Name = View.Name, Identity = View.Identity, Connection = View.Connection };
-                Live[Value.UserId] = Value;
-                return Value;
-            }
-            public PlayerLifetime Disconnect(string UserId, object Identity)
-            {
-                CheckOwner(); PlayerLifetime Value;
-                if (!Live.TryGetValue(UserId, out Value) || !Object.ReferenceEquals(Value.Identity, Identity)) return null;
-                Live.Remove(UserId); return Value;
-            }
-            public PlayerView Resolve(string Token, string UserId)
-            {
-                CheckOwner(); PlayerLifetime Value;
-                if (!Live.TryGetValue(UserId, out Value) || Value.Token != Token || Value.Invalid) return null;
-                var View = Lookup(UserId);
-                if (View == null || !View.Connected || View.UserId != UserId || !Object.ReferenceEquals(View.Identity, Value.Identity) ||
-                    !Object.ReferenceEquals(View.Connection, Value.Connection)) { Value.Invalid = true; return null; }
-                FacadePolicy.Text(View.Name, 128, "player name");
-                return View;
-            }
-            public PlayerLifetime Find(string UserId)
-            {
-                CheckOwner(); FacadePolicy.UserId(UserId); PlayerLifetime Value;
-                return Live.TryGetValue(UserId, out Value) && Resolve(Value.Token, UserId) != null ? Value : null;
-            }
-            public List<PlayerLifetime> Snapshot()
-            {
-                CheckOwner(); var Result = new List<PlayerLifetime>();
-                foreach (var Value in Live.Values) if (Resolve(Value.Token, Value.UserId) != null) Result.Add(Value);
-                Result.Sort((A, B) => StringComparer.Ordinal.Compare(A.UserId, B.UserId));
-                return Result;
-            }
-        }
-        public sealed class ScriptCommand
-        { public string Id, Name, Permission, Description; }
-        // Publish must prepare without effects, then atomically replace only
-        // CarbonLuau's chat entries. A thrown failure must leave Previous intact.
-        public interface ICommandRegistrar
-        {
-            void Publish(FacadeSession Previous, FacadeSession Next);
-        }
         public sealed class FacadeWorld
         {
             public readonly PlayerDirectory Players;
             public readonly ICommandRegistrar Registrar;
             public FacadeSession Active { get; private set; }
+            private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
+            public long PublicationVersion { get; private set; }
+            public bool HasWork {
+                get {
+                    if (Active != null && Active.HasWork) return true;
+                    foreach (FacadeSession Session in Addons.Values) if (Session.HasWork) return true;
+                    return false;
+                }
+            }
             public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar) { this.Players = Players; this.Registrar = Registrar; }
             public void Commit(FacadeSession Next)
             {
@@ -137,24 +31,65 @@ namespace Carbon.Plugins
                 if (Active != null) Active.Active = false;
                 Active = Next;
                 if (Next != null) Next.Active = true;
+                PublicationVersion++;
+            }
+            public void CommitAddon(FacadeSession Previous, FacadeSession Next)
+            {
+                Players.CheckOwner(); Registrar.Publish(Previous, Next);
+                if (Previous != null) {
+                    Addons.Remove(Previous.DomainLifetimeId); Previous.Active = false; Previous.Disposed = true; Previous.Clear();
+                }
+                if (Next != null) {
+                    if (Addons.ContainsKey(Next.DomainLifetimeId)) throw new FacadeException("duplicate active addon domain");
+                    Addons.Add(Next.DomainLifetimeId, Next); Next.Active = true;
+                }
+                PublicationVersion++;
             }
             public void Retire(FacadeSession Value)
-            { Players.CheckOwner(); if (Active == Value) Commit(null); Value.Active = false; Value.Disposed = true; Value.Clear(); }
+            {
+                Players.CheckOwner();
+                if (Active == Value) Commit(null);
+                else if (Value != null && Addons.ContainsKey(Value.DomainLifetimeId)) CommitAddon(Value, null);
+                if (Value != null) { Value.Active = false; Value.Disposed = true; Value.Clear(); }
+            }
+            public bool IsActive(FacadeSession Value)
+            { return Value != null && (Active == Value || (Addons.ContainsKey(Value.DomainLifetimeId) && Addons[Value.DomainLifetimeId] == Value)); }
+            public List<FacadeSession> Sessions()
+            {
+                var Result = new List<FacadeSession>(); if (Active != null) Result.Add(Active);
+                Result.AddRange(Addons.Values); return Result;
+            }
             public void Event(string Kind, PlayerLifetime Player)
             {
                 Players.CheckOwner();
-                if (Active == null || Player == null) return;
-                Active.Event(Kind, Player);
+                if (Player == null) return;
+                Exception Failure = null;
+                if (Active != null) try { Active.Event(Kind, Player); } catch (Exception Error) { Failure = Error; }
+                foreach (FacadeSession Session in Addons.Values) try { Session.Event(Kind, Player); } catch (Exception Error) { if (Failure == null) Failure = Error; }
+                if (Failure != null) throw Failure;
             }
         }
         public sealed class FacadeSession
         {
-            public readonly long Generation;
+            public readonly long VmGenerationId, DomainLifetimeId;
+            public long Generation { get { return DomainLifetimeId; } }
             public readonly SortedDictionary<string, ScriptCommand> Commands = new SortedDictionary<string, ScriptCommand>(StringComparer.Ordinal);
             private readonly SortedDictionary<ulong, string> Listeners = new SortedDictionary<ulong, string>();
             private readonly Queue<byte[]> Pending = new Queue<byte[]>();
+            private sealed class PublicationCheckpoint
+            {
+                public readonly SortedDictionary<ulong, string> Listeners;
+                public readonly SortedDictionary<string, ScriptCommand> Commands;
+                public PublicationCheckpoint(SortedDictionary<ulong, string> Listeners, SortedDictionary<string, ScriptCommand> Commands)
+                {
+                    this.Listeners = new SortedDictionary<ulong, string>(Listeners);
+                    this.Commands = new SortedDictionary<string, ScriptCommand>(Commands, StringComparer.Ordinal);
+                }
+            }
+            private readonly Stack<PublicationCheckpoint> Publications = new Stack<PublicationCheckpoint>();
             private readonly FacadeWorld World;
             private readonly int Capacity;
+            internal readonly object CommandOwnership = new object();
             private ulong NextRegistration;
             public bool Active, Disposed;
             public ulong Rejected;
@@ -163,7 +98,10 @@ namespace Carbon.Plugins
             public int ListenerCount { get { return Listeners.Count; } }
             public readonly NativeRuntime.HostDelegate Callback;
             public FacadeSession(FacadeWorld World, long Generation, int Capacity)
-            { this.World = World; this.Generation = Generation; this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents); Callback = HostCall; }
+                : this(World, Generation, Generation, Capacity) { }
+            public FacadeSession(FacadeWorld World, long VmGenerationId, long DomainLifetimeId, int Capacity)
+            { this.World = World; this.VmGenerationId = VmGenerationId; this.DomainLifetimeId = DomainLifetimeId;
+                this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents); Callback = HostCall; }
             private string Id()
             {
                 if (NextRegistration == ulong.MaxValue) throw new FacadeException("registration identity exhausted");
@@ -185,7 +123,7 @@ namespace Carbon.Plugins
             public bool Invoke(string Name, string UserId, string[] Arguments)
             {
                 World.Players.CheckOwner(); ScriptCommand Command;
-                if (!Active || Disposed || World.Active != this || !Commands.TryGetValue(Name, out Command)) return false;
+                if (!Active || Disposed || !World.IsActive(this) || !Commands.TryGetValue(Name, out Command)) return false;
                 PlayerLifetime Player = World.Players.Find(UserId);
                 if (Player == null || Arguments == null || Arguments.Length > FacadePolicy.Arguments) { Rejected++; return false; }
                 try {
@@ -208,10 +146,20 @@ namespace Carbon.Plugins
                     if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
                 }
             }
-            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); }
+            public void Flush(RuntimeDomain Runtime, System.Diagnostics.Stopwatch Watch, int Milliseconds)
+            { Flush(Runtime, Watch, Milliseconds, 64); }
+            internal void Flush(RuntimeDomain Runtime, System.Diagnostics.Stopwatch Watch, int Milliseconds, int Maximum)
+            {
+                World.Players.CheckOwner();
+                for (int Count = 0; Count < Maximum && Pending.Count != 0 && Watch.Elapsed.TotalMilliseconds < Milliseconds; ++Count) {
+                    if (Runtime.Event(Pending.Dequeue()) != RuntimeStatus.OK) Rejected++;
+                    if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
+                }
+            }
+            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); }
             private bool Gate(string[] Fields)
             {
-                if (!Active || World.Active != this || Disposed || Fields.Length < 5) return false;
+                if (!Active || !World.IsActive(this) || Disposed || Fields.Length < 5) return false;
                 if (Fields[0] == "command") {
                     ScriptCommand Command;
                     if (Fields.Length < 6 || !Commands.TryGetValue(Fields[5], out Command) || Command.Id != Fields[1]) return false;
@@ -235,6 +183,22 @@ namespace Carbon.Plugins
                     Commands.Clear();
                     return new string[0];
                 }
+                if (Code == 10) {
+                    if (Fields.Length != 0) throw new FacadeException("invalid publication begin");
+                    Publications.Push(new PublicationCheckpoint(Listeners, Commands));
+                    return new string[0];
+                }
+                if (Code == 11) {
+                    if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication commit");
+                    Publications.Pop(); return new string[0];
+                }
+                if (Code == 12) {
+                    if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication rollback");
+                    PublicationCheckpoint Checkpoint = Publications.Pop();
+                    Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
+                    Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
+                    return new string[0];
+                }
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
                 int Expected = Code == 1 ? 0 : Code == 3 ? 2 : (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
                 if (Fields.Length != Expected) throw new FacadeException("invalid host arguments");
@@ -253,7 +217,7 @@ namespace Carbon.Plugins
                         return View == null ? new[] {"0", ""} : new[] {"1", View.Name};
                     }
                     case 4: case 5: {
-                        if (Code == 4 && (!Active || World.Active != this)) throw new FacadeException("SendMessage requires a committed generation; use task.defer for startup delivery");
+                        if (Code == 4 && (!Active || !World.IsActive(this))) throw new FacadeException("SendMessage requires a committed generation; use task.defer for startup delivery");
                         var View = World.Players.Resolve(Fields[0], Fields[1]);
                         if (View == null) throw new FacadeException("Player is no longer connected");
                         if (Code == 4) {
@@ -286,12 +250,12 @@ namespace Carbon.Plugins
                     default: throw new FacadeException("invalid host operation");
                 }
             }
-            private uint HostCall(ulong ExpectedGeneration, uint Code, IntPtr Request, uint Length, IntPtr Response, uint Capacity, out uint Written)
+            private uint HostCall(ulong ExpectedDomainLifetime, uint Code, IntPtr Request, uint Length, IntPtr Response, uint Capacity, out uint Written)
             {
                 Written = 0;
                 try {
                     World.Players.CheckOwner();
-                    if (Disposed || ExpectedGeneration != (ulong)Generation || Length > 16384 || Capacity != 262144) return 1;
+                    if (Disposed || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;
                     var Bytes = new byte[Length]; if (Length != 0) Marshal.Copy(Request, Bytes, 0, (int)Length);
                     var Result = FacadePolicy.Pack(Operation(Code, FacadePolicy.Unpack(Bytes)));
                     if (Result.Length > Capacity) throw new FacadeException("host response exceeds bound");
@@ -309,33 +273,6 @@ namespace Carbon.Plugins
                 }
             }
         }
-
-        public sealed partial class NativeRuntime
-        {
-            [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-            public delegate uint HostDelegate(ulong Generation, uint Operation, IntPtr Request, uint Length, IntPtr Response, uint Capacity, out uint Written);
-            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus FacadeDelegate(ulong Vm, ulong Generation, HostDelegate Host);
-            [UnmanagedFunctionPointer(CallingConvention.Cdecl)] private delegate RuntimeStatus EventDelegate(ulong Vm, byte[] Payload, uint Length);
-            private FacadeDelegate InstallFacade;
-            private EventDelegate AdmitEvent;
-            private readonly Dictionary<ulong, FacadeSession> FacadeRoots = new Dictionary<ulong, FacadeSession>();
-            public void Facade(ulong Handle, FacadeSession Session)
-            {
-                CheckOwner();
-                if ((AbiVersion & 65535) < 2) throw new FacadeException("Phase 3 requires native ABI 1.2 or later");
-                if (InstallFacade == null) { InstallFacade = Loader.Bind<FacadeDelegate>("cl_vm_facade"); AdmitEvent = Loader.Bind<EventDelegate>("cl_vm_event"); }
-                FacadeRoots.Add(Handle, Session); // Root until native destruction succeeds, including failed installation.
-                InsideNative = true;
-                try { Require(InstallFacade(Handle, (ulong)Session.Generation, Session.Callback)); }
-                finally { InsideNative = false; }
-            }
-            public RuntimeStatus Event(ulong Handle, byte[] Payload) { CheckOwner(); return AdmitEvent(Handle, Payload, (uint)Payload.Length); }
-        }
-        public sealed partial class RuntimeGeneration
-        {
-            public FacadeSession FacadeSession { get; private set; }
-            public void Facade(FacadeSession Session) { FacadeSession = Session; Native.Facade(Handle, Session); }
-            public RuntimeStatus Event(byte[] Payload) { return Native.Event(Handle, Payload); }
-        }
     }
 }
+

@@ -2,15 +2,17 @@ using System;
 
 namespace Carbon.Plugins
 {
-    [Info("CarbonLuau", "gmoddev", "0.3.0")]
-    [Description("Experimental bounded Luau gameplay facade")]
+    [Info("CarbonLuau", "gmoddev", "0.4.0")]
+    [Description("Experimental bounded Luau runtime with addon composition")]
     public partial class CarbonLuau : CarbonPlugin
     {
+        private const string PackageVersion = "0.4.0";
         private NativeRuntime Native;
         private ScriptHost Host;
         private RuntimeConfig Settings;
         private bool Attempted, Initialized;
         private bool Stopping, DrainScheduled;
+        private ulong DrainWakeToken, DrainWakeDueNs;
         private bool TeardownPending;
         private long ErrorWindow;
         private int ErrorCount;
@@ -43,7 +45,9 @@ namespace Carbon.Plugins
                 Native = new NativeRuntime(Oxide.Core.Interface.Oxide.DataDirectory);
                 InitializeGameplay();
                 Host = new ScriptHost(Native, Settings, () => ScriptSnapshot.Load(Oxide.Core.Interface.Oxide.DataDirectory, Settings), Gameplay);
-                Puts("[CarbonLuau:Native] Native probe loaded successfully. Platform: " + Native.Rid + "; ABI: 1.2");
+                Addons = new AddonRegistry(Host, Native.HostLifetimeId);
+                Puts("[CarbonLuau:Native] Native probe loaded successfully. Platform: " + Native.Rid + "; ABI: " +
+                    (Native.AbiVersion >> 16) + "." + (Native.AbiVersion & 65535));
             }
             catch (Exception Error)
             {
@@ -67,6 +71,7 @@ namespace Carbon.Plugins
                 Report("bootstrap", Result);
                 if (Result.Status == RuntimeStatus.OK) Puts("[CarbonLuau:Runtime] Ready; generation=" + Host.Generation);
                 RequestDrain();
+                QueueAddonWork();
             }
             catch (Exception Error) { PrintError("[CarbonLuau:Runtime] Initialization failed: " + Error.Message); }
             finally { if (TeardownPending) ReleaseNative(); }
@@ -84,7 +89,14 @@ namespace Carbon.Plugins
         [ConsoleCommand("carbonluau.status"), AuthLevel(2)]
         private void StatusCommand(ConsoleSystem.Arg Arg)
         {
-            try { Arg.ReplyWith(Host == null ? "CarbonLuau: unavailable\nReason: " + UnavailableReason : Host.Status()); }
+            try {
+                if (Host == null) { Arg.ReplyWith("CarbonLuau: unavailable\nReason: " + UnavailableReason); return; }
+                string Status = Host.Status() + "\nCarbonLuau package: " + PackageVersion;
+                if (Addons != null) Status += "\nAddon protocol: " + AddonPolicy.ProtocolName + " " + AddonPolicy.ProtocolVersion +
+                    "; package schema: " + AddonPolicy.Schema + "\nAddons: " + Addons.Count + "; snapshot bytes: " +
+                    Addons.SnapshotBytes + " / " + AddonPolicy.MaxAggregateSnapshotBytes;
+                Arg.ReplyWith(Status);
+            }
             catch (Exception) { Arg.ReplyWith("CarbonLuau: unavailable\nReason: runtime context failure; see server log"); }
         }
 
@@ -99,6 +111,7 @@ namespace Carbon.Plugins
                 if (Result.Status == RuntimeStatus.OK) RegisterActivePermissions();
                 Report("bootstrap", Result);
                 RequestDrain();
+                QueueAddonWork();
                 Arg.ReplyWith("CarbonLuau: reload " + Result.Status + "; generation=" + Host.Generation);
             }
             catch (Exception Error)
@@ -114,6 +127,7 @@ namespace Carbon.Plugins
         private void ReleaseNative()
         {
             Stopping = true;
+            DrainWakeDueNs = 0; DrainWakeToken++;
             if ((Host != null && Host.Busy) || RegisteringPermissions) {
                 if (Host != null) Host.RequestStop();
                 TeardownPending = true;
@@ -122,6 +136,7 @@ namespace Carbon.Plugins
             TeardownPending = false;
             try
             {
+                if (Addons != null) { Addons.Dispose(); Addons = null; }
                 if (Host != null) { Host.Dispose(); Host = null; }
                 if (Native == null) return;
                 Native.Dispose();
@@ -134,7 +149,19 @@ namespace Carbon.Plugins
 
         private void RequestDrain()
         {
-            if (Stopping || DrainScheduled || Host == null || Host.Busy || !Host.HasWork) return;
+            if (Stopping || DrainScheduled || Host == null || Host.Busy) return;
+            if (!Host.HasReadyWork) {
+                ulong DueNs; double DelaySeconds;
+                if (!Host.TryGetNextDue(out DueNs, out DelaySeconds)) return;
+                if (DrainWakeDueNs != 0 && DrainWakeDueNs <= DueNs) return;
+                DrainWakeDueNs = DueNs; ulong Token = ++DrainWakeToken;
+                timer.Once((float)Math.Max(0.001, DelaySeconds), () => {
+                    if (Stopping || Token != DrainWakeToken) return;
+                    DrainWakeDueNs = 0; RequestDrain();
+                });
+                return;
+            }
+            DrainWakeDueNs = 0; DrainWakeToken++;
             DrainScheduled = true;
             ScriptHost ExpectedHost = Host;
             long ExpectedGeneration = Host.Generation;
@@ -157,6 +184,7 @@ namespace Carbon.Plugins
                             if (Logged++ < 8) Report("scheduler", Result);
                         }
                         RegisterActivePermissions();
+                        QueueAddonWork();
                         if (Logged > 8) PrintWarning("[CarbonLuau:Scheduler] Drain output limited to eight records.");
                     }
                     RequestDrain();
