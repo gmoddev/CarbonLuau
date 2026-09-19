@@ -253,6 +253,8 @@ worker creation, wall termination, the 256 MiB job limit, crash/restart,
 IPC/protocol rejection, packaging/deployment, live Carbon integration and
 teardown without an orphan process. This Foundation-G-specific deferral neither
 rewrites nor invalidates the historical Windows qualification of Foundations A-F.
+The exact compiler-worker implementation revision requiring that supplement is
+`e3025401c3085f0552bbfe3d045c3143c4ded005`.
 
 ## Phase 0 consistency review
 

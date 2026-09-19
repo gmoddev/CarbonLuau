@@ -112,9 +112,10 @@ measurements are recorded below after qualification.
 
 Verdict: **PARTIAL**, solely because Foundation G Windows live/local
 qualification is deferred. Every available Linux, sanitizer, managed regression,
-packaging and live Carbon gate passed. The tested worktree is based on
-`95214f53dddbd5c408bf4259d18e2dedcfe94846`; the committed implementation and CI
-revision are recorded after final-source CI.
+packaging and live Carbon gate passed. The starting revision was
+`95214f53dddbd5c408bf4259d18e2dedcfe94846`; the exact implementation revision
+requiring the later supplemental Windows live/local run is
+`e3025401c3085f0552bbfe3d045c3143c4ded005`.
 
 The Linux worker was Ubuntu 24.04.5 LTS, kernel 6.8, x86-64, Docker 29.8.0,
 GCC 13.3, CMake 3.28.3 and Mono 6.8. Release CTest passed all five suites:
@@ -166,8 +167,13 @@ the compiler worker, kept the server responsive and launched a fresh worker on
 reload. Final server teardown left no worker process. This controlled-host run is
 not authenticated-client or provider-hosting evidence.
 
-The final hosted CI result is appended to the evidence commit after that gate
-completes.
+Hosted CI passed at the implementation revision in
+[CarbonLuau validation run 35423984097](https://github.com/gmoddev/CarbonLuau/actions/runs/35423984097):
+Ubuntu 24.04 release/native/managed/package jobs, ASan/UBSan/leak detection and
+hosted Windows release/native/managed/package jobs were all green. The hosted
+Windows job exercised worker creation, timeout, crash/restart, protocol rejection,
+the job memory limit, managed integration and release packaging. It is valuable
+hosted-runner evidence, but not Windows live/local Carbon qualification.
 
 ### Windows Foundation G deferral
 
@@ -175,7 +181,8 @@ Foundation G Windows live/local qualification is **DEFERRED / UNQUALIFIED** by
 task-owner decision because the Windows worker is unavailable. No DockerPC access
 or restoration was attempted. Historical Windows evidence for Foundations A-F
 remains valid for those revisions but does not qualify this compiler worker.
-Hosted Windows CI is useful separate evidence and is not a substitute for this
+Hosted Windows CI passed for `e3025401c3085f0552bbfe3d045c3143c4ded005`
+as recorded above; it is separate evidence and is not a substitute for this
 deferred gate.
 
 A supplemental Foundation G Windows run must test the exact committed source for:
