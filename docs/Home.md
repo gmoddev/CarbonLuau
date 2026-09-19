@@ -46,3 +46,12 @@ plus [Foundation E qualification](FoundationE.md) for the addon-capable envelope
 The current source ownership map is recorded in
 [Foundation F](FoundationF.md), and compiler containment is recorded in
 [Foundation G](FoundationG.md).
+
+## Architecture direction
+
+[Invariants](Invariants.md) owns canonical runtime policy. The approved,
+unimplemented GUI Foundation 1 contract is decision
+[D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model), with
+detailed rationale and future implementation guidance in
+[GUI Foundation 1 architecture](GuiFoundation1.md). GUI is not part of the
+current public API and its release identity remains unassigned.

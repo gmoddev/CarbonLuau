@@ -41,6 +41,14 @@ and v0.3.0 artifacts are unchanged. The machine-readable mapping is
 [release.json](../release.json), with build and provenance instructions in the
 [release guide](Release.md).
 
+GUI Foundation 1 is an approved but unimplemented D15 architecture. Its package
+and scripting API identity is **UNASSIGNED / release-planning gated**. The design
+does not alter package `0.4.0`, scripting API `0.4.0-experimental`, native ABI
+`1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` or the
+pinned Luau revision. Assign a GUI-capable identity only after implementation,
+qualification and explicit release planning; do not infer one from the supporting
+[GUI design record](GuiFoundation1.md).
+
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
 ## Dependency and host upgrades
@@ -255,6 +263,24 @@ teardown without an orphan process. This Foundation-G-specific deferral neither
 rewrites nor invalidates the historical Windows qualification of Foundations A-F.
 The exact compiler-worker implementation revision requiring that supplement is
 `e3025401c3085f0552bbfe3d045c3143c4ded005`.
+
+## GUI Foundation 1 architecture gate
+
+[D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model) resolves
+the GUI ownership, publication, presentation, interaction and reconciliation
+model before implementation. [GuiFoundation1.md](GuiFoundation1.md) owns detailed
+rationale and implementation guidance. This documentation adoption is not GUI
+runtime evidence and does not authorize advertising the surface as available.
+
+A future GUI qualification must cover deterministic retained/value behavior,
+cross-domain ownership and provisional publication, exact Player/token lifetime,
+bounded scheduling and overload, backend fault convergence, replacement and D9
+recovery, teardown/leak behavior and affected Foundations A-G regressions. Claims
+about actual rendering, layout, cursor behavior or button receipt additionally
+require a current Carbon/Rust server with an authenticated client. Record the
+qualified host revisions and keep adapter-specific CUI observations as evidence,
+not permanent API guarantees. Numeric flush, payload and reconciliation targets
+remain tuning candidates until measured and deliberately assigned.
 
 ## Phase 0 consistency review
 

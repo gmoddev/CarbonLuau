@@ -3,6 +3,9 @@
 - [Release identity](Release.md)
 - [0.4.0 release notes](releases/0.4.0.md)
 - [0.3.0 release notes](releases/0.3.0.md)
+- Architecture
+  - [Canonical invariants](Invariants.md)
+  - [GUI Foundation 1](GuiFoundation1.md)
 - API
   - [Overview](api/README.md)
   - [Globals](api/Globals.md)
