@@ -30,7 +30,7 @@ foreach ($Document in $Documents) {
 foreach ($Example in @('player-events','hello-command')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
 }
-foreach ($Example in @('hello','shared-live','per-player','activated','images')) {
+foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling')) {
     $ExamplePath = Join-Path $Root "examples/gui/$Example/init.luau"
     if (!(Test-Path -LiteralPath $ExamplePath)) { throw "Missing runnable GUI example: $Example" }
     $ExampleText = Get-Content -Raw -LiteralPath $ExamplePath
@@ -43,13 +43,13 @@ foreach ($Path in @('examples/addons/economy/addon.json','examples/addons/econom
         'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root $Path))) { throw "Missing addon example file: $Path" }
 }
-foreach ($Name in @('ScreenGui','Frame','TextLabel','TextButton','ImageLabel','ImageButton','UIListLayout','UIPadding','GuiObject','UDim','UDim2','Vector2','Color3','ImageSource')) {
+foreach ($Name in @('ScreenGui','Frame','TextLabel','TextButton','ImageLabel','ImageButton','ScrollingFrame','UIListLayout','UIPadding','GuiObject','UDim','UDim2','Vector2','Color3','ImageSource')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits public type: $Name" }
 }
 foreach ($Name in @('Name','ClassName','Parent','Position','Size','AnchorPoint','Visible','BackgroundColor3',
         'BackgroundTransparency','ZIndex','LayoutOrder','Text','TextColor3','TextTransparency','TextSize','TextXAlignment','TextYAlignment',
         'Padding','FillDirection','HorizontalAlignment','VerticalAlignment','PaddingTop','PaddingBottom','PaddingLeft','PaddingRight',
-        'Image','ImageColor3','ImageTransparency')) {
+        'Image','ImageColor3','ImageTransparency','CanvasSize','ScrollingDirection','ScrollingEnabled')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits property: $Name" }
 }
 foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','IsA','Show','Hide','IsShown','Activated')) {

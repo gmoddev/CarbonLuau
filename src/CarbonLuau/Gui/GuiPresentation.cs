@@ -27,6 +27,7 @@ namespace Carbon.Plugins
             internal string TextClientId(ulong ObjectId) { return ClientPrefix + "t" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
             internal string ImageClientId(ulong ObjectId) { return ClientPrefix + "i" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
             internal string ActionClientId(ulong ObjectId) { return ClientPrefix + "a" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
+            internal string ScrollContentClientId(ulong ObjectId) { return ObjectClientId(ObjectId) + "___Content"; }
             internal GuiPresentation Copy()
             {
                 var Result = new GuiPresentation(ScreenId, Epoch, PlayerToken, PlayerUserId, ClientPrefix) {
@@ -71,7 +72,9 @@ namespace Carbon.Plugins
                     Vector(GuiRenderPropertyId.Pivot, 0.5, 0.5), Boolean(GuiRenderPropertyId.Visible, true),
                     Boolean(GuiRenderPropertyId.NeedsCursor, NeedsCursor)));
                 AppendChildren(State, Screen, Presentation.RootClientId, Presentation, Limits, Elements, true, ActionCommand);
-                if (Elements.Count > Limits.MaxProjectedElementsPerScreen)
+                int ProjectedElements = 0;
+                foreach (GuiRenderElement Element in Elements) ProjectedElements = checked(ProjectedElements + Element.ProjectedElementCost);
+                if (ProjectedElements > Limits.MaxProjectedElementsPerScreen)
                     throw new FacadeException("GUI full presentation exceeds the projection element bound");
                 int Estimated = 16;
                 foreach (GuiRenderElement Element in Elements) Estimated = checked(Estimated + Element.CanonicalUtf8Bytes + 64);
@@ -106,7 +109,7 @@ namespace Carbon.Plugins
                     if (Node.ClassId == GuiClassId.TextButton && Presentation.ActionTokens.TryGetValue(Dirty.Key, out ActionToken))
                         Main.Add(String(GuiRenderPropertyId.ActionCommand, GuiRetainedWorld.ActionCommand + " " + ActionToken));
                     if (Main.Count != 0) Elements.Add(new GuiRenderElement(Presentation.ObjectClientId(Dirty.Key), null,
-                        Node.ClassId == GuiClassId.TextButton ? GuiRenderNodeKind.Button : GuiRenderNodeKind.Container, Limits, Main.ToArray()));
+                        RenderKind(Node.ClassId), Limits, Main.ToArray()));
                     bool Text = Dirty.Value.Contains(GuiPropertyId.Text);
                     bool TextColor = HasAny(Dirty.Value, GuiPropertyId.TextColor3, GuiPropertyId.TextTransparency);
                     bool TextSize = Dirty.Value.Contains(GuiPropertyId.TextSize);
@@ -158,7 +161,7 @@ namespace Carbon.Plugins
                 foreach (GuiRetainedNode Node in Ordered) {
                     bool EffectiveVisible = AncestorsVisible && Boolean(Node, GuiPropertyId.Visible);
                     string ClientId = Presentation.ObjectClientId(Node.Identity.GuiObjectId);
-                    GuiRenderNodeKind Kind = Node.ClassId == GuiClassId.TextButton ? GuiRenderNodeKind.Button : GuiRenderNodeKind.Container;
+                    GuiRenderNodeKind Kind = RenderKind(Node.ClassId);
                     var Properties = new List<GuiRenderProperty>();
                     AddLayout(Node, Rectangles[Node.Identity.GuiObjectId], Properties);
                     Properties.Add(Boolean(GuiRenderPropertyId.Visible, Boolean(Node, GuiPropertyId.Visible)));
@@ -169,6 +172,7 @@ namespace Carbon.Plugins
                         string Command = ActionCommand(Node);
                         if (Command != null) Properties.Add(String(GuiRenderPropertyId.ActionCommand, Command));
                     }
+                    if (Node.ClassId == GuiClassId.ScrollingFrame) AddScrollProperties(Node, Properties);
                     Elements.Add(new GuiRenderElement(ClientId, ParentClientId, Kind, Limits, Properties.ToArray()));
                     if (Node.ClassId == GuiClassId.TextLabel || Node.ClassId == GuiClassId.TextButton) {
                         double[] TextColor = Numbers(Node, GuiPropertyId.TextColor3);
@@ -193,7 +197,9 @@ namespace Carbon.Plugins
                             Image(GuiRenderPropertyId.ImageSource, Property(Node, GuiPropertyId.Image).ImageSource),
                             Color(GuiRenderPropertyId.ImageColor, ImageColor, 1 - Number(Node, GuiPropertyId.ImageTransparency))));
                     }
-                    AppendChildren(State, Node, ClientId, Presentation, Limits, Elements, EffectiveVisible, ActionCommand);
+                    string ChildParentClientId = Node.ClassId == GuiClassId.ScrollingFrame
+                        ? Presentation.ScrollContentClientId(Node.Identity.GuiObjectId) : ClientId;
+                    AppendChildren(State, Node, ChildParentClientId, Presentation, Limits, Elements, EffectiveVisible, ActionCommand);
                     if (Node.ClassId == GuiClassId.ImageButton) {
                         var ActionProperties = new List<GuiRenderProperty> {
                             Vector(GuiRenderPropertyId.AnchorMin, 0, 0), Vector(GuiRenderPropertyId.AnchorMax, 1, 1),
@@ -209,6 +215,27 @@ namespace Carbon.Plugins
                             GuiRenderNodeKind.Button, Limits, ActionProperties.ToArray()));
                     }
                 }
+            }
+
+            private static GuiRenderNodeKind RenderKind(GuiClassId ClassId)
+            {
+                if (ClassId == GuiClassId.TextButton) return GuiRenderNodeKind.Button;
+                if (ClassId == GuiClassId.ScrollingFrame) return GuiRenderNodeKind.ScrollView;
+                return GuiRenderNodeKind.Container;
+            }
+
+            private static void AddScrollProperties(GuiRetainedNode Node, List<GuiRenderProperty> Result)
+            {
+                double[] Canvas = Numbers(Node, GuiPropertyId.CanvasSize);
+                Result.Add(Vector(GuiRenderPropertyId.ScrollContentAnchorMin, 0, 1 - Canvas[2]));
+                Result.Add(Vector(GuiRenderPropertyId.ScrollContentAnchorMax, Canvas[0], 1));
+                Result.Add(Vector(GuiRenderPropertyId.ScrollContentOffsetMin, 0, -Canvas[3]));
+                Result.Add(Vector(GuiRenderPropertyId.ScrollContentOffsetMax, Canvas[1], 0));
+                Result.Add(Vector(GuiRenderPropertyId.ScrollContentPivot, 0, 1));
+                string Direction = TextValue(Node, GuiPropertyId.ScrollingDirection);
+                Result.Add(Boolean(GuiRenderPropertyId.ScrollHorizontal, Direction == "X" || Direction == "XY"));
+                Result.Add(Boolean(GuiRenderPropertyId.ScrollVertical, Direction == "Y" || Direction == "XY"));
+                Result.Add(Boolean(GuiRenderPropertyId.ScrollEnabled, Boolean(Node, GuiPropertyId.ScrollingEnabled)));
             }
 
             private static void AddLayout(GuiRetainedState State, GuiRetainedNode Node, List<GuiRenderProperty> Result,
@@ -368,12 +395,13 @@ namespace Carbon.Plugins
             { return Value == "Center" ? 0.5 : Value == "Right" || Value == "Bottom" ? 1 : 0; }
 
             internal static bool NeedsCursorFor(GuiRetainedState State, GuiRetainedNode Screen)
-            { return HasVisibleButton(State, Screen, true); }
-            private static bool HasVisibleButton(GuiRetainedState State, GuiRetainedNode Node, bool AncestorsVisible)
+            { return HasVisibleInteractiveControl(State, Screen, true); }
+            private static bool HasVisibleInteractiveControl(GuiRetainedState State, GuiRetainedNode Node, bool AncestorsVisible)
             {
                 bool Visible = AncestorsVisible && (!GuiSchema.IsA(Node.ClassId, "GuiObject") || Boolean(Node, GuiPropertyId.Visible));
                 if (Visible && (Node.ClassId == GuiClassId.TextButton || Node.ClassId == GuiClassId.ImageButton)) return true;
-                foreach (ulong Child in Node.Children) if (HasVisibleButton(State, State.Nodes[Child], Visible)) return true;
+                if (Visible && Node.ClassId == GuiClassId.ScrollingFrame && Boolean(Node, GuiPropertyId.ScrollingEnabled)) return true;
+                foreach (ulong Child in Node.Children) if (HasVisibleInteractiveControl(State, State.Nodes[Child], Visible)) return true;
                 return false;
             }
             private static GuiStoredValue Property(GuiRetainedNode Node, GuiPropertyId Id)

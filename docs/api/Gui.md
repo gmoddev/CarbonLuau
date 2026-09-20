@@ -2,9 +2,9 @@
 
 Availability: experimental API `0.4.0-experimental`.
 
-Source status: the additive Foundation 2A layout and Foundation 2B typed-image
-surfaces below are implemented and qualified, but Foundation 2 has not received
-a release/API identity yet.
+Source status: the additive Foundation 2A layout, Foundation 2B typed-image and
+Foundation 2C scrolling surfaces below are implemented and qualified, but
+Foundation 2 has not received a release/API identity yet.
 
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the
@@ -137,10 +137,37 @@ Changing ImageColor3 or ImageTransparency can use a patch. Changing Image is a
 structural reconciliation. ImageButton uses the same presentation-bound,
 exact-Player secure Activated path as TextButton.
 
+## Retained scrolling
+
+`ScrollingFrame` is a retained container with an explicit canvas. Its children
+are projected below a private clipped content root. The ordinary layout and
+image rules apply inside that content.
+
+```lua
+local Scroll = Screen:Create("ScrollingFrame")
+Scroll.Size = UDim2.fromOffset(320, 280)
+Scroll.CanvasSize = UDim2.fromOffset(320, 720)
+Scroll.ScrollingDirection = "Y"
+
+local Layout = Scroll:Create("UIListLayout")
+Layout.Padding = UDim.new(0, 8)
+```
+
+`CanvasSize`, `ScrollingDirection` and `ScrollingEnabled` are shared retained
+state. The current scroll position, drag state and inertia are client state for
+each Presentation. CarbonLuau does not expose or claim to know them. Two Players
+viewing one tree can scroll independently.
+
+Changing the canvas, direction or enabled state structurally reconciles the
+affected Presentation. Hide/Show, replacement, reconnect and full
+reconciliation may reset its client-local scroll position. There is no
+`CanvasPosition` or `AutomaticCanvasSize`; scripts must set `CanvasSize`
+explicitly.
+
 ## Parenting and lifetime
 
 `Gui:Create("ScreenGui")` creates a root. `Parent:Create("Frame")` creates and
-parents a child in one operation. Frame, text and image controls may also
+parents a child in one operation. Frame, text, image and scrolling controls may also
 be created detached through `Gui:Create`. Assign `Parent` to another live object
 from the same owner domain, or to `nil`, to reparent or detach it. Cycles and
 cross-domain parenting raise an ordinary Luau error without changing the tree.
@@ -201,6 +228,7 @@ author-visible bounds:
 | Presentations per domain / globally | 512 / 4,096 |
 | Interactive buttons per ScreenGui | 64 |
 | Projected elements in one authoritative ScreenGui | 257 |
+| Projected-element charge for one ScrollingFrame | 7 |
 | Activated listeners per button / GUI Signal connections per domain | 8 / 256 |
 | Name / one Text value / aggregate text per ScreenGui | 64 B / 2,048 B / 32 KiB UTF-8 |
 | Clone size / clone depth | 128 objects / 16 |
@@ -220,9 +248,9 @@ DataModel compatibility:
 - `ScreenGui` is a CarbonLuau root and always has `Parent == nil`.
 - Rust CUI is an implementation detail and is not exposed to Luau.
 - Client rendering state is best effort and is not acknowledged to scripts.
-- TextBox, scrolling, advanced styling and hover/focus events are not
-  implemented. Foundation 2A layout and Foundation 2B typed images are
-  implemented but have no assigned release identity yet.
+- TextBox, advanced styling and hover/focus events are not implemented.
+  Foundation 2A layout, Foundation 2B typed images and Foundation 2C scrolling
+  are implemented but have no assigned release identity yet.
 
 See the [complete reference](Gui-Reference.md), the
 [GUI examples](https://github.com/gmoddev/CarbonLuau/tree/main/examples/gui),

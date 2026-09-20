@@ -7,13 +7,16 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
-        internal enum GuiRenderNodeKind { Container = 1, Text = 2, Button = 3, Image = 4 }
+        internal enum GuiRenderNodeKind { Container = 1, Text = 2, Button = 3, Image = 4, ScrollView = 5 }
         internal enum GuiRenderPropertyId
         {
             AnchorMin = 1, AnchorMax = 2, OffsetMin = 3, OffsetMax = 4, Pivot = 5, Visible = 6,
             BackgroundColor = 7, Text = 8, TextColor = 9, FontSize = 10,
             TextXAlignment = 11, TextYAlignment = 12, ActionCommand = 13, NeedsCursor = 14,
-            ImageSource = 15, ImageColor = 16
+            ImageSource = 15, ImageColor = 16,
+            ScrollContentAnchorMin = 17, ScrollContentAnchorMax = 18,
+            ScrollContentOffsetMin = 19, ScrollContentOffsetMax = 20, ScrollContentPivot = 21,
+            ScrollHorizontal = 22, ScrollVertical = 23, ScrollEnabled = 24
         }
         internal enum GuiRenderValueKind { Boolean = 1, Integer = 2, Number = 3, String = 4, Vector2 = 5, Color = 6, ImageSource = 7 }
 
@@ -99,7 +102,8 @@ namespace Carbon.Plugins
         internal sealed class GuiRenderElement
         {
             internal readonly string ClientId, ParentClientId; internal readonly GuiRenderNodeKind Kind;
-            internal readonly int CanonicalUtf8Bytes;
+            internal readonly int CanonicalUtf8Bytes, ProjectedElementCost;
+            internal string PrivateChildRootId { get { return Kind == GuiRenderNodeKind.ScrollView ? ClientId + "___Content" : null; } }
             private readonly GuiRenderProperty[] PropertyValues;
             internal GuiRenderProperty[] Properties { get { return (GuiRenderProperty[])PropertyValues.Clone(); } }
             internal GuiRenderElement(string ClientId, string ParentClientId, GuiRenderNodeKind Kind, GuiLimits Limits,
@@ -118,6 +122,8 @@ namespace Carbon.Plugins
                         throw new InvalidOperationException("render string exceeds the serialized operation bound");
                 }
                 this.ClientId = ClientId; this.ParentClientId = ParentClientId; this.Kind = Kind; PropertyValues = Copy;
+                ProjectedElementCost = Kind == GuiRenderNodeKind.ScrollView ? 7 : 1;
+                if (PrivateChildRootId != null) ValidateId(PrivateChildRootId, "private child root id");
                 CanonicalUtf8Bytes = GuiRenderValue.Utf8Bytes(Describe());
                 if (CanonicalUtf8Bytes > Limits.MaxSerializedOperationBytes)
                     throw new InvalidOperationException("render element exceeds the serialized operation bound");
@@ -156,25 +162,34 @@ namespace Carbon.Plugins
 
         internal sealed class GuiRenderPlan
         {
-            private readonly GuiRenderElement[] ElementValues; internal readonly int EstimatedSerializedBytes;
+            private readonly GuiRenderElement[] ElementValues; internal readonly int EstimatedSerializedBytes, ProjectedElementCount;
             internal GuiRenderElement[] Elements { get { return (GuiRenderElement[])ElementValues.Clone(); } }
             internal GuiRenderPlan(GuiLimits Limits, int EstimatedSerializedBytes, params GuiRenderElement[] Elements)
             {
                 ValidateRequest(Limits, EstimatedSerializedBytes, Elements);
-                var Seen = new HashSet<string>(StringComparer.Ordinal); int Roots = 0;
+                var Seen = new HashSet<string>(StringComparer.Ordinal); var AvailableParents = new HashSet<string>(StringComparer.Ordinal);
+                int Roots = 0, ProjectedElements = 0;
                 for (int Index = 0; Index < Elements.Length; ++Index) {
                     GuiRenderElement Element = Elements[Index];
-                    if (Element == null || !Seen.Add(Element.ClientId)) throw new InvalidOperationException("full render elements require unique client ids");
+                    if (Element == null || AvailableParents.Contains(Element.ClientId) || !Seen.Add(Element.ClientId))
+                        throw new InvalidOperationException("full render elements require unique client ids");
                     if (Element.ParentClientId == null) ++Roots;
-                    else if (!Seen.Contains(Element.ParentClientId)) throw new InvalidOperationException("full render plan must be parent-before-child");
+                    else if (!AvailableParents.Contains(Element.ParentClientId)) throw new InvalidOperationException("full render plan must be parent-before-child");
+                    AvailableParents.Add(Element.ClientId);
+                    if (Element.PrivateChildRootId != null && !AvailableParents.Add(Element.PrivateChildRootId))
+                        throw new InvalidOperationException("full render plan private child root collides with another client id");
+                    ProjectedElements = checked(ProjectedElements + Element.ProjectedElementCost);
                 }
                 if (Roots != 1) throw new InvalidOperationException("full render plan requires exactly one root");
+                if (ProjectedElements > Limits.MaxProjectedElementsPerScreen)
+                    throw new InvalidOperationException("full render plan exceeds the projection element bound");
                 int CanonicalBytes = GuiRenderValue.Utf8Bytes("FULL|" + EstimatedSerializedBytes.ToString(CultureInfo.InvariantCulture));
                 foreach (GuiRenderElement Element in Elements) {
                     CanonicalBytes = checked(CanonicalBytes + 1 + Element.CanonicalUtf8Bytes);
                     if (CanonicalBytes > Limits.MaxSerializedOperationBytes) throw new InvalidOperationException("full render plan exceeds the serialized operation bound");
                 }
-                this.EstimatedSerializedBytes = EstimatedSerializedBytes; ElementValues = (GuiRenderElement[])Elements.Clone();
+                this.EstimatedSerializedBytes = EstimatedSerializedBytes; ProjectedElementCount = ProjectedElements;
+                ElementValues = (GuiRenderElement[])Elements.Clone();
             }
             internal string Describe()
             {

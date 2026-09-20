@@ -36,7 +36,7 @@ internal static class GuiFoundation1ATests
     {
         Runtime.GuiSchema.Validate();
         Runtime.GuiClassDescriptor[] Classes = Runtime.GuiSchema.Classes;
-        Check(Classes.Length == 10 && Runtime.GuiSchema.Methods.Length == 9 && Runtime.GuiSchema.Events.Length == 1 &&
+        Check(Classes.Length == 11 && Runtime.GuiSchema.Methods.Length == 9 && Runtime.GuiSchema.Events.Length == 1 &&
             Runtime.GuiSchema.ValueTypes.Length == 5, "schema descriptor counts are complete");
         var ClassIds = new HashSet<Runtime.GuiClassId>(); var ClassNames = new HashSet<string>(StringComparer.Ordinal);
         var PublicNames = new List<string>();
@@ -45,7 +45,7 @@ internal static class GuiFoundation1ATests
             if (Class.Public) PublicNames.Add(Class.Name);
         }
         PublicNames.Sort(StringComparer.Ordinal);
-        Check(String.Join(",", PublicNames) == "Frame,ImageButton,ImageLabel,ScreenGui,TextButton,TextLabel,UIListLayout,UIPadding", "additive public class boundary");
+        Check(String.Join(",", PublicNames) == "Frame,ImageButton,ImageLabel,ScreenGui,ScrollingFrame,TextButton,TextLabel,UIListLayout,UIPadding", "additive public class boundary");
 
         Runtime.GuiClassDescriptor Screen = Runtime.GuiSchema.GetClass(Runtime.GuiClassId.ScreenGui);
         Runtime.GuiClassDescriptor Frame = Runtime.GuiSchema.GetClass(Runtime.GuiClassId.Frame);

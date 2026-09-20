@@ -1042,7 +1042,8 @@ namespace Carbon.Plugins
                     return;
                 }
                 Node.Properties[GuiPropertyId.Position] = GuiStoredValue.UDim2(0, 0, 0, 0);
-                int Height = Node.ClassId == GuiClassId.Frame || Node.ClassId == GuiClassId.ImageLabel || Node.ClassId == GuiClassId.ImageButton
+                int Height = Node.ClassId == GuiClassId.Frame || Node.ClassId == GuiClassId.ImageLabel || Node.ClassId == GuiClassId.ImageButton ||
+                    Node.ClassId == GuiClassId.ScrollingFrame
                     ? 100 : Node.ClassId == GuiClassId.TextLabel ? 30 : 36;
                 Node.Properties[GuiPropertyId.Size] = GuiStoredValue.UDim2(0, 100, 0, Height);
                 Node.Properties[GuiPropertyId.AnchorPoint] = GuiStoredValue.Vector2(0, 0);
@@ -1061,6 +1062,11 @@ namespace Carbon.Plugins
                     Node.Properties[GuiPropertyId.Image] = GuiStoredValue.Image(GuiImageSourceValue.Parse(new[] {"imagesource", "None"}, 0));
                     Node.Properties[GuiPropertyId.ImageColor3] = GuiStoredValue.Color3(1, 1, 1);
                     Node.Properties[GuiPropertyId.ImageTransparency] = GuiStoredValue.Number(0);
+                }
+                if (Node.ClassId == GuiClassId.ScrollingFrame) {
+                    Node.Properties[GuiPropertyId.CanvasSize] = GuiStoredValue.UDim2(1, 0, 1, 0);
+                    Node.Properties[GuiPropertyId.ScrollingDirection] = GuiStoredValue.String("Y");
+                    Node.Properties[GuiPropertyId.ScrollingEnabled] = GuiStoredValue.Bool(true);
                 }
             }
 
@@ -1085,6 +1091,7 @@ namespace Carbon.Plugins
                 if (ClassId == GuiClassId.ScreenGui || ClassId == GuiClassId.Frame) return 1;
                 if (ClassId == GuiClassId.TextLabel || ClassId == GuiClassId.TextButton || ClassId == GuiClassId.ImageLabel) return 2;
                 if (ClassId == GuiClassId.ImageButton) return 3;
+                if (ClassId == GuiClassId.ScrollingFrame) return 7;
                 return 0;
             }
             private static bool IsActivatedClass(GuiClassId ClassId)

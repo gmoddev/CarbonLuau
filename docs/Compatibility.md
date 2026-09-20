@@ -425,16 +425,19 @@ affine layout projection and bounded layout dirty synchronization. Its exact
 evidence is recorded in [GuiFoundation2A.md](GuiFoundation2A.md). GUI Foundation
 2B implements immutable typed `ImageSource`, `ImageLabel`, `ImageButton`, bounded
 image projection and the existing secure Activated path; its evidence is in
-[GuiFoundation2B.md](GuiFoundation2B.md). This does not
-alter D15 evidence.
+[GuiFoundation2B.md](GuiFoundation2B.md). GUI Foundation 2C implements retained
+`ScrollingFrame` configuration, Presentation-local scroll state, bounded
+private viewport/content projection and layout/image composition; its evidence
+is in [GuiFoundation2C.md](GuiFoundation2C.md). This does not alter D15 evidence.
 
-Future GUI-2C through GUI-2F work must preserve Foundation 1 behavior for scripts
+Future GUI-2D through GUI-2F work must preserve Foundation 1 behavior for scripts
 that do not use Foundation 2 objects. Qualification must cover deterministic
 layout, retained versus Presentation-local state, projection cost and full
 reconciliation bounds, typed image validation, exact action authority,
 adversarial typed input, publication/replacement/recovery and affected
-Foundation 1 regressions. Client-observed scrolling and TextBox require current
-authenticated-client evidence before their respective support claims. Image
+Foundation 1 regressions. Client-observed scrolling remains unqualified and
+non-gating. TextBox requires current authenticated-client evidence before its
+support claim. Image
 source mapping and host payloads are qualified, while authenticated-client
 visual image behavior remains unqualified and non-gating.
 
@@ -446,14 +449,14 @@ bounds in D16 are the initial hard implementation envelope and must be qualified
 before support. Submission rates and scheduling/timing values remain tuning
 targets rather than permanent compatibility promises.
 
-D16 and GUI Foundations 2A/2B assign no new release identity. Package `0.4.0`, scripting API
+D16 and GUI Foundations 2A/2B/2C assign no new release identity. Package `0.4.0`, scripting API
 `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package schema
 `1` and the pinned Luau revision still describe the implemented addon plus
 Foundation 1 candidate. Foundation 2 release identity remains gated on the
 remaining implementation, qualification and explicit later release planning.
-Server-side layout/image plans and serialized host mappings are qualified;
-authenticated-client visual layout and image behavior remain unqualified and
-non-gating.
+Server-side layout/image/scroll plans and serialized host mappings are
+qualified; authenticated-client visual layout, image and scrolling behavior
+remain unqualified and non-gating.
 
 ## Phase 0 consistency review
 

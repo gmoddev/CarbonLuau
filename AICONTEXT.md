@@ -22,6 +22,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 2 rationale, surface matrices and implementation guidance | [GuiFoundation2.md](docs/GuiFoundation2.md) |
 | GUI Foundation 2A deterministic layout implementation and evidence | [GuiFoundation2A.md](docs/GuiFoundation2A.md) |
 | GUI Foundation 2B typed-image implementation and evidence | [GuiFoundation2B.md](docs/GuiFoundation2B.md) |
+| GUI Foundation 2C scrolling implementation and evidence | [GuiFoundation2C.md](docs/GuiFoundation2C.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -134,8 +135,13 @@ GUI Foundation 2B implements only D16's typed-image slice: immutable
 `ImageSource`, `ImageLabel`, `ImageButton`, bounded image projection and
 `ImageButton.Activated` through the existing secure action ingress. Its
 implementation and qualification record is [GuiFoundation2B.md](docs/GuiFoundation2B.md).
-It assigns no Foundation 2 release identity and does not authorize scrolling,
-TextBox, typed text ingress or later GUI-2C through GUI-2F work.
+It assigns no Foundation 2 release identity and does not authorize later work.
+GUI Foundation 2C implements only D16's scrolling slice: retained
+`ScrollingFrame` configuration, Presentation-local client scroll state, bounded
+private viewport/content projection and Foundation 2 layout/image composition.
+Its implementation and qualification record is [GuiFoundation2C.md](docs/GuiFoundation2C.md).
+It assigns no Foundation 2 release identity and does not authorize TextBox,
+typed text ingress or later GUI-2D through GUI-2F work.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

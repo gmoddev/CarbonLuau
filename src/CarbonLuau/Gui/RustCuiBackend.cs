@@ -83,7 +83,10 @@ namespace Carbon.Plugins
                 if (Visible != null) { Writer.WritePropertyName("activeSelf"); Writer.WriteValue(Require(Visible, GuiRenderValueKind.Boolean).Boolean); }
                 Writer.WritePropertyName("components"); Writer.WriteStartArray();
                 GuiRenderValue Background = Find(Properties, GuiRenderPropertyId.BackgroundColor, false);
-                if (Element.Kind == GuiRenderNodeKind.Container && Background != null) WriteColorComponent(Writer, "UnityEngine.UI.Image", Background);
+                if (Element.Kind == GuiRenderNodeKind.ScrollView) {
+                    if (Background != null) WriteColorComponent(Writer, "UnityEngine.UI.Image", Background);
+                    if (HasScrollProperty(Properties) || !Update) WriteScrollView(Writer, Properties);
+                } else if (Element.Kind == GuiRenderNodeKind.Container && Background != null) WriteColorComponent(Writer, "UnityEngine.UI.Image", Background);
                 else if (Element.Kind == GuiRenderNodeKind.Button && (Background != null || !Update))
                     WriteButton(Writer, Background, Find(Properties, GuiRenderPropertyId.ActionCommand, false));
                 else if (Element.Kind == GuiRenderNodeKind.Text && (HasTextProperty(Properties) || !Update)) WriteText(Writer, Properties, Update);
@@ -148,6 +151,38 @@ namespace Carbon.Plugins
                 }
                 Writer.WriteEndObject();
             }
+            private static void WriteScrollView(JsonTextWriter Writer, GuiRenderProperty[] Properties)
+            {
+                bool Horizontal = Require(Find(Properties, GuiRenderPropertyId.ScrollHorizontal, true), GuiRenderValueKind.Boolean).Boolean;
+                bool Vertical = Require(Find(Properties, GuiRenderPropertyId.ScrollVertical, true), GuiRenderValueKind.Boolean).Boolean;
+                bool Enabled = Require(Find(Properties, GuiRenderPropertyId.ScrollEnabled, true), GuiRenderValueKind.Boolean).Boolean;
+                Writer.WriteStartObject(); Write(Writer, "type", "UnityEngine.UI.ScrollView");
+                Writer.WritePropertyName("contentTransform"); Writer.WriteStartObject();
+                WriteScrollVector(Writer, Properties, GuiRenderPropertyId.ScrollContentAnchorMin, "anchormin");
+                WriteScrollVector(Writer, Properties, GuiRenderPropertyId.ScrollContentAnchorMax, "anchormax");
+                WriteScrollVector(Writer, Properties, GuiRenderPropertyId.ScrollContentOffsetMin, "offsetmin");
+                WriteScrollVector(Writer, Properties, GuiRenderPropertyId.ScrollContentOffsetMax, "offsetmax");
+                WriteScrollVector(Writer, Properties, GuiRenderPropertyId.ScrollContentPivot, "pivot");
+                Writer.WriteEndObject();
+                Writer.WritePropertyName("horizontal"); Writer.WriteValue(Horizontal);
+                Writer.WritePropertyName("vertical"); Writer.WriteValue(Vertical);
+                Write(Writer, "movementType", "Clamped");
+                Writer.WritePropertyName("inertia"); Writer.WriteValue(false);
+                Writer.WritePropertyName("scrollSensitivity"); Writer.WriteValue(1);
+                Writer.WritePropertyName("enabled"); Writer.WriteValue(Enabled);
+                if (Horizontal) WriteScrollbar(Writer, "horizontalScrollbar", Enabled);
+                if (Vertical) WriteScrollbar(Writer, "verticalScrollbar", Enabled);
+                Writer.WriteEndObject();
+            }
+            private static void WriteScrollVector(JsonTextWriter Writer, GuiRenderProperty[] Properties, GuiRenderPropertyId Id, string Name)
+            { Write(Writer, Name, Vector(Require(Find(Properties, Id, true), GuiRenderValueKind.Vector2).Vector)); }
+            private static void WriteScrollbar(JsonTextWriter Writer, string Name, bool Enabled)
+            {
+                Writer.WritePropertyName(Name); Writer.WriteStartObject();
+                Writer.WritePropertyName("autoHide"); Writer.WriteValue(true);
+                Writer.WritePropertyName("enabled"); Writer.WriteValue(Enabled);
+                Writer.WriteEndObject();
+            }
             private static void WriteRect(JsonTextWriter Writer, GuiRenderProperty[] Properties, bool Partial)
             {
                 Writer.WriteStartObject(); Write(Writer, "type", "RectTransform");
@@ -172,6 +207,11 @@ namespace Carbon.Plugins
             { return Find(Properties, GuiRenderPropertyId.Text, false) != null || Find(Properties, GuiRenderPropertyId.TextColor, false) != null ||
                 Find(Properties, GuiRenderPropertyId.FontSize, false) != null || Find(Properties, GuiRenderPropertyId.TextXAlignment, false) != null ||
                 Find(Properties, GuiRenderPropertyId.TextYAlignment, false) != null; }
+            private static bool HasScrollProperty(GuiRenderProperty[] Properties)
+            { return Find(Properties, GuiRenderPropertyId.ScrollContentAnchorMin, false) != null ||
+                Find(Properties, GuiRenderPropertyId.ScrollHorizontal, false) != null ||
+                Find(Properties, GuiRenderPropertyId.ScrollVertical, false) != null ||
+                Find(Properties, GuiRenderPropertyId.ScrollEnabled, false) != null; }
             private static GuiRenderValue Find(GuiRenderProperty[] Properties, GuiRenderPropertyId Id, bool Required)
             {
                 foreach (GuiRenderProperty Property in Properties) if (Property.Id == Id) return Property.Value;

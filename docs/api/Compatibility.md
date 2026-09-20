@@ -9,7 +9,7 @@ artifacts remain API `0.3.0-experimental` with native ABI `1.2`.
 
 The unreleased 0.4.0 candidate combines the additive addon and GUI Foundation 1
 surfaces under this one experimental identity. Authenticated-client visual,
-cursor, image-load, click-receipt and reconciliation behavior remains unqualified and is not
+cursor, scrolling, clipping, image-load, click-receipt and reconciliation behavior remains unqualified and is not
 implied by API availability.
 
 The canonical compatibility policy lives in [Compatibility.md](../Compatibility.md)
@@ -51,6 +51,7 @@ are unchanged; no script migration is required for this deferral.
 | GUI presentations per domain / global | 512 / 4,096 |
 | Interactive buttons per ScreenGui / Activated listeners per button | 64 / 8 |
 | Authoritative projected elements per ScreenGui | 257 |
+| ScrollingFrame projected-element charge | 7 |
 | Image sprite / decimal identifier | 256 UTF-8 bytes / 20 ASCII digits |
 | GUI Signal connections per domain | 256 |
 | GUI Name / Text / aggregate screen text | 64 B / 2,048 B / 32 KiB UTF-8 |

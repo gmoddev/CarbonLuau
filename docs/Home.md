@@ -75,6 +75,7 @@ non-gating. The additive GUI Foundation 2 architecture is resolved by
 with detailed design and future GUI-2A through GUI-2F guidance in
 [GUI Foundation 2](GuiFoundation2.md). Deterministic layout is implemented and
 qualified in [GUI Foundation 2A](GuiFoundation2A.md), and typed images in
-[GUI Foundation 2B](GuiFoundation2B.md), without a Foundation 2 release
-identity. Scrolling, TextBox, typed text input and the remaining GUI-2C through
-GUI-2F surface are not implemented.
+[GUI Foundation 2B](GuiFoundation2B.md), and retained scrolling in
+[GUI Foundation 2C](GuiFoundation2C.md), without a Foundation 2 release
+identity. TextBox, typed text input and the remaining GUI-2D through GUI-2F
+surface are not implemented.

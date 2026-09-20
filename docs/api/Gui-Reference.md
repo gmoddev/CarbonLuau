@@ -2,8 +2,9 @@
 
 Availability: experimental API `0.4.0-experimental`.
 
-Foundation 2A/2B source status: deterministic layout and typed images are
-implemented and qualified, with no Foundation 2 release/API identity assigned.
+Foundation 2A/2B/2C source status: deterministic layout, typed images and
+retained scrolling are implemented and qualified, with no Foundation 2
+release/API identity assigned.
 
 ## Service and construction
 
@@ -14,7 +15,7 @@ local Frame = Screen:Create("Frame")
 ```
 
 `Gui:Create(ClassName)` accepts `ScreenGui`, `Frame`, `TextLabel`, `TextButton`,
-`ImageLabel` and `ImageButton`. `ScreenGui` roots can only be created through
+`ImageLabel`, `ImageButton` and `ScrollingFrame`. `ScreenGui` roots can only be created through
 `Gui`. Calling `Create` on a GuiObject accepts those non-screen GuiObjects plus
 `UIListLayout` or `UIPadding` and parents the new child to the receiver.
 
@@ -48,7 +49,7 @@ These methods describe server intent, not acknowledged client state.
 
 ### GuiObject properties
 
-`Frame`, text controls and image controls are GuiObjects and share:
+`Frame`, text controls, image controls and `ScrollingFrame` are GuiObjects and share:
 
 | Property | Type | Default | Validation |
 |---|---|---|---|
@@ -71,6 +72,7 @@ Class-specific defaults:
 | `TextButton` | `UDim2.fromOffset(100, 36)` | 0 | Yes |
 | `ImageLabel` | `UDim2.fromOffset(100, 100)` | 1 | Yes |
 | `ImageButton` | `UDim2.fromOffset(100, 100)` | 1 | Yes |
+| `ScrollingFrame` | `UDim2.fromOffset(100, 100)` | 0 | Yes |
 
 ### TextLabel and TextButton
 
@@ -106,6 +108,26 @@ and exposes no raw client command.
 `ImageButton` also exposes the same `Activated(Player)` Signal and private
 exact-connection action path as TextButton. A shared image object has one
 retained source for every viewer. Client asset availability is not acknowledged.
+
+### ScrollingFrame
+
+| Property | Type | Default | Validation/behavior |
+|---|---|---|---|
+| `CanvasSize` | UDim2 | `UDim2.fromScale(1, 1)` | Explicit retained content size; finite component ranges below. |
+| `ScrollingDirection` | string | `"Y"` | `"X"`, `"Y"` or `"XY"`; controls enabled scroll axes. |
+| `ScrollingEnabled` | boolean | `true` | Exact boolean; disabled state retains the canvas and children. |
+
+Children are projected beneath a private clipped content root. CarbonLuau
+retains the canvas configuration but not the current client scroll position,
+drag state or inertia. That state belongs separately to each Presentation and
+may reset after full reconciliation, Hide/Show, reconnect or replacement.
+`CanvasPosition` and `AutomaticCanvasSize` are not exposed.
+
+`UIListLayout`, `UIPadding`, text controls and image controls compose normally
+inside a ScrollingFrame. Scripts set `CanvasSize` explicitly; CarbonLuau does
+not infer it from layout or client measurements. A ScrollingFrame is charged as
+seven projected elements against the 257-element authoritative screen bound,
+covering its host-created viewport, content root and possible scrollbar nodes.
 
 ### UIListLayout
 

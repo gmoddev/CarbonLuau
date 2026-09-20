@@ -6,7 +6,7 @@ namespace Carbon.Plugins
     public partial class CarbonLuau
     {
         internal enum GuiClassId
-        { GuiNode = 1, GuiObject = 2, ScreenGui = 3, Frame = 4, TextLabel = 5, TextButton = 6, UIListLayout = 7, UIPadding = 8, ImageLabel = 9, ImageButton = 10 }
+        { GuiNode = 1, GuiObject = 2, ScreenGui = 3, Frame = 4, TextLabel = 5, TextButton = 6, UIListLayout = 7, UIPadding = 8, ImageLabel = 9, ImageButton = 10, ScrollingFrame = 11 }
         internal enum GuiValueTypeId { UDim = 1, UDim2 = 2, Vector2 = 3, Color3 = 4, ImageSource = 5 }
         internal enum GuiPropertyId
         {
@@ -16,6 +16,7 @@ namespace Carbon.Plugins
             LayoutOrder = 17, Padding = 18, FillDirection = 19, HorizontalAlignment = 20, VerticalAlignment = 21,
             PaddingTop = 22, PaddingBottom = 23, PaddingLeft = 24, PaddingRight = 25,
             Image = 26, ImageColor3 = 27, ImageTransparency = 28,
+            CanvasSize = 29, ScrollingDirection = 30, ScrollingEnabled = 31,
             LayoutProjection = 100, ContentProjection = 101
         }
         internal enum GuiMethodId
@@ -138,6 +139,10 @@ namespace Carbon.Plugins
             private static readonly GuiPropertyDescriptor Image = new GuiPropertyDescriptor(GuiPropertyId.Image, "Image", GuiValueKind.ImageSource, GuiMutationKind.Structural);
             private static readonly GuiPropertyDescriptor ImageColor3 = new GuiPropertyDescriptor(GuiPropertyId.ImageColor3, "ImageColor3", GuiValueKind.Color3, GuiMutationKind.Patchable);
             private static readonly GuiPropertyDescriptor ImageTransparency = new GuiPropertyDescriptor(GuiPropertyId.ImageTransparency, "ImageTransparency", GuiValueKind.Number, GuiMutationKind.Patchable, 0, 1);
+            private static readonly GuiPropertyDescriptor CanvasSize = new GuiPropertyDescriptor(GuiPropertyId.CanvasSize, "CanvasSize", GuiValueKind.UDim2, GuiMutationKind.Structural);
+            private static readonly GuiPropertyDescriptor ScrollingDirection = new GuiPropertyDescriptor(GuiPropertyId.ScrollingDirection, "ScrollingDirection", GuiValueKind.String,
+                GuiMutationKind.Structural, null, null, GuiLimitId.None, "X", "Y", "XY");
+            private static readonly GuiPropertyDescriptor ScrollingEnabled = new GuiPropertyDescriptor(GuiPropertyId.ScrollingEnabled, "ScrollingEnabled", GuiValueKind.Boolean, GuiMutationKind.Structural);
 
             private static readonly GuiClassDescriptor[] ClassValues = BuildClasses();
             private static readonly GuiMethodDescriptor[] MethodValues =
@@ -274,7 +279,10 @@ namespace Carbon.Plugins
                     new GuiClassDescriptor(GuiClassId.ImageLabel, "ImageLabel", GuiClassId.GuiObject, true, GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
                         Append(ObjectProperties("UDim2.fromOffset(100, 100)", "1"), ImageProperties()), CommonMethods, new GuiEventId[0]),
                     new GuiClassDescriptor(GuiClassId.ImageButton, "ImageButton", GuiClassId.GuiObject, true, GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
-                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "1"), ImageProperties()), CommonMethods, new[] {GuiEventId.Activated})
+                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "1"), ImageProperties()), CommonMethods, new[] {GuiEventId.Activated}),
+                    new GuiClassDescriptor(GuiClassId.ScrollingFrame, "ScrollingFrame", GuiClassId.GuiObject, true,
+                        GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
+                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "0"), ScrollingProperties()), CommonMethods, new GuiEventId[0])
                 };
             }
             private static GuiPropertyUse[] ObjectProperties(string SizeDefault, string TransparencyDefault)
@@ -305,6 +313,11 @@ namespace Carbon.Plugins
             {
                 return new[] {Use(Image, true, "ImageSource.None()"), Use(ImageColor3, true, "Color3(1, 1, 1)"),
                     Use(ImageTransparency, true, "0")};
+            }
+            private static GuiPropertyUse[] ScrollingProperties()
+            {
+                return new[] {Use(CanvasSize, true, "UDim2.fromScale(1, 1)"), Use(ScrollingDirection, true, "Y"),
+                    Use(ScrollingEnabled, true, "true")};
             }
             private static GuiPropertyUse Use(GuiPropertyDescriptor Descriptor, bool Writable, string DefaultValue)
             { return new GuiPropertyUse(Descriptor, Writable, DefaultValue); }
