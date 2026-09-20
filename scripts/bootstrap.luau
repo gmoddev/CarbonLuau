@@ -173,6 +173,7 @@ local function EncodeGuiValue(Value, Integer)
     end
     if typeof(Value) == "userdata" then
         local ValueKind = tostring(Value)
+        if ValueKind == "UDim" then return "udim", tostring(Value.Scale), tostring(Value.Offset) end
         if ValueKind == "UDim2" then return "udim2", tostring(Value.X.Scale), tostring(Value.X.Offset), tostring(Value.Y.Scale), tostring(Value.Y.Offset) end
         if ValueKind == "Vector2" then return "vector2", tostring(Value.X), tostring(Value.Y) end
         if ValueKind == "Color3" then return "color3", tostring(Value.R), tostring(Value.G), tostring(Value.B) end
@@ -268,7 +269,7 @@ GuiObjectMeta.__newindex = function(Object, Key, Value)
         if not Parent then Fail("Parent expects a same-domain GUI object or nil") end
         Host(21, "set", RecordValue.Id, Key, "object", Parent.Id); return
     end
-    Host(21, "set", RecordValue.Id, Key, EncodeGuiValue(Value, Key == "ZIndex" or Key == "TextSize"))
+    Host(21, "set", RecordValue.Id, Key, EncodeGuiValue(Value, Key == "ZIndex" or Key == "TextSize" or Key == "LayoutOrder"))
 end
 GuiObjectMeta.__tostring = function(Object) return GuiRecord(Object).ClassName end
 GuiObjectMeta.__metatable = "CarbonLuau.GuiObject"

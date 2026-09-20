@@ -2,6 +2,9 @@
 
 Availability: experimental API `0.4.0-experimental`.
 
+Foundation 2A source status: implemented and qualified, with no Foundation 2
+release/API identity assigned yet.
+
 ## Service and construction
 
 ```lua
@@ -12,12 +15,12 @@ local Frame = Screen:Create("Frame")
 
 `Gui:Create(ClassName)` accepts `ScreenGui`, `Frame`, `TextLabel` and
 `TextButton`. `ScreenGui` roots can only be created through `Gui`. Calling
-`Create` on a retained object accepts `Frame`, `TextLabel` or `TextButton` and
-parents the new child to the receiver.
+`Create` on a GuiObject accepts `Frame`, `TextLabel`, `TextButton`,
+`UIListLayout` or `UIPadding` and parents the new child to the receiver.
 
 ## Classes
 
-All four concrete classes expose:
+All concrete classes expose:
 
 | Member | Type | Behavior |
 |---|---|---|
@@ -57,6 +60,7 @@ These methods describe server intent, not acknowledged client state.
 | `BackgroundColor3` | Color3 | `Color3.new(1, 1, 1)` | Each component `0..1`. |
 | `BackgroundTransparency` | number | Class-specific | Finite `0..1`; `0` is opaque. |
 | `ZIndex` | integer | `1` | `0..1000`; sibling-local render order. |
+| `LayoutOrder` | integer | `0` | `-32768..32767`; geometric order under a sibling UIListLayout only. |
 
 Class-specific defaults:
 
@@ -88,6 +92,41 @@ end)
 `Activated` uses the standard [Connection](Types/Connection.md) lifecycle but
 has GUI-specific listener and admission bounds. It is not `MouseButton1Click`
 and exposes no raw client command.
+
+### UIListLayout
+
+`UIListLayout` is a retained, non-rendering `GuiNode`, not a `GuiObject`. It can
+only be created under a GuiObject, cannot have children and is limited to one
+per parent.
+
+| Property | Type | Default | Validation/behavior |
+|---|---|---|---|
+| `Parent` | GuiObject or nil | `nil` | Same owner, no cycle, one UIListLayout per parent. |
+| `Padding` | UDim | `UDim.new(0, 0)` | Gap between arranged visible children. |
+| `FillDirection` | string | `"Vertical"` | `"Vertical"` or `"Horizontal"`. |
+| `HorizontalAlignment` | string | `"Left"` | `"Left"`, `"Center"` or `"Right"`. |
+| `VerticalAlignment` | string | `"Top"` | `"Top"`, `"Center"` or `"Bottom"`. |
+
+Direct visible GuiObject children are arranged by `LayoutOrder`, retained
+attachment order and object identity. Hidden children consume no list space.
+Retained `Size` and `AnchorPoint` participate in projection; retained `Position`
+is preserved but ignored for arranged placement until the layout is removed.
+
+### UIPadding
+
+`UIPadding` is also a retained, non-rendering `GuiNode`, cannot have children and
+is limited to one per GuiObject parent.
+
+| Property | Type | Default | Validation |
+|---|---|---|---|
+| `Parent` | GuiObject or nil | `nil` | Same owner, no cycle, one UIPadding per parent. |
+| `PaddingTop` | UDim | zero | Scale `0..1`, offset `0..32768`. |
+| `PaddingBottom` | UDim | zero | Scale `0..1`, offset `0..32768`. |
+| `PaddingLeft` | UDim | zero | Scale `0..1`, offset `0..32768`. |
+| `PaddingRight` | UDim | zero | Scale `0..1`, offset `0..32768`. |
+
+Padding affects the content rectangle used for direct child projection, list
+layout and built-in text. It does not resize the parent's background.
 
 ## Immutable value types
 

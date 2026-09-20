@@ -559,7 +559,16 @@ namespace Carbon.Plugins
                 if (Use.Descriptor.Id == GuiPropertyId.Visible && ContainsConnectedButton(Node))
                     MarkStructural(ScreenValue, GuiActionRejection.TargetUnavailable);
                 else if (Use.Descriptor.MutationKind == GuiMutationKind.Structural) MarkStructural(ScreenValue);
-                else if (Use.Descriptor.MutationKind == GuiMutationKind.Patchable) MarkPatchable(ScreenValue, Node.Identity.GuiObjectId, Use.Descriptor.Id);
+                else if (Use.Descriptor.MutationKind == GuiMutationKind.Patchable) {
+                    MarkPatchable(ScreenValue, Node.Identity.GuiObjectId, Use.Descriptor.Id);
+                    if ((Use.Descriptor.Id == GuiPropertyId.Size || Use.Descriptor.Id == GuiPropertyId.Visible) && HasListParent(Node))
+                        MarkLayoutAffected(State.Nodes[Node.ParentId.Value]);
+                } else if (Use.Descriptor.MutationKind == GuiMutationKind.LayoutAffecting) {
+                    if (Node.ClassId == GuiClassId.UIListLayout || Node.ClassId == GuiClassId.UIPadding) {
+                        if (Node.ParentId.HasValue) MarkLayoutAffected(State.Nodes[Node.ParentId.Value]);
+                    } else if (Use.Descriptor.Id == GuiPropertyId.LayoutOrder && HasListParent(Node))
+                        MarkLayoutAffected(State.Nodes[Node.ParentId.Value]);
+                }
             }
 
             private void SetParent(GuiRetainedNode Child, string[] Fields, int KindIndex)
@@ -767,17 +776,36 @@ namespace Carbon.Plugins
                 if (Screen == null) return; GuiScreenSynchronization Synchronization = Advance(Screen.Identity.GuiObjectId);
                 if (!HasPresentation(Screen.Identity.GuiObjectId)) { Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = false; return; }
                 if (Synchronization.FullRebuildRequired) return;
+                AddDirty(Screen, Synchronization, ObjectId, Property);
+            }
+            private void MarkLayoutAffected(GuiRetainedNode Parent)
+            {
+                if (Parent == null) return;
+                GuiRetainedNode Screen = RootScreen(Parent); if (Screen == null) return;
+                GuiScreenSynchronization Synchronization = Advance(Screen.Identity.GuiObjectId);
+                if (!HasPresentation(Screen.Identity.GuiObjectId)) { Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = false; return; }
+                if (Synchronization.FullRebuildRequired) return;
+                foreach (ulong ChildId in Parent.Children) {
+                    GuiRetainedNode Child = State.Nodes[ChildId];
+                    if (GuiSchema.IsA(Child.ClassId, "GuiObject") && !AddDirty(Screen, Synchronization, ChildId, GuiPropertyId.LayoutProjection)) return;
+                }
+                if (Parent.ClassId == GuiClassId.TextLabel || Parent.ClassId == GuiClassId.TextButton)
+                    AddDirty(Screen, Synchronization, Parent.Identity.GuiObjectId, GuiPropertyId.ContentProjection);
+            }
+            private bool AddDirty(GuiRetainedNode Screen, GuiScreenSynchronization Synchronization, ulong ObjectId, GuiPropertyId Property)
+            {
                 HashSet<GuiPropertyId> Properties;
                 if (!Synchronization.DirtyObjects.TryGetValue(ObjectId, out Properties)) {
                     if (TrackedDirtyObjects() >= Limits.MaxTrackedDirtyObjectsPerDomain) {
                         Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = true;
                         foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) RequireFullRebuild(Value);
-                        return;
+                        return false;
                     }
                     Properties = new HashSet<GuiPropertyId>(); Synchronization.DirtyObjects.Add(ObjectId, Properties);
                 }
                 Properties.Add(Property);
                 foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) Value.ProjectionBlockedRevision = 0;
+                return true;
             }
             private GuiScreenSynchronization Advance(ulong ScreenId)
             {
@@ -882,7 +910,18 @@ namespace Carbon.Plugins
             private void ValidateAttachment(GuiRetainedNode Child, GuiClassId ChildClass, GuiRetainedNode Parent, int Objects, int Depth, int Buttons, int TextBytes)
             {
                 if (!GuiSchema.GetClass(Parent.ClassId).CanHaveChildren) throw new FacadeException("GUI parent cannot have children");
-                if (Parent.Children.Count >= Limits.MaxChildrenPerObject) throw new FacadeException("GUI child limit reached");
+                if ((ChildClass == GuiClassId.UIListLayout || ChildClass == GuiClassId.UIPadding) && !GuiSchema.IsA(Parent.ClassId, "GuiObject"))
+                    throw new FacadeException("GUI layout helpers require a GuiObject parent");
+                if (ChildClass == GuiClassId.UIListLayout || ChildClass == GuiClassId.UIPadding) {
+                    foreach (ulong SiblingId in Parent.Children) {
+                        if (Child != null && SiblingId == Child.Identity.GuiObjectId) continue;
+                        if (State.Nodes[SiblingId].ClassId == ChildClass) throw new FacadeException("GUI layout helper cardinality limit reached");
+                    }
+                }
+                int RenderableChildren = 0;
+                foreach (ulong ChildId in Parent.Children) if (GuiSchema.IsA(State.Nodes[ChildId].ClassId, "GuiObject")) RenderableChildren++;
+                if (GuiSchema.IsA(ChildClass, "GuiObject") && RenderableChildren >= Limits.MaxChildrenPerObject)
+                    throw new FacadeException("GUI child limit reached");
                 for (GuiRetainedNode Cursor = Parent; Cursor != null; Cursor = Cursor.ParentId.HasValue ? State.Nodes[Cursor.ParentId.Value] : null)
                     if (Child != null && Cursor.Identity.GuiObjectId == Child.Identity.GuiObjectId) throw new FacadeException("GUI parent cycle rejected");
                 int ParentDepth = DepthFromRoot(Parent);
@@ -933,6 +972,14 @@ namespace Carbon.Plugins
                     case GuiValueKind.Number: {
                         double Value = ParseNumber(Fields, KindIndex, "number", 1)[0]; ValidateRange(Value, Descriptor.Minimum, Descriptor.Maximum, Descriptor.Name); return GuiStoredValue.Number(Value);
                     }
+                    case GuiValueKind.UDim: {
+                        double[] Value = ParseNumber(Fields, KindIndex, "udim", 2);
+                        ValidateRange(Value[0], Descriptor.Minimum ?? -8, Descriptor.Maximum ?? 8, Descriptor.Name);
+                        bool NonNegative = Descriptor.Id == GuiPropertyId.PaddingTop || Descriptor.Id == GuiPropertyId.PaddingBottom ||
+                            Descriptor.Id == GuiPropertyId.PaddingLeft || Descriptor.Id == GuiPropertyId.PaddingRight;
+                        ValidateRange(Value[1], NonNegative ? 0 : -32768, 32768, Descriptor.Name);
+                        return GuiStoredValue.UDim(Value[0], Value[1]);
+                    }
                     case GuiValueKind.UDim2: {
                         double[] Value = ParseNumber(Fields, KindIndex, "udim2", 4); ValidateRange(Value[0], -8, 8, Descriptor.Name); ValidateRange(Value[2], -8, 8, Descriptor.Name);
                         ValidateRange(Value[1], -32768, 32768, Descriptor.Name); ValidateRange(Value[3], -32768, 32768, Descriptor.Name); return GuiStoredValue.UDim2(Value[0], Value[1], Value[2], Value[3]);
@@ -968,6 +1015,20 @@ namespace Carbon.Plugins
             {
                 string ClassName = GuiSchema.GetClass(Node.ClassId).Name; Node.Properties[GuiPropertyId.Name] = GuiStoredValue.String(ClassName);
                 if (Node.ClassId == GuiClassId.ScreenGui) return;
+                if (Node.ClassId == GuiClassId.UIListLayout) {
+                    Node.Properties[GuiPropertyId.Padding] = GuiStoredValue.UDim(0, 0);
+                    Node.Properties[GuiPropertyId.FillDirection] = GuiStoredValue.String("Vertical");
+                    Node.Properties[GuiPropertyId.HorizontalAlignment] = GuiStoredValue.String("Left");
+                    Node.Properties[GuiPropertyId.VerticalAlignment] = GuiStoredValue.String("Top");
+                    return;
+                }
+                if (Node.ClassId == GuiClassId.UIPadding) {
+                    Node.Properties[GuiPropertyId.PaddingTop] = GuiStoredValue.UDim(0, 0);
+                    Node.Properties[GuiPropertyId.PaddingBottom] = GuiStoredValue.UDim(0, 0);
+                    Node.Properties[GuiPropertyId.PaddingLeft] = GuiStoredValue.UDim(0, 0);
+                    Node.Properties[GuiPropertyId.PaddingRight] = GuiStoredValue.UDim(0, 0);
+                    return;
+                }
                 Node.Properties[GuiPropertyId.Position] = GuiStoredValue.UDim2(0, 0, 0, 0);
                 int Height = Node.ClassId == GuiClassId.Frame ? 100 : Node.ClassId == GuiClassId.TextLabel ? 30 : 36;
                 Node.Properties[GuiPropertyId.Size] = GuiStoredValue.UDim2(0, 100, 0, Height);
@@ -976,6 +1037,7 @@ namespace Carbon.Plugins
                 Node.Properties[GuiPropertyId.BackgroundColor3] = GuiStoredValue.Color3(1, 1, 1);
                 Node.Properties[GuiPropertyId.BackgroundTransparency] = GuiStoredValue.Number(Node.ClassId == GuiClassId.TextLabel ? 1 : 0);
                 Node.Properties[GuiPropertyId.ZIndex] = GuiStoredValue.Int(1);
+                Node.Properties[GuiPropertyId.LayoutOrder] = GuiStoredValue.Int(0);
                 if (Node.ClassId == GuiClassId.TextLabel || Node.ClassId == GuiClassId.TextButton) {
                     Node.Properties[GuiPropertyId.Text] = GuiStoredValue.String(""); Node.Properties[GuiPropertyId.TextColor3] = GuiStoredValue.Color3(0, 0, 0);
                     Node.Properties[GuiPropertyId.TextTransparency] = GuiStoredValue.Number(0); Node.Properties[GuiPropertyId.TextSize] = GuiStoredValue.Int(14);
@@ -1003,6 +1065,13 @@ namespace Carbon.Plugins
                 foreach (ulong Child in Root.Children) Result += SubtreeTextBytes(State.Nodes[Child]); return Result;
             }
             private int TextBytes(GuiClassId ClassId) { return 0; }
+            private bool HasListParent(GuiRetainedNode Node)
+            {
+                if (!Node.ParentId.HasValue) return false;
+                foreach (ulong ChildId in State.Nodes[Node.ParentId.Value].Children)
+                    if (State.Nodes[ChildId].ClassId == GuiClassId.UIListLayout) return true;
+                return false;
+            }
             private int ScreenTextBytes(GuiRetainedNode Screen) { return SubtreeTextBytes(Screen); }
             private int DepthFromRoot(GuiRetainedNode Node) { int Result = 1; while (Node.ParentId.HasValue) { Result++; Node = State.Nodes[Node.ParentId.Value]; } return Result; }
             private GuiRetainedNode RootScreen(GuiRetainedNode Node)

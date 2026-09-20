@@ -73,5 +73,7 @@ visual, cursor, reconciliation and click evidence remains unqualified and
 non-gating. The additive GUI Foundation 2 architecture is resolved by
 [D16](Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls),
 with detailed design and future GUI-2A through GUI-2F guidance in
-[GUI Foundation 2](GuiFoundation2.md). It is design policy only: none of its new
-classes, values, interactions or version identity is implemented or public yet.
+[GUI Foundation 2](GuiFoundation2.md). The deterministic layout slice is
+implemented and qualified in [GUI Foundation 2A](GuiFoundation2A.md), without a
+Foundation 2 release identity. Scrolling, images, TextBox, typed input and the
+remaining GUI-2B through GUI-2F surface are not implemented.

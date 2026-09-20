@@ -20,7 +20,7 @@ This is server-side Luau, not Roblox API compatibility.
 | Existing `require` and `task.spawn/defer/delay` | [Phase 2 script contract](../Phase2.md) |
 | Addon manifests, dependencies and package-qualified imports | [Addon composition](Addons.md) |
 | Carbon provider registration protocol | [Addon providers](Addon-Providers.md) |
-| Server-driven retained GUI | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
+| Server-driven retained GUI and qualified Foundation 2A layout source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
 
 Players and Commands are available beginning with API `0.3.0-experimental`.
 Addon composition and GUI are available beginning with
@@ -58,8 +58,9 @@ Addon packages use exact dependency bindings, explicit exports and the readonly
 
 GUI Foundation 1 provides `game:GetService("Gui")`, ScreenGui, Frame,
 TextLabel, TextButton, retained properties, immutable layout/color values,
-explicit per-Player Show/Hide and `TextButton.Activated`. Images, TextBox,
-scrolling, layout helpers, advanced styling, hover/focus and raw CUI remain
-unsupported. Authenticated-client visual, cursor, click-receipt and
+explicit per-Player Show/Hide and `TextButton.Activated`. Foundation 2A adds
+implemented but not yet release-versioned `LayoutOrder`, `UIListLayout` and
+`UIPadding`. Images, TextBox, scrolling, advanced styling, hover/focus and raw
+CUI remain unsupported. Authenticated-client visual, cursor, click-receipt and
 reconciliation observations remain unqualified even though the experimental
 API is available.

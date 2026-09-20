@@ -419,10 +419,13 @@ deferred and is not replaced by hosted Windows CI.
 [D16](Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls)
 adopts the additive Foundation 2 architecture. [GuiFoundation2.md](GuiFoundation2.md)
 owns detailed rationale, exact surface matrices, implementation sequencing and
-qualification planning. This documentation adoption is not implementation,
-runtime evidence or public API availability, and it does not alter D15 evidence.
+qualification planning. The first slice, GUI Foundation 2A, now implements and
+qualifies `GuiObject.LayoutOrder`, `UIListLayout`, `UIPadding`, deterministic
+affine layout projection and bounded layout dirty synchronization. Its exact
+evidence is recorded in [GuiFoundation2A.md](GuiFoundation2A.md). This does not
+alter D15 evidence.
 
-Future GUI-2A through GUI-2F work must preserve Foundation 1 behavior for scripts
+Future GUI-2B through GUI-2F work must preserve Foundation 1 behavior for scripts
 that do not use Foundation 2 objects. Qualification must cover deterministic
 layout, retained versus Presentation-local state, projection cost and full
 reconciliation bounds, typed image validation, exact action authority,
@@ -438,11 +441,13 @@ bounds in D16 are the initial hard implementation envelope and must be qualified
 before support. Submission rates and scheduling/timing values remain tuning
 targets rather than permanent compatibility promises.
 
-D16 assigns no release identity. Package `0.4.0`, scripting API
+D16 and GUI Foundation 2A assign no new release identity. Package `0.4.0`, scripting API
 `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package schema
 `1` and the pinned Luau revision still describe the implemented addon plus
-Foundation 1 candidate. Foundation 2 identity remains gated on implementation,
-qualification and explicit later release planning.
+Foundation 1 candidate. Foundation 2 release identity remains gated on the
+remaining implementation, qualification and explicit later release planning.
+Server-side layout plans are qualified; authenticated-client visual layout
+remains unqualified and non-gating.
 
 ## Phase 0 consistency review
 

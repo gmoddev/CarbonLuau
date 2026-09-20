@@ -20,6 +20,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 1G public closure, identity and evidence | [GuiFoundation1G.md](docs/GuiFoundation1G.md) |
 | Canonical GUI Foundation 2 additive semantics | [D16 in Invariants.md](docs/Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls) |
 | GUI Foundation 2 rationale, surface matrices and implementation guidance | [GuiFoundation2.md](docs/GuiFoundation2.md) |
+| GUI Foundation 2A deterministic layout implementation and evidence | [GuiFoundation2A.md](docs/GuiFoundation2A.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -122,6 +123,12 @@ GUI-2A through GUI-2F work is implemented and qualified. Exact supported
 single-line text preservation is a TextBox qualification gate: defer TextBox if
 the current authenticated client/host path cannot preserve it, rather than
 weakening or normalizing the contract.
+GUI Foundation 2A implements only D16's deterministic layout slice: `LayoutOrder`,
+`UIListLayout`, `UIPadding`, affine projection and bounded layout dirty
+synchronization. Its implementation and qualification record is
+[GuiFoundation2A.md](docs/GuiFoundation2A.md). It does not assign a Foundation 2
+release identity or authorize scrolling, images, TextBox, typed input or later
+GUI-2B through GUI-2F work.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

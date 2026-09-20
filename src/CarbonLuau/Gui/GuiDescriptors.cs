@@ -5,13 +5,17 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
-        internal enum GuiClassId { GuiNode = 1, GuiObject = 2, ScreenGui = 3, Frame = 4, TextLabel = 5, TextButton = 6 }
+        internal enum GuiClassId
+        { GuiNode = 1, GuiObject = 2, ScreenGui = 3, Frame = 4, TextLabel = 5, TextButton = 6, UIListLayout = 7, UIPadding = 8 }
         internal enum GuiValueTypeId { UDim = 1, UDim2 = 2, Vector2 = 3, Color3 = 4 }
         internal enum GuiPropertyId
         {
             Name = 1, ClassName = 2, Parent = 3, Position = 4, Size = 5, AnchorPoint = 6, Visible = 7,
             BackgroundColor3 = 8, BackgroundTransparency = 9, ZIndex = 10, Text = 11, TextColor3 = 12,
-            TextTransparency = 13, TextSize = 14, TextXAlignment = 15, TextYAlignment = 16
+            TextTransparency = 13, TextSize = 14, TextXAlignment = 15, TextYAlignment = 16,
+            LayoutOrder = 17, Padding = 18, FillDirection = 19, HorizontalAlignment = 20, VerticalAlignment = 21,
+            PaddingTop = 22, PaddingBottom = 23, PaddingLeft = 24, PaddingRight = 25,
+            LayoutProjection = 100, ContentProjection = 101
         }
         internal enum GuiMethodId
         { Create = 1, Clone = 2, Destroy = 3, GetChildren = 4, FindFirstChild = 5, IsA = 6, Show = 7, Hide = 8, IsShown = 9 }
@@ -19,7 +23,7 @@ namespace Carbon.Plugins
         [Flags] internal enum GuiCreationScope { None = 0, GuiService = 1, GuiObject = 2 }
         internal enum GuiLimitId { None = 0, NameUtf8Bytes = 1, TextUtf8Bytes = 2 }
         internal enum GuiValueKind { String, Boolean, Integer, Number, GuiNodeReference, UDim, UDim2, Vector2, Color3 }
-        internal enum GuiMutationKind { Metadata, Patchable, Structural }
+        internal enum GuiMutationKind { Metadata, Patchable, LayoutAffecting, Structural }
 
         internal sealed class GuiPropertyDescriptor
         {
@@ -121,6 +125,15 @@ namespace Carbon.Plugins
             private static readonly GuiPropertyDescriptor TextSize = new GuiPropertyDescriptor(GuiPropertyId.TextSize, "TextSize", GuiValueKind.Integer, GuiMutationKind.Patchable, 1, 128);
             private static readonly GuiPropertyDescriptor TextXAlignment = new GuiPropertyDescriptor(GuiPropertyId.TextXAlignment, "TextXAlignment", GuiValueKind.String, GuiMutationKind.Patchable, null, null, GuiLimitId.None, "Left", "Center", "Right");
             private static readonly GuiPropertyDescriptor TextYAlignment = new GuiPropertyDescriptor(GuiPropertyId.TextYAlignment, "TextYAlignment", GuiValueKind.String, GuiMutationKind.Patchable, null, null, GuiLimitId.None, "Top", "Center", "Bottom");
+            private static readonly GuiPropertyDescriptor LayoutOrder = new GuiPropertyDescriptor(GuiPropertyId.LayoutOrder, "LayoutOrder", GuiValueKind.Integer, GuiMutationKind.LayoutAffecting, -32768, 32767);
+            private static readonly GuiPropertyDescriptor Padding = new GuiPropertyDescriptor(GuiPropertyId.Padding, "Padding", GuiValueKind.UDim, GuiMutationKind.LayoutAffecting, -8, 8);
+            private static readonly GuiPropertyDescriptor FillDirection = new GuiPropertyDescriptor(GuiPropertyId.FillDirection, "FillDirection", GuiValueKind.String, GuiMutationKind.LayoutAffecting, null, null, GuiLimitId.None, "Vertical", "Horizontal");
+            private static readonly GuiPropertyDescriptor HorizontalAlignment = new GuiPropertyDescriptor(GuiPropertyId.HorizontalAlignment, "HorizontalAlignment", GuiValueKind.String, GuiMutationKind.LayoutAffecting, null, null, GuiLimitId.None, "Left", "Center", "Right");
+            private static readonly GuiPropertyDescriptor VerticalAlignment = new GuiPropertyDescriptor(GuiPropertyId.VerticalAlignment, "VerticalAlignment", GuiValueKind.String, GuiMutationKind.LayoutAffecting, null, null, GuiLimitId.None, "Top", "Center", "Bottom");
+            private static readonly GuiPropertyDescriptor PaddingTop = new GuiPropertyDescriptor(GuiPropertyId.PaddingTop, "PaddingTop", GuiValueKind.UDim, GuiMutationKind.LayoutAffecting, 0, 1);
+            private static readonly GuiPropertyDescriptor PaddingBottom = new GuiPropertyDescriptor(GuiPropertyId.PaddingBottom, "PaddingBottom", GuiValueKind.UDim, GuiMutationKind.LayoutAffecting, 0, 1);
+            private static readonly GuiPropertyDescriptor PaddingLeft = new GuiPropertyDescriptor(GuiPropertyId.PaddingLeft, "PaddingLeft", GuiValueKind.UDim, GuiMutationKind.LayoutAffecting, 0, 1);
+            private static readonly GuiPropertyDescriptor PaddingRight = new GuiPropertyDescriptor(GuiPropertyId.PaddingRight, "PaddingRight", GuiValueKind.UDim, GuiMutationKind.LayoutAffecting, 0, 1);
 
             private static readonly GuiClassDescriptor[] ClassValues = BuildClasses();
             private static readonly GuiMethodDescriptor[] MethodValues =
@@ -242,7 +255,11 @@ namespace Carbon.Plugins
                     new GuiClassDescriptor(GuiClassId.TextLabel, "TextLabel", GuiClassId.GuiObject, true, GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
                         Append(ObjectProperties("UDim2.fromOffset(100, 30)", "1"), TextProperties()), CommonMethods, new GuiEventId[0]),
                     new GuiClassDescriptor(GuiClassId.TextButton, "TextButton", GuiClassId.GuiObject, true, GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
-                        Append(ObjectProperties("UDim2.fromOffset(100, 36)", "0"), TextProperties()), CommonMethods, new[] {GuiEventId.Activated})
+                        Append(ObjectProperties("UDim2.fromOffset(100, 36)", "0"), TextProperties()), CommonMethods, new[] {GuiEventId.Activated}),
+                    new GuiClassDescriptor(GuiClassId.UIListLayout, "UIListLayout", GuiClassId.GuiNode, true, GuiCreationScope.GuiObject, false,
+                        LayoutProperties(), CommonMethods, new GuiEventId[0]),
+                    new GuiClassDescriptor(GuiClassId.UIPadding, "UIPadding", GuiClassId.GuiNode, true, GuiCreationScope.GuiObject, false,
+                        PaddingProperties(), CommonMethods, new GuiEventId[0])
                 };
             }
             private static GuiPropertyUse[] ObjectProperties(string SizeDefault, string TransparencyDefault)
@@ -250,12 +267,24 @@ namespace Carbon.Plugins
                 return new[] {Use(Name, true, "class name"), Use(ClassName, false, "concrete class"), Use(Parent, true, "nil"),
                     Use(Position, true, "UDim2(0, 0, 0, 0)"), Use(Size, true, SizeDefault), Use(AnchorPoint, true, "Vector2(0, 0)"),
                     Use(Visible, true, "true"), Use(BackgroundColor3, true, "Color3(1, 1, 1)"),
-                    Use(BackgroundTransparency, true, TransparencyDefault), Use(ZIndex, true, "1")};
+                    Use(BackgroundTransparency, true, TransparencyDefault), Use(ZIndex, true, "1"), Use(LayoutOrder, true, "0")};
             }
             private static GuiPropertyUse[] TextProperties()
             {
                 return new[] {Use(Text, true, ""), Use(TextColor3, true, "Color3(0, 0, 0)"), Use(TextTransparency, true, "0"),
                     Use(TextSize, true, "14"), Use(TextXAlignment, true, "Center"), Use(TextYAlignment, true, "Center")};
+            }
+            private static GuiPropertyUse[] LayoutProperties()
+            {
+                return new[] {Use(Name, true, "UIListLayout"), Use(ClassName, false, "UIListLayout"), Use(Parent, true, "nil"),
+                    Use(Padding, true, "UDim.new(0, 0)"), Use(FillDirection, true, "Vertical"),
+                    Use(HorizontalAlignment, true, "Left"), Use(VerticalAlignment, true, "Top")};
+            }
+            private static GuiPropertyUse[] PaddingProperties()
+            {
+                return new[] {Use(Name, true, "UIPadding"), Use(ClassName, false, "UIPadding"), Use(Parent, true, "nil"),
+                    Use(PaddingTop, true, "UDim.new(0, 0)"), Use(PaddingBottom, true, "UDim.new(0, 0)"),
+                    Use(PaddingLeft, true, "UDim.new(0, 0)"), Use(PaddingRight, true, "UDim.new(0, 0)")};
             }
             private static GuiPropertyUse Use(GuiPropertyDescriptor Descriptor, bool Writable, string DefaultValue)
             { return new GuiPropertyUse(Descriptor, Writable, DefaultValue); }

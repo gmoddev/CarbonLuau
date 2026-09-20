@@ -43,11 +43,12 @@ foreach ($Path in @('examples/addons/economy/addon.json','examples/addons/econom
         'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root $Path))) { throw "Missing addon example file: $Path" }
 }
-foreach ($Name in @('ScreenGui','Frame','TextLabel','TextButton','GuiObject','UDim','UDim2','Vector2','Color3')) {
+foreach ($Name in @('ScreenGui','Frame','TextLabel','TextButton','UIListLayout','UIPadding','GuiObject','UDim','UDim2','Vector2','Color3')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits public type: $Name" }
 }
 foreach ($Name in @('Name','ClassName','Parent','Position','Size','AnchorPoint','Visible','BackgroundColor3',
-        'BackgroundTransparency','ZIndex','Text','TextColor3','TextTransparency','TextSize','TextXAlignment','TextYAlignment')) {
+        'BackgroundTransparency','ZIndex','LayoutOrder','Text','TextColor3','TextTransparency','TextSize','TextXAlignment','TextYAlignment',
+        'Padding','FillDirection','HorizontalAlignment','VerticalAlignment','PaddingTop','PaddingBottom','PaddingLeft','PaddingRight')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits property: $Name" }
 }
 foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','IsA','Show','Hide','IsShown','Activated')) {

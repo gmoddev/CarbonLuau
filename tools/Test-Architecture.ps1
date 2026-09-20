@@ -85,6 +85,17 @@ foreach ($Required in @('GuiScreenSynchronization','CompilePatch','FullRebuildRe
         throw "GUI Foundation 1D synchronization owner is missing: $Required"
     }
 }
+foreach ($Required in @('ProjectChildren','GuiAffine','ContentRect')) {
+    if (!$Presentation.Contains($Required)) { throw "GUI Foundation 2A layout compiler owner is missing: $Required" }
+}
+foreach ($Required in @('MarkLayoutAffected','UIListLayout','UIPadding','LayoutProjection')) {
+    if (!$Registry.Contains($Required) -and !$Presentation.Contains($Required)) {
+        throw "GUI Foundation 2A retained/synchronization owner is missing: $Required"
+    }
+}
+if ($Presentation -match 'LayoutGroup|HorizontalLayoutGroup|VerticalLayoutGroup') {
+    throw 'GUI Foundation 2A must not delegate canonical layout to a host layout group'
+}
 foreach ($Required in @('RandomNumberGenerator','MaxActionTokensGlobal','ValidateQueued','GuiActionDiagnostics','MaxPlayerInteractionsPerSecond')) {
     if (!$Actions.Contains($Required) -and !$Registry.Contains($Required)) {
         throw "GUI Foundation 1E interaction owner is missing: $Required"

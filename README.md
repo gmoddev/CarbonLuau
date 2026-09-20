@@ -38,7 +38,7 @@ cursor, click-receipt and reconciliation behavior remains unqualified.
 
 Callbacks and host inputs are bounded, deadlines are cooperative, and the VM cap is not a whole-server memory cap. Successful reload cancels old listeners and commands; failed candidates preserve them. CarbonLuau does not expose raw Rust objects, arbitrary console execution, filesystem or network APIs, or a Roblox hierarchy.
 
-Provider-defined C# capabilities, root-to-addon imports, package downloads, version solving, multiple package instances, restricted exposure profiles, and async capabilities remain deferred. CarbonLuau has one shared VM heap cap, not per-addon hard heap isolation. Images, TextBox, scrolling, layout helpers and advanced GUI styling are not implemented. The item convenience APIs `Player:GiveItem` and `Items:Exists` are also deferred because no safe ownership adapter has been established.
+Provider-defined C# capabilities, root-to-addon imports, package downloads, version solving, multiple package instances, restricted exposure profiles, and async capabilities remain deferred. CarbonLuau has one shared VM heap cap, not per-addon hard heap isolation. Deterministic `UIListLayout` and `UIPadding` are implemented in source but have not received a Foundation 2 release identity. Images, TextBox, scrolling and advanced GUI styling are not implemented. The item convenience APIs `Player:GiveItem` and `Items:Exists` are also deferred because no safe ownership adapter has been established.
 
 Authenticated real-client behavior and Shockbyte full-runtime behavior remain outside the qualified support envelope. See [API compatibility and limits](docs/api/Compatibility.md) and [platform compatibility](docs/Compatibility.md) for details.
 

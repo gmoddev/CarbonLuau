@@ -2,6 +2,9 @@
 
 Availability: experimental API `0.4.0-experimental`.
 
+Source status: the additive Foundation 2A layout surface below is implemented
+and qualified, but Foundation 2 has not received a release/API identity yet.
+
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the
 same objects. CarbonLuau synchronizes committed changes after Luau returns.
@@ -20,6 +23,10 @@ Button.Size = UDim2.fromOffset(220, 44)
 Button.Text = "Click"
 Button.BackgroundColor3 = Color3.fromRGB(45, 120, 210)
 Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local Padding = Button:Create("UIPadding")
+Padding.PaddingLeft = UDim.new(0, 12)
+Padding.PaddingRight = UDim.new(0, 12)
 
 Button.Activated:Connect(function(Player)
     Button.Text = Player.Name
@@ -59,6 +66,45 @@ Screen:Show(Player)
 A clone receives new object identities and copies the subtree's public
 properties and child order. It does not copy viewers, action state, pending
 updates or Signal connections.
+
+## Deterministic lists and padding
+
+`UIListLayout` arranges the direct visible GuiObject children of its parent.
+Geometry is computed by CarbonLuau from retained `UDim` and `UDim2` values; it
+does not use a Unity layout group or client viewport measurement.
+
+```lua
+local Panel = Screen:Create("Frame")
+Panel.Size = UDim2.fromOffset(320, 240)
+
+local Padding = Panel:Create("UIPadding")
+Padding.PaddingTop = UDim.new(0, 12)
+Padding.PaddingBottom = UDim.new(0, 12)
+Padding.PaddingLeft = UDim.new(0, 16)
+Padding.PaddingRight = UDim.new(0, 16)
+
+local Layout = Panel:Create("UIListLayout")
+Layout.FillDirection = "Vertical"
+Layout.Padding = UDim.new(0, 8)
+Layout.HorizontalAlignment = "Center"
+Layout.VerticalAlignment = "Top"
+
+local First = Panel:Create("TextLabel")
+First.LayoutOrder = 10
+local Second = Panel:Create("TextButton")
+Second.LayoutOrder = 20
+```
+
+Geometric order is `LayoutOrder`, then attachment order, then object identity.
+`ZIndex` independently controls render order, and `GetChildren()` still returns
+attachment order. A hidden child consumes no list space. Child `Size` remains
+authoritative; no automatic or text-derived sizing is performed.
+
+List layout never rewrites retained `Position`. Reading it returns the author's
+value, and removing the `UIListLayout` restores that value as projection
+authority. `UIPadding` defines the content rectangle for direct children, list
+layout and built-in label/button text. It does not shrink the parent's own
+background. Each parent may contain at most one helper of each kind.
 
 ## Parenting and lifetime
 
@@ -116,7 +162,8 @@ author-visible bounds:
 
 | Resource | Bound |
 |---|---:|
-| Objects in one ScreenGui / tree depth / children of one object | 128 / 16 / 64 |
+| Objects in one ScreenGui / tree depth / arranged GuiObject children of one object | 128 / 16 / 64 |
+| UIListLayout / UIPadding children of one parent | 1 / 1 |
 | Objects / ScreenGuis in one domain | 1,024 / 32 |
 | Objects globally | 8,192 |
 | Screens for one Player connection / viewers of one ScreenGui | 16 / 256 |
@@ -141,8 +188,9 @@ DataModel compatibility:
 - `ScreenGui` is a CarbonLuau root and always has `Parent == nil`.
 - Rust CUI is an implementation detail and is not exposed to Luau.
 - Client rendering state is best effort and is not acknowledged to scripts.
-- Images, TextBox, scrolling, layout helpers, advanced styling and hover/focus
-  events are not implemented.
+- Images, TextBox, scrolling, advanced styling and hover/focus events are not
+  implemented. Foundation 2A layout is implemented but has no assigned release
+  identity yet.
 
 See the [complete reference](Gui-Reference.md), the
 [GUI examples](https://github.com/gmoddev/CarbonLuau/tree/main/examples/gui),
