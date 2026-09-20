@@ -108,12 +108,13 @@ Players.PlayerAdded:Connect(function(Player)
 end)
 ```
 
-The release bundle includes hello, shared-tree, per-player Clone and Activated
-examples under `examples/gui`, plus owner/consumer addon examples under
-`examples/addons`. See the [GUI guide](api/Gui.md) before deployment. In
-particular, Show/Hide represent desired server state; authenticated-client
-visual correctness, cursor behavior, actual click receipt and reconciliation
-remain unqualified.
+The release bundle includes hello, shared-tree, per-player Clone, Activated,
+deterministic layout, padding, typed image and retained scrolling examples under
+`examples/gui`, plus owner/consumer addon examples under `examples/addons`. See
+the [GUI guide](api/Gui.md) before deployment. `TextBox` is not implemented.
+Show/Hide represent desired server state; authenticated-client visual
+correctness, image loading, clipping, scrolling, actual click receipt and
+reconciliation remain unqualified.
 
 ## Configuration
 

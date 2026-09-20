@@ -6,6 +6,8 @@ $Release = Get-Content -Raw -LiteralPath (Join-Path $Root 'release.json') | Conv
 $Version = $Release.apiVersion
 $GuiGuide = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui.md')
 $GuiReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui-Reference.md')
+$GuiDescriptors = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiDescriptors.cs')
+$ReleaseNotes = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/releases/0.4.0.md')
 foreach ($Text in @($Bootstrap,$Managed,(Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Globals.md')),
     (Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Compatibility.md')),$GuiGuide,$GuiReference)) {
     if (!$Text.Contains($Version)) { throw 'API version differs between runtime and documentation' }
@@ -30,7 +32,9 @@ foreach ($Document in $Documents) {
 foreach ($Example in @('player-events','hello-command')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
 }
-foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling')) {
+foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',
+        'layout-vertical','layout-horizontal','padding','layout-order','image-label','image-button',
+        'item-skin','steam-avatar','scrolling-layout','shared-rich','per-player-rich')) {
     $ExamplePath = Join-Path $Root "examples/gui/$Example/init.luau"
     if (!(Test-Path -LiteralPath $ExamplePath)) { throw "Missing runnable GUI example: $Example" }
     $ExampleText = Get-Content -Raw -LiteralPath $ExamplePath
@@ -45,6 +49,9 @@ foreach ($Path in @('examples/addons/economy/addon.json','examples/addons/econom
 }
 foreach ($Name in @('ScreenGui','Frame','TextLabel','TextButton','ImageLabel','ImageButton','ScrollingFrame','UIListLayout','UIPadding','GuiObject','UDim','UDim2','Vector2','Color3','ImageSource')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits public type: $Name" }
+    if ($Name -notin @('GuiObject','UDim','UDim2','Vector2','Color3') -and !$GuiDescriptors.Contains(('"{0}"' -f $Name))) {
+        throw "GUI descriptor omits implemented public type: $Name"
+    }
 }
 foreach ($Name in @('Name','ClassName','Parent','Position','Size','AnchorPoint','Visible','BackgroundColor3',
         'BackgroundTransparency','ZIndex','LayoutOrder','Text','TextColor3','TextTransparency','TextSize','TextXAlignment','TextYAlignment',
@@ -63,5 +70,14 @@ foreach ($Constructor in @('ImageSource.None','ImageSource.Sprite','ImageSource.
 }
 foreach ($Claim in @('desired server state','does not transfer','not acknowledged','Player')) {
     if (!$GuiGuide.Contains($Claim)) { throw "GUI guide is missing required observable-semantics claim: $Claim" }
+}
+if ($GuiDescriptors -match '\bTextBox\b|\bSubmitted\b' -or $Bootstrap -match '\bTextBox\b|\bSubmitted\b') {
+    throw 'Deferred TextBox or Submitted leaked into the production descriptor/bootstrap surface'
+}
+foreach ($Document in @($GuiGuide,$GuiReference,$ReleaseNotes,(Get-Content -Raw -LiteralPath (Join-Path $Root 'README.md')),
+        (Get-Content -Raw -LiteralPath (Join-Path $Root 'CHANGELOG.md')))) {
+    if (!$Document.Contains('TextBox') -or !$Document.Contains('not implemented')) {
+        throw 'Public release documentation must identify TextBox as not implemented'
+    }
 }
 Write-Output '[CarbonLuau:ApiTest] PASS version identity, gameplay/addon/GUI surface audit, runnable examples and relative links; runtime suite loads examples'

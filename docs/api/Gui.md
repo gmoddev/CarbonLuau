@@ -2,12 +2,11 @@
 
 Availability: experimental API `0.4.0-experimental`.
 
-Source status: the additive Foundation 2A layout, Foundation 2B typed-image and
-Foundation 2C scrolling surfaces below are implemented and have completed
-Foundation 2E lifecycle qualification, but Foundation 2 has not received a
-release/API identity yet. `TextBox` and `Submitted` are deferred and not
-implemented because the current Rust command transport cannot preserve the
-required submitted text exactly.
+The additive Foundation 2 layout, typed-image and retained-scrolling surface
+below is included in package `0.4.0` and API `0.4.0-experimental` after
+Foundation 2F qualification. `TextBox` is not implemented. `Submitted` is not
+implemented. The current Rust command transport cannot preserve the required
+submitted text exactly, so CarbonLuau does not expose a lossy substitute.
 
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the
@@ -70,6 +69,22 @@ Screen:Show(Player)
 A clone receives new object identities and copies the subtree's public
 properties and child order. It does not copy viewers, action state, pending
 updates or Signal connections.
+
+## Runnable examples
+
+The release bundle and repository include focused examples for each supported
+Foundation 2 pattern:
+
+| Pattern | Example |
+|---|---|
+| Vertical and horizontal lists | [`layout-vertical`](../../examples/gui/layout-vertical/init.luau), [`layout-horizontal`](../../examples/gui/layout-horizontal/init.luau) |
+| Padding and LayoutOrder versus ZIndex | [`padding`](../../examples/gui/padding/init.luau), [`layout-order`](../../examples/gui/layout-order/init.luau) |
+| Sprite/PNG labels and secure image buttons | [`image-label`](../../examples/gui/image-label/init.luau), [`image-button`](../../examples/gui/image-button/init.luau) |
+| Item, skin and Steam avatar sources | [`item-skin`](../../examples/gui/item-skin/init.luau), [`steam-avatar`](../../examples/gui/steam-avatar/init.luau) |
+| Explicit scrolling and list layout inside scrolling | [`scrolling`](../../examples/gui/scrolling/init.luau), [`scrolling-layout`](../../examples/gui/scrolling-layout/init.luau) |
+| One shared tree and cloned per-Player state | [`shared-rich`](../../examples/gui/shared-rich/init.luau), [`per-player-rich`](../../examples/gui/per-player-rich/init.luau) |
+
+These examples use only the public Luau surface. Raw Rust CUI is never exposed.
 
 ## Deterministic lists and padding
 
@@ -216,6 +231,15 @@ Do not build authorization around button visibility alone. Check normal server
 permissions and game state inside the callback before performing sensitive
 actions.
 
+## TextBox status
+
+**TextBox is not implemented.** The inspected Rust InputField command path
+trims submitted text before CarbonLuau receives it. That loses trailing and
+whitespace-only input and violates D16's exact `Submitted(Player, Text)`
+contract. CarbonLuau intentionally does not reconstruct console arguments,
+normalize input or advertise partial support. The design may be reconsidered
+if a future host provides a bounded opaque text-preserving input transport.
+
 ## Current hard bounds
 
 The current experimental candidate rejects operations that would exceed these
@@ -252,8 +276,8 @@ DataModel compatibility:
 - Rust CUI is an implementation detail and is not exposed to Luau.
 - Client rendering state is best effort and is not acknowledged to scripts.
 - TextBox, advanced styling and hover/focus events are not implemented.
-  Foundation 2A layout, Foundation 2B typed images and Foundation 2C scrolling
-  are implemented but have no assigned release identity yet.
+  Foundation 2 layout, typed images and retained scrolling are included in the
+  experimental `0.4.0-experimental` surface.
 
 See the [complete reference](Gui-Reference.md), the
 [GUI examples](https://github.com/gmoddev/CarbonLuau/tree/main/examples/gui),

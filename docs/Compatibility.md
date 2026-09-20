@@ -53,7 +53,11 @@ that evidence is no longer a gate for the experimental identity.
 GUI Foundation 2A through 2C implement deterministic layout, typed images and
 retained scrolling. [Foundation 2E](GuiFoundation2E.md) qualifies their
 lifecycle, shared-view, cross-domain, replacement, recovery, provider and
-failure behavior without assigning a Foundation 2 release identity. `TextBox`
+failure behavior. [Foundation 2F](GuiFoundation2F.md) closes public documentation,
+examples, compatibility, bounded scale and release preparation and assigns this
+implemented subset to the existing package `0.4.0` and scripting API
+`0.4.0-experimental`. No 0.5.0 identity is needed because 0.4.0 remains
+unreleased and the subset is additive. `TextBox`
 is **DEFERRED / NOT IMPLEMENTED**. Rust Dedicated Server app `258550`, build
 `25353106`, was inspected for GUI-2D and trims the complete command and
 `ConsoleSystem.Arg.FullString`; trailing and whitespace-only input cannot meet
@@ -441,8 +445,8 @@ image projection and the existing secure Activated path; its evidence is in
 private viewport/content projection and layout/image composition; its evidence
 is in [GuiFoundation2C.md](GuiFoundation2C.md). This does not alter D15 evidence.
 
-Future GUI-2D through GUI-2F work must preserve Foundation 1 behavior for scripts
-that do not use Foundation 2 objects. Qualification must cover deterministic
+The implemented Foundation 2 subset preserves Foundation 1 behavior for scripts
+that do not use Foundation 2 objects. Qualification covers deterministic
 layout, retained versus Presentation-local state, projection cost and full
 reconciliation bounds, typed image validation, exact action authority,
 adversarial typed input, publication/replacement/recovery and affected
@@ -460,11 +464,10 @@ bounds in D16 are the initial hard implementation envelope and must be qualified
 before support. Submission rates and scheduling/timing values remain tuning
 targets rather than permanent compatibility promises.
 
-D16 and GUI Foundations 2A/2B/2C assign no new release identity. Package `0.4.0`, scripting API
-`0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package schema
-`1` and the pinned Luau revision still describe the implemented addon plus
-Foundation 1 candidate. Foundation 2 release identity remains gated on the
-remaining implementation, qualification and explicit later release planning.
+D16 and GUI Foundations 2A/2B/2C did not independently assign a release identity.
+GUI Foundation 2F includes their qualified layout/image/scrolling surface in
+package `0.4.0` and scripting API `0.4.0-experimental`. Native ABI `1.4`, provider
+protocol `1.2`, package schema `1` and the pinned Luau revision are unchanged.
 Server-side layout/image/scroll plans and serialized host mappings are
 qualified; authenticated-client visual layout, image and scrolling behavior
 remain unqualified and non-gating.

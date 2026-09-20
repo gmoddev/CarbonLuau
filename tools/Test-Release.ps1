@@ -59,11 +59,21 @@ try {
             }
             foreach ($ExampleEntry in @('examples/gui/hello/init.luau','examples/gui/shared-live/init.luau',
                     'examples/gui/per-player/init.luau','examples/gui/activated/init.luau','examples/gui/images/init.luau',
-                    'examples/gui/scrolling/init.luau',
+                    'examples/gui/scrolling/init.luau','examples/gui/layout-vertical/init.luau',
+                    'examples/gui/layout-horizontal/init.luau','examples/gui/padding/init.luau',
+                    'examples/gui/layout-order/init.luau','examples/gui/image-label/init.luau',
+                    'examples/gui/image-button/init.luau','examples/gui/item-skin/init.luau',
+                    'examples/gui/steam-avatar/init.luau','examples/gui/scrolling-layout/init.luau',
+                    'examples/gui/shared-rich/init.luau','examples/gui/per-player-rich/init.luau',
                     'examples/addons/guiowner/addon.json','examples/addons/guiowner/init.luau','examples/addons/guiowner/api.luau',
                     'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {
                 if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $ExampleEntry })) {
                     throw "Release bundle is missing public GUI example: $ExampleEntry"
+                }
+            }
+            foreach ($DocumentEntry in @('GUI.md','GUI-REFERENCE.md','RELEASE-NOTES.md')) {
+                if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $DocumentEntry })) {
+                    throw "Release bundle is missing public GUI documentation: $DocumentEntry"
                 }
             }
             $ProvenanceEntry = $Bundle.Entries | Where-Object { $_.FullName -ceq 'PROVENANCE.json' }

@@ -7,15 +7,15 @@ Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators u
 pinned Luau revision and the installed Rust/Carbon builds. Published v0.3.0
 artifacts remain API `0.3.0-experimental` with native ABI `1.2`.
 
-The unreleased 0.4.0 candidate combines the additive addon and GUI Foundation 1
-surfaces under this one experimental identity. Authenticated-client visual,
+The unreleased 0.4.0 candidate combines the additive addon, GUI Foundation 1 and
+implemented GUI Foundation 2 layout/image/scrolling surfaces under this one
+experimental identity. Authenticated-client visual,
 cursor, scrolling, clipping, image-load, click-receipt and reconciliation behavior remains unqualified and is not
 implied by API availability.
 
 Foundation 2 deterministic layout, typed images and retained scrolling are
-implemented in source and have completed Foundation 2E lifecycle qualification,
-but they have no Foundation 2 release/API identity. `TextBox` and `Submitted`
-are deferred and not implemented because the inspected Rust InputField command
+qualified for experimental public release by Foundation 2F. `TextBox` is not
+implemented and `Submitted` is not implemented because the inspected Rust InputField command
 path trims submitted text before CarbonLuau receives it. The exact D16 text
 contract was not weakened into console-argument semantics.
 

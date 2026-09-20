@@ -170,10 +170,12 @@ model, lifecycle, serialized projection and controlled ingress behavior only.
 
 Package `0.4.0`, scripting API `0.4.0-experimental`, native ABI `1.4`, provider
 protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and pinned Luau revision
-`c6b830185af962c82003f86784e2fe036357c830` are unchanged. Foundation 2 still
-has no release/API identity.
+`c6b830185af962c82003f86784e2fe036357c830` were unchanged by GUI-2E. At that
+phase Foundation 2 had no release/API identity. GUI-2F later assigned the
+implemented layout/image/scrolling subset to the existing unreleased
+`0.4.0-experimental` identity.
 
-GUI-2F public release qualification remains future work. TextBox, Submitted,
+TextBox, Submitted,
 focus APIs, alternate text transport, CanvasPosition, AutomaticCanvasSize,
 UIGridLayout, URL images, advanced styling and Foundation 3 features were not
 implemented.

@@ -18,6 +18,7 @@
   - [GUI Foundation 2B](GuiFoundation2B.md)
   - [GUI Foundation 2C](GuiFoundation2C.md)
   - [GUI Foundation 2E](GuiFoundation2E.md)
+  - [GUI Foundation 2F](GuiFoundation2F.md)
 - API
   - [Overview](api/README.md)
   - [Globals](api/Globals.md)

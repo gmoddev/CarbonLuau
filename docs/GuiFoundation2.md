@@ -654,5 +654,8 @@ implemented identities remain package `0.4.0`, scripting API
 `1` and pinned Luau revision
 `c6b830185af962c82003f86784e2fe036357c830`.
 
-Foundation 2 release identity remains gated on implementation, qualification
-and later explicit release planning. This record does not begin GUI-2A.
+At architecture adoption, Foundation 2 release identity remained gated on
+implementation, qualification and later explicit release planning. This record
+did not begin GUI-2A. GUI Foundation 2F later assigned the implemented
+layout/image/scrolling subset to the existing unreleased
+`0.4.0-experimental` identity; TextBox remains deferred and unimplemented.

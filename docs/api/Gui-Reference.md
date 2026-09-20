@@ -2,11 +2,11 @@
 
 Availability: experimental API `0.4.0-experimental`.
 
-Foundation 2A/2B/2C source status: deterministic layout, typed images and
-retained scrolling are implemented and have completed Foundation 2E lifecycle
-qualification, with no Foundation 2 release/API identity assigned. `TextBox`
-and `Submitted` are deferred and not implemented because the current Rust
-command transport failed D16's exact text-preservation gate.
+Foundation 2 deterministic layout, typed images and retained scrolling are
+included in package `0.4.0` and API `0.4.0-experimental` after Foundation 2F
+qualification. `TextBox` is not implemented and `Submitted` is not implemented
+because the current Rust command transport failed D16's exact text-preservation
+gate.
 
 ## Service and construction
 
@@ -190,3 +190,10 @@ asset-key characters. Decimal identifiers contain at most 20 ASCII digits;
 skin and Steam IDs must also fit unsigned 64-bit range. Omitted Item SkinId
 reads as the empty string. A syntactically valid but unavailable asset remains
 retained state and receives no client-load acknowledgement.
+
+## Deferred text input
+
+`TextBox`, `Submitted`, `FocusLost`, focus APIs and typed text ingress do not
+exist in this release. The canonical future design requires exact supported
+single-line text preservation. The current host command transport trims input,
+so CarbonLuau does not expose partial or console-argument-based behavior.

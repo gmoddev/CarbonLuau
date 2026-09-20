@@ -24,6 +24,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 2B typed-image implementation and evidence | [GuiFoundation2B.md](docs/GuiFoundation2B.md) |
 | GUI Foundation 2C scrolling implementation and evidence | [GuiFoundation2C.md](docs/GuiFoundation2C.md) |
 | GUI Foundation 2E lifecycle and rich-control closure | [GuiFoundation2E.md](docs/GuiFoundation2E.md) |
+| GUI Foundation 2F public qualification and release-candidate closure | [GuiFoundation2F.md](docs/GuiFoundation2F.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -148,8 +149,16 @@ replacement, recovery, provider, publication and failure behavior for the
 implemented GUI-2A through GUI-2C surface. Its evidence is recorded in
 [GuiFoundation2E.md](docs/GuiFoundation2E.md). The GUI-2D host gate failed on
 the inspected Rust build, so `TextBox` and typed text ingress remain explicitly
-deferred and unimplemented. GUI-2E assigns no Foundation 2 release identity and
-does not authorize GUI-2F or Foundation 3 work.
+deferred and unimplemented. At completion, GUI-2E assigned no Foundation 2
+release identity and did not itself authorize GUI-2F or Foundation 3 work.
+GUI Foundation 2F assigns the implemented deterministic-layout, typed-image and
+retained-scrolling subset to the existing unreleased package `0.4.0` and
+scripting API `0.4.0-experimental`. Its public documentation, examples,
+compatibility audit, scale evidence and release preparation are recorded in
+[GuiFoundation2F.md](docs/GuiFoundation2F.md). `TextBox` and `Submitted` remain
+deferred and unimplemented. Authenticated-client image, click, scrolling and
+clipping observations remain explicitly unqualified and are not implied by the
+experimental identity. GUI-2F authorizes no Foundation 3 work.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

@@ -2,8 +2,8 @@
 
 The current candidate implements the **experimental** `CarbonLuau`
 `0.4.0-experimental` scripting API. It preserves the gameplay facade introduced
-in 0.3.0-experimental and adds qualified addon composition plus the GUI
-Foundation 1 surface.
+in 0.3.0-experimental and adds qualified addon composition plus GUI Foundation 1
+and the implemented Foundation 2 layout/image/scrolling surface.
 Windows/Linux workers, sanitizers and live Carbon qualification passed; exact
 scope and limitations are maintained in [Foundation E](../FoundationE.md).
 This is server-side Luau, not Roblox API compatibility.
@@ -58,10 +58,10 @@ Addon packages use exact dependency bindings, explicit exports and the readonly
 
 GUI Foundation 1 provides `game:GetService("Gui")`, ScreenGui, Frame and text
 controls with retained properties, immutable values, per-Player Show/Hide and
-secure Activated events. Foundation 2A adds implemented but not yet
-release-versioned layout helpers; Foundation 2B adds typed ImageSource,
-ImageLabel and ImageButton; Foundation 2C adds retained ScrollingFrame
-configuration with client-local scroll position. TextBox, advanced styling,
+secure Activated events. Foundation 2 adds release-qualified layout helpers,
+typed ImageSource, ImageLabel, ImageButton and retained ScrollingFrame
+configuration with client-local scroll position under the same
+`0.4.0-experimental` identity. TextBox is not implemented. Advanced styling,
 hover/focus and raw CUI remain unsupported. Authenticated-client visual, cursor, image-load,
 click-receipt and reconciliation observations remain unqualified even though
 the experimental source surface is available.

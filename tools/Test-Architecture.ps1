@@ -18,6 +18,7 @@ $Expected = @(
     'src/CarbonLuau/Gui/GuiConfig.cs',
     'src/CarbonLuau/Gui/GuiActions.cs',
     'src/CarbonLuau/Gui/GuiDescriptors.cs',
+    'src/CarbonLuau/Gui/GuiImageSource.cs',
     'src/CarbonLuau/Gui/GuiModelContracts.cs',
     'src/CarbonLuau/Gui/GuiRetainedRegistry.cs',
     'src/CarbonLuau/Gui/GuiRenderPlan.cs',

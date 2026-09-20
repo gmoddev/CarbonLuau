@@ -15,8 +15,9 @@ identity mapping:
 | Pinned Luau | `c6b830185af962c82003f86784e2fe036357c830` |
 
 Published v0.3.0 remains the gameplay-facade baseline. The additive package and
-scripting API minor bump identifies public addon composition and GUI Foundation
-1 without claiming a stable 1.0 API. The unreleased candidate remains 0.4.0
+scripting API minor bump identifies public addon composition, GUI Foundation 1
+and the implemented Foundation 2 layout/image/scrolling subset without claiming
+a stable 1.0 API. The unreleased candidate remains 0.4.0
 rather than advancing to 0.5.0 because no published 0.4 compatibility surface is
 being superseded. Package, scripting API, native ABI, provider protocol, package
 schema and pinned Luau are separate compatibility identities even though this
@@ -28,6 +29,10 @@ Authenticated-client visual layout, cursor behavior, actual click receipt and
 client reconciliation remain unqualified and are not release-artifact claims.
 This evidence is non-gating for the experimental identity but must stay visible
 in release notes and compatibility documentation.
+
+`TextBox` and `Submitted` are not part of the release identity. Their D16 design
+remains deferred because the inspected host transport cannot preserve submitted
+text exactly.
 
 ## Reproduce a platform bundle
 

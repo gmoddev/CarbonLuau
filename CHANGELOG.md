@@ -15,7 +15,13 @@ All notable public changes to CarbonLuau are recorded here.
 - Experimental retained GUI with ScreenGui, Frame, TextLabel and TextButton.
 - Roblox-familiar UDim, UDim2, Vector2 and Color3 values; explicit per-Player
   Show/Hide; bounded synchronization; and secure TextButton.Activated.
+- Deterministic UIListLayout and UIPadding with LayoutOrder independent of ZIndex.
+- Typed ImageSource values, ImageLabel, ImageButton and secure ImageButton.Activated.
+- Retained ScrollingFrame configuration with explicit CanvasSize and client-local
+  scroll position.
 - Runnable root and addon GUI examples, including shared and per-player trees.
+- Focused runnable Foundation 2 examples for layout, images, scrolling, shared
+  retained trees and cloned per-Player state.
 
 ### Validation
 
@@ -25,6 +31,8 @@ All notable public changes to CarbonLuau are recorded here.
 - Passed Windows, Ubuntu, ASan, UBSan and leak-detection regressions.
 - Qualified GUI ownership, publication, replacement, VM recovery, backend fault
   convergence, action-token rejection, lifecycle teardown and bounded stress.
+- Qualified the implemented Foundation 2 surface at 1, 10, 50 and 100 viewers
+  with a 254-element rich screen inside the 257-element projection bound.
 
 ### Limits
 
@@ -35,8 +43,9 @@ All notable public changes to CarbonLuau are recorded here.
 - Authenticated-client visual layout, cursor behavior, actual click receipt and
   client reconciliation remain unqualified. This does not block the experimental
   API identity and is not evidence that those client-observed outcomes passed.
-- Images, TextBox, scrolling, automatic layouts, advanced styling and hover/focus
-  events remain deferred.
+- TextBox is not implemented because the current host transport cannot preserve
+  submitted text exactly. UIGridLayout, automatic sizing/canvas sizing,
+  CanvasPosition, advanced styling and hover/focus events remain deferred.
 
 ## 0.3.0
 

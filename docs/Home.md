@@ -39,6 +39,7 @@ receipt by an authenticated client was not tested and is not claimed.
 - Provider-owned addon packages, exact dependency lifetimes and public modules.
 - `require("@addon")`, `require("@addon/path")` and dependency availability.
 - ScreenGui, Frame, text/image controls and immutable layout, color and typed image values.
+- Deterministic UIListLayout/UIPadding and retained ScrollingFrame configuration.
 - Explicit per-Player Show/Hide and secure button Activated callbacks.
 
 Items/inventory, arbitrary Rust hooks, filesystem/network access, Roblox
@@ -77,7 +78,9 @@ with detailed design and future GUI-2A through GUI-2F guidance in
 qualified in [GUI Foundation 2A](GuiFoundation2A.md), and typed images in
 [GUI Foundation 2B](GuiFoundation2B.md), and retained scrolling in
 [GUI Foundation 2C](GuiFoundation2C.md). Their lifecycle and rich-control
-closure is qualified in [GUI Foundation 2E](GuiFoundation2E.md), without a
-Foundation 2 release identity. TextBox and typed text input are explicitly
-deferred after the current Rust transport failed the exact-preservation gate;
-GUI-2F remains future work.
+closure is qualified in [GUI Foundation 2E](GuiFoundation2E.md). Public
+qualification, examples, compatibility and release preparation are closed by
+[GUI Foundation 2F](GuiFoundation2F.md) under the existing
+`0.4.0-experimental` identity. TextBox is not implemented and typed text input
+remains deferred after the current Rust transport failed the exact-preservation
+gate.
