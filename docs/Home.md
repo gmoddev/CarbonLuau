@@ -84,3 +84,10 @@ qualification, examples, compatibility and release preparation are closed by
 `0.4.0-experimental` identity. TextBox is not implemented and typed text input
 remains deferred after the current Rust transport failed the exact-preservation
 gate.
+
+The additive GUI Foundation 3 architecture is resolved by
+[D17](Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent),
+with its detailed grid, clipping, font, scroll-effect, bounds and qualification
+guidance in [GUI Foundation 3](GuiFoundation3.md). Foundation 3 is architecture
+only at this point: it has no production implementation or release identity,
+and it does not reopen deferred TextBox work.

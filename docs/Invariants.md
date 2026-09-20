@@ -115,6 +115,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
 | D16 - resolved GUI Foundation 2 architecture; implemented subset qualified for experimental public release through 2F | Foundation 2 additively specializes D15 as specified below. GUI-2A/2B/2C/2E/2F implement and qualify deterministic layout, typed images and retained scrolling under the existing `0.4.0-experimental` identity. `TextBox` and typed text ingress remain deferred and unimplemented after the exact text-preservation gate failed. [GuiFoundation2.md](GuiFoundation2.md) retains the complete supporting design. | Requalify affected behavior; reconsider TextBox only with a bounded opaque text-preserving host transport |
+| D17 - resolved GUI Foundation 3 architecture | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design, implementation sequencing and qualification gates. No Foundation 3 production code or release identity is assigned by this decision. | Implement and qualify the applicable GUI-3A through GUI-3E slices before public support; omit any host-dependent feature that cannot meet its recorded gate |
 
 ### Canonical detail for resolved decisions
 
@@ -358,6 +359,170 @@ public 0.4 compatibility surface and does not warrant 0.5.0. Native ABI `1.4`,
 provider protocol `1.2`, package schema `1` and the pinned Luau revision remain
 unchanged. `TextBox`, `Submitted` and typed text ingress remain deferred and
 unimplemented; their design above is preserved for possible future reconsideration.
+
+#### D17 - GUI Foundation 3 deterministic grids, clipping, fonts and Presentation scroll intent
+
+GUI Foundation 3 additively extends D15 and D16 with deterministic
+`UIGridLayout`, bounded rectangular `Frame.ClipsDescendants`, immutable
+project-owned `GuiFont` values and retained `TextLabel.Font` and
+`TextButton.Font`, plus one-way per-Presentation `ScrollingFrame:ScrollTo`,
+`ScrollToTop` and `ScrollToBottom` effects. No other Foundation 3 public feature
+is approved. D15 and D16 remain authoritative for GUI ownership, publication,
+Presentation lifetime, synchronization, interaction security, retained versus
+client-local scrolling state, typed images, replacement, recovery and resource
+discipline except where this decision explicitly specializes the new surface.
+
+`UIGridLayout` is an ordinary owner-bound, non-rendering retained layout helper
+computed by CarbonLuau from retained affine geometry. Its properties are
+`CellSize` (`UDim2`, default `UDim2.fromOffset(100, 100)`, non-negative scale
+and offset components), `CellPadding` (`UDim2`, default
+`UDim2.fromOffset(0, 0)`, non-negative scale and offset components),
+`FillDirection` (`"Horizontal"` or `"Vertical"`, default `"Horizontal"`),
+`FillDirectionMaxCells` (integer `1..64`, default `1`),
+`HorizontalAlignment` (`"Left"`, `"Center"` or `"Right"`, default `"Left"`)
+and `VerticalAlignment` (`"Top"`, `"Center"` or `"Bottom"`, default `"Top"`).
+A parent may contain at most one active `UIListLayout` or `UIGridLayout`, not
+one of each; `UIPadding` may coexist with either. Conflicting layout-manager
+creation or reparenting fails atomically.
+
+Grid ordering is `LayoutOrder`, then retained attachment ordinal, then object
+identity. `ZIndex` remains independent and `GetChildren` remains attachment
+order. Hidden children consume no cell. `UIPadding` establishes the content
+rectangle before grid geometry is computed. Explicit `FillDirectionMaxCells`
+determines row or column topology without client pixels or automatic
+fit-to-parent behavior. Grid overflow does not resize cells, change topology,
+clip automatically or query available client space. Nested grids are allowed;
+each layout operates only on its own direct children. Foundation 3 has no
+`StartCorner`, `SortOrder`, `AbsoluteContentSize`, automatic cell sizing or
+client-dependent wrapping.
+
+While a direct child is governed by `UIGridLayout`, its retained `Position` and
+`Size` remain synchronously readable and writable but neither determines its
+projected outer rectangle. The grid cell determines projected position and
+projected size. `AnchorPoint` remains retained and participates only in encoding
+the computed cell rectangle; it does not change the cell bounds. Grid projection
+never rewrites retained `Position` or `Size`. Removing or leaving the grid
+restores their latest retained values as projection authority. This intentionally
+differs from `UIListLayout`, under which retained child `Size` remains projection
+authority.
+
+`Frame.ClipsDescendants` is retained shared boolean state with default `false`.
+When true, CarbonLuau projects private rectangular clipping state below the
+Frame and routes projected descendants through it. That representation is not
+retained or Luau-addressable, does not depend on Frame background visibility or
+transparency, and affects descendant rendering and interaction eligibility.
+Nested clipping is allowed within the effective depth bound. The property is
+initially structural/full-rebuild for synchronization. `ScrollingFrame` keeps
+its existing private viewport clipping and is not redefined by this property.
+
+Authenticated current-client qualification must establish visible descendant
+clipping, transparent-parent behavior, nested clipping, hit rejection outside
+clipped regions and interoperability with `ScrollingFrame` clipping. If that
+contract cannot be established, `ClipsDescendants` must be omitted from the
+implemented/public Foundation 3 release subset rather than weakened. This is a
+qualification gate, not an unresolved architecture choice.
+
+`GuiFont` is an immutable host-lifetime-independent value with exactly
+`RobotoCondensedRegular`, `RobotoCondensedBold`, `DroidSansMono` and
+`PermanentMarker`. It has no constructor and exposes no arbitrary string, path,
+filesystem or other host capability. `TextLabel.Font` and `TextButton.Font` are
+retained shared properties, default to `RobotoCondensedRegular`, and are
+patchable where qualified. Host font identifiers remain backend details. Each
+member requires supported-client qualification before public release; an
+unavailable member must be removed before qualification rather than silently
+falling back or exposing host strings. Existing visual behavior remains
+unchanged until an author explicitly uses the feature.
+
+`ScrollingFrame:ScrollTo(Player, Vector2)`, `ScrollToTop(Player)` and
+`ScrollToBottom(Player)` are Presentation-specific one-way effects, not
+retained scroll state, `CanvasPosition`, readable state or shared viewer state.
+`ScrollTo` accepts normalized CarbonLuau coordinates from `0..1`, where `(0, 0)`
+is top-left and `(1, 1)` is bottom-right, and transmits only enabled axes.
+Top/Bottom change only vertical intent and require Y scrolling. Each operation
+targets one exact D11 Player connection, one current eligible Presentation and
+the specified `ScrollingFrame`; absence produces a controlled programming error
+under the existing GUI error model. Other viewers remain unaffected, and
+`Clone` copies no pending effect.
+
+A scroll intent is bounded one-shot Presentation effect state, not retained
+authority. During committed execution, CarbonLuau validates the
+`ScrollingFrame` owner, exact Player and current Presentation, stages the latest
+pending effect and sends it during a later GUI flush. During provisional
+execution, `ResourceOwner` is the `ScrollingFrame` owner and
+`PublicationContext` is the admitted provisional operation. The journaled
+effect cannot become client-visible before commit. Commit first publishes
+retained changes, then resolves the resulting current Presentation, binds the
+effect to that Presentation epoch and enqueues it for a later flush. If the exact
+Player or Presentation disappears before commit, the ephemeral effect is
+discarded with bounded diagnostics without rolling back otherwise valid retained
+publication.
+
+Pending scroll effects are bounded and latest-wins per
+`(Presentation, ScrollingFrame)` with no historical log. If a rebuild and effect
+are due together, the rebuild is emitted first, or the effect may equivalently
+be folded into the replacement projection. A local host rejection retains the
+latest effect for a later eligible synchronization attempt. Local host acceptance
+consumes it; there is no client acknowledgement, and a later unrelated rebuild
+does not replay it. Before public qualification, current-client evidence must
+cover top/bottom orientation, midpoint, horizontal/vertical/XY behavior, exact
+Player isolation, repeated same-frame latest-wins behavior, rebuild ordering and
+local failure/retry. A bounded structural replacement may implement the same
+one-way contract if partial update is unreliable; `CanvasPosition` remains
+excluded.
+
+Foundation 3 adds these synchronization classifications: grid
+creation/destruction/reparenting and `ClipsDescendants` are structural; grid
+property mutation, `LayoutOrder` under list/grid, `Visible` under grid,
+`AnchorPoint` under grid and `UIPadding` with grid are layout-affecting;
+`LayoutOrder` without layout is metadata-only; `Position` and `Size` under grid
+are retained-only while the grid governs projection; `Font` is patchable; and
+`ScrollTo*` is a Presentation-local effect. Grid recomputation touches only
+direct arranged children. There is no historical geometry queue, and existing
+dirty overflow still collapses to authoritative whole-presentation
+reconciliation.
+
+D15/D16 ownership and retained publication apply without a new ownership model.
+`UIGridLayout` is an ordinary owner-bound retained GUI resource;
+`ClipsDescendants` and `Font` are ordinary retained properties; `GuiFont` owns no
+host resource; and foreign-domain mutation continues using the existing
+`ResourceOwner` and `PublicationContext` semantics. Only `ScrollTo*` uses the
+new bounded Presentation-effect publication rule.
+
+Foundation 3 preserves existing global envelopes. Initial hard additions are
+one active `UIListLayout`/`UIGridLayout` total and one `UIPadding` per parent;
+at most 64 arranged grid children; `FillDirectionMaxCells` `1..64`;
+O(direct-child) grid work with no synthesized empty retained cells; effective
+nested clipping depth four, counting explicit Frame clips and private
+`ScrollingFrame` viewport clips; one private clipping projection element per
+clipping Frame; the unchanged 257 projected-element screen limit; at most 16
+pending scroll effects per Presentation, 512 per domain and 4096 globally; and
+one latest pending value per `(Presentation, ScrollingFrame)`. A
+`ClipsDescendants` mutation that would exceed authoritative projection bounds
+fails atomically. Timing and rate measurements are qualification targets, not
+public compatibility guarantees.
+
+Foundation 3 excludes `AutomaticSize`, `AutomaticCanvasSize`,
+`AbsoluteContentSize`, `CanvasPosition`, `UIAspectRatioConstraint`,
+`UISizeConstraint`, generic constraints, `UIStroke`, a CarbonLuau outline
+helper, `UICorner`, advanced image scale modes, arbitrary fonts or font paths,
+`TextBox`, animations/tweens, drag/drop, focus/navigation, client geometry and
+arbitrary client scripting. `TextBox` remains deferred under D16's exact-text
+transport gate and is not reopened.
+
+Existing Foundation 1/2 behavior remains unchanged unless an author explicitly
+uses a Foundation 3 feature. Ordinary `Position`/`Size`, `UIListLayout`,
+`UIPadding`, `LayoutOrder`, `ZIndex`, attachment-order `GetChildren`,
+`Clone`/`Destroy`, `TextButton`/`ImageButton.Activated`, explicit `CanvasSize`,
+client-local scrolling, `ImageSource`, D15/D16 publication,
+replacement/recovery and one-tree/multiple-Presentation semantics are preserved.
+Grid projection overrides `Position`/`Size` only while the child is actively
+governed by `UIGridLayout`.
+
+This architecture adoption assigns no package or scripting API identity and
+does not change package `0.4.0`, scripting API `0.4.0-experimental`, native ABI
+`1.4`, provider protocol `1.2`, package schema `1` or the pinned Luau revision.
+Foundation 3 release identity remains gated on implementation, qualification
+and later release planning.
 
 **Evidence separation:** [Phase1-Validation.md](Phase1-Validation.md) owns the scoped execution-core results. [Phase2-Validation.md](Phase2-Validation.md) owns module/callback/recovery qualification; Phase 1 does not establish their safety. [Phase3-Validation.md](Phase3-Validation.md) owns first-facade qualification; [Phase4-Validation.md](Phase4-Validation.md) records the blocked item investigation, not an implemented item API.
 

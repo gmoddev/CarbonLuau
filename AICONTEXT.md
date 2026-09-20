@@ -25,6 +25,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 2C scrolling implementation and evidence | [GuiFoundation2C.md](docs/GuiFoundation2C.md) |
 | GUI Foundation 2E lifecycle and rich-control closure | [GuiFoundation2E.md](docs/GuiFoundation2E.md) |
 | GUI Foundation 2F public qualification and release-candidate closure | [GuiFoundation2F.md](docs/GuiFoundation2F.md) |
+| Canonical GUI Foundation 3 additive semantics | [D17 in Invariants.md](docs/Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent) |
+| GUI Foundation 3 rationale, surface matrices, implementation guidance and qualification gates | [GuiFoundation3.md](docs/GuiFoundation3.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -159,6 +161,13 @@ compatibility audit, scale evidence and release preparation are recorded in
 deferred and unimplemented. Authenticated-client image, click, scrolling and
 clipping observations remain explicitly unqualified and are not implied by the
 experimental identity. GUI-2F authorizes no Foundation 3 work.
+GUI Foundation 3 architecture is canonically owned by D17 in
+[Invariants.md](docs/Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent).
+[GuiFoundation3.md](docs/GuiFoundation3.md) is supporting rationale, exact
+surface guidance, implementation sequencing and qualification planning; it does
+not override D17, prove implementation or assign a release identity. D17 is
+additive to D15/D16 and authorizes only explicitly scoped GUI-3A through GUI-3E
+implementation work. `TextBox` remains deferred under D16 and is not reopened.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

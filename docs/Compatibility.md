@@ -472,6 +472,30 @@ Server-side layout/image/scroll plans and serialized host mappings are
 qualified; authenticated-client visual layout, image and scrolling behavior
 remain unqualified and non-gating.
 
+## GUI Foundation 3 architecture gate
+
+[D17](Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent)
+adopts the additive Foundation 3 architecture. [GuiFoundation3.md](GuiFoundation3.md)
+owns detailed rationale, exact surface matrices, implementation sequencing and
+qualification planning. This policy adoption implements no Foundation 3
+production behavior and does not change existing Foundation 1/2 evidence.
+
+Future Foundation 3 public qualification must separately establish deterministic
+grid behavior, clipping visuals and hit eligibility, supported-client availability
+of every exposed `GuiFont`, and normalized one-way scroll-effect behavior. If
+authenticated-client evidence cannot satisfy the clipping contract,
+`ClipsDescendants` is omitted from the implemented/public release subset. If a
+font is unavailable, that value is removed before qualification rather than
+silently falling back. An unreliable scroll partial update may use bounded
+structural replacement, but does not authorize `CanvasPosition` or readback.
+
+D17 assigns no package or scripting API identity. Package `0.4.0`, scripting
+API `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package
+schema `1` and the pinned Luau revision remain unchanged. Foundation 3 release
+identity remains gated on implementation, qualification and explicit release
+planning. `TextBox` remains deferred and unimplemented under D16's exact-text
+transport gate.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:
