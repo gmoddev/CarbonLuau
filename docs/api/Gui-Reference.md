@@ -3,8 +3,10 @@
 Availability: experimental API `0.4.0-experimental`.
 
 Foundation 2A/2B/2C source status: deterministic layout, typed images and
-retained scrolling are implemented and qualified, with no Foundation 2
-release/API identity assigned.
+retained scrolling are implemented and have completed Foundation 2E lifecycle
+qualification, with no Foundation 2 release/API identity assigned. `TextBox`
+and `Submitted` are deferred and not implemented because the current Rust
+command transport failed D16's exact text-preservation gate.
 
 ## Service and construction
 

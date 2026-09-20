@@ -50,6 +50,17 @@ pinned Luau revision are unchanged. Authenticated-client visual layout, cursor,
 actual click receipt and client reconciliation remain explicitly unqualified;
 that evidence is no longer a gate for the experimental identity.
 
+GUI Foundation 2A through 2C implement deterministic layout, typed images and
+retained scrolling. [Foundation 2E](GuiFoundation2E.md) qualifies their
+lifecycle, shared-view, cross-domain, replacement, recovery, provider and
+failure behavior without assigning a Foundation 2 release identity. `TextBox`
+is **DEFERRED / NOT IMPLEMENTED**. Rust Dedicated Server app `258550`, build
+`25353106`, was inspected for GUI-2D and trims the complete command and
+`ConsoleSystem.Arg.FullString`; trailing and whitespace-only input cannot meet
+D16's exact-preservation contract. Parsed argument reconstruction is not an
+acceptable substitute. This finding is build-specific and may be revisited if
+the host later exposes a bounded opaque text-preserving UI-input payload.
+
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
 ## Dependency and host upgrades

@@ -3,8 +3,11 @@
 Availability: experimental API `0.4.0-experimental`.
 
 Source status: the additive Foundation 2A layout, Foundation 2B typed-image and
-Foundation 2C scrolling surfaces below are implemented and qualified, but
-Foundation 2 has not received a release/API identity yet.
+Foundation 2C scrolling surfaces below are implemented and have completed
+Foundation 2E lifecycle qualification, but Foundation 2 has not received a
+release/API identity yet. `TextBox` and `Submitted` are deferred and not
+implemented because the current Rust command transport cannot preserve the
+required submitted text exactly.
 
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the

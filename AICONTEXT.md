@@ -23,6 +23,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 2A deterministic layout implementation and evidence | [GuiFoundation2A.md](docs/GuiFoundation2A.md) |
 | GUI Foundation 2B typed-image implementation and evidence | [GuiFoundation2B.md](docs/GuiFoundation2B.md) |
 | GUI Foundation 2C scrolling implementation and evidence | [GuiFoundation2C.md](docs/GuiFoundation2C.md) |
+| GUI Foundation 2E lifecycle and rich-control closure | [GuiFoundation2E.md](docs/GuiFoundation2E.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -142,6 +143,13 @@ private viewport/content projection and Foundation 2 layout/image composition.
 Its implementation and qualification record is [GuiFoundation2C.md](docs/GuiFoundation2C.md).
 It assigns no Foundation 2 release identity and does not authorize TextBox,
 typed text ingress or later GUI-2D through GUI-2F work.
+GUI Foundation 2E closes D15/D16 lifecycle, shared-view, cross-domain,
+replacement, recovery, provider, publication and failure behavior for the
+implemented GUI-2A through GUI-2C surface. Its evidence is recorded in
+[GuiFoundation2E.md](docs/GuiFoundation2E.md). The GUI-2D host gate failed on
+the inspected Rust build, so `TextBox` and typed text ingress remain explicitly
+deferred and unimplemented. GUI-2E assigns no Foundation 2 release identity and
+does not authorize GUI-2F or Foundation 3 work.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

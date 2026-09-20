@@ -12,6 +12,13 @@ surfaces under this one experimental identity. Authenticated-client visual,
 cursor, scrolling, clipping, image-load, click-receipt and reconciliation behavior remains unqualified and is not
 implied by API availability.
 
+Foundation 2 deterministic layout, typed images and retained scrolling are
+implemented in source and have completed Foundation 2E lifecycle qualification,
+but they have no Foundation 2 release/API identity. `TextBox` and `Submitted`
+are deferred and not implemented because the inspected Rust InputField command
+path trims submitted text before CarbonLuau receives it. The exact D16 text
+contract was not weakened into console-argument semantics.
+
 The canonical compatibility policy lives in [Compatibility.md](../Compatibility.md)
 and decisions D8/D12. Additive means preserving existing contracts while adding
 names/operations. Removing/renaming APIs or changing types, lifetime, failure or

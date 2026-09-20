@@ -30,8 +30,10 @@ The v0.4.0 candidate provides sandboxed Luau execution, bounded logging and memo
 Addon packages are registered by a loaded Carbon provider plugin. CarbonLuau does not scan an addon directory or download packages. See [addon composition](docs/api/Addons.md), the [provider protocol](docs/api/Addon-Providers.md), and the [Foundation E qualification record](docs/FoundationE.md).
 
 The GUI surface offers ScreenGui, Frame, TextLabel, TextButton, ImageLabel,
-ImageButton, typed ImageSource values, deterministic list/padding layout,
-explicit per-Player Show/Hide and secure Activated callbacks. See the
+ImageButton, ScrollingFrame, typed ImageSource values, deterministic list and
+padding layout, explicit per-Player Show/Hide and secure Activated callbacks.
+The implemented Foundation 2 controls have completed lifecycle qualification.
+See the
 [GUI guide](docs/api/Gui.md). Authenticated-client visual,
 cursor, click-receipt and reconciliation behavior remains unqualified.
 
@@ -39,7 +41,7 @@ cursor, click-receipt and reconciliation behavior remains unqualified.
 
 Callbacks and host inputs are bounded, deadlines are cooperative, and the VM cap is not a whole-server memory cap. Successful reload cancels old listeners and commands; failed candidates preserve them. CarbonLuau does not expose raw Rust objects, arbitrary console execution, filesystem or network APIs, or a Roblox hierarchy.
 
-Provider-defined C# capabilities, root-to-addon imports, package downloads, version solving, multiple package instances, restricted exposure profiles, and async capabilities remain deferred. CarbonLuau has one shared VM heap cap, not per-addon hard heap isolation. Deterministic `UIListLayout`/`UIPadding`, typed images and `ScrollingFrame` are implemented in source but have not received a Foundation 2 release identity. TextBox and advanced GUI styling are not implemented. The item convenience APIs `Player:GiveItem` and `Items:Exists` are also deferred because no safe ownership adapter has been established.
+Provider-defined C# capabilities, root-to-addon imports, package downloads, version solving, multiple package instances, restricted exposure profiles, and async capabilities remain deferred. CarbonLuau has one shared VM heap cap, not per-addon hard heap isolation. Deterministic `UIListLayout`/`UIPadding`, typed images and `ScrollingFrame` are implemented and lifecycle-qualified in source but have not received a Foundation 2 release identity. TextBox is explicitly deferred because the current Rust command transport cannot preserve submitted text exactly; advanced GUI styling is also not implemented. The item convenience APIs `Player:GiveItem` and `Items:Exists` are deferred because no safe ownership adapter has been established.
 
 Authenticated real-client behavior and Shockbyte full-runtime behavior remain outside the qualified support envelope. See [API compatibility and limits](docs/api/Compatibility.md) and [platform compatibility](docs/Compatibility.md) for details.
 
