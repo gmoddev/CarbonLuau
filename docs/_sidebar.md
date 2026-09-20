@@ -13,6 +13,7 @@
   - [GUI Foundation 1E](GuiFoundation1E.md)
   - [GUI Foundation 1F](GuiFoundation1F.md)
   - [GUI Foundation 1G](GuiFoundation1G.md)
+  - [GUI Foundation 2 architecture](GuiFoundation2.md)
 - API
   - [Overview](api/README.md)
   - [Globals](api/Globals.md)

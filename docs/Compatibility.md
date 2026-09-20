@@ -414,6 +414,36 @@ click-receipt and reconciliation evidence remains unqualified and non-gating.
 Foundation G's Windows live/local compiler-worker supplement remains separately
 deferred and is not replaced by hosted Windows CI.
 
+## GUI Foundation 2 architecture gate
+
+[D16](Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls)
+adopts the additive Foundation 2 architecture. [GuiFoundation2.md](GuiFoundation2.md)
+owns detailed rationale, exact surface matrices, implementation sequencing and
+qualification planning. This documentation adoption is not implementation,
+runtime evidence or public API availability, and it does not alter D15 evidence.
+
+Future GUI-2A through GUI-2F work must preserve Foundation 1 behavior for scripts
+that do not use Foundation 2 objects. Qualification must cover deterministic
+layout, retained versus Presentation-local state, projection cost and full
+reconciliation bounds, typed image validation, exact action authority,
+adversarial typed input, publication/replacement/recovery and affected
+Foundation 1 regressions. Client-observed scrolling, images and TextBox require
+current authenticated-client evidence before their respective support claims.
+
+TextBox additionally requires exact supported single-line transport preservation
+for spaces, leading/trailing and repeated whitespace, quotes, backslashes and
+Unicode. Failure to prove that contract defers TextBox; it does not authorize
+normalization or console-argument semantics. Concrete object/input/source/queue
+bounds in D16 are the initial hard implementation envelope and must be qualified
+before support. Submission rates and scheduling/timing values remain tuning
+targets rather than permanent compatibility promises.
+
+D16 assigns no release identity. Package `0.4.0`, scripting API
+`0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package schema
+`1` and the pinned Luau revision still describe the implemented addon plus
+Foundation 1 candidate. Foundation 2 identity remains gated on implementation,
+qualification and explicit later release planning.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:

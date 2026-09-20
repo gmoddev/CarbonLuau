@@ -18,6 +18,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 1E secure Activated ingress and evidence | [GuiFoundation1E.md](docs/GuiFoundation1E.md) |
 | GUI Foundation 1F lifecycle/runtime closure and evidence | [GuiFoundation1F.md](docs/GuiFoundation1F.md) |
 | GUI Foundation 1G public closure, identity and evidence | [GuiFoundation1G.md](docs/GuiFoundation1G.md) |
+| Canonical GUI Foundation 2 additive semantics | [D16 in Invariants.md](docs/Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls) |
+| GUI Foundation 2 rationale, surface matrices and implementation guidance | [GuiFoundation2.md](docs/GuiFoundation2.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -107,8 +109,19 @@ API `0.4.0-experimental` to the complete D15 GUI surface, records the public
 documentation/examples and closes available non-authenticated qualification in
 [GuiFoundation1G.md](docs/GuiFoundation1G.md). Authenticated-client visual,
 cursor, click-receipt and reconciliation behavior remains unqualified but is
-explicitly non-gating. Do not reinterpret API availability as evidence for those
-client-observed outcomes or as authorization for GUI Foundation 2.
+explicitly non-gating. Do not reinterpret API availability as evidence for
+those client-observed outcomes or as independent authorization to implement GUI
+Foundation 2 outside D16 and an explicitly scoped implementation phase.
+GUI Foundation 2 architecture is canonically owned by D16 in
+[Invariants.md](docs/Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls).
+[GuiFoundation2.md](docs/GuiFoundation2.md) is supporting rationale, exact
+surface guidance, implementation sequencing and qualification planning; it does
+not override D16 or prove implementation. D16 is additive to D15, assigns no
+release identity and authorizes no production surface until the applicable
+GUI-2A through GUI-2F work is implemented and qualified. Exact supported
+single-line text preservation is a TextBox qualification gate: defer TextBox if
+the current authenticated client/host path cannot preserve it, rather than
+weakening or normalizing the contract.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

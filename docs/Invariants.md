@@ -114,6 +114,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D13 — resolved/deferred for v0.1 | User approved deferral on 2026-09-14. No maintainable supported path has been established that guarantees deterministic ownership and cleanup across qualified Rust item construction, insertion, partial mutation and removal callbacks. Player:GiveItem and the entire Phase 4 item convenience surface, including Items/Items:Exists, are deferred from v0.1; no independent read-only Items use case is accepted. Preserve I1–I11 unchanged rather than excluding failure paths. [Phase4.md](Phase4.md#ownership-gate-d13) records the rejected candidate and evidence; [roadmap](CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases) records the revised scope. | Reconsider only with a stronger supported Rust/Carbon transactional item API or evidence of a safe adapter, followed by explicit scope approval and qualification |
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
+| D16 - resolved GUI Foundation 2 deterministic layout and rich controls architecture | Foundation 2 additively specializes D15 with deterministic retained layout, scrolling, typed images and bounded text submission as specified below. [GuiFoundation2.md](GuiFoundation2.md) owns supporting rationale, exact surface matrices, implementation guidance and qualification planning. This is adopted policy, not implementation or public API availability. | Implement and qualify GUI-2A through GUI-2F before assigning a release identity; defer TextBox if exact supported text preservation cannot be proven |
 
 ### Canonical detail for resolved decisions
 
@@ -240,6 +241,121 @@ GUI is an additive part of its first public compatibility surface. Native ABI
 `1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and the
 pinned Luau revision are unchanged. Authenticated-client GUI observations remain
 unqualified and non-gating under the explicit Foundation 1G scope decision.
+
+#### D16 — GUI Foundation 2 deterministic layout and rich controls
+
+GUI Foundation 2 additively extends D15 with retained `UIListLayout`,
+`UIPadding`, `ScrollingFrame`, `ImageLabel`, `ImageButton` and `TextBox`, the
+immutable `ImageSource` value type, and `GuiObject.LayoutOrder`.
+`ImageButton.Activated` reuses D15 interaction semantics and `TextBox` adds
+`Submitted(Player, Text)`. D15 remains authoritative for ownership,
+publication, Presentation lifetime, synchronization, interaction security,
+replacement, recovery and bounded resources except where this decision
+specializes new Foundation 2 state.
+
+CarbonLuau computes Foundation 2 layout from retained `UDim`/`UDim2` state.
+Host or Unity layout groups, client viewport measurements and client text
+measurements are not authoritative. `UIListLayout` and `UIPadding` are ordinary
+owner-bound, non-rendering retained children; a parent may have at most one of
+each. `LayoutOrder` controls list geometry independently of `ZIndex`, retained
+attachment order and `GetChildren`. List layout never rewrites script-visible
+`Position`; removing it restores retained `Position` as projection authority.
+Child `Size` remains retained authority, hidden children consume no list space,
+and recomputation is bounded to the relevant direct arranged children.
+
+`ScrollingFrame` is a retained `GuiObject` container. `CanvasSize`,
+`ScrollingDirection` and `ScrollingEnabled` are shared retained state. Current
+scroll offset, inertia, gesture/drag state and related transient behavior belong
+only to each Presentation/client. Foundation 2 exposes neither
+`CanvasPosition` nor `AutomaticCanvasSize`, and CarbonLuau does not claim to
+know current client scroll state. Full reconciliation, Hide/Show, replacement,
+disconnect or recovery may reset client-local scroll position.
+
+`ImageSource` is an immutable, host-lifetime-independent value with only
+`None`, `Sprite`, `Png`, `Item` and `SteamAvatar` source kinds. It grants no
+filesystem, FileStorage, Carbon image-database, network or other host
+capability. Foundation 2 provides no arbitrary URL image source. `ImageLabel`
+and `ImageButton` consume this typed value. `ImageButton.Activated` uses the
+existing opaque, exact-Player, Presentation-bound D15 action authority.
+
+`TextBox.Text` is shared retained server state; the currently typed client draft
+and focus/cursor/selection state are Presentation-local. Client editing never
+implicitly mutates retained `Text`. Submission produces the validated immutable
+payload `Submitted(Player, Text)` and changes retained `Text` only when script
+explicitly assigns it. Foundation 2 TextBox is single-line and adds retained
+`PlaceholderText`, `MaxLength` and `TextEditable`; it does not expose counterfeit
+Roblox `FocusLost` semantics.
+
+Text submission extends the one existing private GUI ingress with typed action
+records rather than adding another client-command transport. Action kind
+distinguishes `Activated` from `TextSubmitted`; authority remains bound to VM
+generation, owner domain lifetime, `ScreenGui`, target, exact Player connection
+and Presentation epoch. Payloads are bounded, validated and immutable; queue
+and rate admission plus listener fanout are atomic; lifetime, action kind,
+target availability, editability and listener registration are revalidated
+before scheduled Luau entry. Luau never supplies commands, tokens, target IDs
+or Presentation IDs, and Carbon dispatch never synchronously enters Luau.
+
+The public `Submitted` contract requires exact preservation of supported
+single-line text through the current authenticated Rust/Carbon transport,
+including spaces, leading/trailing and repeated whitespace, quotes,
+backslashes and Unicode. If current authenticated-client/host qualification
+cannot establish that contract, `TextBox` is deferred from Foundation 2. The
+contract must not be weakened into console-command argument semantics and input
+must not be silently normalized merely to ship the class. This is a
+qualification gate, not an unresolved architecture choice.
+
+Foundation 2 adds an internal layout-affecting dirty classification. A layout
+mutation recomputes only relevant direct arranged children; there is no
+historical layout-work queue and latest retained state wins. Overflow collapses
+to D15 whole-presentation reconciliation. Image color/transparency and retained
+TextBox text/placeholder/editability may patch where supported; image source and
+scrolling configuration may initially require full reconciliation.
+Presentation-local drafts and scroll state are not retained dirty state. These
+classifications do not create a second consistency model.
+
+D15 ownership and publication apply without exception. Layout helpers are
+ordinary domain-owned retained resources; `ImageSource` has no domain lifetime;
+`Submitted` Signal ownership follows the `TextBox` owner; input authority is
+Presentation-specific; and local scroll state belongs only to the Presentation.
+All retained Foundation 2 mutations participate in the existing GUI publication
+journal. Provisional work creates no client effect or usable interaction
+authority before commit. Sharing references never transfers ownership.
+
+Foundation 2 implementations must bound layout cardinality/work, TextBox scalar
+and UTF-8 input, raw typed payload, input admission, image-source
+representations, projected render elements and queued GUI text bytes. The
+initial hard safety envelope is one `UIListLayout` and one `UIPadding` per
+parent; the existing 64 direct-child layout bound; `MaxLength` at most 256
+Unicode scalars; submitted text at most 1,024 UTF-8 bytes; raw input command tail
+at most 1,536 UTF-8 bytes; sprite source at most 256 UTF-8 bytes; canonical PNG,
+Steam and skin identifiers at most 20 ASCII digits; queued text at most 64 KiB
+per domain and 256 KiB globally; and a full authoritative Presentation that
+fits configured projection/reconciliation limits. Layout helpers count against
+normal object limits and interactive controls against existing token limits.
+Per-token submission rates and exact scheduling/timing values remain
+implementation qualification targets, not permanent public compatibility
+guarantees. Existing serializer limits must not simply be raised to fit richer
+controls.
+
+Foundation 2 excludes `UIGridLayout`, `AbsoluteContentSize`,
+`AutomaticCanvasSize`, `CanvasPosition`, general `ClipsDescendants`, `UIStroke`,
+`UICorner`, `TextScaled`, `TextBounds`, rich text, wrapping controls, public font
+selection, `FocusLost`/`Focused`/`CaptureFocus`/`IsFocused`, multiline or
+password TextBox behavior, arbitrary URL images, Carbon image-database
+integration, drag/drop, client geometry queries and arbitrary client scripting.
+These are outside Foundation 2, not permanent rejection of a separately designed
+future phase.
+
+Existing Foundation 1 behavior remains unchanged unless an author uses a new
+Foundation 2 object/property: ordinary `Position`, coordinates without padding,
+`TextButton.Activated`, `ZIndex`, attachment-order `GetChildren`, `Clone`,
+`Destroy`, D15 publication/replacement/recovery and one-tree/multiple-Presentation
+semantics are preserved. D16 assigns no package or API version. Package `0.4.0`,
+scripting API `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`,
+package schema `1` and the pinned Luau revision remain the current implemented
+identities; Foundation 2 identity is gated on implementation, qualification and
+later release planning.
 
 **Evidence separation:** [Phase1-Validation.md](Phase1-Validation.md) owns the scoped execution-core results. [Phase2-Validation.md](Phase2-Validation.md) owns module/callback/recovery qualification; Phase 1 does not establish their safety. [Phase3-Validation.md](Phase3-Validation.md) owns first-facade qualification; [Phase4-Validation.md](Phase4-Validation.md) records the blocked item investigation, not an implemented item API.
 

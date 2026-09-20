@@ -70,4 +70,8 @@ teardown, diagnostics and leak/stress closure are recorded in
 available qualification and the retained 0.4.0 experimental identity are
 recorded in [GUI Foundation 1G](GuiFoundation1G.md). Authenticated real-client
 visual, cursor, reconciliation and click evidence remains unqualified and
-non-gating.
+non-gating. The additive GUI Foundation 2 architecture is resolved by
+[D16](Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls),
+with detailed design and future GUI-2A through GUI-2F guidance in
+[GUI Foundation 2](GuiFoundation2.md). It is design policy only: none of its new
+classes, values, interactions or version identity is implemented or public yet.
