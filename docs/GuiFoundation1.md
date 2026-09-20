@@ -1,9 +1,8 @@
 # GUI Foundation 1 architecture
 
-Status: **approved architecture; Foundations 1A through 1F implement the retained
-runtime, presentation projection, automatic synchronization, secure Activated
-ingress and lifecycle/runtime closure. Authenticated-client qualification and
-release planning remain deferred**.
+Status: **qualified for experimental public release through Foundation 1G.
+Authenticated-client visual, cursor, click-receipt and reconciliation behavior
+remains unqualified and non-gating**.
 
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model) is the canonical policy owner. This record preserves the detailed rationale and implementation guidance for future GUI phases. If this record and D15 conflict, D15 wins and both documents must be reconciled before implementation continues.
 
@@ -174,7 +173,11 @@ The following are **qualification/tuning targets, not compatibility guarantees o
 
 ## Compatibility and qualification gates
 
-GUI Foundation 1's package and scripting API identity is **UNASSIGNED / release-planning gated**. The current package `0.4.0`, scripting API `0.4.0-experimental`, native ABI `1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and pinned Luau revision remain unchanged by this design record.
+GUI Foundation 1 is included in package `0.4.0` and scripting API
+`0.4.0-experimental`. The native ABI remains `1.4`, provider protocol remains
+`CarbonLuau.Addons` / `1.2`, package schema remains `1` and the pinned Luau
+revision is unchanged. This experimental identity does not claim authenticated
+client-observed rendering or interaction evidence.
 
 Implementation is split into explicitly scoped phases. [GUI Foundation 1A](GuiFoundation1A.md)
 owns only the internal descriptor, limit, render-contract and deterministic mock
@@ -191,12 +194,19 @@ validation and bounded scheduler ingress. [GUI Foundation 1F](GuiFoundation1F.md
 owns replacement, fatal recovery, provider/host teardown, backend retry,
 operator diagnostics and leak/stress closure.
 
-The exact remaining Foundation 1G work is authenticated-client visual, cursor,
-click and reconciliation evidence; live multi-viewer qualification; current
-Carbon/Rust adapter upgrade checks; and an explicit GUI release/API identity
-decision after those gates pass. Foundation 1G is not authorization for another
-public GUI feature.
+Foundation 1G owns public documentation/examples, the final available
+qualification matrix and the deliberate decision to retain the unreleased
+`0.4.0` / `0.4.0-experimental` identity. Authenticated-client visual, cursor,
+click and reconciliation observations remain a separate unqualified evidence
+gate and do not block the experimental scripting identity. Foundation 1G is not
+authorization for another public GUI feature.
 
-Before public support, qualification must cover retained model and value semantics, layout golden cases, mutation ordering, shared-domain ownership, provisional foreign-owner publication, exact Player/token attacks and reconnects, bounds/queue exhaustion, no reentrant entry, backend fault injection, replacement/recovery cleanup, sanitizer coverage, live current Carbon/Rust rendering with an authenticated client, multi-viewer cost and host-upgrade adapter checks.
+Experimental public qualification covers retained model and value semantics,
+layout golden cases, mutation ordering, shared-domain ownership, provisional
+foreign-owner publication, exact Player/token attacks and reconnects,
+bounds/queue exhaustion, no reentrant entry, backend fault injection,
+replacement/recovery cleanup, sanitizer coverage, modeled multi-viewer cost and
+host-adapter checks. Live current Carbon/Rust rendering with an authenticated
+client remains a separate unqualified, non-gating evidence category.
 
 Authenticated-client evidence is required for claims about actual visual layout, click receipt, cursor behavior and client reconciliation. Controlled `BasePlayer` fixtures alone cannot establish those results. Exact supported Carbon/Rust revisions and any host-specific adapter assumptions belong in qualification evidence and compatibility documentation, not D15.

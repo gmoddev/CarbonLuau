@@ -12,6 +12,10 @@ All notable public changes to CarbonLuau are recorded here.
 - Explicit public modules and `require("@id")` / `require("@id/path")`.
 - Readonly `addon.Id`, `addon.Version` and `addon:IsDependencyAvailable(id)`.
 - Cross-domain fair scheduling and delayed wakeups without persistent idle-frame work.
+- Experimental retained GUI with ScreenGui, Frame, TextLabel and TextButton.
+- Roblox-familiar UDim, UDim2, Vector2 and Color3 values; explicit per-Player
+  Show/Hide; bounded synchronization; and secure TextButton.Activated.
+- Runnable root and addon GUI examples, including shared and per-player trees.
 
 ### Validation
 
@@ -19,6 +23,8 @@ All notable public changes to CarbonLuau are recorded here.
 - Qualified shared-heap exhaustion, parser boundaries, scheduler saturation,
   provider lifecycle, CarbonLuau reload with providers retained, and native teardown.
 - Passed Windows, Ubuntu, ASan, UBSan and leak-detection regressions.
+- Qualified GUI ownership, publication, replacement, VM recovery, backend fault
+  convergence, action-token rejection, lifecycle teardown and bounded stress.
 
 ### Limits
 
@@ -26,6 +32,11 @@ All notable public changes to CarbonLuau are recorded here.
 - Provider-defined C# capabilities, root imports, downloads, registries, version
   solving, multiple instances, restricted exposure and async capabilities remain deferred.
 - The 64 MiB cap is shared across the VM; there is no per-addon hard heap isolation.
+- Authenticated-client visual layout, cursor behavior, actual click receipt and
+  client reconciliation remain unqualified. This does not block the experimental
+  API identity and is not evidence that those client-observed outcomes passed.
+- Images, TextBox, scrolling, automatic layouts, advanced styling and hover/focus
+  events remain deferred.
 
 ## 0.3.0
 

@@ -57,6 +57,14 @@ try {
             if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $WorkerEntry })) {
                 throw "Release bundle is missing compiler worker: $WorkerEntry"
             }
+            foreach ($ExampleEntry in @('examples/gui/hello/init.luau','examples/gui/shared-live/init.luau',
+                    'examples/gui/per-player/init.luau','examples/gui/activated/init.luau',
+                    'examples/addons/guiowner/addon.json','examples/addons/guiowner/init.luau','examples/addons/guiowner/api.luau',
+                    'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {
+                if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $ExampleEntry })) {
+                    throw "Release bundle is missing public GUI example: $ExampleEntry"
+                }
+            }
             $ProvenanceEntry = $Bundle.Entries | Where-Object { $_.FullName -ceq 'PROVENANCE.json' }
             $Reader = New-Object IO.StreamReader($ProvenanceEntry.Open())
             try { $BundleProvenance = $Reader.ReadToEnd() | ConvertFrom-Json } finally { $Reader.Dispose() }

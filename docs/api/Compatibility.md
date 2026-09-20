@@ -7,6 +7,11 @@ Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators u
 pinned Luau revision and the installed Rust/Carbon builds. Published v0.3.0
 artifacts remain API `0.3.0-experimental` with native ABI `1.2`.
 
+The unreleased 0.4.0 candidate combines the additive addon and GUI Foundation 1
+surfaces under this one experimental identity. Authenticated-client visual,
+cursor, click-receipt and reconciliation behavior remains unqualified and is not
+implied by API availability.
+
 The canonical compatibility policy lives in [Compatibility.md](../Compatibility.md)
 and decisions D8/D12. Additive means preserving existing contracts while adding
 names/operations. Removing/renaming APIs or changing types, lifetime, failure or
@@ -40,6 +45,15 @@ are unchanged; no script migration is required for this deferral.
 | Addon registrations / one provider | 128 / 32 |
 | Aggregate immutable addon snapshots | 32 MiB |
 | Compiler request / response / wall time | 64 KiB / 1 MiB / 1 second |
+| GUI objects per ScreenGui / depth / children | 128 / 16 / 64 |
+| GUI objects / ScreenGuis per domain; GUI objects global | 1,024 / 32; 8,192 |
+| Screens per Player connection / viewers per ScreenGui | 16 / 256 |
+| GUI presentations per domain / global | 512 / 4,096 |
+| TextButtons per ScreenGui / Activated listeners per button | 64 / 8 |
+| GUI Signal connections per domain | 256 |
+| GUI Name / Text / aggregate screen text | 64 B / 2,048 B / 32 KiB UTF-8 |
+| GUI clone objects / depth | 128 / 16 |
+| GUI interactions per Player / per action | 20/s burst 20 / 8/s burst 8 |
 
 NUL is rejected in API strings; malformed UTF-8 is rejected by host transport.
 Wrong types are not implicitly coerced. Registration/input failures raise script
@@ -54,3 +68,8 @@ limit; timeout or invalid protocol response discards the worker and starts clean
 on the next compilation request.
 Deadlines remain cooperative; a bounded host operation can exceed a frame budget.
 No multi-tenant, real-time, client-delivery or exactly-once replay guarantee exists.
+
+GUI serialization size, flush CPU/byte/send budgets and full-reconciliation
+checkpoints are internal bounded tuning values rather than public scripting API
+promises. See the [GUI guide](Gui.md) for observable semantics and unsupported
+features.

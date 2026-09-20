@@ -1,6 +1,6 @@
 # Release identity and reproducibility
 
-CarbonLuau's addon-capable experimental release candidate uses this deliberate
+CarbonLuau's addon and GUI-capable experimental release candidate uses this deliberate
 identity mapping:
 
 | Identity | Value |
@@ -15,12 +15,19 @@ identity mapping:
 | Pinned Luau | `c6b830185af962c82003f86784e2fe036357c830` |
 
 Published v0.3.0 remains the gameplay-facade baseline. The additive package and
-scripting API minor bump identifies public addon composition without claiming a
-stable 1.0 API. Package, scripting API, native ABI, provider protocol, package
+scripting API minor bump identifies public addon composition and GUI Foundation
+1 without claiming a stable 1.0 API. The unreleased candidate remains 0.4.0
+rather than advancing to 0.5.0 because no published 0.4 compatibility surface is
+being superseded. Package, scripting API, native ABI, provider protocol, package
 schema and pinned Luau are separate compatibility identities even though this
 candidate records them together. [release.json](https://github.com/gmoddev/CarbonLuau/blob/main/release.json)
 is the machine-readable owner of the mapping, and CI checks it against source and
 documentation.
+
+Authenticated-client visual layout, cursor behavior, actual click receipt and
+client reconciliation remain unqualified and are not release-artifact claims.
+This evidence is non-gating for the experimental identity but must stay visible
+in release notes and compatibility documentation.
 
 ## Reproduce a platform bundle
 

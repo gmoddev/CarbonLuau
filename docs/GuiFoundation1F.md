@@ -154,3 +154,13 @@ release-planning gated**. Package `0.4.0`, scripting API
 `0.4.0-experimental`, native ABI `1.4`, provider protocol
 `CarbonLuau.Addons` / `1.2`, package schema `1` and the pinned Luau revision are
 unchanged.
+
+## Foundation 1G disposition
+
+Foundation 1G subsequently resolved the release-planning gate by assigning the
+complete D15 surface to the still-unreleased package `0.4.0` and scripting API
+`0.4.0-experimental`. The authenticated-client items listed above remain
+unqualified, but an explicit scope decision made them non-gating for the
+experimental identity. This does not retroactively turn Foundation 1F's
+server-side evidence into visual, cursor, click-receipt or client-reconciliation
+evidence.

@@ -2,7 +2,7 @@
 
 CarbonLuau embeds a pinned Luau VM for bounded, server-side scripting on
 Carbon-modded Rust servers. Published `v0.3.0` contains the first gameplay facade.
-The qualified `v0.4.0` candidate adds the first experimental public addon surface;
+The qualified `v0.4.0` candidate adds experimental addon composition and GUI;
 Windows x64, glibc Linux x64, sanitizers and live Carbon passed the recorded matrix.
 
 Start with [installation](Installation.md), then use the
@@ -38,11 +38,14 @@ receipt by an authenticated client was not tested and is not claimed.
 - VM memory, callback, queue, payload and logging bounds.
 - Provider-owned addon packages, exact dependency lifetimes and public modules.
 - `require("@addon")`, `require("@addon/path")` and dependency availability.
+- ScreenGui, Frame, TextLabel, TextButton and immutable layout/color values.
+- Explicit per-Player Show/Hide and secure TextButton.Activated callbacks.
 
 Items/inventory, arbitrary Rust hooks, filesystem/network access, Roblox
 replication and `task.wait` are not included. See the [0.3.0 release notes](releases/0.3.0.md)
 for the published baseline and the [0.4.0 release notes](releases/0.4.0.md)
-plus [Foundation E qualification](FoundationE.md) for the addon-capable envelope.
+plus [Foundation E qualification](FoundationE.md) and
+[GUI Foundation 1G](GuiFoundation1G.md) for the candidate envelope.
 The current source ownership map is recorded in
 [Foundation F](FoundationF.md), and compiler containment is recorded in
 [Foundation G](FoundationG.md).
@@ -53,8 +56,8 @@ The current source ownership map is recorded in
 Foundation 1 contract is decision
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model), with
 detailed rationale and future implementation guidance in
-[GUI Foundation 1 architecture](GuiFoundation1.md). GUI is not part of the
-assigned release API and its release identity remains unassigned. The internal
+[GUI Foundation 1 architecture](GuiFoundation1.md). GUI is part of the
+experimental `0.4.0-experimental` scripting API. The internal
 substrate is recorded in [GUI Foundation 1A](GuiFoundation1A.md), and the
 retained Luau runtime through object lifecycle/publication is recorded in
 [GUI Foundation 1B](GuiFoundation1B.md). Static exact-Player presentations and
@@ -63,5 +66,8 @@ Bounded retained-tree synchronization and reconciliation are recorded in
 [GUI Foundation 1D](GuiFoundation1D.md). Secure `TextButton.Activated` ingress is
 recorded in [GUI Foundation 1E](GuiFoundation1E.md). Replacement, recovery,
 teardown, diagnostics and leak/stress closure are recorded in
-[GUI Foundation 1F](GuiFoundation1F.md). Authenticated real-client visual,
-reconciliation and click evidence plus a GUI release identity remain deferred.
+[GUI Foundation 1F](GuiFoundation1F.md). Public documentation, examples, final
+available qualification and the retained 0.4.0 experimental identity are
+recorded in [GUI Foundation 1G](GuiFoundation1G.md). Authenticated real-client
+visual, cursor, reconciliation and click evidence remains unqualified and
+non-gating.

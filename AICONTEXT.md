@@ -17,6 +17,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 1D synchronization/reconciliation and evidence | [GuiFoundation1D.md](docs/GuiFoundation1D.md) |
 | GUI Foundation 1E secure Activated ingress and evidence | [GuiFoundation1E.md](docs/GuiFoundation1E.md) |
 | GUI Foundation 1F lifecycle/runtime closure and evidence | [GuiFoundation1F.md](docs/GuiFoundation1F.md) |
+| GUI Foundation 1G public closure, identity and evidence | [GuiFoundation1G.md](docs/GuiFoundation1G.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -73,9 +74,10 @@ GUI Foundation 1 architecture is canonically owned by D15 in
 [GuiFoundation1.md](docs/GuiFoundation1.md) is the supporting design and
 implementation-guidance record; it does not override D15 or by itself prove an
 implementation phase. Future GUI phases must preserve that public model and stop rather
-than invent conflicting semantics. GUI package/API identity remains unassigned
-until implementation, qualification and release planning; D12's current
-`0.4.0-experimental` identity does not include GUI.
+than invent conflicting semantics. Foundation 1G completed implementation,
+available qualification and release planning and assigns GUI to D12's existing
+unreleased `0.4.0-experimental` identity. Authenticated-client observations
+remain unqualified and non-gating.
 The internal descriptors, limit snapshot, Carbon-independent render/backend
 contracts and deterministic mock backend implemented by GUI Foundation 1A are
 recorded in [GuiFoundation1A.md](docs/GuiFoundation1A.md). They do not authorize
@@ -98,8 +100,15 @@ does not assign a GUI-capable release identity or authorize later GUI features.
 GUI Foundation 1F's replacement, recovery, teardown, backend-retry, bounded
 diagnostic and leak/stress closure is recorded in
 [GuiFoundation1F.md](docs/GuiFoundation1F.md). Authenticated-client rendering,
-reconciliation and click evidence plus GUI release planning remain Foundation
-1G work; no new GUI surface or identity is authorized.
+reconciliation and click evidence plus GUI release planning were left to
+Foundation 1G; Foundation 1F itself authorized no new GUI surface or identity.
+GUI Foundation 1G assigns the already-unreleased package `0.4.0` and scripting
+API `0.4.0-experimental` to the complete D15 GUI surface, records the public
+documentation/examples and closes available non-authenticated qualification in
+[GuiFoundation1G.md](docs/GuiFoundation1G.md). Authenticated-client visual,
+cursor, click-receipt and reconciliation behavior remains unqualified but is
+explicitly non-gating. Do not reinterpret API availability as evidence for those
+client-observed outcomes or as authorization for GUI Foundation 2.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

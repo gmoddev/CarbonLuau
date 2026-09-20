@@ -33,7 +33,7 @@ ABI `1.3`. This does not alter the already-published v0.3.0/ABI 1.2 artifacts or
 assign a new scripting API identity. A future release must deliberately map its
 package, native ABI and still-pending addon scripting/protocol identities.
 
-The qualified v0.4.0 candidate assigns the additive addon-capable identity
+The qualified v0.4.0 candidate assigns the additive addon and GUI-capable identity
 `CarbonLuau 0.4.0-experimental`. It maps package `0.4.0`, native ABI `1.4`,
 provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and pinned Luau
 revision `c6b830185af962c82003f86784e2fe036357c830`. The identities remain separate,
@@ -41,15 +41,14 @@ and v0.3.0 artifacts are unchanged. The machine-readable mapping is
 [release.json](../release.json), with build and provenance instructions in the
 [release guide](Release.md).
 
-GUI Foundation 1 is an approved D15 architecture implemented through Foundation
-1F, including the retained runtime, presentations, synchronization, secure
-`TextButton.Activated` ingress and lifecycle/runtime closure. Its package
-and scripting API identity is **UNASSIGNED / release-planning gated**. The design
-does not alter package `0.4.0`, scripting API `0.4.0-experimental`, native ABI
-`1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` or the
-pinned Luau revision. Assign a GUI-capable identity only after implementation,
-qualification and explicit release planning; do not infer one from the supporting
-[GUI design record](GuiFoundation1.md).
+GUI Foundation 1 is implemented through Foundation 1F and publicly closed by
+Foundation 1G. It is included in package `0.4.0` and scripting API
+`0.4.0-experimental`. No 0.5.0 bump is warranted because 0.4.0 has not been
+released and GUI is additive to that first public addon candidate. Native ABI
+`1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and the
+pinned Luau revision are unchanged. Authenticated-client visual layout, cursor,
+actual click receipt and client reconciliation remain explicitly unqualified;
+that evidence is no longer a gate for the experimental identity.
 
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
@@ -271,18 +270,20 @@ The exact compiler-worker implementation revision requiring that supplement is
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model) resolves
 the GUI ownership, publication, presentation, interaction and reconciliation
 model before implementation. [GuiFoundation1.md](GuiFoundation1.md) owns detailed
-rationale and implementation guidance. This documentation adoption is not GUI
-runtime evidence and does not authorize advertising the surface as available.
+rationale and implementation guidance. Foundations 1A through 1F provide the
+runtime evidence, and Foundation 1G owns public closure and identity.
 
-A future GUI qualification must cover deterministic retained/value behavior,
+GUI qualification covers deterministic retained/value behavior,
 cross-domain ownership and provisional publication, exact Player/token lifetime,
 bounded scheduling and overload, backend fault convergence, replacement and D9
 recovery, teardown/leak behavior and affected Foundations A-G regressions. Claims
-about actual rendering, layout, cursor behavior or button receipt additionally
+about actual rendering, layout, cursor behavior or button receipt still
 require a current Carbon/Rust server with an authenticated client. Record the
 qualified host revisions and keep adapter-specific CUI observations as evidence,
 not permanent API guarantees. Numeric flush, payload and reconciliation targets
-remain tuning candidates until measured and deliberately assigned.
+remain internal tuning values rather than public compatibility promises. Missing
+authenticated-client evidence does not prevent experimental API availability,
+but it does prevent claims about those unobserved client outcomes.
 
 ### GUI Foundation 1A evidence contract
 
@@ -294,9 +295,9 @@ source inspection, managed Windows/Linux regression tests, package checks and
 architecture/API/documentation checks. It changes no public or native interface.
 
 This phase does not qualify a retained runtime, production Rust CUI adapter,
-client rendering, UI interaction or D15 publication journal. Public GUI claims
-still require the complete architecture gate above, including authenticated-client
-evidence for rendering and click behavior.
+client rendering, UI interaction or D15 publication journal. Later Foundation 1
+phases provide the runtime evidence. Authenticated-client evidence remains
+required only for claims about actual rendering and click behavior.
 
 ### GUI Foundation 1B evidence contract
 
@@ -311,8 +312,8 @@ Windows/Linux runtime tests; and affected sanitizer coverage.
 
 Foundation 1B does not qualify presentations, Player/viewer state, production
 rendering, layout translation, synchronization, action tokens, client event
-ingress or visible/click behavior. Those remain later GUI gates, and the GUI
-package/scripting identity remains unassigned.
+ingress or visible/click behavior. Those remained later GUI gates at this phase;
+Foundation 1G subsequently assigns the experimental identity.
 
 ### GUI Foundation 1C evidence contract
 
@@ -330,7 +331,8 @@ Foundation 1C does not qualify automatic property patches, dirty tracking,
 patch/full selection, periodic reconciliation, action tokens, the private client
 command, interaction limits or Activated ingress/delivery. Authenticated-client
 evidence remains mandatory for visual layout, cursor, click and client
-reconciliation claims. The GUI package/scripting identity remains unassigned.
+reconciliation claims. The identity remained unassigned at this phase and was
+subsequently resolved by Foundation 1G.
 
 ### GUI Foundation 1D evidence contract
 
@@ -350,7 +352,8 @@ interaction rate limiting, Activated ingress/delivery or GUI Foundation 1E.
 Authenticated-client evidence remains mandatory for actual visual layout,
 cursor behavior, client reconciliation and click receipt. Numeric flush, payload
 and checkpoint values remain internal tuning values rather than public
-compatibility promises. The GUI package/scripting identity remains unassigned.
+compatibility promises. The identity remained unassigned at this phase and was
+subsequently resolved by Foundation 1G.
 
 ### GUI Foundation 1E evidence contract
 
@@ -370,8 +373,8 @@ coverage.
 Authenticated real-client click receipt remains mandatory before claiming that
 a Rust client delivered the private command or visibly completed an
 interaction. Hosted or local model tests and server-side Carbon registration do
-not substitute for that evidence. The GUI package/scripting identity remains
-unassigned.
+not substitute for that evidence. The identity remained unassigned at this
+phase and was subsequently resolved by Foundation 1G.
 
 ### GUI Foundation 1F evidence contract
 
@@ -387,11 +390,29 @@ Foundations A-G regressions; Windows/Linux runtime lanes; live Carbon lifecycle;
 and affected sanitizer coverage.
 
 Authenticated real-client rendering, layout, cursor, reconciliation and click
-receipt remain mandatory before those behaviors or the complete GUI surface can
-be advertised as qualified. Controlled-host and server-side live lifecycle
+receipt remain mandatory before those client-observed behaviors can be
+advertised as qualified. Controlled-host and server-side live lifecycle
 evidence do not substitute for that gate. A GUI-specific live provider fixture
 also remains unavailable; controlled provider/domain lifecycle evidence is
-reported separately. The GUI package/scripting identity remains unassigned.
+reported separately. The identity remained unassigned at this phase and was
+subsequently resolved by Foundation 1G.
+
+### GUI Foundation 1G evidence contract
+
+[GUI Foundation 1G](GuiFoundation1G.md) closes public API documentation,
+runnable root/addon examples, descriptor-to-document auditing, release identity,
+release notes, bundle contents and final-head reproducibility for the complete
+D15 scripting surface. Its affected evidence is GUI-1A through 1F, Foundations
+A-G, addon/package/parser, replacement/recovery, synchronization, interaction
+security, registry baseline, Windows/Linux runtime, sanitizer, packaging,
+release and documentation checks.
+
+The selected identity remains package `0.4.0` and scripting API
+`0.4.0-experimental`; native ABI `1.4`, provider protocol `1.2`, package schema
+`1` and the Luau pin do not change. Authenticated-client visual, cursor,
+click-receipt and reconciliation evidence remains unqualified and non-gating.
+Foundation G's Windows live/local compiler-worker supplement remains separately
+deferred and is not replaced by hosted Windows CI.
 
 ## Phase 0 consistency review
 

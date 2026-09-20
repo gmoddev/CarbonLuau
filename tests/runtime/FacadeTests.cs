@@ -184,12 +184,12 @@ internal static class FacadeTests
             } finally { Views[UserId].Send=NormalSend; }
         }
         if (Repository != null) {
-            foreach (string Example in new[]{"player-events", "hello-command"}) {
+            foreach (string Example in new[]{"player-events", "hello-command", "gui/hello", "gui/shared-live", "gui/per-player", "gui/activated"}) {
                 string Text=File.ReadAllText(Path.Combine(Repository,"examples",Example,"init.luau"));
                 using (var Host=new Runtime.ScriptHost(Native,Config,()=>new Runtime.ScriptSnapshot{EntryName="init.luau",EntrySource=Text},World))
                     Check(Host.Reload().Status==Runtime.RuntimeStatus.OK,"shipped example loads: "+Example);
             }
-            Console.WriteLine("[CarbonLuau:FacadeTest] PASS both shipped public API examples loaded through real compiler/VM");
+            Console.WriteLine("[CarbonLuau:FacadeTest] PASS six shipped root examples loaded through real compiler/VM");
         }
         Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
     }

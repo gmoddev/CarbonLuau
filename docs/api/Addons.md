@@ -67,4 +67,6 @@ Provider-defined C# capabilities, root-to-addon imports, addons depending on the
 operator root, restricted exposure profiles and async capabilities are deferred.
 
 The [economy and shop examples](https://github.com/gmoddev/CarbonLuau/tree/main/examples/addons) show the
-complete required and optional import pattern.
+complete required and optional import pattern. The `guiowner` and `guiconsumer`
+examples show a public module exporting owner-bound GUI references: the consumer
+may use them while the owner is live, but ownership does not transfer.

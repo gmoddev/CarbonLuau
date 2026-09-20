@@ -85,6 +85,36 @@ Package authors can start from the bundled `examples/addons/economy` and
 [provider protocol](api/Addon-Providers.md). CarbonLuau unload invalidates every
 provider token; a provider that remains loaded must register again after reload.
 
+## GUI scripts
+
+The v0.4.0 candidate includes the experimental server-driven GUI surface. A
+minimal entrypoint can create one retained tree and show it to current and future
+Players:
+
+```lua
+local Gui = game:GetService("Gui")
+local Players = game:GetService("Players")
+
+local Screen = Gui:Create("ScreenGui")
+local Label = Screen:Create("TextLabel")
+Label.Text = "Hello from CarbonLuau"
+
+for _, Player in Players:GetPlayers() do
+    Screen:Show(Player)
+end
+
+Players.PlayerAdded:Connect(function(Player)
+    Screen:Show(Player)
+end)
+```
+
+The release bundle includes hello, shared-tree, per-player Clone and Activated
+examples under `examples/gui`, plus owner/consumer addon examples under
+`examples/addons`. See the [GUI guide](api/Gui.md) before deployment. In
+particular, Show/Hide represent desired server state; authenticated-client
+visual correctness, cursor behavior, actual click receipt and reconciliation
+remain unqualified.
+
 ## Configuration
 
 Carbon writes the plugin configuration in its normal configuration directory.
@@ -110,7 +140,8 @@ rejected.
 
 ## Diagnostics
 
-- `carbonluau.status`: current availability, generation, identities and counters.
+- `carbonluau.status`: current availability, generation, identities and bounded
+  scheduler/addon/GUI counters.
 - `carbonluau.reload`: compile and initialize a new candidate generation.
 - Carbon server log: messages beginning with `[CarbonLuau:Config]`,
   `[CarbonLuau:Native]`, `[CarbonLuau:Runtime]` or `[CarbonLuau:Scheduler]`.

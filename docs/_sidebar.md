@@ -12,6 +12,7 @@
   - [GUI Foundation 1D](GuiFoundation1D.md)
   - [GUI Foundation 1E](GuiFoundation1E.md)
   - [GUI Foundation 1F](GuiFoundation1F.md)
+  - [GUI Foundation 1G](GuiFoundation1G.md)
 - API
   - [Overview](api/README.md)
   - [Globals](api/Globals.md)
@@ -23,6 +24,8 @@
   - [Connection](api/Types/Connection.md)
   - [Addon composition](api/Addons.md)
   - [Addon providers](api/Addon-Providers.md)
+  - [GUI guide](api/Gui.md)
+  - [GUI reference](api/Gui-Reference.md)
   - [Compatibility](api/Compatibility.md)
 - Qualification
   - [Support policy](Compatibility.md)
