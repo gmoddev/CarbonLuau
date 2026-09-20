@@ -14,11 +14,13 @@ namespace Carbon.Plugins
             internal readonly string Text;
             internal readonly bool Boolean;
             internal readonly int Integer;
+            internal readonly GuiImageSourceValue ImageSource;
             private readonly double[] NumberValues;
             internal double[] Numbers { get { return NumberValues == null ? null : (double[])NumberValues.Clone(); } }
 
-            private GuiStoredValue(GuiValueKind Kind, string Text = null, bool Boolean = false, int Integer = 0, params double[] Numbers)
-            { this.Kind = Kind; this.Text = Text; this.Boolean = Boolean; this.Integer = Integer; NumberValues = Numbers; }
+            private GuiStoredValue(GuiValueKind Kind, string Text = null, bool Boolean = false, int Integer = 0,
+                GuiImageSourceValue ImageSource = null, params double[] Numbers)
+            { this.Kind = Kind; this.Text = Text; this.Boolean = Boolean; this.Integer = Integer; this.ImageSource = ImageSource; NumberValues = Numbers; }
             internal static GuiStoredValue String(string Value) { return new GuiStoredValue(GuiValueKind.String, Text: Value); }
             internal static GuiStoredValue Bool(bool Value) { return new GuiStoredValue(GuiValueKind.Boolean, Boolean: Value); }
             internal static GuiStoredValue Int(int Value) { return new GuiStoredValue(GuiValueKind.Integer, Integer: Value); }
@@ -28,6 +30,7 @@ namespace Carbon.Plugins
             { return new GuiStoredValue(GuiValueKind.UDim2, Numbers: new[] {Normalize(XScale), Normalize(XOffset), Normalize(YScale), Normalize(YOffset)}); }
             internal static GuiStoredValue Vector2(double X, double Y) { return new GuiStoredValue(GuiValueKind.Vector2, Numbers: new[] {Normalize(X), Normalize(Y)}); }
             internal static GuiStoredValue Color3(double R, double G, double B) { return new GuiStoredValue(GuiValueKind.Color3, Numbers: new[] {Normalize(R), Normalize(G), Normalize(B)}); }
+            internal static GuiStoredValue Image(GuiImageSourceValue Value) { return new GuiStoredValue(GuiValueKind.ImageSource, ImageSource: Value); }
             private static double Normalize(double Value) { return Value == 0 ? 0 : Value; }
 
             internal string[] Encode()
@@ -41,12 +44,14 @@ namespace Carbon.Plugins
                     case GuiValueKind.UDim2: return new[] {"udim2", Format(NumberValues[0]), Format(NumberValues[1]), Format(NumberValues[2]), Format(NumberValues[3])};
                     case GuiValueKind.Vector2: return new[] {"vector2", Format(NumberValues[0]), Format(NumberValues[1])};
                     case GuiValueKind.Color3: return new[] {"color3", Format(NumberValues[0]), Format(NumberValues[1]), Format(NumberValues[2])};
+                    case GuiValueKind.ImageSource: return ImageSource.Encode();
                     default: throw new FacadeException("unsupported GUI value kind");
                 }
             }
             internal bool SameAs(GuiStoredValue Other)
             {
-                if (Other == null || Kind != Other.Kind || Text != Other.Text || Boolean != Other.Boolean || Integer != Other.Integer) return false;
+                if (Other == null || Kind != Other.Kind || Text != Other.Text || Boolean != Other.Boolean || Integer != Other.Integer ||
+                    !Object.Equals(ImageSource, Other.ImageSource)) return false;
                 if (NumberValues == null || Other.NumberValues == null) return NumberValues == Other.NumberValues;
                 if (NumberValues.Length != Other.NumberValues.Length) return false;
                 for (int Index = 0; Index < NumberValues.Length; ++Index) if (NumberValues[Index] != Other.NumberValues[Index]) return false;
@@ -424,7 +429,7 @@ namespace Carbon.Plugins
                     }
                     case "event": {
                         RequireFields(Fields, 3); GuiRetainedNode Value = Node(Id(Fields[1]));
-                        if (Fields[2] != "Activated" || Value.ClassId != GuiClassId.TextButton) throw new FacadeException("event is not available on GUI object");
+                        if (Fields[2] != "Activated" || !IsActivatedClass(Value.ClassId)) throw new FacadeException("event is not available on GUI object");
                         return new string[0];
                     }
                     case "shown": {
@@ -449,7 +454,7 @@ namespace Carbon.Plugins
                     case "destroy": RequireFields(Fields, 2); return Destroy(Id(Fields[1]));
                     case "connect": {
                         RequireFields(Fields, 2); GuiRetainedNode Button = Node(Id(Fields[1]));
-                        if (Button.ClassId != GuiClassId.TextButton) throw new FacadeException("Activated is only available on TextButton");
+                        if (!IsActivatedClass(Button.ClassId)) throw new FacadeException("Activated is only available on button GUI objects");
                         int Count = 0; foreach (ulong Owner in State.Connections.Values) if (Owner == Button.Identity.GuiObjectId) Count++;
                         if (Count >= Limits.MaxSignalConnectionsPerButton || State.Connections.Count >= Limits.MaxGuiSignalConnectionsPerDomain)
                             throw new FacadeException("GUI Signal connection limit reached");
@@ -480,7 +485,8 @@ namespace Carbon.Plugins
                 if (State.Nodes.Count >= Limits.MaxObjectsPerDomain) throw new FacadeException("domain GUI object limit reached");
                 if (Descriptor.Id == GuiClassId.ScreenGui && State.Screens >= Limits.MaxScreensPerDomain) throw new FacadeException("domain ScreenGui limit reached");
                 GuiRetainedNode Parent = ParentId == 0 ? null : Node(ParentId);
-                if (Parent != null) ValidateAttachment(null, Descriptor.Id, Parent, 1, 1, Descriptor.Id == GuiClassId.TextButton ? 1 : 0, TextBytes(Descriptor.Id));
+                if (Parent != null) ValidateAttachment(null, Descriptor.Id, Parent, 1, 1, IsActivatedClass(Descriptor.Id) ? 1 : 0,
+                    TextBytes(Descriptor.Id), ProjectionCost(Descriptor.Id));
                 if (NextObjectId == ulong.MaxValue) throw new FacadeException("GUI object identity exhausted");
                 World.Adjust(1); ulong ObjectId = NextObjectId++;
                 var Result = new GuiRetainedNode(new GuiObjectIdentity(VmGenerationId, DomainLifetimeId, ObjectId), Descriptor.Id);
@@ -583,7 +589,7 @@ namespace Carbon.Plugins
                 } else throw new FacadeException("Parent expects a same-domain GUI object or nil");
                 if (Parent != null && Child.ParentId == Parent.Identity.GuiObjectId) return;
                 int Objects = SubtreeCount(Child), Depth = SubtreeDepth(Child), Buttons = SubtreeButtons(Child), TextBytes = SubtreeTextBytes(Child);
-                if (Parent != null) ValidateAttachment(Child, Child.ClassId, Parent, Objects, Depth, Buttons, TextBytes);
+                if (Parent != null) ValidateAttachment(Child, Child.ClassId, Parent, Objects, Depth, Buttons, TextBytes, SubtreeProjectionCost(Child));
                 GuiRetainedNode OldScreen = RootScreen(Child), NewScreen = Parent == null ? null : RootScreen(Parent);
                 if (Child.ParentId.HasValue) State.Nodes[Child.ParentId.Value].Children.Remove(Child.Identity.GuiObjectId);
                 Child.ParentId = null; if (Parent != null) Attach(Child, Parent);
@@ -828,7 +834,7 @@ namespace Carbon.Plugins
             { foreach (ulong Value in State.Connections.Values) if (Value == ButtonId) return true; return false; }
             private bool ContainsConnectedButton(GuiRetainedNode Root)
             {
-                if (Root.ClassId == GuiClassId.TextButton && HasConnection(Root.Identity.GuiObjectId)) return true;
+                if (IsActivatedClass(Root.ClassId) && HasConnection(Root.Identity.GuiObjectId)) return true;
                 foreach (ulong Child in Root.Children) if (ContainsConnectedButton(State.Nodes[Child])) return true;
                 return false;
             }
@@ -890,7 +896,7 @@ namespace Carbon.Plugins
                     !Object.ReferenceEquals(Player.Connection, Record.PlayerConnection)) return GuiActionRejection.Stale;
                 GuiRetainedNode Screen, Button;
                 if (!State.Nodes.TryGetValue(Record.ScreenId, out Screen) || Screen.ClassId != GuiClassId.ScreenGui ||
-                    !State.Nodes.TryGetValue(Record.ButtonId, out Button) || Button.ClassId != GuiClassId.TextButton ||
+                    !State.Nodes.TryGetValue(Record.ButtonId, out Button) || !IsActivatedClass(Button.ClassId) ||
                     !EffectivelyVisible(Button, Screen)) return GuiActionRejection.TargetUnavailable;
                 var Values = new List<KeyValuePair<ulong, string>>();
                 foreach (var Value in State.Connections) if (Value.Value == Record.ButtonId) {
@@ -907,7 +913,8 @@ namespace Carbon.Plugins
             private static string PresentationKey(ulong ScreenId, string PlayerToken)
             { return ScreenId.ToString(CultureInfo.InvariantCulture) + ":" + PlayerToken; }
 
-            private void ValidateAttachment(GuiRetainedNode Child, GuiClassId ChildClass, GuiRetainedNode Parent, int Objects, int Depth, int Buttons, int TextBytes)
+            private void ValidateAttachment(GuiRetainedNode Child, GuiClassId ChildClass, GuiRetainedNode Parent, int Objects, int Depth,
+                int Buttons, int TextBytes, int ProjectedElements)
             {
                 if (!GuiSchema.GetClass(Parent.ClassId).CanHaveChildren) throw new FacadeException("GUI parent cannot have children");
                 if ((ChildClass == GuiClassId.UIListLayout || ChildClass == GuiClassId.UIPadding) && !GuiSchema.IsA(Parent.ClassId, "GuiObject"))
@@ -929,11 +936,14 @@ namespace Carbon.Plugins
                 GuiRetainedNode Screen = RootScreen(Parent);
                 if (Screen != null) {
                     int ExistingObjects = SubtreeCount(Screen); int ExistingButtons = SubtreeButtons(Screen); int ExistingText = SubtreeTextBytes(Screen);
+                    int ExistingProjection = SubtreeProjectionCost(Screen);
                     GuiRetainedNode OldScreen = Child == null ? null : RootScreen(Child);
                     bool SameScreen = OldScreen != null && OldScreen.Identity.GuiObjectId == Screen.Identity.GuiObjectId;
                     if (!SameScreen && ExistingObjects + Objects > Limits.MaxObjectsPerScreen) throw new FacadeException("ScreenGui object limit reached");
                     if (!SameScreen && ExistingButtons + Buttons > Limits.MaxButtonsPerScreen) throw new FacadeException("ScreenGui button limit reached");
                     if (!SameScreen && ExistingText + TextBytes > Limits.MaxTextUtf8BytesPerScreen) throw new FacadeException("ScreenGui aggregate text limit reached");
+                    if (!SameScreen && ExistingProjection + ProjectedElements > Limits.MaxProjectedElementsPerScreen)
+                        throw new FacadeException("ScreenGui projection element limit reached");
                 }
             }
 
@@ -992,6 +1002,8 @@ namespace Carbon.Plugins
                         double[] Value = ParseNumber(Fields, KindIndex, "color3", 3); foreach (double Component in Value) ValidateRange(Component, 0, 1, Descriptor.Name);
                         return GuiStoredValue.Color3(Value[0], Value[1], Value[2]);
                     }
+                    case GuiValueKind.ImageSource:
+                        return GuiStoredValue.Image(GuiImageSourceValue.Parse(Fields, KindIndex));
                     default: throw new FacadeException("unsupported GUI property type");
                 }
             }
@@ -1030,18 +1042,25 @@ namespace Carbon.Plugins
                     return;
                 }
                 Node.Properties[GuiPropertyId.Position] = GuiStoredValue.UDim2(0, 0, 0, 0);
-                int Height = Node.ClassId == GuiClassId.Frame ? 100 : Node.ClassId == GuiClassId.TextLabel ? 30 : 36;
+                int Height = Node.ClassId == GuiClassId.Frame || Node.ClassId == GuiClassId.ImageLabel || Node.ClassId == GuiClassId.ImageButton
+                    ? 100 : Node.ClassId == GuiClassId.TextLabel ? 30 : 36;
                 Node.Properties[GuiPropertyId.Size] = GuiStoredValue.UDim2(0, 100, 0, Height);
                 Node.Properties[GuiPropertyId.AnchorPoint] = GuiStoredValue.Vector2(0, 0);
                 Node.Properties[GuiPropertyId.Visible] = GuiStoredValue.Bool(true);
                 Node.Properties[GuiPropertyId.BackgroundColor3] = GuiStoredValue.Color3(1, 1, 1);
-                Node.Properties[GuiPropertyId.BackgroundTransparency] = GuiStoredValue.Number(Node.ClassId == GuiClassId.TextLabel ? 1 : 0);
+                Node.Properties[GuiPropertyId.BackgroundTransparency] = GuiStoredValue.Number(
+                    Node.ClassId == GuiClassId.TextLabel || Node.ClassId == GuiClassId.ImageLabel || Node.ClassId == GuiClassId.ImageButton ? 1 : 0);
                 Node.Properties[GuiPropertyId.ZIndex] = GuiStoredValue.Int(1);
                 Node.Properties[GuiPropertyId.LayoutOrder] = GuiStoredValue.Int(0);
                 if (Node.ClassId == GuiClassId.TextLabel || Node.ClassId == GuiClassId.TextButton) {
                     Node.Properties[GuiPropertyId.Text] = GuiStoredValue.String(""); Node.Properties[GuiPropertyId.TextColor3] = GuiStoredValue.Color3(0, 0, 0);
                     Node.Properties[GuiPropertyId.TextTransparency] = GuiStoredValue.Number(0); Node.Properties[GuiPropertyId.TextSize] = GuiStoredValue.Int(14);
                     Node.Properties[GuiPropertyId.TextXAlignment] = GuiStoredValue.String("Center"); Node.Properties[GuiPropertyId.TextYAlignment] = GuiStoredValue.String("Center");
+                }
+                if (Node.ClassId == GuiClassId.ImageLabel || Node.ClassId == GuiClassId.ImageButton) {
+                    Node.Properties[GuiPropertyId.Image] = GuiStoredValue.Image(GuiImageSourceValue.Parse(new[] {"imagesource", "None"}, 0));
+                    Node.Properties[GuiPropertyId.ImageColor3] = GuiStoredValue.Color3(1, 1, 1);
+                    Node.Properties[GuiPropertyId.ImageTransparency] = GuiStoredValue.Number(0);
                 }
             }
 
@@ -1058,7 +1077,18 @@ namespace Carbon.Plugins
             private void Collect(GuiRetainedNode Root, List<ulong> Result) { Result.Add(Root.Identity.GuiObjectId); foreach (ulong Child in Root.Children) Collect(State.Nodes[Child], Result); }
             private int SubtreeCount(GuiRetainedNode Root) { int Result = 1; foreach (ulong Child in Root.Children) Result += SubtreeCount(State.Nodes[Child]); return Result; }
             private int SubtreeDepth(GuiRetainedNode Root) { int Result = 1; foreach (ulong Child in Root.Children) Result = Math.Max(Result, 1 + SubtreeDepth(State.Nodes[Child])); return Result; }
-            private int SubtreeButtons(GuiRetainedNode Root) { int Result = Root.ClassId == GuiClassId.TextButton ? 1 : 0; foreach (ulong Child in Root.Children) Result += SubtreeButtons(State.Nodes[Child]); return Result; }
+            private int SubtreeButtons(GuiRetainedNode Root) { int Result = IsActivatedClass(Root.ClassId) ? 1 : 0; foreach (ulong Child in Root.Children) Result += SubtreeButtons(State.Nodes[Child]); return Result; }
+            private int SubtreeProjectionCost(GuiRetainedNode Root)
+            { int Result = ProjectionCost(Root.ClassId); foreach (ulong Child in Root.Children) Result += SubtreeProjectionCost(State.Nodes[Child]); return Result; }
+            private static int ProjectionCost(GuiClassId ClassId)
+            {
+                if (ClassId == GuiClassId.ScreenGui || ClassId == GuiClassId.Frame) return 1;
+                if (ClassId == GuiClassId.TextLabel || ClassId == GuiClassId.TextButton || ClassId == GuiClassId.ImageLabel) return 2;
+                if (ClassId == GuiClassId.ImageButton) return 3;
+                return 0;
+            }
+            private static bool IsActivatedClass(GuiClassId ClassId)
+            { return ClassId == GuiClassId.TextButton || ClassId == GuiClassId.ImageButton; }
             private int SubtreeTextBytes(GuiRetainedNode Root)
             {
                 int Result = 0; GuiStoredValue Text; if (Root.Properties.TryGetValue(GuiPropertyId.Text, out Text)) Result = FacadePolicy.Utf8.GetByteCount(Text.Text);

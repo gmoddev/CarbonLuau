@@ -37,6 +37,10 @@ internal static class Program
             try { GuiFoundation2ATests.RunModel(); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
+        if (Args.Length >= 1 && Args[0] == "--gui2b-only") {
+            try { GuiFoundation2BTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauRuntime-" + Guid.NewGuid().ToString("N"));
         try
         {
@@ -50,6 +54,7 @@ internal static class Program
             GuiFoundation1ETests.RunModel();
             GuiFoundation1FTests.RunModel();
             GuiFoundation2ATests.RunModel();
+            GuiFoundation2BTests.RunModel();
             var Low = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MinValue, MaxCallbackMilliseconds = int.MinValue }.Validate();
             var High = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MaxValue, MaxCallbackMilliseconds = int.MaxValue }.Validate();
             Check(Low.MaxVmMemoryMiB == 16 && Low.MaxCallbackMilliseconds == 1 && High.MaxVmMemoryMiB == 256 && High.MaxCallbackMilliseconds == 100, "clamps");
@@ -109,6 +114,7 @@ internal static class Program
                 GuiFoundation1ETests.RunNative(Native);
                 GuiFoundation1FTests.RunNative(Native);
                 GuiFoundation2ATests.RunNative(Native);
+                GuiFoundation2BTests.RunNative(Native);
                 AddonTests.Run(Native, Args.Length > 3 ? Args[3] : null);
                 FoundationETests.Run(Native);
                 Native.Dispose(); Native.Dispose();

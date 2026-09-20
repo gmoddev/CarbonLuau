@@ -22,6 +22,15 @@ if SharedValueEqual == nil then
         if Kind == "UDim2" then return Left.X == Right.X and Left.Y == Right.Y end
         if Kind == "Vector2" then return Left.X == Right.X and Left.Y == Right.Y end
         if Kind == "Color3" then return Left.R == Right.R and Left.G == Right.G and Left.B == Right.B end
+        if Kind == "ImageSource" then
+            if Left.Kind ~= Right.Kind then return false end
+            if Left.Kind == "None" then return true end
+            if Left.Kind == "Sprite" then return Left.Name == Right.Name end
+            if Left.Kind == "Png" then return Left.Id == Right.Id end
+            if Left.Kind == "Item" then return Left.ItemId == Right.ItemId and Left.SkinId == Right.SkinId end
+            if Left.Kind == "SteamAvatar" then return Left.UserId == Right.UserId end
+            return false
+        end
         return false
     end
 end
@@ -41,7 +50,7 @@ local function ValueMeta(Kind)
     Meta.__metatable = "CarbonLuau." .. Kind
     ValueMetas[Kind] = table.freeze(Meta)
 end
-for _, Kind in {"UDim", "UDim2", "Vector2", "Color3"} do ValueMeta(Kind) end
+for _, Kind in {"UDim", "UDim2", "Vector2", "Color3", "ImageSource"} do ValueMeta(Kind) end
 local function Value(Kind, RecordValue)
     local Result = MakeUserdata(ValueMetas[Kind])
     ValueRecords[Result] = RecordValue
@@ -70,7 +79,38 @@ function Color3.fromRGB(R, G, B)
     if R % 1 ~= 0 or G % 1 ~= 0 or B % 1 ~= 0 then Fail("Color3.fromRGB expects integer components") end
     return Color3.new(R / 255, G / 255, B / 255)
 end
-table.freeze(UDim); table.freeze(UDim2); table.freeze(Vector2); table.freeze(Color3)
+local function DecimalId(Value, Label)
+    Value = String(Value, Label)
+    if #Value == 0 or #Value > 20 or (#Value > 1 and string.sub(Value, 1, 1) == "0") or string.find(Value, "[^0-9]") then
+        Fail(Label .. " must be a canonical decimal string of at most 20 digits")
+    end
+    return Value
+end
+local function UnsignedDecimalId(Value, Label)
+    Value = DecimalId(Value, Label)
+    if #Value == 20 and Value > "18446744073709551615" then Fail(Label .. " exceeds the unsigned 64-bit range") end
+    return Value
+end
+local ImageSource = {}
+function ImageSource.None() return Value("ImageSource", {Kind = "None"}) end
+function ImageSource.Sprite(Name)
+    Name = String(Name, "ImageSource.Sprite name")
+    if #Name == 0 or #Name > 256 or string.sub(Name, 1, 1) == "/" or string.sub(Name, -1) == "/" or
+        string.find(Name, "//", 1, true) or string.find(Name, "[^%w_./%-]") then Fail("ImageSource.Sprite name is not a canonical asset key") end
+    for Segment in string.gmatch(Name, "[^/]+") do if Segment == "." or Segment == ".." then Fail("ImageSource.Sprite name is not a canonical asset key") end end
+    return Value("ImageSource", {Kind = "Sprite", Name = Name})
+end
+function ImageSource.Png(Id) return Value("ImageSource", {Kind = "Png", Id = DecimalId(Id, "PNG identifier")}) end
+function ImageSource.Item(ItemId, SkinId)
+    ItemId = Number(ItemId, "ImageSource.Item ItemId", -2147483648, 2147483647)
+    if ItemId % 1 ~= 0 then Fail("ImageSource.Item ItemId must be an integer") end
+    return Value("ImageSource", {Kind = "Item", ItemId = ItemId,
+        SkinId = SkinId == nil and "" or UnsignedDecimalId(SkinId, "skin identifier")})
+end
+function ImageSource.SteamAvatar(UserId)
+    return Value("ImageSource", {Kind = "SteamAvatar", UserId = UnsignedDecimalId(UserId, "Steam user identifier")})
+end
+table.freeze(UDim); table.freeze(UDim2); table.freeze(Vector2); table.freeze(Color3); table.freeze(ImageSource)
 local function Record(Player)
     local Value = Records[Player]
     if not Value then Fail("invalid Player proxy") end
@@ -177,6 +217,13 @@ local function EncodeGuiValue(Value, Integer)
         if ValueKind == "UDim2" then return "udim2", tostring(Value.X.Scale), tostring(Value.X.Offset), tostring(Value.Y.Scale), tostring(Value.Y.Offset) end
         if ValueKind == "Vector2" then return "vector2", tostring(Value.X), tostring(Value.Y) end
         if ValueKind == "Color3" then return "color3", tostring(Value.R), tostring(Value.G), tostring(Value.B) end
+        if ValueKind == "ImageSource" then
+            if Value.Kind == "None" then return "imagesource", "None" end
+            if Value.Kind == "Sprite" then return "imagesource", "Sprite", Value.Name end
+            if Value.Kind == "Png" then return "imagesource", "Png", Value.Id end
+            if Value.Kind == "SteamAvatar" then return "imagesource", "SteamAvatar", Value.UserId end
+            if Value.Kind == "Item" then return "imagesource", "Item", tostring(Value.ItemId), Value.SkinId end
+        end
     end
     Fail("unsupported GUI property value")
 end
@@ -190,6 +237,13 @@ local function DecodeGuiValue(Fields)
     if Kind == "udim2" then return UDim2.new(tonumber(Fields[2]), tonumber(Fields[3]), tonumber(Fields[4]), tonumber(Fields[5])) end
     if Kind == "vector2" then return Vector2.new(tonumber(Fields[2]), tonumber(Fields[3])) end
     if Kind == "color3" then return Color3.new(tonumber(Fields[2]), tonumber(Fields[3]), tonumber(Fields[4])) end
+    if Kind == "imagesource" then
+        if Fields[2] == "None" then return ImageSource.None() end
+        if Fields[2] == "Sprite" then return ImageSource.Sprite(Fields[3]) end
+        if Fields[2] == "Png" then return ImageSource.Png(Fields[3]) end
+        if Fields[2] == "Item" then return ImageSource.Item(tonumber(Fields[3]), Fields[4] == "" and nil or Fields[4]) end
+        if Fields[2] == "SteamAvatar" then return ImageSource.SteamAvatar(Fields[3]) end
+    end
     if Kind == "object" then return GetGuiObject(Fields[2], Fields[3]) end
     Fail("invalid GUI host value")
 end
@@ -309,4 +363,4 @@ local function Dispatch(Fields)
         Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))
     else Callback(Player) end
 end
-return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Color3 = Color3}), SharedValueEqual
+return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Color3 = Color3, ImageSource = ImageSource}), SharedValueEqual

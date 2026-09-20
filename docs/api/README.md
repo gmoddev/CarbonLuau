@@ -20,7 +20,7 @@ This is server-side Luau, not Roblox API compatibility.
 | Existing `require` and `task.spawn/defer/delay` | [Phase 2 script contract](../Phase2.md) |
 | Addon manifests, dependencies and package-qualified imports | [Addon composition](Addons.md) |
 | Carbon provider registration protocol | [Addon providers](Addon-Providers.md) |
-| Server-driven retained GUI and qualified Foundation 2A layout source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
+| Server-driven retained GUI with qualified Foundation 2A layout and 2B typed-image source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
 
 Players and Commands are available beginning with API `0.3.0-experimental`.
 Addon composition and GUI are available beginning with
@@ -56,11 +56,11 @@ Addon packages use exact dependency bindings, explicit exports and the readonly
 `addon` context. They are public experimental behavior beginning with
 `0.4.0-experimental`; they are not present in published v0.3.0 artifacts.
 
-GUI Foundation 1 provides `game:GetService("Gui")`, ScreenGui, Frame,
-TextLabel, TextButton, retained properties, immutable layout/color values,
-explicit per-Player Show/Hide and `TextButton.Activated`. Foundation 2A adds
-implemented but not yet release-versioned `LayoutOrder`, `UIListLayout` and
-`UIPadding`. Images, TextBox, scrolling, advanced styling, hover/focus and raw
-CUI remain unsupported. Authenticated-client visual, cursor, click-receipt and
-reconciliation observations remain unqualified even though the experimental
-API is available.
+GUI Foundation 1 provides `game:GetService("Gui")`, ScreenGui, Frame and text
+controls with retained properties, immutable values, per-Player Show/Hide and
+secure Activated events. Foundation 2A adds implemented but not yet
+release-versioned layout helpers; Foundation 2B adds typed ImageSource,
+ImageLabel and ImageButton. TextBox, scrolling, advanced styling, hover/focus
+and raw CUI remain unsupported. Authenticated-client visual, cursor, image-load,
+click-receipt and reconciliation observations remain unqualified even though
+the experimental source surface is available.

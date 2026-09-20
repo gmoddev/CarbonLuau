@@ -25,6 +25,8 @@ namespace Carbon.Plugins
             internal GuiBackendTarget Target { get { return new GuiBackendTarget(PlayerToken, PlayerUserId, RootClientId); } }
             internal string ObjectClientId(ulong ObjectId) { return ClientPrefix + "o" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
             internal string TextClientId(ulong ObjectId) { return ClientPrefix + "t" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
+            internal string ImageClientId(ulong ObjectId) { return ClientPrefix + "i" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
+            internal string ActionClientId(ulong ObjectId) { return ClientPrefix + "a" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
             internal GuiPresentation Copy()
             {
                 var Result = new GuiPresentation(ScreenId, Epoch, PlayerToken, PlayerUserId, ClientPrefix) {
@@ -69,6 +71,8 @@ namespace Carbon.Plugins
                     Vector(GuiRenderPropertyId.Pivot, 0.5, 0.5), Boolean(GuiRenderPropertyId.Visible, true),
                     Boolean(GuiRenderPropertyId.NeedsCursor, NeedsCursor)));
                 AppendChildren(State, Screen, Presentation.RootClientId, Presentation, Limits, Elements, true, ActionCommand);
+                if (Elements.Count > Limits.MaxProjectedElementsPerScreen)
+                    throw new FacadeException("GUI full presentation exceeds the projection element bound");
                 int Estimated = 16;
                 foreach (GuiRenderElement Element in Elements) Estimated = checked(Estimated + Element.CanonicalUtf8Bytes + 64);
                 if (Estimated > Limits.MaxSerializedOperationBytes) throw new FacadeException("GUI full presentation exceeds the serialized operation bound");
@@ -121,6 +125,13 @@ namespace Carbon.Plugins
                     }
                     if (TextProperties.Count != 0) Elements.Add(new GuiRenderElement(Presentation.TextClientId(Dirty.Key), null,
                         GuiRenderNodeKind.Text, Limits, TextProperties.ToArray()));
+                    bool ImageColor = HasAny(Dirty.Value, GuiPropertyId.ImageColor3, GuiPropertyId.ImageTransparency);
+                    if (ImageColor) {
+                        double[] ColorValue = Numbers(Node, GuiPropertyId.ImageColor3);
+                        Elements.Add(new GuiRenderElement(Presentation.ImageClientId(Dirty.Key), null, GuiRenderNodeKind.Image, Limits,
+                            Image(GuiRenderPropertyId.ImageSource, Property(Node, GuiPropertyId.Image).ImageSource),
+                            Color(GuiRenderPropertyId.ImageColor, ColorValue, 1 - Number(Node, GuiPropertyId.ImageTransparency))));
+                    }
                 }
                 if (Elements.Count == 0) throw new GuiFullRebuildRequiredException("dirty state produced no safe patch");
                 int Estimated = 16;
@@ -172,7 +183,31 @@ namespace Carbon.Plugins
                             String(GuiRenderPropertyId.TextXAlignment, TextValue(Node, GuiPropertyId.TextXAlignment)),
                             String(GuiRenderPropertyId.TextYAlignment, TextValue(Node, GuiPropertyId.TextYAlignment))));
                     }
+                    if (Node.ClassId == GuiClassId.ImageLabel || Node.ClassId == GuiClassId.ImageButton) {
+                        double[] ImageColor = Numbers(Node, GuiPropertyId.ImageColor3);
+                        Elements.Add(new GuiRenderElement(Presentation.ImageClientId(Node.Identity.GuiObjectId), ClientId,
+                            GuiRenderNodeKind.Image, Limits,
+                            Vector(GuiRenderPropertyId.AnchorMin, 0, 0), Vector(GuiRenderPropertyId.AnchorMax, 1, 1),
+                            Vector(GuiRenderPropertyId.OffsetMin, 0, 0), Vector(GuiRenderPropertyId.OffsetMax, 0, 0),
+                            Vector(GuiRenderPropertyId.Pivot, 0.5, 0.5), Boolean(GuiRenderPropertyId.Visible, true),
+                            Image(GuiRenderPropertyId.ImageSource, Property(Node, GuiPropertyId.Image).ImageSource),
+                            Color(GuiRenderPropertyId.ImageColor, ImageColor, 1 - Number(Node, GuiPropertyId.ImageTransparency))));
+                    }
                     AppendChildren(State, Node, ClientId, Presentation, Limits, Elements, EffectiveVisible, ActionCommand);
+                    if (Node.ClassId == GuiClassId.ImageButton) {
+                        var ActionProperties = new List<GuiRenderProperty> {
+                            Vector(GuiRenderPropertyId.AnchorMin, 0, 0), Vector(GuiRenderPropertyId.AnchorMax, 1, 1),
+                            Vector(GuiRenderPropertyId.OffsetMin, 0, 0), Vector(GuiRenderPropertyId.OffsetMax, 0, 0),
+                            Vector(GuiRenderPropertyId.Pivot, 0.5, 0.5), Boolean(GuiRenderPropertyId.Visible, true),
+                            Color(GuiRenderPropertyId.BackgroundColor, new[] {1.0, 1.0, 1.0}, 0)
+                        };
+                        if (EffectiveVisible && ActionCommand != null) {
+                            string Command = ActionCommand(Node);
+                            if (Command != null) ActionProperties.Add(String(GuiRenderPropertyId.ActionCommand, Command));
+                        }
+                        Elements.Add(new GuiRenderElement(Presentation.ActionClientId(Node.Identity.GuiObjectId), ClientId,
+                            GuiRenderNodeKind.Button, Limits, ActionProperties.ToArray()));
+                    }
                 }
             }
 
@@ -337,7 +372,7 @@ namespace Carbon.Plugins
             private static bool HasVisibleButton(GuiRetainedState State, GuiRetainedNode Node, bool AncestorsVisible)
             {
                 bool Visible = AncestorsVisible && (!GuiSchema.IsA(Node.ClassId, "GuiObject") || Boolean(Node, GuiPropertyId.Visible));
-                if (Visible && Node.ClassId == GuiClassId.TextButton) return true;
+                if (Visible && (Node.ClassId == GuiClassId.TextButton || Node.ClassId == GuiClassId.ImageButton)) return true;
                 foreach (ulong Child in Node.Children) if (HasVisibleButton(State, State.Nodes[Child], Visible)) return true;
                 return false;
             }
@@ -355,6 +390,7 @@ namespace Carbon.Plugins
             private static GuiRenderProperty String(GuiRenderPropertyId Id, string Value) { return new GuiRenderProperty(Id, GuiRenderValue.FromString(Value)); }
             private static GuiRenderProperty Vector(GuiRenderPropertyId Id, double X, double Y) { return new GuiRenderProperty(Id, GuiRenderValue.FromVector(X, Y)); }
             private static GuiRenderProperty Color(GuiRenderPropertyId Id, double[] Value, double Alpha) { return new GuiRenderProperty(Id, GuiRenderValue.FromColor(Value[0], Value[1], Value[2], Alpha)); }
+            private static GuiRenderProperty Image(GuiRenderPropertyId Id, GuiImageSourceValue Value) { return new GuiRenderProperty(Id, GuiRenderValue.FromImageSource(Value)); }
         }
 
         internal sealed class GuiFullRebuildRequiredException : Exception

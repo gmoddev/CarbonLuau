@@ -75,6 +75,7 @@ try {
                 @{ Source = (Join-Path $Root 'examples/gui/shared-live/init.luau'); Name = 'examples/gui/shared-live/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/gui/per-player/init.luau'); Name = 'examples/gui/per-player/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/gui/activated/init.luau'); Name = 'examples/gui/activated/init.luau' },
+                @{ Source = (Join-Path $Root 'examples/gui/images/init.luau'); Name = 'examples/gui/images/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/scripts/init.luau'); Name = 'examples/scripts/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/scripts/modules/message.luau'); Name = 'examples/scripts/modules/message.luau' },
                 @{ Source = (Join-Path $Root 'examples/addons/economy/addon.json'); Name = 'examples/addons/economy/addon.json' },

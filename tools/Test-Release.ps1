@@ -58,7 +58,7 @@ try {
                 throw "Release bundle is missing compiler worker: $WorkerEntry"
             }
             foreach ($ExampleEntry in @('examples/gui/hello/init.luau','examples/gui/shared-live/init.luau',
-                    'examples/gui/per-player/init.luau','examples/gui/activated/init.luau',
+                    'examples/gui/per-player/init.luau','examples/gui/activated/init.luau','examples/gui/images/init.luau',
                     'examples/addons/guiowner/addon.json','examples/addons/guiowner/init.luau','examples/addons/guiowner/api.luau',
                     'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {
                 if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $ExampleEntry })) {

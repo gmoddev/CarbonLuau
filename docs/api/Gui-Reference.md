@@ -2,8 +2,8 @@
 
 Availability: experimental API `0.4.0-experimental`.
 
-Foundation 2A source status: implemented and qualified, with no Foundation 2
-release/API identity assigned yet.
+Foundation 2A/2B source status: deterministic layout and typed images are
+implemented and qualified, with no Foundation 2 release/API identity assigned.
 
 ## Service and construction
 
@@ -13,9 +13,9 @@ local Screen = Gui:Create("ScreenGui")
 local Frame = Screen:Create("Frame")
 ```
 
-`Gui:Create(ClassName)` accepts `ScreenGui`, `Frame`, `TextLabel` and
-`TextButton`. `ScreenGui` roots can only be created through `Gui`. Calling
-`Create` on a GuiObject accepts `Frame`, `TextLabel`, `TextButton`,
+`Gui:Create(ClassName)` accepts `ScreenGui`, `Frame`, `TextLabel`, `TextButton`,
+`ImageLabel` and `ImageButton`. `ScreenGui` roots can only be created through
+`Gui`. Calling `Create` on a GuiObject accepts those non-screen GuiObjects plus
 `UIListLayout` or `UIPadding` and parents the new child to the receiver.
 
 ## Classes
@@ -48,7 +48,7 @@ These methods describe server intent, not acknowledged client state.
 
 ### GuiObject properties
 
-`Frame`, `TextLabel` and `TextButton` are GuiObjects and share:
+`Frame`, text controls and image controls are GuiObjects and share:
 
 | Property | Type | Default | Validation |
 |---|---|---|---|
@@ -69,6 +69,8 @@ Class-specific defaults:
 | `Frame` | `UDim2.fromOffset(100, 100)` | 0 | Yes |
 | `TextLabel` | `UDim2.fromOffset(100, 30)` | 1 | Yes |
 | `TextButton` | `UDim2.fromOffset(100, 36)` | 0 | Yes |
+| `ImageLabel` | `UDim2.fromOffset(100, 100)` | 1 | Yes |
+| `ImageButton` | `UDim2.fromOffset(100, 100)` | 1 | Yes |
 
 ### TextLabel and TextButton
 
@@ -92,6 +94,18 @@ end)
 `Activated` uses the standard [Connection](Types/Connection.md) lifecycle but
 has GUI-specific listener and admission bounds. It is not `MouseButton1Click`
 and exposes no raw client command.
+
+### ImageLabel and ImageButton
+
+| Property | Type | Default | Validation |
+|---|---|---|---|
+| `Image` | ImageSource | `ImageSource.None()` | One of the typed constructors below. Source replacement is structural. |
+| `ImageColor3` | Color3 | `Color3.new(1, 1, 1)` | Each component `0..1`; patchable. |
+| `ImageTransparency` | number | `0` | Finite `0..1`; patchable. |
+
+`ImageButton` also exposes the same `Activated(Player)` Signal and private
+exact-connection action path as TextButton. A shared image object has one
+retained source for every viewer. Client asset availability is not acknowledged.
 
 ### UIListLayout
 
@@ -140,7 +154,15 @@ normalized to zero.
 | `UDim2` | `UDim2.new(XScale, XOffset, YScale, YOffset)`; `UDim2.fromScale(XScale, YScale)`; `UDim2.fromOffset(XOffset, YOffset)` | Read-only `X` and `Y` UDim values |
 | `Vector2` | `Vector2.new(X, Y)` | `X`, `Y` each `-32768..32768`; AnchorPoint narrows this to `0..1` |
 | `Color3` | `Color3.new(R, G, B)`; `Color3.fromRGB(R, G, B)` | Normalized fields `0..1`; `fromRGB` requires integer `0..255` components |
+| `ImageSource` | `ImageSource.None()`; `ImageSource.Sprite(Name)`; `ImageSource.Png(Id)`; `ImageSource.Item(ItemId, SkinId?)`; `ImageSource.SteamAvatar(UserId)` | Read-only `Kind` and source-specific fields; Sprite is a canonical asset key, Png an opaque decimal string, ItemId signed int32, SkinId/UserId unsigned decimal strings |
 
 The value constructors are globals in every entrypoint and module environment.
 They do not carry a host/domain lifetime and may be shared safely between
 domains.
+
+ImageSource grants no filesystem, FileStorage, Carbon image-database, URL or
+network capability. Sprite names are 1..256 bytes and restricted to canonical
+asset-key characters. Decimal identifiers contain at most 20 ASCII digits;
+skin and Steam IDs must also fit unsigned 64-bit range. Omitted Item SkinId
+reads as the empty string. A syntactically valid but unavailable asset remains
+retained state and receives no client-load acknowledgement.

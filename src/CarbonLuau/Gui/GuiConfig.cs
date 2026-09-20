@@ -14,7 +14,7 @@ namespace Carbon.Plugins
             internal int MaxActionTokensPerPresentation = 64, MaxActionTokensPerDomain = 8192, MaxActionTokensGlobal = 32768;
             internal int MaxNameUtf8Bytes = 64, MaxTextUtf8Bytes = 2048, MaxTextUtf8BytesPerScreen = 32 * 1024;
             internal int MaxTrackedDirtyObjectsPerDomain = 512, MaxCloneObjects = 128, MaxCloneDepth = 16;
-            internal int MaxRenderElementsPerOperation = 257, MaxRenderPropertiesPerElement = 16;
+            internal int MaxProjectedElementsPerScreen, MaxRenderElementsPerOperation = 257, MaxRenderPropertiesPerElement = 16;
             internal int MaxSerializedOperationBytes = 64 * 1024, MaxPresentationSendsPerFlush = 64;
             internal int MaxSerializedBytesPerFlush = 256 * 1024, GuiFlushBudgetMicroseconds = 1000;
             internal int PatchBatchesBeforeFull = 32, MaxPlayerInteractionsPerSecond = 20;
@@ -35,6 +35,7 @@ namespace Carbon.Plugins
                 Positive(MaxTextUtf8BytesPerScreen, "MaxTextUtf8BytesPerScreen");
                 Positive(MaxTrackedDirtyObjectsPerDomain, "MaxTrackedDirtyObjectsPerDomain");
                 Positive(MaxCloneObjects, "MaxCloneObjects"); Positive(MaxCloneDepth, "MaxCloneDepth");
+                if (MaxProjectedElementsPerScreen < 0) throw new InvalidOperationException("MaxProjectedElementsPerScreen cannot be negative");
                 Positive(MaxRenderElementsPerOperation, "MaxRenderElementsPerOperation");
                 Positive(MaxRenderPropertiesPerElement, "MaxRenderPropertiesPerElement");
                 Positive(MaxSerializedOperationBytes, "MaxSerializedOperationBytes");
@@ -60,7 +61,9 @@ namespace Carbon.Plugins
                 AtMost(MaxSerializedOperationBytes, MaxSerializedBytesPerFlush, "one operation must fit the flush byte bound");
                 if (MaxRenderElementsPerOperation < MaxObjectsPerScreen)
                     throw new InvalidOperationException("MaxRenderElementsPerOperation must cover MaxObjectsPerScreen");
-                return new GuiLimits(this);
+                int ProjectionLimit = MaxProjectedElementsPerScreen == 0 ? MaxRenderElementsPerOperation : MaxProjectedElementsPerScreen;
+                AtMost(ProjectionLimit, MaxRenderElementsPerOperation, "screen projection must fit one render operation");
+                return new GuiLimits(this, ProjectionLimit);
             }
 
             private static void Positive(int Value, string Name)
@@ -79,13 +82,13 @@ namespace Carbon.Plugins
             internal readonly int MaxActionTokensPerPresentation, MaxActionTokensPerDomain, MaxActionTokensGlobal;
             internal readonly int MaxNameUtf8Bytes, MaxTextUtf8Bytes, MaxTextUtf8BytesPerScreen;
             internal readonly int MaxTrackedDirtyObjectsPerDomain, MaxCloneObjects, MaxCloneDepth;
-            internal readonly int MaxRenderElementsPerOperation, MaxRenderPropertiesPerElement;
+            internal readonly int MaxProjectedElementsPerScreen, MaxRenderElementsPerOperation, MaxRenderPropertiesPerElement;
             internal readonly int MaxSerializedOperationBytes, MaxPresentationSendsPerFlush, MaxSerializedBytesPerFlush;
             internal readonly int GuiFlushBudgetMicroseconds, PatchBatchesBeforeFull;
             internal readonly int MaxPlayerInteractionsPerSecond, MaxPlayerInteractionBurst;
             internal readonly int MaxActionInteractionsPerSecond, MaxActionInteractionBurst;
 
-            internal GuiLimits(GuiConfig Value)
+            internal GuiLimits(GuiConfig Value, int ProjectionLimit)
             {
                 MaxObjectsPerScreen = Value.MaxObjectsPerScreen; MaxTreeDepth = Value.MaxTreeDepth;
                 MaxChildrenPerObject = Value.MaxChildrenPerObject; MaxObjectsPerDomain = Value.MaxObjectsPerDomain;
@@ -98,7 +101,8 @@ namespace Carbon.Plugins
                 MaxActionTokensGlobal = Value.MaxActionTokensGlobal; MaxNameUtf8Bytes = Value.MaxNameUtf8Bytes;
                 MaxTextUtf8Bytes = Value.MaxTextUtf8Bytes; MaxTextUtf8BytesPerScreen = Value.MaxTextUtf8BytesPerScreen;
                 MaxTrackedDirtyObjectsPerDomain = Value.MaxTrackedDirtyObjectsPerDomain; MaxCloneObjects = Value.MaxCloneObjects;
-                MaxCloneDepth = Value.MaxCloneDepth; MaxRenderElementsPerOperation = Value.MaxRenderElementsPerOperation;
+                MaxCloneDepth = Value.MaxCloneDepth; MaxProjectedElementsPerScreen = ProjectionLimit;
+                MaxRenderElementsPerOperation = Value.MaxRenderElementsPerOperation;
                 MaxRenderPropertiesPerElement = Value.MaxRenderPropertiesPerElement;
                 MaxSerializedOperationBytes = Value.MaxSerializedOperationBytes;
                 MaxPresentationSendsPerFlush = Value.MaxPresentationSendsPerFlush;

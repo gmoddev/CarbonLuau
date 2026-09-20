@@ -2,8 +2,9 @@
 
 Availability: experimental API `0.4.0-experimental`.
 
-Source status: the additive Foundation 2A layout surface below is implemented
-and qualified, but Foundation 2 has not received a release/API identity yet.
+Source status: the additive Foundation 2A layout and Foundation 2B typed-image
+surfaces below are implemented and qualified, but Foundation 2 has not received
+a release/API identity yet.
 
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the
@@ -106,10 +107,40 @@ authority. `UIPadding` defines the content rectangle for direct children, list
 layout and built-in label/button text. It does not shrink the parent's own
 background. Each parent may contain at most one helper of each kind.
 
+## Typed images
+
+Choose an explicit host-known image source and assign it to an ImageLabel or
+ImageButton. Values are immutable, comparable and safe to retain or share
+between domains.
+
+```lua
+local Icon = Screen:Create("ImageLabel")
+Icon.Size = UDim2.fromOffset(64, 64)
+Icon.Image = ImageSource.Sprite("assets/icons/info.png")
+Icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+
+local Item = Screen:Create("ImageButton")
+Item.Image = ImageSource.Item(-932201673, "12345678901234567890")
+Item.Activated:Connect(function(Player)
+    print(`{Player.Name} selected the item`)
+end)
+```
+
+Other accepted constructors are `ImageSource.None()`, `ImageSource.Png(Id)`
+and `ImageSource.SteamAvatar(UserId)`. PNG, skin and Steam identifiers are
+strings, preserving 64-bit identity. Sprite names are restricted asset keys,
+not server paths. No constructor accepts a URL, downloads media or exposes
+Carbon's image database. Client asset loading is best effort and not
+acknowledged to scripts.
+
+Changing ImageColor3 or ImageTransparency can use a patch. Changing Image is a
+structural reconciliation. ImageButton uses the same presentation-bound,
+exact-Player secure Activated path as TextButton.
+
 ## Parenting and lifetime
 
 `Gui:Create("ScreenGui")` creates a root. `Parent:Create("Frame")` creates and
-parents a child in one operation. `Frame`, `TextLabel` and `TextButton` may also
+parents a child in one operation. Frame, text and image controls may also
 be created detached through `Gui:Create`. Assign `Parent` to another live object
 from the same owner domain, or to `nil`, to reparent or detach it. Cycles and
 cross-domain parenting raise an ordinary Luau error without changing the tree.
@@ -145,7 +176,7 @@ current release candidate.
 
 ## Interaction security
 
-`TextButton.Activated` is the only GUI event. CarbonLuau generates private,
+`TextButton.Activated` and `ImageButton.Activated` share one GUI event path. CarbonLuau generates private,
 opaque action authority separately for every presentation and exact Player
 connection. Scripts never receive tokens or raw client commands. Forged, stale,
 cross-Player, hidden, retired and over-limit actions are rejected before Luau
@@ -168,7 +199,8 @@ author-visible bounds:
 | Objects globally | 8,192 |
 | Screens for one Player connection / viewers of one ScreenGui | 16 / 256 |
 | Presentations per domain / globally | 512 / 4,096 |
-| TextButtons per ScreenGui | 64 |
+| Interactive buttons per ScreenGui | 64 |
+| Projected elements in one authoritative ScreenGui | 257 |
 | Activated listeners per button / GUI Signal connections per domain | 8 / 256 |
 | Name / one Text value / aggregate text per ScreenGui | 64 B / 2,048 B / 32 KiB UTF-8 |
 | Clone size / clone depth | 128 objects / 16 |
@@ -188,9 +220,9 @@ DataModel compatibility:
 - `ScreenGui` is a CarbonLuau root and always has `Parent == nil`.
 - Rust CUI is an implementation detail and is not exposed to Luau.
 - Client rendering state is best effort and is not acknowledged to scripts.
-- Images, TextBox, scrolling, advanced styling and hover/focus events are not
-  implemented. Foundation 2A layout is implemented but has no assigned release
-  identity yet.
+- TextBox, scrolling, advanced styling and hover/focus events are not
+  implemented. Foundation 2A layout and Foundation 2B typed images are
+  implemented but have no assigned release identity yet.
 
 See the [complete reference](Gui-Reference.md), the
 [GUI examples](https://github.com/gmoddev/CarbonLuau/tree/main/examples/gui),

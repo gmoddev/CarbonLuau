@@ -136,7 +136,7 @@ internal static class GuiFoundation1BTests
 
         var ScreenConfig = new Runtime.GuiConfig {MaxObjectsPerScreen = 3, MaxTreeDepth = 3, MaxChildrenPerObject = 3,
             MaxObjectsPerDomain = 10, MaxObjectsGlobal = 10, MaxScreensPerDomain = 1, MaxButtonsPerScreen = 3,
-            MaxTrackedDirtyObjectsPerDomain = 10, MaxCloneObjects = 3, MaxCloneDepth = 3, MaxRenderElementsPerOperation = 3,
+            MaxTrackedDirtyObjectsPerDomain = 10, MaxCloneObjects = 3, MaxCloneDepth = 3, MaxRenderElementsPerOperation = 5,
             MaxTextUtf8Bytes = 4, MaxTextUtf8BytesPerScreen = 6};
         var ScreenGui = new Runtime.GuiRetainedRegistry(new Runtime.GuiRetainedWorld(ScreenConfig.Validate()), 4, 5); ulong ScreenRegistration = 0;
         ulong LimitedScreen = Id(Create(ScreenGui, ref ScreenRegistration, "ScreenGui"));

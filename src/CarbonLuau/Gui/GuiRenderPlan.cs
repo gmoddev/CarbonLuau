@@ -7,14 +7,15 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
-        internal enum GuiRenderNodeKind { Container = 1, Text = 2, Button = 3 }
+        internal enum GuiRenderNodeKind { Container = 1, Text = 2, Button = 3, Image = 4 }
         internal enum GuiRenderPropertyId
         {
             AnchorMin = 1, AnchorMax = 2, OffsetMin = 3, OffsetMax = 4, Pivot = 5, Visible = 6,
             BackgroundColor = 7, Text = 8, TextColor = 9, FontSize = 10,
-            TextXAlignment = 11, TextYAlignment = 12, ActionCommand = 13, NeedsCursor = 14
+            TextXAlignment = 11, TextYAlignment = 12, ActionCommand = 13, NeedsCursor = 14,
+            ImageSource = 15, ImageColor = 16
         }
-        internal enum GuiRenderValueKind { Boolean = 1, Integer = 2, Number = 3, String = 4, Vector2 = 5, Color = 6 }
+        internal enum GuiRenderValueKind { Boolean = 1, Integer = 2, Number = 3, String = 4, Vector2 = 5, Color = 6, ImageSource = 7 }
 
         internal struct GuiRenderVector2
         {
@@ -44,9 +45,11 @@ namespace Carbon.Plugins
             internal readonly GuiRenderValueKind Kind; internal readonly bool Boolean;
             internal readonly int Integer; internal readonly double Number; internal readonly string Text;
             internal readonly GuiRenderVector2 Vector; internal readonly GuiRenderColor Color;
+            internal readonly GuiImageSourceValue ImageSource;
             private GuiRenderValue(GuiRenderValueKind Kind, bool Boolean = false, int Integer = 0, double Number = 0,
-                string Text = null, GuiRenderVector2 Vector = default(GuiRenderVector2), GuiRenderColor Color = default(GuiRenderColor))
-            { this.Kind = Kind; this.Boolean = Boolean; this.Integer = Integer; this.Number = Number; this.Text = Text; this.Vector = Vector; this.Color = Color; }
+                string Text = null, GuiRenderVector2 Vector = default(GuiRenderVector2), GuiRenderColor Color = default(GuiRenderColor),
+                GuiImageSourceValue ImageSource = null)
+            { this.Kind = Kind; this.Boolean = Boolean; this.Integer = Integer; this.Number = Number; this.Text = Text; this.Vector = Vector; this.Color = Color; this.ImageSource = ImageSource; }
             internal static GuiRenderValue FromBoolean(bool Value) { return new GuiRenderValue(GuiRenderValueKind.Boolean, Boolean: Value); }
             internal static GuiRenderValue FromInteger(int Value) { return new GuiRenderValue(GuiRenderValueKind.Integer, Integer: Value); }
             internal static GuiRenderValue FromNumber(double Value)
@@ -69,6 +72,8 @@ namespace Carbon.Plugins
             { return new GuiRenderValue(GuiRenderValueKind.Vector2, Vector: new GuiRenderVector2(X, Y)); }
             internal static GuiRenderValue FromColor(double R, double G, double B, double A)
             { return new GuiRenderValue(GuiRenderValueKind.Color, Color: new GuiRenderColor(R, G, B, A)); }
+            internal static GuiRenderValue FromImageSource(GuiImageSourceValue Value)
+            { if (Value == null) throw new InvalidOperationException("render image source is required"); return new GuiRenderValue(GuiRenderValueKind.ImageSource, ImageSource: Value); }
             internal string Describe()
             {
                 switch (Kind) {
@@ -78,6 +83,7 @@ namespace Carbon.Plugins
                     case GuiRenderValueKind.String: return Text.Length.ToString(CultureInfo.InvariantCulture) + ":" + Text;
                     case GuiRenderValueKind.Vector2: return Vector.X.ToString("R", CultureInfo.InvariantCulture) + "," + Vector.Y.ToString("R", CultureInfo.InvariantCulture);
                     case GuiRenderValueKind.Color: return Color.R.ToString("R", CultureInfo.InvariantCulture) + "," + Color.G.ToString("R", CultureInfo.InvariantCulture) + "," + Color.B.ToString("R", CultureInfo.InvariantCulture) + "," + Color.A.ToString("R", CultureInfo.InvariantCulture);
+                    case GuiRenderValueKind.ImageSource: return ImageSource.Describe();
                     default: throw new InvalidOperationException("unknown render value kind");
                 }
             }

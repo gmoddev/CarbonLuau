@@ -30,7 +30,7 @@ foreach ($Document in $Documents) {
 foreach ($Example in @('player-events','hello-command')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
 }
-foreach ($Example in @('hello','shared-live','per-player','activated')) {
+foreach ($Example in @('hello','shared-live','per-player','activated','images')) {
     $ExamplePath = Join-Path $Root "examples/gui/$Example/init.luau"
     if (!(Test-Path -LiteralPath $ExamplePath)) { throw "Missing runnable GUI example: $Example" }
     $ExampleText = Get-Content -Raw -LiteralPath $ExamplePath
@@ -43,12 +43,13 @@ foreach ($Path in @('examples/addons/economy/addon.json','examples/addons/econom
         'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root $Path))) { throw "Missing addon example file: $Path" }
 }
-foreach ($Name in @('ScreenGui','Frame','TextLabel','TextButton','UIListLayout','UIPadding','GuiObject','UDim','UDim2','Vector2','Color3')) {
+foreach ($Name in @('ScreenGui','Frame','TextLabel','TextButton','ImageLabel','ImageButton','UIListLayout','UIPadding','GuiObject','UDim','UDim2','Vector2','Color3','ImageSource')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits public type: $Name" }
 }
 foreach ($Name in @('Name','ClassName','Parent','Position','Size','AnchorPoint','Visible','BackgroundColor3',
         'BackgroundTransparency','ZIndex','LayoutOrder','Text','TextColor3','TextTransparency','TextSize','TextXAlignment','TextYAlignment',
-        'Padding','FillDirection','HorizontalAlignment','VerticalAlignment','PaddingTop','PaddingBottom','PaddingLeft','PaddingRight')) {
+        'Padding','FillDirection','HorizontalAlignment','VerticalAlignment','PaddingTop','PaddingBottom','PaddingLeft','PaddingRight',
+        'Image','ImageColor3','ImageTransparency')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits property: $Name" }
 }
 foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','IsA','Show','Hide','IsShown','Activated')) {
@@ -56,6 +57,9 @@ foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','I
 }
 foreach ($Constructor in @('UDim.new','UDim2.new','UDim2.fromScale','UDim2.fromOffset','Vector2.new','Color3.new','Color3.fromRGB')) {
     if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains($Constructor)) { throw "GUI constructor differs between bootstrap and reference: $Constructor" }
+}
+foreach ($Constructor in @('ImageSource.None','ImageSource.Sprite','ImageSource.Png','ImageSource.Item','ImageSource.SteamAvatar')) {
+    if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains(($Constructor -split '\.')[1])) { throw "GUI image constructor differs between bootstrap and reference: $Constructor" }
 }
 foreach ($Claim in @('desired server state','does not transfer','not acknowledged','Player')) {
     if (!$GuiGuide.Contains($Claim)) { throw "GUI guide is missing required observable-semantics claim: $Claim" }

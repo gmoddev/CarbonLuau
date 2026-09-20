@@ -36,8 +36,8 @@ internal static class GuiFoundation1ATests
     {
         Runtime.GuiSchema.Validate();
         Runtime.GuiClassDescriptor[] Classes = Runtime.GuiSchema.Classes;
-        Check(Classes.Length == 8 && Runtime.GuiSchema.Methods.Length == 9 && Runtime.GuiSchema.Events.Length == 1 &&
-            Runtime.GuiSchema.ValueTypes.Length == 4, "schema descriptor counts are complete");
+        Check(Classes.Length == 10 && Runtime.GuiSchema.Methods.Length == 9 && Runtime.GuiSchema.Events.Length == 1 &&
+            Runtime.GuiSchema.ValueTypes.Length == 5, "schema descriptor counts are complete");
         var ClassIds = new HashSet<Runtime.GuiClassId>(); var ClassNames = new HashSet<string>(StringComparer.Ordinal);
         var PublicNames = new List<string>();
         foreach (Runtime.GuiClassDescriptor Class in Classes) {
@@ -45,7 +45,7 @@ internal static class GuiFoundation1ATests
             if (Class.Public) PublicNames.Add(Class.Name);
         }
         PublicNames.Sort(StringComparer.Ordinal);
-        Check(String.Join(",", PublicNames) == "Frame,ScreenGui,TextButton,TextLabel,UIListLayout,UIPadding", "additive public class boundary");
+        Check(String.Join(",", PublicNames) == "Frame,ImageButton,ImageLabel,ScreenGui,TextButton,TextLabel,UIListLayout,UIPadding", "additive public class boundary");
 
         Runtime.GuiClassDescriptor Screen = Runtime.GuiSchema.GetClass(Runtime.GuiClassId.ScreenGui);
         Runtime.GuiClassDescriptor Frame = Runtime.GuiSchema.GetClass(Runtime.GuiClassId.Frame);
@@ -64,7 +64,7 @@ internal static class GuiFoundation1ATests
             Property(Label, Runtime.GuiPropertyId.Text).Descriptor.Utf8Limit == Runtime.GuiLimitId.TextUtf8Bytes,
             "TextLabel text schema");
         Check(!Has(Label.Events, Runtime.GuiEventId.Activated) && Has(Button.Events, Runtime.GuiEventId.Activated),
-            "Activated belongs only to TextButton");
+            "Foundation 1 Activated boundary remains intact");
         Check(Has(Screen.Methods, Runtime.GuiMethodId.Show) && Has(Screen.Methods, Runtime.GuiMethodId.Hide) && Has(Screen.Methods, Runtime.GuiMethodId.IsShown),
             "ScreenGui lifecycle methods");
         Check(!Has(Frame.Methods, Runtime.GuiMethodId.Show), "GuiObjects cannot be shown directly");
@@ -92,7 +92,7 @@ internal static class GuiFoundation1ATests
         Runtime.GuiLimits Limits = new Runtime.GuiConfig().Validate();
         Check(Limits.MaxObjectsPerScreen == 128 && Limits.MaxObjectsPerDomain == 1024 && Limits.MaxObjectsGlobal == 8192,
             "retained object defaults");
-        Check(Limits.MaxRenderElementsPerOperation == 257 && Limits.MaxSerializedOperationBytes == 65536 &&
+        Check(Limits.MaxProjectedElementsPerScreen == 257 && Limits.MaxRenderElementsPerOperation == 257 && Limits.MaxSerializedOperationBytes == 65536 &&
             Limits.MaxPresentationSendsPerFlush == 64 && Limits.MaxSerializedBytesPerFlush == 262144 &&
             Limits.GuiFlushBudgetMicroseconds == 1000 && Limits.PatchBatchesBeforeFull == 32,
             "render tuning candidates remain internal configuration");

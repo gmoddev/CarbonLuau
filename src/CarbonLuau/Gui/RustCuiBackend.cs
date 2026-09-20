@@ -87,6 +87,8 @@ namespace Carbon.Plugins
                 else if (Element.Kind == GuiRenderNodeKind.Button && (Background != null || !Update))
                     WriteButton(Writer, Background, Find(Properties, GuiRenderPropertyId.ActionCommand, false));
                 else if (Element.Kind == GuiRenderNodeKind.Text && (HasTextProperty(Properties) || !Update)) WriteText(Writer, Properties, Update);
+                else if (Element.Kind == GuiRenderNodeKind.Image && (Find(Properties, GuiRenderPropertyId.ImageSource, false) != null ||
+                    Find(Properties, GuiRenderPropertyId.ImageColor, false) != null || !Update)) WriteImage(Writer, Properties);
                 if (HasRectProperty(Properties) || !Update) WriteRect(Writer, Properties, Update);
                 GuiRenderValue Cursor = Find(Properties, GuiRenderPropertyId.NeedsCursor, false);
                 if (Cursor != null && Require(Cursor, GuiRenderValueKind.Boolean).Boolean) {
@@ -123,6 +125,27 @@ namespace Carbon.Plugins
                 }
                 Value = Find(Properties, GuiRenderPropertyId.TextColor, false);
                 if (Value != null) Write(Writer, "color", Color(Require(Value, GuiRenderValueKind.Color).Color));
+                Writer.WriteEndObject();
+            }
+            private static void WriteImage(JsonTextWriter Writer, GuiRenderProperty[] Properties)
+            {
+                GuiRenderValue SourceValue = Require(Find(Properties, GuiRenderPropertyId.ImageSource, true), GuiRenderValueKind.ImageSource);
+                GuiImageSourceValue Source = SourceValue.ImageSource;
+                if (Source.Kind == GuiImageSourceKind.None) return;
+                Writer.WriteStartObject();
+                Write(Writer, "type", Source.Kind == GuiImageSourceKind.SteamAvatar ? "UnityEngine.UI.RawImage" : "UnityEngine.UI.Image");
+                GuiRenderValue ColorValue = Find(Properties, GuiRenderPropertyId.ImageColor, false);
+                if (ColorValue != null) Write(Writer, "color", Color(Require(ColorValue, GuiRenderValueKind.Color).Color));
+                switch (Source.Kind) {
+                    case GuiImageSourceKind.Sprite: Write(Writer, "sprite", Source.Primary); break;
+                    case GuiImageSourceKind.Png: Write(Writer, "png", Source.Primary); break;
+                    case GuiImageSourceKind.Item:
+                        Writer.WritePropertyName("itemid"); Writer.WriteValue(Source.ItemId);
+                        if (Source.Secondary.Length != 0) { Writer.WritePropertyName("skinid"); Writer.WriteValue(UInt64.Parse(Source.Secondary, CultureInfo.InvariantCulture)); }
+                        break;
+                    case GuiImageSourceKind.SteamAvatar: Write(Writer, "steamid", Source.Primary); break;
+                    default: throw new InvalidOperationException("unknown image source kind");
+                }
                 Writer.WriteEndObject();
             }
             private static void WriteRect(JsonTextWriter Writer, GuiRenderProperty[] Properties, bool Partial)

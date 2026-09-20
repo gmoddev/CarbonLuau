@@ -6,8 +6,8 @@ namespace Carbon.Plugins
     public partial class CarbonLuau
     {
         internal enum GuiClassId
-        { GuiNode = 1, GuiObject = 2, ScreenGui = 3, Frame = 4, TextLabel = 5, TextButton = 6, UIListLayout = 7, UIPadding = 8 }
-        internal enum GuiValueTypeId { UDim = 1, UDim2 = 2, Vector2 = 3, Color3 = 4 }
+        { GuiNode = 1, GuiObject = 2, ScreenGui = 3, Frame = 4, TextLabel = 5, TextButton = 6, UIListLayout = 7, UIPadding = 8, ImageLabel = 9, ImageButton = 10 }
+        internal enum GuiValueTypeId { UDim = 1, UDim2 = 2, Vector2 = 3, Color3 = 4, ImageSource = 5 }
         internal enum GuiPropertyId
         {
             Name = 1, ClassName = 2, Parent = 3, Position = 4, Size = 5, AnchorPoint = 6, Visible = 7,
@@ -15,6 +15,7 @@ namespace Carbon.Plugins
             TextTransparency = 13, TextSize = 14, TextXAlignment = 15, TextYAlignment = 16,
             LayoutOrder = 17, Padding = 18, FillDirection = 19, HorizontalAlignment = 20, VerticalAlignment = 21,
             PaddingTop = 22, PaddingBottom = 23, PaddingLeft = 24, PaddingRight = 25,
+            Image = 26, ImageColor3 = 27, ImageTransparency = 28,
             LayoutProjection = 100, ContentProjection = 101
         }
         internal enum GuiMethodId
@@ -22,7 +23,7 @@ namespace Carbon.Plugins
         internal enum GuiEventId { Activated = 1 }
         [Flags] internal enum GuiCreationScope { None = 0, GuiService = 1, GuiObject = 2 }
         internal enum GuiLimitId { None = 0, NameUtf8Bytes = 1, TextUtf8Bytes = 2 }
-        internal enum GuiValueKind { String, Boolean, Integer, Number, GuiNodeReference, UDim, UDim2, Vector2, Color3 }
+        internal enum GuiValueKind { String, Boolean, Integer, Number, GuiNodeReference, UDim, UDim2, Vector2, Color3, ImageSource }
         internal enum GuiMutationKind { Metadata, Patchable, LayoutAffecting, Structural }
 
         internal sealed class GuiPropertyDescriptor
@@ -134,6 +135,9 @@ namespace Carbon.Plugins
             private static readonly GuiPropertyDescriptor PaddingBottom = new GuiPropertyDescriptor(GuiPropertyId.PaddingBottom, "PaddingBottom", GuiValueKind.UDim, GuiMutationKind.LayoutAffecting, 0, 1);
             private static readonly GuiPropertyDescriptor PaddingLeft = new GuiPropertyDescriptor(GuiPropertyId.PaddingLeft, "PaddingLeft", GuiValueKind.UDim, GuiMutationKind.LayoutAffecting, 0, 1);
             private static readonly GuiPropertyDescriptor PaddingRight = new GuiPropertyDescriptor(GuiPropertyId.PaddingRight, "PaddingRight", GuiValueKind.UDim, GuiMutationKind.LayoutAffecting, 0, 1);
+            private static readonly GuiPropertyDescriptor Image = new GuiPropertyDescriptor(GuiPropertyId.Image, "Image", GuiValueKind.ImageSource, GuiMutationKind.Structural);
+            private static readonly GuiPropertyDescriptor ImageColor3 = new GuiPropertyDescriptor(GuiPropertyId.ImageColor3, "ImageColor3", GuiValueKind.Color3, GuiMutationKind.Patchable);
+            private static readonly GuiPropertyDescriptor ImageTransparency = new GuiPropertyDescriptor(GuiPropertyId.ImageTransparency, "ImageTransparency", GuiValueKind.Number, GuiMutationKind.Patchable, 0, 1);
 
             private static readonly GuiClassDescriptor[] ClassValues = BuildClasses();
             private static readonly GuiMethodDescriptor[] MethodValues =
@@ -161,7 +165,14 @@ namespace Carbon.Plugins
                 new GuiValueTypeDescriptor(GuiValueTypeId.Color3, "Color3", new[] {
                     new GuiValueFieldDescriptor("R", GuiValueKind.Number, 0, 1), new GuiValueFieldDescriptor("G", GuiValueKind.Number, 0, 1),
                     new GuiValueFieldDescriptor("B", GuiValueKind.Number, 0, 1)},
-                    new GuiValueConstructorDescriptor("new", "R", "G", "B"), new GuiValueConstructorDescriptor("fromRGB", "R", "G", "B"))
+                    new GuiValueConstructorDescriptor("new", "R", "G", "B"), new GuiValueConstructorDescriptor("fromRGB", "R", "G", "B")),
+                new GuiValueTypeDescriptor(GuiValueTypeId.ImageSource, "ImageSource", new[] {
+                    new GuiValueFieldDescriptor("Kind", GuiValueKind.String), new GuiValueFieldDescriptor("Name", GuiValueKind.String),
+                    new GuiValueFieldDescriptor("Id", GuiValueKind.String), new GuiValueFieldDescriptor("ItemId", GuiValueKind.Integer),
+                    new GuiValueFieldDescriptor("SkinId", GuiValueKind.String), new GuiValueFieldDescriptor("UserId", GuiValueKind.String)},
+                    new GuiValueConstructorDescriptor("None"), new GuiValueConstructorDescriptor("Sprite", "Name"),
+                    new GuiValueConstructorDescriptor("Png", "Id"), new GuiValueConstructorDescriptor("Item", "ItemId", "SkinId?"),
+                    new GuiValueConstructorDescriptor("SteamAvatar", "UserId"))
             };
 
             internal static GuiClassDescriptor[] Classes { get { return (GuiClassDescriptor[])ClassValues.Clone(); } }
@@ -259,7 +270,11 @@ namespace Carbon.Plugins
                     new GuiClassDescriptor(GuiClassId.UIListLayout, "UIListLayout", GuiClassId.GuiNode, true, GuiCreationScope.GuiObject, false,
                         LayoutProperties(), CommonMethods, new GuiEventId[0]),
                     new GuiClassDescriptor(GuiClassId.UIPadding, "UIPadding", GuiClassId.GuiNode, true, GuiCreationScope.GuiObject, false,
-                        PaddingProperties(), CommonMethods, new GuiEventId[0])
+                        PaddingProperties(), CommonMethods, new GuiEventId[0]),
+                    new GuiClassDescriptor(GuiClassId.ImageLabel, "ImageLabel", GuiClassId.GuiObject, true, GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
+                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "1"), ImageProperties()), CommonMethods, new GuiEventId[0]),
+                    new GuiClassDescriptor(GuiClassId.ImageButton, "ImageButton", GuiClassId.GuiObject, true, GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
+                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "1"), ImageProperties()), CommonMethods, new[] {GuiEventId.Activated})
                 };
             }
             private static GuiPropertyUse[] ObjectProperties(string SizeDefault, string TransparencyDefault)
@@ -285,6 +300,11 @@ namespace Carbon.Plugins
                 return new[] {Use(Name, true, "UIPadding"), Use(ClassName, false, "UIPadding"), Use(Parent, true, "nil"),
                     Use(PaddingTop, true, "UDim.new(0, 0)"), Use(PaddingBottom, true, "UDim.new(0, 0)"),
                     Use(PaddingLeft, true, "UDim.new(0, 0)"), Use(PaddingRight, true, "UDim.new(0, 0)")};
+            }
+            private static GuiPropertyUse[] ImageProperties()
+            {
+                return new[] {Use(Image, true, "ImageSource.None()"), Use(ImageColor3, true, "Color3(1, 1, 1)"),
+                    Use(ImageTransparency, true, "0")};
             }
             private static GuiPropertyUse Use(GuiPropertyDescriptor Descriptor, bool Writable, string DefaultValue)
             { return new GuiPropertyUse(Descriptor, Writable, DefaultValue); }

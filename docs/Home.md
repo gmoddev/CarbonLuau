@@ -38,8 +38,8 @@ receipt by an authenticated client was not tested and is not claimed.
 - VM memory, callback, queue, payload and logging bounds.
 - Provider-owned addon packages, exact dependency lifetimes and public modules.
 - `require("@addon")`, `require("@addon/path")` and dependency availability.
-- ScreenGui, Frame, TextLabel, TextButton and immutable layout/color values.
-- Explicit per-Player Show/Hide and secure TextButton.Activated callbacks.
+- ScreenGui, Frame, text/image controls and immutable layout, color and typed image values.
+- Explicit per-Player Show/Hide and secure button Activated callbacks.
 
 Items/inventory, arbitrary Rust hooks, filesystem/network access, Roblox
 replication and `task.wait` are not included. See the [0.3.0 release notes](releases/0.3.0.md)
@@ -73,7 +73,8 @@ visual, cursor, reconciliation and click evidence remains unqualified and
 non-gating. The additive GUI Foundation 2 architecture is resolved by
 [D16](Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls),
 with detailed design and future GUI-2A through GUI-2F guidance in
-[GUI Foundation 2](GuiFoundation2.md). The deterministic layout slice is
-implemented and qualified in [GUI Foundation 2A](GuiFoundation2A.md), without a
-Foundation 2 release identity. Scrolling, images, TextBox, typed input and the
-remaining GUI-2B through GUI-2F surface are not implemented.
+[GUI Foundation 2](GuiFoundation2.md). Deterministic layout is implemented and
+qualified in [GUI Foundation 2A](GuiFoundation2A.md), and typed images in
+[GUI Foundation 2B](GuiFoundation2B.md), without a Foundation 2 release
+identity. Scrolling, TextBox, typed text input and the remaining GUI-2C through
+GUI-2F surface are not implemented.

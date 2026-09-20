@@ -419,19 +419,24 @@ deferred and is not replaced by hosted Windows CI.
 [D16](Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls)
 adopts the additive Foundation 2 architecture. [GuiFoundation2.md](GuiFoundation2.md)
 owns detailed rationale, exact surface matrices, implementation sequencing and
-qualification planning. The first slice, GUI Foundation 2A, now implements and
+qualification planning. GUI Foundation 2A implements and
 qualifies `GuiObject.LayoutOrder`, `UIListLayout`, `UIPadding`, deterministic
 affine layout projection and bounded layout dirty synchronization. Its exact
-evidence is recorded in [GuiFoundation2A.md](GuiFoundation2A.md). This does not
+evidence is recorded in [GuiFoundation2A.md](GuiFoundation2A.md). GUI Foundation
+2B implements immutable typed `ImageSource`, `ImageLabel`, `ImageButton`, bounded
+image projection and the existing secure Activated path; its evidence is in
+[GuiFoundation2B.md](GuiFoundation2B.md). This does not
 alter D15 evidence.
 
-Future GUI-2B through GUI-2F work must preserve Foundation 1 behavior for scripts
+Future GUI-2C through GUI-2F work must preserve Foundation 1 behavior for scripts
 that do not use Foundation 2 objects. Qualification must cover deterministic
 layout, retained versus Presentation-local state, projection cost and full
 reconciliation bounds, typed image validation, exact action authority,
 adversarial typed input, publication/replacement/recovery and affected
-Foundation 1 regressions. Client-observed scrolling, images and TextBox require
-current authenticated-client evidence before their respective support claims.
+Foundation 1 regressions. Client-observed scrolling and TextBox require current
+authenticated-client evidence before their respective support claims. Image
+source mapping and host payloads are qualified, while authenticated-client
+visual image behavior remains unqualified and non-gating.
 
 TextBox additionally requires exact supported single-line transport preservation
 for spaces, leading/trailing and repeated whitespace, quotes, backslashes and
@@ -441,13 +446,14 @@ bounds in D16 are the initial hard implementation envelope and must be qualified
 before support. Submission rates and scheduling/timing values remain tuning
 targets rather than permanent compatibility promises.
 
-D16 and GUI Foundation 2A assign no new release identity. Package `0.4.0`, scripting API
+D16 and GUI Foundations 2A/2B assign no new release identity. Package `0.4.0`, scripting API
 `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package schema
 `1` and the pinned Luau revision still describe the implemented addon plus
 Foundation 1 candidate. Foundation 2 release identity remains gated on the
 remaining implementation, qualification and explicit later release planning.
-Server-side layout plans are qualified; authenticated-client visual layout
-remains unqualified and non-gating.
+Server-side layout/image plans and serialized host mappings are qualified;
+authenticated-client visual layout and image behavior remain unqualified and
+non-gating.
 
 ## Phase 0 consistency review
 
