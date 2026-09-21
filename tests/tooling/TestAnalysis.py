@@ -98,6 +98,7 @@ class AnalysisTests(unittest.TestCase):
     def test_unsafe_require_withheld(self):
         for Source in ['return require("../../escape")', 'return require(Name)', 'local R = require\nreturn R("x")']:
             Value = self.Session.Snapshot({"init.luau": Source})
+            self.assertIn("Result", Value, Value)
             self.assertEqual(Value["Result"]["Admitted"], [], Value)
 
 

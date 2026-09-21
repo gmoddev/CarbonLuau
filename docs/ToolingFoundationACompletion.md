@@ -143,7 +143,7 @@ terminate analysis. The extension host remains responsive during looping analysi
 | Luau VM | Pinned restricted type-function capabilities and heap bound | Not equivalent to arbitrary native process execution; VM defects remain relevant |
 | Windows OS controls | Job commit/process/parent-lifetime controls installed before execution | No filesystem/network isolation |
 | Linux OS controls | Pre-exec address-space cap, process group, parent-loss and soft RSS monitor | RSS may overshoot between samples; no seccomp or filesystem/network isolation |
-| macOS | Analysis disabled; static-only policy | No build/runtime execution evidence from a macOS runner |
+| macOS | Analysis disabled; static-only policy; hosted arm64 build/static-host checks pass | No executable language-analysis or VS Code E2E evidence; x64 not executed |
 | Workspace Trust | Explicit prerequisite for executable type analysis | Consent is not sandboxing; workspace config/plugins remain excluded even after trust |
 
 ## Qualification evidence
@@ -159,13 +159,13 @@ Local checks were lightweight metadata, TypeScript and deterministic packaging.
 | Core and metadata | Both target frameworks build; generator check and negative drift suite pass |
 | Static host | Eight actual-host groups pass on Windows/Linux: protocol, identities, metadata, project/package/dependency/ownership and archive fixtures |
 | Trusted supervisor | Five actual-LSP groups pass on Windows/Linux: ordinary type function/API, excluded config, untrusted rejection, require mapping and unsafe-source withholding |
-| Security suite | Twelve groups: config/settings/plugin exclusion; normal/infinite/heap type functions; untrusted/command rejection; Unicode/invalid/typeof imports; unknown/aggregate inputs; malformed/crashed server; process memory; controls installed before child instruction; ancestor config rejection; launcher/child teardown |
+| Security suite | Thirteen groups: config/settings/plugin exclusion; normal/infinite/heap type functions; untrusted/command rejection; Unicode/invalid/typeof imports; unknown/aggregate inputs; malformed/crashed server; process memory; controls installed before child instruction; ancestor config rejection; normal snapshot cleanup; launcher/child teardown |
 | VS Code | Version 1.95.3, real workbench trust UI with dedicated profile: Restricted Mode, grant, trusted reopen, type diagnostics/hover/completion/signature, two-crash latch, explicit restart, looping type-function responsiveness/no replay, revocation/reload |
 | Queue regression | Deterministic test proves an already queued snapshot cannot start after the preceding request fails |
 | Runtime | Reconciled Windows/Linux native CTests and full net48 runtime suite pass, including latest Player-1F-C, GUI, module/package/parser, addon and resource/lifecycle stress |
 | Packaging | Windows/Linux byte-for-byte deterministic runtime release bundles and source ZIP audit pass; Core sources included, tooling/analysis/preview payloads excluded |
 | Architecture/API | API audit, GiveItem structural supplement, architecture and schema positive/negative checks pass |
-| macOS | No available runner. Explicit user direction: retain static-only status; no executable language qualification claimed |
+| macOS | User direction retained: static-only. Subsequent hosted macOS arm64 CI built Core/tooling/parser and passed eight static-host groups; no executable language or VS Code E2E qualification; x64 not executed |
 
 The upstream `.config.luau` execution discovery remains true. These tests prove
 its exclusion from this adapter, not an upstream non-execution flag. Native
@@ -178,6 +178,14 @@ the canonical runtime source and builds packs, tests transport/security, then
 runs real VS Code E2E on Windows/Linux. macOS CI is configured for build/static
 checks only; configuration is not evidence that a run occurred. Hosted CI status
 must be reported separately from the worker results.
+
+Runtime commit `64eca4a552152c80fd48c3b0c7cdb3b16b7822c8` passed hosted
+[runtime/packaging/sanitizers](https://github.com/gmoddev/CarbonLuau/actions/runs/35661166495),
+[tooling on Windows/Linux/macOS arm64](https://github.com/gmoddev/CarbonLuau/actions/runs/35661166595)
+and [baseline contracts](https://github.com/gmoddev/CarbonLuau/actions/runs/35661166400).
+The extension records its own final commit/run evidence. Its normal shutdown
+allows up to five seconds for supervisor EOF cleanup before forced termination;
+unexpected forced process loss can leave private temporary snapshot data.
 
 ## Developer workflow, UX and Foundation B handoff
 
