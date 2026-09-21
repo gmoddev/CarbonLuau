@@ -34,7 +34,8 @@ ImageButton, ScrollingFrame, typed ImageSource values, deterministic list and
 padding layout, current-source Frame clipping, retained GuiFont values and
 Presentation-specific one-way scroll methods,
 explicit per-Player Show/Hide and secure Activated callbacks.
-The implemented Foundation 2 controls have completed lifecycle qualification.
+The implemented Foundation 2 and Foundation 3 controls have completed
+server-side model, lifecycle, scale and release-candidate qualification.
 See the
 [GUI guide](docs/api/Gui.md). Authenticated-client visual,
 cursor, click-receipt and reconciliation behavior remains unqualified.
@@ -45,13 +46,10 @@ Callbacks and host inputs are bounded, deadlines are cooperative, and the VM cap
 
 Provider-defined C# capabilities, root-to-addon imports, package downloads, version solving, multiple package instances, restricted exposure profiles, and async capabilities remain deferred. CarbonLuau has one shared VM heap cap, not per-addon hard heap isolation. Deterministic `UIListLayout`/`UIPadding`, typed images and `ScrollingFrame` are part of the experimental `0.4.0-experimental` surface. TextBox is not implemented because the current Rust command transport cannot preserve submitted text exactly; advanced GUI styling is also not implemented. The item convenience APIs `Player:GiveItem` and `Items:Exists` are deferred because no safe ownership adapter has been established.
 
-`Frame.ClipsDescendants` is implemented in current source but remains outside the qualified public surface until authenticated-client visual and hit testing passes.
-`GuiFont` and text `Font` are also implemented in current source, but the four
-faces remain outside the qualified public surface until authenticated-client
-rendering and no-fallback behavior are verified.
-`ScrollingFrame:ScrollTo`, `ScrollToTop` and `ScrollToBottom` are implemented
-in current source, but actual client orientation, isolation and retry behavior
-remain outside the qualified public surface until authenticated-client testing.
+`Frame.ClipsDescendants`, `GuiFont`, text `Font`, and the `ScrollTo` methods are
+part of the experimental source surface. Their authenticated-client visual,
+font-asset and scrolling behavior remains unqualified and is not implied by the
+release-candidate identity.
 
 Authenticated real-client behavior and Shockbyte full-runtime behavior remain outside the qualified support envelope. See [API compatibility and limits](docs/api/Compatibility.md) and [platform compatibility](docs/Compatibility.md) for details.
 

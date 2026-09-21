@@ -4,8 +4,8 @@ Verdict: **PASS for the scoped Foundation 1E implementation and available
 qualification**. Authenticated real-client click receipt remains
 **UNQUALIFIED**.
 
-Starting commit: `0877dbfb40a3bafe141a5029848f7e569cd884e1`.
-Implementation commit: `515d0ad26883a65390d4439a9002648556369c09`.
+Starting commit: `31d0301c62d8a9f1cade08136bd2d269919dcf8a`.
+Implementation and qualification commit: `918632a97255887eafc91e09e12287a2caa137c5`.
 
 GUI Foundation 1E implements the one approved client interaction:
 `TextButton.Activated`. It adds no other GUI event, class, input surface or

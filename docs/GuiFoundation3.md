@@ -2,7 +2,7 @@
 
 Status: **READY FOR IMPLEMENTATION DESIGN / CANONICALLY ADOPTED**.
 
-Baseline reviewed: `7999340d4a8918e0bfa2eb05a1f97310978c8f76`, after GUI
+Baseline reviewed: `4e7e0539ed9f0fe69c864a5421f3b55e0509f6f6`, after GUI
 Foundation 2F.
 
 [D17](Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent)

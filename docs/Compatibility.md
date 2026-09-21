@@ -477,14 +477,15 @@ remain unqualified and non-gating.
 [D17](Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent)
 adopts the additive Foundation 3 architecture. [GuiFoundation3.md](GuiFoundation3.md)
 owns detailed rationale, exact surface matrices, implementation sequencing and
-qualification planning. [GUI Foundation 3A](GuiFoundation3A.md) implements the
-deterministic `UIGridLayout` slice in source without assigning it a release
-identity. It does not change existing Foundation 1/2 evidence or begin
-clipping, font or scroll-effect work.
+qualification planning. GUI Foundations 3A through 3D implement the accepted
+surface, and [GUI Foundation 3E](GuiFoundation3E.md) closes the combined
+server-side model, lifecycle, scale, compatibility and release-candidate audit.
 
-Future Foundation 3 public qualification must separately establish deterministic
-grid behavior, clipping visuals and hit eligibility, supported-client availability
-of every exposed `GuiFont`, and normalized one-way scroll-effect behavior. If
+Foundation 3 server-side qualification establishes deterministic grid behavior,
+bounded clipping projection, font identity and normalized one-way scroll-effect
+publication. Authenticated-client qualification remains separate for clipping
+visuals and hit eligibility, availability of every exposed `GuiFont`, and actual
+scroll behavior. If
 authenticated-client evidence cannot satisfy the clipping contract,
 `ClipsDescendants` is omitted from the implemented/public release subset. If a
 font is unavailable, that value is removed before qualification rather than
@@ -495,9 +496,9 @@ structural replacement, but does not authorize `CanvasPosition` or readback.
 `Frame.ClipsDescendants` source slice with private mask projection, effective
 depth four including ScrollingFrame viewport clips, structural action
 reconciliation and unchanged projection envelopes. It remains **IMPLEMENTED /
-CLIENT-UNQUALIFIED** and is not part of the qualified public release subset
-until the mandatory authenticated-client visual and clipped-hit supplement
-passes. Windows native/local GUI-3B evidence is separately **DEFERRED /
+CLIENT-UNQUALIFIED**. That limitation is explicit and non-gating for the
+experimental source API; it is not a claim that visual or clipped-hit behavior
+passed. Windows native/local GUI-3B evidence is separately **DEFERRED /
 UNQUALIFIED** while DockerPC is unavailable; hosted Windows does not replace it.
 
 [GUI Foundation 3C](GuiFoundation3C.md) implements D17's immutable `GuiFont`,
@@ -519,13 +520,18 @@ isolation, coalescing, rebuild ordering, retry and lifecycle behavior. Windows
 native/local GUI-3D evidence is separately **DEFERRED / UNQUALIFIED** while
 DockerPC is unavailable; hosted Windows remains separate evidence.
 
-D17 assigns no package or scripting API identity. Package `0.4.0`, scripting
-API `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package
-schema `1` and the pinned Luau revision remain unchanged. Foundation 3 release
-identity remains gated on implementation, qualification and explicit release
-planning; in particular, the implemented 3A grid is not yet included in the
-already qualified `0.4.0-experimental` public surface. `TextBox` remains
-deferred and unimplemented under D16's exact-text transport gate.
+GUI-3E assigns the additive implemented Foundation 3 surface to the still
+unreleased package `0.4.0` and scripting API `0.4.0-experimental`. This is the
+smallest accurate identity because no published 0.4 compatibility surface is
+being superseded. Native ABI `1.4`, provider protocol `1.2`, package schema `1`
+and the pinned Luau revision remain unchanged. `TextBox` remains deferred and
+unimplemented under D16's exact-text transport gate.
+
+Authenticated-client supplements must test the exact implementation revisions
+`eb25da029c83b2d1a48c4b21bc86e40858ef4dcc` for clipping,
+`74ac4075e3d369bc51ca24aa7f3a0b33688d8d61` for fonts and
+`6543951131f6f4ac2b31a1d11d6a5ad0bcd36595` for scroll effects, or documented
+source-equivalent descendants. GUI-3E does not invent client evidence.
 
 GUI-3A Windows native/local qualification is **DEFERRED / UNQUALIFIED** because
 the required DockerPC infrastructure is unavailable. This GUI-3A-specific gate
@@ -533,7 +539,7 @@ is non-gating by explicit scope decision and must remain distinct from both
 hosted Windows CI and Foundation G's Windows live/local deferral. Hosted Windows
 CI does not qualify the missing native/local DockerPC environment. A future
 supplemental run must test GUI-3A source revision
-`5f87ba0ff79326f2a6d24c05030e4918eb57e836` or a documented source-equivalent
+`b292ecd6ff6c52081de0a991979968502a8353a0` or a documented source-equivalent
 descendant. Historical Windows qualification for earlier foundations remains
 valid within its original envelope.
 

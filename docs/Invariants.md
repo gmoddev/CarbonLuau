@@ -115,7 +115,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
 | D16 - resolved GUI Foundation 2 architecture; implemented subset qualified for experimental public release through 2F | Foundation 2 additively specializes D15 as specified below. GUI-2A/2B/2C/2E/2F implement and qualify deterministic layout, typed images and retained scrolling under the existing `0.4.0-experimental` identity. `TextBox` and typed text ingress remain deferred and unimplemented after the exact text-preservation gate failed. [GuiFoundation2.md](GuiFoundation2.md) retains the complete supporting design. | Requalify affected behavior; reconsider TextBox only with a bounded opaque text-preserving host transport |
-| D17 - resolved GUI Foundation 3 architecture; implemented through the Presentation-scroll slice in 3D | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md) and [GuiFoundation3D.md](GuiFoundation3D.md) record the implemented slices and qualification limits. Foundation 3D assigns no release identity. | Qualify and explicitly version the applicable Foundation 3 subset before public support; omit any host-dependent feature that cannot meet its recorded gate |
+| D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
 
 ### Canonical detail for resolved decisions
 
@@ -518,11 +518,12 @@ replacement/recovery and one-tree/multiple-Presentation semantics are preserved.
 Grid projection overrides `Position`/`Size` only while the child is actively
 governed by `UIGridLayout`.
 
-This architecture adoption assigns no package or scripting API identity and
-does not change package `0.4.0`, scripting API `0.4.0-experimental`, native ABI
-`1.4`, provider protocol `1.2`, package schema `1` or the pinned Luau revision.
-Foundation 3 release identity remains gated on implementation, qualification
-and later release planning.
+The architecture adoption itself assigned no identity. GUI Foundation 3E later
+qualified the implemented additive server-side model and assigned it to the
+still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Native
+ABI `1.4`, provider protocol `1.2`, package schema `1` and the pinned Luau
+revision remain unchanged. Authenticated-client clipping, font and scroll
+behavior remains outside the qualified evidence envelope.
 
 **Evidence separation:** [Phase1-Validation.md](Phase1-Validation.md) owns the scoped execution-core results. [Phase2-Validation.md](Phase2-Validation.md) owns module/callback/recovery qualification; Phase 1 does not establish their safety. [Phase3-Validation.md](Phase3-Validation.md) owns first-facade qualification; [Phase4-Validation.md](Phase4-Validation.md) records the blocked item investigation, not an implemented item API.
 

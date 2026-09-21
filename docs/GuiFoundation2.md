@@ -2,7 +2,7 @@
 
 Status: **READY FOR IMPLEMENTATION DESIGN / CANONICALLY ADOPTED**.
 
-Baseline reviewed: `f546653224d6597c18b8a2eb7b4e1094b150abc8`, after GUI
+Baseline reviewed: `69f62106202fcf86a51f2bb7f1fc1d4fe11dbf91`, after GUI
 Foundation 1G.
 
 [D16](Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls)

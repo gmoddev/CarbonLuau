@@ -1,6 +1,6 @@
 # GUI Foundation 3A: deterministic grid layout
 
-Starting commit: `1ede1fb2ea5557f9de4ee634748106461569c587`.
+Starting commit: `6c2b4ae3f7c88054695d84cbcf87b0447f82d619`.
 
 GUI Foundation 3A implements only D17's deterministic `UIGridLayout` slice.
 It adds the retained grid helper, explicit row/column topology, affine
@@ -120,7 +120,7 @@ foundations, and it is distinct from Foundation G's own Windows live/local
 deferral.
 
 Any future supplemental Windows-native GUI-3A qualification must test exact
-source revision `5f87ba0ff79326f2a6d24c05030e4918eb57e836` or explicitly requalify a
+source revision `b292ecd6ff6c52081de0a991979968502a8353a0` or explicitly requalify a
 documented descendant after confirming its production GUI-3A source is
 unchanged.
 

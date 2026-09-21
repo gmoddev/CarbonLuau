@@ -1,4 +1,5 @@
 local Gui = game:GetService("Gui")
+local Players = game:GetService("Players")
 
 local Screen = Gui:Create("ScreenGui")
 local Viewport = Screen:Create("Frame")
@@ -14,3 +15,6 @@ Overflowing.Size = UDim2.fromScale(0.5, 1)
 
 assert(Viewport.ClipsDescendants)
 assert(Viewport:FindFirstChild("Overflowing") == Overflowing)
+
+for _, Player in Players:GetPlayers() do Screen:Show(Player) end
+Players.PlayerAdded:Connect(function(Player) Screen:Show(Player) end)

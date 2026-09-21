@@ -1,6 +1,6 @@
 # GUI Foundation 2C: retained scrolling
 
-Starting commit: `d9b4b1b2b2116334ec30023679207341392c1a0f`.
+Starting commit: `bc39b4da0b149b6186dc01bd742adf9852d1b769`.
 
 GUI Foundation 2C implements only D16's scrolling slice. It adds the retained
 `ScrollingFrame` container, explicit canvas configuration, bounded Rust CUI

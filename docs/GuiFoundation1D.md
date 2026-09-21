@@ -2,10 +2,10 @@
 
 Verdict: **PASS for the scoped Foundation 1D implementation**.
 
-Starting commit: `94503cf3484da506d251c84382dbe23501fcd1d6`.
-Implementation commit: `312ed6e2048a824d524eac4d8956128e4983a823`.
+Starting commit: `0ecd9337851fc368a67993367d29fb9f17c23c2c`.
+Implementation and qualification commit: `31d0301c62d8a9f1cade08136bd2d269919dcf8a`.
 Recovery correction and final tested-source commit:
-`b9d798955fd77981e768e05e9251420aef2a5548`.
+`31d0301c62d8a9f1cade08136bd2d269919dcf8a`.
 
 GUI Foundation 1D connects committed retained mutations to already-shown
 Presentations. It adds revisioned dirty state, deterministic Rust CUI property
@@ -164,7 +164,7 @@ Final qualification on 2026-09-19 produced the following results:
   [run 35478234017](https://github.com/gmoddev/CarbonLuau/actions/runs/35478234017).
 
 The first hosted run exposed a null VM recovery-path dereference in the new
-post-callback GUI guard. Commit `b9d7989` added the missing live-VM check; the
+post-callback GUI guard. Commit `31d0301` added the missing live-VM check; the
 complete corrected-source matrix above then passed. The failed run is not cited
 as qualification evidence.
 

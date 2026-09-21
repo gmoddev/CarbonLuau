@@ -109,7 +109,7 @@ replace/update/destroy, missing targets, failure injection and documentation
 identity consistency. `Test-Architecture.ps1` owns the new implementation paths
 and rejects managed reflection APIs in the GUI component.
 
-Implementation commit `d2bb1527d749ea4fe1b4de8cc26aa472a3bb6b69`
+Implementation and qualification commit `b81510c23b25feb1635d9e97a8595c867c056416`
 passed the following final-source checks:
 
 - Release managed build with zero warnings and zero errors;

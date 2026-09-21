@@ -24,6 +24,7 @@
   - [GUI Foundation 3B](GuiFoundation3B.md)
   - [GUI Foundation 3C](GuiFoundation3C.md)
   - [GUI Foundation 3D](GuiFoundation3D.md)
+  - [GUI Foundation 3E](GuiFoundation3E.md)
 - API
   - [Overview](api/README.md)
   - [Globals](api/Globals.md)

@@ -1,10 +1,10 @@
 # GUI Foundation 3C: retained fonts
 
-Starting commit: `d6cc7f6b80777b32bf576638e63cccfa0b177210`.
+Starting commit: `eb25da029c83b2d1a48c4b21bc86e40858ef4dcc`.
 
 GUI Foundation 3C implements only D17's immutable `GuiFont` and retained text
 font slice. The exact implementation revision for later authenticated-client
-font qualification is `de02135a4ce8167a5bdf40e0f5ae2c41342f8864`.
+font qualification is `74ac4075e3d369bc51ca24aa7f3a0b33688d8d61`.
 
 ## Implemented surface
 

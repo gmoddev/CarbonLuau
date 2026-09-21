@@ -411,7 +411,7 @@ internal static class GuiFoundation2ETests
                 Check(Old.Gui.LiveObjectCount == 0 && Old.PendingCount == 0 && !World.AdmitGuiAction(Player, OldToken),
                     "fatal recovery stales rich handles, Presentation and queued authority at cycle " + Cycle);
                 Host.Drain(); string NewToken = LatestToken(Backend, Player.Token);
-                Check(NewToken != null && NewToken != OldToken && World.Gui.LiveObjects == 8 && World.Gui.LivePresentations == 1 &&
+                Check(NewToken != null && NewToken != OldToken && World.Gui.LiveObjects == 11 && World.Gui.LivePresentations == 1 &&
                     World.Gui.LiveActionCount == 1, "fatal recovery reconstructs only fresh rich retained state at cycle " + Cycle);
                 if (Cycle != 99) { Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "operator reload rearms rich recovery"); Host.Drain(); }
             }
@@ -438,9 +438,10 @@ internal static class GuiFoundation2ETests
         return "local State=require('state'); local P=game:GetService('Players'):GetPlayers()[1]; local S=game:GetService('Gui'):Create('ScreenGui'); " +
             "local F=S:Create('ScrollingFrame'); F.CanvasSize=UDim2.fromOffset(480,1200); local Pad=F:Create('UIPadding'); Pad.PaddingLeft=UDim.new(0,8); " +
             "local L=F:Create('UIListLayout'); L.Padding=UDim.new(0,4); local A=F:Create('Frame'); local B=F:Create('Frame'); A.LayoutOrder=1; B.LayoutOrder=2; " +
+            "local Clip=A:Create('Frame'); Clip.ClipsDescendants=true; local Grid=Clip:Create('UIGridLayout'); Grid.CellSize=UDim2.fromOffset(32,24); local Label=Clip:Create('TextLabel'); Label.Font=GuiFont.RobotoCondensedBold; " +
             "local I=A:Create('ImageLabel'); I.Image=ImageSource.Png('42'); local Button=B:Create('ImageButton'); Button.Image=ImageSource.Sprite('assets/icons/accept.png'); " +
-            "Button.Activated:Connect(function(V) assert(V==P); print('rich-click'); L.Padding=UDim.new(0,9); I.ImageColor3=Color3.fromRGB(1,2,3); F.CanvasSize=UDim2.fromOffset(480,1600) end); " +
-            "S.Name='" + Label + "'; S:Show(P); State.Screen=S; State.Scroll=F; State.Layout=L; State.Image=I; State.Button=Button";
+            "Button.Activated:Connect(function(V) assert(V==P); print('rich-click'); L.Padding=UDim.new(0,9); Grid.CellPadding=UDim2.fromOffset(3,3); Label.Font=GuiFont.DroidSansMono; I.ImageColor3=Color3.fromRGB(1,2,3); F.CanvasSize=UDim2.fromOffset(480,1600) end); " +
+            "S.Name='" + Label + "'; S:Show(P); F:ScrollTo(P,Vector2.new(0.25,0.75)); State.Screen=S; State.Scroll=F; State.Layout=L; State.Grid=Grid; State.Clip=Clip; State.Label=Label; State.Image=I; State.Button=Button";
     }
 
     private static void RunAddonProviderNative(Runtime.NativeRuntime Native)
@@ -462,17 +463,19 @@ internal static class GuiFoundation2ETests
                 ulong Button = FindClass(OwnerSession, Runtime.GuiClassId.ImageButton); string OwnerToken = LatestToken(Backend, Player.Token);
 
                 byte[] Failed = ConsumerArchive("richfail", true,
-                    "local A=require('@richowner'); A.Layout.Padding=UDim.new(0,31); A.Scroll.CanvasSize=UDim2.fromOffset(900,1800); A.Button.Image=ImageSource.Png('700'); error('reject rich consumer')");
+                    "local A=require('@richowner'); A.Layout.Padding=UDim.new(0,31); A.Grid.CellPadding=UDim2.fromOffset(31,31); A.Clip.ClipsDescendants=false; A.Label.Font=GuiFont.PermanentMarker; A.Scroll.CanvasSize=UDim2.fromOffset(900,1800); A.Scroll:ScrollTo(A.Player,Vector2.new(0.9,0.9)); A.Button.Image=ImageSource.Png('700'); error('reject rich consumer')");
                 string[] FailedRegistration = Registry.RegisterArchive(ConsumerProvider, Failed); Process(Registry);
                 Check(Registry.Status(ConsumerProvider, FailedRegistration[1])[2] == "Failed" &&
                     Get(OwnerSession, Scroll, "CanvasSize")[2] == "480" && Get(OwnerSession, Scroll, "CanvasSize")[4] == "1200",
                     "failed foreign rich candidate rolls back retained owner mutation");
 
                 byte[] Required = ConsumerArchive("richrequired", true,
-                    "local A=require('@richowner'); A.Layout.Padding=UDim.new(0,17); A.Scroll.ScrollingDirection='XY'; A.Button.ImageColor3=Color3.fromRGB(7,8,9); A.Button.Activated:Connect(function() print('consumer-click') end)");
+                    "local A=require('@richowner'); A.Layout.Padding=UDim.new(0,17); A.Grid.CellPadding=UDim2.fromOffset(7,7); A.Clip.ClipsDescendants=true; A.Label.Font=GuiFont.DroidSansMono; A.Scroll.ScrollingDirection='XY'; A.Scroll:ScrollTo(A.Player,Vector2.new(0.2,0.8)); A.Button.ImageColor3=Color3.fromRGB(7,8,9); A.Button.Activated:Connect(function() print('consumer-click') end)");
                 string[] RequiredRegistration = Registry.RegisterArchive(ConsumerProvider, Required); Process(Registry); Host.Drain();
-                Check(Registry.Status(ConsumerProvider, RequiredRegistration[1])[2] == "Active" &&
-                    Get(OwnerSession, Scroll, "ScrollingDirection")[1] == "XY", "successful foreign rich candidate commits against live owner");
+                string[] RequiredStatus = Registry.Status(ConsumerProvider, RequiredRegistration[1]);
+                Check(RequiredStatus[2] == "Active" &&
+                    Get(OwnerSession, Scroll, "ScrollingDirection")[1] == "XY",
+                    "successful foreign rich candidate commits against live owner: " + String.Join("|", RequiredStatus));
 
                 byte[] Optional = ConsumerArchive("richoptional", false,
                     "local A=require('@richowner'); local Saved=A.Value; game:GetService('Commands'):Register('richoptionalcheck',{},function() assert(Saved==ImageSource.Png('42')); print('image-value-live') end)");
@@ -536,10 +539,11 @@ internal static class GuiFoundation2ETests
     private static byte[] OwnerArchive(string Version)
     {
         string Manifest = "{\"schema\":1,\"id\":\"richowner\",\"version\":\"" + Version + "\",\"main\":\"api\"}";
-        string Init = "local A=require('api'); local P=game:GetService('Players'):GetPlayers()[1]; A.Screen:Show(P); game:GetService('Commands'):Register('richowner',{},function() print(A.Scroll.ScrollingDirection) end)";
+        string Init = "local A=require('api'); local P=game:GetService('Players'):GetPlayers()[1]; A.Player=P; A.Screen:Show(P); A.Scroll:ScrollTo(P,Vector2.new(0.5,0.5)); game:GetService('Commands'):Register('richowner',{},function() print(A.Scroll.ScrollingDirection) end)";
         string Api = "local G=game:GetService('Gui'); local S=G:Create('ScreenGui'); local F=S:Create('ScrollingFrame'); F.CanvasSize=UDim2.fromOffset(480,1200); " +
-            "local L=F:Create('UIListLayout'); local Pad=F:Create('UIPadding'); local I=F:Create('ImageLabel'); I.Image=ImageSource.Png('42'); " +
-            "local B=F:Create('ImageButton'); B.Image=ImageSource.Png('43'); B.Activated:Connect(function() print('owner-click') end); return {Screen=S,Scroll=F,Layout=L,Padding=Pad,Image=I,Button=B,Value=ImageSource.Png('42')}";
+            "local L=F:Create('UIListLayout'); local Pad=F:Create('UIPadding'); local C=F:Create('Frame'); C.ClipsDescendants=true; local Grid=C:Create('UIGridLayout'); Grid.CellSize=UDim2.fromOffset(32,24); " +
+            "local Label=C:Create('TextButton'); Label.Font=GuiFont.RobotoCondensedBold; local I=F:Create('ImageLabel'); I.Image=ImageSource.Png('42'); " +
+            "local B=F:Create('ImageButton'); B.Image=ImageSource.Png('43'); B.Activated:Connect(function() print('owner-click') end); return {Screen=S,Scroll=F,Layout=L,Padding=Pad,Clip=C,Grid=Grid,Label=Label,Image=I,Button=B,Value=ImageSource.Png('42')}";
         return Archive(Manifest, Init, Api);
     }
 

@@ -66,9 +66,9 @@ hover/focus and raw CUI remain unsupported. Authenticated-client visual, cursor,
 click-receipt and reconciliation observations remain unqualified even though
 the experimental source surface is available.
 
-Foundation 3A's deterministic `UIGridLayout` is implemented in current source
-for qualification but has not been assigned to a package or scripting API
-release identity. Foundation 3B's `Frame.ClipsDescendants` is implemented in
-current source with bounded private projection, but remains client-unqualified
-and outside the qualified public release identity. Project-owned fonts and
-one-way scroll effects remain unimplemented.
+Foundation 3 adds deterministic `UIGridLayout`, bounded
+`Frame.ClipsDescendants`, four project-owned `GuiFont` values, retained text
+fonts and exact-Player one-way scroll effects under the same still-unreleased
+`0.4.0-experimental` identity. Their server-side model, publication, lifecycle
+and scale behavior is qualified. Authenticated-client clipping, font rendering
+and actual scroll behavior remains explicitly unqualified.

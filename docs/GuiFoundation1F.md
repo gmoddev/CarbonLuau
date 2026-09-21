@@ -4,8 +4,8 @@ Verdict: **PASS for the scoped Foundation 1F implementation and available
 qualification**. Authenticated real-client rendering and click evidence remains
 **UNQUALIFIED** and is not claimed by this result.
 
-Starting commit: `fcfa609208f4a10dfbdc0b7cd2b18408072f4578`.
-Implementation commit: `c5a30f9bebf674d5493232f1d4e0fb146eb59346`.
+Starting commit: `918632a97255887eafc91e09e12287a2caa137c5`.
+Implementation and qualification commit: `806c9c52a9a4454e9a14e2c57d5da20a8c8308cb`.
 
 GUI Foundation 1F closes replacement, fatal recovery, teardown, retry,
 diagnostic and leak behavior for the D15 surface implemented by Foundations 1A

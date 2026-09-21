@@ -22,6 +22,11 @@ All notable public changes to CarbonLuau are recorded here.
 - Runnable root and addon GUI examples, including shared and per-player trees.
 - Focused runnable Foundation 2 examples for layout, images, scrolling, shared
   retained trees and cloned per-Player state.
+- Deterministic `UIGridLayout`, bounded `Frame.ClipsDescendants`, immutable
+  `GuiFont` values, retained text fonts and exact-Player one-way scroll effects.
+- Focused Foundation 3 examples for horizontal and vertical grids, padding,
+  scrolling grids, nested clipping, font patching, isolated Player scrolling
+  and a combined screen.
 
 ### Validation
 
@@ -33,6 +38,9 @@ All notable public changes to CarbonLuau are recorded here.
   convergence, action-token rejection, lifecycle teardown and bounded stress.
 - Qualified the implemented Foundation 2 surface at 1, 10, 50 and 100 viewers
   with a 254-element rich screen inside the 257-element projection bound.
+- Qualified the combined Foundation 3 server-side surface at 1, 10, 50 and 100
+  viewers with a 252-element screen, transactional publication, lifecycle,
+  replacement, recovery, backend failure and bounded stress coverage.
 
 ### Limits
 
@@ -44,8 +52,11 @@ All notable public changes to CarbonLuau are recorded here.
   client reconciliation remain unqualified. This does not block the experimental
   API identity and is not evidence that those client-observed outcomes passed.
 - TextBox is not implemented because the current host transport cannot preserve
-  submitted text exactly. UIGridLayout, automatic sizing/canvas sizing,
-  CanvasPosition, advanced styling and hover/focus events remain deferred.
+  submitted text exactly. Automatic sizing/canvas sizing, CanvasPosition,
+  advanced styling and hover/focus events remain deferred.
+- Foundation 3 clipping, font rendering and actual scroll behavior remain
+  authenticated-client unqualified. Windows native/local Foundation 3
+  qualification is deferred; hosted Windows CI is separate evidence.
 
 ## 0.3.0
 

@@ -1,10 +1,10 @@
 # GUI Foundation 3D: Presentation-specific scroll effects
 
-Starting commit: `28f4462184fc47c15bb867783a6e2e6c6a045b92`.
+Starting commit: `74ac4075e3d369bc51ca24aa7f3a0b33688d8d61`.
 
 GUI Foundation 3D implements only D17's one-way Presentation scroll-effect
 slice. The implementation revision requiring later authenticated-client
-qualification is `e280faf344b1d6f652cb74c0b6b6449047c33c4f`.
+qualification is `6543951131f6f4ac2b31a1d11d6a5ad0bcd36595`.
 
 ## Public surface
 
@@ -86,7 +86,7 @@ Verdict: **PARTIAL**.
 | Linux release/runtime/package | PASS |
 | ASan/UBSan/leak detection | PASS |
 | Local Windows managed/static/API/package | PASS |
-| Hosted Windows CI | PASS at `31065a78f9184b164943b6d29d811ff10f6498aa` |
+| Hosted Windows CI | PASS at historical source-equivalent commit `31065a78f9184b164943b6d29d811ff10f6498aa`, retained on `codex/backup-main-pre-squash-20260921` |
 | Authenticated-client scroll behavior | DEFERRED / UNQUALIFIED |
 | Windows native/local | DEFERRED / UNQUALIFIED |
 

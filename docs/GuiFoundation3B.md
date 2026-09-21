@@ -1,11 +1,11 @@
 # GUI Foundation 3B: Frame clipping
 
-Starting commit: `b012028ec4ff4b97b4f5a80776fa91664fdcdbf4`.
+Starting commit: `b292ecd6ff6c52081de0a991979968502a8353a0`.
 
 GUI Foundation 3B implements only D17's bounded rectangular
 `Frame.ClipsDescendants` slice. The production source revision requiring the
 later authenticated-client supplement is
-`caad3cc6f08312a62f92b882783e0107d3782f8f`.
+`eb25da029c83b2d1a48c4b21bc86e40858ef4dcc`.
 
 The implementation is **IMPLEMENTED / CLIENT-UNQUALIFIED**. It is not part of
 the already qualified `0.4.0-experimental` public release identity. The overall
@@ -117,7 +117,7 @@ The later supplement must test normal, transparent and visible-background
 Frames; nested clips; both ScrollingFrame nesting orders; partially clipped text
 and image buttons; clipped-away versus visible clicks; false/true/false toggles;
 recovery; and the effective depth boundary against exact source revision
-`caad3cc6f08312a62f92b882783e0107d3782f8f`. Failure of the private mask to satisfy both visual and
+`eb25da029c83b2d1a48c4b21bc86e40858ef4dcc`. Failure of the private mask to satisfy both visual and
 interaction semantics requires omission from the implemented/public Foundation
 3 release subset, not a weaker contract.
 

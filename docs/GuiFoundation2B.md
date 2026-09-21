@@ -1,6 +1,6 @@
 # GUI Foundation 2B: typed images
 
-Starting commit: `eada2aac70b282313d79e48d8011c7dfc43e0804`.
+Starting commit: `e6e925ff513c499f99898695ef4fc1782706a9e7`.
 
 GUI Foundation 2B implements only D16's typed-image slice. It adds the
 immutable `ImageSource` value, retained `ImageLabel` and `ImageButton` classes,

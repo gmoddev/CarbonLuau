@@ -1,6 +1,6 @@
 # GUI Foundation 2A: deterministic layout
 
-Starting commit: `dd7755af1293fad822a40d5be5f1d80b387acaa8`.
+Starting commit: `7bd0dba0873f4ef1a99711afd68889ed5c39a649`.
 
 GUI Foundation 2A implements only D16's deterministic retained-layout slice.
 It adds `GuiObject.LayoutOrder`, `UIListLayout`, `UIPadding`, server-side affine

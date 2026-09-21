@@ -64,7 +64,12 @@ try {
                     'examples/gui/layout-order/init.luau','examples/gui/image-label/init.luau',
                     'examples/gui/image-button/init.luau','examples/gui/item-skin/init.luau',
                     'examples/gui/steam-avatar/init.luau','examples/gui/scrolling-layout/init.luau',
-                    'examples/gui/scroll-effects/init.luau',
+                    'examples/gui/grid/init.luau','examples/gui/grid-vertical/init.luau',
+                    'examples/gui/grid-padding/init.luau','examples/gui/grid-scrolling/init.luau',
+                    'examples/gui/clipping/init.luau','examples/gui/nested-clipping/init.luau',
+                    'examples/gui/fonts/init.luau','examples/gui/font-patch/init.luau',
+                    'examples/gui/scroll-effects/init.luau','examples/gui/per-player-scroll/init.luau',
+                    'examples/gui/foundation3-combined/init.luau',
                     'examples/gui/shared-rich/init.luau','examples/gui/per-player-rich/init.luau',
                     'examples/addons/guiowner/addon.json','examples/addons/guiowner/init.luau','examples/addons/guiowner/api.luau',
                     'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {

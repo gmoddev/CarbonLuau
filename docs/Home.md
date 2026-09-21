@@ -92,6 +92,7 @@ guidance in [GUI Foundation 3](GuiFoundation3.md). Current source implements the
 deterministic grid in [GUI Foundation 3A](GuiFoundation3A.md), bounded clipping
 in [GUI Foundation 3B](GuiFoundation3B.md), retained project-owned fonts in
 [GUI Foundation 3C](GuiFoundation3C.md), and exact-Player one-way scrolling in
-[GUI Foundation 3D](GuiFoundation3D.md). These slices have no assigned release
-identity; their authenticated-client gates remain explicit, and Foundation 3
+[GUI Foundation 3D](GuiFoundation3D.md). [GUI Foundation 3E](GuiFoundation3E.md)
+closes their server-side lifecycle, scale and release-candidate qualification
+under `0.4.0-experimental`; authenticated-client gates remain explicit, and Foundation 3
 does not reopen deferred TextBox work.

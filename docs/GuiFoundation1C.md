@@ -2,8 +2,8 @@
 
 Verdict: **PASS for the scoped Foundation 1C implementation**.
 
-Starting commit: `45b01ae252097ed20c7d7403945716cdeeeda5a9`.
-Implementation and tested-source commit: `686749c92a819a2189f53487b780a6632350c89d`.
+Starting commit: `ef97d59c4bab196a64dcdcf3ef624b769130c3e7`.
+Implementation and tested-source commit: `0ecd9337851fc368a67993367d29fb9f17c23c2c`.
 
 Foundation 1C connects the retained GUI authority from Foundation 1B to a
 bounded Rust CUI projection. It implements the internal Presentation lifecycle,

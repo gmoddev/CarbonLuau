@@ -34,7 +34,8 @@ foreach ($Example in @('player-events','hello-command')) {
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',
         'layout-vertical','layout-horizontal','padding','layout-order','image-label','image-button',
-        'item-skin','steam-avatar','scrolling-layout','shared-rich','per-player-rich','grid','clipping','fonts','scroll-effects')) {
+        'item-skin','steam-avatar','scrolling-layout','shared-rich','per-player-rich','grid','grid-vertical','grid-padding',
+        'grid-scrolling','clipping','nested-clipping','fonts','font-patch','scroll-effects','per-player-scroll','foundation3-combined')) {
     $ExamplePath = Join-Path $Root "examples/gui/$Example/init.luau"
     if (!(Test-Path -LiteralPath $ExamplePath)) { throw "Missing runnable GUI example: $Example" }
     $ExampleText = Get-Content -Raw -LiteralPath $ExamplePath

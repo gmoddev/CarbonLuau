@@ -2,30 +2,13 @@
 
 Availability: experimental API `0.4.0-experimental`.
 
-The additive Foundation 2 layout, typed-image and retained-scrolling surface
-below is included in package `0.4.0` and API `0.4.0-experimental` after
-Foundation 2F qualification. `TextBox` is not implemented. `Submitted` is not
-implemented. The current Rust command transport cannot preserve the required
-submitted text exactly, so CarbonLuau does not expose a lossy substitute.
-
-Current source also contains Foundation 3A's deterministic `UIGridLayout` for
-qualification. It has no assigned package or scripting API release identity
-yet and is not implied by published `0.4.0` artifacts.
-
-Current source additionally implements `Frame.ClipsDescendants` with bounded
-private rectangular mask projection. The property is implemented but remains
-client-unqualified and is not yet in a qualified public release surface.
-
-Current source also implements four immutable `GuiFont` values and retained
-`TextLabel.Font`/`TextButton.Font`. The model and backend mapping are qualified,
-but actual supported-client font rendering remains unqualified. This slice has
-no assigned package or scripting API release identity.
-
-Current source additionally implements exact-Player `ScrollingFrame:ScrollTo`,
-`ScrollToTop` and `ScrollToBottom` as bounded one-way Presentation effects.
-Their model, publication, backend serialization and lifecycle behavior are
-qualified, but actual supported-client scroll behavior remains unqualified.
-This slice has no assigned package or scripting API release identity.
+The additive Foundation 2 and Foundation 3 surfaces below are included in the
+still-unreleased package `0.4.0` and API `0.4.0-experimental`. The Foundation 3
+server-side model, publication, lifecycle and scale behavior is qualified.
+Authenticated-client clipping, font rendering and actual scroll behavior remains
+explicitly unqualified. `TextBox` and `Submitted` are not implemented because
+the current Rust command transport cannot preserve submitted text exactly;
+CarbonLuau does not expose a lossy substitute.
 
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the
@@ -67,7 +50,7 @@ end)
 submitted the accepted action. The shared button text changes for every viewer
 because they are all viewing the same retained tree.
 
-## Frame clipping in current source
+## Frame clipping
 
 ```lua
 local Viewport = Screen:Create("Frame")
@@ -83,7 +66,7 @@ the retained child tree. The private mask helper is not addressable from Luau.
 Authenticated-client visual and clipped-region click behavior is still pending
 the D17 qualification supplement.
 
-## Retained fonts in current source
+## Retained fonts
 
 ```lua
 local Label = Screen:Create("TextLabel")
@@ -104,7 +87,7 @@ current viewers. The host filenames remain private. Actual client rendering of
 the four faces, including absence of fallback, still requires the D17
 authenticated-client supplement.
 
-## Presentation-specific scrolling in current source
+## Presentation-specific scrolling
 
 ```lua
 Screen:Show(Player)
@@ -146,8 +129,7 @@ updates or Signal connections.
 ## Runnable examples
 
 The release bundle and repository include focused examples for each supported
-Foundation 2 pattern. The grid example is a current-source qualification
-example and is not part of a published release identity yet:
+Foundation 2 and Foundation 3 pattern:
 
 | Pattern | Example |
 |---|---|
@@ -157,10 +139,11 @@ example and is not part of a published release identity yet:
 | Item, skin and Steam avatar sources | [`item-skin`](../../examples/gui/item-skin/init.luau), [`steam-avatar`](../../examples/gui/steam-avatar/init.luau) |
 | Explicit scrolling and list layout inside scrolling | [`scrolling`](../../examples/gui/scrolling/init.luau), [`scrolling-layout`](../../examples/gui/scrolling-layout/init.luau) |
 | One shared tree and cloned per-Player state | [`shared-rich`](../../examples/gui/shared-rich/init.luau), [`per-player-rich`](../../examples/gui/per-player-rich/init.luau) |
-| Deterministic explicit grid, current source only | [`grid`](../../examples/gui/grid/init.luau) |
-| Rectangular Frame clipping, current source and client-unqualified | [`clipping`](../../examples/gui/clipping/init.luau) |
-| Retained text fonts, current source and client-unqualified | [`fonts`](../../examples/gui/fonts/init.luau) |
-| Exact-Player one-way scrolling, current source and client-unqualified | [`scroll-effects`](../../examples/gui/scroll-effects/init.luau) |
+| Inventory, vertical-fill, padded and scrolling grids | [`grid`](../../examples/gui/grid/init.luau), [`grid-vertical`](../../examples/gui/grid-vertical/init.luau), [`grid-padding`](../../examples/gui/grid-padding/init.luau), [`grid-scrolling`](../../examples/gui/grid-scrolling/init.luau) |
+| Rectangular and nested Frame clipping, client-unqualified | [`clipping`](../../examples/gui/clipping/init.luau), [`nested-clipping`](../../examples/gui/nested-clipping/init.luau) |
+| Retained font selection and patching, client-unqualified | [`fonts`](../../examples/gui/fonts/init.luau), [`font-patch`](../../examples/gui/font-patch/init.luau) |
+| Top/bottom and isolated per-Player scrolling, client-unqualified | [`scroll-effects`](../../examples/gui/scroll-effects/init.luau), [`per-player-scroll`](../../examples/gui/per-player-scroll/init.luau) |
+| Combined Foundation 3 screen, client-unqualified | [`foundation3-combined`](../../examples/gui/foundation3-combined/init.luau) |
 
 These examples use only the public Luau surface. Raw Rust CUI is never exposed.
 
@@ -393,7 +376,8 @@ DataModel compatibility:
 - Rust CUI is an implementation detail and is not exposed to Luau.
 - Client rendering state is best effort and is not acknowledged to scripts.
 - TextBox, advanced styling and hover/focus events are not implemented.
-  Foundation 2 layout, typed images and retained scrolling are included in the
+  Foundation 2 layout, typed images and retained scrolling plus Foundation 3
+  grids, clipping, fonts and one-way scroll effects are included in the
   experimental `0.4.0-experimental` surface.
 
 See the [complete reference](Gui-Reference.md), the

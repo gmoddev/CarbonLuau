@@ -342,10 +342,9 @@ local function ScrollPlayer(Self, Player)
 end
 function GuiObjectMethods.ScrollTo(Self, Player, Position)
     local RecordValue, PlayerValue = ScrollPlayer(Self, Player)
-    local ValueRecord = ValueRecords[Position]
-    if not ValueRecord or tostring(Position) ~= "Vector2" then Fail("ScrollTo expects Vector2") end
-    local X = Number(ValueRecord.X, "scroll X", 0, 1)
-    local Y = Number(ValueRecord.Y, "scroll Y", 0, 1)
+    if typeof(Position) ~= "userdata" or tostring(Position) ~= "Vector2" then Fail("ScrollTo expects Vector2") end
+    local X = Number(Position.X, "scroll X", 0, 1)
+    local Y = Number(Position.Y, "scroll Y", 0, 1)
     Host(21, "scroll", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId, tostring(X), tostring(Y))
 end
 function GuiObjectMethods.ScrollToTop(Self, Player)

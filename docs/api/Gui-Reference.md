@@ -8,19 +8,13 @@ qualification. `TextBox` is not implemented and `Submitted` is not implemented
 because the current Rust command transport failed D16's exact text-preservation
 gate.
 
-Foundation 3A's `UIGridLayout` is implemented in current source for
-qualification. It has not yet been assigned to a package or scripting API
-release identity; do not infer its availability from published `0.4.0` artifacts.
-Foundation 3B's `Frame.ClipsDescendants` is also implemented in current source,
-but its mandatory authenticated-client visual and hit-region qualification is
-still pending. It is not part of a qualified public release surface.
-Foundation 3C's `GuiFont` and retained TextLabel/TextButton `Font` are
-implemented in current source. Actual rendering of all four fonts remains
-client-unqualified, and this slice has no assigned release identity.
-Foundation 3D's `ScrollingFrame:ScrollTo`, `ScrollToTop` and `ScrollToBottom`
-are implemented in current source as exact-Player one-way Presentation effects.
-Actual client scrolling remains unqualified, and this slice has no assigned
-release identity.
+Foundation 3's `UIGridLayout`, `Frame.ClipsDescendants`, `GuiFont`, retained
+TextLabel/TextButton `Font`, and exact-Player `ScrollingFrame:ScrollTo`,
+`ScrollToTop` and `ScrollToBottom` are included in the still-unreleased package
+`0.4.0` and scripting API `0.4.0-experimental`. Their server-side model,
+publication, lifecycle and scale behavior is qualified. Authenticated-client
+clipping visuals and hit regions, rendering of all four fonts, and actual scroll
+behavior remain explicitly unqualified.
 
 ## Service and construction
 

@@ -1,6 +1,6 @@
 # GUI Foundation 1G: public closure
 
-Starting commit: `a35233e8fa265e9c30e42568a15ae5fc3fb95fd2`.
+Starting commit: `806c9c52a9a4454e9a14e2c57d5da20a8c8308cb`.
 
 GUI Foundation 1G closes public documentation, runnable examples, API auditing,
 release identity and available final qualification for the D15 surface. It adds

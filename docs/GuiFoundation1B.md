@@ -2,8 +2,8 @@
 
 Status: **implemented and qualified on the Foundation 1B boundary**.
 
-Starting commit: `deb035e20065fa27515fae8d536db66c064e0487`.
-Implementation commit: `7550f252f7f76b2ee3a1713bab1244b3960d4594`.
+Starting commit: `b81510c23b25feb1635d9e97a8595c867c056416`.
+Implementation and qualification commit: `ef97d59c4bab196a64dcdcf3ef624b769130c3e7`.
 
 Foundation 1B implements D15's server-side retained GUI and Luau object/value
 semantics. It deliberately stops before presentations, client identities,

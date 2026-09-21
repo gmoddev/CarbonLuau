@@ -109,8 +109,9 @@ end)
 ```
 
 The release bundle includes hello, shared-tree, per-player Clone, Activated,
-deterministic layout, padding, typed image and retained scrolling examples under
-`examples/gui`, plus owner/consumer addon examples under `examples/addons`. See
+deterministic list/grid layout, padding, typed image, retained scrolling,
+clipping, font, scroll-effect and combined examples under `examples/gui`, plus
+owner/consumer addon examples under `examples/addons`. See
 the [GUI guide](api/Gui.md) before deployment. `TextBox` is not implemented.
 Show/Hide represent desired server state; authenticated-client visual
 correctness, image loading, clipping, scrolling, actual click receipt and

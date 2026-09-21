@@ -4,7 +4,7 @@ Verdict: **PASS for experimental public release of the implemented Foundation 2
 surface**. Authenticated-client observations remain explicitly unqualified and
 non-gating under the existing compatibility policy.
 
-Starting commit: `9fab87f4ffd7da1ca1a1d45c417dff781627e425`.
+Starting commit: `a3f970a395c430410cc3e80edb98726c0e8e8259`.
 
 Foundation 2F adds no production GUI behavior. It closes public documentation,
 examples, API compatibility, scale evidence, release contents and identity for
