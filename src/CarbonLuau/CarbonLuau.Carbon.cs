@@ -23,6 +23,10 @@ namespace Carbon.Plugins
             if (Player == null || !Player.IsConnected || Player.Connection == null) return null;
             if (!Player.Connection.connected || !Player.Connection.active ||
                 Player.Connection.userid.ToString(System.Globalization.CultureInfo.InvariantCulture) != Player.UserIDString) return null;
+            Network.Connection Connection = Player.Connection;
+            Func<bool> Current = () => Player != null && Player.IsConnected && Player.Connection != null &&
+                Object.ReferenceEquals(Player.Connection, Connection) && Connection.connected && Connection.active &&
+                Object.ReferenceEquals(Connection.player, Player) && Object.ReferenceEquals(BasePlayer.FindByID(Player.userID), Player);
             return new PlayerView {
                 Identity = Player, Connection = Player.Connection, UserId = Player.UserIDString, Name = Player.displayName,
                 Connected = Player.IsConnected,
@@ -34,7 +38,50 @@ namespace Carbon.Plugins
                 },
                 Health = () => Player.Health(),
                 MaxHealth = () => Player.MaxHealth(),
-                Inventory = () => ViewInventory(Player)
+                Inventory = () => ViewInventory(Player),
+                Teleport = new PlayerTeleportOperation(
+                    () => {
+                        bool IsCurrent = Current();
+                        return new PlayerTeleportState {
+                            Current = IsCurrent,
+                            Alive = IsCurrent && Player.IsAlive(),
+                            Spectating = IsCurrent && Player.IsSpectating(),
+                            Wounded = IsCurrent && Player.IsWounded(),
+                            Incapacitated = IsCurrent && Player.IsIncapacitated(),
+                            Sleeping = IsCurrent && Player.IsSleeping(),
+                            Mounted = IsCurrent && Player.GetMounted() != null,
+                            Parented = IsCurrent && Player.HasParent()
+                        };
+                    },
+                    (Destination, Before) => {
+                        var Target = new UnityEngine.Vector3(Destination.X, Destination.Y, Destination.Z);
+                        Player.PauseFlyHackDetection(5f);
+                        Player.PauseSpeedHackDetection(5f);
+                        Player.PauseTickDistanceDetection(5f);
+                        Player.ApplyStallProtection(4f);
+                        BaseMountable Mount = Player.GetMounted();
+                        if (Mount != null) Mount.DismountPlayer(Player, true);
+                        if (Player.GetMounted() != null) throw new InvalidOperationException("host refused dismount");
+                        if (Player.HasParent()) Player.SetParent(null, true, true);
+                        if (Player.HasParent()) throw new InvalidOperationException("host refused unparent");
+                        Player.UpdateUnparentTime();
+                        Player.SetServerFall(true);
+                        try {
+                            Player.MovePosition(Target);
+                            Player.UpdateEstimatedVelocity(Target, Target, 1f);
+                            Player.ClientRPC(RpcTarget.Player("ForcePositionTo", Player), Target);
+                            Player.UpdateNetworkGroup();
+                            Player.SendNetworkUpdateImmediate();
+                        } finally {
+                            if (!Before.Sleeping) Player.SetServerFall(false);
+                        }
+                    },
+                    (Destination, Before) => {
+                        if (!Current()) return false;
+                        UnityEngine.Vector3 Actual = Player.transform.position;
+                        return Actual.x == Destination.X && Actual.y == Destination.Y && Actual.z == Destination.Z &&
+                            Player.GetMounted() == null && !Player.HasParent() && Player.IsSleeping() == Before.Sleeping;
+                    })
             };
         }
         private static PhysicalInventoryContainer ViewInventoryContainer(ItemContainer Container)

@@ -77,7 +77,7 @@ foreach ($Property in @('Health','MaxHealth')) {
         throw "Player property differs between bootstrap and reference: $Property"
     }
 }
-foreach ($Method in @('CountItem','HasItem')) {
+foreach ($Method in @('CountItem','HasItem','Teleport')) {
     if (!$Bootstrap.Contains(('function PlayerMethods.{0}' -f $Method)) -or !$PlayerReference.Contains(('`Player:{0}' -f $Method))) {
         throw "Player method differs between bootstrap and reference: $Method"
     }

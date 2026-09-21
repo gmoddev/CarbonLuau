@@ -289,6 +289,9 @@ internal static class AddonTests
     {
         var Registrar = new Registrar();
         const string UserId = "76561198000000010";
+        int Teleports = 0;
+        var TeleportPosition = new Runtime.PlayerPosition(0, 0, 0);
+        var TeleportState = new Runtime.PlayerTeleportState {Current = true, Alive = true};
         object Scrap = new object(), MainId = new object(), BeltId = new object(), WearId = new object();
         var Main = new List<Runtime.PhysicalInventoryStack> {new Runtime.PhysicalInventoryStack(MainId, Scrap, 75, true)};
         Func<Runtime.PhysicalInventorySource> Inventory = () => new Runtime.PhysicalInventorySource {
@@ -297,7 +300,11 @@ internal static class AddonTests
             Wear = new Runtime.PhysicalInventoryContainer {Identity = WearId, StackCount = 0, Read = Index => default(Runtime.PhysicalInventoryStack)}};
         var View = new Runtime.PlayerView {Identity = new object(), Connection = new object(), UserId = UserId,
             Name = "Public Module Fixture", Connected = true, Send = Message => { }, Permission = Permission => true,
-            Health = () => 64.5f, MaxHealth = () => 140.25f, Inventory = Inventory};
+            Health = () => 64.5f, MaxHealth = () => 140.25f, Inventory = Inventory,
+            Position = () => TeleportPosition,
+            Teleport = new Runtime.PlayerTeleportOperation(() => TeleportState,
+                (Destination, Before) => { Teleports++; TeleportPosition = Destination; },
+                (Destination, Before) => TeleportPosition.X == Destination.X && TeleportPosition.Y == Destination.Y && TeleportPosition.Z == Destination.Z)};
         var Directory = new Runtime.PlayerDirectory(Id => Id == UserId ? View : null);
         var World = new Runtime.FacadeWorld(Directory, Registrar, new Runtime.ItemDirectory(Name => Name == "scrap" ? Scrap : null));
         Directory.Connect(View);
@@ -336,9 +343,11 @@ internal static class AddonTests
                 Runtime.FacadeSession EconomySession = Session(World, EconomyDomain);
                 Check(EconomySession != null, "public package facade is identifiable");
 
-                string ConsumerSource = "assert(addon.Id=='consumerone' and addon.Version=='1.0.0'); assert(not pcall(function() addon.Id='changed' end)); assert(addon:IsDependencyAvailable('economy')); assert(not addon:IsDependencyAvailable('undeclared')); EntrySecret=99; local A=require('@economy'); local PrivateClosure=require('@economy/freshprivate'); assert(A==require('@economy/api') and A.FromLocal and A.Read()==41 and A.Count==0 and PrivateClosure()==73); assert(A.Items:Exists('scrap') and A.Player:CountItem('scrap')==75 and A.Player:HasItem('scrap',75) and A.Physical()==75); A.Count+=1; assert(not pcall(require,'@economy/private/hidden')); assert(not pcall(require,'@undeclared/api')); assert(not pcall(require,'../bad'))";
+                string ConsumerSource = "assert(addon.Id=='consumerone' and addon.Version=='1.0.0'); assert(not pcall(function() addon.Id='changed' end)); assert(addon:IsDependencyAvailable('economy')); assert(not addon:IsDependencyAvailable('undeclared')); EntrySecret=99; local A=require('@economy'); local PrivateClosure=require('@economy/freshprivate'); assert(A==require('@economy/api') and A.FromLocal and A.Read()==41 and A.Count==0 and PrivateClosure()==73); assert(A.Items:Exists('scrap') and A.Player:CountItem('scrap')==75 and A.Player:HasItem('scrap',75) and A.Physical()==75); assert(not pcall(function() A.Player:Teleport(Vector3.new(9,8,7)) end)); task.defer(function() A.Player:Teleport(Vector3.new(9,8,7)); print('shared-teleport') end); A.Count+=1; assert(not pcall(require,'@economy/private/hidden')); assert(not pcall(require,'@undeclared/api')); assert(not pcall(require,'../bad'))";
                 string[] ConsumerOne = Registry.RegisterArchive(Consumers, PublicPackage("consumerone", "1.0.0", new[] {"economy"}, new string[0], ConsumerSource, null, new string[0])); Process(Registry);
                 IsState(Registry.Status(Consumers, ConsumerOne[1]), "Active", "main and path import succeed through required exact binding");
+                Check(Drain(Host) == "shared-teleport\n" && Teleports == 1 && TeleportPosition.X == 9f,
+                    "shared provider Player cannot launder provisional Teleport and runs once after consumer commit");
                 string[] ConsumerTwo = Registry.RegisterArchive(Consumers, PublicPackage("consumertwo", "1.0.0", new[] {"economy"}, new string[0],
                     "local A=require('@economy/api'); assert(A.Count==1 and A.Read()==41); A.Count+=1; assert(require('@economy/nilvalue')==true and require('@economy/novalue')==true)", null, new string[0])); Process(Registry);
                 IsState(Registry.Status(Consumers, ConsumerTwo[1]), "Active", "two consumers share canonical module value and mutable state");
@@ -375,9 +384,9 @@ internal static class AddonTests
                     new EntrySpec("api.luau", "return {Generation='1',Pure=5,Vector=Vector3.new(1,2,3),Player=game:GetService('Players'):GetPlayers()[1],Items=game:GetService('Items'),Host=function() return #game:GetService('Players'):GetPlayers() end}"));
                 string[] Life = Registry.RegisterArchive(Provider, LifeOne); Process(Registry);
                 string[] Optional = Registry.RegisterArchive(Consumers, PublicPackage("lifeoptional", "1.0.0", new string[0], new[] {"life"},
-                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert(V.Vector==Vector3.new(1,2,3) and V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() assert(V.Generation=='1' and V.Pure==5 and V.Vector*2==Vector3.new(2,4,6)); V.Pure+=1; assert(not pcall(V.Host)); assert(not pcall(function() return V.Player.Health end)); assert(not pcall(function() return V.Player.MaxHealth end)); assert(not pcall(function() return V.Player:CountItem('scrap') end)); assert(not pcall(function() return V.Items:Exists('scrap') end)); assert(not pcall(require,'@life')); assert(not addon:IsDependencyAvailable('life')); print('retained-a1') end)", null, new string[0])); Process(Registry);
+                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert(V.Vector==Vector3.new(1,2,3) and V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() assert(V.Generation=='1' and V.Pure==5 and V.Vector*2==Vector3.new(2,4,6)); V.Pure+=1; assert(not pcall(V.Host)); assert(not pcall(function() return V.Player.Health end)); assert(not pcall(function() return V.Player.MaxHealth end)); assert(not pcall(function() return V.Player:CountItem('scrap') end)); assert(not pcall(function() V.Player:Teleport(Vector3.new(20,21,22)) end)); assert(not pcall(function() return V.Items:Exists('scrap') end)); assert(not pcall(require,'@life')); assert(not addon:IsDependencyAvailable('life')); print('retained-a1') end)", null, new string[0])); Process(Registry);
                 string[] Required = Registry.RegisterArchive(Consumers, PublicPackage("liferequired", "1.0.0", new[] {"life"}, new string[0],
-                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert((V.Generation=='1' and V.Vector==Vector3.new(1,2,3)) or (V.Generation=='2' and V.Vector==Vector3.new(4,5,6)) or (V.Generation=='3' and V.Vector==Vector3.new(7,8,9))); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() print('required-'..V.Generation) end)", null, new string[0])); Process(Registry);
+                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert((V.Generation=='1' and V.Vector==Vector3.new(1,2,3)) or (V.Generation=='2' and V.Vector==Vector3.new(4,5,6)) or (V.Generation=='3' and V.Vector==Vector3.new(7,8,9))); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() if V.Generation=='2' then V.Player:Teleport(Vector3.new(12,13,14)) end; print('required-'..V.Generation) end)", null, new string[0])); Process(Registry);
                 string OldOptional = Registry.Status(Consumers, Optional[1])[7], OldRequired = Registry.Status(Consumers, Required[1])[7];
                 byte[] LifeTwo = PublicPackage("life", "2.0.0", new string[0], new string[0], "return true", "api", new string[0],
                     new EntrySpec("api.luau", "return {Generation='2',Pure=9,Vector=Vector3.new(4,5,6),Player=game:GetService('Players'):GetPlayers()[1],Items=game:GetService('Items'),Host=function() return #game:GetService('Players'):GetPlayers() end}"));
@@ -389,10 +398,11 @@ internal static class AddonTests
                 Check(Registry.ProcessOne(), "required consumer reconstructs against A2");
                 Check(Registry.Status(Consumers, Required[1])[7] != OldRequired && Registry.BindingStatus(Consumers, Required[1], "life")[1] == "available",
                     "required consumer receives fresh A2 exact binding");
-                Check(Drain(Host) == "retained-a1\nrequired-2\n", "retained A1 pure value survives while its host facade and stale import fail; required consumer resolves A2");
+                Check(Drain(Host) == "retained-a1\nrequired-2\n" && Teleports == 2 && TeleportPosition.X == 12f,
+                    "retained A1 Teleport stays stale while reconstructed required consumer resolves and moves through A2");
 
                 string[] Retained = Registry.RegisterArchive(Consumers, PublicPackage("retainedoptional", "1.0.0", new string[0], new[] {"life"},
-                    "local V=require('@life'); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() assert(V.Generation=='2' and V.Pure==9); assert(not pcall(function() return V.Player.Health end)); assert(not pcall(function() return V.Player:HasItem('scrap') end)); assert(not pcall(function() return V.Items:Exists('scrap') end)); print('retained-a2') end)", null, new string[0])); Process(Registry);
+                    "local V=require('@life'); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() assert(V.Generation=='2' and V.Pure==9); assert(not pcall(function() return V.Player.Health end)); assert(not pcall(function() return V.Player:HasItem('scrap') end)); assert(not pcall(function() V.Player:Teleport(Vector3.new(30,31,32)) end)); assert(not pcall(function() return V.Items:Exists('scrap') end)); print('retained-a2') end)", null, new string[0])); Process(Registry);
                 Registry.ReplaceArchive(Provider, Life[1], PublicPackage("life", "3.0.0", new string[0], new string[0], "return true", "api", new string[0],
                     new EntrySpec("api.luau", "return {Generation='3',Pure=11,Vector=Vector3.new(7,8,9),Player=game:GetService('Players'):GetPlayers()[1],Items=game:GetService('Items')}")));
                 Process(Registry);

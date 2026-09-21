@@ -297,7 +297,8 @@ namespace Carbon.Plugins
                 if (Code == 20) return Gui.Query(Fields);
                 if (Code == 21) return Gui.Mutate(Fields, Id);
                 int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 :
-                    Code == 25 ? 1 : Code == 26 ? 3 : Code == 27 ? 4 : (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
+                    Code == 25 ? 1 : Code == 26 ? 3 : Code == 27 ? 4 : Code == 28 ? 5 :
+                    (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
                 if (Fields.Length != Expected) throw new FacadeException("invalid host arguments");
                 switch (Code) {
                     case 1: {
@@ -360,6 +361,21 @@ namespace Carbon.Plugins
                         PhysicalInventorySource Source = View.Inventory();
                         if (Code == 27) return new[] {PhysicalInventoryObservation.Has(Source, Definition, Amount) ? "1" : "0"};
                         return new[] {PhysicalInventoryObservation.Count(Source, Definition).ToString(CultureInfo.InvariantCulture)};
+                    }
+                    case 28: {
+                        if (!Active || Disposed || !World.IsActive(this))
+                            throw new FacadeException("Teleport requires a committed domain; use task.defer for startup movement");
+                        var View = World.Players.Resolve(Fields[0], Fields[1]);
+                        if (View == null) throw new FacadeException("Player is no longer connected");
+                        if (View.Teleport == null) throw new FacadeException("Player teleport is unavailable");
+                        float X, Y, Z;
+                        if (!Single.TryParse(Fields[2], NumberStyles.Float, CultureInfo.InvariantCulture, out X) ||
+                            !Single.TryParse(Fields[3], NumberStyles.Float, CultureInfo.InvariantCulture, out Y) ||
+                            !Single.TryParse(Fields[4], NumberStyles.Float, CultureInfo.InvariantCulture, out Z) ||
+                            Single.IsNaN(X) || Single.IsInfinity(X) || Single.IsNaN(Y) || Single.IsInfinity(Y) ||
+                            Single.IsNaN(Z) || Single.IsInfinity(Z)) throw new FacadeException("invalid Teleport position");
+                        View.Teleport.Execute(new PlayerPosition(X, Y, Z));
+                        return new string[0];
                     }
                     case 6: {
                         if (Fields[0] != "added" && Fields[0] != "removing") throw new FacadeException("unknown signal");

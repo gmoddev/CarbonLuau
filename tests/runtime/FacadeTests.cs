@@ -32,6 +32,9 @@ internal static class FacadeTests
         var Views = new Dictionary<string, Runtime.PlayerView>();
         var Messages = new List<string>(); bool Allowed = false;
         var Position = new Runtime.PlayerPosition(10.5f, -20.25f, 30.75f);
+        var TeleportState = new Runtime.PlayerTeleportState {Current = true, Alive = true};
+        bool TeleportMutationFailure = false, TeleportVerification = true;
+        int TeleportMutations = 0, TeleportVerifications = 0;
         float Health = 87.5f, MaxHealth = 137.25f;
         object Scrap = new object(), Wood = new object(), Rifle = new object();
         object MainId = new object(), BeltId = new object(), WearId = new object(), ExternalId = new object();
@@ -40,7 +43,19 @@ internal static class FacadeTests
             Main = InventoryContainer(MainId, Main), Belt = InventoryContainer(BeltId, Belt), Wear = InventoryContainer(WearId, Wear)};
         Func<Runtime.PlayerView> View = () => new Runtime.PlayerView { Identity = new object(), Connection = new object(), UserId = UserId,
             Name = "Fixture Player", Connected = true, Send = Message => Messages.Add(Message), Permission = Permission => Allowed,
-            Position = () => Position, Health = () => Health, MaxHealth = () => MaxHealth, Inventory = Inventory };
+            Position = () => Position, Health = () => Health, MaxHealth = () => MaxHealth, Inventory = Inventory,
+            Teleport = new Runtime.PlayerTeleportOperation(
+                () => TeleportState,
+                (Destination, Before) => {
+                    TeleportMutations++; Position = Destination; TeleportState.Mounted = false; TeleportState.Parented = false;
+                    if (TeleportMutationFailure) throw new InvalidOperationException("private teleport failure");
+                },
+                (Destination, Before) => {
+                    TeleportVerifications++;
+                    return TeleportVerification && TeleportState.Current && TeleportState.Sleeping == Before.Sleeping &&
+                        !TeleportState.Mounted && !TeleportState.Parented && Position.X == Destination.X &&
+                        Position.Y == Destination.Y && Position.Z == Destination.Z;
+                }) };
         var Directory = new Runtime.PlayerDirectory(Id => Views.ContainsKey(Id) ? Views[Id] : null);
         var Definitions = new Dictionary<string, object>(StringComparer.Ordinal) {{"scrap", Scrap}, {"wood", Wood}, {"rifle.ak", Rifle}};
         var Registrar = new Registrar(); var World = new Runtime.FacadeWorld(Directory, Registrar,
@@ -71,6 +86,40 @@ internal static class FacadeTests
             Load("P=game:GetService('Players'); Old=P:GetPlayers()[1]; Snapshot=P:GetPlayers(); assert(Old==P:GetPlayerByUserId('" + UserId + "')); assert(Old.UserId=='" + UserId + "' and type(Old.UserId)=='string'); assert(Old.Name=='Fixture Player' and Old.IsConnected); assert(not pcall(function() Old.Name='forged' end)); assert(not pcall(function() Old.Health=1 end)); assert(not pcall(function() Old.MaxHealth=1 end)); assert(not pcall(function() Old.SendMessage({},'forged') end)); assert(not pcall(function() Old:SendMessage('provisional') end)); local ProvisionalPosition=require('positionread'); assert(ProvisionalPosition==Vector3.new(10.5,-20.25,30.75)); local ProvisionalHealth=require('healthread'); assert(ProvisionalHealth.Health==87.5 and ProvisionalHealth.MaxHealth==137.25); local ProvisionalInventory=require('inventoryread'); assert(ProvisionalInventory.Exists and ProvisionalInventory.Count==0 and not ProvisionalInventory.Has); State.SavedPosition=Old.Position; State.SavedHealth=Old.Health; State.SavedMaxHealth=Old.MaxHealth; task.defer(function() Old:SendMessage('committed') end)");
             Check(Messages.Count == 0, "D10 caught provisional message has no effect"); Drain(Host); Check(Messages.Count == 1 && Messages[0] == "committed", "D10 deferred delivery after commit");
             Execute("local Zero=Vector3.new(0,0,0); local A=Vector3.new(10,20,30); local B=Vector3.new(5,0,-5); assert(Zero.X==0 and Zero.Y==0 and Zero.Z==0 and Zero.Magnitude==0); assert(Vector3.new(-1.5,2.25,-3.75).X==-1.5); assert(Vector3.new(3,4,12).Magnitude==13); assert(tostring(A)=='Vector3'); assert(A==Vector3.new(10,20,30) and A~=Vector3.new(11,20,30) and A~=Vector3.new(10,21,30) and A~=Vector3.new(10,20,31) and A~={}); assert(Vector3.new(0.1+0.2,0,0)~=Vector3.new(0.3,0,0)); assert(A+B==Vector3.new(15,20,25)); assert(A-B==Vector3.new(5,20,35)); assert(-A==Vector3.new(-10,-20,-30)); assert(A*2==Vector3.new(20,40,60)); assert(2*A==Vector3.new(20,40,60)); assert(A/2==Vector3.new(5,10,15)); local Maximum=Vector3.new(3.4028234663852886e38,-3.4028234663852886e38,0); assert(Maximum.X>0 and Maximum.Y<0); assert(not pcall(Vector3.new,0/0,0,0)); assert(not pcall(Vector3.new,1/0,0,0)); assert(not pcall(Vector3.new,3.4028236e38,0,0)); assert(not pcall(Vector3.new,'1',0,0)); assert(not pcall(function() A.X=1 end)); assert(not pcall(function() A.Unknown=1 end)); assert(not pcall(function() return A*B end)); assert(not pcall(function() return A/B end)); assert(not pcall(function() return A/0 end)); assert(not pcall(function() return Maximum+Maximum end)); assert(not pcall(function() return Maximum*2 end))");
+            Execute("assert(select('#',Old:Teleport(Vector3.new(1.25,-2.5,3.75)))==0); assert(Old.Position==Vector3.new(1.25,-2.5,3.75)); assert(not pcall(function() Old:Teleport({X=1,Y=2,Z=3}) end)); assert(not pcall(function() Old:Teleport(1) end))");
+            Check(TeleportMutations == 1 && TeleportVerifications == 1, "active Teleport returns no values and verifies exactly once");
+            var BeforeProvisionalTeleport = Position;
+            Load("P=game:GetService('Players'); Old=P:GetPlayers()[1]; Snapshot=P:GetPlayers(); State.SavedPosition=Vector3.new(10.5,-20.25,30.75); State.SavedHealth=87.5; State.SavedMaxHealth=137.25; assert(not pcall(function() Old:Teleport(Vector3.new(10,20,30)) end)); task.defer(function() Old:Teleport(Vector3.new(11,22,33)) end)");
+            Check(Position.X == BeforeProvisionalTeleport.X && TeleportMutations == 1, "provisional Teleport is rejected before host mutation");
+            Drain(Host); Check(Position.X == 11f && Position.Y == 22f && Position.Z == 33f && TeleportMutations == 2,
+                "deferred Teleport runs exactly once after successful commit");
+            var BeforeFailedCandidate = Position;
+            Source = "local P=game:GetService('Players'):GetPlayers()[1]; task.defer(function() P:Teleport(Vector3.new(44,55,66)) end); error('reject')";
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.RUNTIME_ERROR && !Host.HasWork &&
+                Position.X == BeforeFailedCandidate.X && TeleportMutations == 2, "failed candidate never publishes deferred Teleport");
+            TeleportState = new Runtime.PlayerTeleportState {Current = true, Alive = true, Sleeping = true, Mounted = true, Parented = true};
+            Execute("Old:Teleport(Vector3.new(-7,8,-9))");
+            Check(TeleportState.Sleeping && !TeleportState.Mounted && !TeleportState.Parented,
+                "sleeping Teleport preserves sleep and normalizes mounted/parented state");
+            foreach (var Ineligible in new[] {
+                new Runtime.PlayerTeleportState {Current = true, Alive = false},
+                new Runtime.PlayerTeleportState {Current = true, Alive = true, Spectating = true},
+                new Runtime.PlayerTeleportState {Current = true, Alive = true, Wounded = true},
+                new Runtime.PlayerTeleportState {Current = true, Alive = true, Incapacitated = true}
+            }) {
+                TeleportState = Ineligible; int Before = TeleportMutations;
+                Execute("assert(not pcall(function() Old:Teleport(Vector3.new(1,2,3)) end))");
+                Check(TeleportMutations == Before, "ineligible Teleport fails before mutation");
+            }
+            TeleportState = new Runtime.PlayerTeleportState {Current = true, Alive = true};
+            TeleportMutationFailure = true;
+            Execute("local Ok,Error=pcall(function() Old:Teleport(Vector3.new(70,80,90)) end); assert(not Ok and string.find(Error,'after host mutation began',1,true) and not string.find(Error,'private teleport failure',1,true))");
+            Check(Position.X == 70f, "failed post-boundary Teleport is not rolled back");
+            TeleportMutationFailure = false; TeleportVerification = false; int BeforeMismatchVerify = TeleportVerifications;
+            Execute("assert(not pcall(function() Old:Teleport(Vector3.new(71,81,91)) end))");
+            Check(TeleportVerifications == BeforeMismatchVerify + 1 && Position.X == 71f,
+                "verification mismatch performs one check and claims no rollback");
+            TeleportVerification = true;
             Position = new Runtime.PlayerPosition(-4.5f, 6.25f, 8.75f);
             Execute("local First=Old.Position; assert(First==Vector3.new(-4.5,6.25,8.75)); assert(First~=require('state').SavedPosition); local Second=Old.Position; assert(First==Second and not rawequal(First,Second))");
             Position = new Runtime.PlayerPosition(101.5f, 202.25f, -303.75f);
@@ -136,16 +185,23 @@ internal static class FacadeTests
             Views[UserId].Send = Message => { throw new InvalidOperationException("private host detail must not leak"); };
             Execute("local Ok,Error=pcall(function() Old:SendMessage('host failure') end); assert(not Ok and not string.find(Error,'private host detail',1,true))");
             Views[UserId].Send = NormalSend;
+            var NormalTeleport = Views[UserId].Teleport;
+            Views[UserId].Teleport = new Runtime.PlayerTeleportOperation(
+                () => new Runtime.PlayerTeleportState {Current = true, Alive = true},
+                (Destination, Before) => { Host.Status(); },
+                (Destination, Before) => true);
+            Execute("local Ok,Error=pcall(function() Old:Teleport(Vector3.new(1,2,3)) end); assert(not Ok and string.find(Error,'after host mutation began',1,true))");
+            Views[UserId].Teleport = NormalTeleport;
             Views[UserId].Connected = false;
             Execute("assert(not Old.IsConnected)");
             Views[UserId].Connected = true;
             Execute("assert(not Old.IsConnected)");
             Check(Directory.Resolve(Lifetime.Token,UserId)==null,"observed invalidation is permanent even if host object/connection is reused");
             var Removed = Directory.Disconnect(UserId, Views[UserId].Identity); Views.Remove(UserId);
-            Execute("local Saved=require('state').SavedPosition; assert(Saved==Vector3.new(10.5,-20.25,30.75) and Saved*2==Vector3.new(21,-40.5,61.5)); assert(require('state').SavedHealth==87.5 and require('state').SavedMaxHealth==137.25); assert(not Old.IsConnected and Old.Name=='Fixture Player'); assert(#Snapshot==1); assert(not pcall(function() return Old.Position end)); assert(not pcall(function() return Old.Health end)); assert(not pcall(function() return Old.MaxHealth end)); assert(not pcall(function() Old:CountItem('scrap') end)); assert(not pcall(function() Old:HasItem('scrap') end)); assert(not pcall(function() Old:SendMessage('stale') end)); assert(not pcall(function() Old:HasPermission('fixture.allowed') end))");
+            Execute("local Saved=require('state').SavedPosition; assert(Saved==Vector3.new(10.5,-20.25,30.75) and Saved*2==Vector3.new(21,-40.5,61.5)); assert(require('state').SavedHealth==87.5 and require('state').SavedMaxHealth==137.25); assert(not Old.IsConnected and Old.Name=='Fixture Player'); assert(#Snapshot==1); assert(not pcall(function() return Old.Position end)); assert(not pcall(function() return Old.Health end)); assert(not pcall(function() return Old.MaxHealth end)); assert(not pcall(function() Old:CountItem('scrap') end)); assert(not pcall(function() Old:HasItem('scrap') end)); assert(not pcall(function() Old:Teleport(Vector3.new(1,2,3)) end)); assert(not pcall(function() Old:SendMessage('stale') end)); assert(not pcall(function() Old:HasPermission('fixture.allowed') end))");
             Views[UserId] = View(); var Reconnected = Directory.Connect(Views[UserId]);
             Check(Reconnected.Token != Removed.Token && Directory.Resolve(Removed.Token, UserId) == null && Directory.Resolve("forged", UserId) == null, "reconnect/forged token never retargets");
-            Execute("assert(not Old.IsConnected and not pcall(function() return Old.Position end) and not pcall(function() return Old.Health end) and not pcall(function() return Old.MaxHealth end) and not pcall(function() return Old:CountItem('scrap') end)); local Fresh=P:GetPlayers()[1]; assert(Fresh~=Old and Fresh.IsConnected and Fresh.Position==Vector3.new(101.5,202.25,-303.75) and Fresh.Health==53.375 and Fresh.MaxHealth==142.625 and Fresh:CountItem('scrap')==101)");
+            Execute("assert(not Old.IsConnected and not pcall(function() return Old.Position end) and not pcall(function() return Old.Health end) and not pcall(function() return Old.MaxHealth end) and not pcall(function() return Old:CountItem('scrap') end) and not pcall(function() Old:Teleport(Vector3.new(1,2,3)) end)); local Fresh=P:GetPlayers()[1]; assert(Fresh~=Old and Fresh.IsConnected and Fresh.Position==Vector3.new(101.5,202.25,-303.75) and Fresh.Health==53.375 and Fresh.MaxHealth==142.625 and Fresh:CountItem('scrap')==101)");
 
             Load("local P=game:GetService('Players'); P.PlayerAdded:Connect(function() print('first') end); C=P.PlayerAdded:Connect(function() print('second') end); P.PlayerAdded:Connect(function() error('listener error') end); P.PlayerAdded:Connect(function() print('last') end); P.PlayerRemoving:Connect(function(V) assert(not V.IsConnected); print(V.UserId) end)");
             Check(!Host.HasWork, "no synthetic joins for current players"); World.Event("added", Reconnected);
@@ -263,6 +319,6 @@ internal static class FacadeTests
             }
             Console.WriteLine("[CarbonLuau:FacadeTest] PASS ten shipped root examples loaded through real compiler/VM");
         }
-        Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, Vector3, Position, Health, MaxHealth, Items, physical inventory, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
+        Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, Vector3, Position, Teleport, Health, MaxHealth, Items, physical inventory, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
     }
 }

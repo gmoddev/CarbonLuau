@@ -286,6 +286,11 @@ local function GuiRecord(Value)
     if not Result then Fail("invalid GUI object") end
     return Result
 end
+function PlayerMethods.Teleport(Player, Position)
+    local Value = Record(Player)
+    local X, Y, Z = Vector3Components(Position)
+    Host(28, Value.Token, Value.UserId, tostring(X), tostring(Y), tostring(Z))
+end
 function PlayerMethods.CountItem(Player, ShortName)
     local Value = Record(Player)
     return tonumber(Host(26, Value.Token, Value.UserId, String(ShortName, "item short name"))[1])

@@ -1,7 +1,7 @@
 # Player
 
 Availability: core proxy in experimental API `0.3.0-experimental`; Position,
-Health, MaxHealth, CountItem and HasItem are added in `0.4.0-experimental`. Obtained from Players,
+Health, MaxHealth, CountItem, HasItem and Teleport are added in `0.4.0-experimental`. Obtained from Players,
 Signals or CommandContext; there is no constructor. A frozen proxy represents
 one connection in one generation, never a BasePlayer or a transferable host handle.
 
@@ -15,6 +15,7 @@ one connection in one generation, never a BasePlayer or a transferable host hand
 | `Player.MaxHealth` | read-only number | Fresh exact-connection current host maximum health, including host overrides/modifiers. It is not assumed to be 100. |
 | `Player:CountItem(ShortName: string)` | number | Exact checked physical quantity across top-level main, belt and wear stacks. |
 | `Player:HasItem(ShortName: string, Amount: number?)` | boolean | Whether that physical quantity reaches Amount; omitted Amount is 1. |
+| `Player:Teleport(Position: Vector3)` | no values | Moves this exact live Player to the requested raw Rust world coordinate. Committed execution only. |
 | `Player:SendMessage(Message: string)` | no values | Sends system chat through Rust `BasePlayer.ChatMessage`; 1024 UTF-8 bytes maximum, no NUL. The command name/channel is host-fixed, not script-controlled. |
 | `Player:HasPermission(Permission: string)` | boolean | Fresh Carbon permission query for this live connection; no permission mutation. |
 
@@ -25,7 +26,7 @@ host-valid players remain readable;
 mounted/parented reads use the root Transform's world position. Each read returns
 a new immutable value that remains usable after later movement or disconnect.
 After disconnect, Name/UserId remain safe snapshot values; Position, Health,
-MaxHealth, CountItem, HasItem, SendMessage and HasPermission raise
+MaxHealth, CountItem, HasItem, Teleport, SendMessage and HasPermission raise
 `Player is no longer connected`. Same-account reconnect creates a different proxy.
 Generation retirement destroys VM-local script references and rejects late host work.
 Once host invalidity is observed, the old token stays invalid even if the host
@@ -73,3 +74,11 @@ Failed candidates never deliver their deferred messages. A successful host call
 does not acknowledge client receipt; there is no replay deduplication or formatting
 sanitization beyond the bounded string contract. `IsConnected` is not a lease:
 always allow the later operation to fail. See [compatibility](../Compatibility.md).
+
+Teleport has the same committed-only rule as SendMessage. It requires an alive,
+non-spectating, non-wounded and non-incapacitated Player. Sleeping is preserved;
+mounted and parented Players are normalized internally. The destination is not
+clamped, grounded or made collision-safe. A failure after host mutation starts
+means Player state may already have changed and CarbonLuau does not roll it
+back. Server-side behavior is qualified; authenticated-client convergence and
+rubber-band behavior remain unqualified.

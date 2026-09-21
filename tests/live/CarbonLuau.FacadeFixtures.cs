@@ -19,6 +19,8 @@ namespace Carbon.Plugins
             const ulong Id = 76561198000000001;
             string UserId = Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
             BasePlayer Player = null;
+            BaseEntity Parent = null;
+            BaseMountable Mount = null;
             API.Commands.Command Foreign = null;
             string Prefix = "[CarbonLuau:HostFixture] ";
             Action<bool, string> Check = (Value, Message) => { if (!Value) throw new InvalidOperationException(Message); };
@@ -41,7 +43,7 @@ namespace Carbon.Plugins
                 Player = GameManager.server.CreateEntity("assets/prefabs/player/player.prefab", new UnityEngine.Vector3(0, -100, 0)) as BasePlayer;
                 Check(Player != null, "create real BasePlayer entity");
                 Player.userID = Id; Player.UserIDString = UserId; Player.displayName = "CarbonLuau controlled fixture";
-                Player.Spawn();
+                Player.Spawn(); Player.lifestate = BaseCombatEntity.LifeState.Alive;
                 Player.net.connection = new Network.Connection { userid = Id, username = Player.displayName, connected = true, active = true, player = Player };
                 BasePlayer.activePlayerLookup[Id] = Player;
                 BasePlayer.activePlayerList.Add(Player);
@@ -75,12 +77,51 @@ namespace Carbon.Plugins
                 Check(Vitals.Status == RuntimeStatus.OK, "sleeping/wounded live Health/MaxHealth read: " + Vitals.Error);
                 Player.SetPlayerFlag(BasePlayer.PlayerFlags.Sleeping, false);
                 Player.SetPlayerFlag(BasePlayer.PlayerFlags.Wounded, false);
-                Player.health = 0f; Player.lifestate = BaseCombatEntity.LifeState.Dead;
-                Check(Player.IsDead(), "controlled Player entered dead-but-host-valid state");
-                Vitals = Host.Execute("player1b.dead", "local P=game:GetService('Players'):GetPlayers()[1]; assert(P.Health==0 and P.MaxHealth==212.75 and P:CountItem('scrap')==121 and P:HasItem('hoodie',3))");
-                Check(Vitals.Status == RuntimeStatus.OK, "dead-but-host-valid live Health/MaxHealth read: " + Vitals.Error);
                 Player.lifestate = BaseCombatEntity.LifeState.Alive;
                 Player.health = 190.25f; Player.OverrideMaxHealth(145.5f, false, false);
+                Check(Player.IsAlive(), "controlled Player is alive before Teleport; state=" + Player.lifestate);
+                var Teleport = Host.Execute("player1d.live.first", "local P=game:GetService('Players'):GetPlayers()[1]; assert(select('#',P:Teleport(Vector3.new(25.5,500.25,40.125)))==0); assert(P.Position==Vector3.new(25.5,500.25,40.125))");
+                Check(Teleport.Status == RuntimeStatus.OK && Player.transform.position == new UnityEngine.Vector3(25.5f, 500.25f, 40.125f),
+                    "live first exact-coordinate teleport: " + Teleport.Error);
+                Check(Player.IsAlive(), "controlled Player remains alive after first Teleport");
+                Teleport = Host.Execute("player1d.live.far", "local P=game:GetService('Players'):GetPlayers()[1]; P:Teleport(Vector3.new(-400.5,500.5,400.75)); assert(P.Position==Vector3.new(-400.5,500.5,400.75))");
+                Check(Teleport.Status == RuntimeStatus.OK && Player.transform.position == new UnityEngine.Vector3(-400.5f, 500.5f, 400.75f),
+                    "live long-distance exact-coordinate teleport: " + Teleport.Error);
+                Check(Player.IsAlive(), "controlled Player remains alive after long-distance Teleport");
+                Teleport = Host.Execute("player1d.live.repeat", "local P=game:GetService('Players'):GetPlayers()[1]; P:Teleport(Vector3.new(26,500,41)); assert(P.Position==Vector3.new(26,500,41))");
+                Check(Teleport.Status == RuntimeStatus.OK && Player.transform.position == new UnityEngine.Vector3(26f, 500f, 41f),
+                    "live repeated exact-coordinate teleport: " + Teleport.Error);
+                Player.SetPlayerFlag(BasePlayer.PlayerFlags.Sleeping, true);
+                Teleport = Host.Execute("player1d.sleeping", "local P=game:GetService('Players'):GetPlayers()[1]; P:Teleport(Vector3.new(27,501,42)); assert(P.Position==Vector3.new(27,501,42))");
+                Check(Teleport.Status == RuntimeStatus.OK && Player.IsSleeping(), "sleeping teleport preserves sleeping state");
+                Player.SetPlayerFlag(BasePlayer.PlayerFlags.Sleeping, false);
+                Player.SetPlayerFlag(BasePlayer.PlayerFlags.Wounded, true);
+                Teleport = Host.Execute("player1d.wounded", "local P=game:GetService('Players'):GetPlayers()[1]; assert(not pcall(function() P:Teleport(Vector3.new(1,2,3)) end))");
+                Check(Teleport.Status == RuntimeStatus.OK && Player.transform.position == new UnityEngine.Vector3(27f, 501f, 42f),
+                    "wounded teleport rejects before positional mutation");
+                Player.SetPlayerFlag(BasePlayer.PlayerFlags.Wounded, false);
+                Parent = GameManager.server.CreateEntity("assets/prefabs/deployable/woodenbox/woodbox_deployed.prefab", Player.transform.position);
+                Check(Parent != null, "create controlled parent fixture"); Parent.Spawn(); Player.SetParent(Parent, true, true);
+                Check(Player.HasParent(), "controlled player parent fixture attached");
+                Teleport = Host.Execute("player1d.parented", "local P=game:GetService('Players'):GetPlayers()[1]; P:Teleport(Vector3.new(28,502,43))");
+                Check(Teleport.Status == RuntimeStatus.OK && !Player.HasParent() && Player.transform.position == new UnityEngine.Vector3(28f, 502f, 43f),
+                    "parented teleport detaches and relocates");
+                Mount = GameManager.server.CreateEntity("assets/prefabs/deployable/chair/chair.deployed.prefab", Player.transform.position) as BaseMountable;
+                if (Mount != null) {
+                    Mount.Spawn(); Mount.MountPlayer(Player);
+                    if (Player.GetMounted() != null) {
+                        Teleport = Host.Execute("player1d.mounted", "local P=game:GetService('Players'):GetPlayers()[1]; P:Teleport(Vector3.new(29,503,44))");
+                        Check(Teleport.Status == RuntimeStatus.OK && Player.GetMounted() == null && !Player.HasParent() &&
+                            Player.transform.position == new UnityEngine.Vector3(29f, 503f, 44f), "mounted teleport uses bounded dismount and relocation");
+                    } else Puts(Prefix + "SKIP controlled chair did not accept synthetic mount");
+                } else Puts(Prefix + "SKIP target build chair prefab unavailable");
+                Puts(Prefix + "PASS live server exact/repeated/sleeping/parented Teleport adapter; no authenticated-client convergence claim");
+                Player.health = 0f; Player.lifestate = BaseCombatEntity.LifeState.Dead;
+                Check(Player.IsDead(), "controlled Player entered dead-but-host-valid state");
+                Vitals = Host.Execute("player1b.dead", "local P=game:GetService('Players'):GetPlayers()[1]; assert(P.Health==0 and P.MaxHealth==145.5 and P:CountItem('scrap')==121 and P:HasItem('hoodie',3)); assert(not pcall(function() P:Teleport(Vector3.new(1,2,3)) end))");
+                Check(Vitals.Status == RuntimeStatus.OK, "dead-but-host-valid live reads and Teleport rejection: " + Vitals.Error);
+                Player.lifestate = BaseCombatEntity.LifeState.Alive;
+                Player.OverrideMaxHealth(212.75f, false, false); Player.health = 190.25f;
                 Puts(Prefix + "PASS live Health/MaxHealth direct reads, dynamic maximum, no clamp and sleeping/wounded/dead host-valid states");
                 var Manager = Carbon.Community.Runtime.CommandManager;
                 Func<string, string[], string> Invoke = (Name, Arguments) => {
@@ -107,7 +148,11 @@ namespace Carbon.Plugins
                 string Reason; Check(Manager.RegisterCommand(Foreign, out Reason), "install owned collision fixture");
                 var BeforeCollision = Manager.Find("hello");
                 Check(Host.Reload("game:GetService('Commands'):Register('clforeign',{},function() end)").Status != RuntimeStatus.OK && Object.ReferenceEquals(Manager.Find("hello"), BeforeCollision), "foreign collision preserves active state");
-                Load("local P=game:GetService('Players'); local Old=P:GetPlayers()[1]; assert(Old.IsConnected and Old.Health==190.25 and Old.MaxHealth==145.5 and Old:CountItem('scrap')==121); assert(not pcall(function() Old:SendMessage('provisional') end)); P.PlayerRemoving:Connect(function(V) assert(not Old.IsConnected and not V.IsConnected); assert(not pcall(function() return Old.Health end)); assert(not pcall(function() return Old.MaxHealth end)); assert(not pcall(function() return Old:CountItem('scrap') end)); print('old invalid') end); P.PlayerAdded:Connect(function(V) assert(not Old.IsConnected and V.IsConnected and Old~=V and V.Health==190.25 and V.MaxHealth==145.5 and V:CountItem('scrap')==121); print('new lifetime') end)");
+                // Return the synthetic no-client fixture to its original stable
+                // host position before exercising unrelated lifecycle checks.
+                Player.SetServerFall(false); Player.MovePosition(new UnityEngine.Vector3(0f, -100f, 0f));
+                Player.lifestate = BaseCombatEntity.LifeState.Alive; Player.OverrideMaxHealth(212.75f, false, false); Player.health = 190.25f;
+                Load("local P=game:GetService('Players'); local Old=P:GetPlayers()[1]; assert(Old.IsConnected,'connected'); assert(Old.Health==190.25,'health '..tostring(Old.Health)); assert(Old.MaxHealth==212.75,'max '..tostring(Old.MaxHealth)); assert(Old:CountItem('scrap')==121,'items'); assert(not pcall(function() Old:SendMessage('provisional') end),'send provisional'); assert(not pcall(function() Old:Teleport(Vector3.new(1,2,3)) end),'teleport provisional'); P.PlayerRemoving:Connect(function(V) assert(not Old.IsConnected and not V.IsConnected); assert(not pcall(function() return Old.Health end)); assert(not pcall(function() return Old.MaxHealth end)); assert(not pcall(function() return Old:CountItem('scrap') end)); assert(not pcall(function() Old:Teleport(Vector3.new(1,2,3)) end)); print('old invalid') end); P.PlayerAdded:Connect(function(V) assert(not Old.IsConnected and V.IsConnected and Old~=V and V.Health==190.25 and V.MaxHealth==212.75 and V:CountItem('scrap')==121); print('new lifetime') end)");
                 OnPlayerDisconnected(Player, "controlled fixture");
                 Player.net.connection = null;
                 Check(Drain() == "old invalid\n", "disconnect invalidates retained proxy");
@@ -147,6 +192,8 @@ namespace Carbon.Plugins
                     BasePlayer.activePlayerLookup.Remove(Id); BasePlayer.activePlayerList.Remove(Player);
                     Player.Kill();
                 }
+                if (Mount != null && !Mount.IsDestroyed) Mount.Kill();
+                if (Parent != null && !Parent.IsDestroyed) Parent.Kill();
             }
         }
         private void AwaitPhase3Teardown(ScriptHost Expected, int Frames)

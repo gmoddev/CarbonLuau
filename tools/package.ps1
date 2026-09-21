@@ -41,7 +41,7 @@ Write-Output $OutputPath
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../examples/scripts') -Destination $OutputDirectory -Recurse -Force
 $Examples = Join-Path $OutputDirectory 'examples'
 New-Item -ItemType Directory -Force -Path $Examples | Out-Null
-foreach ($Name in @('player-events','hello-command')) {
+foreach ($Name in @('player-events','hello-command','player-teleport')) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "../examples/$Name") -Destination $Examples -Recurse -Force
 }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../examples/addons') -Destination $Examples -Recurse -Force
