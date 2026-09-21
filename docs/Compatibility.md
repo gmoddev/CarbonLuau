@@ -33,13 +33,37 @@ ABI `1.3`. This does not alter the already-published v0.3.0/ABI 1.2 artifacts or
 assign a new scripting API identity. A future release must deliberately map its
 package, native ABI and still-pending addon scripting/protocol identities.
 
-The qualified v0.4.0 candidate assigns the additive addon-capable identity
+The qualified v0.4.0 candidate assigns the additive addon and GUI-capable identity
 `CarbonLuau 0.4.0-experimental`. It maps package `0.4.0`, native ABI `1.4`,
 provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and pinned Luau
 revision `c6b830185af962c82003f86784e2fe036357c830`. The identities remain separate,
 and v0.3.0 artifacts are unchanged. The machine-readable mapping is
 [release.json](../release.json), with build and provenance instructions in the
 [release guide](Release.md).
+
+GUI Foundation 1 is implemented through Foundation 1F and publicly closed by
+Foundation 1G. It is included in package `0.4.0` and scripting API
+`0.4.0-experimental`. No 0.5.0 bump is warranted because 0.4.0 has not been
+released and GUI is additive to that first public addon candidate. Native ABI
+`1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and the
+pinned Luau revision are unchanged. Authenticated-client visual layout, cursor,
+actual click receipt and client reconciliation remain explicitly unqualified;
+that evidence is no longer a gate for the experimental identity.
+
+GUI Foundation 2A through 2C implement deterministic layout, typed images and
+retained scrolling. [Foundation 2E](GuiFoundation2E.md) qualifies their
+lifecycle, shared-view, cross-domain, replacement, recovery, provider and
+failure behavior. [Foundation 2F](GuiFoundation2F.md) closes public documentation,
+examples, compatibility, bounded scale and release preparation and assigns this
+implemented subset to the existing package `0.4.0` and scripting API
+`0.4.0-experimental`. No 0.5.0 identity is needed because 0.4.0 remains
+unreleased and the subset is additive. `TextBox`
+is **DEFERRED / NOT IMPLEMENTED**. Rust Dedicated Server app `258550`, build
+`25353106`, was inspected for GUI-2D and trims the complete command and
+`ConsoleSystem.Arg.FullString`; trailing and whitespace-only input cannot meet
+D16's exact-preservation contract. Parsed argument reconstruction is not an
+acceptable substitute. This finding is build-specific and may be revisited if
+the host later exposes a bounded opaque text-preserving UI-input payload.
 
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
@@ -255,6 +279,269 @@ teardown without an orphan process. This Foundation-G-specific deferral neither
 rewrites nor invalidates the historical Windows qualification of Foundations A-F.
 The exact compiler-worker implementation revision requiring that supplement is
 `e3025401c3085f0552bbfe3d045c3143c4ded005`.
+
+## GUI Foundation 1 architecture gate
+
+[D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model) resolves
+the GUI ownership, publication, presentation, interaction and reconciliation
+model before implementation. [GuiFoundation1.md](GuiFoundation1.md) owns detailed
+rationale and implementation guidance. Foundations 1A through 1F provide the
+runtime evidence, and Foundation 1G owns public closure and identity.
+
+GUI qualification covers deterministic retained/value behavior,
+cross-domain ownership and provisional publication, exact Player/token lifetime,
+bounded scheduling and overload, backend fault convergence, replacement and D9
+recovery, teardown/leak behavior and affected Foundations A-G regressions. Claims
+about actual rendering, layout, cursor behavior or button receipt still
+require a current Carbon/Rust server with an authenticated client. Record the
+qualified host revisions and keep adapter-specific CUI observations as evidence,
+not permanent API guarantees. Numeric flush, payload and reconciliation targets
+remain internal tuning values rather than public compatibility promises. Missing
+authenticated-client evidence does not prevent experimental API availability,
+but it does prevent claims about those unobserved client outcomes.
+
+### GUI Foundation 1A evidence contract
+
+[GUI Foundation 1A](GuiFoundation1A.md) implements internal managed descriptors,
+validated limits, render/backend contracts and a deterministic in-memory backend.
+Its evidence is schema completeness, explicit non-reflective ownership, bounded
+deterministic request construction, backend ordering/fault behavior, pinned host
+source inspection, managed Windows/Linux regression tests, package checks and
+architecture/API/documentation checks. It changes no public or native interface.
+
+This phase does not qualify a retained runtime, production Rust CUI adapter,
+client rendering, UI interaction or D15 publication journal. Later Foundation 1
+phases provide the runtime evidence. Authenticated-client evidence remains
+required only for claims about actual rendering and click behavior.
+
+### GUI Foundation 1B evidence contract
+
+[GUI Foundation 1B](GuiFoundation1B.md) implements the domain-bound `Gui`
+service, opaque retained object/value userdata, bounded tree lifecycle, GUI
+Signal ownership and the D7/D10 publication journal. Its affected evidence is
+constructor/field/equality validation; every class/property default and bound;
+identity, ordering, parenting, clone/destroy and teardown behavior; nested and
+caught publication rollback; exact foreign-owner commit/rollback/stale-owner
+handling; shared-VM cross-domain values; GUI-1A plus Foundations A-G regressions;
+Windows/Linux runtime tests; and affected sanitizer coverage.
+
+Foundation 1B does not qualify presentations, Player/viewer state, production
+rendering, layout translation, synchronization, action tokens, client event
+ingress or visible/click behavior. Those remained later GUI gates at this phase;
+Foundation 1G subsequently assigns the experimental identity.
+
+### GUI Foundation 1C evidence contract
+
+[GUI Foundation 1C](GuiFoundation1C.md) implements internal Presentations,
+`ScreenGui:Show`/`Hide`/`IsShown`, exact D11 Player connection binding,
+deterministic full render plans, D15 layout translation, opaque client IDs and
+the production Rust CUI backend. Its affected evidence is presentation and
+publication transitions; disconnect/reconnect and teardown; deterministic
+parent/Z ordering; layout, color, text and cursor golden plans; bounded CUI JSON;
+backend unavailable/failure containment; actual Luau facade calls; server-side
+Carbon AddUI/DestroyUI integration where available; GUI-1A/1B and Foundations
+A-G regressions; Windows/Linux runtime lanes; and affected sanitizer coverage.
+
+Foundation 1C does not qualify automatic property patches, dirty tracking,
+patch/full selection, periodic reconciliation, action tokens, the private client
+command, interaction limits or Activated ingress/delivery. Authenticated-client
+evidence remains mandatory for visual layout, cursor, click and client
+reconciliation claims. The identity remained unassigned at this phase and was
+subsequently resolved by Foundation 1G.
+
+### GUI Foundation 1D evidence contract
+
+[GUI Foundation 1D](GuiFoundation1D.md) implements committed ScreenGui revisions,
+bounded property dirty state, coalesced Rust CUI `update=true` patches,
+structural full replacement, periodic full reconciliation and one shared
+owner-thread post-Luau GUI flush. Its affected evidence is patch and structural
+classification; newest-state coalescing; Show/Hide/reparent/destroy ordering;
+dirty overflow; actual serialized payload limits; Update/Replace fault
+convergence; publication rollback; exact Player disconnect and teardown;
+persistent domain/Presentation fairness; modeled 1, 10, 50, 100 and 256-viewer
+cost; GUI-1A through 1C and Foundations A-G regressions; Windows/Linux runtime
+lanes; packaging; and affected sanitizer coverage.
+
+Foundation 1D does not qualify action tokens, the private client command,
+interaction rate limiting, Activated ingress/delivery or GUI Foundation 1E.
+Authenticated-client evidence remains mandatory for actual visual layout,
+cursor behavior, client reconciliation and click receipt. Numeric flush, payload
+and checkpoint values remain internal tuning values rather than public
+compatibility promises. The identity remained unassigned at this phase and was
+subsequently resolved by Foundation 1G.
+
+### GUI Foundation 1E evidence contract
+
+[GUI Foundation 1E](GuiFoundation1E.md) implements one private Player-origin
+Carbon command, 128-bit opaque presentation-bound action tokens, exact Player
+connection validation, bounded per-action and per-Player rates, atomic bounded
+listener fanout and operation-9 revalidation immediately before Luau entry. Its
+affected evidence is distinct per-Player tokens; malformed, forged,
+cross-Player, stale, hidden and destroyed rejection; Hide/Show, full-rebuild,
+uncertainty, disconnect, domain and VM lifecycle rotation; property-patch token
+retention; queue, listener and registry bounds; publication rollback and commit;
+normal Activated callback ordering and mutation; hostile-input stress; GUI-1A
+through 1D and Foundations A-G regressions; Windows/Linux runtime lanes;
+packaging; live Carbon registration where available; and affected sanitizer
+coverage.
+
+Authenticated real-client click receipt remains mandatory before claiming that
+a Rust client delivered the private command or visibly completed an
+interaction. Hosted or local model tests and server-side Carbon registration do
+not substitute for that evidence. The identity remained unassigned at this
+phase and was subsequently resolved by Foundation 1G.
+
+### GUI Foundation 1F evidence contract
+
+[GUI Foundation 1F](GuiFoundation1F.md) closes healthy root/addon replacement,
+cross-domain owner/holder retirement, fatal VM reconstruction, provider and host
+teardown, pending-work invalidation, backend retry convergence, bounded operator
+diagnostics and registry leak/stress behavior. Its affected evidence is failed
+and successful candidate publication; stale references/tokens across every
+lifetime transition; callback pre-entry suppression; newest-state backend fault
+recovery; baseline registry counts; 100 replacement/failure/recovery cycles;
+1,000 Show/Hide, Clone/Destroy and reconnect cycles; GUI-1A through 1E and
+Foundations A-G regressions; Windows/Linux runtime lanes; live Carbon lifecycle;
+and affected sanitizer coverage.
+
+Authenticated real-client rendering, layout, cursor, reconciliation and click
+receipt remain mandatory before those client-observed behaviors can be
+advertised as qualified. Controlled-host and server-side live lifecycle
+evidence do not substitute for that gate. A GUI-specific live provider fixture
+also remains unavailable; controlled provider/domain lifecycle evidence is
+reported separately. The identity remained unassigned at this phase and was
+subsequently resolved by Foundation 1G.
+
+### GUI Foundation 1G evidence contract
+
+[GUI Foundation 1G](GuiFoundation1G.md) closes public API documentation,
+runnable root/addon examples, descriptor-to-document auditing, release identity,
+release notes, bundle contents and final-head reproducibility for the complete
+D15 scripting surface. Its affected evidence is GUI-1A through 1F, Foundations
+A-G, addon/package/parser, replacement/recovery, synchronization, interaction
+security, registry baseline, Windows/Linux runtime, sanitizer, packaging,
+release and documentation checks.
+
+The selected identity remains package `0.4.0` and scripting API
+`0.4.0-experimental`; native ABI `1.4`, provider protocol `1.2`, package schema
+`1` and the Luau pin do not change. Authenticated-client visual, cursor,
+click-receipt and reconciliation evidence remains unqualified and non-gating.
+Foundation G's Windows live/local compiler-worker supplement remains separately
+deferred and is not replaced by hosted Windows CI.
+
+## GUI Foundation 2 architecture gate
+
+[D16](Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls)
+adopts the additive Foundation 2 architecture. [GuiFoundation2.md](GuiFoundation2.md)
+owns detailed rationale, exact surface matrices, implementation sequencing and
+qualification planning. GUI Foundation 2A implements and
+qualifies `GuiObject.LayoutOrder`, `UIListLayout`, `UIPadding`, deterministic
+affine layout projection and bounded layout dirty synchronization. Its exact
+evidence is recorded in [GuiFoundation2A.md](GuiFoundation2A.md). GUI Foundation
+2B implements immutable typed `ImageSource`, `ImageLabel`, `ImageButton`, bounded
+image projection and the existing secure Activated path; its evidence is in
+[GuiFoundation2B.md](GuiFoundation2B.md). GUI Foundation 2C implements retained
+`ScrollingFrame` configuration, Presentation-local scroll state, bounded
+private viewport/content projection and layout/image composition; its evidence
+is in [GuiFoundation2C.md](GuiFoundation2C.md). This does not alter D15 evidence.
+
+The implemented Foundation 2 subset preserves Foundation 1 behavior for scripts
+that do not use Foundation 2 objects. Qualification covers deterministic
+layout, retained versus Presentation-local state, projection cost and full
+reconciliation bounds, typed image validation, exact action authority,
+adversarial typed input, publication/replacement/recovery and affected
+Foundation 1 regressions. Client-observed scrolling remains unqualified and
+non-gating. TextBox requires current authenticated-client evidence before its
+support claim. Image
+source mapping and host payloads are qualified, while authenticated-client
+visual image behavior remains unqualified and non-gating.
+
+TextBox additionally requires exact supported single-line transport preservation
+for spaces, leading/trailing and repeated whitespace, quotes, backslashes and
+Unicode. Failure to prove that contract defers TextBox; it does not authorize
+normalization or console-argument semantics. Concrete object/input/source/queue
+bounds in D16 are the initial hard implementation envelope and must be qualified
+before support. Submission rates and scheduling/timing values remain tuning
+targets rather than permanent compatibility promises.
+
+D16 and GUI Foundations 2A/2B/2C did not independently assign a release identity.
+GUI Foundation 2F includes their qualified layout/image/scrolling surface in
+package `0.4.0` and scripting API `0.4.0-experimental`. Native ABI `1.4`, provider
+protocol `1.2`, package schema `1` and the pinned Luau revision are unchanged.
+Server-side layout/image/scroll plans and serialized host mappings are
+qualified; authenticated-client visual layout, image and scrolling behavior
+remain unqualified and non-gating.
+
+## GUI Foundation 3 architecture gate
+
+[D17](Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent)
+adopts the additive Foundation 3 architecture. [GuiFoundation3.md](GuiFoundation3.md)
+owns detailed rationale, exact surface matrices, implementation sequencing and
+qualification planning. GUI Foundations 3A through 3D implement the accepted
+surface, and [GUI Foundation 3E](GuiFoundation3E.md) closes the combined
+server-side model, lifecycle, scale, compatibility and release-candidate audit.
+
+Foundation 3 server-side qualification establishes deterministic grid behavior,
+bounded clipping projection, font identity and normalized one-way scroll-effect
+publication. Authenticated-client qualification remains separate for clipping
+visuals and hit eligibility, availability of every exposed `GuiFont`, and actual
+scroll behavior. If
+authenticated-client evidence cannot satisfy the clipping contract,
+`ClipsDescendants` is omitted from the implemented/public release subset. If a
+font is unavailable, that value is removed before qualification rather than
+silently falling back. An unreliable scroll partial update may use bounded
+structural replacement, but does not authorize `CanvasPosition` or readback.
+
+[GUI Foundation 3B](GuiFoundation3B.md) implements D17's bounded
+`Frame.ClipsDescendants` source slice with private mask projection, effective
+depth four including ScrollingFrame viewport clips, structural action
+reconciliation and unchanged projection envelopes. It remains **IMPLEMENTED /
+CLIENT-UNQUALIFIED**. That limitation is explicit and non-gating for the
+experimental source API; it is not a claim that visual or clipped-hit behavior
+passed. Windows native/local GUI-3B evidence is separately **DEFERRED /
+UNQUALIFIED** while DockerPC is unavailable; hosted Windows does not replace it.
+
+[GUI Foundation 3C](GuiFoundation3C.md) implements D17's immutable `GuiFont`,
+retained TextLabel/TextButton `Font`, canonical render identity, explicit
+private backend mapping and patch-synchronization slice. It is **IMPLEMENTED /
+CLIENT-UNQUALIFIED** until an authenticated supported current client proves all
+four fonts render without fallback and qualifies mutation, multi-viewer,
+replacement and recovery behavior. Windows native/local GUI-3C evidence is
+separately **DEFERRED / UNQUALIFIED** while DockerPC is unavailable; hosted
+Windows remains separate evidence.
+
+[GUI Foundation 3D](GuiFoundation3D.md) implements D17's exact-Player
+`ScrollTo`, `ScrollToTop` and `ScrollToBottom` Presentation effects with
+top-left normalized public coordinates, backend-private vertical inversion,
+bounded latest-wins state, transactional publication, rebuild-first retry and
+lifecycle cleanup. It is **IMPLEMENTED / CLIENT-UNQUALIFIED** until an
+authenticated current client qualifies orientation, both axes, two-viewer
+isolation, coalescing, rebuild ordering, retry and lifecycle behavior. Windows
+native/local GUI-3D evidence is separately **DEFERRED / UNQUALIFIED** while
+DockerPC is unavailable; hosted Windows remains separate evidence.
+
+GUI-3E assigns the additive implemented Foundation 3 surface to the still
+unreleased package `0.4.0` and scripting API `0.4.0-experimental`. This is the
+smallest accurate identity because no published 0.4 compatibility surface is
+being superseded. Native ABI `1.4`, provider protocol `1.2`, package schema `1`
+and the pinned Luau revision remain unchanged. `TextBox` remains deferred and
+unimplemented under D16's exact-text transport gate.
+
+Authenticated-client supplements must test the exact implementation revisions
+`eb25da029c83b2d1a48c4b21bc86e40858ef4dcc` for clipping,
+`74ac4075e3d369bc51ca24aa7f3a0b33688d8d61` for fonts and
+`6543951131f6f4ac2b31a1d11d6a5ad0bcd36595` for scroll effects, or documented
+source-equivalent descendants. GUI-3E does not invent client evidence.
+
+GUI-3A Windows native/local qualification is **DEFERRED / UNQUALIFIED** because
+the required DockerPC infrastructure is unavailable. This GUI-3A-specific gate
+is non-gating by explicit scope decision and must remain distinct from both
+hosted Windows CI and Foundation G's Windows live/local deferral. Hosted Windows
+CI does not qualify the missing native/local DockerPC environment. A future
+supplemental run must test GUI-3A source revision
+`b292ecd6ff6c52081de0a991979968502a8353a0` or a documented source-equivalent
+descendant. Historical Windows qualification for earlier foundations remains
+valid within its original envelope.
 
 ## Phase 0 consistency review
 

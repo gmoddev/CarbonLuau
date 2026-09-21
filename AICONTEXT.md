@@ -9,6 +9,29 @@ This document owns contribution workflow and prompt construction. It applies to 
 | How to scope work and construct prompts | This document |
 | Product purpose, architecture, trust, ownership, ABI, threading, lifecycle and resource rules | [Invariants.md](docs/Invariants.md) |
 | Provisional/open/deferred decisions and implementation gates | [Decision register in Invariants.md](docs/Invariants.md#decision-register) |
+| Canonical GUI Foundation 1 semantics | [D15 in Invariants.md](docs/Invariants.md#d15--gui-foundation-1-retained-presentation-model) |
+| GUI Foundation 1 rationale and implementation guidance | [GuiFoundation1.md](docs/GuiFoundation1.md) |
+| GUI Foundation 1A internal substrate and evidence | [GuiFoundation1A.md](docs/GuiFoundation1A.md) |
+| GUI Foundation 1B retained runtime and evidence | [GuiFoundation1B.md](docs/GuiFoundation1B.md) |
+| GUI Foundation 1C presentation/CUI projection and evidence | [GuiFoundation1C.md](docs/GuiFoundation1C.md) |
+| GUI Foundation 1D synchronization/reconciliation and evidence | [GuiFoundation1D.md](docs/GuiFoundation1D.md) |
+| GUI Foundation 1E secure Activated ingress and evidence | [GuiFoundation1E.md](docs/GuiFoundation1E.md) |
+| GUI Foundation 1F lifecycle/runtime closure and evidence | [GuiFoundation1F.md](docs/GuiFoundation1F.md) |
+| GUI Foundation 1G public closure, identity and evidence | [GuiFoundation1G.md](docs/GuiFoundation1G.md) |
+| Canonical GUI Foundation 2 additive semantics | [D16 in Invariants.md](docs/Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls) |
+| GUI Foundation 2 rationale, surface matrices and implementation guidance | [GuiFoundation2.md](docs/GuiFoundation2.md) |
+| GUI Foundation 2A deterministic layout implementation and evidence | [GuiFoundation2A.md](docs/GuiFoundation2A.md) |
+| GUI Foundation 2B typed-image implementation and evidence | [GuiFoundation2B.md](docs/GuiFoundation2B.md) |
+| GUI Foundation 2C scrolling implementation and evidence | [GuiFoundation2C.md](docs/GuiFoundation2C.md) |
+| GUI Foundation 2E lifecycle and rich-control closure | [GuiFoundation2E.md](docs/GuiFoundation2E.md) |
+| GUI Foundation 2F public qualification and release-candidate closure | [GuiFoundation2F.md](docs/GuiFoundation2F.md) |
+| Canonical GUI Foundation 3 additive semantics | [D17 in Invariants.md](docs/Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent) |
+| GUI Foundation 3 rationale, surface matrices, implementation guidance and qualification gates | [GuiFoundation3.md](docs/GuiFoundation3.md) |
+| GUI Foundation 3A deterministic-grid implementation and evidence | [GuiFoundation3A.md](docs/GuiFoundation3A.md) |
+| GUI Foundation 3B clipping implementation and evidence | [GuiFoundation3B.md](docs/GuiFoundation3B.md) |
+| GUI Foundation 3C retained-font implementation and evidence | [GuiFoundation3C.md](docs/GuiFoundation3C.md) |
+| GUI Foundation 3D Presentation-scroll-effect implementation and evidence | [GuiFoundation3D.md](docs/GuiFoundation3D.md) |
+| GUI Foundation 3E lifecycle, scale, compatibility and release-candidate closure | [GuiFoundation3E.md](docs/GuiFoundation3E.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -60,6 +83,131 @@ implementation routing are recorded in [FoundationF.md](docs/FoundationF.md).
 Foundation G's isolated pinned compiler, deadline, protocol, deployment and
 qualification scope are recorded in [FoundationG.md](docs/FoundationG.md).
 It does not authorize unrelated post-v0.4 features.
+GUI Foundation 1 architecture is canonically owned by D15 in
+[Invariants.md](docs/Invariants.md#d15--gui-foundation-1-retained-presentation-model).
+[GuiFoundation1.md](docs/GuiFoundation1.md) is the supporting design and
+implementation-guidance record; it does not override D15 or by itself prove an
+implementation phase. Future GUI phases must preserve that public model and stop rather
+than invent conflicting semantics. Foundation 1G completed implementation,
+available qualification and release planning and assigns GUI to D12's existing
+unreleased `0.4.0-experimental` identity. Authenticated-client observations
+remain unqualified and non-gating.
+The internal descriptors, limit snapshot, Carbon-independent render/backend
+contracts and deterministic mock backend implemented by GUI Foundation 1A are
+recorded in [GuiFoundation1A.md](docs/GuiFoundation1A.md). They do not authorize
+public GUI bindings, retained-object behavior, presentations or CUI rendering.
+GUI Foundation 1B's retained objects, immutable value userdata, ownership,
+tree lifecycle, GUI Signals and D7/D10 publication journal are recorded in
+[GuiFoundation1B.md](docs/GuiFoundation1B.md). They do not authorize
+presentations, client rendering/event ingress or a GUI-capable release identity.
+GUI Foundation 1C's internal presentations, public ScreenGui visibility methods,
+full retained-tree compilation and production Rust CUI projection are recorded
+in [GuiFoundation1C.md](docs/GuiFoundation1C.md).
+GUI Foundation 1D's revisioned dirty synchronization, bounded fair GUI flush,
+Rust CUI property patches, structural reconciliation and newest-state failure
+convergence are recorded in [GuiFoundation1D.md](docs/GuiFoundation1D.md). It
+does not by itself authorize client action ingress or a GUI-capable release
+identity. GUI Foundation 1E's private client command, opaque presentation-bound
+actions, exact Player validation, bounded admission and pre-entry stale-work
+suppression are recorded in [GuiFoundation1E.md](docs/GuiFoundation1E.md). It
+does not assign a GUI-capable release identity or authorize later GUI features.
+GUI Foundation 1F's replacement, recovery, teardown, backend-retry, bounded
+diagnostic and leak/stress closure is recorded in
+[GuiFoundation1F.md](docs/GuiFoundation1F.md). Authenticated-client rendering,
+reconciliation and click evidence plus GUI release planning were left to
+Foundation 1G; Foundation 1F itself authorized no new GUI surface or identity.
+GUI Foundation 1G assigns the already-unreleased package `0.4.0` and scripting
+API `0.4.0-experimental` to the complete D15 GUI surface, records the public
+documentation/examples and closes available non-authenticated qualification in
+[GuiFoundation1G.md](docs/GuiFoundation1G.md). Authenticated-client visual,
+cursor, click-receipt and reconciliation behavior remains unqualified but is
+explicitly non-gating. Do not reinterpret API availability as evidence for
+those client-observed outcomes or as independent authorization to implement GUI
+Foundation 2 outside D16 and an explicitly scoped implementation phase.
+GUI Foundation 2 architecture is canonically owned by D16 in
+[Invariants.md](docs/Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls).
+[GuiFoundation2.md](docs/GuiFoundation2.md) is supporting rationale, exact
+surface guidance, implementation sequencing and qualification planning; it does
+not override D16 or prove implementation. D16 is additive to D15, assigns no
+release identity and authorizes no production surface until the applicable
+GUI-2A through GUI-2F work is implemented and qualified. Exact supported
+single-line text preservation is a TextBox qualification gate: defer TextBox if
+the current authenticated client/host path cannot preserve it, rather than
+weakening or normalizing the contract.
+GUI Foundation 2A implements only D16's deterministic layout slice: `LayoutOrder`,
+`UIListLayout`, `UIPadding`, affine projection and bounded layout dirty
+synchronization. Its implementation and qualification record is
+[GuiFoundation2A.md](docs/GuiFoundation2A.md). It does not assign a Foundation 2
+release identity or authorize scrolling, images, TextBox, typed input or later
+GUI-2B through GUI-2F work.
+GUI Foundation 2B implements only D16's typed-image slice: immutable
+`ImageSource`, `ImageLabel`, `ImageButton`, bounded image projection and
+`ImageButton.Activated` through the existing secure action ingress. Its
+implementation and qualification record is [GuiFoundation2B.md](docs/GuiFoundation2B.md).
+It assigns no Foundation 2 release identity and does not authorize later work.
+GUI Foundation 2C implements only D16's scrolling slice: retained
+`ScrollingFrame` configuration, Presentation-local client scroll state, bounded
+private viewport/content projection and Foundation 2 layout/image composition.
+Its implementation and qualification record is [GuiFoundation2C.md](docs/GuiFoundation2C.md).
+It assigns no Foundation 2 release identity and does not authorize TextBox,
+typed text ingress or later GUI-2D through GUI-2F work.
+GUI Foundation 2E closes D15/D16 lifecycle, shared-view, cross-domain,
+replacement, recovery, provider, publication and failure behavior for the
+implemented GUI-2A through GUI-2C surface. Its evidence is recorded in
+[GuiFoundation2E.md](docs/GuiFoundation2E.md). The GUI-2D host gate failed on
+the inspected Rust build, so `TextBox` and typed text ingress remain explicitly
+deferred and unimplemented. At completion, GUI-2E assigned no Foundation 2
+release identity and did not itself authorize GUI-2F or Foundation 3 work.
+GUI Foundation 2F assigns the implemented deterministic-layout, typed-image and
+retained-scrolling subset to the existing unreleased package `0.4.0` and
+scripting API `0.4.0-experimental`. Its public documentation, examples,
+compatibility audit, scale evidence and release preparation are recorded in
+[GuiFoundation2F.md](docs/GuiFoundation2F.md). `TextBox` and `Submitted` remain
+deferred and unimplemented. Authenticated-client image, click, scrolling and
+clipping observations remain explicitly unqualified and are not implied by the
+experimental identity. GUI-2F authorizes no Foundation 3 work.
+GUI Foundation 3 architecture is canonically owned by D17 in
+[Invariants.md](docs/Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent).
+[GuiFoundation3.md](docs/GuiFoundation3.md) is supporting rationale, exact
+surface guidance, implementation sequencing and qualification planning; it does
+not override D17, prove implementation or assign a release identity. D17 is
+additive to D15/D16 and authorizes only explicitly scoped GUI-3A through GUI-3E
+implementation work. `TextBox` remains deferred under D16 and is not reopened.
+GUI Foundation 3A implements only D17's deterministic `UIGridLayout` slice:
+retained descriptors, list-or-grid exclusivity, affine direct-child projection,
+retained Position/Size authority restoration and bounded dirty synchronization.
+Its implementation and qualification record is
+[GuiFoundation3A.md](docs/GuiFoundation3A.md). It assigns no Foundation 3
+release identity and authorizes no clipping, font, scroll-effect or GUI-3B+
+work.
+GUI Foundation 3B implements only D17's bounded `Frame.ClipsDescendants`
+slice: private projection-only mask nodes, effective depth accounting with
+ScrollingFrame, retained-geometry interaction eligibility, structural action
+reconciliation and atomic projection-bound validation. Its implementation and
+qualification record is [GuiFoundation3B.md](docs/GuiFoundation3B.md).
+The feature is IMPLEMENTED / CLIENT-UNQUALIFIED pending D17's mandatory
+authenticated-client visual and hit-region supplement. It assigns no Foundation
+3 release identity and authorizes no GuiFont, ScrollTo or GUI-3C+ work.
+GUI Foundation 3C implements only D17's immutable `GuiFont`, retained
+`TextLabel.Font`/`TextButton.Font`, backend mapping and patch-synchronization
+slice. Its implementation and qualification record is
+[GuiFoundation3C.md](docs/GuiFoundation3C.md). The feature is IMPLEMENTED /
+CLIENT-UNQUALIFIED pending D17's mandatory authenticated-client font-rendering
+supplement. It assigns no Foundation 3 release identity and authorizes no
+ScrollTo or GUI-3D+ work.
+GUI Foundation 3D implements only D17's exact-Player, bounded latest-wins
+`ScrollingFrame:ScrollTo`, `ScrollToTop` and `ScrollToBottom` Presentation
+effects, publication specialization, backend mapping, retry and lifecycle
+integration. Its implementation and qualification record is
+[GuiFoundation3D.md](docs/GuiFoundation3D.md). The feature is IMPLEMENTED /
+CLIENT-UNQUALIFIED pending D17's mandatory authenticated-client scroll
+supplement. GUI Foundation 3E closes combined interaction, shared-view,
+cross-domain, replacement, recovery, publication, scale, compatibility and
+release-candidate qualification for the implemented D17 surface. Its evidence
+is recorded in [GuiFoundation3E.md](docs/GuiFoundation3E.md). The additive
+surface remains in the still-unreleased package `0.4.0` and scripting API
+`0.4.0-experimental`; its client-observed gates and Windows native/local gate
+remain explicitly unqualified. GUI-3E authorizes no Foundation 4 or TextBox work.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

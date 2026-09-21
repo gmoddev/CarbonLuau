@@ -1,6 +1,7 @@
 # Connection
 
-Availability: experimental API `0.3.0-experimental`; returned by Signal:Connect.
+Availability: experimental API `0.3.0-experimental`; GUI Activated connections
+are added in `0.4.0-experimental`. Returned by Signal:Connect.
 It is a frozen subscription facade, not a network connection or Carbon hook object.
 
 `Connection:Disconnect() -> ()`
@@ -18,6 +19,7 @@ Connection:Disconnect()
 Connection:Disconnect() -- idempotent
 ```
 
-The owning generation automatically disconnects it on successful replacement or
+The owning domain automatically disconnects it on successful replacement or
 unload. Failed replacement does not affect it. Keeping the Lua object does not
-keep a retired VM alive. See [Signal](Signal.md) and [limits](../Compatibility.md).
+keep a retired domain or VM alive. See [Signal](Signal.md) and
+[limits](../Compatibility.md).

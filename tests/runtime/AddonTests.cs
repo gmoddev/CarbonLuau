@@ -578,13 +578,20 @@ internal static class AddonTests
     {
         string EconomyRoot = Path.Combine(SourceRoot, "examples", "addons", "economy");
         string ShopRoot = Path.Combine(SourceRoot, "examples", "addons", "shop");
-        foreach (string PathValue in new[] {EconomyRoot, ShopRoot}) Check(Directory.Exists(PathValue), "addon example directory exists");
+        string GuiOwnerRoot = Path.Combine(SourceRoot, "examples", "addons", "guiowner");
+        string GuiConsumerRoot = Path.Combine(SourceRoot, "examples", "addons", "guiconsumer");
+        foreach (string PathValue in new[] {EconomyRoot, ShopRoot, GuiOwnerRoot, GuiConsumerRoot}) Check(Directory.Exists(PathValue), "addon example directory exists");
         byte[] Economy = Archive(File.ReadAllText(Path.Combine(EconomyRoot, "addon.json")),
             new EntrySpec("init.luau", File.ReadAllText(Path.Combine(EconomyRoot, "init.luau"))),
             new EntrySpec("api.luau", File.ReadAllText(Path.Combine(EconomyRoot, "api.luau"))),
             new EntrySpec("formatting.luau", File.ReadAllText(Path.Combine(EconomyRoot, "formatting.luau"))));
         byte[] Shop = Archive(File.ReadAllText(Path.Combine(ShopRoot, "addon.json")),
             new EntrySpec("init.luau", File.ReadAllText(Path.Combine(ShopRoot, "init.luau"))));
+        byte[] GuiOwner = Archive(File.ReadAllText(Path.Combine(GuiOwnerRoot, "addon.json")),
+            new EntrySpec("init.luau", File.ReadAllText(Path.Combine(GuiOwnerRoot, "init.luau"))),
+            new EntrySpec("api.luau", File.ReadAllText(Path.Combine(GuiOwnerRoot, "api.luau"))));
+        byte[] GuiConsumer = Archive(File.ReadAllText(Path.Combine(GuiConsumerRoot, "addon.json")),
+            new EntrySpec("init.luau", File.ReadAllText(Path.Combine(GuiConsumerRoot, "init.luau"))));
         var World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), new Registrar());
         using (var Host = new Runtime.ScriptHost(Native, Config, Root, World)) {
             Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "addon example root baseline");
@@ -594,10 +601,14 @@ internal static class AddonTests
                 IsState(Registry.Status(Provider, EconomyResult[1]), "Active", "economy example activates");
                 string[] ShopResult = Registry.RegisterArchive(Provider, Shop); Process(Registry);
                 IsState(Registry.Status(Provider, ShopResult[1]), "Active", "shop example imports public economy modules");
-                Check(Host.DomainCount == 3, "both public addon examples share the root VM");
+                string[] GuiOwnerResult = Registry.RegisterArchive(Provider, GuiOwner); Process(Registry);
+                IsState(Registry.Status(Provider, GuiOwnerResult[1]), "Active", "GUI owner example activates");
+                string[] GuiConsumerResult = Registry.RegisterArchive(Provider, GuiConsumer); Process(Registry);
+                IsState(Registry.Status(Provider, GuiConsumerResult[1]), "Active", "GUI consumer imports shared owner GUI");
+                Check(Host.DomainCount == 5, "all public addon examples share the root VM");
             }
         }
-        Console.WriteLine("[CarbonLuau:AddonTest] PASS bundled economy/shop examples through real parser/compiler/VM");
+        Console.WriteLine("[CarbonLuau:AddonTest] PASS bundled economy/shop and shared-GUI examples through real parser/compiler/VM");
     }
 
     private static void RunGraphBounds(Runtime.NativeRuntime Native, Runtime.RuntimeConfig Config, Func<Runtime.ScriptSnapshot> Root)

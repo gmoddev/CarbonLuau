@@ -33,7 +33,9 @@ namespace Carbon.Plugins
         private void InitializeGameplay()
         {
             CommandRegistrar = new CarbonCommandRegistrar(this);
-            Gameplay = new FacadeWorld(new PlayerDirectory(ReadPlayer), CommandRegistrar);
+            var Players = new PlayerDirectory(ReadPlayer);
+            Gameplay = new FacadeWorld(Players, CommandRegistrar,
+                new RustCuiBackend(new GuiConfig().Validate(), new CarbonRustCuiTransport(Players)));
         }
         private void SeedPlayers()
         {
@@ -63,9 +65,29 @@ namespace Carbon.Plugins
                 Gameplay.Players.CheckOwner();
                 if (Player == null) return;
                 var Lifetime = Gameplay.Players.Disconnect(Player.UserIDString, Player);
+                Gameplay.DisconnectGui(Lifetime);
                 Gameplay.Event("removing", Lifetime);
                 if (Host != null && !Host.Busy) RequestDrain();
             } catch (Exception) { PrintWarning("[CarbonLuau:Players] Disconnection event rejected (host context)."); }
+        }
+        [ConsoleCommand("carbonluau.gui.action")]
+        private void GuiActionCommand(ConsoleSystem.Arg Arg)
+        {
+            try {
+                if (Stopping || Gameplay == null || Host == null || Arg == null || Arg.Connection == null) return;
+                BasePlayer Player = Arg.Connection.player as BasePlayer;
+                if (Player == null || !Player.IsConnected || Player.Connection == null ||
+                    !Object.ReferenceEquals(Player.Connection, Arg.Connection)) return;
+                var Arguments = Arg.Args;
+                string Token = Arguments != null && Arguments.Length == 1 ? Arguments[0].ToString() : null;
+                if (Token == null || Token.Length > 32) {
+                    Gameplay.Gui.ActionDiagnostics.Reject(GuiActionRejection.Malformed); return;
+                }
+                PlayerLifetime Lifetime = Gameplay.Players.Find(Player.UserIDString);
+                if (Lifetime == null || !Object.ReferenceEquals(Lifetime.Identity, Player) ||
+                    !Object.ReferenceEquals(Lifetime.Connection, Player.Connection)) return;
+                if (Gameplay.AdmitGuiAction(Lifetime, Token) && !Host.Busy) RequestDrain();
+            } catch (Exception) { /* Untrusted client input is rejected without per-request logging. */ }
         }
         private void RegisterActivePermissions()
         {

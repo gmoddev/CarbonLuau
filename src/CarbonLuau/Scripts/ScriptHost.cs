@@ -176,6 +176,10 @@ namespace Carbon.Plugins
                             break; // Never use the retired drain's cutoff/handles for a new generation.
                         }
                     }
+                    if (Facade != null && Vm != null && Vm.Info.Ready != 0 && !Busy && !StopRequested) {
+                        var GuiWatch = Stopwatch.StartNew();
+                        Facade.FlushGui(GuiWatch, Math.Max(1, (Facade.Gui.Limits.GuiFlushBudgetMicroseconds + 999) / 1000));
+                    }
                     if (Watch.Elapsed.TotalMilliseconds > Settings.FrameDrainBudgetMilliseconds) BudgetOverruns++;
                     return Results;
                 } finally { Draining = false; }
@@ -199,4 +203,3 @@ namespace Carbon.Plugins
         }
     }
 }
-

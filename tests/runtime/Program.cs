@@ -9,12 +9,92 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length >= 1 && Args[0] == "--gui-only") {
+            try { GuiFoundation1ATests.Run(Args.Length > 1 ? Args[1] : null); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui1b-only") {
+            try { GuiFoundation1BTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui1c-only") {
+            try { GuiFoundation1CTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui1d-only") {
+            try { GuiFoundation1DTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui1e-only") {
+            try { GuiFoundation1ETests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui1f-only") {
+            try { GuiFoundation1FTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui2a-only") {
+            try { GuiFoundation2ATests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui2b-only") {
+            try { GuiFoundation2BTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui2c-only") {
+            try { GuiFoundation2CTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui2e-only") {
+            try { GuiFoundation2ETests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui2f-only") {
+            try { GuiFoundation2FTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui3a-only") {
+            try { GuiFoundation3ATests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui3b-only") {
+            try { GuiFoundation3BTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui3c-only") {
+            try { GuiFoundation3CTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui3d-only") {
+            try { GuiFoundation3DTests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length >= 1 && Args[0] == "--gui3e-only") {
+            try { GuiFoundation3ETests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauRuntime-" + Guid.NewGuid().ToString("N"));
         try
         {
             Check(Marshal.SizeOf(typeof(Runtime.NativeResult)) == 6160 && Marshal.SizeOf(typeof(Runtime.VmInfo)) == 24, "ABI layout");
             var Default = new Runtime.RuntimeConfig();
             Check(Default.Enabled && Default.MaxVmMemoryMiB == 64 && Default.MaxCallbackMilliseconds == 3, "defaults");
+            GuiFoundation1ATests.Run(Args.Length > 3 ? Args[3] : null);
+            GuiFoundation1BTests.RunModel();
+            GuiFoundation1CTests.RunModel();
+            GuiFoundation1DTests.RunModel();
+            GuiFoundation1ETests.RunModel();
+            GuiFoundation1FTests.RunModel();
+            GuiFoundation2ATests.RunModel();
+            GuiFoundation2BTests.RunModel();
+            GuiFoundation2CTests.RunModel();
+            GuiFoundation2ETests.RunModel();
+            GuiFoundation2FTests.RunModel();
+            GuiFoundation3ATests.RunModel();
+            GuiFoundation3BTests.RunModel();
+            GuiFoundation3CTests.RunModel();
+            GuiFoundation3DTests.RunModel();
+            GuiFoundation3ETests.RunModel();
             var Low = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MinValue, MaxCallbackMilliseconds = int.MinValue }.Validate();
             var High = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MaxValue, MaxCallbackMilliseconds = int.MaxValue }.Validate();
             Check(Low.MaxVmMemoryMiB == 16 && Low.MaxCallbackMilliseconds == 1 && High.MaxVmMemoryMiB == 256 && High.MaxCallbackMilliseconds == 100, "clamps");
@@ -68,6 +148,20 @@ internal static class Program
                 Check(Generation.Execute("stale", "return 3", 3).Status == Runtime.RuntimeStatus.INVALID_ARGUMENT, "stale managed generation");
                 ScriptTests.Run(Native, Root);
                 FacadeTests.Run(Native, Args.Length > 3 ? Args[3] : null);
+                GuiFoundation1BTests.RunNative(Native);
+                GuiFoundation1CTests.RunNative(Native);
+                GuiFoundation1DTests.RunNative(Native);
+                GuiFoundation1ETests.RunNative(Native);
+                GuiFoundation1FTests.RunNative(Native);
+                GuiFoundation2ATests.RunNative(Native);
+                GuiFoundation2BTests.RunNative(Native);
+                GuiFoundation2CTests.RunNative(Native);
+                GuiFoundation2ETests.RunNative(Native);
+                GuiFoundation2FTests.RunNative(Native, Args.Length > 3 ? Args[3] : ".");
+                GuiFoundation3ATests.RunNative(Native, Args.Length > 3 ? Args[3] : ".");
+                GuiFoundation3BTests.RunNative(Native);
+                GuiFoundation3CTests.RunNative(Native);
+                GuiFoundation3DTests.RunNative(Native);
                 AddonTests.Run(Native, Args.Length > 3 ? Args[3] : null);
                 FoundationETests.Run(Native);
                 Native.Dispose(); Native.Dispose();

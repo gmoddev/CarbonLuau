@@ -13,8 +13,11 @@ namespace Carbon.Plugins
         {
             public readonly PlayerDirectory Players;
             public readonly ICommandRegistrar Registrar;
+            internal readonly GuiRetainedWorld Gui;
             public FacadeSession Active { get; private set; }
             private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
+            private long GuiFlushCursor;
+            private ulong GuiFlushCycle;
             public long PublicationVersion { get; private set; }
             public bool HasWork {
                 get {
@@ -23,7 +26,15 @@ namespace Carbon.Plugins
                     return false;
                 }
             }
-            public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar) { this.Players = Players; this.Registrar = Registrar; }
+            public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar)
+                : this(Players, Registrar, null) { }
+            internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, IGuiBackend Backend)
+                : this(Players, Registrar, new GuiConfig().Validate(), Backend) { }
+            internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, GuiLimits Limits, IGuiBackend Backend)
+            {
+                this.Players = Players ?? throw new ArgumentNullException("Players"); this.Registrar = Registrar;
+                Gui = new GuiRetainedWorld(Limits ?? throw new ArgumentNullException("Limits"), Players, Backend ?? new InMemoryGuiBackend());
+            }
             public void Commit(FacadeSession Next)
             {
                 Players.CheckOwner();
@@ -68,6 +79,52 @@ namespace Carbon.Plugins
                 foreach (FacadeSession Session in Addons.Values) try { Session.Event(Kind, Player); } catch (Exception Error) { if (Failure == null) Failure = Error; }
                 if (Failure != null) throw Failure;
             }
+            internal void DisconnectGui(PlayerLifetime Player)
+            {
+                Players.CheckOwner(); if (Player == null) return;
+                if (Active != null) Active.Gui.Disconnect(Player);
+                foreach (FacadeSession Session in Addons.Values) Session.Gui.Disconnect(Player);
+            }
+            internal bool AdmitGuiAction(PlayerLifetime Sender, string Token)
+            {
+                Players.CheckOwner(); GuiActionAdmission Admission;
+                if (!Gui.TryAdmit(Sender, Token, out Admission)) return false;
+                FacadeSession Session = null;
+                if (Active != null && Active.DomainLifetimeId == checked((long)Admission.Record.DomainLifetimeId) &&
+                    Active.VmGenerationId == checked((long)Admission.Record.VmGenerationId)) Session = Active;
+                else {
+                    FacadeSession Candidate;
+                    if (Addons.TryGetValue(checked((long)Admission.Record.DomainLifetimeId), out Candidate) &&
+                        Candidate.VmGenerationId == checked((long)Admission.Record.VmGenerationId)) Session = Candidate;
+                }
+                if (Session == null || !Session.TryEnqueueGuiAction(Admission, Sender)) {
+                    Gui.QueueRejected(); return false;
+                }
+                Gui.Accepted(); return true;
+            }
+            internal string GuiStatus { get { return Gui.Status; } }
+            internal void FlushGui(System.Diagnostics.Stopwatch Watch, int Milliseconds)
+            {
+                Players.CheckOwner(); int Sends = 0, Bytes = 0, WithoutProgress = 0;
+                if (GuiFlushCycle == ulong.MaxValue) GuiFlushCycle = 0; GuiFlushCycle++;
+                double DeadlineMilliseconds = Math.Min(Milliseconds,
+                    Watch.Elapsed.TotalMilliseconds + Gui.Limits.GuiFlushBudgetMicroseconds / 1000.0);
+                var SessionValues = Sessions();
+                while (Sends < Gui.Limits.MaxPresentationSendsPerFlush && Bytes < Gui.Limits.MaxSerializedBytesPerFlush &&
+                    Watch.Elapsed.TotalMilliseconds < DeadlineMilliseconds && SessionValues.Count != 0) {
+                    FacadeSession Selected = null;
+                    foreach (FacadeSession Session in SessionValues) if (Session.Gui.HasWork && Session.DomainLifetimeId > GuiFlushCursor &&
+                        (Selected == null || Session.DomainLifetimeId < Selected.DomainLifetimeId)) Selected = Session;
+                    if (Selected == null) foreach (FacadeSession Session in SessionValues) if (Session.Gui.HasWork &&
+                        (Selected == null || Session.DomainLifetimeId < Selected.DomainLifetimeId)) Selected = Session;
+                    if (Selected == null) break;
+                    GuiFlushCursor = Selected.DomainLifetimeId;
+                    int Used = Selected.Gui.FlushOne(Gui.Limits.MaxSerializedBytesPerFlush - Bytes, GuiFlushCycle);
+                    if (Used == Int32.MinValue) { if (++WithoutProgress >= SessionValues.Count) break; continue; }
+                    if (Used < 0) { if (++WithoutProgress >= SessionValues.Count) break; continue; }
+                    WithoutProgress = 0; Sends++; Bytes += Used;
+                }
+            }
         }
         public sealed class FacadeSession
         {
@@ -88,12 +145,13 @@ namespace Carbon.Plugins
             }
             private readonly Stack<PublicationCheckpoint> Publications = new Stack<PublicationCheckpoint>();
             private readonly FacadeWorld World;
+            internal readonly GuiRetainedRegistry Gui;
             private readonly int Capacity;
             internal readonly object CommandOwnership = new object();
             private ulong NextRegistration;
             public bool Active, Disposed;
             public ulong Rejected;
-            public bool HasWork { get { return Pending.Count != 0; } }
+            public bool HasWork { get { return Pending.Count != 0 || Gui.HasWork; } }
             public int PendingCount { get { return Pending.Count; } }
             public int ListenerCount { get { return Listeners.Count; } }
             public readonly NativeRuntime.HostDelegate Callback;
@@ -101,7 +159,8 @@ namespace Carbon.Plugins
                 : this(World, Generation, Generation, Capacity) { }
             public FacadeSession(FacadeWorld World, long VmGenerationId, long DomainLifetimeId, int Capacity)
             { this.World = World; this.VmGenerationId = VmGenerationId; this.DomainLifetimeId = DomainLifetimeId;
-                this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents); Callback = HostCall; }
+                this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents);
+                Gui = new GuiRetainedRegistry(World.Gui, checked((ulong)VmGenerationId), checked((ulong)DomainLifetimeId)); Callback = HostCall; }
             private string Id()
             {
                 if (NextRegistration == ulong.MaxValue) throw new FacadeException("registration identity exhausted");
@@ -119,6 +178,24 @@ namespace Carbon.Plugins
                 World.Players.CheckOwner();
                 foreach (var Listener in Listeners) if (Listener.Value == Kind)
                     Enqueue(new[] {Kind, Listener.Key.ToString(CultureInfo.InvariantCulture), Player.Token, Player.UserId, Player.Name});
+            }
+            internal bool TryEnqueueGuiAction(GuiActionAdmission Admission, PlayerLifetime Player)
+            {
+                if (!Active || Disposed || !World.IsActive(this) || Admission == null || Player == null) return false;
+                string[] Registrations = Admission.Registrations; GuiActionRecord Record = Admission.Record;
+                if (Registrations == null || Registrations.Length == 0 || Pending.Count > Capacity - Registrations.Length) { Rejected++; return false; }
+                var Payloads = new List<byte[]>(Registrations.Length);
+                try {
+                    foreach (string Registration in Registrations) {
+                        byte[] Payload = FacadePolicy.Pack("activated", Registration, Player.Token, Player.UserId, Player.Name,
+                            Record.Token, Record.ScreenId.ToString(CultureInfo.InvariantCulture),
+                            Record.PresentationEpoch.ToString(CultureInfo.InvariantCulture), Record.ButtonId.ToString(CultureInfo.InvariantCulture));
+                        if (Payload.Length > 16384) throw new FacadeException("GUI action payload exceeds limit");
+                        Payloads.Add(Payload);
+                    }
+                } catch { Rejected++; return false; }
+                foreach (byte[] Payload in Payloads) Pending.Enqueue(Payload);
+                return true;
             }
             public bool Invoke(string Name, string UserId, string[] Arguments)
             {
@@ -156,7 +233,7 @@ namespace Carbon.Plugins
                     if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
                 }
             }
-            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); }
+            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); Gui.Dispose(); }
             private bool Gate(string[] Fields)
             {
                 if (!Active || !World.IsActive(this) || Disposed || Fields.Length < 5) return false;
@@ -165,6 +242,13 @@ namespace Carbon.Plugins
                     if (Fields.Length < 6 || !Commands.TryGetValue(Fields[5], out Command) || Command.Id != Fields[1]) return false;
                     var View = World.Players.Resolve(Fields[2], Fields[3]);
                     return View != null && (Command.Permission.Length == 0 || View.Permission(Command.Permission));
+                }
+                if (Fields[0] == "activated") {
+                    ulong ScreenId, Epoch, ButtonId;
+                    return Fields.Length == 9 && UInt64.TryParse(Fields[6], NumberStyles.None, CultureInfo.InvariantCulture, out ScreenId) &&
+                        UInt64.TryParse(Fields[7], NumberStyles.None, CultureInfo.InvariantCulture, out Epoch) &&
+                        UInt64.TryParse(Fields[8], NumberStyles.None, CultureInfo.InvariantCulture, out ButtonId) &&
+                        World.Gui.ValidateQueued(Fields[5], Fields[1], Fields[2], Fields[3], ScreenId, Epoch, ButtonId);
                 }
                 ulong IdValue; string Kind;
                 return ulong.TryParse(Fields[1], out IdValue) && Listeners.TryGetValue(IdValue, out Kind) && Kind == Fields[0];
@@ -185,21 +269,27 @@ namespace Carbon.Plugins
                 }
                 if (Code == 10) {
                     if (Fields.Length != 0) throw new FacadeException("invalid publication begin");
-                    Publications.Push(new PublicationCheckpoint(Listeners, Commands));
+                    PublicationCheckpoint Checkpoint = new PublicationCheckpoint(Listeners, Commands);
+                    Gui.BeginPublication();
+                    try { Publications.Push(Checkpoint); }
+                    catch { Gui.RollbackPublication(); throw; }
                     return new string[0];
                 }
                 if (Code == 11) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication commit");
-                    Publications.Pop(); return new string[0];
+                    Gui.CommitPublication(); Publications.Pop(); return new string[0];
                 }
                 if (Code == 12) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication rollback");
+                    Gui.RollbackPublication();
                     PublicationCheckpoint Checkpoint = Publications.Pop();
                     Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
                     Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
                     return new string[0];
                 }
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
+                if (Code == 20) return Gui.Query(Fields);
+                if (Code == 21) return Gui.Mutate(Fields, Id);
                 int Expected = Code == 1 ? 0 : Code == 3 ? 2 : (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
                 if (Fields.Length != Expected) throw new FacadeException("invalid host arguments");
                 switch (Code) {
@@ -275,4 +365,3 @@ namespace Carbon.Plugins
         }
     }
 }
-

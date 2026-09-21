@@ -12,6 +12,21 @@ All notable public changes to CarbonLuau are recorded here.
 - Explicit public modules and `require("@id")` / `require("@id/path")`.
 - Readonly `addon.Id`, `addon.Version` and `addon:IsDependencyAvailable(id)`.
 - Cross-domain fair scheduling and delayed wakeups without persistent idle-frame work.
+- Experimental retained GUI with ScreenGui, Frame, TextLabel and TextButton.
+- Roblox-familiar UDim, UDim2, Vector2 and Color3 values; explicit per-Player
+  Show/Hide; bounded synchronization; and secure TextButton.Activated.
+- Deterministic UIListLayout and UIPadding with LayoutOrder independent of ZIndex.
+- Typed ImageSource values, ImageLabel, ImageButton and secure ImageButton.Activated.
+- Retained ScrollingFrame configuration with explicit CanvasSize and client-local
+  scroll position.
+- Runnable root and addon GUI examples, including shared and per-player trees.
+- Focused runnable Foundation 2 examples for layout, images, scrolling, shared
+  retained trees and cloned per-Player state.
+- Deterministic `UIGridLayout`, bounded `Frame.ClipsDescendants`, immutable
+  `GuiFont` values, retained text fonts and exact-Player one-way scroll effects.
+- Focused Foundation 3 examples for horizontal and vertical grids, padding,
+  scrolling grids, nested clipping, font patching, isolated Player scrolling
+  and a combined screen.
 
 ### Validation
 
@@ -19,6 +34,13 @@ All notable public changes to CarbonLuau are recorded here.
 - Qualified shared-heap exhaustion, parser boundaries, scheduler saturation,
   provider lifecycle, CarbonLuau reload with providers retained, and native teardown.
 - Passed Windows, Ubuntu, ASan, UBSan and leak-detection regressions.
+- Qualified GUI ownership, publication, replacement, VM recovery, backend fault
+  convergence, action-token rejection, lifecycle teardown and bounded stress.
+- Qualified the implemented Foundation 2 surface at 1, 10, 50 and 100 viewers
+  with a 254-element rich screen inside the 257-element projection bound.
+- Qualified the combined Foundation 3 server-side surface at 1, 10, 50 and 100
+  viewers with a 252-element screen, transactional publication, lifecycle,
+  replacement, recovery, backend failure and bounded stress coverage.
 
 ### Limits
 
@@ -26,6 +48,15 @@ All notable public changes to CarbonLuau are recorded here.
 - Provider-defined C# capabilities, root imports, downloads, registries, version
   solving, multiple instances, restricted exposure and async capabilities remain deferred.
 - The 64 MiB cap is shared across the VM; there is no per-addon hard heap isolation.
+- Authenticated-client visual layout, cursor behavior, actual click receipt and
+  client reconciliation remain unqualified. This does not block the experimental
+  API identity and is not evidence that those client-observed outcomes passed.
+- TextBox is not implemented because the current host transport cannot preserve
+  submitted text exactly. Automatic sizing/canvas sizing, CanvasPosition,
+  advanced styling and hover/focus events remain deferred.
+- Foundation 3 clipping, font rendering and actual scroll behavior remain
+  authenticated-client unqualified. Windows native/local Foundation 3
+  qualification is deferred; hosted Windows CI is separate evidence.
 
 ## 0.3.0
 

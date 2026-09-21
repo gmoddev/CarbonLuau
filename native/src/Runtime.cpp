@@ -121,7 +121,9 @@ static ClStatus LoadSourceLocked(Vm* Runtime, Domain* Owner, const char* Chunk, 
         return CL_OK;
     } catch (...) {
         bool Memory = Runtime->AllocationFailed;
-        Diagnostic(*Runtime, *Result, "native compile/load failure; VM retired");
+        const char* Message = Runtime->Thread && lua_gettop(Runtime->Thread) && lua_type(Runtime->Thread, -1) == LUA_TSTRING
+            ? lua_tostring(Runtime->Thread, -1) : "native compile/load failure";
+        Diagnostic(*Runtime, *Result, Message, Runtime->Thread);
         Retire(*Runtime);
         Result->Flags = 1;
         return Memory ? CL_MEMORY_LIMIT : CL_INTERNAL_ERROR;
