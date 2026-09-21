@@ -282,6 +282,20 @@ qualified host revisions and keep adapter-specific CUI observations as evidence,
 not permanent API guarantees. Numeric flush, payload and reconciliation targets
 remain tuning candidates until measured and deliberately assigned.
 
+### GUI Foundation 1A evidence contract
+
+[GUI Foundation 1A](GuiFoundation1A.md) implements internal managed descriptors,
+validated limits, render/backend contracts and a deterministic in-memory backend.
+Its evidence is schema completeness, explicit non-reflective ownership, bounded
+deterministic request construction, backend ordering/fault behavior, pinned host
+source inspection, managed Windows/Linux regression tests, package checks and
+architecture/API/documentation checks. It changes no public or native interface.
+
+This phase does not qualify a retained runtime, production Rust CUI adapter,
+client rendering, UI interaction or D15 publication journal. Public GUI claims
+still require the complete architecture gate above, including authenticated-client
+evidence for rendering and click behavior.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:

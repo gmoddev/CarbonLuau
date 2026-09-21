@@ -9,12 +9,17 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length >= 1 && Args[0] == "--gui-only") {
+            try { GuiFoundation1ATests.Run(Args.Length > 1 ? Args[1] : null); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauRuntime-" + Guid.NewGuid().ToString("N"));
         try
         {
             Check(Marshal.SizeOf(typeof(Runtime.NativeResult)) == 6160 && Marshal.SizeOf(typeof(Runtime.VmInfo)) == 24, "ABI layout");
             var Default = new Runtime.RuntimeConfig();
             Check(Default.Enabled && Default.MaxVmMemoryMiB == 64 && Default.MaxCallbackMilliseconds == 3, "defaults");
+            GuiFoundation1ATests.Run(Args.Length > 3 ? Args[3] : null);
             var Low = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MinValue, MaxCallbackMilliseconds = int.MinValue }.Validate();
             var High = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MaxValue, MaxCallbackMilliseconds = int.MaxValue }.Validate();
             Check(Low.MaxVmMemoryMiB == 16 && Low.MaxCallbackMilliseconds == 1 && High.MaxVmMemoryMiB == 256 && High.MaxCallbackMilliseconds == 100, "clamps");

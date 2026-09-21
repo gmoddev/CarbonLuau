@@ -1,6 +1,7 @@
 # GUI Foundation 1 architecture
 
-Status: **approved architecture; implementation has not begun**.
+Status: **approved architecture; Foundation 1A internal substrate implemented,
+public GUI runtime not begun**.
 
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model) is the canonical policy owner. This record preserves the detailed rationale and implementation guidance for future GUI phases. If this record and D15 conflict, D15 wins and both documents must be reconciled before implementation continues.
 
@@ -173,6 +174,9 @@ The following are **qualification/tuning targets, not compatibility guarantees o
 
 GUI Foundation 1's package and scripting API identity is **UNASSIGNED / release-planning gated**. The current package `0.4.0`, scripting API `0.4.0-experimental`, native ABI `1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` and pinned Luau revision remain unchanged by this design record.
 
-Implementation must be split into explicitly scoped phases; this adoption does not begin GUI-1A or authorize production code. Before public support, qualification must cover retained model and value semantics, layout golden cases, mutation ordering, shared-domain ownership, provisional foreign-owner publication, exact Player/token attacks and reconnects, bounds/queue exhaustion, no reentrant entry, backend fault injection, replacement/recovery cleanup, sanitizer coverage, live current Carbon/Rust rendering with an authenticated client, multi-viewer cost and host-upgrade adapter checks.
+Implementation is split into explicitly scoped phases. [GUI Foundation 1A](GuiFoundation1A.md)
+owns only the internal descriptor, limit, render-contract and deterministic mock
+backend substrate; it does not make GUI public or implement GUI-1B behavior.
+Before public support, qualification must cover retained model and value semantics, layout golden cases, mutation ordering, shared-domain ownership, provisional foreign-owner publication, exact Player/token attacks and reconnects, bounds/queue exhaustion, no reentrant entry, backend fault injection, replacement/recovery cleanup, sanitizer coverage, live current Carbon/Rust rendering with an authenticated client, multi-viewer cost and host-upgrade adapter checks.
 
 Authenticated-client evidence is required for claims about actual visual layout, click receipt, cursor behavior and client reconciliation. Controlled `BasePlayer` fixtures alone cannot establish those results. Exact supported Carbon/Rust revisions and any host-specific adapter assumptions belong in qualification evidence and compatibility documentation, not D15.

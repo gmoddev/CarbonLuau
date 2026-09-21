@@ -15,6 +15,13 @@ $Expected = @(
     'src/CarbonLuau/Addons/AddonPackage.cs',
     'src/CarbonLuau/Addons/AddonRegistry.cs',
     'src/CarbonLuau/Addons/DependencyGraph.cs',
+    'src/CarbonLuau/Gui/GuiConfig.cs',
+    'src/CarbonLuau/Gui/GuiDescriptors.cs',
+    'src/CarbonLuau/Gui/GuiModelContracts.cs',
+    'src/CarbonLuau/Gui/GuiRenderPlan.cs',
+    'src/CarbonLuau/Gui/IGuiBackend.cs',
+    'src/CarbonLuau/Gui/InMemoryGuiBackend.cs',
+    'src/CarbonLuau/Gui/GuiHostCapabilities.cs',
     'native/src/runtime/RuntimeInternal.hpp',
     'native/src/runtime/VmRegistry.cpp',
     'native/src/runtime/VmState.cpp',
@@ -43,6 +50,24 @@ foreach ($Path in $Forbidden) {
 }
 if (Get-ChildItem (Join-Path $Root 'native/src') -Recurse -File -Filter '*.inl') {
     throw 'Private native .inl implementation coupling returned'
+}
+
+$GuiSources = @(Get-ChildItem (Join-Path $Root 'src/CarbonLuau/Gui') -File -Filter '*.cs')
+foreach ($GuiSource in $GuiSources) {
+    $GuiText = Get-Content -Raw -LiteralPath $GuiSource.FullName
+    if ($GuiText -match 'System\.Reflection|GetProperties\s*\(|GetMethods\s*\(|GetEvents\s*\(') {
+        throw "GUI schema must not discover public members through reflection: $($GuiSource.Name)"
+    }
+    if ($GuiText -match '\bCui|\bLui|BasePlayer|UnityEngine') {
+        throw "GUI retained/backend contracts leaked host CUI types: $($GuiSource.Name)"
+    }
+}
+$Bootstrap = Get-Content -Raw -LiteralPath (Join-Path $Root 'scripts/bootstrap.luau')
+if ($Bootstrap -match 'GetService.*Gui|Name\s*==\s*["'']Gui["'']') {
+    throw 'GUI Foundation 1A must not install the public Gui service'
+}
+if (Test-Path -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/RustCuiBackend.cs')) {
+    throw 'GUI Foundation 1A must not implement the production Rust CUI backend'
 }
 
 $Worker = Get-Content -Raw -LiteralPath (Join-Path $Root 'native/src/scripts/CompilerWorker.cpp')
