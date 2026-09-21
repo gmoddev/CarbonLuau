@@ -39,10 +39,17 @@ host read. Finite results are preserved independently without clamping; stale
 connections and non-finite host values raise controlled errors. See the
 [Player-1B qualification record](../PlayerInteractionFoundation1B.md).
 
+Player-1C adds the domain-bound `Items` service with `Exists`, plus bounded
+physical `Player:CountItem` and `Player:HasItem` reads under the same identity.
+The scanner reads only direct main, belt and wear entries, rejects more than 128
+entries before returning any answer, and never uses hook-virtualized count APIs.
+See the [Player-1C qualification record](../PlayerInteractionFoundation1C.md).
+
 Revised D13 and
 [D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
-read-only item observation plus implementation-gated `Player:GiveItem` and
-`Player:TakeItem` for future scoped work. Neither mutation is currently shipped.
+read-only item observation, now implemented by Player-1C, plus implementation-
+gated `Player:GiveItem` and `Player:TakeItem` for future scoped work. Neither
+mutation is currently shipped.
 Their canonical result contract is `false` only before inventory COMMIT, `true`
 only after physical VERIFY, and a controlled error for post-COMMIT uncertainty.
 This policy change removes no implemented API and changes no package, scripting
@@ -53,6 +60,8 @@ API or native ABI identity.
 | Connected-player population / snapshot | 1024; larger host population fails closed |
 | Player name / user ID | 128 UTF-8 bytes / 20 ASCII decimal digits |
 | Vector3 components | Finite System.Single range; no clamping |
+| Item short name / physical inventory entries | 1..128 lowercase ASCII bytes / 128 direct main+belt+wear entries |
+| HasItem amount / counted quantity | Exact positive integer through `2^53 - 1` / checked exact Luau integer |
 | Listeners | 128 per signal, 256 per generation |
 | Commands | 64 per generation; initialization-only |
 | Command / permission name | 32 / 128 ASCII bytes |

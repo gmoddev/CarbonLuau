@@ -551,14 +551,14 @@ surface matrix, phase sequence and qualification plan are retained in
 [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md). Player-1A
 implements immutable `Vector3` and read-only exact-connection `Player.Position`;
 Player-1B implements live read-only exact-connection `Player.Health` and
-`Player.MaxHealth` under `0.4.0-experimental`. Their qualification records are
+`Player.MaxHealth`; Player-1C implements `Items:Exists` plus bounded physical
+`Player:CountItem` and `Player:HasItem` under `0.4.0-experimental`. Their qualification records are
 [PlayerInteractionFoundation1A.md](PlayerInteractionFoundation1A.md) and
-[PlayerInteractionFoundation1B.md](PlayerInteractionFoundation1B.md).
-Bounded item observation, the `Items` service, Teleport,
-GiveItem and TakeItem remain unimplemented.
+[PlayerInteractionFoundation1B.md](PlayerInteractionFoundation1B.md) and
+[PlayerInteractionFoundation1C.md](PlayerInteractionFoundation1C.md).
+Teleport, GiveItem and TakeItem remain unimplemented.
 
-Remaining work is separated into Player-1C (`Items:Exists`, CountItem and HasItem),
-Player-1D (Teleport) and Player-1E (combined lifecycle, stress, documentation
+Remaining work is separated into Player-1D (Teleport) and Player-1E (combined lifecycle, stress, documentation
 and public qualification closure). Revised D13 additionally routes Inventory-M1
 for the deterministic model and mutation gate, Inventory-M2 for exact target-
 build adapter qualification, Player-1F-A for TakeItem, Player-1F-B for GiveItem
@@ -571,11 +571,12 @@ postcondition was verified, and a controlled error after COMMIT means inventory
 may have changed. Rust inventory is not described as globally atomic; no
 rollback, plugin isolation or unchanged-state guarantee is added.
 
-Player-1C must establish an exact target-build, bounded, nonrecursive physical
+Player-1C establishes an exact target-build, bounded, nonrecursive physical
 main/belt/wear adapter that does not accept a hook-virtualized count as the
-canonical answer. Its concrete inspected-stack/work bound is selected and
-documented only after target-build inspection. If that contract cannot be met,
-Player-1C is deferred rather than weakened.
+canonical answer. Its hard limit is 128 direct entries across the three accepted
+containers, compared with the target build's normal 24 + 6 + 8 capacities.
+The reusable scanner and evidence are recorded in
+[PlayerInteractionFoundation1C.md](PlayerInteractionFoundation1C.md).
 
 Inventory mutation requires exact-connection serialization, committed execution
 and target-build evidence. GiveItem must pass G1 no-world-drop transfer, G2

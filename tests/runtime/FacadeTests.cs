@@ -24,6 +24,8 @@ internal static class FacadeTests
             foreach (var Result in Host.Drain()) Logs += Result.Logs;
         return Logs;
     }
+    private static Runtime.PhysicalInventoryContainer InventoryContainer(object Identity, List<Runtime.PhysicalInventoryStack> Stacks)
+    { return new Runtime.PhysicalInventoryContainer {Identity = Identity, StackCount = Stacks.Count, Read = Index => Stacks[Index]}; }
     public static void Run(Runtime.NativeRuntime Native, string Repository = null)
     {
         const string UserId = "76561198000000001";
@@ -31,11 +33,18 @@ internal static class FacadeTests
         var Messages = new List<string>(); bool Allowed = false;
         var Position = new Runtime.PlayerPosition(10.5f, -20.25f, 30.75f);
         float Health = 87.5f, MaxHealth = 137.25f;
+        object Scrap = new object(), Wood = new object(), Rifle = new object();
+        object MainId = new object(), BeltId = new object(), WearId = new object(), ExternalId = new object();
+        var Main = new List<Runtime.PhysicalInventoryStack>(); var Belt = new List<Runtime.PhysicalInventoryStack>(); var Wear = new List<Runtime.PhysicalInventoryStack>();
+        Func<Runtime.PhysicalInventorySource> Inventory = () => new Runtime.PhysicalInventorySource {
+            Main = InventoryContainer(MainId, Main), Belt = InventoryContainer(BeltId, Belt), Wear = InventoryContainer(WearId, Wear)};
         Func<Runtime.PlayerView> View = () => new Runtime.PlayerView { Identity = new object(), Connection = new object(), UserId = UserId,
             Name = "Fixture Player", Connected = true, Send = Message => Messages.Add(Message), Permission = Permission => Allowed,
-            Position = () => Position, Health = () => Health, MaxHealth = () => MaxHealth };
+            Position = () => Position, Health = () => Health, MaxHealth = () => MaxHealth, Inventory = Inventory };
         var Directory = new Runtime.PlayerDirectory(Id => Views.ContainsKey(Id) ? Views[Id] : null);
-        var Registrar = new Registrar(); var World = new Runtime.FacadeWorld(Directory, Registrar);
+        var Definitions = new Dictionary<string, object>(StringComparer.Ordinal) {{"scrap", Scrap}, {"wood", Wood}, {"rifle.ak", Rifle}};
+        var Registrar = new Registrar(); var World = new Runtime.FacadeWorld(Directory, Registrar,
+            new Runtime.ItemDirectory(Name => Definitions.ContainsKey(Name) ? Definitions[Name] : null));
         string Source = "", FailureModule = null;
         var Config = new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20};
         Func<Runtime.ScriptSnapshot> SnapshotSource = () => {
@@ -44,13 +53,14 @@ internal static class FacadeTests
             if (FailureModule != null) Snapshot.Modules.Add("caughtresource", FailureModule);
             Snapshot.Modules.Add("positionread", "return game:GetService('Players'):GetPlayers()[1].Position");
             Snapshot.Modules.Add("healthread", "local P=game:GetService('Players'):GetPlayers()[1]; return {Health=P.Health,MaxHealth=P.MaxHealth}");
+            Snapshot.Modules.Add("inventoryread", "local P=game:GetService('Players'):GetPlayers()[1]; local I=game:GetService('Items'); return {Exists=I:Exists('scrap'),Count=P:CountItem('scrap'),Has=P:HasItem('scrap')}");
             return Snapshot;
         };
         const string ReadState = "local State=require('state'); local P,Old,Snapshot,C=State.P,State.Old,State.Snapshot,State.C; ";
         using (var Host = new Runtime.ScriptHost(Native, Config, SnapshotSource, World)) {
             Action<string> Load = Text => { Source = ReadState + Text + "; State.P=P; State.Old=Old; State.Snapshot=Snapshot; State.C=C"; var Result = Host.Reload(); Check(Result.Status == Runtime.RuntimeStatus.OK, "load: " + Result.Error); };
             Action<string> Execute = Text => { var Result = Host.Execute("facade.test", ReadState + Text); Check(Result.Status == Runtime.RuntimeStatus.OK, "execute: " + Result.Error); };
-            Load("local P=game:GetService('Players'); assert(#P:GetPlayers()==0); assert(P==game:GetService('Players')); assert(game:GetService('Commands')==game:GetService('Commands')); assert(game.ApiVersion=='0.4.0-experimental'); assert(not pcall(function() game:GetService('X') end)); assert(not pcall(function() game:GetService(1) end)); assert(not pcall(function() P:GetPlayerByUserId(123) end)); assert(P:GetPlayerByUserId('123')==nil); assert(__hostcall==nil and debug==nil and getfenv==nil)");
+            Load("local P=game:GetService('Players'); local I=game:GetService('Items'); assert(#P:GetPlayers()==0); assert(P==game:GetService('Players')); assert(I==game:GetService('Items')); assert(I:Exists('wood') and I:Exists('scrap') and I:Exists('rifle.ak') and not I:Exists('unknown.item')); assert(not pcall(function() I:Exists('Scrap') end)); assert(not pcall(function() I:Exists(' scrap') end)); assert(not pcall(function() I:Exists('scrap ') end)); assert(not pcall(function() I:Exists('') end)); assert(not pcall(function() I:Exists(string.rep('a',129)) end)); assert(not pcall(function() I:Exists('scrap\\0bad') end)); assert(not pcall(function() I:Exists('café') end)); assert(not pcall(function() I:Exists(1) end)); assert(not I:Exists('a') and not I:Exists(string.rep('a',128))); assert(game:GetService('Commands')==game:GetService('Commands')); assert(game.ApiVersion=='0.4.0-experimental'); assert(not pcall(function() game:GetService('X') end)); assert(not pcall(function() game:GetService(1) end)); assert(not pcall(function() P:GetPlayerByUserId(123) end)); assert(P:GetPlayerByUserId('123')==nil); assert(__hostcall==nil and debug==nil and getfenv==nil)");
             FailureModule = "print('module-attempt'); game:GetService('Commands'):Register('moduleleak',{},function() end); task.defer(function() error('module task leaked') end); error('caught resource failure')";
             Source = "assert(not pcall(require,'caughtresource')); assert(not pcall(require,'caughtresource'))";
             var FailedModule = Host.Reload();
@@ -58,7 +68,7 @@ internal static class FacadeTests
             Check(!Registrar.Active.Commands.ContainsKey("moduleleak") && !Host.HasWork && Host.Status().Contains("modules: 0"), "caught failed module publishes no cache, command or task");
             FailureModule = null;
             Views[UserId] = View(); var Lifetime = Directory.Connect(Views[UserId]);
-            Load("P=game:GetService('Players'); Old=P:GetPlayers()[1]; Snapshot=P:GetPlayers(); assert(Old==P:GetPlayerByUserId('" + UserId + "')); assert(Old.UserId=='" + UserId + "' and type(Old.UserId)=='string'); assert(Old.Name=='Fixture Player' and Old.IsConnected); assert(not pcall(function() Old.Name='forged' end)); assert(not pcall(function() Old.Health=1 end)); assert(not pcall(function() Old.MaxHealth=1 end)); assert(not pcall(function() Old.SendMessage({},'forged') end)); assert(not pcall(function() Old:SendMessage('provisional') end)); local ProvisionalPosition=require('positionread'); assert(ProvisionalPosition==Vector3.new(10.5,-20.25,30.75)); local ProvisionalHealth=require('healthread'); assert(ProvisionalHealth.Health==87.5 and ProvisionalHealth.MaxHealth==137.25); State.SavedPosition=Old.Position; State.SavedHealth=Old.Health; State.SavedMaxHealth=Old.MaxHealth; task.defer(function() Old:SendMessage('committed') end)");
+            Load("P=game:GetService('Players'); Old=P:GetPlayers()[1]; Snapshot=P:GetPlayers(); assert(Old==P:GetPlayerByUserId('" + UserId + "')); assert(Old.UserId=='" + UserId + "' and type(Old.UserId)=='string'); assert(Old.Name=='Fixture Player' and Old.IsConnected); assert(not pcall(function() Old.Name='forged' end)); assert(not pcall(function() Old.Health=1 end)); assert(not pcall(function() Old.MaxHealth=1 end)); assert(not pcall(function() Old.SendMessage({},'forged') end)); assert(not pcall(function() Old:SendMessage('provisional') end)); local ProvisionalPosition=require('positionread'); assert(ProvisionalPosition==Vector3.new(10.5,-20.25,30.75)); local ProvisionalHealth=require('healthread'); assert(ProvisionalHealth.Health==87.5 and ProvisionalHealth.MaxHealth==137.25); local ProvisionalInventory=require('inventoryread'); assert(ProvisionalInventory.Exists and ProvisionalInventory.Count==0 and not ProvisionalInventory.Has); State.SavedPosition=Old.Position; State.SavedHealth=Old.Health; State.SavedMaxHealth=Old.MaxHealth; task.defer(function() Old:SendMessage('committed') end)");
             Check(Messages.Count == 0, "D10 caught provisional message has no effect"); Drain(Host); Check(Messages.Count == 1 && Messages[0] == "committed", "D10 deferred delivery after commit");
             Execute("local Zero=Vector3.new(0,0,0); local A=Vector3.new(10,20,30); local B=Vector3.new(5,0,-5); assert(Zero.X==0 and Zero.Y==0 and Zero.Z==0 and Zero.Magnitude==0); assert(Vector3.new(-1.5,2.25,-3.75).X==-1.5); assert(Vector3.new(3,4,12).Magnitude==13); assert(tostring(A)=='Vector3'); assert(A==Vector3.new(10,20,30) and A~=Vector3.new(11,20,30) and A~=Vector3.new(10,21,30) and A~=Vector3.new(10,20,31) and A~={}); assert(Vector3.new(0.1+0.2,0,0)~=Vector3.new(0.3,0,0)); assert(A+B==Vector3.new(15,20,25)); assert(A-B==Vector3.new(5,20,35)); assert(-A==Vector3.new(-10,-20,-30)); assert(A*2==Vector3.new(20,40,60)); assert(2*A==Vector3.new(20,40,60)); assert(A/2==Vector3.new(5,10,15)); local Maximum=Vector3.new(3.4028234663852886e38,-3.4028234663852886e38,0); assert(Maximum.X>0 and Maximum.Y<0); assert(not pcall(Vector3.new,0/0,0,0)); assert(not pcall(Vector3.new,1/0,0,0)); assert(not pcall(Vector3.new,3.4028236e38,0,0)); assert(not pcall(Vector3.new,'1',0,0)); assert(not pcall(function() A.X=1 end)); assert(not pcall(function() A.Unknown=1 end)); assert(not pcall(function() return A*B end)); assert(not pcall(function() return A/B end)); assert(not pcall(function() return A/0 end)); assert(not pcall(function() return Maximum+Maximum end)); assert(not pcall(function() return Maximum*2 end))");
             Position = new Runtime.PlayerPosition(-4.5f, 6.25f, 8.75f);
@@ -79,6 +89,26 @@ internal static class FacadeTests
             Health = Single.NaN; Execute("assert(not pcall(function() return Old.Health end))");
             Health = 53.375f; MaxHealth = Single.PositiveInfinity; Execute("assert(not pcall(function() return Old.MaxHealth end))");
             MaxHealth = 142.625f;
+            Execute("assert(Old:CountItem('scrap')==0 and not Old:HasItem('scrap') and Old:CountItem('unknown.item')==0 and not Old:HasItem('unknown.item',1))");
+            Main.Add(new Runtime.PhysicalInventoryStack(MainId, Scrap, 50, true));
+            Main.Add(new Runtime.PhysicalInventoryStack(MainId, Scrap, 25, true));
+            Main.Add(new Runtime.PhysicalInventoryStack(MainId, Wood, 500, true));
+            Main.Add(new Runtime.PhysicalInventoryStack(MainId, Scrap, 0, true));
+            Belt.Add(new Runtime.PhysicalInventoryStack(BeltId, Scrap, 20, true));
+            Wear.Add(new Runtime.PhysicalInventoryStack(WearId, Scrap, 5, true));
+            Wear.Add(new Runtime.PhysicalInventoryStack(WearId, Scrap, 999, false));
+            Wear.Add(new Runtime.PhysicalInventoryStack(ExternalId, Scrap, 999, true));
+            Execute("assert(Old:CountItem('scrap')==100 and Old:CountItem('wood')==500); assert(Old:HasItem('scrap') and Old:HasItem('scrap',1) and Old:HasItem('scrap',100) and not Old:HasItem('scrap',101)); assert(not pcall(function() Old:HasItem('scrap',0) end)); assert(not pcall(function() Old:HasItem('scrap',-1) end)); assert(not pcall(function() Old:HasItem('scrap',1.5) end)); assert(not pcall(function() Old:HasItem('scrap',9007199254740992) end)); assert(not pcall(function() Old:HasItem('scrap',0/0) end)); assert(not pcall(function() Old:HasItem('scrap',1/0) end)); assert(not pcall(function() Old:HasItem('scrap','1') end)); assert(not pcall(function() Old:CountItem('Scrap') end))");
+            Main[0] = new Runtime.PhysicalInventoryStack(MainId, Scrap, 51, true);
+            Execute("assert(Old:CountItem('scrap')==101 and Old:HasItem('scrap',101))");
+            var SavedMain = new List<Runtime.PhysicalInventoryStack>(Main); var SavedBelt = new List<Runtime.PhysicalInventoryStack>(Belt); var SavedWear = new List<Runtime.PhysicalInventoryStack>(Wear);
+            Main.Clear(); Belt.Clear(); Wear.Clear();
+            for (int Index = 0; Index < Runtime.FacadePolicy.InventoryStacks; ++Index)
+                Main.Add(new Runtime.PhysicalInventoryStack(MainId, Scrap, 1, true));
+            Execute("assert(Old:CountItem('scrap')==128 and Old:HasItem('scrap',128))");
+            Main.Add(new Runtime.PhysicalInventoryStack(MainId, Scrap, 1, true));
+            Execute("assert(not pcall(function() return Old:CountItem('scrap') end)); assert(not pcall(function() return Old:HasItem('scrap',1) end))");
+            Main.Clear(); Main.AddRange(SavedMain); Belt.AddRange(SavedBelt); Wear.AddRange(SavedWear);
             Position = new Runtime.PlayerPosition(Single.NaN, 0, 0);
             Execute("assert(not pcall(function() return Old.Position end))");
             Position = new Runtime.PlayerPosition(101.5f, 202.25f, -303.75f);
@@ -88,6 +118,9 @@ internal static class FacadeTests
             var HealthPrevious = Registrar.Active; Source = "local Value=require('healthread'); assert(Value.Health==53.375 and Value.MaxHealth==142.625); error('health candidate rejected')";
             Check(Host.Reload().Status == Runtime.RuntimeStatus.RUNTIME_ERROR && Registrar.Active == HealthPrevious && !Host.HasWork,
                 "failed provisional Health candidate preserves active domain and publishes no work");
+            var InventoryPrevious = Registrar.Active; Source = "local Value=require('inventoryread'); assert(Value.Exists and Value.Count==101 and Value.Has); error('inventory candidate rejected')";
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.RUNTIME_ERROR && Registrar.Active == InventoryPrevious && !Host.HasWork,
+                "failed provisional inventory candidate preserves active domain and publishes no work");
             var Second = View(); Second.UserId = "76561198000000002"; Second.Name = "Second Player";
             Views[Second.UserId] = Second; Directory.Connect(Second);
             Execute("assert(#P:GetPlayers()==2 and #Snapshot==1); assert(P:GetPlayers()[2].Name=='Second Player')");
@@ -109,10 +142,10 @@ internal static class FacadeTests
             Execute("assert(not Old.IsConnected)");
             Check(Directory.Resolve(Lifetime.Token,UserId)==null,"observed invalidation is permanent even if host object/connection is reused");
             var Removed = Directory.Disconnect(UserId, Views[UserId].Identity); Views.Remove(UserId);
-            Execute("local Saved=require('state').SavedPosition; assert(Saved==Vector3.new(10.5,-20.25,30.75) and Saved*2==Vector3.new(21,-40.5,61.5)); assert(require('state').SavedHealth==87.5 and require('state').SavedMaxHealth==137.25); assert(not Old.IsConnected and Old.Name=='Fixture Player'); assert(#Snapshot==1); assert(not pcall(function() return Old.Position end)); assert(not pcall(function() return Old.Health end)); assert(not pcall(function() return Old.MaxHealth end)); assert(not pcall(function() Old:SendMessage('stale') end)); assert(not pcall(function() Old:HasPermission('fixture.allowed') end))");
+            Execute("local Saved=require('state').SavedPosition; assert(Saved==Vector3.new(10.5,-20.25,30.75) and Saved*2==Vector3.new(21,-40.5,61.5)); assert(require('state').SavedHealth==87.5 and require('state').SavedMaxHealth==137.25); assert(not Old.IsConnected and Old.Name=='Fixture Player'); assert(#Snapshot==1); assert(not pcall(function() return Old.Position end)); assert(not pcall(function() return Old.Health end)); assert(not pcall(function() return Old.MaxHealth end)); assert(not pcall(function() Old:CountItem('scrap') end)); assert(not pcall(function() Old:HasItem('scrap') end)); assert(not pcall(function() Old:SendMessage('stale') end)); assert(not pcall(function() Old:HasPermission('fixture.allowed') end))");
             Views[UserId] = View(); var Reconnected = Directory.Connect(Views[UserId]);
             Check(Reconnected.Token != Removed.Token && Directory.Resolve(Removed.Token, UserId) == null && Directory.Resolve("forged", UserId) == null, "reconnect/forged token never retargets");
-            Execute("assert(not Old.IsConnected and not pcall(function() return Old.Position end) and not pcall(function() return Old.Health end) and not pcall(function() return Old.MaxHealth end)); local Fresh=P:GetPlayers()[1]; assert(Fresh~=Old and Fresh.IsConnected and Fresh.Position==Vector3.new(101.5,202.25,-303.75) and Fresh.Health==53.375 and Fresh.MaxHealth==142.625)");
+            Execute("assert(not Old.IsConnected and not pcall(function() return Old.Position end) and not pcall(function() return Old.Health end) and not pcall(function() return Old.MaxHealth end) and not pcall(function() return Old:CountItem('scrap') end)); local Fresh=P:GetPlayers()[1]; assert(Fresh~=Old and Fresh.IsConnected and Fresh.Position==Vector3.new(101.5,202.25,-303.75) and Fresh.Health==53.375 and Fresh.MaxHealth==142.625 and Fresh:CountItem('scrap')==101)");
 
             Load("local P=game:GetService('Players'); P.PlayerAdded:Connect(function() print('first') end); C=P.PlayerAdded:Connect(function() print('second') end); P.PlayerAdded:Connect(function() error('listener error') end); P.PlayerAdded:Connect(function() print('last') end); P.PlayerRemoving:Connect(function(V) assert(not V.IsConnected); print(V.UserId) end)");
             Check(!Host.HasWork, "no synthetic joins for current players"); World.Event("added", Reconnected);
@@ -199,6 +232,8 @@ internal static class FacadeTests
             Console.WriteLine("[CarbonLuau:Player1A] 2000 live Position reads: " + Watch.Elapsed.TotalMilliseconds.ToString("F2") + " ms");
             Watch.Restart(); Execute("local Player=game:GetService('Players'):GetPlayerByUserId('"+UserId+"'); for I=1,2000 do assert(Player.Health==53.375 and Player.MaxHealth==142.625) end");
             Console.WriteLine("[CarbonLuau:Player1B] 2000 live Health/MaxHealth read pairs: " + Watch.Elapsed.TotalMilliseconds.ToString("F2") + " ms");
+            Watch.Restart(); Execute("local Player=game:GetService('Players'):GetPlayerByUserId('"+UserId+"'); for I=1,2000 do assert(Player:CountItem('scrap')==101 and Player:HasItem('scrap',100)) end");
+            Console.WriteLine("[CarbonLuau:Player1C] 2000 CountItem/HasItem pairs over 8 entries: " + Watch.Elapsed.TotalMilliseconds.ToString("F2") + " ms");
             Previous=Registrar.Active; Host.Dispose(); Check(Registrar.Active==null && !Previous.Invoke("hello",UserId,new[]{"unload"}) && !Host.HasWork,"unload removes all host registrations");
         }
         var Tight = new Runtime.RuntimeConfig {MaxCallbackMilliseconds=3}; string Runaway = "game:GetService('Players').PlayerAdded:Connect(function() while true do end end)";
@@ -228,6 +263,6 @@ internal static class FacadeTests
             }
             Console.WriteLine("[CarbonLuau:FacadeTest] PASS ten shipped root examples loaded through real compiler/VM");
         }
-        Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, Vector3, Position, Health, MaxHealth, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
+        Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, Vector3, Position, Health, MaxHealth, Items, physical inventory, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
     }
 }

@@ -12,6 +12,7 @@ $Expected = @(
     'src/CarbonLuau/Facade/PlayerDirectory.cs',
     'src/CarbonLuau/Facade/CommandRegistry.cs',
     'src/CarbonLuau/Facade/FacadeSession.cs',
+    'src/CarbonLuau/Facade/InventoryObservation.cs',
     'src/CarbonLuau/Addons/AddonPackage.cs',
     'src/CarbonLuau/Addons/AddonRegistry.cs',
     'src/CarbonLuau/Addons/DependencyGraph.cs',

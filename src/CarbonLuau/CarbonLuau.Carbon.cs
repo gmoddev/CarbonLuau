@@ -33,15 +33,44 @@ namespace Carbon.Plugins
                     return new PlayerPosition(Value.x, Value.y, Value.z);
                 },
                 Health = () => Player.Health(),
-                MaxHealth = () => Player.MaxHealth()
+                MaxHealth = () => Player.MaxHealth(),
+                Inventory = () => ViewInventory(Player)
             };
+        }
+        private static PhysicalInventoryContainer ViewInventoryContainer(ItemContainer Container)
+        {
+            if (Container == null || Container.itemList == null) throw new InvalidOperationException("Player inventory container is unavailable");
+            return new PhysicalInventoryContainer {
+                Identity = Container,
+                StackCount = Container.itemList.Count,
+                Read = Index => {
+                    Item Value = Container.itemList[Index];
+                    return Value == null ? default(PhysicalInventoryStack) :
+                        new PhysicalInventoryStack(Value.parent, Value.info, Value.amount, Value.IsValid());
+                }
+            };
+        }
+        private static PhysicalInventorySource ViewInventory(BasePlayer Player)
+        {
+            if (Player == null || Player.inventory == null) throw new InvalidOperationException("Player inventory is unavailable");
+            return new PhysicalInventorySource {
+                Main = ViewInventoryContainer(Player.inventory.containerMain),
+                Belt = ViewInventoryContainer(Player.inventory.containerBelt),
+                Wear = ViewInventoryContainer(Player.inventory.containerWear)
+            };
+        }
+        private static object ReadItemDefinition(string ShortName)
+        {
+            ItemDefinition Definition = ItemManager.FindItemDefinition(ShortName);
+            return Definition != null && String.Equals(Definition.shortname, ShortName, StringComparison.Ordinal) ? Definition : null;
         }
         private void InitializeGameplay()
         {
             CommandRegistrar = new CarbonCommandRegistrar(this);
             var Players = new PlayerDirectory(ReadPlayer);
-            Gameplay = new FacadeWorld(Players, CommandRegistrar,
-                new RustCuiBackend(new GuiConfig().Validate(), new CarbonRustCuiTransport(Players)));
+            var Limits = new GuiConfig().Validate();
+            Gameplay = new FacadeWorld(Players, CommandRegistrar, new ItemDirectory(ReadItemDefinition), Limits,
+                new RustCuiBackend(Limits, new CarbonRustCuiTransport(Players)));
         }
         private void SeedPlayers()
         {

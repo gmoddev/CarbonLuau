@@ -23,6 +23,7 @@ namespace Carbon.Plugins
             public Func<string, bool> Permission;
             public Func<PlayerPosition> Position;
             public Func<float> Health, MaxHealth;
+            public Func<PhysicalInventorySource> Inventory;
         }
         public sealed class PlayerLifetime
         {

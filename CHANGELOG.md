@@ -10,6 +10,8 @@ All notable public changes to CarbonLuau are recorded here.
   `Player.Position` under Player Interaction Foundation 1A.
 - Live read-only exact-connection `Player.Health` and `Player.MaxHealth` under
   Player Interaction Foundation 1B, preserving independent finite host values.
+- Domain-bound `Items:Exists` and bounded physical `Player:CountItem` /
+  `Player:HasItem` reads under Player Interaction Foundation 1C.
 - Experimental addon composition under scripting API `0.4.0-experimental`.
 - Bounded provider-owned schema-1 packages and immutable source snapshots.
 - Required and optional dependency lifetimes with exact replacement bindings.
@@ -39,6 +41,8 @@ All notable public changes to CarbonLuau are recorded here.
   sanitizer matrix; hosted Windows evidence is recorded separately.
 - Qualified Health/MaxHealth live reads, dynamic maximum health, non-clamping,
   exact-connection lifetime, provisional and cross-domain behavior.
+- Qualified exact short-name lookup and checked physical main/belt/wear scanning
+  with a hard 128-entry envelope, exact-connection lifetime and addon sharing.
 - Qualified root-only, 1, 10, 50 and 100-addon configurations on Windows and Linux.
 - Qualified shared-heap exhaustion, parser boundaries, scheduler saturation,
   provider lifecycle, CarbonLuau reload with providers retained, and native teardown.

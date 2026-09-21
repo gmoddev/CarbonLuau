@@ -286,6 +286,18 @@ local function GuiRecord(Value)
     if not Result then Fail("invalid GUI object") end
     return Result
 end
+function PlayerMethods.CountItem(Player, ShortName)
+    local Value = Record(Player)
+    return tonumber(Host(26, Value.Token, Value.UserId, String(ShortName, "item short name"))[1])
+end
+function PlayerMethods.HasItem(Player, ShortName, Amount)
+    local Value = Record(Player)
+    String(ShortName, "item short name")
+    if Amount == nil then Amount = 1 end
+    Number(Amount, "item amount", 1, 9007199254740991)
+    if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
+    return Host(27, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount))[1] == "1"
+end
 local function EncodeGuiValue(Value, Integer)
     local Kind = type(Value)
     if Kind == "string" then return "string", Value end
@@ -455,6 +467,12 @@ function Gui.Create(Self, ClassName)
     return GetGuiObject(Fields[1], Fields[2])
 end
 table.freeze(Gui)
+local Items = {}
+function Items.Exists(Self, ShortName)
+    if Self ~= Items then Fail("invalid Items service") end
+    return Host(25, String(ShortName, "item short name"))[1] == "1"
+end
+table.freeze(Items)
 local Game = {ApiName = "CarbonLuau", ApiVersion = "0.4.0-experimental", ApiStatus = "Experimental"}
 function Game.GetService(Self, Name)
     if Self ~= Game then Fail("invalid game facade") end
@@ -462,7 +480,8 @@ function Game.GetService(Self, Name)
     if Name == "Players" then return Players end
     if Name == "Commands" then return Commands end
     if Name == "Gui" then return Gui end
-    Fail("unknown service (expected Players, Commands or Gui)")
+    if Name == "Items" then return Items end
+    Fail("unknown service (expected Players, Commands, Gui or Items)")
 end
 table.freeze(Game)
 -- One host-admitted callback per scheduler work item; no dispatch fan-out in Lua.

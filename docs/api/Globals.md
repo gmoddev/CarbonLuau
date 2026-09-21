@@ -7,7 +7,7 @@ not modify the shared facade or grant host authority.
 
 | Signature / field | Type / return | Behavior |
 |---|---|---|
-| `game:GetService(Name)` | string -> Players, Commands or Gui service | Exact case-sensitive names `Players`, `Commands` and `Gui`; repeated retrieval returns the same domain-bound service. |
+| `game:GetService(Name)` | string -> Players, Commands, Gui or Items service | Exact case-sensitive names `Players`, `Commands`, `Gui` and `Items`; repeated retrieval returns the same domain-bound service. |
 | `game.ApiName` | read-only string | `CarbonLuau` |
 | `game.ApiVersion` | read-only string | Current candidate: `0.4.0-experimental` |
 | `game.ApiStatus` | read-only string | `Experimental` |
@@ -21,9 +21,9 @@ only in its owning generation; there is no cross-reload state preservation.
 
 ```lua
 print(game.ApiName, game.ApiVersion, game.ApiStatus)
-local Commands = game:GetService("Commands")
+local Items = game:GetService("Items")
 ```
 
-See [Players](Services/Players.md), [Commands](Services/Commands.md), [GUI](Gui.md) and
+See [Players](Services/Players.md), [Commands](Services/Commands.md), [Items](Services/Items.md), [GUI](Gui.md) and
 [compatibility](Compatibility.md). No other services or global host-call primitive
 are exposed. Existing standard-library/sandbox restrictions remain in force.

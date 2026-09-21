@@ -239,7 +239,10 @@ Player-1A implements immutable `Vector3` and read-only `Player.Position` as
 recorded in [PlayerInteractionFoundation1A.md](docs/PlayerInteractionFoundation1A.md).
 Player-1B implements read-only `Player.Health` and `Player.MaxHealth` as recorded
 in [PlayerInteractionFoundation1B.md](docs/PlayerInteractionFoundation1B.md).
-This does not authorize or imply Player-1C+, Inventory-M or other gameplay APIs.
+Player-1C implements the `Items` existence service plus bounded physical
+`Player:CountItem` and `Player:HasItem` as recorded in
+[PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md).
+This does not authorize or imply Player-1D+, Inventory-M or other gameplay APIs.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

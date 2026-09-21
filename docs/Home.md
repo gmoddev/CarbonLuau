@@ -34,6 +34,7 @@ receipt by an authenticated client was not tested and is not claimed.
 - Transactional scripts and controlled `require` modules.
 - Bounded `task.spawn`, `task.defer` and `task.delay`.
 - Players, Player proxies, Signals/Connections and Commands.
+- Items existence plus bounded physical main/belt/wear inventory observation.
 - Carbon permission checks and administrator status/reload commands.
 - VM memory, callback, queue, payload and logging bounds.
 - Provider-owned addon packages, exact dependency lifetimes and public modules.
@@ -42,8 +43,8 @@ receipt by an authenticated client was not tested and is not claimed.
 - Deterministic UIListLayout/UIPadding and retained ScrollingFrame configuration.
 - Explicit per-Player Show/Hide and secure button Activated callbacks.
 
-Items/inventory, arbitrary Rust hooks, filesystem/network access, Roblox
-replication and `task.wait` are not included. See the [0.3.0 release notes](releases/0.3.0.md)
+Inventory mutation/raw inventory objects, arbitrary Rust hooks, filesystem/network access,
+Roblox replication and `task.wait` are not included. See the [0.3.0 release notes](releases/0.3.0.md)
 for the published baseline and the [0.4.0 release notes](releases/0.4.0.md)
 plus [Foundation E qualification](FoundationE.md) and
 [GUI Foundation 1G](GuiFoundation1G.md) for the candidate envelope.
@@ -105,10 +106,12 @@ immutable `Vector3`, read-only exact-Player position/health/inventory
 observation, read-only item existence, committed-only Teleport and
 implementation-gated GiveItem/TakeItem. Player-1A implements immutable
 `Vector3` and read-only exact-connection `Player.Position`; Player-1B implements
-live read-only `Player.Health` and `Player.MaxHealth`. See
+live read-only `Player.Health` and `Player.MaxHealth`; Player-1C implements
+`Items:Exists`, `Player:CountItem` and `Player:HasItem`. See
 [Player Interaction Foundation 1A](PlayerInteractionFoundation1A.md) and
-[Player Interaction Foundation 1B](PlayerInteractionFoundation1B.md). The later
-surface remains unimplemented. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
+[Player Interaction Foundation 1B](PlayerInteractionFoundation1B.md) and
+[Player Interaction Foundation 1C](PlayerInteractionFoundation1C.md). The later
+spatial and mutation surface remains unimplemented. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
 exact-Player Luau serialization and false/true/indeterminate-error outcomes;
 the full rationale is in
 [Inventory Ownership / Failure Reassessment](InventoryOwnershipFailureReassessment.md).

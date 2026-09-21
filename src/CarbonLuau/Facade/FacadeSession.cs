@@ -12,6 +12,7 @@ namespace Carbon.Plugins
         public sealed class FacadeWorld
         {
             public readonly PlayerDirectory Players;
+            public readonly ItemDirectory Items;
             public readonly ICommandRegistrar Registrar;
             internal readonly GuiRetainedWorld Gui;
             public FacadeSession Active { get; private set; }
@@ -27,12 +28,17 @@ namespace Carbon.Plugins
                 }
             }
             public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar)
-                : this(Players, Registrar, null) { }
+                : this(Players, Registrar, new ItemDirectory(Name => null), new GuiConfig().Validate(), null) { }
             internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, IGuiBackend Backend)
-                : this(Players, Registrar, new GuiConfig().Validate(), Backend) { }
+                : this(Players, Registrar, new ItemDirectory(Name => null), new GuiConfig().Validate(), Backend) { }
+            public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, ItemDirectory Items)
+                : this(Players, Registrar, Items, new GuiConfig().Validate(), null) { }
             internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, GuiLimits Limits, IGuiBackend Backend)
+                : this(Players, Registrar, new ItemDirectory(Name => null), Limits, Backend) { }
+            internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, ItemDirectory Items, GuiLimits Limits, IGuiBackend Backend)
             {
                 this.Players = Players ?? throw new ArgumentNullException("Players"); this.Registrar = Registrar;
+                this.Items = Items ?? throw new ArgumentNullException("Items");
                 Gui = new GuiRetainedWorld(Limits ?? throw new ArgumentNullException("Limits"), Players, Backend ?? new InMemoryGuiBackend());
             }
             public void Commit(FacadeSession Next)
@@ -290,7 +296,8 @@ namespace Carbon.Plugins
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
                 if (Code == 20) return Gui.Query(Fields);
                 if (Code == 21) return Gui.Mutate(Fields, Id);
-                int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 : (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
+                int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 :
+                    Code == 25 ? 1 : Code == 26 ? 3 : Code == 27 ? 4 : (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
                 if (Fields.Length != Expected) throw new FacadeException("invalid host arguments");
                 switch (Code) {
                     case 1: {
@@ -338,6 +345,21 @@ namespace Carbon.Plugins
                         float Value = Read();
                         if (Single.IsNaN(Value) || Single.IsInfinity(Value)) throw new FacadeException("Player " + Name + " is invalid");
                         return new[] {Value.ToString("R", CultureInfo.InvariantCulture)};
+                    }
+                    case 25: {
+                        return new[] {World.Items.Resolve(Fields[0]) == null ? "0" : "1"};
+                    }
+                    case 26: case 27: {
+                        FacadePolicy.ItemShortName(Fields[2]);
+                        long Amount = Code == 27 ? FacadePolicy.ExactPositiveInteger(Fields[3], "item amount") : 0;
+                        var View = World.Players.Resolve(Fields[0], Fields[1]);
+                        if (View == null) throw new FacadeException("Player is no longer connected");
+                        object Definition = World.Items.Resolve(Fields[2]);
+                        if (Definition == null) return new[] {"0"};
+                        if (View.Inventory == null) throw new FacadeException("Player inventory is unavailable");
+                        PhysicalInventorySource Source = View.Inventory();
+                        if (Code == 27) return new[] {PhysicalInventoryObservation.Has(Source, Definition, Amount) ? "1" : "0"};
+                        return new[] {PhysicalInventoryObservation.Count(Source, Definition).ToString(CultureInfo.InvariantCulture)};
                     }
                     case 6: {
                         if (Fields[0] != "added" && Fields[0] != "removing") throw new FacadeException("unknown signal");

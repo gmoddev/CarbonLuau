@@ -47,23 +47,37 @@ namespace Carbon.Plugins
                 BasePlayer.activePlayerList.Add(Player);
                 Player.OverrideMaxHealth(250f, false, false); Player.health = 190.25f;
                 Player.OverrideMaxHealth(145.5f, false, false);
-                string Script = "local P=game:GetService('Players'); local C=game:GetService('Commands'); P.PlayerAdded:Connect(function(V) assert(V.UserId=='"+UserId+"' and V.IsConnected and V.Health==190.25 and V.MaxHealth==145.5); V:SendMessage('welcome fixture'); print('joined') end); P.PlayerRemoving:Connect(function(V) assert(not V.IsConnected); assert(not pcall(function() return V.Health end)); assert(not pcall(function() return V.MaxHealth end)); assert(not pcall(function() V:SendMessage('stale') end)); print('removed') end); C:Register('hello',{permission='carbonluau.example.hello'},function(Ctx) assert(Ctx.Player.UserId=='"+UserId+"'); Ctx.Player:SendMessage('hello fixture'); print('A '..(Ctx.Arguments[1] or 'empty')) end)";
+                Item ScrapMainA = ItemManager.CreateByName("scrap", 40), ScrapMainB = ItemManager.CreateByName("scrap", 60), ScrapBelt = ItemManager.CreateByName("scrap", 20);
+                Item HoodieMain = ItemManager.CreateByName("hoodie", 1), HoodieBelt = ItemManager.CreateByName("hoodie", 1), HoodieWear = ItemManager.CreateByName("hoodie", 1);
+                Check(ScrapMainA != null && ScrapMainB != null && ScrapBelt != null && HoodieMain != null && HoodieBelt != null && HoodieWear != null,
+                    "create exact-build inventory fixture items");
+                Check(ScrapMainA.MoveToContainer(Player.inventory.containerMain, 0, false) && ScrapMainB.MoveToContainer(Player.inventory.containerMain, 1, false) &&
+                    ScrapBelt.MoveToContainer(Player.inventory.containerBelt, 0, false) && HoodieMain.MoveToContainer(Player.inventory.containerMain, 2, false) &&
+                    HoodieBelt.MoveToContainer(Player.inventory.containerBelt, 1, false) && HoodieWear.MoveToContainer(Player.inventory.containerWear, 0, false),
+                    "place physical main/belt/wear fixture stacks");
+                string Script = "local P=game:GetService('Players'); local I=game:GetService('Items'); local C=game:GetService('Commands'); assert(I:Exists('scrap') and I:Exists('hoodie') and not I:Exists('carbonluau.unknown')); P.PlayerAdded:Connect(function(V) assert(V.UserId=='"+UserId+"' and V.IsConnected and V.Health==190.25 and V.MaxHealth==145.5 and V:CountItem('scrap')==120 and V:CountItem('hoodie')==3 and V:HasItem('scrap',120)); V:SendMessage('welcome fixture'); print('joined') end); P.PlayerRemoving:Connect(function(V) assert(not V.IsConnected); assert(not pcall(function() return V.Health end)); assert(not pcall(function() return V.MaxHealth end)); assert(not pcall(function() return V:CountItem('scrap') end)); assert(not pcall(function() return V:HasItem('scrap') end)); assert(not pcall(function() V:SendMessage('stale') end)); print('removed') end); C:Register('hello',{permission='carbonluau.example.hello'},function(Ctx) assert(Ctx.Player.UserId=='"+UserId+"'); Ctx.Player:SendMessage('hello fixture'); print('A '..(Ctx.Arguments[1] or 'empty')) end)";
                 Load(Script);
                 OnPlayerConnected(Player);
                 Check(Drain() == "joined\n", "real host hook/proxy/ChatMessage path");
                 Puts(Prefix + "PASS real BasePlayer + Network.Connection; future join; bounded ChatMessage path returned (no connected client or delivery claim)");
+                var InventoryRead = Host.Execute("player1c.live", "local P=game:GetService('Players'):GetPlayers()[1]; local I=game:GetService('Items'); assert(I:Exists('wood') and I:Exists('rifle.ak') and not I:Exists('carbonluau.unknown')); assert(P:CountItem('scrap')==120 and P:CountItem('hoodie')==3 and P:CountItem('carbonluau.unknown')==0); assert(P:HasItem('scrap') and P:HasItem('scrap',120) and not P:HasItem('scrap',121))");
+                Check(InventoryRead.Status == RuntimeStatus.OK, "live main/belt/wear physical inventory read: " + InventoryRead.Error);
+                ScrapMainA.amount = 41;
+                InventoryRead = Host.Execute("player1c.changed", "local P=game:GetService('Players'):GetPlayers()[1]; assert(P:CountItem('scrap')==121 and P:HasItem('scrap',121))");
+                Check(InventoryRead.Status == RuntimeStatus.OK, "live inventory change between reads: " + InventoryRead.Error);
+                Puts(Prefix + "PASS live Items lookup and bounded physical main/belt/wear inventory reads, multiple stacks and changing quantity");
                 Player.OverrideMaxHealth(212.75f, false, false); Player.health = 0.125f;
                 var Vitals = Host.Execute("player1b.live", "local P=game:GetService('Players'):GetPlayers()[1]; assert(P.Health==0.125 and P.MaxHealth==212.75)");
                 Check(Vitals.Status == RuntimeStatus.OK, "dynamic live Health/MaxHealth read: " + Vitals.Error);
                 Player.SetPlayerFlag(BasePlayer.PlayerFlags.Sleeping, true);
                 Player.SetPlayerFlag(BasePlayer.PlayerFlags.Wounded, true);
-                Vitals = Host.Execute("player1b.states", "local P=game:GetService('Players'):GetPlayers()[1]; assert(P.Health==0.125 and P.MaxHealth==212.75)");
+                Vitals = Host.Execute("player1b.states", "local P=game:GetService('Players'):GetPlayers()[1]; assert(P.Health==0.125 and P.MaxHealth==212.75 and P:CountItem('scrap')==121)");
                 Check(Vitals.Status == RuntimeStatus.OK, "sleeping/wounded live Health/MaxHealth read: " + Vitals.Error);
                 Player.SetPlayerFlag(BasePlayer.PlayerFlags.Sleeping, false);
                 Player.SetPlayerFlag(BasePlayer.PlayerFlags.Wounded, false);
                 Player.health = 0f; Player.lifestate = BaseCombatEntity.LifeState.Dead;
                 Check(Player.IsDead(), "controlled Player entered dead-but-host-valid state");
-                Vitals = Host.Execute("player1b.dead", "local P=game:GetService('Players'):GetPlayers()[1]; assert(P.Health==0 and P.MaxHealth==212.75)");
+                Vitals = Host.Execute("player1b.dead", "local P=game:GetService('Players'):GetPlayers()[1]; assert(P.Health==0 and P.MaxHealth==212.75 and P:CountItem('scrap')==121 and P:HasItem('hoodie',3))");
                 Check(Vitals.Status == RuntimeStatus.OK, "dead-but-host-valid live Health/MaxHealth read: " + Vitals.Error);
                 Player.lifestate = BaseCombatEntity.LifeState.Alive;
                 Player.health = 190.25f; Player.OverrideMaxHealth(145.5f, false, false);
@@ -93,7 +107,7 @@ namespace Carbon.Plugins
                 string Reason; Check(Manager.RegisterCommand(Foreign, out Reason), "install owned collision fixture");
                 var BeforeCollision = Manager.Find("hello");
                 Check(Host.Reload("game:GetService('Commands'):Register('clforeign',{},function() end)").Status != RuntimeStatus.OK && Object.ReferenceEquals(Manager.Find("hello"), BeforeCollision), "foreign collision preserves active state");
-                Load("local P=game:GetService('Players'); local Old=P:GetPlayers()[1]; assert(Old.IsConnected and Old.Health==190.25 and Old.MaxHealth==145.5); assert(not pcall(function() Old:SendMessage('provisional') end)); P.PlayerRemoving:Connect(function(V) assert(not Old.IsConnected and not V.IsConnected); assert(not pcall(function() return Old.Health end)); assert(not pcall(function() return Old.MaxHealth end)); print('old invalid') end); P.PlayerAdded:Connect(function(V) assert(not Old.IsConnected and V.IsConnected and Old~=V and V.Health==190.25 and V.MaxHealth==145.5); print('new lifetime') end)");
+                Load("local P=game:GetService('Players'); local Old=P:GetPlayers()[1]; assert(Old.IsConnected and Old.Health==190.25 and Old.MaxHealth==145.5 and Old:CountItem('scrap')==121); assert(not pcall(function() Old:SendMessage('provisional') end)); P.PlayerRemoving:Connect(function(V) assert(not Old.IsConnected and not V.IsConnected); assert(not pcall(function() return Old.Health end)); assert(not pcall(function() return Old.MaxHealth end)); assert(not pcall(function() return Old:CountItem('scrap') end)); print('old invalid') end); P.PlayerAdded:Connect(function(V) assert(not Old.IsConnected and V.IsConnected and Old~=V and V.Health==190.25 and V.MaxHealth==145.5 and V:CountItem('scrap')==121); print('new lifetime') end)");
                 OnPlayerDisconnected(Player, "controlled fixture");
                 Player.net.connection = null;
                 Check(Drain() == "old invalid\n", "disconnect invalidates retained proxy");
