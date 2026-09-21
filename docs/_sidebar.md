@@ -9,6 +9,7 @@
   - [GUI Foundation 1A](GuiFoundation1A.md)
   - [GUI Foundation 1B](GuiFoundation1B.md)
   - [GUI Foundation 1C](GuiFoundation1C.md)
+  - [GUI Foundation 1D](GuiFoundation1D.md)
 - API
   - [Overview](api/README.md)
   - [Globals](api/Globals.md)

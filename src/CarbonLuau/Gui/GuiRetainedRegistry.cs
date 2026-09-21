@@ -43,6 +43,14 @@ namespace Carbon.Plugins
                     default: throw new FacadeException("unsupported GUI value kind");
                 }
             }
+            internal bool SameAs(GuiStoredValue Other)
+            {
+                if (Other == null || Kind != Other.Kind || Text != Other.Text || Boolean != Other.Boolean || Integer != Other.Integer) return false;
+                if (NumberValues == null || Other.NumberValues == null) return NumberValues == Other.NumberValues;
+                if (NumberValues.Length != Other.NumberValues.Length) return false;
+                for (int Index = 0; Index < NumberValues.Length; ++Index) if (NumberValues[Index] != Other.NumberValues[Index]) return false;
+                return true;
+            }
             private static string Format(double Value) { return Value.ToString("R", CultureInfo.InvariantCulture); }
         }
 
@@ -67,6 +75,7 @@ namespace Carbon.Plugins
             internal readonly Dictionary<ulong, GuiRetainedNode> Nodes = new Dictionary<ulong, GuiRetainedNode>();
             internal readonly Dictionary<string, ulong> Connections = new Dictionary<string, ulong>(StringComparer.Ordinal);
             internal readonly Dictionary<string, GuiPresentation> Presentations = new Dictionary<string, GuiPresentation>(StringComparer.Ordinal);
+            internal readonly Dictionary<ulong, GuiScreenSynchronization> Synchronization = new Dictionary<ulong, GuiScreenSynchronization>();
             internal readonly Queue<GuiBackendTarget> PendingDestroys = new Queue<GuiBackendTarget>();
             internal int Screens;
             internal GuiRetainedState Copy()
@@ -75,6 +84,7 @@ namespace Carbon.Plugins
                 foreach (var Value in Nodes) Result.Nodes.Add(Value.Key, Value.Value.Copy());
                 foreach (var Value in Connections) Result.Connections.Add(Value.Key, Value.Value);
                 foreach (var Value in Presentations) Result.Presentations.Add(Value.Key, Value.Value.Copy());
+                foreach (var Value in Synchronization) Result.Synchronization.Add(Value.Key, Value.Value.Copy());
                 foreach (GuiBackendTarget Value in PendingDestroys) Result.PendingDestroys.Enqueue(Value);
                 return Result;
             }
@@ -143,6 +153,8 @@ namespace Carbon.Plugins
             private GuiRetainedState State = new GuiRetainedState();
             private ulong NextObjectId = 1;
             private ulong NextPresentationEpoch = 1;
+            private string PresentationFlushCursor;
+            private bool PreferDestroy;
             private bool Disposed;
 
             internal GuiRetainedRegistry(GuiRetainedWorld World, ulong VmGenerationId, ulong DomainLifetimeId)
@@ -159,7 +171,7 @@ namespace Carbon.Plugins
             internal bool HasWork {
                 get {
                     if (State.PendingDestroys.Count != 0) return true;
-                    foreach (GuiPresentation Value in State.Presentations.Values) if (Value.NeedsReplace) return true;
+                    foreach (GuiPresentation Value in State.Presentations.Values) if (PresentationNeedsWork(Value)) return true;
                     return false;
                 }
             }
@@ -267,7 +279,8 @@ namespace Carbon.Plugins
                 World.Adjust(1); ulong ObjectId = NextObjectId++;
                 var Result = new GuiRetainedNode(new GuiObjectIdentity(VmGenerationId, DomainLifetimeId, ObjectId), Descriptor.Id);
                 ApplyDefaults(Result); State.Nodes.Add(ObjectId, Result); if (Descriptor.Id == GuiClassId.ScreenGui) State.Screens++;
-                if (Parent != null) { Attach(Result, Parent); MarkScreenForFull(RootScreen(Parent)); }
+                if (Descriptor.Id == GuiClassId.ScreenGui) State.Synchronization.Add(ObjectId, new GuiScreenSynchronization());
+                if (Parent != null) { Attach(Result, Parent); MarkStructural(RootScreen(Parent)); }
                 return Result;
             }
 
@@ -291,7 +304,9 @@ namespace Carbon.Plugins
                 foreach (ulong OldId in SourceIds) foreach (ulong OldChild in State.Nodes[OldId].Children) {
                     GuiRetainedNode Parent = Map[OldId], Child = Map[OldChild]; Parent.Children.Add(Child.Identity.GuiObjectId); Child.ParentId = Parent.Identity.GuiObjectId;
                 }
-                State.Screens += ScreenCopies; return Map[Source.Identity.GuiObjectId];
+                State.Screens += ScreenCopies;
+                if (ScreenCopies != 0) State.Synchronization.Add(Map[Source.Identity.GuiObjectId].Identity.GuiObjectId, new GuiScreenSynchronization());
+                return Map[Source.Identity.GuiObjectId];
             }
 
             private string[] Destroy(ulong ObjectId)
@@ -313,7 +328,8 @@ namespace Carbon.Plugins
                     }
                     State.Nodes.Remove(RemovedId);
                 }
-                World.Adjust(-RemovedIds.Count); if (AffectedScreen != null && Root.ClassId != GuiClassId.ScreenGui) MarkScreenForFull(AffectedScreen);
+                if (Root.ClassId == GuiClassId.ScreenGui) State.Synchronization.Remove(Root.Identity.GuiObjectId);
+                World.Adjust(-RemovedIds.Count); if (AffectedScreen != null && Root.ClassId != GuiClassId.ScreenGui) MarkStructural(AffectedScreen);
                 return RemovedConnections.ToArray();
             }
 
@@ -323,6 +339,7 @@ namespace Carbon.Plugins
                 if (!GuiSchema.TryGetProperty(Node.ClassId, Name, out Use) || !Use.Writable) throw new FacadeException("GUI property is unknown or read-only");
                 if (Use.Descriptor.Id == GuiPropertyId.Parent) { SetParent(Node, Fields, KindIndex); return; }
                 GuiStoredValue Value = ParseValue(Use.Descriptor, Fields, KindIndex);
+                GuiStoredValue Existing = Node.Properties[Use.Descriptor.Id]; if (Existing.SameAs(Value)) return;
                 if (Use.Descriptor.Id == GuiPropertyId.Text) {
                     GuiRetainedNode Screen = RootScreen(Node); if (Screen != null) {
                         int Current = ScreenTextBytes(Screen); int Old = FacadePolicy.Utf8.GetByteCount(Node.Properties[GuiPropertyId.Text].Text);
@@ -331,7 +348,9 @@ namespace Carbon.Plugins
                     }
                 }
                 Node.Properties[Use.Descriptor.Id] = Value;
-                if (Use.Descriptor.MutationKind == GuiMutationKind.Structural) MarkScreenForFull(RootScreen(Node));
+                GuiRetainedNode ScreenValue = RootScreen(Node);
+                if (Use.Descriptor.MutationKind == GuiMutationKind.Structural) MarkStructural(ScreenValue);
+                else if (Use.Descriptor.MutationKind == GuiMutationKind.Patchable) MarkPatchable(ScreenValue, Node.Identity.GuiObjectId, Use.Descriptor.Id);
             }
 
             private void SetParent(GuiRetainedNode Child, string[] Fields, int KindIndex)
@@ -350,7 +369,7 @@ namespace Carbon.Plugins
                 GuiRetainedNode OldScreen = RootScreen(Child), NewScreen = Parent == null ? null : RootScreen(Parent);
                 if (Child.ParentId.HasValue) State.Nodes[Child.ParentId.Value].Children.Remove(Child.Identity.GuiObjectId);
                 Child.ParentId = null; if (Parent != null) Attach(Child, Parent);
-                MarkScreenForFull(OldScreen); if (NewScreen != OldScreen) MarkScreenForFull(NewScreen);
+                MarkStructural(OldScreen); if (NewScreen != OldScreen) MarkStructural(NewScreen);
             }
 
             private void Show(GuiRetainedNode Screen, string PlayerToken, string PlayerUserId)
@@ -358,7 +377,7 @@ namespace Carbon.Plugins
                 RequireScreen(Screen); if (World.Resolve(PlayerToken, PlayerUserId) == null) throw new FacadeException("Player is no longer connected");
                 string Key = PresentationKey(Screen.Identity.GuiObjectId, PlayerToken); GuiPresentation Existing;
                 if (State.Presentations.TryGetValue(Key, out Existing)) {
-                    if (Existing.SynchronizationUncertain) Existing.NeedsReplace = true;
+                    if (Existing.SynchronizationUncertain) { Existing.NeedsFullResync = true; Existing.ProjectionBlockedRevision = 0; }
                     return;
                 }
                 int Viewers = 0; foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) Viewers++;
@@ -378,46 +397,84 @@ namespace Carbon.Plugins
                 if (!State.Presentations.TryGetValue(Key, out Presentation)) return;
                 State.Presentations.Remove(Key); World.RemovePresentation(Presentation.PlayerToken);
                 if (Presentation.WasSent) State.PendingDestroys.Enqueue(Presentation.Target);
+                PruneSynchronization(Screen.Identity.GuiObjectId);
             }
             internal void Disconnect(PlayerLifetime Player)
             {
                 RequireLive(); if (Player == null) return;
                 var Keys = new List<string>(); foreach (var Value in State.Presentations) if (Value.Value.PlayerToken == Player.Token) Keys.Add(Value.Key);
-                foreach (string Key in Keys) { World.RemovePresentation(State.Presentations[Key].PlayerToken); State.Presentations.Remove(Key); }
+                var Screens = new HashSet<ulong>();
+                foreach (string Key in Keys) { GuiPresentation Value = State.Presentations[Key]; Screens.Add(Value.ScreenId); World.RemovePresentation(Value.PlayerToken); State.Presentations.Remove(Key); }
                 if (State.PendingDestroys.Count != 0) {
                     var Keep = new Queue<GuiBackendTarget>(); while (State.PendingDestroys.Count != 0) {
                         GuiBackendTarget Target = State.PendingDestroys.Dequeue(); if (Target.ExactPlayerConnectionToken != Player.Token) Keep.Enqueue(Target);
                     }
                     while (Keep.Count != 0) State.PendingDestroys.Enqueue(Keep.Dequeue());
                 }
+                foreach (ulong ScreenId in Screens) PruneSynchronization(ScreenId);
             }
             internal int FlushOne(int RemainingBytes)
+            { return FlushOne(RemainingBytes, 0, false); }
+            internal int FlushOne(int RemainingBytes, ulong FlushCycle)
+            { return FlushOne(RemainingBytes, FlushCycle, true); }
+            private int FlushOne(int RemainingBytes, ulong FlushCycle, bool TrackWorldCycle)
             {
                 RequireLive(); if (Publications.Count != 0) return 0;
-                if (State.PendingDestroys.Count != 0) { World.Backend.Destroy(State.PendingDestroys.Dequeue()); return 0; }
-                string SelectedKey = null; GuiPresentation Selected = null;
-                foreach (var Value in State.Presentations) if (Value.Value.NeedsReplace && (SelectedKey == null || StringComparer.Ordinal.Compare(Value.Key, SelectedKey) < 0)) {
-                    SelectedKey = Value.Key; Selected = Value.Value;
+                string SelectedKey; GuiPresentation Selected; bool HasPresentation = SelectPresentation(FlushCycle, TrackWorldCycle, out SelectedKey, out Selected);
+                if (State.PendingDestroys.Count != 0 && (PreferDestroy || !HasPresentation)) {
+                    GuiBackendTarget Target = State.PendingDestroys.Peek(); int DestroyBytes = World.Backend.MeasureDestroy(Target);
+                    if (DestroyBytes > RemainingBytes) return -DestroyBytes;
+                    State.PendingDestroys.Dequeue(); try { World.Backend.Destroy(Target); } catch { }
+                    PreferDestroy = false; return DestroyBytes;
                 }
-                if (Selected == null) return 0;
+                if (!HasPresentation) return Int32.MinValue;
+                if (TrackWorldCycle) Selected.LastAttemptCycle = FlushCycle;
+                PresentationFlushCursor = SelectedKey; PreferDestroy = true;
                 if (World.Resolve(Selected.PlayerToken, Selected.PlayerUserId) == null) {
-                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); return 0;
+                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); PruneSynchronization(Selected.ScreenId); return 0;
                 }
                 GuiRetainedNode Screen;
                 if (!State.Nodes.TryGetValue(Selected.ScreenId, out Screen)) {
-                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); return 0;
+                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); State.Synchronization.Remove(Selected.ScreenId); return 0;
                 }
-                GuiRenderPlan Plan;
-                try { Plan = GuiRenderCompiler.Compile(State, Screen, Selected, Limits); }
-                catch { Selected.NeedsReplace = false; Selected.SynchronizationUncertain = true; return 0; }
-                if (Plan.EstimatedSerializedBytes > RemainingBytes) return -Plan.EstimatedSerializedBytes;
-                GuiBackendResult Result = World.Backend.Replace(Selected.Target, Plan);
-                if (Result.Code == GuiBackendResultCode.TargetUnavailable) {
-                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken);
-                } else if (Result.Accepted) {
-                    Selected.WasSent = true; Selected.NeedsReplace = false; Selected.SynchronizationUncertain = false;
-                } else { Selected.NeedsReplace = false; Selected.SynchronizationUncertain = true; }
-                return Plan.EstimatedSerializedBytes;
+                GuiScreenSynchronization Synchronization = State.Synchronization[Selected.ScreenId]; ulong Revision = Synchronization.Revision;
+                bool Full = Selected.NeedsFullResync || !Selected.WasSent || Synchronization.FullRebuildRequired ||
+                    Selected.SuccessfulPatchBatches >= Limits.PatchBatchesBeforeFull;
+                GuiRenderPlan Plan = null; GuiRenderPatch Patch = null; int Bytes;
+                if (!Full) {
+                    try { Patch = GuiRenderCompiler.CompilePatch(State, Screen, Selected, Synchronization, Limits); }
+                    catch (GuiFullRebuildRequiredException) { Full = true; }
+                    catch (InvalidOperationException) { Full = true; }
+                }
+                if (Full) {
+                    try { Plan = GuiRenderCompiler.Compile(State, Screen, Selected, Limits); Bytes = World.Backend.MeasureReplace(Selected.Target, Plan); }
+                    catch {
+                        Selected.NeedsFullResync = false; Selected.SynchronizationUncertain = true;
+                        Selected.ProjectionBlockedRevision = Revision; return 0;
+                    }
+                } else {
+                    try { Bytes = World.Backend.MeasureUpdate(Selected.Target, Patch); }
+                    catch {
+                        Selected.NeedsFullResync = true; Selected.SuccessfulPatchBatches = 0;
+                        return 0;
+                    }
+                }
+                if (Bytes > RemainingBytes) return -Bytes;
+                GuiBackendResult Result;
+                try { Result = Full ? World.Backend.Replace(Selected.Target, Plan) : World.Backend.Update(Selected.Target, Patch); }
+                catch { Result = GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "GUI backend send failed"); }
+                if (Result.Accepted) {
+                    Selected.WasSent = true; Selected.SentRevision = Revision; Selected.NeedsFullResync = false;
+                    Selected.SynchronizationUncertain = false; Selected.ProjectionBlockedRevision = 0;
+                    Selected.LastNeedsCursor = GuiRenderCompiler.NeedsCursorFor(State, Screen);
+                    Selected.SuccessfulPatchBatches = Full ? 0 : Selected.SuccessfulPatchBatches + 1;
+                    PruneSynchronization(Selected.ScreenId);
+                } else if (!Full || Result.Code != GuiBackendResultCode.TargetUnavailable || World.Resolve(Selected.PlayerToken, Selected.PlayerUserId) != null) {
+                    Selected.NeedsFullResync = true; Selected.SynchronizationUncertain = true; Selected.SuccessfulPatchBatches = 0;
+                } else {
+                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); PruneSynchronization(Selected.ScreenId);
+                }
+                return Bytes;
             }
             private void RemovePresentationsForScreen(ulong ScreenId)
             {
@@ -426,11 +483,66 @@ namespace Carbon.Plugins
                     GuiPresentation Presentation = State.Presentations[Key]; State.Presentations.Remove(Key); World.RemovePresentation(Presentation.PlayerToken);
                     if (Presentation.WasSent) State.PendingDestroys.Enqueue(Presentation.Target);
                 }
+                PruneSynchronization(ScreenId);
             }
-            private void MarkScreenForFull(GuiRetainedNode Screen)
+            private bool SelectPresentation(ulong FlushCycle, bool TrackWorldCycle, out string SelectedKey, out GuiPresentation Selected)
             {
-                if (Screen == null) return;
-                foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) Value.NeedsReplace = true;
+                SelectedKey = null; Selected = null;
+                foreach (var Value in State.Presentations) if ((!TrackWorldCycle || Value.Value.LastAttemptCycle != FlushCycle) && PresentationNeedsWork(Value.Value) &&
+                    StringComparer.Ordinal.Compare(Value.Key, PresentationFlushCursor ?? "") > 0 &&
+                    (SelectedKey == null || StringComparer.Ordinal.Compare(Value.Key, SelectedKey) < 0)) { SelectedKey = Value.Key; Selected = Value.Value; }
+                if (Selected != null) return true;
+                foreach (var Value in State.Presentations) if ((!TrackWorldCycle || Value.Value.LastAttemptCycle != FlushCycle) && PresentationNeedsWork(Value.Value) &&
+                    (SelectedKey == null || StringComparer.Ordinal.Compare(Value.Key, SelectedKey) < 0)) { SelectedKey = Value.Key; Selected = Value.Value; }
+                return Selected != null;
+            }
+            private bool PresentationNeedsWork(GuiPresentation Presentation)
+            {
+                GuiScreenSynchronization Synchronization;
+                if (!State.Synchronization.TryGetValue(Presentation.ScreenId, out Synchronization) ||
+                    Presentation.ProjectionBlockedRevision == Synchronization.Revision) return false;
+                return Presentation.NeedsFullResync || Presentation.SentRevision < Synchronization.Revision;
+            }
+            private void MarkStructural(GuiRetainedNode Screen)
+            {
+                if (Screen == null) return; GuiScreenSynchronization Synchronization = Advance(Screen.Identity.GuiObjectId);
+                Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = HasPresentation(Screen.Identity.GuiObjectId);
+                foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) {
+                    Value.NeedsFullResync = true; Value.ProjectionBlockedRevision = 0; Value.SuccessfulPatchBatches = 0;
+                }
+            }
+            private void MarkPatchable(GuiRetainedNode Screen, ulong ObjectId, GuiPropertyId Property)
+            {
+                if (Screen == null) return; GuiScreenSynchronization Synchronization = Advance(Screen.Identity.GuiObjectId);
+                if (!HasPresentation(Screen.Identity.GuiObjectId)) { Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = false; return; }
+                if (Synchronization.FullRebuildRequired) return;
+                HashSet<GuiPropertyId> Properties;
+                if (!Synchronization.DirtyObjects.TryGetValue(ObjectId, out Properties)) {
+                    if (TrackedDirtyObjects() >= Limits.MaxTrackedDirtyObjectsPerDomain) {
+                        Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = true;
+                        foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) Value.NeedsFullResync = true;
+                        return;
+                    }
+                    Properties = new HashSet<GuiPropertyId>(); Synchronization.DirtyObjects.Add(ObjectId, Properties);
+                }
+                Properties.Add(Property);
+                foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) Value.ProjectionBlockedRevision = 0;
+            }
+            private GuiScreenSynchronization Advance(ulong ScreenId)
+            {
+                GuiScreenSynchronization Result = State.Synchronization[ScreenId];
+                if (Result.Revision == ulong.MaxValue) throw new FacadeException("ScreenGui revision exhausted");
+                Result.Revision++; return Result;
+            }
+            private int TrackedDirtyObjects()
+            { int Result = 0; foreach (GuiScreenSynchronization Value in State.Synchronization.Values) Result += Value.DirtyObjects.Count; return Result; }
+            private bool HasPresentation(ulong ScreenId)
+            { foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == ScreenId) return true; return false; }
+            private void PruneSynchronization(ulong ScreenId)
+            {
+                GuiScreenSynchronization Synchronization; if (!State.Synchronization.TryGetValue(ScreenId, out Synchronization)) return;
+                foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == ScreenId && Value.SentRevision < Synchronization.Revision) return;
+                Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = false;
             }
             private static void RequireScreen(GuiRetainedNode Screen)
             { if (Screen.ClassId != GuiClassId.ScreenGui) throw new FacadeException("Show, Hide and IsShown require ScreenGui"); }

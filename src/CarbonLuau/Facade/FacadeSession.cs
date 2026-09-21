@@ -17,6 +17,7 @@ namespace Carbon.Plugins
             public FacadeSession Active { get; private set; }
             private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
             private long GuiFlushCursor;
+            private ulong GuiFlushCycle;
             public long PublicationVersion { get; private set; }
             public bool HasWork {
                 get {
@@ -85,6 +86,7 @@ namespace Carbon.Plugins
             internal void FlushGui(System.Diagnostics.Stopwatch Watch, int Milliseconds)
             {
                 Players.CheckOwner(); int Sends = 0, Bytes = 0, WithoutProgress = 0;
+                if (GuiFlushCycle == ulong.MaxValue) GuiFlushCycle = 0; GuiFlushCycle++;
                 double DeadlineMilliseconds = Math.Min(Milliseconds,
                     Watch.Elapsed.TotalMilliseconds + Gui.Limits.GuiFlushBudgetMicroseconds / 1000.0);
                 var SessionValues = Sessions();
@@ -97,7 +99,8 @@ namespace Carbon.Plugins
                         (Selected == null || Session.DomainLifetimeId < Selected.DomainLifetimeId)) Selected = Session;
                     if (Selected == null) break;
                     GuiFlushCursor = Selected.DomainLifetimeId;
-                    int Used = Selected.Gui.FlushOne(Gui.Limits.MaxSerializedBytesPerFlush - Bytes);
+                    int Used = Selected.Gui.FlushOne(Gui.Limits.MaxSerializedBytesPerFlush - Bytes, GuiFlushCycle);
+                    if (Used == Int32.MinValue) { if (++WithoutProgress >= SessionValues.Count) break; continue; }
                     if (Used < 0) { if (++WithoutProgress >= SessionValues.Count) break; continue; }
                     WithoutProgress = 0; Sends++; Bytes += Used;
                 }

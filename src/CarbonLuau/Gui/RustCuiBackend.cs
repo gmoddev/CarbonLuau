@@ -21,6 +21,12 @@ namespace Carbon.Plugins
             private readonly IRustCuiTransport Transport;
             internal RustCuiBackend(GuiLimits Limits, IRustCuiTransport Transport)
             { this.Limits = Limits ?? throw new ArgumentNullException("Limits"); this.Transport = Transport ?? throw new ArgumentNullException("Transport"); }
+            public int MeasureReplace(GuiBackendTarget Target, GuiRenderPlan Plan)
+            { return Measure(Target, Plan == null ? null : Plan.Elements, false, true); }
+            public int MeasureUpdate(GuiBackendTarget Target, GuiRenderPatch Patch)
+            { return Measure(Target, Patch == null ? null : Patch.Elements, true, false); }
+            public int MeasureDestroy(GuiBackendTarget Target)
+            { if (Target == null) throw new InvalidOperationException("backend target is required"); return GuiRenderValue.Utf8Bytes(Target.ClientRootId); }
             public GuiBackendResult Replace(GuiBackendTarget Target, GuiRenderPlan Plan)
             { return Send(Target, Plan == null ? null : Plan.Elements, false, true, GuiBackendOperationKind.Replace); }
             public GuiBackendResult Update(GuiBackendTarget Target, GuiRenderPatch Patch)
@@ -44,6 +50,14 @@ namespace Carbon.Plugins
                     string Message = Error.Message.Length > 200 ? "Rust CUI serialization failed" : Error.Message;
                     return GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, Message);
                 } catch { return GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "Rust CUI serialization/send failed"); }
+            }
+
+            private int Measure(GuiBackendTarget Target, GuiRenderElement[] Elements, bool Update, bool Replace)
+            {
+                if (Target == null || Elements == null || Elements.Length == 0) throw new InvalidOperationException("backend target and request are required");
+                int Bytes = GuiRenderValue.Utf8Bytes(Serialize(Elements, Update, Replace));
+                if (Bytes > Limits.MaxSerializedOperationBytes) throw new InvalidOperationException("Rust CUI payload exceeds the serialized operation bound");
+                return Bytes;
             }
 
             internal static string Serialize(GuiRenderElement[] Elements, bool Update, bool Replace)
@@ -70,9 +84,9 @@ namespace Carbon.Plugins
                 Writer.WritePropertyName("components"); Writer.WriteStartArray();
                 GuiRenderValue Background = Find(Properties, GuiRenderPropertyId.BackgroundColor, false);
                 if (Element.Kind == GuiRenderNodeKind.Container && Background != null) WriteColorComponent(Writer, "UnityEngine.UI.Image", Background);
-                else if (Element.Kind == GuiRenderNodeKind.Button) WriteButton(Writer, Background);
-                else if (Element.Kind == GuiRenderNodeKind.Text) WriteText(Writer, Properties);
-                WriteRect(Writer, Properties);
+                else if (Element.Kind == GuiRenderNodeKind.Button && (Background != null || !Update)) WriteButton(Writer, Background);
+                else if (Element.Kind == GuiRenderNodeKind.Text && (HasTextProperty(Properties) || !Update)) WriteText(Writer, Properties, Update);
+                if (HasRectProperty(Properties) || !Update) WriteRect(Writer, Properties, Update);
                 GuiRenderValue Cursor = Find(Properties, GuiRenderPropertyId.NeedsCursor, false);
                 if (Cursor != null && Require(Cursor, GuiRenderValueKind.Boolean).Boolean) {
                     Writer.WriteStartObject(); Write(Writer, "type", "NeedsCursor"); Writer.WriteEndObject();
@@ -90,28 +104,49 @@ namespace Carbon.Plugins
                 if (Background != null) Write(Writer, "color", Color(Require(Background, GuiRenderValueKind.Color).Color));
                 Writer.WriteEndObject();
             }
-            private static void WriteText(JsonTextWriter Writer, GuiRenderProperty[] Properties)
+            private static void WriteText(JsonTextWriter Writer, GuiRenderProperty[] Properties, bool Partial)
             {
                 Writer.WriteStartObject(); Write(Writer, "type", "UnityEngine.UI.Text");
-                Write(Writer, "text", Require(Find(Properties, GuiRenderPropertyId.Text, true), GuiRenderValueKind.String).Text);
-                Writer.WritePropertyName("fontSize"); Writer.WriteValue(Require(Find(Properties, GuiRenderPropertyId.FontSize, true), GuiRenderValueKind.Integer).Integer);
-                Write(Writer, "font", "robotocondensed-regular.ttf");
-                string X = Require(Find(Properties, GuiRenderPropertyId.TextXAlignment, true), GuiRenderValueKind.String).Text;
-                string Y = Require(Find(Properties, GuiRenderPropertyId.TextYAlignment, true), GuiRenderValueKind.String).Text;
-                Write(Writer, "align", Alignment(X, Y));
-                Write(Writer, "color", Color(Require(Find(Properties, GuiRenderPropertyId.TextColor, true), GuiRenderValueKind.Color).Color));
+                GuiRenderValue Value = Find(Properties, GuiRenderPropertyId.Text, false);
+                if (Value != null) Write(Writer, "text", Require(Value, GuiRenderValueKind.String).Text);
+                Value = Find(Properties, GuiRenderPropertyId.FontSize, false);
+                if (Value != null) { Writer.WritePropertyName("fontSize"); Writer.WriteValue(Require(Value, GuiRenderValueKind.Integer).Integer); }
+                if (!Partial) Write(Writer, "font", "robotocondensed-regular.ttf");
+                GuiRenderValue XValue = Find(Properties, GuiRenderPropertyId.TextXAlignment, false);
+                GuiRenderValue YValue = Find(Properties, GuiRenderPropertyId.TextYAlignment, false);
+                if (XValue != null || YValue != null) {
+                    string X = Require(XValue, GuiRenderValueKind.String).Text;
+                    string Y = Require(YValue, GuiRenderValueKind.String).Text;
+                    Write(Writer, "align", Alignment(X, Y));
+                }
+                Value = Find(Properties, GuiRenderPropertyId.TextColor, false);
+                if (Value != null) Write(Writer, "color", Color(Require(Value, GuiRenderValueKind.Color).Color));
                 Writer.WriteEndObject();
             }
-            private static void WriteRect(JsonTextWriter Writer, GuiRenderProperty[] Properties)
+            private static void WriteRect(JsonTextWriter Writer, GuiRenderProperty[] Properties, bool Partial)
             {
                 Writer.WriteStartObject(); Write(Writer, "type", "RectTransform");
-                Write(Writer, "anchormin", Vector(Require(Find(Properties, GuiRenderPropertyId.AnchorMin, true), GuiRenderValueKind.Vector2).Vector));
-                Write(Writer, "anchormax", Vector(Require(Find(Properties, GuiRenderPropertyId.AnchorMax, true), GuiRenderValueKind.Vector2).Vector));
-                Write(Writer, "offsetmin", Vector(Require(Find(Properties, GuiRenderPropertyId.OffsetMin, true), GuiRenderValueKind.Vector2).Vector));
-                Write(Writer, "offsetmax", Vector(Require(Find(Properties, GuiRenderPropertyId.OffsetMax, true), GuiRenderValueKind.Vector2).Vector));
-                Write(Writer, "pivot", Vector(Require(Find(Properties, GuiRenderPropertyId.Pivot, true), GuiRenderValueKind.Vector2).Vector));
+                WriteVector(Writer, Properties, GuiRenderPropertyId.AnchorMin, "anchormin", Partial);
+                WriteVector(Writer, Properties, GuiRenderPropertyId.AnchorMax, "anchormax", Partial);
+                WriteVector(Writer, Properties, GuiRenderPropertyId.OffsetMin, "offsetmin", Partial);
+                WriteVector(Writer, Properties, GuiRenderPropertyId.OffsetMax, "offsetmax", Partial);
+                WriteVector(Writer, Properties, GuiRenderPropertyId.Pivot, "pivot", Partial);
                 Writer.WriteEndObject();
             }
+            private static void WriteVector(JsonTextWriter Writer, GuiRenderProperty[] Properties, GuiRenderPropertyId Id, string Name, bool Partial)
+            {
+                GuiRenderValue Value = Find(Properties, Id, false);
+                if (Value != null) Write(Writer, Name, Vector(Require(Value, GuiRenderValueKind.Vector2).Vector));
+                else if (!Partial) Require(Value, GuiRenderValueKind.Vector2);
+            }
+            private static bool HasRectProperty(GuiRenderProperty[] Properties)
+            { return Find(Properties, GuiRenderPropertyId.AnchorMin, false) != null || Find(Properties, GuiRenderPropertyId.AnchorMax, false) != null ||
+                Find(Properties, GuiRenderPropertyId.OffsetMin, false) != null || Find(Properties, GuiRenderPropertyId.OffsetMax, false) != null ||
+                Find(Properties, GuiRenderPropertyId.Pivot, false) != null; }
+            private static bool HasTextProperty(GuiRenderProperty[] Properties)
+            { return Find(Properties, GuiRenderPropertyId.Text, false) != null || Find(Properties, GuiRenderPropertyId.TextColor, false) != null ||
+                Find(Properties, GuiRenderPropertyId.FontSize, false) != null || Find(Properties, GuiRenderPropertyId.TextXAlignment, false) != null ||
+                Find(Properties, GuiRenderPropertyId.TextYAlignment, false) != null; }
             private static GuiRenderValue Find(GuiRenderProperty[] Properties, GuiRenderPropertyId Id, bool Required)
             {
                 foreach (GuiRenderProperty Property in Properties) if (Property.Id == Id) return Property.Value;

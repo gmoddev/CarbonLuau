@@ -27,6 +27,13 @@ namespace Carbon.Plugins
             private readonly List<Call> CallValues = new List<Call>();
             private long NextSequence = 1;
 
+            public int MeasureReplace(GuiBackendTarget Target, GuiRenderPlan Plan)
+            { Required(Target, Plan); return Plan.EstimatedSerializedBytes; }
+            public int MeasureUpdate(GuiBackendTarget Target, GuiRenderPatch Patch)
+            { Required(Target, Patch); return Patch.EstimatedSerializedBytes; }
+            public int MeasureDestroy(GuiBackendTarget Target)
+            { if (Target == null) throw new InvalidOperationException("backend target is required"); return GuiRenderValue.Utf8Bytes(Target.ClientRootId); }
+
             internal void FailNext(GuiBackendOperationKind Kind, GuiBackendResultCode Code, string Diagnostic)
             {
                 if (Code == GuiBackendResultCode.Accepted || Code == GuiBackendResultCode.TargetUnavailable)

@@ -164,9 +164,10 @@ internal static class GuiFoundation1CTests
         var Gui = new Runtime.GuiRetainedRegistry(new Runtime.GuiRetainedWorld(Limits, Players.Directory,
             new Runtime.RustCuiBackend(Limits, TransportValue)), 4, 5);
         ulong Screen = Id(Create(Gui, "ScreenGui")); Show(Gui, Screen, Player); Gui.FlushOne(Limits.MaxSerializedBytesPerFlush);
-        Check(Gui.PresentationCount == 0 && !ShownAfterReconnect(Gui, Screen, Players), "target-unavailable send drops desired presentation");
-        Show(Gui, Screen, Player); Players.Directory.Disconnect(Player.UserId, Player.Identity); Gui.FlushOne(Limits.MaxSerializedBytesPerFlush);
-        Check(Gui.PresentationCount == 0 && TransportValue.Replaces == 1, "stale exact connection is dropped before backend send");
+        Check(Gui.PresentationCount == 1 && ShownAfterReconnect(Gui, Screen, Players), "transient target-unavailable result preserves desired presentation");
+        Gui.FlushOne(Limits.MaxSerializedBytesPerFlush); Check(TransportValue.Replaces == 2, "target-unavailable presentation retries one bounded full replacement");
+        Players.Directory.Disconnect(Player.UserId, Player.Identity); Create(Gui, "Frame", Screen); Gui.FlushOne(Limits.MaxSerializedBytesPerFlush);
+        Check(Gui.PresentationCount == 0 && TransportValue.Replaces == 2, "stale exact connection is dropped before backend send");
         Gui.Dispose();
     }
 

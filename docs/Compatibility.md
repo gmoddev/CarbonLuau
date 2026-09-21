@@ -331,6 +331,26 @@ command, interaction limits or Activated ingress/delivery. Authenticated-client
 evidence remains mandatory for visual layout, cursor, click and client
 reconciliation claims. The GUI package/scripting identity remains unassigned.
 
+### GUI Foundation 1D evidence contract
+
+[GUI Foundation 1D](GuiFoundation1D.md) implements committed ScreenGui revisions,
+bounded property dirty state, coalesced Rust CUI `update=true` patches,
+structural full replacement, periodic full reconciliation and one shared
+owner-thread post-Luau GUI flush. Its affected evidence is patch and structural
+classification; newest-state coalescing; Show/Hide/reparent/destroy ordering;
+dirty overflow; actual serialized payload limits; Update/Replace fault
+convergence; publication rollback; exact Player disconnect and teardown;
+persistent domain/Presentation fairness; modeled 1, 10, 50, 100 and 256-viewer
+cost; GUI-1A through 1C and Foundations A-G regressions; Windows/Linux runtime
+lanes; packaging; and affected sanitizer coverage.
+
+Foundation 1D does not qualify action tokens, the private client command,
+interaction rate limiting, Activated ingress/delivery or GUI Foundation 1E.
+Authenticated-client evidence remains mandatory for actual visual layout,
+cursor behavior, client reconciliation and click receipt. Numeric flush, payload
+and checkpoint values remain internal tuning values rather than public
+compatibility promises. The GUI package/scripting identity remains unassigned.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:

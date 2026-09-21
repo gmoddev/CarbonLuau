@@ -1,7 +1,8 @@
 # GUI Foundation 1 architecture
 
-Status: **approved architecture; Foundations 1A and 1B implemented through the
-retained Luau runtime, with presentations/rendering still deferred**.
+Status: **approved architecture; Foundations 1A through 1D implement the retained
+runtime, presentation projection and automatic synchronization, with interaction
+ingress still deferred**.
 
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model) is the canonical policy owner. This record preserves the detailed rationale and implementation guidance for future GUI phases. If this record and D15 conflict, D15 wins and both documents must be reconciled before implementation continues.
 
@@ -181,8 +182,9 @@ objects, values, lifecycle, ownership, Signal presence and publication journal;
 it does not implement presentations or client rendering. [GUI Foundation 1C](GuiFoundation1C.md)
 owns internal presentations, exact Player-bound Show/Hide state, deterministic
 full-plan compilation and the production Rust CUI projection. It remains a
-static projection phase: GUI-1D owns automatic property synchronization and
-client interaction ingress.
+static projection phase. [GUI Foundation 1D](GuiFoundation1D.md) owns revisioned
+dirty state, coalesced property patches, structural full reconciliation and the
+shared bounded post-Luau GUI flush. Interaction ingress remains a later phase.
 Before public support, qualification must cover retained model and value semantics, layout golden cases, mutation ordering, shared-domain ownership, provisional foreign-owner publication, exact Player/token attacks and reconnects, bounds/queue exhaustion, no reentrant entry, backend fault injection, replacement/recovery cleanup, sanitizer coverage, live current Carbon/Rust rendering with an authenticated client, multi-viewer cost and host-upgrade adapter checks.
 
 Authenticated-client evidence is required for claims about actual visual layout, click receipt, cursor behavior and client reconciliation. Controlled `BasePlayer` fixtures alone cannot establish those results. Exact supported Carbon/Rust revisions and any host-specific adapter assumptions belong in qualification evidence and compatibility documentation, not D15.

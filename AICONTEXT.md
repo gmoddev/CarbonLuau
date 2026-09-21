@@ -14,6 +14,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 1A internal substrate and evidence | [GuiFoundation1A.md](docs/GuiFoundation1A.md) |
 | GUI Foundation 1B retained runtime and evidence | [GuiFoundation1B.md](docs/GuiFoundation1B.md) |
 | GUI Foundation 1C presentation/CUI projection and evidence | [GuiFoundation1C.md](docs/GuiFoundation1C.md) |
+| GUI Foundation 1D synchronization/reconciliation and evidence | [GuiFoundation1D.md](docs/GuiFoundation1D.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -83,8 +84,12 @@ tree lifecycle, GUI Signals and D7/D10 publication journal are recorded in
 presentations, client rendering/event ingress or a GUI-capable release identity.
 GUI Foundation 1C's internal presentations, public ScreenGui visibility methods,
 full retained-tree compilation and production Rust CUI projection are recorded
-in [GuiFoundation1C.md](docs/GuiFoundation1C.md). It does not authorize GUI-1D
-dirty synchronization, client action ingress or a GUI-capable release identity.
+in [GuiFoundation1C.md](docs/GuiFoundation1C.md).
+GUI Foundation 1D's revisioned dirty synchronization, bounded fair GUI flush,
+Rust CUI property patches, structural reconciliation and newest-state failure
+convergence are recorded in [GuiFoundation1D.md](docs/GuiFoundation1D.md). It
+does not authorize client action ingress, GUI Foundation 1E behavior or a
+GUI-capable release identity.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

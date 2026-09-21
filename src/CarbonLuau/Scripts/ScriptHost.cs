@@ -157,7 +157,6 @@ namespace Carbon.Plugins
                 Draining = true;
                 try {
                     var Watch = Stopwatch.StartNew();
-                    if (Facade != null) Facade.FlushGui(Watch, Settings.FrameDrainBudgetMilliseconds);
                     FlushDomainFacades(Watch);
                     if (Vm.Info.Ready == 0) { var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery); return Results; }
                     SchedulerInfo Cutoff = Vm.Scheduler;
@@ -176,6 +175,10 @@ namespace Carbon.Plugins
                             var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery);
                             break; // Never use the retired drain's cutoff/handles for a new generation.
                         }
+                    }
+                    if (Facade != null && Vm != null && Vm.Info.Ready != 0 && !Busy && !StopRequested) {
+                        var GuiWatch = Stopwatch.StartNew();
+                        Facade.FlushGui(GuiWatch, Math.Max(1, (Facade.Gui.Limits.GuiFlushBudgetMicroseconds + 999) / 1000));
                     }
                     if (Watch.Elapsed.TotalMilliseconds > Settings.FrameDrainBudgetMilliseconds) BudgetOverruns++;
                     return Results;

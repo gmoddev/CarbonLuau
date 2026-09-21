@@ -117,9 +117,10 @@ Initial Show compiles the current final retained tree. Creation, destruction,
 reparenting and ZIndex changes can require a full replacement for structural
 correctness. Ordinary layout, visibility, color and text property assignment
 continues to update retained state synchronously but does not automatically emit
-a patch in 1C. GUI-1D owns dirty masks, coalesced automatic synchronization,
-patch/full selection, periodic reconciliation, action tokens, the private client
-command, rate limiting and Activated ingress/delivery.
+a patch in 1C. GUI Foundation 1D owns dirty masks, coalesced automatic
+synchronization, patch/full selection and periodic reconciliation. Later GUI
+work owns action tokens, the private client command, rate limiting and Activated
+ingress/delivery.
 
 Foundation 1C does not claim authenticated-client visual layout, cursor behavior,
 button receipt or reconciliation. A controlled server-side AddUI fixture can

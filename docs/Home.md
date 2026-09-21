@@ -59,5 +59,6 @@ substrate is recorded in [GUI Foundation 1A](GuiFoundation1A.md), and the
 retained Luau runtime through object lifecycle/publication is recorded in
 [GUI Foundation 1B](GuiFoundation1B.md). Static exact-Player presentations and
 the Rust CUI projection are recorded in [GUI Foundation 1C](GuiFoundation1C.md).
-Automatic synchronization, interaction ingress and a GUI release identity remain
-deferred.
+Bounded retained-tree synchronization and reconciliation are recorded in
+[GUI Foundation 1D](GuiFoundation1D.md). Interaction ingress and a GUI release
+identity remain deferred.
