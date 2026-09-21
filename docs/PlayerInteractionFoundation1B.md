@@ -47,6 +47,9 @@ adapter and rules out a hard-coded 100.
 
 ## Qualification
 
+Qualified implementation revision:
+`ae7f6856fae92e03c2ddf0a686cf7e2a3670ce81`.
+
 The focused real-VM fixtures cover zero, positive, negative and fractional
 finite values; changing reads; Health above MaxHealth; non-100 and changing
 MaxHealth; no clamping; NaN/infinity rejection; immutability; provisional
@@ -78,7 +81,12 @@ deadline is test-only; production configuration and defaults are unchanged.
 
 DockerPC was unavailable, so no Windows native/local or Windows live result is
 claimed. Hosted Windows CI is separate evidence and is not a substitute for
-that unavailable local environment.
+that unavailable local environment. The
+[hosted validation run](https://github.com/gmoddev/CarbonLuau/actions/runs/35570576645)
+passed Windows and Ubuntu native/runtime/loader/package jobs plus the sanitizer
+job at the qualified revision. The
+[documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/35570576640)
+also passed.
 
 ## Identities and remaining scope
 
