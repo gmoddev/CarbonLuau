@@ -11,6 +11,9 @@ gate.
 Foundation 3A's `UIGridLayout` is implemented in current source for
 qualification. It has not yet been assigned to a package or scripting API
 release identity; do not infer its availability from published `0.4.0` artifacts.
+Foundation 3B's `Frame.ClipsDescendants` is also implemented in current source,
+but its mandatory authenticated-client visual and hit-region qualification is
+still pending. It is not part of a qualified public release surface.
 
 ## Service and construction
 
@@ -79,6 +82,17 @@ Class-specific defaults:
 | `ImageLabel` | `UDim2.fromOffset(100, 100)` | 1 | Yes |
 | `ImageButton` | `UDim2.fromOffset(100, 100)` | 1 | Yes |
 | `ScrollingFrame` | `UDim2.fromOffset(100, 100)` | 0 | Yes |
+
+`Frame` additionally exposes:
+
+| Property | Type | Default | Behavior |
+|---|---|---|---|
+| `ClipsDescendants` | boolean | `false` | Rectangular descendant clipping through private projection state. Implemented in current source, but authenticated-client visual and hit behavior remains unqualified. |
+
+The property is not available on other GuiObject classes. It does not modify
+retained child geometry or add a script-visible child. Explicit Frame clips and
+private ScrollingFrame viewport clips share an effective nesting limit of four.
+Each explicit Frame clip consumes one of the unchanged 257 projected elements.
 
 ### TextLabel and TextButton
 

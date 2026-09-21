@@ -59,6 +59,8 @@ are unchanged; no script migration is required for this deferral.
 | Interactive buttons per ScreenGui / Activated listeners per button | 64 / 8 |
 | Authoritative projected elements per ScreenGui | 257 |
 | ScrollingFrame projected-element charge | 7 |
+| Effective Frame/ScrollingFrame clip depth | 4 |
+| Explicit clipping Frame projected-element charge | 1 additional private element |
 | Image sprite / decimal identifier | 256 UTF-8 bytes / 20 ASCII digits |
 | GUI Signal connections per domain | 256 |
 | GUI Name / Text / aggregate screen text | 64 B / 2,048 B / 32 KiB UTF-8 |

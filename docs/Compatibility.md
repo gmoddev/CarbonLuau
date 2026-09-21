@@ -491,6 +491,15 @@ font is unavailable, that value is removed before qualification rather than
 silently falling back. An unreliable scroll partial update may use bounded
 structural replacement, but does not authorize `CanvasPosition` or readback.
 
+[GUI Foundation 3B](GuiFoundation3B.md) implements D17's bounded
+`Frame.ClipsDescendants` source slice with private mask projection, effective
+depth four including ScrollingFrame viewport clips, structural action
+reconciliation and unchanged projection envelopes. It remains **IMPLEMENTED /
+CLIENT-UNQUALIFIED** and is not part of the qualified public release subset
+until the mandatory authenticated-client visual and clipped-hit supplement
+passes. Windows native/local GUI-3B evidence is separately **DEFERRED /
+UNQUALIFIED** while DockerPC is unavailable; hosted Windows does not replace it.
+
 D17 assigns no package or scripting API identity. Package `0.4.0`, scripting
 API `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package
 schema `1` and the pinned Luau revision remain unchanged. Foundation 3 release

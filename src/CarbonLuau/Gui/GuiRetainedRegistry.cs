@@ -560,9 +560,13 @@ namespace Carbon.Plugins
                         if (Current - Old + Next > Limits.MaxTextUtf8BytesPerScreen) throw new FacadeException("ScreenGui aggregate text limit reached");
                     }
                 }
+                if (Use.Descriptor.Id == GuiPropertyId.ClipsDescendants)
+                    ValidateClippingMutation(Node, Value.Boolean);
                 Node.Properties[Use.Descriptor.Id] = Value;
                 GuiRetainedNode ScreenValue = RootScreen(Node);
-                if (Use.Descriptor.Id == GuiPropertyId.Visible && ContainsConnectedButton(Node))
+                if (CouldAffectClippedInteraction(Use.Descriptor.Id, ScreenValue))
+                    MarkStructural(ScreenValue, GuiActionRejection.TargetUnavailable);
+                else if (Use.Descriptor.Id == GuiPropertyId.Visible && ContainsConnectedButton(Node))
                     MarkStructural(ScreenValue, GuiActionRejection.TargetUnavailable);
                 else if (Use.Descriptor.MutationKind == GuiMutationKind.Structural) MarkStructural(ScreenValue);
                 else if (Use.Descriptor.MutationKind == GuiMutationKind.Patchable) {
@@ -844,15 +848,23 @@ namespace Carbon.Plugins
                 foreach (ulong Child in Root.Children) if (ContainsConnectedButton(State.Nodes[Child])) return true;
                 return false;
             }
-            private bool EffectivelyVisible(GuiRetainedNode Button, GuiRetainedNode Screen)
+            private bool CouldAffectClippedInteraction(GuiPropertyId PropertyId, GuiRetainedNode Screen)
             {
-                for (GuiRetainedNode Value = Button; Value != null && Value != Screen;
-                    Value = Value.ParentId.HasValue ? State.Nodes[Value.ParentId.Value] : null) {
-                    GuiStoredValue Visible;
-                    if (!Value.Properties.TryGetValue(GuiPropertyId.Visible, out Visible) || !Visible.Boolean) return false;
-                    if (!Value.ParentId.HasValue) return false;
-                }
-                return RootScreen(Button) == Screen;
+                if (Screen == null || !ContainsClippingFrame(Screen) || !ContainsConnectedButton(Screen)) return false;
+                if (PropertyId == GuiPropertyId.Position || PropertyId == GuiPropertyId.Size || PropertyId == GuiPropertyId.AnchorPoint ||
+                    PropertyId == GuiPropertyId.LayoutOrder || PropertyId == GuiPropertyId.Padding || PropertyId == GuiPropertyId.FillDirection ||
+                    PropertyId == GuiPropertyId.HorizontalAlignment || PropertyId == GuiPropertyId.VerticalAlignment ||
+                    PropertyId == GuiPropertyId.PaddingTop || PropertyId == GuiPropertyId.PaddingBottom ||
+                    PropertyId == GuiPropertyId.PaddingLeft || PropertyId == GuiPropertyId.PaddingRight ||
+                    PropertyId == GuiPropertyId.CellSize || PropertyId == GuiPropertyId.CellPadding ||
+                    PropertyId == GuiPropertyId.FillDirectionMaxCells) return true;
+                return false;
+            }
+            private bool ContainsClippingFrame(GuiRetainedNode Root)
+            {
+                if (IsClippingFrame(Root)) return true;
+                foreach (ulong Child in Root.Children) if (ContainsClippingFrame(State.Nodes[Child])) return true;
+                return false;
             }
             private void RequireFullRebuild(GuiPresentation Presentation, GuiActionRejection Reason = GuiActionRejection.Stale)
             {
@@ -903,7 +915,7 @@ namespace Carbon.Plugins
                 GuiRetainedNode Screen, Button;
                 if (!State.Nodes.TryGetValue(Record.ScreenId, out Screen) || Screen.ClassId != GuiClassId.ScreenGui ||
                     !State.Nodes.TryGetValue(Record.ButtonId, out Button) || !IsActivatedClass(Button.ClassId) ||
-                    !EffectivelyVisible(Button, Screen)) return GuiActionRejection.TargetUnavailable;
+                    !GuiRenderCompiler.IsEffectivelyInteractive(State, Screen, Button)) return GuiActionRejection.TargetUnavailable;
                 var Values = new List<KeyValuePair<ulong, string>>();
                 foreach (var Value in State.Connections) if (Value.Value == Record.ButtonId) {
                     ulong Numeric; if (UInt64.TryParse(Value.Key, NumberStyles.None, CultureInfo.InvariantCulture, out Numeric))
@@ -940,6 +952,8 @@ namespace Carbon.Plugins
                     throw new FacadeException("GUI child limit reached");
                 for (GuiRetainedNode Cursor = Parent; Cursor != null; Cursor = Cursor.ParentId.HasValue ? State.Nodes[Cursor.ParentId.Value] : null)
                     if (Child != null && Cursor.Identity.GuiObjectId == Child.Identity.GuiObjectId) throw new FacadeException("GUI parent cycle rejected");
+                int ClipDepth = ClipDepthToRoot(Parent) + (Child == null ? ClipContribution(ChildClass, false) : SubtreeClipDepth(Child));
+                if (ClipDepth > Limits.MaxEffectiveClipDepth) throw new FacadeException("GUI effective clipping depth limit reached");
                 int ParentDepth = DepthFromRoot(Parent);
                 if (ParentDepth + Depth > Limits.MaxTreeDepth) throw new FacadeException("GUI tree depth limit reached");
                 GuiRetainedNode Screen = RootScreen(Parent);
@@ -953,7 +967,19 @@ namespace Carbon.Plugins
                     if (!SameScreen && ExistingText + TextBytes > Limits.MaxTextUtf8BytesPerScreen) throw new FacadeException("ScreenGui aggregate text limit reached");
                     if (!SameScreen && ExistingProjection + ProjectedElements > Limits.MaxProjectedElementsPerScreen)
                         throw new FacadeException("ScreenGui projection element limit reached");
+                    if (Child != null && ContainsClippingFrame(Child)) ValidateClippingAttachmentCandidate(Child, Parent, Screen);
                 }
+            }
+
+            private void ValidateClippingAttachmentCandidate(GuiRetainedNode Child, GuiRetainedNode Parent, GuiRetainedNode Screen)
+            {
+                GuiRetainedState Candidate = State.Copy();
+                GuiRetainedNode CandidateChild = Candidate.Nodes[Child.Identity.GuiObjectId];
+                if (CandidateChild.ParentId.HasValue)
+                    Candidate.Nodes[CandidateChild.ParentId.Value].Children.Remove(CandidateChild.Identity.GuiObjectId);
+                CandidateChild.ParentId = Parent.Identity.GuiObjectId;
+                Candidate.Nodes[Parent.Identity.GuiObjectId].Children.Add(CandidateChild.Identity.GuiObjectId);
+                ValidateClippingProjectionCandidate(Candidate, Screen.Identity.GuiObjectId);
             }
 
             private static void Attach(GuiRetainedNode Child, GuiRetainedNode Parent)
@@ -1089,6 +1115,8 @@ namespace Carbon.Plugins
                     Node.Properties[GuiPropertyId.ScrollingDirection] = GuiStoredValue.String("Y");
                     Node.Properties[GuiPropertyId.ScrollingEnabled] = GuiStoredValue.Bool(true);
                 }
+                if (Node.ClassId == GuiClassId.Frame)
+                    Node.Properties[GuiPropertyId.ClipsDescendants] = GuiStoredValue.Bool(false);
             }
 
             private GuiRetainedNode Node(ulong Id)
@@ -1106,7 +1134,7 @@ namespace Carbon.Plugins
             private int SubtreeDepth(GuiRetainedNode Root) { int Result = 1; foreach (ulong Child in Root.Children) Result = Math.Max(Result, 1 + SubtreeDepth(State.Nodes[Child])); return Result; }
             private int SubtreeButtons(GuiRetainedNode Root) { int Result = IsActivatedClass(Root.ClassId) ? 1 : 0; foreach (ulong Child in Root.Children) Result += SubtreeButtons(State.Nodes[Child]); return Result; }
             private int SubtreeProjectionCost(GuiRetainedNode Root)
-            { int Result = ProjectionCost(Root.ClassId); foreach (ulong Child in Root.Children) Result += SubtreeProjectionCost(State.Nodes[Child]); return Result; }
+            { int Result = ProjectionCost(Root.ClassId) + (IsClippingFrame(Root) ? 1 : 0); foreach (ulong Child in Root.Children) Result += SubtreeProjectionCost(State.Nodes[Child]); return Result; }
             private static int ProjectionCost(GuiClassId ClassId)
             {
                 if (ClassId == GuiClassId.ScreenGui || ClassId == GuiClassId.Frame) return 1;
@@ -1114,6 +1142,66 @@ namespace Carbon.Plugins
                 if (ClassId == GuiClassId.ImageButton) return 3;
                 if (ClassId == GuiClassId.ScrollingFrame) return 7;
                 return 0;
+            }
+            private static bool IsClippingFrame(GuiRetainedNode Node)
+            {
+                GuiStoredValue Value;
+                return Node != null && Node.ClassId == GuiClassId.Frame &&
+                    Node.Properties.TryGetValue(GuiPropertyId.ClipsDescendants, out Value) && Value.Boolean;
+            }
+            private static int ClipContribution(GuiClassId ClassId, bool FrameClips)
+            { return ClassId == GuiClassId.ScrollingFrame || (ClassId == GuiClassId.Frame && FrameClips) ? 1 : 0; }
+            private int ClipDepthToRoot(GuiRetainedNode Node)
+            {
+                int Result = 0;
+                for (GuiRetainedNode Cursor = Node; Cursor != null;
+                    Cursor = Cursor.ParentId.HasValue ? State.Nodes[Cursor.ParentId.Value] : null)
+                    Result += ClipContribution(Cursor.ClassId, IsClippingFrame(Cursor));
+                return Result;
+            }
+            private int SubtreeClipDepth(GuiRetainedNode Root)
+            { return SubtreeClipDepth(Root, false); }
+            private int SubtreeClipDepth(GuiRetainedNode Root, bool ForceRootClip)
+            {
+                int Own = ClipContribution(Root.ClassId, ForceRootClip || IsClippingFrame(Root)), Maximum = 0;
+                foreach (ulong Child in Root.Children) Maximum = Math.Max(Maximum, SubtreeClipDepth(State.Nodes[Child], false));
+                return Own + Maximum;
+            }
+            private void ValidateClippingMutation(GuiRetainedNode Node, bool Enabled)
+            {
+                if (Node.ClassId != GuiClassId.Frame) throw new FacadeException("ClipsDescendants is only available on Frame");
+                if (!Enabled) return;
+                int Ancestors = Node.ParentId.HasValue ? ClipDepthToRoot(State.Nodes[Node.ParentId.Value]) : 0;
+                if (Ancestors + SubtreeClipDepth(Node, true) > Limits.MaxEffectiveClipDepth)
+                    throw new FacadeException("GUI effective clipping depth limit reached");
+                GuiRetainedNode Screen = RootScreen(Node);
+                if (Screen != null && SubtreeProjectionCost(Screen) + 1 > Limits.MaxProjectedElementsPerScreen)
+                    throw new FacadeException("ScreenGui projection element limit reached");
+                ValidateClippingProjectionCandidate(Node, Screen);
+            }
+            private void ValidateClippingProjectionCandidate(GuiRetainedNode Node, GuiRetainedNode Screen)
+            {
+                if (Screen == null) return;
+                GuiRetainedState Candidate = State.Copy();
+                Candidate.Nodes[Node.Identity.GuiObjectId].Properties[GuiPropertyId.ClipsDescendants] = GuiStoredValue.Bool(true);
+                ValidateClippingProjectionCandidate(Candidate, Screen.Identity.GuiObjectId);
+            }
+            private void ValidateClippingProjectionCandidate(GuiRetainedState Candidate, ulong ScreenId)
+            {
+                GuiPresentation Presentation = null;
+                foreach (GuiPresentation Value in Candidate.Presentations.Values)
+                    if (Value.ScreenId == ScreenId) { Presentation = Value; break; }
+                if (Presentation == null) Presentation = new GuiPresentation(ScreenId, 1, "measure", "measure",
+                    "cluau_00000000000000000000000000000000_");
+                try {
+                    GuiRenderPlan Plan = GuiRenderCompiler.Compile(Candidate, Candidate.Nodes[ScreenId], Presentation, Limits, Button => {
+                        foreach (ulong Owner in Candidate.Connections.Values)
+                            if (Owner == Button.Identity.GuiObjectId) return GuiRetainedWorld.ActionCommand + " " + new string('0', 32);
+                        return null;
+                    });
+                    World.Backend.MeasureReplace(Presentation.Target, Plan);
+                } catch (FacadeException) { throw; }
+                catch (Exception) { throw new FacadeException("GUI clipping projection exceeds the authoritative render envelope"); }
             }
             private static bool IsActivatedClass(GuiClassId ClassId)
             { return ClassId == GuiClassId.TextButton || ClassId == GuiClassId.ImageButton; }

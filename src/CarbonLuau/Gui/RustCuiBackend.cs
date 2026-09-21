@@ -86,7 +86,8 @@ namespace Carbon.Plugins
                 if (Element.Kind == GuiRenderNodeKind.ScrollView) {
                     if (Background != null) WriteColorComponent(Writer, "UnityEngine.UI.Image", Background);
                     if (HasScrollProperty(Properties) || !Update) WriteScrollView(Writer, Properties);
-                } else if (Element.Kind == GuiRenderNodeKind.Container && Background != null) WriteColorComponent(Writer, "UnityEngine.UI.Image", Background);
+                } else if (Element.Kind == GuiRenderNodeKind.Clip) WriteClip(Writer);
+                else if (Element.Kind == GuiRenderNodeKind.Container && Background != null) WriteColorComponent(Writer, "UnityEngine.UI.Image", Background);
                 else if (Element.Kind == GuiRenderNodeKind.Button && (Background != null || !Update))
                     WriteButton(Writer, Background, Find(Properties, GuiRenderPropertyId.ActionCommand, false));
                 else if (Element.Kind == GuiRenderNodeKind.Text && (HasTextProperty(Properties) || !Update)) WriteText(Writer, Properties, Update);
@@ -103,6 +104,12 @@ namespace Carbon.Plugins
             {
                 Writer.WriteStartObject(); Write(Writer, "type", Type); Write(Writer, "color", Color(Require(Value, GuiRenderValueKind.Color).Color));
                 Writer.WriteEndObject();
+            }
+            private static void WriteClip(JsonTextWriter Writer)
+            {
+                Writer.WriteStartObject(); Write(Writer, "type", "UnityEngine.UI.Image"); Write(Writer, "color", "0 0 0 0"); Writer.WriteEndObject();
+                Writer.WriteStartObject(); Write(Writer, "type", "UnityEngine.UI.Mask");
+                Writer.WritePropertyName("showMaskGraphic"); Writer.WriteValue(false); Writer.WriteEndObject();
             }
             private static void WriteButton(JsonTextWriter Writer, GuiRenderValue Background, GuiRenderValue Action)
             {

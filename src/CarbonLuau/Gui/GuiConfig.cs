@@ -14,6 +14,7 @@ namespace Carbon.Plugins
             internal int MaxActionTokensPerPresentation = 64, MaxActionTokensPerDomain = 8192, MaxActionTokensGlobal = 32768;
             internal int MaxNameUtf8Bytes = 64, MaxTextUtf8Bytes = 2048, MaxTextUtf8BytesPerScreen = 32 * 1024;
             internal int MaxTrackedDirtyObjectsPerDomain = 512, MaxCloneObjects = 128, MaxCloneDepth = 16;
+            internal int MaxEffectiveClipDepth = 4;
             internal int MaxProjectedElementsPerScreen, MaxRenderElementsPerOperation = 257, MaxRenderPropertiesPerElement = 16;
             internal int MaxSerializedOperationBytes = 64 * 1024, MaxPresentationSendsPerFlush = 64;
             internal int MaxSerializedBytesPerFlush = 256 * 1024, GuiFlushBudgetMicroseconds = 1000;
@@ -35,6 +36,8 @@ namespace Carbon.Plugins
                 Positive(MaxTextUtf8BytesPerScreen, "MaxTextUtf8BytesPerScreen");
                 Positive(MaxTrackedDirtyObjectsPerDomain, "MaxTrackedDirtyObjectsPerDomain");
                 Positive(MaxCloneObjects, "MaxCloneObjects"); Positive(MaxCloneDepth, "MaxCloneDepth");
+                Positive(MaxEffectiveClipDepth, "MaxEffectiveClipDepth");
+                AtMost(MaxEffectiveClipDepth, 4, "MaxEffectiveClipDepth cannot exceed the canonical clipping bound");
                 if (MaxProjectedElementsPerScreen < 0) throw new InvalidOperationException("MaxProjectedElementsPerScreen cannot be negative");
                 Positive(MaxRenderElementsPerOperation, "MaxRenderElementsPerOperation");
                 Positive(MaxRenderPropertiesPerElement, "MaxRenderPropertiesPerElement");
@@ -82,6 +85,7 @@ namespace Carbon.Plugins
             internal readonly int MaxActionTokensPerPresentation, MaxActionTokensPerDomain, MaxActionTokensGlobal;
             internal readonly int MaxNameUtf8Bytes, MaxTextUtf8Bytes, MaxTextUtf8BytesPerScreen;
             internal readonly int MaxTrackedDirtyObjectsPerDomain, MaxCloneObjects, MaxCloneDepth;
+            internal readonly int MaxEffectiveClipDepth;
             internal readonly int MaxProjectedElementsPerScreen, MaxRenderElementsPerOperation, MaxRenderPropertiesPerElement;
             internal readonly int MaxSerializedOperationBytes, MaxPresentationSendsPerFlush, MaxSerializedBytesPerFlush;
             internal readonly int GuiFlushBudgetMicroseconds, PatchBatchesBeforeFull;
@@ -102,6 +106,7 @@ namespace Carbon.Plugins
                 MaxTextUtf8Bytes = Value.MaxTextUtf8Bytes; MaxTextUtf8BytesPerScreen = Value.MaxTextUtf8BytesPerScreen;
                 MaxTrackedDirtyObjectsPerDomain = Value.MaxTrackedDirtyObjectsPerDomain; MaxCloneObjects = Value.MaxCloneObjects;
                 MaxCloneDepth = Value.MaxCloneDepth; MaxProjectedElementsPerScreen = ProjectionLimit;
+                MaxEffectiveClipDepth = Value.MaxEffectiveClipDepth;
                 MaxRenderElementsPerOperation = Value.MaxRenderElementsPerOperation;
                 MaxRenderPropertiesPerElement = Value.MaxRenderPropertiesPerElement;
                 MaxSerializedOperationBytes = Value.MaxSerializedOperationBytes;

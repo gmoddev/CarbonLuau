@@ -176,6 +176,14 @@ Its implementation and qualification record is
 [GuiFoundation3A.md](docs/GuiFoundation3A.md). It assigns no Foundation 3
 release identity and authorizes no clipping, font, scroll-effect or GUI-3B+
 work.
+GUI Foundation 3B implements only D17's bounded `Frame.ClipsDescendants`
+slice: private projection-only mask nodes, effective depth accounting with
+ScrollingFrame, retained-geometry interaction eligibility, structural action
+reconciliation and atomic projection-bound validation. Its implementation and
+qualification record is [GuiFoundation3B.md](docs/GuiFoundation3B.md).
+The feature is IMPLEMENTED / CLIENT-UNQUALIFIED pending D17's mandatory
+authenticated-client visual and hit-region supplement. It assigns no Foundation
+3 release identity and authorizes no GuiFont, ScrollTo or GUI-3C+ work.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

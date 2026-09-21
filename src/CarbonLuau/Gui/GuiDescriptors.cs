@@ -18,6 +18,7 @@ namespace Carbon.Plugins
             Image = 26, ImageColor3 = 27, ImageTransparency = 28,
             CanvasSize = 29, ScrollingDirection = 30, ScrollingEnabled = 31,
             CellSize = 32, CellPadding = 33, FillDirectionMaxCells = 34,
+            ClipsDescendants = 35,
             LayoutProjection = 100, ContentProjection = 101
         }
         internal enum GuiMethodId
@@ -148,6 +149,8 @@ namespace Carbon.Plugins
             private static readonly GuiPropertyDescriptor CellPadding = new GuiPropertyDescriptor(GuiPropertyId.CellPadding, "CellPadding", GuiValueKind.UDim2, GuiMutationKind.LayoutAffecting);
             private static readonly GuiPropertyDescriptor FillDirectionMaxCells = new GuiPropertyDescriptor(GuiPropertyId.FillDirectionMaxCells,
                 "FillDirectionMaxCells", GuiValueKind.Integer, GuiMutationKind.LayoutAffecting, 1, 64);
+            private static readonly GuiPropertyDescriptor ClipsDescendants = new GuiPropertyDescriptor(GuiPropertyId.ClipsDescendants,
+                "ClipsDescendants", GuiValueKind.Boolean, GuiMutationKind.Structural);
 
             private static readonly GuiClassDescriptor[] ClassValues = BuildClasses();
             private static readonly GuiMethodDescriptor[] MethodValues =
@@ -272,7 +275,7 @@ namespace Carbon.Plugins
                     new GuiClassDescriptor(GuiClassId.ScreenGui, "ScreenGui", GuiClassId.GuiNode, true, GuiCreationScope.GuiService, true, Screen,
                         Append(CommonMethods, GuiMethodId.Show, GuiMethodId.Hide, GuiMethodId.IsShown), new GuiEventId[0]),
                     new GuiClassDescriptor(GuiClassId.Frame, "Frame", GuiClassId.GuiObject, true, GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
-                        ObjectProperties("UDim2.fromOffset(100, 100)", "0"), CommonMethods, new GuiEventId[0]),
+                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "0"), FrameProperties()), CommonMethods, new GuiEventId[0]),
                     new GuiClassDescriptor(GuiClassId.TextLabel, "TextLabel", GuiClassId.GuiObject, true, GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
                         Append(ObjectProperties("UDim2.fromOffset(100, 30)", "1"), TextProperties()), CommonMethods, new GuiEventId[0]),
                     new GuiClassDescriptor(GuiClassId.TextButton, "TextButton", GuiClassId.GuiObject, true, GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
@@ -304,6 +307,8 @@ namespace Carbon.Plugins
                 return new[] {Use(Text, true, ""), Use(TextColor3, true, "Color3(0, 0, 0)"), Use(TextTransparency, true, "0"),
                     Use(TextSize, true, "14"), Use(TextXAlignment, true, "Center"), Use(TextYAlignment, true, "Center")};
             }
+            private static GuiPropertyUse[] FrameProperties()
+            { return new[] {Use(ClipsDescendants, true, "false")}; }
             private static GuiPropertyUse[] LayoutProperties()
             {
                 return new[] {Use(Name, true, "UIListLayout"), Use(ClassName, false, "UIListLayout"), Use(Parent, true, "nil"),

@@ -21,6 +21,7 @@
   - [GUI Foundation 2F](GuiFoundation2F.md)
   - [GUI Foundation 3 architecture](GuiFoundation3.md)
   - [GUI Foundation 3A](GuiFoundation3A.md)
+  - [GUI Foundation 3B](GuiFoundation3B.md)
 - API
   - [Overview](api/README.md)
   - [Globals](api/Globals.md)

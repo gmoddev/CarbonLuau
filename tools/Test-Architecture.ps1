@@ -105,6 +105,11 @@ foreach ($Required in @('ProjectGridChildren','CellSize','CellPadding','FillDire
 if ($Presentation -match 'GridLayoutGroup|ContentSizeFitter|LayoutElement') {
     throw 'GUI Foundation 3A must not delegate canonical grid geometry to a host layout component'
 }
+foreach ($Required in @('ClipsDescendants','ClipClientId','GuiRenderNodeKind.Clip','IsEffectivelyInteractive')) {
+    if (!$Presentation.Contains($Required) -and !$Registry.Contains($Required)) {
+        throw "GUI Foundation 3B clipping owner is missing: $Required"
+    }
+}
 $RenderPlan = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiRenderPlan.cs')
 foreach ($Required in @('ScrollingFrame','CanvasSize','ScrollingDirection','ScrollingEnabled','ScrollContentClientId')) {
     if (!$Registry.Contains($Required) -and !$Presentation.Contains($Required)) {
@@ -125,6 +130,9 @@ if (!$Backend.Contains('MeasureUpdate') -or !$Backend.Contains('Transport.Update
 }
 if (!$Backend.Contains('ActionCommand') -or !$Backend.Contains('"command"')) {
     throw 'GUI Foundation 1E Rust CUI action command serialization is missing'
+}
+if (!$Backend.Contains('UnityEngine.UI.Mask') -or !$Backend.Contains('showMaskGraphic')) {
+    throw 'GUI Foundation 3B private mask backend mapping is missing'
 }
 if (!$Backend.Contains('UnityEngine.UI.ScrollView') -or !$Backend.Contains('contentTransform') -or
     $Backend.Contains('NormalizedPosition') -or $Presentation.Contains('CanvasPosition')) {

@@ -34,7 +34,7 @@ foreach ($Example in @('player-events','hello-command')) {
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',
         'layout-vertical','layout-horizontal','padding','layout-order','image-label','image-button',
-        'item-skin','steam-avatar','scrolling-layout','shared-rich','per-player-rich','grid')) {
+        'item-skin','steam-avatar','scrolling-layout','shared-rich','per-player-rich','grid','clipping')) {
     $ExamplePath = Join-Path $Root "examples/gui/$Example/init.luau"
     if (!(Test-Path -LiteralPath $ExamplePath)) { throw "Missing runnable GUI example: $Example" }
     $ExampleText = Get-Content -Raw -LiteralPath $ExamplePath
@@ -57,7 +57,7 @@ foreach ($Name in @('Name','ClassName','Parent','Position','Size','AnchorPoint',
         'BackgroundTransparency','ZIndex','LayoutOrder','Text','TextColor3','TextTransparency','TextSize','TextXAlignment','TextYAlignment',
         'Padding','FillDirection','HorizontalAlignment','VerticalAlignment','PaddingTop','PaddingBottom','PaddingLeft','PaddingRight',
         'Image','ImageColor3','ImageTransparency','CanvasSize','ScrollingDirection','ScrollingEnabled',
-        'CellSize','CellPadding','FillDirectionMaxCells')) {
+        'CellSize','CellPadding','FillDirectionMaxCells','ClipsDescendants')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits property: $Name" }
 }
 foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','IsA','Show','Hide','IsShown','Activated')) {

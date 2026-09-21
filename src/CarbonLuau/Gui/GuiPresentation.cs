@@ -27,6 +27,7 @@ namespace Carbon.Plugins
             internal string TextClientId(ulong ObjectId) { return ClientPrefix + "t" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
             internal string ImageClientId(ulong ObjectId) { return ClientPrefix + "i" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
             internal string ActionClientId(ulong ObjectId) { return ClientPrefix + "a" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
+            internal string ClipClientId(ulong ObjectId) { return ClientPrefix + "c" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
             internal string ScrollContentClientId(ulong ObjectId) { return ObjectClientId(ObjectId) + "___Content"; }
             internal GuiPresentation Copy()
             {
@@ -71,7 +72,8 @@ namespace Carbon.Plugins
                     Vector(GuiRenderPropertyId.OffsetMin, 0, 0), Vector(GuiRenderPropertyId.OffsetMax, 0, 0),
                     Vector(GuiRenderPropertyId.Pivot, 0.5, 0.5), Boolean(GuiRenderPropertyId.Visible, true),
                     Boolean(GuiRenderPropertyId.NeedsCursor, NeedsCursor)));
-                AppendChildren(State, Screen, Presentation.RootClientId, Presentation, Limits, Elements, true, ActionCommand);
+                AppendChildren(State, Screen, Presentation.RootClientId, Presentation, Limits, Elements, true, true,
+                    new List<GuiClipRect>(), false, ActionCommand);
                 int ProjectedElements = 0;
                 foreach (GuiRenderElement Element in Elements) ProjectedElements = checked(ProjectedElements + Element.ProjectedElementCost);
                 if (ProjectedElements > Limits.MaxProjectedElementsPerScreen)
@@ -144,6 +146,7 @@ namespace Carbon.Plugins
 
             private static void AppendChildren(GuiRetainedState State, GuiRetainedNode Parent, string ParentClientId,
                 GuiPresentation Presentation, GuiLimits Limits, List<GuiRenderElement> Elements, bool AncestorsVisible,
+                bool AncestorsInteractive, List<GuiClipRect> ParentBoundsInClips, bool ParentCreatesClip,
                 Func<GuiRetainedNode, string> ActionCommand)
             {
                 var Ordered = new List<GuiRetainedNode>();
@@ -160,6 +163,9 @@ namespace Carbon.Plugins
                 });
                 foreach (GuiRetainedNode Node in Ordered) {
                     bool EffectiveVisible = AncestorsVisible && Boolean(Node, GuiPropertyId.Visible);
+                    List<GuiClipRect> BoundsInClips = BoundsWithinClips(ParentBoundsInClips, ParentCreatesClip,
+                        Rectangles[Node.Identity.GuiObjectId], Node);
+                    bool EffectiveInteractive = AncestorsInteractive && !EntirelyOutsideAny(BoundsInClips);
                     string ClientId = Presentation.ObjectClientId(Node.Identity.GuiObjectId);
                     GuiRenderNodeKind Kind = RenderKind(Node.ClassId);
                     var Properties = new List<GuiRenderProperty>();
@@ -168,7 +174,7 @@ namespace Carbon.Plugins
                     double[] Background = Numbers(Node, GuiPropertyId.BackgroundColor3);
                     Properties.Add(Color(GuiRenderPropertyId.BackgroundColor, Background,
                         1 - Number(Node, GuiPropertyId.BackgroundTransparency)));
-                    if (EffectiveVisible && Node.ClassId == GuiClassId.TextButton && ActionCommand != null) {
+                    if (EffectiveVisible && EffectiveInteractive && Node.ClassId == GuiClassId.TextButton && ActionCommand != null) {
                         string Command = ActionCommand(Node);
                         if (Command != null) Properties.Add(String(GuiRenderPropertyId.ActionCommand, Command));
                     }
@@ -197,9 +203,20 @@ namespace Carbon.Plugins
                             Image(GuiRenderPropertyId.ImageSource, Property(Node, GuiPropertyId.Image).ImageSource),
                             Color(GuiRenderPropertyId.ImageColor, ImageColor, 1 - Number(Node, GuiPropertyId.ImageTransparency))));
                     }
+                    bool ClipsDescendants = Node.ClassId == GuiClassId.Frame && Boolean(Node, GuiPropertyId.ClipsDescendants);
                     string ChildParentClientId = Node.ClassId == GuiClassId.ScrollingFrame
                         ? Presentation.ScrollContentClientId(Node.Identity.GuiObjectId) : ClientId;
-                    AppendChildren(State, Node, ChildParentClientId, Presentation, Limits, Elements, EffectiveVisible, ActionCommand);
+                    if (ClipsDescendants) {
+                        string ClipClientId = Presentation.ClipClientId(Node.Identity.GuiObjectId);
+                        Elements.Add(new GuiRenderElement(ClipClientId, ClientId, GuiRenderNodeKind.Clip, Limits,
+                            Vector(GuiRenderPropertyId.AnchorMin, 0, 0), Vector(GuiRenderPropertyId.AnchorMax, 1, 1),
+                            Vector(GuiRenderPropertyId.OffsetMin, 0, 0), Vector(GuiRenderPropertyId.OffsetMax, 0, 0),
+                            Vector(GuiRenderPropertyId.Pivot, 0.5, 0.5), Boolean(GuiRenderPropertyId.Visible, true)));
+                        ChildParentClientId = ClipClientId;
+                    }
+                    AppendChildren(State, Node, ChildParentClientId, Presentation, Limits, Elements, EffectiveVisible,
+                        EffectiveInteractive, Node.ClassId == GuiClassId.ScrollingFrame ? new List<GuiClipRect>() : BoundsInClips,
+                        ClipsDescendants, ActionCommand);
                     if (Node.ClassId == GuiClassId.ImageButton) {
                         var ActionProperties = new List<GuiRenderProperty> {
                             Vector(GuiRenderPropertyId.AnchorMin, 0, 0), Vector(GuiRenderPropertyId.AnchorMax, 1, 1),
@@ -207,7 +224,7 @@ namespace Carbon.Plugins
                             Vector(GuiRenderPropertyId.Pivot, 0.5, 0.5), Boolean(GuiRenderPropertyId.Visible, true),
                             Color(GuiRenderPropertyId.BackgroundColor, new[] {1.0, 1.0, 1.0}, 0)
                         };
-                        if (EffectiveVisible && ActionCommand != null) {
+                        if (EffectiveVisible && EffectiveInteractive && ActionCommand != null) {
                             string Command = ActionCommand(Node);
                             if (Command != null) ActionProperties.Add(String(GuiRenderPropertyId.ActionCommand, Command));
                         }
@@ -216,6 +233,44 @@ namespace Carbon.Plugins
                     }
                 }
             }
+
+            private static List<GuiClipRect> BoundsWithinClips(List<GuiClipRect> ParentBounds, bool ParentCreatesClip,
+                GuiProjectedRect Rect, GuiRetainedNode Node)
+            {
+                var Result = new List<GuiClipRect>(ParentBounds.Count + (ParentCreatesClip ? 1 : 0));
+                foreach (GuiClipRect Parent in ParentBounds) Result.Add(BoundsWithinClip(Parent, Rect, Node));
+                if (ParentCreatesClip) Result.Add(BoundsWithinClip(GuiClipRect.Unit, Rect, Node));
+                return Result;
+            }
+            private static GuiClipRect BoundsWithinClip(GuiClipRect ParentBounds,
+                GuiProjectedRect Rect, GuiRetainedNode Node)
+            {
+                double[] Anchor = Numbers(Node, GuiPropertyId.AnchorPoint);
+                GuiAffine XSize = Affine(Rect.Size[0], Rect.Size[1]), YSize = Affine(Rect.Size[2], Rect.Size[3]);
+                GuiAffine XPosition = Affine(Rect.Position[0], Rect.Position[1]);
+                GuiAffine YPosition = Affine(Rect.Position[2], Rect.Position[3]);
+                GuiAffine LocalX = GuiAffine.Subtract(XPosition, GuiAffine.Multiply(XSize, Anchor[0]));
+                GuiAffine LocalY = GuiAffine.Subtract(YPosition, GuiAffine.Multiply(YSize, Anchor[1]));
+                return new GuiClipRect(Compose(ParentBounds.XStart, ParentBounds.XSize, LocalX),
+                    Compose(ParentBounds.YStart, ParentBounds.YSize, LocalY),
+                    ComposeSize(ParentBounds.XSize, XSize), ComposeSize(ParentBounds.YSize, YSize));
+            }
+            private static GuiAffine Compose(GuiAffine ParentStart, GuiAffine ParentSize, GuiAffine Local)
+            { return GuiAffine.Add(ParentStart, GuiAffine.Add(GuiAffine.Multiply(ParentSize, Local.Scale), Affine(0, Local.Offset))); }
+            private static GuiAffine ComposeSize(GuiAffine ParentSize, GuiAffine LocalSize)
+            { return GuiAffine.Add(GuiAffine.Multiply(ParentSize, LocalSize.Scale), Affine(0, LocalSize.Offset)); }
+            private static bool EntirelyOutside(GuiClipRect Rect)
+            {
+                if (!AlwaysNonNegative(Rect.XSize) || !AlwaysNonNegative(Rect.YSize)) return false;
+                GuiAffine Right = GuiAffine.Add(Rect.XStart, Rect.XSize), Bottom = GuiAffine.Add(Rect.YStart, Rect.YSize);
+                return AlwaysAtMostZero(Right) || AlwaysAtLeastOne(Rect.XStart) ||
+                    AlwaysAtMostZero(Bottom) || AlwaysAtLeastOne(Rect.YStart);
+            }
+            private static bool EntirelyOutsideAny(List<GuiClipRect> Rectangles)
+            { foreach (GuiClipRect Value in Rectangles) if (EntirelyOutside(Value)) return true; return false; }
+            private static bool AlwaysNonNegative(GuiAffine Value) { return Value.Scale >= 0 && Value.Offset >= 0; }
+            private static bool AlwaysAtMostZero(GuiAffine Value) { return Value.Scale <= 0 && Value.Offset <= 0; }
+            private static bool AlwaysAtLeastOne(GuiAffine Value) { return Value.Scale >= 1 && Value.Offset >= 0; }
 
             private static GuiRenderNodeKind RenderKind(GuiClassId ClassId)
             {
@@ -301,6 +356,14 @@ namespace Carbon.Plugins
                 internal readonly double[] Position, Size;
                 internal GuiProjectedRect(GuiAffine XPosition, GuiAffine YPosition, GuiAffine XSize, GuiAffine YSize)
                 { Position = new[] {XPosition.Scale, XPosition.Offset, YPosition.Scale, YPosition.Offset}; Size = new[] {XSize.Scale, XSize.Offset, YSize.Scale, YSize.Offset}; }
+            }
+
+            private sealed class GuiClipRect
+            {
+                internal static readonly GuiClipRect Unit = new GuiClipRect(Affine(0, 0), Affine(0, 0), Affine(1, 0), Affine(1, 0));
+                internal readonly GuiAffine XStart, YStart, XSize, YSize;
+                internal GuiClipRect(GuiAffine XStart, GuiAffine YStart, GuiAffine XSize, GuiAffine YSize)
+                { this.XStart = XStart; this.YStart = YStart; this.XSize = XSize; this.YSize = YSize; }
             }
 
             private static Dictionary<ulong, GuiProjectedRect> ProjectChildren(GuiRetainedState State, GuiRetainedNode Parent)
@@ -430,14 +493,52 @@ namespace Carbon.Plugins
             { return Value == "Center" ? 0.5 : Value == "Right" || Value == "Bottom" ? 1 : 0; }
 
             internal static bool NeedsCursorFor(GuiRetainedState State, GuiRetainedNode Screen)
-            { return HasVisibleInteractiveControl(State, Screen, true); }
-            private static bool HasVisibleInteractiveControl(GuiRetainedState State, GuiRetainedNode Node, bool AncestorsVisible)
+            { return HasVisibleInteractiveControl(State, Screen, true, true, new List<GuiClipRect>(), false); }
+            internal static bool IsEffectivelyInteractive(GuiRetainedState State, GuiRetainedNode Screen, GuiRetainedNode Target)
             {
-                bool Visible = AncestorsVisible && (!GuiSchema.IsA(Node.ClassId, "GuiObject") || Boolean(Node, GuiPropertyId.Visible));
-                if (Visible && (Node.ClassId == GuiClassId.TextButton || Node.ClassId == GuiClassId.ImageButton)) return true;
-                if (Visible && Node.ClassId == GuiClassId.ScrollingFrame && Boolean(Node, GuiPropertyId.ScrollingEnabled)) return true;
-                foreach (ulong Child in Node.Children) if (HasVisibleInteractiveControl(State, State.Nodes[Child], Visible)) return true;
+                if (State == null || Screen == null || Target == null || Screen.ClassId != GuiClassId.ScreenGui) return false;
+                bool Found, Eligible;
+                FindInteractiveEligibility(State, Screen, Target.Identity.GuiObjectId, true, true,
+                    new List<GuiClipRect>(), false, out Found, out Eligible);
+                return Found && Eligible;
+            }
+            private static bool HasVisibleInteractiveControl(GuiRetainedState State, GuiRetainedNode Parent, bool AncestorsVisible,
+                bool AncestorsInteractive, List<GuiClipRect> ParentBoundsInClips, bool ParentCreatesClip)
+            {
+                Dictionary<ulong, GuiProjectedRect> Rectangles = ProjectChildren(State, Parent);
+                foreach (ulong ChildId in Parent.Children) {
+                    GuiRetainedNode Node = State.Nodes[ChildId];
+                    if (!GuiSchema.IsA(Node.ClassId, "GuiObject")) continue;
+                    bool Visible = AncestorsVisible && Boolean(Node, GuiPropertyId.Visible);
+                    List<GuiClipRect> BoundsInClips = BoundsWithinClips(ParentBoundsInClips, ParentCreatesClip, Rectangles[ChildId], Node);
+                    bool Interactive = AncestorsInteractive && !EntirelyOutsideAny(BoundsInClips);
+                    if (Visible && Interactive && (Node.ClassId == GuiClassId.TextButton || Node.ClassId == GuiClassId.ImageButton)) return true;
+                    if (Visible && Interactive && Node.ClassId == GuiClassId.ScrollingFrame && Boolean(Node, GuiPropertyId.ScrollingEnabled)) return true;
+                    bool Clips = Node.ClassId == GuiClassId.Frame && Boolean(Node, GuiPropertyId.ClipsDescendants);
+                    if (HasVisibleInteractiveControl(State, Node, Visible, Interactive,
+                        Node.ClassId == GuiClassId.ScrollingFrame ? new List<GuiClipRect>() : BoundsInClips, Clips)) return true;
+                }
                 return false;
+            }
+            private static void FindInteractiveEligibility(GuiRetainedState State, GuiRetainedNode Parent, ulong TargetId,
+                bool AncestorsVisible, bool AncestorsInteractive, List<GuiClipRect> ParentBoundsInClips, bool ParentCreatesClip,
+                out bool Found, out bool Eligible)
+            {
+                Dictionary<ulong, GuiProjectedRect> Rectangles = ProjectChildren(State, Parent);
+                foreach (ulong ChildId in Parent.Children) {
+                    GuiRetainedNode Node = State.Nodes[ChildId];
+                    if (!GuiSchema.IsA(Node.ClassId, "GuiObject")) continue;
+                    bool Visible = AncestorsVisible && Boolean(Node, GuiPropertyId.Visible);
+                    List<GuiClipRect> BoundsInClips = BoundsWithinClips(ParentBoundsInClips, ParentCreatesClip, Rectangles[ChildId], Node);
+                    bool Interactive = AncestorsInteractive && !EntirelyOutsideAny(BoundsInClips);
+                    if (ChildId == TargetId) { Found = true; Eligible = Visible && Interactive; return; }
+                    bool Clips = Node.ClassId == GuiClassId.Frame && Boolean(Node, GuiPropertyId.ClipsDescendants);
+                    FindInteractiveEligibility(State, Node, TargetId, Visible, Interactive,
+                        Node.ClassId == GuiClassId.ScrollingFrame ? new List<GuiClipRect>() : BoundsInClips,
+                        Clips, out Found, out Eligible);
+                    if (Found) return;
+                }
+                Found = false; Eligible = false;
             }
             private static GuiStoredValue Property(GuiRetainedNode Node, GuiPropertyId Id)
             { GuiStoredValue Value; if (!Node.Properties.TryGetValue(Id, out Value)) throw new InvalidOperationException("GUI render property is missing"); return Value; }

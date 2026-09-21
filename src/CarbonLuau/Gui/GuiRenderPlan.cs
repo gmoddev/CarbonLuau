@@ -7,7 +7,7 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
-        internal enum GuiRenderNodeKind { Container = 1, Text = 2, Button = 3, Image = 4, ScrollView = 5 }
+        internal enum GuiRenderNodeKind { Container = 1, Text = 2, Button = 3, Image = 4, ScrollView = 5, Clip = 6 }
         internal enum GuiRenderPropertyId
         {
             AnchorMin = 1, AnchorMax = 2, OffsetMin = 3, OffsetMax = 4, Pivot = 5, Visible = 6,

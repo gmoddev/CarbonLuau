@@ -12,6 +12,10 @@ Current source also contains Foundation 3A's deterministic `UIGridLayout` for
 qualification. It has no assigned package or scripting API release identity
 yet and is not implied by published `0.4.0` artifacts.
 
+Current source additionally implements `Frame.ClipsDescendants` with bounded
+private rectangular mask projection. The property is implemented but remains
+client-unqualified and is not yet in a qualified public release surface.
+
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the
 same objects. CarbonLuau synchronizes committed changes after Luau returns.
@@ -52,6 +56,22 @@ end)
 submitted the accepted action. The shared button text changes for every viewer
 because they are all viewing the same retained tree.
 
+## Frame clipping in current source
+
+```lua
+local Viewport = Screen:Create("Frame")
+Viewport.ClipsDescendants = true
+
+local Overflowing = Viewport:Create("Frame")
+Overflowing.Position = UDim2.fromScale(0.75, 0)
+Overflowing.Size = UDim2.fromScale(0.5, 1)
+```
+
+Clipping is projection-only. It does not rewrite Position, Size, layout order or
+the retained child tree. The private mask helper is not addressable from Luau.
+Authenticated-client visual and clipped-region click behavior is still pending
+the D17 qualification supplement.
+
 ## One tree or one tree per Player
 
 Calling `Screen:Show(Player)` for several Players creates several views of one
@@ -89,6 +109,7 @@ example and is not part of a published release identity yet:
 | Explicit scrolling and list layout inside scrolling | [`scrolling`](../../examples/gui/scrolling/init.luau), [`scrolling-layout`](../../examples/gui/scrolling-layout/init.luau) |
 | One shared tree and cloned per-Player state | [`shared-rich`](../../examples/gui/shared-rich/init.luau), [`per-player-rich`](../../examples/gui/per-player-rich/init.luau) |
 | Deterministic explicit grid, current source only | [`grid`](../../examples/gui/grid/init.luau) |
+| Rectangular Frame clipping, current source and client-unqualified | [`clipping`](../../examples/gui/clipping/init.luau) |
 
 These examples use only the public Luau surface. Raw Rust CUI is never exposed.
 

@@ -68,5 +68,7 @@ the experimental source surface is available.
 
 Foundation 3A's deterministic `UIGridLayout` is implemented in current source
 for qualification but has not been assigned to a package or scripting API
-release identity. Clipping, project-owned fonts and one-way scroll effects are
-not implemented by 3A.
+release identity. Foundation 3B's `Frame.ClipsDescendants` is implemented in
+current source with bounded private projection, but remains client-unqualified
+and outside the qualified public release identity. Project-owned fonts and
+one-way scroll effects remain unimplemented.
