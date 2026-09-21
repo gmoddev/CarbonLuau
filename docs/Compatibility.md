@@ -42,8 +42,8 @@ and v0.3.0 artifacts are unchanged. The machine-readable mapping is
 [release guide](Release.md).
 
 GUI Foundation 1 is an approved D15 architecture implemented through Foundation
-1E, including the retained runtime, presentations, synchronization and secure
-`TextButton.Activated` ingress. Its package
+1F, including the retained runtime, presentations, synchronization, secure
+`TextButton.Activated` ingress and lifecycle/runtime closure. Its package
 and scripting API identity is **UNASSIGNED / release-planning gated**. The design
 does not alter package `0.4.0`, scripting API `0.4.0-experimental`, native ABI
 `1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` or the
@@ -372,6 +372,26 @@ a Rust client delivered the private command or visibly completed an
 interaction. Hosted or local model tests and server-side Carbon registration do
 not substitute for that evidence. The GUI package/scripting identity remains
 unassigned.
+
+### GUI Foundation 1F evidence contract
+
+[GUI Foundation 1F](GuiFoundation1F.md) closes healthy root/addon replacement,
+cross-domain owner/holder retirement, fatal VM reconstruction, provider and host
+teardown, pending-work invalidation, backend retry convergence, bounded operator
+diagnostics and registry leak/stress behavior. Its affected evidence is failed
+and successful candidate publication; stale references/tokens across every
+lifetime transition; callback pre-entry suppression; newest-state backend fault
+recovery; baseline registry counts; 100 replacement/failure/recovery cycles;
+1,000 Show/Hide, Clone/Destroy and reconnect cycles; GUI-1A through 1E and
+Foundations A-G regressions; Windows/Linux runtime lanes; live Carbon lifecycle;
+and affected sanitizer coverage.
+
+Authenticated real-client rendering, layout, cursor, reconciliation and click
+receipt remain mandatory before those behaviors or the complete GUI surface can
+be advertised as qualified. Controlled-host and server-side live lifecycle
+evidence do not substitute for that gate. A GUI-specific live provider fixture
+also remains unavailable; controlled provider/domain lifecycle evidence is
+reported separately. The GUI package/scripting identity remains unassigned.
 
 ## Phase 0 consistency review
 

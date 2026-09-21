@@ -1,8 +1,9 @@
 # GUI Foundation 1 architecture
 
-Status: **approved architecture; Foundations 1A through 1D implement the retained
-runtime, presentation projection and automatic synchronization, with interaction
-ingress still deferred**.
+Status: **approved architecture; Foundations 1A through 1F implement the retained
+runtime, presentation projection, automatic synchronization, secure Activated
+ingress and lifecycle/runtime closure. Authenticated-client qualification and
+release planning remain deferred**.
 
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model) is the canonical policy owner. This record preserves the detailed rationale and implementation guidance for future GUI phases. If this record and D15 conflict, D15 wins and both documents must be reconciled before implementation continues.
 
@@ -184,7 +185,18 @@ owns internal presentations, exact Player-bound Show/Hide state, deterministic
 full-plan compilation and the production Rust CUI projection. It remains a
 static projection phase. [GUI Foundation 1D](GuiFoundation1D.md) owns revisioned
 dirty state, coalesced property patches, structural full reconciliation and the
-shared bounded post-Luau GUI flush. Interaction ingress remains a later phase.
+shared bounded post-Luau GUI flush. [GUI Foundation 1E](GuiFoundation1E.md) owns
+the private action command, presentation-bound authority, exact Player
+validation and bounded scheduler ingress. [GUI Foundation 1F](GuiFoundation1F.md)
+owns replacement, fatal recovery, provider/host teardown, backend retry,
+operator diagnostics and leak/stress closure.
+
+The exact remaining Foundation 1G work is authenticated-client visual, cursor,
+click and reconciliation evidence; live multi-viewer qualification; current
+Carbon/Rust adapter upgrade checks; and an explicit GUI release/API identity
+decision after those gates pass. Foundation 1G is not authorization for another
+public GUI feature.
+
 Before public support, qualification must cover retained model and value semantics, layout golden cases, mutation ordering, shared-domain ownership, provisional foreign-owner publication, exact Player/token attacks and reconnects, bounds/queue exhaustion, no reentrant entry, backend fault injection, replacement/recovery cleanup, sanitizer coverage, live current Carbon/Rust rendering with an authenticated client, multi-viewer cost and host-upgrade adapter checks.
 
 Authenticated-client evidence is required for claims about actual visual layout, click receipt, cursor behavior and client reconciliation. Controlled `BasePlayer` fixtures alone cannot establish those results. Exact supported Carbon/Rust revisions and any host-specific adapter assumptions belong in qualification evidence and compatibility documentation, not D15.

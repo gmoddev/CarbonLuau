@@ -61,5 +61,7 @@ retained Luau runtime through object lifecycle/publication is recorded in
 the Rust CUI projection are recorded in [GUI Foundation 1C](GuiFoundation1C.md).
 Bounded retained-tree synchronization and reconciliation are recorded in
 [GUI Foundation 1D](GuiFoundation1D.md). Secure `TextButton.Activated` ingress is
-recorded in [GUI Foundation 1E](GuiFoundation1E.md). Authenticated real-client
-click evidence and a GUI release identity remain deferred.
+recorded in [GUI Foundation 1E](GuiFoundation1E.md). Replacement, recovery,
+teardown, diagnostics and leak/stress closure are recorded in
+[GUI Foundation 1F](GuiFoundation1F.md). Authenticated real-client visual,
+reconciliation and click evidence plus a GUI release identity remain deferred.

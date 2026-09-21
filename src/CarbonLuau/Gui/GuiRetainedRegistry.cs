@@ -98,8 +98,10 @@ namespace Carbon.Plugins
             internal readonly PlayerDirectory Players;
             internal readonly IGuiBackend Backend;
             internal readonly GuiActionDiagnostics ActionDiagnostics = new GuiActionDiagnostics();
+            internal readonly GuiRuntimeDiagnostics RuntimeDiagnostics = new GuiRuntimeDiagnostics();
             internal int LiveObjects { get; private set; }
             internal int LivePresentations { get; private set; }
+            private readonly HashSet<GuiRetainedRegistry> Registries = new HashSet<GuiRetainedRegistry>();
             private readonly Dictionary<string, int> PlayerPresentations = new Dictionary<string, int>(StringComparer.Ordinal);
             private readonly Dictionary<string, GuiActionRecord> Actions = new Dictionary<string, GuiActionRecord>(StringComparer.Ordinal);
             private readonly Dictionary<GuiRetainedRegistry, int> DomainActions = new Dictionary<GuiRetainedRegistry, int>();
@@ -108,9 +110,17 @@ namespace Carbon.Plugins
             private readonly Queue<string> RetiredActionOrder = new Queue<string>();
             internal int LiveActionCount { get { return Actions.Count; } }
             internal int RetiredActionCount { get { return RetiredActions.Count; } }
+            internal int LiveRegistryCount { get { return Registries.Count; } }
+            internal int PlayerActionRateCount { get { return PlayerActionRates.Count; } }
+            internal int DomainActionOwnerCount { get { return DomainActions.Count; } }
             internal GuiRetainedWorld(GuiLimits Limits) : this(Limits, null, new InMemoryGuiBackend()) { }
             internal GuiRetainedWorld(GuiLimits Limits, PlayerDirectory Players, IGuiBackend Backend)
             { this.Limits = Limits ?? throw new ArgumentNullException("Limits"); this.Players = Players; this.Backend = Backend ?? throw new ArgumentNullException("Backend"); }
+            internal void RegisterRegistry(GuiRetainedRegistry Registry)
+            {
+                if (Registry == null || !Registries.Add(Registry)) throw new FacadeException("invalid GUI registry publication");
+            }
+            internal void UnregisterRegistry(GuiRetainedRegistry Registry) { if (Registry != null) Registries.Remove(Registry); }
             internal void Adjust(int Change)
             {
                 long Next = (long)LiveObjects + Change;
@@ -265,6 +275,32 @@ namespace Carbon.Plugins
             internal void Accepted() { ActionDiagnostics.Accept(); }
             internal void QueueRejected() { ActionDiagnostics.Reject(GuiActionRejection.QueueFull); }
             internal string ActionStatus { get { return ActionDiagnostics.Status() + "; active/retired: " + Actions.Count + "/" + RetiredActions.Count; } }
+            internal void BackendAccepted(bool Full) { RuntimeDiagnostics.BackendAccepted(Full); }
+            internal void BackendFailed() { RuntimeDiagnostics.BackendFailed(); }
+            internal void RecordResourceLimit(Exception Error)
+            {
+                string Message = Error == null ? "" : Error.Message ?? "";
+                if (Message.IndexOf("limit", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    Message.IndexOf("bound", StringComparison.OrdinalIgnoreCase) >= 0)
+                    RuntimeDiagnostics.ResourceLimitRejected();
+            }
+            internal string Status
+            {
+                get {
+                    int Screens = 0, Connections = 0, Dirty = 0, FullResync = 0, Blocked = 0, PendingDestroys = 0;
+                    foreach (GuiRetainedRegistry Registry in Registries) {
+                        Screens += Registry.ScreenCount; Connections += Registry.ConnectionCount;
+                        Dirty += Registry.DirtyPresentationCount; FullResync += Registry.FullResyncPresentationCount;
+                        Blocked += Registry.BlockedPresentationCount; PendingDestroys += Registry.PendingDestroyCount;
+                    }
+                    return "GUI live registries/objects/screens/presentations/connections/actions: " + Registries.Count + "/" +
+                        LiveObjects + "/" + Screens + "/" + LivePresentations + "/" + Connections + "/" + Actions.Count +
+                        "\nGUI presentation dirty/full-resync/blocked/pending-destroy: " + Dirty + "/" + FullResync + "/" + Blocked + "/" + PendingDestroys +
+                        "\nGUI backend full/patch/failures; resource-limit rejections: " + RuntimeDiagnostics.FullRebuilds + "/" +
+                        RuntimeDiagnostics.Patches + "/" + RuntimeDiagnostics.BackendSendFailures + "; " + RuntimeDiagnostics.ResourceLimitRejections +
+                        "\n" + ActionStatus;
+                }
+            }
             private static bool CanonicalToken(string Token)
             {
                 if (Token == null || Token.Length != 32) return false;
@@ -291,12 +327,45 @@ namespace Carbon.Plugins
                 if (VmGenerationId == 0 || DomainLifetimeId == 0) throw new ArgumentOutOfRangeException("GUI owner identity");
                 this.World = World ?? throw new ArgumentNullException("World"); Limits = World.Limits;
                 this.VmGenerationId = VmGenerationId; this.DomainLifetimeId = DomainLifetimeId;
+                World.RegisterRegistry(this);
             }
             internal int LiveObjectCount { get { return State.Nodes.Count; } }
             internal int ScreenCount { get { return State.Screens; } }
             internal int ConnectionCount { get { return State.Connections.Count; } }
             internal int PresentationCount { get { return State.Presentations.Count; } }
             internal int PublicationDepth { get { return Publications.Count; } }
+            internal int PendingDestroyCount { get { return State.PendingDestroys.Count; } }
+            internal int DirtyPresentationCount {
+                get {
+                    int Result = 0;
+                    foreach (GuiPresentation Value in State.Presentations.Values) {
+                        GuiScreenSynchronization Synchronization;
+                        if (State.Synchronization.TryGetValue(Value.ScreenId, out Synchronization) && Value.SentRevision < Synchronization.Revision) Result++;
+                    }
+                    return Result;
+                }
+            }
+            internal int FullResyncPresentationCount {
+                get {
+                    int Result = 0;
+                    foreach (GuiPresentation Value in State.Presentations.Values) {
+                        GuiScreenSynchronization Synchronization;
+                        if (Value.NeedsFullResync || (State.Synchronization.TryGetValue(Value.ScreenId, out Synchronization) && Synchronization.FullRebuildRequired)) Result++;
+                    }
+                    return Result;
+                }
+            }
+            internal int BlockedPresentationCount {
+                get {
+                    int Result = 0;
+                    foreach (GuiPresentation Value in State.Presentations.Values) {
+                        GuiScreenSynchronization Synchronization;
+                        if (Value.ProjectionBlockedRevision != 0 && State.Synchronization.TryGetValue(Value.ScreenId, out Synchronization) &&
+                            Value.ProjectionBlockedRevision == Synchronization.Revision) Result++;
+                    }
+                    return Result;
+                }
+            }
             internal bool HasWork {
                 get {
                     if (State.PendingDestroys.Count != 0) return true;
@@ -317,7 +386,9 @@ namespace Carbon.Plugins
 
             internal void BeginPublication()
             {
-                RequireLive(); if (Publications.Count >= 64) throw new FacadeException("GUI publication nesting limit reached");
+                RequireLive(); if (Publications.Count >= 64) {
+                    World.RuntimeDiagnostics.ResourceLimitRejected(); throw new FacadeException("GUI publication nesting limit reached");
+                }
                 Publications.Push(State.Copy());
             }
             internal void CommitPublication()
@@ -368,7 +439,7 @@ namespace Carbon.Plugins
             internal string[] Mutate(string[] Fields, Func<string> NextRegistration)
             {
                 RequireLive(); if (Fields == null || Fields.Length == 0) throw new FacadeException("invalid GUI mutation");
-                switch (Fields[0]) {
+                try { switch (Fields[0]) {
                     case "create": {
                         RequireFields(Fields, 3); ulong ParentId = Fields[1].Length == 0 ? 0 : Id(Fields[1]);
                         return ObjectResult(Create(ParentId, Fields[2]));
@@ -395,7 +466,7 @@ namespace Carbon.Plugins
                     case "show": RequireFields(Fields, 4); Show(Node(Id(Fields[1])), Fields[2], Fields[3]); return new string[0];
                     case "hide": RequireFields(Fields, 4); Hide(Node(Id(Fields[1])), Fields[2], Fields[3]); return new string[0];
                     default: throw new FacadeException("unknown GUI mutation");
-                }
+                } } catch (FacadeException Error) { World.RecordResourceLimit(Error); throw; }
             }
 
             private GuiRetainedNode Create(ulong ParentId, string ClassName)
@@ -567,7 +638,10 @@ namespace Carbon.Plugins
                 if (State.PendingDestroys.Count != 0 && (PreferDestroy || !HasPresentation)) {
                     GuiBackendTarget Target = State.PendingDestroys.Peek(); int DestroyBytes = World.Backend.MeasureDestroy(Target);
                     if (DestroyBytes > RemainingBytes) return -DestroyBytes;
-                    State.PendingDestroys.Dequeue(); try { World.Backend.Destroy(Target); } catch { }
+                    State.PendingDestroys.Dequeue(); GuiBackendResult DestroyResult;
+                    try { DestroyResult = World.Backend.Destroy(Target); }
+                    catch { DestroyResult = GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "GUI backend destroy failed"); }
+                    if (!DestroyResult.Accepted) World.BackendFailed();
                     PreferDestroy = false; return DestroyBytes;
                 }
                 if (!HasPresentation) return Int32.MinValue;
@@ -609,7 +683,8 @@ namespace Carbon.Plugins
                         World.EnsureActionCapacity(this, CandidateActions.Count);
                         Bytes = World.Backend.MeasureReplace(Selected.Target, Plan);
                     }
-                    catch {
+                    catch (Exception Error) {
+                        World.RecordResourceLimit(Error);
                         Selected.NeedsFullResync = false; Selected.SynchronizationUncertain = true;
                         Selected.ProjectionBlockedRevision = Revision; return 0;
                     }
@@ -625,9 +700,11 @@ namespace Carbon.Plugins
                 try { Result = Full ? World.Backend.Replace(Selected.Target, Plan) : World.Backend.Update(Selected.Target, Patch); }
                 catch { Result = GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "GUI backend send failed"); }
                 if (Result.Accepted) {
+                    World.BackendAccepted(Full);
                     if (Full) {
                         try { World.ActivateActions(this, CandidateActions); }
-                        catch {
+                        catch (Exception Error) {
+                            World.RecordResourceLimit(Error);
                             AdvancePresentationEpoch(Selected); Selected.NeedsFullResync = true; Selected.SynchronizationUncertain = true;
                             Selected.SuccessfulPatchBatches = 0; return Bytes;
                         }
@@ -639,9 +716,11 @@ namespace Carbon.Plugins
                     Selected.SuccessfulPatchBatches = Full ? 0 : Selected.SuccessfulPatchBatches + 1;
                     PruneSynchronization(Selected.ScreenId);
                 } else if (!Full || Result.Code != GuiBackendResultCode.TargetUnavailable || World.Resolve(Selected.PlayerToken, Selected.PlayerUserId) != null) {
+                    World.BackendFailed();
                     if (Full) AdvancePresentationEpoch(Selected);
                     RequireFullRebuild(Selected); Selected.SynchronizationUncertain = true; Selected.SuccessfulPatchBatches = 0;
                 } else {
+                    World.BackendFailed();
                     InvalidatePresentation(Selected, GuiActionRejection.Stale); State.Presentations.Remove(SelectedKey);
                     World.RemovePresentation(Selected.PlayerToken); PruneSynchronization(Selected.ScreenId);
                 }
@@ -942,9 +1021,13 @@ namespace Carbon.Plugins
                 }
                 foreach (GuiBackendTarget Value in State.PendingDestroys) if (Destroyed.Add(Value.Key)) TryDestroy(Value);
                 World.Adjust(-State.Nodes.Count); State = new GuiRetainedState(); Publications.Clear();
+                World.UnregisterRegistry(this);
             }
             private void TryDestroy(GuiBackendTarget Target)
-            { try { World.Backend.Destroy(Target); } catch { } }
+            {
+                try { if (!World.Backend.Destroy(Target).Accepted) World.BackendFailed(); }
+                catch { World.BackendFailed(); }
+            }
         }
     }
 }

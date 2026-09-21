@@ -16,6 +16,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 1C presentation/CUI projection and evidence | [GuiFoundation1C.md](docs/GuiFoundation1C.md) |
 | GUI Foundation 1D synchronization/reconciliation and evidence | [GuiFoundation1D.md](docs/GuiFoundation1D.md) |
 | GUI Foundation 1E secure Activated ingress and evidence | [GuiFoundation1E.md](docs/GuiFoundation1E.md) |
+| GUI Foundation 1F lifecycle/runtime closure and evidence | [GuiFoundation1F.md](docs/GuiFoundation1F.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -94,6 +95,11 @@ identity. GUI Foundation 1E's private client command, opaque presentation-bound
 actions, exact Player validation, bounded admission and pre-entry stale-work
 suppression are recorded in [GuiFoundation1E.md](docs/GuiFoundation1E.md). It
 does not assign a GUI-capable release identity or authorize later GUI features.
+GUI Foundation 1F's replacement, recovery, teardown, backend-retry, bounded
+diagnostic and leak/stress closure is recorded in
+[GuiFoundation1F.md](docs/GuiFoundation1F.md). Authenticated-client rendering,
+reconciliation and click evidence plus GUI release planning remain Foundation
+1G work; no new GUI surface or identity is authorized.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

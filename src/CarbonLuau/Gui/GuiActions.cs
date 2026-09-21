@@ -47,6 +47,19 @@ namespace Carbon.Plugins
             }
         }
 
+        internal sealed class GuiRuntimeDiagnostics
+        {
+            internal ulong BackendSendFailures, FullRebuilds, Patches, ResourceLimitRejections;
+
+            internal void BackendAccepted(bool Full)
+            {
+                if (Full) Increment(ref FullRebuilds); else Increment(ref Patches);
+            }
+            internal void BackendFailed() { Increment(ref BackendSendFailures); }
+            internal void ResourceLimitRejected() { Increment(ref ResourceLimitRejections); }
+            private static void Increment(ref ulong Value) { if (Value != ulong.MaxValue) Value++; }
+        }
+
         internal sealed class GuiActionRate
         {
             private readonly int Rate, Burst;

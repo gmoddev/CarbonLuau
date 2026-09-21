@@ -102,7 +102,7 @@ namespace Carbon.Plugins
                 }
                 Gui.Accepted(); return true;
             }
-            internal string GuiActionStatus { get { return Gui.ActionStatus; } }
+            internal string GuiStatus { get { return Gui.Status; } }
             internal void FlushGui(System.Diagnostics.Stopwatch Watch, int Milliseconds)
             {
                 Players.CheckOwner(); int Sends = 0, Bytes = 0, WithoutProgress = 0;
