@@ -27,7 +27,11 @@ namespace Carbon.Plugins
                 Identity = Player, Connection = Player.Connection, UserId = Player.UserIDString, Name = Player.displayName,
                 Connected = Player.IsConnected,
                 Send = Message => Player.ChatMessage(Message),
-                Permission = Permission => permission.UserHasPermission(Player.UserIDString, Permission)
+                Permission = Permission => permission.UserHasPermission(Player.UserIDString, Permission),
+                Position = () => {
+                    var Value = Player.transform.position;
+                    return new PlayerPosition(Value.x, Value.y, Value.z);
+                }
             };
         }
         private void InitializeGameplay()

@@ -16,7 +16,7 @@ foreach ($Service in @('Players','Commands','Gui')) {
     if (!$Bootstrap.Contains(('if Name == "{0}"' -f $Service))) { throw "Missing registered service: $Service" }
     if ($Service -ne 'Gui' -and !(Test-Path -LiteralPath (Join-Path $Root "docs/api/Services/$Service.md"))) { throw "Missing service reference: $Service" }
 }
-foreach ($Type in @('Player','CommandContext','Signal','Connection')) {
+foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "docs/api/Types/$Type.md"))) { throw "Missing type reference: $Type" }
 }
 $Documents = @(Get-Item (Join-Path $Root 'README.md')) + @(Get-Item (Join-Path $Root 'CHANGELOG.md')) +
@@ -29,7 +29,7 @@ foreach ($Document in $Documents) {
         if (!(Test-Path -LiteralPath (Join-Path $Document.DirectoryName $Target))) { throw "Broken relative link: $($Document.Name): $Target" }
     }
 }
-foreach ($Example in @('player-events','hello-command')) {
+foreach ($Example in @('player-events','player-position','hello-command')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',
@@ -66,6 +66,9 @@ foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','I
 }
 foreach ($Constructor in @('UDim.new','UDim2.new','UDim2.fromScale','UDim2.fromOffset','Vector2.new','Color3.new','Color3.fromRGB')) {
     if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains($Constructor)) { throw "GUI constructor differs between bootstrap and reference: $Constructor" }
+}
+if (!$Bootstrap.Contains('Vector3.new') -or !(Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/Vector3.md')).Contains('Vector3.new')) {
+    throw 'Vector3 constructor differs between bootstrap and reference'
 }
 foreach ($Constructor in @('ImageSource.None','ImageSource.Sprite','ImageSource.Png','ImageSource.Item','ImageSource.SteamAvatar')) {
     if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains(($Constructor -split '\.')[1])) { throw "GUI image constructor differs between bootstrap and reference: $Constructor" }

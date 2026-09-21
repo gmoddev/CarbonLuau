@@ -14,6 +14,7 @@ This is server-side Luau, not Roblox API compatibility.
 | Players, connected-player snapshots, join/leave events | [Players](Services/Players.md) |
 | Player-issued chat commands | [Commands](Services/Commands.md) |
 | Player identity, messaging, permission query | [Player](Types/Player.md) |
+| Immutable world-coordinate values | [Vector3](Types/Vector3.md) |
 | Command payload | [CommandContext](Types/CommandContext.md) |
 | Event subscription | [Signal](Types/Signal.md), [Connection](Types/Connection.md) |
 | Versions and limits | [Compatibility](Compatibility.md) |
@@ -45,11 +46,14 @@ Players.PlayerAdded:Connect(function(Player)
 end)
 ```
 
-Not implemented in the current scripting surface: inventory, entities, health,
-teleport, moderation/admin mutation, networking, HTTP, filesystem APIs,
+Player-1A adds immutable `Vector3` and the live read-only `Player.Position`
+property under `0.4.0-experimental`; see its
+[qualification record](../PlayerInteractionFoundation1A.md). Not implemented in
+the current scripting surface: inventory, entities, health, teleport,
+moderation/admin mutation, networking, HTTP, filesystem APIs,
 arbitrary hooks/console execution, reflection, Roblox hierarchy/replication and
 `task.wait`. No Phase 4 API is shipped. [D18](../Invariants.md#d18--player-interaction-foundation-1)
-approves a future bounded read-only item identity/inventory surface plus
+also approves a future bounded read-only item identity/inventory surface plus
 committed-only Teleport and implementation-gated GiveItem/TakeItem, but
 architecture adoption does not make those APIs available. Revised D13 requires
 PREPARE/COMMIT/VERIFY and exact-Player serialization for those two mutations;

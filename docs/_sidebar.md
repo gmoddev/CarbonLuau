@@ -26,6 +26,7 @@
   - [GUI Foundation 3D](GuiFoundation3D.md)
   - [GUI Foundation 3E](GuiFoundation3E.md)
   - [Player Interaction Foundation 1 architecture](PlayerInteractionFoundation1.md)
+  - [Player Interaction Foundation 1A](PlayerInteractionFoundation1A.md)
   - [Inventory ownership/failure reassessment](InventoryOwnershipFailureReassessment.md)
 - API
   - [Overview](api/README.md)
@@ -33,6 +34,7 @@
   - [Players](api/Services/Players.md)
   - [Commands](api/Services/Commands.md)
   - [Player](api/Types/Player.md)
+  - [Vector3](api/Types/Vector3.md)
   - [CommandContext](api/Types/CommandContext.md)
   - [Signal](api/Types/Signal.md)
   - [Connection](api/Types/Connection.md)

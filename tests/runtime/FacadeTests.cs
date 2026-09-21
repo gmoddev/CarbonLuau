@@ -29,8 +29,10 @@ internal static class FacadeTests
         const string UserId = "76561198000000001";
         var Views = new Dictionary<string, Runtime.PlayerView>();
         var Messages = new List<string>(); bool Allowed = false;
+        var Position = new Runtime.PlayerPosition(10.5f, -20.25f, 30.75f);
         Func<Runtime.PlayerView> View = () => new Runtime.PlayerView { Identity = new object(), Connection = new object(), UserId = UserId,
-            Name = "Fixture Player", Connected = true, Send = Message => Messages.Add(Message), Permission = Permission => Allowed };
+            Name = "Fixture Player", Connected = true, Send = Message => Messages.Add(Message), Permission = Permission => Allowed,
+            Position = () => Position };
         var Directory = new Runtime.PlayerDirectory(Id => Views.ContainsKey(Id) ? Views[Id] : null);
         var Registrar = new Registrar(); var World = new Runtime.FacadeWorld(Directory, Registrar);
         string Source = "", FailureModule = null;
@@ -39,6 +41,7 @@ internal static class FacadeTests
             var Snapshot = new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = Source};
             Snapshot.Modules.Add("state", "return {}");
             if (FailureModule != null) Snapshot.Modules.Add("caughtresource", FailureModule);
+            Snapshot.Modules.Add("positionread", "return game:GetService('Players'):GetPlayers()[1].Position");
             return Snapshot;
         };
         const string ReadState = "local State=require('state'); local P,Old,Snapshot,C=State.P,State.Old,State.Snapshot,State.C; ";
@@ -53,8 +56,19 @@ internal static class FacadeTests
             Check(!Registrar.Active.Commands.ContainsKey("moduleleak") && !Host.HasWork && Host.Status().Contains("modules: 0"), "caught failed module publishes no cache, command or task");
             FailureModule = null;
             Views[UserId] = View(); var Lifetime = Directory.Connect(Views[UserId]);
-            Load("P=game:GetService('Players'); Old=P:GetPlayers()[1]; Snapshot=P:GetPlayers(); assert(Old==P:GetPlayerByUserId('" + UserId + "')); assert(Old.UserId=='" + UserId + "' and type(Old.UserId)=='string'); assert(Old.Name=='Fixture Player' and Old.IsConnected); assert(not pcall(function() Old.Name='forged' end)); assert(not pcall(function() Old.SendMessage({},'forged') end)); assert(not pcall(function() Old:SendMessage('provisional') end)); task.defer(function() Old:SendMessage('committed') end)");
+            Load("P=game:GetService('Players'); Old=P:GetPlayers()[1]; Snapshot=P:GetPlayers(); assert(Old==P:GetPlayerByUserId('" + UserId + "')); assert(Old.UserId=='" + UserId + "' and type(Old.UserId)=='string'); assert(Old.Name=='Fixture Player' and Old.IsConnected); assert(not pcall(function() Old.Name='forged' end)); assert(not pcall(function() Old.SendMessage({},'forged') end)); assert(not pcall(function() Old:SendMessage('provisional') end)); local ProvisionalPosition=require('positionread'); assert(ProvisionalPosition==Vector3.new(10.5,-20.25,30.75)); State.SavedPosition=Old.Position; task.defer(function() Old:SendMessage('committed') end)");
             Check(Messages.Count == 0, "D10 caught provisional message has no effect"); Drain(Host); Check(Messages.Count == 1 && Messages[0] == "committed", "D10 deferred delivery after commit");
+            Execute("local Zero=Vector3.new(0,0,0); local A=Vector3.new(10,20,30); local B=Vector3.new(5,0,-5); assert(Zero.X==0 and Zero.Y==0 and Zero.Z==0 and Zero.Magnitude==0); assert(Vector3.new(-1.5,2.25,-3.75).X==-1.5); assert(Vector3.new(3,4,12).Magnitude==13); assert(tostring(A)=='Vector3'); assert(A==Vector3.new(10,20,30) and A~=Vector3.new(11,20,30) and A~=Vector3.new(10,21,30) and A~=Vector3.new(10,20,31) and A~={}); assert(Vector3.new(0.1+0.2,0,0)~=Vector3.new(0.3,0,0)); assert(A+B==Vector3.new(15,20,25)); assert(A-B==Vector3.new(5,20,35)); assert(-A==Vector3.new(-10,-20,-30)); assert(A*2==Vector3.new(20,40,60)); assert(2*A==Vector3.new(20,40,60)); assert(A/2==Vector3.new(5,10,15)); local Maximum=Vector3.new(3.4028234663852886e38,-3.4028234663852886e38,0); assert(Maximum.X>0 and Maximum.Y<0); assert(not pcall(Vector3.new,0/0,0,0)); assert(not pcall(Vector3.new,1/0,0,0)); assert(not pcall(Vector3.new,3.4028236e38,0,0)); assert(not pcall(Vector3.new,'1',0,0)); assert(not pcall(function() A.X=1 end)); assert(not pcall(function() A.Unknown=1 end)); assert(not pcall(function() return A*B end)); assert(not pcall(function() return A/B end)); assert(not pcall(function() return A/0 end)); assert(not pcall(function() return Maximum+Maximum end)); assert(not pcall(function() return Maximum*2 end))");
+            Position = new Runtime.PlayerPosition(-4.5f, 6.25f, 8.75f);
+            Execute("local First=Old.Position; assert(First==Vector3.new(-4.5,6.25,8.75)); assert(First~=require('state').SavedPosition); local Second=Old.Position; assert(First==Second and not rawequal(First,Second))");
+            Position = new Runtime.PlayerPosition(101.5f, 202.25f, -303.75f);
+            Execute("assert(Old.Position==Vector3.new(101.5,202.25,-303.75))");
+            Position = new Runtime.PlayerPosition(Single.NaN, 0, 0);
+            Execute("assert(not pcall(function() return Old.Position end))");
+            Position = new Runtime.PlayerPosition(101.5f, 202.25f, -303.75f);
+            var PositionPrevious = Registrar.Active; Source = "local Value=require('positionread'); assert(Value==Vector3.new(101.5,202.25,-303.75)); error('position candidate rejected')";
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.RUNTIME_ERROR && Registrar.Active == PositionPrevious && !Host.HasWork,
+                "failed provisional Position candidate preserves active domain and publishes no work");
             var Second = View(); Second.UserId = "76561198000000002"; Second.Name = "Second Player";
             Views[Second.UserId] = Second; Directory.Connect(Second);
             Execute("assert(#P:GetPlayers()==2 and #Snapshot==1); assert(P:GetPlayers()[2].Name=='Second Player')");
@@ -76,10 +90,10 @@ internal static class FacadeTests
             Execute("assert(not Old.IsConnected)");
             Check(Directory.Resolve(Lifetime.Token,UserId)==null,"observed invalidation is permanent even if host object/connection is reused");
             var Removed = Directory.Disconnect(UserId, Views[UserId].Identity); Views.Remove(UserId);
-            Execute("assert(not Old.IsConnected and Old.Name=='Fixture Player'); assert(#Snapshot==1); assert(not pcall(function() Old:SendMessage('stale') end)); assert(not pcall(function() Old:HasPermission('fixture.allowed') end))");
+            Execute("local Saved=require('state').SavedPosition; assert(Saved==Vector3.new(10.5,-20.25,30.75) and Saved*2==Vector3.new(21,-40.5,61.5)); assert(not Old.IsConnected and Old.Name=='Fixture Player'); assert(#Snapshot==1); assert(not pcall(function() return Old.Position end)); assert(not pcall(function() Old:SendMessage('stale') end)); assert(not pcall(function() Old:HasPermission('fixture.allowed') end))");
             Views[UserId] = View(); var Reconnected = Directory.Connect(Views[UserId]);
             Check(Reconnected.Token != Removed.Token && Directory.Resolve(Removed.Token, UserId) == null && Directory.Resolve("forged", UserId) == null, "reconnect/forged token never retargets");
-            Execute("assert(not Old.IsConnected); assert(P:GetPlayers()[1]~=Old and P:GetPlayers()[1].IsConnected)");
+            Execute("assert(not Old.IsConnected and not pcall(function() return Old.Position end)); assert(P:GetPlayers()[1]~=Old and P:GetPlayers()[1].IsConnected and P:GetPlayers()[1].Position==Vector3.new(101.5,202.25,-303.75))");
 
             Load("local P=game:GetService('Players'); P.PlayerAdded:Connect(function() print('first') end); C=P.PlayerAdded:Connect(function() print('second') end); P.PlayerAdded:Connect(function() error('listener error') end); P.PlayerAdded:Connect(function() print('last') end); P.PlayerRemoving:Connect(function(V) assert(not V.IsConnected); print(V.UserId) end)");
             Check(!Host.HasWork, "no synthetic joins for current players"); World.Event("added", Reconnected);
@@ -162,6 +176,8 @@ internal static class FacadeTests
             }
             Watch.Restart(); Execute("local P=game:GetService('Players'); for I=1,2000 do assert(P:GetPlayerByUserId('"+UserId+"').IsConnected); assert(#P:GetPlayers()==1) end");
             Console.WriteLine("[CarbonLuau:FacadeTest] 2000 proxy lookup/snapshot pairs: " + Watch.Elapsed.TotalMilliseconds.ToString("F2") + " ms");
+            Watch.Restart(); Execute("local Player=game:GetService('Players'):GetPlayerByUserId('"+UserId+"'); for I=1,2000 do local Value=Player.Position; assert(Value.X==101.5 and Value.Y==202.25 and Value.Z==-303.75) end");
+            Console.WriteLine("[CarbonLuau:Player1A] 2000 live Position reads: " + Watch.Elapsed.TotalMilliseconds.ToString("F2") + " ms");
             Previous=Registrar.Active; Host.Dispose(); Check(Registrar.Active==null && !Previous.Invoke("hello",UserId,new[]{"unload"}) && !Host.HasWork,"unload removes all host registrations");
         }
         var Tight = new Runtime.RuntimeConfig {MaxCallbackMilliseconds=3}; string Runaway = "game:GetService('Players').PlayerAdded:Connect(function() while true do end end)";
@@ -184,13 +200,13 @@ internal static class FacadeTests
             } finally { Views[UserId].Send=NormalSend; }
         }
         if (Repository != null) {
-            foreach (string Example in new[]{"player-events", "hello-command", "gui/hello", "gui/shared-live", "gui/per-player", "gui/activated", "gui/images", "gui/scrolling"}) {
+            foreach (string Example in new[]{"player-events", "player-position", "hello-command", "gui/hello", "gui/shared-live", "gui/per-player", "gui/activated", "gui/images", "gui/scrolling"}) {
                 string Text=File.ReadAllText(Path.Combine(Repository,"examples",Example,"init.luau"));
                 using (var Host=new Runtime.ScriptHost(Native,Config,()=>new Runtime.ScriptSnapshot{EntryName="init.luau",EntrySource=Text},World))
                     Check(Host.Reload().Status==Runtime.RuntimeStatus.OK,"shipped example loads: "+Example);
             }
-            Console.WriteLine("[CarbonLuau:FacadeTest] PASS eight shipped root examples loaded through real compiler/VM");
+            Console.WriteLine("[CarbonLuau:FacadeTest] PASS nine shipped root examples loaded through real compiler/VM");
         }
-        Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
+        Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, Vector3, Position, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
     }
 }

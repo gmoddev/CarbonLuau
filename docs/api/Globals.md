@@ -16,6 +16,9 @@ Wrong receiver, non-string service name or unknown service raises a Luau error.
 No permission is required for discovery or version inspection. A service exists
 only in its owning generation; there is no cross-reload state preservation.
 
+`Vector3` is also a frozen global constructor table beginning with
+`0.4.0-experimental`. See the [Vector3 reference](Types/Vector3.md).
+
 ```lua
 print(game.ApiName, game.ApiVersion, game.ApiStatus)
 local Commands = game:GetService("Commands")

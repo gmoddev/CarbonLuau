@@ -97,14 +97,16 @@ closes their server-side lifecycle, scale and release-candidate qualification
 under `0.4.0-experimental`; authenticated-client gates remain explicit, and Foundation 3
 does not reopen deferred TextBox work.
 
-Player Interaction Foundation 1 is resolved for future implementation by
+Player Interaction Foundation 1 is resolved by
 [D18](Invariants.md#d18--player-interaction-foundation-1), with complete
 rationale and qualification routing in
 [PlayerInteractionFoundation1](PlayerInteractionFoundation1.md). It approves
 immutable `Vector3`, read-only exact-Player position/health/inventory
 observation, read-only item existence, committed-only Teleport and
-implementation-gated GiveItem/TakeItem. None of this surface is implemented by
-the architecture adoptions. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
+implementation-gated GiveItem/TakeItem. Player-1A now implements immutable
+`Vector3` and read-only exact-connection `Player.Position`; see
+[Player Interaction Foundation 1A](PlayerInteractionFoundation1A.md). The later
+surface remains unimplemented. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
 exact-Player Luau serialization and false/true/indeterminate-error outcomes;
 the full rationale is in
 [Inventory Ownership / Failure Reassessment](InventoryOwnershipFailureReassessment.md).

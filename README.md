@@ -19,13 +19,13 @@ Players.PlayerAdded:Connect(function(Player)
 end)
 ```
 
-Use the administrator commands `carbonluau.status` and `carbonluau.reload`. More examples are available for [player events](examples/player-events/init.luau), [permission-protected commands](examples/hello-command/init.luau), [GUI](examples/gui/hello/init.luau), and [addon composition](examples/addons/shop/init.luau). Startup messages must use `task.defer` because provisional generations cannot send them.
+Use the administrator commands `carbonluau.status` and `carbonluau.reload`. More examples are available for [player events](examples/player-events/init.luau), [player positions](examples/player-position/init.luau), [permission-protected commands](examples/hello-command/init.luau), [GUI](examples/gui/hello/init.luau), and [addon composition](examples/addons/shop/init.luau). Startup messages must use `task.defer` because provisional generations cannot send them.
 
 For clean-checkout builds, checksums, and provenance, see the [release reproducibility guide](docs/Release.md).
 
 ## What is included
 
-The v0.4.0 candidate provides sandboxed Luau execution, bounded logging and memory, execution and compilation deadlines, reloads, controlled modules and tasks, and the Players, Signals, Commands and Gui facades. It also provides bounded provider-owned addon packages, exact dependency lifetimes, explicit public modules, and package-qualified `require("@id[/path]")` inside one shared VM. The scripting identity is `CarbonLuau 0.4.0-experimental`.
+The v0.4.0 candidate provides sandboxed Luau execution, bounded logging and memory, execution and compilation deadlines, reloads, controlled modules and tasks, and the Players, Signals, Commands and Gui facades. Player-1A adds immutable `Vector3` values and live read-only `Player.Position`. The candidate also provides bounded provider-owned addon packages, exact dependency lifetimes, explicit public modules, and package-qualified `require("@id[/path]")` inside one shared VM. The scripting identity is `CarbonLuau 0.4.0-experimental`.
 
 Addon packages are registered by a loaded Carbon provider plugin. CarbonLuau does not scan an addon directory or download packages. See [addon composition](docs/api/Addons.md), the [provider protocol](docs/api/Addon-Providers.md), and the [Foundation E qualification record](docs/FoundationE.md).
 
@@ -44,7 +44,7 @@ cursor, click-receipt and reconciliation behavior remains unqualified.
 
 Callbacks and host inputs are bounded, deadlines are cooperative, and the VM cap is not a whole-server memory cap. Successful reload cancels old listeners and commands; failed candidates preserve them. CarbonLuau does not expose raw Rust objects, arbitrary console execution, filesystem or network APIs, or a Roblox hierarchy.
 
-Provider-defined C# capabilities, root-to-addon imports, package downloads, version solving, multiple package instances, restricted exposure profiles, and async capabilities remain deferred. CarbonLuau has one shared VM heap cap, not per-addon hard heap isolation. Deterministic `UIListLayout`/`UIPadding`, typed images and `ScrollingFrame` are part of the experimental `0.4.0-experimental` surface. TextBox is not implemented because the current Rust command transport cannot preserve submitted text exactly; advanced GUI styling is also not implemented. D18 approves a future Player interaction surface, including implementation-gated `Player:GiveItem` and `Player:TakeItem` under revised D13, but none of it is implemented. Raw inventory objects, world-drop fallback and rollback APIs remain excluded.
+Provider-defined C# capabilities, root-to-addon imports, package downloads, version solving, multiple package instances, restricted exposure profiles, and async capabilities remain deferred. CarbonLuau has one shared VM heap cap, not per-addon hard heap isolation. Deterministic `UIListLayout`/`UIPadding`, typed images and `ScrollingFrame` are part of the experimental `0.4.0-experimental` surface. TextBox is not implemented because the current Rust command transport cannot preserve submitted text exactly; advanced GUI styling is also not implemented. D18's Vector3 and Position slice is implemented; Health, inventory observation, Teleport, `Player:GiveItem` and `Player:TakeItem` remain unimplemented. Raw inventory objects, world-drop fallback and rollback APIs remain excluded.
 
 `Frame.ClipsDescendants`, `GuiFont`, text `Font`, and the `ScrollTo` methods are
 part of the experimental source surface. Their authenticated-client visual,

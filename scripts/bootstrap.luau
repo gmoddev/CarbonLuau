@@ -13,6 +13,11 @@ local function Number(Value, Label, Minimum, Maximum)
     if Value < Minimum or Value > Maximum then Fail(Label .. " is outside its allowed range") end
     return Value == 0 and 0 or Value
 end
+local function FiniteNumber(Value, Label)
+    if type(Value) ~= "number" or Value ~= Value or Value == math.huge or Value == -math.huge then Fail("expected finite number for " .. Label) end
+    return Value == 0 and 0 or Value
+end
+local MaxHostFloat = 3.4028234663852886e38
 local ValueRecords = setmetatable({}, {__mode = "k"})
 if SharedValueEqual == nil then
     SharedValueEqual = function(Left, Right)
@@ -21,6 +26,7 @@ if SharedValueEqual == nil then
         if Kind == "UDim" then return Left.Scale == Right.Scale and Left.Offset == Right.Offset end
         if Kind == "UDim2" then return Left.X == Right.X and Left.Y == Right.Y end
         if Kind == "Vector2" then return Left.X == Right.X and Left.Y == Right.Y end
+        if Kind == "Vector3" then return Left.X == Right.X and Left.Y == Right.Y and Left.Z == Right.Z end
         if Kind == "Color3" then return Left.R == Right.R and Left.G == Right.G and Left.B == Right.B end
         if Kind == "ImageSource" then
             if Left.Kind ~= Right.Kind then return false end
@@ -36,7 +42,7 @@ if SharedValueEqual == nil then
     end
 end
 local ValueMetas = {}
-local function ValueMeta(Kind)
+local function ValueMeta(Kind, Configure)
     local Meta = {}
     Meta.__index = function(Value, Key)
         local RecordValue = ValueRecords[Value]
@@ -49,6 +55,7 @@ local function ValueMeta(Kind)
     Meta.__tostring = function() return Kind end
     Meta.__eq = SharedValueEqual
     Meta.__metatable = "CarbonLuau." .. Kind
+    if Configure then Configure(Meta) end
     ValueMetas[Kind] = table.freeze(Meta)
 end
 for _, Kind in {"UDim", "UDim2", "Vector2", "Color3", "ImageSource"} do ValueMeta(Kind) end
@@ -70,6 +77,53 @@ function UDim2.fromOffset(XOffset, YOffset) return UDim2.new(0, XOffset, 0, YOff
 local Vector2 = {}
 function Vector2.new(X, Y)
     return Value("Vector2", {X = Number(X, "Vector2.X", -32768, 32768), Y = Number(Y, "Vector2.Y", -32768, 32768)})
+end
+local Vector3
+local function IsVector3(Value)
+    return typeof(Value) == "userdata" and tostring(Value) == "Vector3"
+end
+local function Vector3Components(Value)
+    if not IsVector3(Value) then Fail("expected Vector3") end
+    return Value.X, Value.Y, Value.Z
+end
+ValueMeta("Vector3", function(Meta)
+    Meta.__add = function(Left, Right)
+        local LX, LY, LZ = Vector3Components(Left)
+        local RX, RY, RZ = Vector3Components(Right)
+        return Vector3.new(LX + RX, LY + RY, LZ + RZ)
+    end
+    Meta.__sub = function(Left, Right)
+        local LX, LY, LZ = Vector3Components(Left)
+        local RX, RY, RZ = Vector3Components(Right)
+        return Vector3.new(LX - RX, LY - RY, LZ - RZ)
+    end
+    Meta.__unm = function(Operand)
+        local X, Y, Z = Vector3Components(Operand)
+        return Vector3.new(-X, -Y, -Z)
+    end
+    Meta.__mul = function(Left, Right)
+        if IsVector3(Left) then
+            local X, Y, Z = Vector3Components(Left)
+            local Scalar = FiniteNumber(Right, "Vector3 scalar")
+            return Vector3.new(X * Scalar, Y * Scalar, Z * Scalar)
+        end
+        local Scalar = FiniteNumber(Left, "Vector3 scalar")
+        local X, Y, Z = Vector3Components(Right)
+        return Vector3.new(Scalar * X, Scalar * Y, Scalar * Z)
+    end
+    Meta.__div = function(Left, Right)
+        local X, Y, Z = Vector3Components(Left)
+        local Scalar = FiniteNumber(Right, "Vector3 scalar")
+        if Scalar == 0 then Fail("Vector3 division by zero") end
+        return Vector3.new(X / Scalar, Y / Scalar, Z / Scalar)
+    end
+end)
+Vector3 = {}
+function Vector3.new(X, Y, Z)
+    X = Number(X, "Vector3.X", -MaxHostFloat, MaxHostFloat)
+    Y = Number(Y, "Vector3.Y", -MaxHostFloat, MaxHostFloat)
+    Z = Number(Z, "Vector3.Z", -MaxHostFloat, MaxHostFloat)
+    return Value("Vector3", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})
 end
 local Color3 = {}
 function Color3.new(R, G, B)
@@ -134,7 +188,7 @@ local GuiFont = {
     DroidSansMono = Font("DroidSansMono"),
     PermanentMarker = Font("PermanentMarker"),
 }
-table.freeze(UDim); table.freeze(UDim2); table.freeze(Vector2); table.freeze(Color3); table.freeze(ImageSource); table.freeze(GuiFont)
+table.freeze(UDim); table.freeze(UDim2); table.freeze(Vector2); table.freeze(Vector3); table.freeze(Color3); table.freeze(ImageSource); table.freeze(GuiFont)
 local function Record(Player)
     local Value = Records[Player]
     if not Value then Fail("invalid Player proxy") end
@@ -161,6 +215,10 @@ local function GetPlayer(Token, UserId, Name)
             if Key == "Name" then return Info[1] == "1" and Info[2] or Name end
             if Key == "UserId" then return UserId end
             if Key == "IsConnected" then return Info[1] == "1" end
+            if Key == "Position" then
+                local Position = Host(22, Token, UserId)
+                return Vector3.new(tonumber(Position[1]), tonumber(Position[2]), tonumber(Position[3]))
+            end
             return PlayerMethods[Key]
         end,
     }
@@ -416,4 +474,4 @@ local function Dispatch(Fields)
         Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))
     else Callback(Player) end
 end
-return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont}), SharedValueEqual
+return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Vector3 = Vector3, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont}), SharedValueEqual

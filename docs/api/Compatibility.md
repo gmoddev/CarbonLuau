@@ -27,6 +27,12 @@ change and migration decision. Experimental does not permit silent breaking chan
 No automatic version negotiation, long-term deprecation window or Roblox contract
 is promised. Consult [current qualification](../Phase3-Validation.md).
 
+Player-1A adds immutable `Vector3` and read-only `Player.Position` under the
+existing `0.4.0-experimental` identity. Components and vector arithmetic remain
+inside the finite System.Single range; Position is one bounded exact-connection
+host lookup and one root world-position read. See the
+[Player-1A qualification record](../PlayerInteractionFoundation1A.md).
+
 Revised D13 and
 [D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
 read-only item observation plus implementation-gated `Player:GiveItem` and
@@ -40,6 +46,7 @@ API or native ABI identity.
 |---|---|
 | Connected-player population / snapshot | 1024; larger host population fails closed |
 | Player name / user ID | 128 UTF-8 bytes / 20 ASCII decimal digits |
+| Vector3 components | Finite System.Single range; no clamping |
 | Listeners | 128 per signal, 256 per generation |
 | Commands | 64 per generation; initialization-only |
 | Command / permission name | 32 / 128 ASCII bytes |

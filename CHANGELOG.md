@@ -6,6 +6,8 @@ All notable public changes to CarbonLuau are recorded here.
 
 ### Added
 
+- Immutable `Vector3` arithmetic and live read-only exact-connection
+  `Player.Position` under Player Interaction Foundation 1A.
 - Experimental addon composition under scripting API `0.4.0-experimental`.
 - Bounded provider-owned schema-1 packages and immutable source snapshots.
 - Required and optional dependency lifetimes with exact replacement bindings.
@@ -30,6 +32,9 @@ All notable public changes to CarbonLuau are recorded here.
 
 ### Validation
 
+- Qualified Vector3 bounds/arithmetic, cross-domain value lifetime and
+  Player.Position lifecycle/provisional behavior on the Linux runtime and
+  sanitizer matrix; hosted Windows evidence is recorded separately.
 - Qualified root-only, 1, 10, 50 and 100-addon configurations on Windows and Linux.
 - Qualified shared-heap exhaustion, parser boundaries, scheduler saturation,
   provider lifecycle, CarbonLuau reload with providers retained, and native teardown.

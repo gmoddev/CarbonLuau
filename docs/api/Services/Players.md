@@ -23,7 +23,7 @@ are cancelled when their generation retires; failed reload preserves old listene
 
 ```lua
 local Players = game:GetService("Players")
-for _, Player in Players:GetPlayers() do print(Player.Name, Player.UserId) end
+for _, Player in Players:GetPlayers() do print(Player.Name, Player.UserId, Player.Position) end
 Players.PlayerAdded:Connect(function(Player) print("joined", Player.UserId) end)
 Players.PlayerRemoving:Connect(function(Player) print("left", Player.UserId) end)
 local Player = Players:GetPlayerByUserId("76561198000000001")
