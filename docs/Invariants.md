@@ -111,12 +111,12 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D10 — approved admitted-operation and provisional-effect model | Admission, resource ownership, publication and deadline are orthogonal as specified in the canonical D10 detail below. | Requalify admitted-operation, cross-domain facade or provisional-effect changes |
 | D11 — resolved Phase 3 identity contract; domain binding added | Existing exact connection-token semantics remain, with host-backed facade validity now also bound to the owning domain lifetime; see D11 detail below. | Requalify host identity/adapter or domain-lifetime changes |
 | D12 — resolved addon and GUI-capable experimental identity | The additive addon, GUI Foundation 1 and implemented GUI Foundation 2 layout/image/scrolling surfaces are assigned `CarbonLuau 0.4.0-experimental`; package, API, ABI, provider protocol, schema and Luau identities remain separate. `TextBox` is not implemented. Authenticated-client GUI observations remain unqualified and non-gating. | Requalify affected public behavior and assign an explicit migration/version decision for breaks |
-| D13 — resolved inventory ownership/failure model; exact-build adapter qualified; mutation unimplemented | Rust inventory remains nontransactional, but a lack of universal rollback no longer categorically excludes a narrow operation. Eligible inventory mutation uses bounded mutation-free PREPARE, an explicit first-host-effect COMMIT boundary, strongest-defensible physical VERIFY, exact-Player Luau serialization and three distinct outcomes: pre-COMMIT `false`, verified `true`, or controlled post-COMMIT indeterminate error. Returned host resources remain under temporary CarbonLuau responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) retains the complete rationale; [InventoryMutationM2Validation.md](InventoryMutationM2Validation.md) qualifies G1–G5 on Rust build `25353106` plus Carbon `2.0.259`. | Implement only the qualified narrow adapter through Player-1F-A/1F-B; requalify host build, Carbon hook behavior, bounds or adapter-path changes |
+| D13 — resolved inventory ownership/failure model; TakeItem implemented | Rust inventory remains nontransactional, but a lack of universal rollback no longer categorically excludes a narrow operation. Eligible inventory mutation uses bounded mutation-free PREPARE, an explicit first-host-effect COMMIT boundary, strongest-defensible physical VERIFY, exact-Player Luau serialization and three distinct outcomes: pre-COMMIT `false`, verified `true`, or controlled post-COMMIT indeterminate error. Returned host resources remain under temporary CarbonLuau responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) retains the complete rationale; [InventoryMutationM2Validation.md](InventoryMutationM2Validation.md) qualifies G1–G5 and [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records the narrow TakeItem implementation. | Requalify host build, Carbon hook behavior, bounds or adapter-path changes; GiveItem remains separately gated |
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
 | D16 - resolved GUI Foundation 2 architecture; implemented subset qualified for experimental public release through 2F | Foundation 2 additively specializes D15 as specified below. GUI-2A/2B/2C/2E/2F implement and qualify deterministic layout, typed images and retained scrolling under the existing `0.4.0-experimental` identity. `TextBox` and typed text ingress remain deferred and unimplemented after the exact text-preservation gate failed. [GuiFoundation2.md](GuiFoundation2.md) retains the complete supporting design. | Requalify affected behavior; reconsider TextBox only with a bounded opaque text-preserving host transport |
 | D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
-| D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; implemented through Player-1D | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and implementation-gated `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, [PlayerInteractionFoundation1A.md](PlayerInteractionFoundation1A.md) records Vector3/Position, [PlayerInteractionFoundation1B.md](PlayerInteractionFoundation1B.md) records Health/MaxHealth, [PlayerInteractionFoundation1C.md](PlayerInteractionFoundation1C.md) records Items/physical inventory observation and [PlayerInteractionFoundation1D.md](PlayerInteractionFoundation1D.md) records Teleport implementation/server qualification. Authenticated-client Teleport behavior and later D18 mutation/closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
+| D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and implementation-gated `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record the read/spatial implementations, and [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem. Authenticated-client Teleport behavior, GiveItem and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 
 ### Canonical detail for resolved decisions
 
@@ -685,14 +685,15 @@ beyond bounded read-only `Exists` in Foundation 1. Its facade remains bound to
 and revalidates its owning domain lifetime under D10, and no host
 item/container object crosses into Luau.
 
-`GiveItem` and `TakeItem` are architecturally accepted but unimplemented
-committed-only inventory mutations under D13's PREPARE/COMMIT/VERIFY model.
+`GiveItem` and `TakeItem` are committed-only inventory mutations under D13's
+PREPARE/COMMIT/VERIFY model. TakeItem is implemented by Player-1F-A; GiveItem
+remains implementation-gated.
 Both return `true` only for a verified physical postcondition, `false` only for
 definite PREPARE rejection before COMMIT, and a controlled error for any
 post-COMMIT uncertainty. Their required Amount is an exact integer from 1
-through `Int32.MaxValue`; canonical-but-unknown item identity is a controlled
-programming/configuration error for mutation rather than the ordinary absence
-used by read APIs.
+through `Int32.MaxValue`. For TakeItem, a canonical unknown item is a definite
+PREPARE rejection and returns false before COMMIT. GiveItem retains its
+separately gated configuration-error treatment until implemented.
 
 GiveItem means delivery into the exact Player's accepted ordinary top-level
 main/belt/wear inventory, with stacking and multiple stacks allowed but no exact
@@ -757,7 +758,8 @@ only after successful publication, and failed candidates never drain it.
 
 Errors preserve simple author semantics: malformed item identity, invalid
 Amount or invalid Vector3 are programming errors; unknown canonical items are
-false/zero for read APIs but a programming/configuration error for mutation;
+false/zero for read APIs, false before COMMIT for TakeItem, and remain a
+programming/configuration error for the separately gated GiveItem;
 stale Player use is a controlled stale-Player error; ineligible Teleport state
 is a controlled operational error; and adapter failure is a controlled host-
 operation error. No Rust enum, exception or result wrapper is public. Inventory
@@ -795,8 +797,9 @@ injection algorithms with no Rust mutation or public API. Inventory-M2 has
 qualified the exact target-build Create/no-drop transfer, returned-resource,
 Take, cleanup and work-bound adapters as recorded in
 [InventoryMutationM2Validation.md](InventoryMutationM2Validation.md).
-Player-1F-A then implements TakeItem and Player-1F-B implements GiveItem using
-only that qualified adapter;
+Player-1F-A implements TakeItem using only that qualified adapter as recorded in
+[PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md), and
+Player-1F-B remains assigned to GiveItem;
 Player-1F-C performs combined lifecycle/public closure. No inventory production
 work is authorized by architecture adoption alone.
 

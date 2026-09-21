@@ -54,8 +54,8 @@ but authenticated-client convergence remains unqualified. See the
 Revised D13 and
 [D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
 read-only item observation, now implemented by Player-1C, plus implementation-
-gated `Player:GiveItem` and `Player:TakeItem` for future scoped work. Neither
-mutation is currently shipped.
+gated `Player:GiveItem` and `Player:TakeItem`. Player-1F-A ships TakeItem using
+the exact Inventory-M2 adapter; GiveItem remains unimplemented.
 Their canonical result contract is `false` only before inventory COMMIT, `true`
 only after physical VERIFY, and a controlled error for post-COMMIT uncertainty.
 This policy change removes no implemented API and changes no package, scripting
@@ -68,6 +68,7 @@ API or native ABI identity.
 | Vector3 components | Finite System.Single range; no clamping |
 | Item short name / physical inventory entries | 1..128 lowercase ASCII bytes / 128 direct main+belt+wear entries |
 | HasItem amount / counted quantity | Exact positive integer through `2^53 - 1` / checked exact Luau integer |
+| TakeItem amount / verification | Exact integer 1..`Int32.MaxValue`; one bounded fresh scan after COMMIT |
 | Listeners | 128 per signal, 256 per generation |
 | Commands | 64 per generation; initialization-only |
 | Command / permission name | 32 / 128 ASCII bytes |

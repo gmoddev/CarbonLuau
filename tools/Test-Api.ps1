@@ -10,6 +10,7 @@ $GuiDescriptors = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau
 $ReleaseNotes = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/releases/0.4.0.md')
 $Player1C = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1C.md')
 $Player1D = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1D.md')
+$Player1FA = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1FA.md')
 foreach ($Text in @($Bootstrap,$Managed,(Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Globals.md')),
     (Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Compatibility.md')),$GuiGuide,$GuiReference)) {
     if (!$Text.Contains($Version)) { throw 'API version differs between runtime and documentation' }
@@ -31,7 +32,7 @@ foreach ($Document in $Documents) {
         if (!(Test-Path -LiteralPath (Join-Path $Document.DirectoryName $Target))) { throw "Broken relative link: $($Document.Name): $Target" }
     }
 }
-foreach ($Example in @('player-events','player-position','player-health','player-inventory','hello-command')) {
+foreach ($Example in @('player-events','player-position','player-health','player-inventory','player-teleport','player-take-item','hello-command')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',
@@ -78,7 +79,7 @@ foreach ($Property in @('Health','MaxHealth')) {
         throw "Player property differs between bootstrap and reference: $Property"
     }
 }
-foreach ($Method in @('CountItem','HasItem','Teleport')) {
+foreach ($Method in @('CountItem','HasItem','Teleport','TakeItem')) {
     if (!$Bootstrap.Contains(('function PlayerMethods.{0}' -f $Method)) -or !$PlayerReference.Contains(('`Player:{0}' -f $Method))) {
         throw "Player method differs between bootstrap and reference: $Method"
     }
@@ -92,6 +93,9 @@ foreach ($Claim in @('128 direct entries','main, belt and wear','PREPARE/VERIFY'
 }
 foreach ($Claim in @('IMPLEMENTED / AUTHENTICATED-CLIENT UNQUALIFIED','`25353106`','`74b9b48e9375177bc17e76a4d939956d1076645b`','no values')) {
     if (!$Player1D.Contains($Claim)) { throw "Player-1D evidence omits: $Claim" }
+}
+foreach ($Claim in @('PREPARE, COMMIT and VERIFY','Player.inventory.Take(null','Q0 - Q1 == requestedAmount','1,000 successful','GiveItem')) {
+    if (!$Player1FA.Contains($Claim)) { throw "Player-1F-A evidence omits: $Claim" }
 }
 foreach ($Constructor in @('ImageSource.None','ImageSource.Sprite','ImageSource.Png','ImageSource.Item','ImageSource.SteamAvatar')) {
     if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains(($Constructor -split '\.')[1])) { throw "GUI image constructor differs between bootstrap and reference: $Constructor" }

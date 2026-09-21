@@ -113,8 +113,10 @@ live read-only `Player.Health` and `Player.MaxHealth`; Player-1C implements
 [Player Interaction Foundation 1C](PlayerInteractionFoundation1C.md). Player-1D
 implements committed-only `Player:Teleport(Vector3)` with exact-build server
 qualification; authenticated-client convergence remains unqualified. See
-[Player Interaction Foundation 1D](PlayerInteractionFoundation1D.md). The later
-mutation and closure surface remains unimplemented. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
+[Player Interaction Foundation 1D](PlayerInteractionFoundation1D.md). Player-1F-A
+implements committed-only verified `Player:TakeItem` using the exact-build
+Inventory-M2 adapter; see [Player Interaction Foundation 1F-A](PlayerInteractionFoundation1FA.md).
+GiveItem and the combined mutation closure remain unimplemented. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
 exact-Player Luau serialization and false/true/indeterminate-error outcomes;
 the full rationale is in
 [Inventory Ownership / Failure Reassessment](InventoryOwnershipFailureReassessment.md).

@@ -71,6 +71,7 @@ try {
                 @{ Source = $CompilerPath; Name = "carbon/data/CarbonLuau/native/$Rid/$ExpectedCompilerName"; Executable = ($Rid -eq 'linux-x64') },
                 @{ Source = (Join-Path $Root 'examples/hello-command/init.luau'); Name = 'examples/hello-command/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/player-events/init.luau'); Name = 'examples/player-events/init.luau' },
+                @{ Source = (Join-Path $Root 'examples/player-take-item/init.luau'); Name = 'examples/player-take-item/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/gui/hello/init.luau'); Name = 'examples/gui/hello/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/gui/shared-live/init.luau'); Name = 'examples/gui/shared-live/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/gui/per-player/init.luau'); Name = 'examples/gui/per-player/init.luau' },

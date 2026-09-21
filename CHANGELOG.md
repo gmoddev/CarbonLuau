@@ -16,6 +16,9 @@ All notable public changes to CarbonLuau are recorded here.
   D10 provisional rejection, sleeping preservation, internal mount/parent
   normalization and bounded server verification. Authenticated-client
   convergence remains unqualified.
+- Committed-only `Player:TakeItem(ShortName, Amount)` with mutation-free
+  PREPARE, the Inventory-M2-qualified Rust removal path and dual host/physical
+  VERIFY. Post-COMMIT uncertainty is an error and never claims rollback.
 - Experimental addon composition under scripting API `0.4.0-experimental`.
 - Bounded provider-owned schema-1 packages and immutable source snapshots.
 - Required and optional dependency lifetimes with exact replacement bindings.

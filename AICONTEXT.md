@@ -1,6 +1,6 @@
 # CarbonLuau AI and contributor policy
 
-This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 is documented in [Phase2.md](docs/Phase2.md), [Phase2-Validation.md](docs/Phase2-Validation.md) and invariant D9. The authorized Phase 3 facade, approved provisional-effect policy and qualification status are in [Phase3.md](docs/Phase3.md), [Phase3-Validation.md](docs/Phase3-Validation.md) and D10–D12. Script authors start at the [public API reference](docs/api/README.md). Revised D13 owns the unimplemented inventory ownership/failure model, and D18 owns the unimplemented Player Interaction Foundation 1 surface.
+This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 is documented in [Phase2.md](docs/Phase2.md), [Phase2-Validation.md](docs/Phase2-Validation.md) and invariant D9. The authorized Phase 3 facade, approved provisional-effect policy and qualification status are in [Phase3.md](docs/Phase3.md), [Phase3-Validation.md](docs/Phase3-Validation.md) and D10–D12. Script authors start at the [public API reference](docs/api/README.md). Revised D13 owns inventory ownership/failure semantics, and D18 owns Player Interaction Foundation 1; their implemented status is routed below.
 
 ## Authority and reading order
 
@@ -38,6 +38,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Player Interaction Foundation 1B Health/MaxHealth implementation and evidence | [PlayerInteractionFoundation1B.md](docs/PlayerInteractionFoundation1B.md) |
 | Player Interaction Foundation 1C Items/inventory observation implementation and evidence | [PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md) |
 | Player Interaction Foundation 1D Teleport implementation and qualification | [PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md) |
+| Player Interaction Foundation 1F-A TakeItem implementation and qualification | [PlayerInteractionFoundation1FA.md](docs/PlayerInteractionFoundation1FA.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Inventory-M2 exact-build G1-G5 qualification and adapter evidence | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
@@ -59,7 +60,8 @@ Preserve [Phase4.md](docs/Phase4.md),
 checker as evidence. Inventory-M2 subsequently qualified revised D13 gates
 G1-G5 for the narrow adapter on Rust build `25353106` plus Carbon `2.0.259`, as
 recorded in [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md).
-That qualification is not mutation implementation or public API support.
+Player-1F-A uses that qualification for the narrow public TakeItem adapter;
+GiveItem and broader mutation remain unimplemented.
 Phase 5 hardening/qualification is complete within its recorded controlled-host
 envelope in [Phase5.md](docs/Phase5.md) and
 [Phase5-Validation.md](docs/Phase5-Validation.md). Authenticated real-client
@@ -239,7 +241,8 @@ authenticated-client gates; Player-1E is combined read-only/spatial closure.
 Inventory-M1 owns the deterministic model without Rust mutation; Inventory-M2
 has completed exact target-build adapter qualification; Player-1F-A owns TakeItem,
 Player-1F-B owns GiveItem, and Player-1F-C owns combined mutation closure.
-GiveItem and TakeItem remain unimplemented and may qualify independently.
+TakeItem is implemented by Player-1F-A and GiveItem remains unimplemented; they
+qualify independently.
 Player-1A implements immutable `Vector3` and read-only `Player.Position` as
 recorded in [PlayerInteractionFoundation1A.md](docs/PlayerInteractionFoundation1A.md).
 Player-1B implements read-only `Player.Health` and `Player.MaxHealth` as recorded
@@ -249,8 +252,10 @@ Player-1C implements the `Items` existence service plus bounded physical
 [PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md).
 Player-1D implements committed-only `Player:Teleport(Vector3)` as recorded in
 [PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md).
+Player-1F-A implements committed-only verified `Player:TakeItem` as recorded in
+[PlayerInteractionFoundation1FA.md](docs/PlayerInteractionFoundation1FA.md).
 The exact-build server adapter is qualified; authenticated-client convergence
-remains unqualified. This does not authorize or imply Player-1E+, Inventory-M
+remains unqualified. This does not authorize or imply GiveItem, Player-1F-B/C
 or other gameplay APIs.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
