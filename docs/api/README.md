@@ -45,12 +45,14 @@ Players.PlayerAdded:Connect(function(Player)
 end)
 ```
 
-Deferred/not supported: inventory, entities, health, teleport, moderation/admin
-mutation, networking, HTTP, filesystem APIs, arbitrary hooks/console execution,
-reflection, Roblox hierarchy/replication and `task.wait`. No Phase 4 API is shipped.
-The entire item convenience surface (`Items`, `Items:Exists`, `Player:GiveItem`)
-is deferred from v0.1 by [D13](../Invariants.md#decision-register), not pending
-implementation in this scripting API version.
+Not implemented in the current scripting surface: inventory, entities, health,
+teleport, moderation/admin mutation, networking, HTTP, filesystem APIs,
+arbitrary hooks/console execution, reflection, Roblox hierarchy/replication and
+`task.wait`. No Phase 4 API is shipped. [D18](../Invariants.md#d18--player-interaction-foundation-1)
+approves a future bounded read-only item identity/inventory surface plus
+committed-only Teleport, but architecture adoption does not make those APIs
+available. `Player:GiveItem`, `TakeItem` and other item mutation remain deferred
+under D13.
 
 Addon packages use exact dependency bindings, explicit exports and the readonly
 `addon` context. They are public experimental behavior beginning with

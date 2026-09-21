@@ -13,6 +13,12 @@ from v0.1, including Player:GiveItem and Items:Exists. They are not outstanding
 v0.1 acceptance requirements. [Section 31](#31-suggested-implementation-phases)
 is the current roadmap; [Phase4.md](Phase4.md) preserves the investigation.
 
+**Later additive architecture (2026-09-21):** D18 supersedes only D13's former
+product-scope exclusion of bounded read-only item identity and inventory
+observation for future Player Interaction Foundation 1 work. It does not reopen
+v0.1 Phase 4, implement an API, or weaken D13's item-mutation ownership and
+cleanup findings. See [D18](Invariants.md#d18--player-interaction-foundation-1).
+
 ---
 
 ## 1. Objective
@@ -1196,8 +1202,10 @@ phase; no `game:GetService`, Signals, Player proxies or player hooks are include
 
 ### Phase 4 — item conveniences: deferred from v0.1
 
-D13 defers Player:GiveItem and Items/Items:Exists together. They are not prerequisites
-for Phase 5 or remaining v0.1 implementation requirements. The historical
+D13 deferred Player:GiveItem and Items/Items:Exists together from v0.1. They are
+not prerequisites for Phase 5 or remaining v0.1 implementation requirements. D18
+later reopens only bounded read-only identity and observation for a separately
+scoped future foundation; it does not create a new v0.1 Phase 4. The historical
 [investigation and rejected adapter](Phase4.md) remain preserved. Existing task
 primitives belong to the qualified Phase 2 substrate, not this deferral.
 

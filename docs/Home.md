@@ -96,3 +96,13 @@ in [GUI Foundation 3B](GuiFoundation3B.md), retained project-owned fonts in
 closes their server-side lifecycle, scale and release-candidate qualification
 under `0.4.0-experimental`; authenticated-client gates remain explicit, and Foundation 3
 does not reopen deferred TextBox work.
+
+Player Interaction Foundation 1 is resolved for future implementation by
+[D18](Invariants.md#d18--player-interaction-foundation-1), with complete
+rationale and qualification routing in
+[PlayerInteractionFoundation1](PlayerInteractionFoundation1.md). It approves
+immutable `Vector3`, read-only exact-Player position/health/inventory
+observation, read-only item existence and committed-only Teleport. None of this
+surface is implemented by the architecture adoption. `TakeItem`, health
+mutation and `GiveItem` remain deferred; D13 continues to own item-mutation
+ownership and cleanup requirements.

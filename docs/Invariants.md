@@ -111,11 +111,12 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D10 — approved admitted-operation and provisional-effect model | Admission, resource ownership, publication and deadline are orthogonal as specified in the canonical D10 detail below. | Requalify admitted-operation, cross-domain facade or provisional-effect changes |
 | D11 — resolved Phase 3 identity contract; domain binding added | Existing exact connection-token semantics remain, with host-backed facade validity now also bound to the owning domain lifetime; see D11 detail below. | Requalify host identity/adapter or domain-lifetime changes |
 | D12 — resolved addon and GUI-capable experimental identity | The additive addon, GUI Foundation 1 and implemented GUI Foundation 2 layout/image/scrolling surfaces are assigned `CarbonLuau 0.4.0-experimental`; package, API, ABI, provider protocol, schema and Luau identities remain separate. `TextBox` is not implemented. Authenticated-client GUI observations remain unqualified and non-gating. | Requalify affected public behavior and assign an explicit migration/version decision for breaks |
-| D13 — resolved/deferred for v0.1 | User approved deferral on 2026-09-14. No maintainable supported path has been established that guarantees deterministic ownership and cleanup across qualified Rust item construction, insertion, partial mutation and removal callbacks. Player:GiveItem and the entire Phase 4 item convenience surface, including Items/Items:Exists, are deferred from v0.1; no independent read-only Items use case is accepted. Preserve I1–I11 unchanged rather than excluding failure paths. [Phase4.md](Phase4.md#ownership-gate-d13) records the rejected candidate and evidence; [roadmap](CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases) records the revised scope. | Reconsider only with a stronger supported Rust/Carbon transactional item API or evidence of a safe adapter, followed by explicit scope approval and qualification |
+| D13 — resolved item-mutation deferral; read-only scope specialized by D18 | User approved the Phase 4 deferral on 2026-09-14. No maintainable supported path guarantees deterministic ownership and cleanup across qualified Rust item construction, insertion, stacking/splitting/drop behavior, partial mutation and callbacks, so `Player:GiveItem` and item mutation remain deferred. D18 supersedes only D13's former product-scope exclusion of bounded read-only item identity and observation; it does not weaken the ownership, commit, abort or cleanup findings. [Phase4.md](Phase4.md#ownership-gate-d13) remains historical investigation evidence. | Reconsider item mutation only with a stronger supported Rust/Carbon transactional API or safe-adapter evidence, explicit scope approval and qualification |
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
 | D16 - resolved GUI Foundation 2 architecture; implemented subset qualified for experimental public release through 2F | Foundation 2 additively specializes D15 as specified below. GUI-2A/2B/2C/2E/2F implement and qualify deterministic layout, typed images and retained scrolling under the existing `0.4.0-experimental` identity. `TextBox` and typed text ingress remain deferred and unimplemented after the exact text-preservation gate failed. [GuiFoundation2.md](GuiFoundation2.md) retains the complete supporting design. | Requalify affected behavior; reconsider TextBox only with a bounded opaque text-preserving host transport |
 | D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
+| D18 — resolved Player Interaction Foundation 1 architecture; not implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; and committed-only teleport under the canonical detail below. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the complete supporting design, host evidence, phase routing and qualification plan. D18 assigns no release identity and authorizes no production surface outside a separately scoped Player-1A through Player-1E implementation task. | Implement only through the scoped Player-1 phases; requalify exact host adapters, bounds, lifetime, publication and client-observed Teleport behavior before support |
 
 ### Canonical detail for resolved decisions
 
@@ -524,6 +525,130 @@ still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Native
 ABI `1.4`, provider protocol `1.2`, package schema `1` and the pinned Luau
 revision remain unchanged. Authenticated-client clipping, font and scroll
 behavior remains outside the qualified evidence envelope.
+
+#### D18 — Player Interaction Foundation 1
+
+D18 approves exactly this future public surface: immutable `Vector3` construction,
+X/Y/Z/Magnitude, exact equality, addition, subtraction, unary negation, scalar
+multiplication in either operand order and scalar division;
+`Player.Position`, `Player:Teleport(Position)`, `Player.Health`,
+`Player.MaxHealth`, `Player:CountItem(ShortName)`,
+`Player:HasItem(ShortName, Amount?)`; and `game:GetService("Items")` with
+`Items:Exists(ShortName)`. No other gameplay API is approved by this decision.
+
+`Vector3` is a project-owned immutable value with no host, Player or domain
+lifetime. X/Y/Z are finite Luau numbers; every stored component and arithmetic
+result must be convertible to a finite Unity/System.Single coordinate at a host
+boundary. The GUI `Vector2` coordinate bound does not apply. Equality compares
+components exactly. Division by zero, nonfinite or host-unrepresentable results,
+wrong operand types, `Vector3 * Vector3` and `Vector3 / Vector3` are programming
+errors. `Unit`, `Dot` and `Cross` remain deferred.
+
+`Player.Position` is a read-only live observation of the exact `BasePlayer` root
+world position with no axis remapping, scale conversion, eye offset, terrain
+projection, parent-local coordinate or exposed Transform. Mounted, parented,
+sleeping, wounded and otherwise still-host-valid exact Players may be observed.
+`Player.Health` and `Player.MaxHealth` are likewise read-only live host
+observations. Health is not fabricated or clamped to MaxHealth; MaxHealth uses
+current host maximum-health semantics and is not assumed constant or 100. A
+nonfinite host value is a controlled host-state failure. Wounded and
+dead-but-still-host-valid exact Players may be observed. None of these live
+world-state properties gains D11's bounded disconnected Name/UserId snapshot.
+
+Foundation 1 inventory is bounded, nonrecursive physical observation of the
+exact Player's top-level main, belt and wear containers only. `CountItem` sums
+positive physical stack amounts with checked arithmetic and excludes invalid,
+destroying, removal-pending or non-reciprocal entries according to the qualified
+adapter; condition does not exclude an otherwise valid item. `HasItem` defaults
+an omitted Amount to one and may stop once the requested quantity is observed.
+An explicit Amount is an exact positive Luau integer from 1 through `2^53 - 1`.
+The result and accumulation must remain exactly representable under that public
+integer-number contract. Traversal has a target-build-qualified hard inspected-
+stack/work bound and fails closed when exceeded. It performs no nested,
+backpack or special-container discovery and must not obtain its canonical answer
+from a hook-virtualized count result. The concrete traversal limit belongs in
+compatibility/facade policy after target-build inspection, not in D18.
+
+The item identifier is the canonical lowercase Rust short name: a string of
+1..128 ASCII bytes with no NUL, accepted exactly without silent lowercasing,
+display-name lookup, fuzzy matching, numeric ID or exposed `ItemDefinition`.
+Malformed or noncanonical names are programming errors. A syntactically valid
+unknown name is ordinary absence: `Items:Exists` returns false, `CountItem`
+returns zero and `HasItem` returns false. The `Items` service exposes no metadata
+beyond bounded read-only `Exists` in Foundation 1. Its facade remains bound to
+and revalidates its owning domain lifetime under D10, and no host
+item/container object crosses into Luau.
+
+`Player:Teleport(Vector3)` is the sole Foundation 1 gameplay mutation and
+returns no values. It revalidates the exact current D11 Player connection and
+owning domain, requires committed execution plus an alive, non-spectating,
+non-wounded/non-incapacitated Player, and does not implicitly wake a sleeping
+Player. The qualified adapter owns required dismount/parent normalization and
+the target Rust build's fall, anti-cheat, movement, network-group, snapshot,
+forced-position and client-convergence sequence. The public contract is only
+"move this exact Player to this world coordinate". It promises no safe-position
+search, terrain/ground projection, collision avoidance, path-trigger traversal,
+transactional rollback or client acknowledgement. If host mutation begins and
+later work fails, CarbonLuau reports a controlled host-operation failure without
+claiming rollback.
+
+Teleport has two mandatory implementation gates: establish the correct adapter
+sequence on the exact target Rust/Carbon build, and qualify authenticated-client
+convergence at the intended destination. Client qualification covers no
+immediate rubber-band, long-distance/network-group transition, fall state,
+mount/parent convergence and repeated teleports. Until both gates pass,
+Teleport may be implemented and model-qualified but must not be described as
+authenticated-client-qualified public behavior. These gates do not block the
+read-only Player-1A/1B/1C surface. Player-1C separately requires exact target-
+build evidence that direct bounded main/belt/wear inspection satisfies the
+physical observation contract; if not, Player-1C is deferred rather than
+changing the API meaning.
+
+All new Player operations inherit D11 exact-connection and domain-lifetime
+semantics without another proxy type. Same-account reconnect never retargets an
+old proxy. After disconnect, `Position`, `Health`, `MaxHealth`, `CountItem`,
+`HasItem` and `Teleport` fail with the controlled stale-Player model, while an
+ordinary `Vector3` remains usable. Host access stays owner-thread-only. Reads
+are bounded direct observations and avoid intentionally invoking plugin hooks
+where possible. Synchronous host/plugin callbacks caused by Teleport must never
+recursively enter the active Luau VM; CarbonLuau-owned resulting work is copied
+into bounded payloads and admitted later under the existing scheduler.
+
+Pure `Vector3` work plus `Position`, `Health`, `MaxHealth`, `Items:Exists`,
+`CountItem` and `HasItem` are allowed during provisional execution. Teleport is
+an irreversible committed-only host mutation under D7/D10 and is rejected from
+root/addon candidates, first-load modules and provisional dependency chains.
+Resource ownership, publication context and deadline remain orthogonal; a
+dependency or shared-module call cannot launder provisional context into a
+committed Teleport. Existing deferred work is the supported way to request
+Teleport only after successful publication, and failed candidates never drain it.
+
+Errors preserve simple author semantics: malformed item identity, invalid
+Amount or invalid Vector3 are programming errors; unknown canonical items are
+false/zero; stale Player use is a controlled stale-Player error; ineligible
+Teleport state is a controlled operational error; and adapter failure is a
+controlled host-operation error. No Rust enum, exception or result wrapper is
+public. `pcall` remains the ordinary race/failure-handling mechanism.
+
+Health mutation; `TakeItem`; `GiveItem`; richer inventory/container APIs; Item,
+`ItemDefinition`, numeric item IDs, `BasePlayer`, `BaseEntity` and
+`UnityEngine.Vector3`; Player velocity/rotation/CFrame/Transform; explicit
+wounded/dead APIs; and Vector3 Unit/Dot/Cross remain deferred. `TakeItem` has no
+Foundation 1 phase because current hook-overridable sequential removal does not
+establish a physical all-or-nothing or trustworthy removed-amount contract.
+`GiveItem` remains deferred under D13, including its construction, nested-
+resource, insertion, stacking/splitting/drop, commit and cleanup requirements.
+D18 supersedes only D13's former product-scope exclusion of read-only item
+identity and observation.
+
+D18 is additive to existing `Player.Name`, `UserId`, `IsConnected`,
+`SendMessage` and `HasPermission` behavior. Architecture adoption changes no
+package, scripting API, native ABI, provider protocol, package schema or pinned
+Luau identity. Future work is routed as Player-1A (`Vector3` and Position),
+Player-1B (Health and MaxHealth), Player-1C (Items existence plus CountItem and
+HasItem), Player-1D (Teleport and its host/client gates), and Player-1E
+(combined lifecycle, stress, documentation and public qualification closure).
+There is no TakeItem or GiveItem implementation phase.
 
 **Evidence separation:** [Phase1-Validation.md](Phase1-Validation.md) owns the scoped execution-core results. [Phase2-Validation.md](Phase2-Validation.md) owns module/callback/recovery qualification; Phase 1 does not establish their safety. [Phase3-Validation.md](Phase3-Validation.md) owns first-facade qualification; [Phase4-Validation.md](Phase4-Validation.md) records the blocked item investigation, not an implemented item API.
 

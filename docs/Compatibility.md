@@ -543,6 +543,44 @@ supplemental run must test GUI-3A source revision
 descendant. Historical Windows qualification for earlier foundations remains
 valid within its original envelope.
 
+## Player Interaction Foundation 1 architecture gate
+
+[D18](Invariants.md#d18--player-interaction-foundation-1) adopts the additive
+Player Interaction Foundation 1 architecture. The complete host rationale,
+surface matrix, phase sequence and qualification plan are retained in
+[PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md). This is
+policy adoption only: none of `Vector3`, Position, Health/MaxHealth, bounded
+item observation, the `Items` service or Teleport is implemented or part of the
+current public scripting surface.
+
+Future work is separated into Player-1A (`Vector3` and Position), Player-1B
+(Health and MaxHealth), Player-1C (`Items:Exists`, CountItem and HasItem),
+Player-1D (Teleport) and Player-1E (combined lifecycle, stress, documentation
+and public qualification closure). There is no TakeItem or GiveItem phase.
+D13 continues to govern item construction, insertion, mutation, partial
+publication and cleanup; D18 reopens only bounded read-only identity and
+physical top-level inventory observation.
+
+Player-1C must establish an exact target-build, bounded, nonrecursive physical
+main/belt/wear adapter that does not accept a hook-virtualized count as the
+canonical answer. Its concrete inspected-stack/work bound is selected and
+documented only after target-build inspection. If that contract cannot be met,
+Player-1C is deferred rather than weakened.
+
+Player-1D has separate mandatory gates: qualification of the exact Rust/Carbon
+relocation sequence and authenticated-client evidence for destination
+convergence, rubber-band resistance, long-distance network-group transition,
+fall state, mount/parent handling and repeated teleports. Server/model evidence
+alone cannot establish authenticated-client Teleport behavior. These gates do
+not block the read-only Player-1A/1B/1C surfaces.
+
+D18 adoption changes no identity. Package remains `0.4.0`, scripting API
+remains `0.4.0-experimental`, native ABI remains `1.4`, provider protocol
+remains `CarbonLuau.Addons` / `1.2`, package schema remains `1`, and the pinned
+Luau revision is unchanged. Windows/Linux/native/live/sanitizer qualification
+belongs to the applicable future implementation phase; this documentation-only
+adoption claims none of it.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:

@@ -27,10 +27,12 @@ change and migration decision. Experimental does not permit silent breaking chan
 No automatic version negotiation, long-term deprecation window or Roblox contract
 is promised. Consult [current qualification](../Phase3-Validation.md).
 
-D13 defers the unshipped Items/Items:Exists and Player:GiveItem proposal from v0.1.
-This is a [roadmap scope revision](../CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases),
-not removal of an implemented API. Package, scripting API and native ABI identities
-are unchanged; no script migration is required for this deferral.
+D13 continues to defer unshipped `Player:GiveItem`, `TakeItem` and item mutation.
+[D18](../Invariants.md#d18--player-interaction-foundation-1) now approves bounded
+read-only item identity/inventory observation for future scoped implementation,
+but none of that Player Interaction Foundation 1 surface is currently shipped.
+This policy change removes no implemented API and changes no package, scripting
+API or native ABI identity.
 
 | Resource | Bound |
 |---|---|
