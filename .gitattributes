@@ -3,3 +3,5 @@
 *.cpp text eol=lf
 *.h text eol=lf
 *.yml text eol=lf
+# Preserve intentional Markdown hard breaks in the supplied architecture evidence.
+docs/design/CarbonLuau_VSCode_Tooling_Architecture.md whitespace=-blank-at-eol

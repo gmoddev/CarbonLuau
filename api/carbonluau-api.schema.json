@@ -1,0 +1,351 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gmoddev.github.io/CarbonLuau/api/carbonluau-api.schema.json",
+  "title": "CarbonLuau API catalog schema 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "SchemaVersion",
+    "Api",
+    "Types",
+    "Members",
+    "LimitKeys"
+  ],
+  "properties": {
+    "SchemaVersion": {
+      "const": 1
+    },
+    "Api": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Name",
+        "Version",
+        "Status"
+      ],
+      "properties": {
+        "Name": {
+          "const": "CarbonLuau"
+        },
+        "Version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Status": {
+          "enum": [
+            "Experimental",
+            "Stable"
+          ]
+        }
+      }
+    },
+    "Types": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Type"
+      }
+    },
+    "Members": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Member"
+      }
+    },
+    "LimitKeys": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    }
+  },
+  "$defs": {
+    "Availability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SinceApi",
+        "Implemented",
+        "Qualification"
+      ],
+      "properties": {
+        "SinceApi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "DeprecatedSince": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "RemovedSince": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Implemented": {
+          "type": "boolean"
+        },
+        "Qualification": {
+          "enum": [
+            "Supported",
+            "Experimental",
+            "ClientUnqualified",
+            "Deferred",
+            "Unavailable"
+          ]
+        }
+      }
+    },
+    "Type": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Id",
+        "Name",
+        "Summary",
+        "Availability",
+        "Preview",
+        "Kind"
+      ],
+      "properties": {
+        "Id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Availability": {
+          "$ref": "#/$defs/Availability"
+        },
+        "Preview": {
+          "enum": [
+            "Pure",
+            "ReadMock",
+            "PresentationEffect",
+            "HostMutation",
+            "Unavailable"
+          ]
+        },
+        "DocumentationKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Kind": {
+          "enum": [
+            "Service",
+            "Class",
+            "Value",
+            "Enum",
+            "Singleton",
+            "Global"
+          ]
+        },
+        "BaseTypeId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "Parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Name",
+        "Type",
+        "Optional",
+        "Variadic"
+      ],
+      "properties": {
+        "Name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Optional": {
+          "type": "boolean"
+        },
+        "Variadic": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Parameters",
+        "Returns"
+      ],
+      "properties": {
+        "Parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "Returns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        }
+      }
+    },
+    "Member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Id",
+        "Name",
+        "Summary",
+        "Availability",
+        "Preview",
+        "OwnerId",
+        "Kind"
+      ],
+      "properties": {
+        "Id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Availability": {
+          "$ref": "#/$defs/Availability"
+        },
+        "Preview": {
+          "enum": [
+            "Pure",
+            "ReadMock",
+            "PresentationEffect",
+            "HostMutation",
+            "Unavailable"
+          ]
+        },
+        "DocumentationKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "OwnerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Kind": {
+          "enum": [
+            "Property",
+            "Method",
+            "Signal",
+            "Constructor",
+            "Singleton"
+          ]
+        },
+        "ValueType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "Writable": {
+          "type": "boolean"
+        },
+        "Signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Signature"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "Kind": {
+                "enum": [
+                  "Property",
+                  "Singleton"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "ValueType",
+              "Writable"
+            ],
+            "not": {
+              "required": [
+                "Signatures"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "Kind": {
+                "enum": [
+                  "Method",
+                  "Signal",
+                  "Constructor"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "Signatures"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "Writable"
+                  ]
+                },
+                {
+                  "required": [
+                    "ValueType"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

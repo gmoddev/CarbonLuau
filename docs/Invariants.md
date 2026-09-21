@@ -154,8 +154,33 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D16 - resolved GUI Foundation 2 architecture; implemented subset qualified for experimental public release through 2F | Foundation 2 additively specializes D15 as specified below. GUI-2A/2B/2C/2E/2F implement and qualify deterministic layout, typed images and retained scrolling under the existing `0.4.0-experimental` identity. `TextBox` and typed text ingress remain deferred and unimplemented after the exact text-preservation gate failed. [GuiFoundation2.md](GuiFoundation2.md) retains the complete supporting design. | Requalify affected behavior; reconsider TextBox only with a bounded opaque text-preserving host transport |
 | D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
+| D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
 
 ### Canonical detail for resolved decisions
+
+#### D19 — official editor tooling
+
+Accepted architecture, not implemented tooling behavior. CarbonLuau owns shared
+Core semantics, API metadata, generated definitions, package/module validation,
+tooling coordinator/worker and preview-plan generation. The separate
+`gmoddev/carbonluau-vscode` repository owns editor integration and paint-only UX.
+Any rule deciding project/package/GUI validity or deterministic GUI geometry and
+resource accounting belongs to canonical CarbonLuau code or generated metadata,
+never an independent TypeScript implementation.
+
+[ToolingBaseline.md](ToolingBaseline.md) owns the detailed tooling contracts,
+security, identities and repository boundary under this decision;
+[ToolingFoundationA.md](ToolingFoundationA.md) owns implementation routing.
+The [supplied design](design/CarbonLuau_VSCode_Tooling_Architecture.md) is supporting
+evidence at its recorded revision. Adoption changes no runtime API, ABI, provider
+protocol, package schema, release identity or authenticated-client qualification.
+Do not infer authorization for preview, fixtures, live integration, debugging or
+visual authoring from the existence of this baseline.
+
+Tooling qualification gates still open: exact upstream LSP/Luau/transform pairing
+(Foundation A), per-platform worker containment including macOS (B), and publisher
+namespace/signing/attestation administration (E). These are implementation gates,
+not permission to weaken semantic ownership or claim untested platform support.
 
 #### D2 — limits in addon-capable operation
 
