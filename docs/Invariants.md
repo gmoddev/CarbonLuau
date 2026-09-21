@@ -111,7 +111,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D10 — approved admitted-operation and provisional-effect model | Admission, resource ownership, publication and deadline are orthogonal as specified in the canonical D10 detail below. | Requalify admitted-operation, cross-domain facade or provisional-effect changes |
 | D11 — resolved Phase 3 identity contract; domain binding added | Existing exact connection-token semantics remain, with host-backed facade validity now also bound to the owning domain lifetime; see D11 detail below. | Requalify host identity/adapter or domain-lifetime changes |
 | D12 — resolved addon and GUI-capable experimental identity | The additive addon, GUI Foundation 1 and implemented GUI Foundation 2 layout/image/scrolling surfaces are assigned `CarbonLuau 0.4.0-experimental`; package, API, ABI, provider protocol, schema and Luau identities remain separate. `TextBox` is not implemented. Authenticated-client GUI observations remain unqualified and non-gating. | Requalify affected public behavior and assign an explicit migration/version decision for breaks |
-| D13 — resolved inventory ownership/failure model; mutation implementation-gated | Rust inventory remains nontransactional, but a lack of universal rollback no longer categorically excludes a narrow operation. Eligible inventory mutation uses bounded mutation-free PREPARE, an explicit first-host-effect COMMIT boundary, strongest-defensible physical VERIFY, exact-Player Luau serialization and three distinct outcomes: pre-COMMIT `false`, verified `true`, or controlled post-COMMIT indeterminate error. Returned host resources remain under temporary CarbonLuau responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) retains the complete rationale. | Qualify each operation and G1–G5 on the exact target build; failure leaves that API unimplemented without weakening its contract |
+| D13 — resolved inventory ownership/failure model; exact-build adapter qualified; mutation unimplemented | Rust inventory remains nontransactional, but a lack of universal rollback no longer categorically excludes a narrow operation. Eligible inventory mutation uses bounded mutation-free PREPARE, an explicit first-host-effect COMMIT boundary, strongest-defensible physical VERIFY, exact-Player Luau serialization and three distinct outcomes: pre-COMMIT `false`, verified `true`, or controlled post-COMMIT indeterminate error. Returned host resources remain under temporary CarbonLuau responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) retains the complete rationale; [InventoryMutationM2Validation.md](InventoryMutationM2Validation.md) qualifies G1–G5 on Rust build `25353106` plus Carbon `2.0.259`. | Implement only the qualified narrow adapter through Player-1F-A/1F-B; requalify host build, Carbon hook behavior, bounds or adapter-path changes |
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
 | D16 - resolved GUI Foundation 2 architecture; implemented subset qualified for experimental public release through 2F | Foundation 2 additively specializes D15 as specified below. GUI-2A/2B/2C/2E/2F implement and qualify deterministic layout, typed images and retained scrolling under the existing `0.4.0-experimental` identity. `TextBox` and typed text ingress remain deferred and unimplemented after the exact text-preservation gate failed. [GuiFoundation2.md](GuiFoundation2.md) retains the complete supporting design. | Requalify affected behavior; reconsider TextBox only with a bounded opaque text-preserving host transport |
@@ -293,12 +293,16 @@ transfer and removal work use a target-build-qualified capacity envelope, one
 fresh bounded VERIFY scan and no polling. One operation may never perform
 unbounded item work.
 
-Implementation remains gated on: G1, a GiveItem planned no-world-drop adapter;
-G2, returned-Item terminal-state observability; G3, TakeItem removal and
+Inventory-M2 qualified G1, a GiveItem planned no-world-drop adapter; G2,
+returned-Item terminal-state observability; G3, TakeItem removal and
 verification behavior; G4, supported cleanup for returned unattached Items; and
-G5, concrete work bounds derived from supported container maxima. Failure of an
-individual gate leaves that API unimplemented without weakening its contract or
-blocking an independently qualified sibling operation. Historical
+G5, concrete work bounds derived from supported container maxima, on Rust build
+`25353106` plus Carbon `2.0.259`. The exact adapter and evidence are recorded in
+[InventoryMutationM2Validation.md](InventoryMutationM2Validation.md). This
+qualification does not implement either public API. Failure during later
+implementation or requalification leaves that individual API unimplemented
+without weakening its contract or blocking an independently qualified sibling.
+Historical
 [Phase4.md](Phase4.md#ownership-gate-d13) and
 [Phase4-Validation.md](Phase4-Validation.md) findings remain evidence of host
 nontransactionality, not the current categorical architecture conclusion.
@@ -787,10 +791,12 @@ its authenticated-client gate remains unqualified. Remaining work is routed to
 Player-1E for combined lifecycle, stress, documentation and public
 qualification closure.
 Inventory-M1 adds only the model, gate, bounded plans/snapshots and failure-
-injection algorithms with no Rust mutation or public API. Inventory-M2 qualifies
-the exact target-build Create/no-drop transfer, returned-resource, Take,
-cleanup and work-bound adapters. Player-1F-A then implements TakeItem,
-Player-1F-B implements GiveItem only after its stricter gates pass, and
+injection algorithms with no Rust mutation or public API. Inventory-M2 has
+qualified the exact target-build Create/no-drop transfer, returned-resource,
+Take, cleanup and work-bound adapters as recorded in
+[InventoryMutationM2Validation.md](InventoryMutationM2Validation.md).
+Player-1F-A then implements TakeItem and Player-1F-B implements GiveItem using
+only that qualified adapter;
 Player-1F-C performs combined lifecycle/public closure. No inventory production
 work is authorized by architecture adoption alone.
 

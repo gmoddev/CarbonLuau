@@ -565,9 +565,10 @@ remain unimplemented.
 Remaining work is separated into supplemental authenticated-client Teleport
 qualification and Player-1E (combined lifecycle, stress, documentation and
 public qualification closure). Revised D13 additionally routes Inventory-M1
-for the deterministic model and mutation gate, Inventory-M2 for exact target-
-build adapter qualification, Player-1F-A for TakeItem, Player-1F-B for GiveItem
-and Player-1F-C for combined mutation closure. These phases are not implemented.
+for the deterministic model and mutation gate, Player-1F-A for TakeItem,
+Player-1F-B for GiveItem and Player-1F-C for combined mutation closure.
+Inventory-M2 exact-target adapter qualification is complete; the other
+inventory phases and both public mutation APIs remain unimplemented.
 
 D13 now accepts CarbonLuau-serialized, definite-rejection inventory mutation:
 bounded mutation-free PREPARE, explicit first-host-effect COMMIT and one bounded
@@ -584,12 +585,14 @@ The reusable scanner and evidence are recorded in
 [PlayerInteractionFoundation1C.md](PlayerInteractionFoundation1C.md).
 
 Inventory mutation requires exact-connection serialization, committed execution
-and target-build evidence. GiveItem must pass G1 no-world-drop transfer, G2
-returned-Item terminal-state observability and G4 supported cleanup handling.
-TakeItem must pass G3 host-result plus physical-delta verification. Both depend
-on G5 concrete inspection/placement/removal work bounds from actual supported
-container maxima. One API may remain deferred if its individual gates fail.
-The complete rationale is retained in
+and target-build evidence. Inventory-M2 qualified GiveItem's G1 no-world-drop
+transfer, G2 returned-Item terminal-state observability and G4 supported cleanup;
+TakeItem's G3 host-result plus physical-delta verification; and shared G5 work
+bounds on Rust build `25353106` plus Carbon `2.0.259`. The narrow adapter and
+evidence are recorded in
+[InventoryMutationM2Validation.md](InventoryMutationM2Validation.md). One API
+may still remain unimplemented if its later implementation or requalification
+fails. The complete rationale is retained in
 [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md).
 
 Player-1D passed qualification of the exact Rust/Carbon relocation sequence on

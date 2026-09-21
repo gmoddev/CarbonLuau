@@ -39,6 +39,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Player Interaction Foundation 1C Items/inventory observation implementation and evidence | [PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md) |
 | Player Interaction Foundation 1D Teleport implementation and qualification | [PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
+| Inventory-M2 exact-build G1-G5 qualification and adapter evidence | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -54,9 +55,11 @@ supersedes categorical mutation deferral with a per-operation
 PREPARE/COMMIT/VERIFY model. D18 now architecturally accepts bounded read-only
 item observation plus implementation-gated `Player:GiveItem` and `TakeItem`.
 Preserve [Phase4.md](docs/Phase4.md),
-[Phase4-Validation.md](docs/Phase4-Validation.md) and the structural checker as
-historical evidence; revised architecture is not implementation or proof that
-the exact target-build gates pass.
+[Phase4-Validation.md](docs/Phase4-Validation.md) and the historical structural
+checker as evidence. Inventory-M2 subsequently qualified revised D13 gates
+G1-G5 for the narrow adapter on Rust build `25353106` plus Carbon `2.0.259`, as
+recorded in [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md).
+That qualification is not mutation implementation or public API support.
 Phase 5 hardening/qualification is complete within its recorded controlled-host
 envelope in [Phase5.md](docs/Phase5.md) and
 [Phase5-Validation.md](docs/Phase5-Validation.md). Authenticated real-client
@@ -233,8 +236,8 @@ Inventory-M work. Player-1A is `Vector3` plus Position; Player-1B is read-only
 Health/MaxHealth; Player-1C is bounded item identity and physical inventory
 observation; Player-1D is committed-only Teleport with exact-host and
 authenticated-client gates; Player-1E is combined read-only/spatial closure.
-Inventory-M1 owns the deterministic model without Rust mutation, Inventory-M2
-owns exact target-build adapter qualification, Player-1F-A owns TakeItem,
+Inventory-M1 owns the deterministic model without Rust mutation; Inventory-M2
+has completed exact target-build adapter qualification; Player-1F-A owns TakeItem,
 Player-1F-B owns GiveItem, and Player-1F-C owns combined mutation closure.
 GiveItem and TakeItem remain unimplemented and may qualify independently.
 Player-1A implements immutable `Vector3` and read-only `Player.Position` as
