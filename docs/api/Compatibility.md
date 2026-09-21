@@ -66,6 +66,13 @@ only after physical VERIFY, and a controlled error for post-COMMIT uncertainty.
 This additive implementation removes no implemented API and changes no package, scripting
 API or native ABI identity.
 
+[Player-1F-C](../PlayerInteractionFoundation1FC.md) records the correction of a
+cold-module mutation bug in `9b27ba5` and combined closure. Provisional outer
+admission **or** active first-load publication forbids committed-only mutation,
+including nested/public/shared calls. Cached exports called later by committed
+execution remain usable. Reads stay allowed; no deadline reset, inventory
+reservation, transaction, rollback or exactly-once recovery is implied.
+
 [I12](../Invariants.md#i12--trusted-in-process-host-interference) defines the
 trusted in-process interference boundary. Normal vanilla behavior, ordinary
 callback acceptance/rejection and CarbonLuau's own planning/verification bugs

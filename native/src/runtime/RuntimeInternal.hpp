@@ -136,6 +136,7 @@ Domain* GetDomain(Vm& Runtime, ClHandle Id, bool Active = false);
 void ReleaseDomain(Vm& Runtime, Domain& Value);
 Domain* AddDomain(Vm& Runtime, uint32_t MaxQueued);
 bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation);
+bool CanMutateHost(const Vm& Runtime);
 void RollbackPublication(PublicationScope& Scope);
 int FindStaged(Vm& Runtime, Domain* Owner, Module* Value);
 void Interrupt(lua_State* State, int Gc);

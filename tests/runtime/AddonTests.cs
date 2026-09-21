@@ -232,6 +232,7 @@ internal static class AddonTests
         RunDependencyLifecycle(Native);
         RunPublicModules(Native);
         RunGiveItem(Native);
+        RunMutationPublication(Native);
         if (SourceRoot != null) RunExamples(Native, Config, Root, SourceRoot);
 
         InvalidArchive(Archive("{", new EntrySpec("init.luau", "return true")), "malformed JSON rejected");
@@ -299,6 +300,57 @@ internal static class AddonTests
         string Logs = ""; foreach (Runtime.ExecutionResult Result in Host.Drain()) Logs += Result.Logs; return Logs;
     }
 
+    private static void RunMutationPublication(Runtime.NativeRuntime Native)
+    {
+        var Value = new PlayerInteractionFoundation1FBTests.Fixture {Limit = 1000};
+        var View = Value.View(); int Takes = 0, Teleports = 0;
+        View.TakeInventory = (Definition, Amount) => {Takes++; return Value.Take(Definition, Amount);};
+        View.Teleport = new Runtime.PlayerTeleportOperation(() => new Runtime.PlayerTeleportState {Current = true, Alive = true},
+            (Destination, Before) => {Teleports++;}, (Destination, Before) => true);
+        var Players = new Runtime.PlayerDirectory(Id => View); Players.Connect(View);
+        var World = new Runtime.FacadeWorld(Players, new Registrar(), new Runtime.ItemDirectory(Name => Name == "scrap" ? Value.Definition : null));
+        object Provider = new object(), Consumers = new object();
+        const string Api = "local P=game:GetService('Players'):GetPlayers()[1]; return {Player=P,Mutate=function() assert(P:GiveItem('scrap',2)); assert(P:TakeItem('scrap',1)); P:Teleport(Vector3.new(1,2,3)) end}";
+        const string Block = "for _,F in {A.Mutate,function() A.Player:GiveItem('scrap',1) end,function() A.Player:TakeItem('scrap',1) end,function() A.Player:Teleport(Vector3.new(1,2,3)) end} do local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'requires a committed domain',1,true)) end; ";
+        Func<byte[]> Library = () => PublicPackage("mutationlib", "1.0.0", new string[0], new string[0], "require('api')", "api", new[] {"cold", "nested"},
+            new EntrySpec("api.luau", Api), new EntrySpec("cold.luau", "local A=require('api'); " + Block + "return true"),
+            new EntrySpec("nested.luau", "assert(require('cold')); return true"));
+        const string ConsumerSource = "local A=require('@mutationbridge'); " + Block +
+            "task.defer(function() assert(require('@mutationbridge/cold')); assert(require('@mutationlib/cold')); A.Mutate(); print('committed') end)";
+        using (var Host = new Runtime.ScriptHost(Native, new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20},
+            () => new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = "return true"}, World)) {
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "mutation publication root ready");
+            using (var Registry = new Runtime.AddonRegistry(Host, Native.HostLifetimeId)) {
+                string[] Lib = Registry.RegisterArchive(Provider, Library()); Process(Registry);
+                string[] Bridge = Registry.RegisterArchive(Provider, PublicPackage("mutationbridge", "1.0.0", new[] {"mutationlib"}, new string[0],
+                    "require('api')", "api", new[] {"cold"}, new EntrySpec("api.luau", "return require('@mutationlib')"),
+                    new EntrySpec("cold.luau", "local A=require('@mutationlib'); " + Block + "return require('@mutationlib/nested')")));
+                Process(Registry);
+                string[] Consumer = Registry.RegisterArchive(Consumers, PublicPackage("mutationconsumer", "1.0.0", new[] {"mutationbridge", "mutationlib"}, new string[0],
+                    ConsumerSource, null, new string[0])); Process(Registry);
+                Check(Value.Creates == 0 && Takes == 0 && Teleports == 0, "cross-domain provisional context");
+                Check(Drain(Host) == "committed\n" && Value.Creates == 1 && Takes == 1 && Teleports == 1, "public/transitive/nested cold scope; cached shared closure restored");
+                string[] Optional = Registry.RegisterArchive(Consumers, PublicPackage("mutationoptional", "1.0.0", new string[0], new[] {"mutationlib"},
+                    "local A=require('@mutationlib'); game:GetService('Commands'):Register('oldmutation',{},function() assert(not addon:IsDependencyAvailable('mutationlib')); assert(A.Player~=nil); assert(not pcall(A.Mutate)); print('stale') end)", null, new string[0]));
+                Process(Registry); string OldOptional = Registry.Status(Consumers, Optional[1])[7];
+                Registry.ReplaceArchive(Consumers, Consumer[1], PublicPackage("mutationconsumer", "1.0.1", new[] {"mutationbridge", "mutationlib"}, new string[0],
+                    ConsumerSource + "; error('candidate')", null, new string[0])); Process(Registry);
+                Check(Drain(Host) == "" && Value.Creates == 1, "failed replacement publishes no work");
+                Registry.ReplaceArchive(Provider, Lib[1], Library()); Process(Registry);
+                Check(Drain(Host) == "committed\n" && Value.Creates == 2 && Takes == 2 && Teleports == 2, "required subgraph reconstructs with fresh committed authority");
+                Check(Registry.Status(Consumers, Optional[1])[7] == OldOptional && Registry.BindingStatus(Consumers, Optional[1], "mutationlib")[1] == "stale", "optional binding does not retarget");
+                Check(Session(World, OldOptional).Invoke("oldmutation", View.UserId, new string[0]), "optional callback admitted");
+                Check(Drain(Host) == "stale\n" && Value.Creates == 2, "retained shared Player cannot mutate replacement");
+                Registry.UnloadProvider(Provider); Process(Registry); Drain(Host);
+                Check(Value.Creates == 2 && World.GiveItems.BusyCount == 0 && World.GiveItems.TrackedResources == 0, "provider teardown no replay/resources");
+                Registry.UnloadProvider(Consumers); Process(Registry);
+                string[] Again = Registry.RegisterArchive(Provider, Library()); Process(Registry);
+                IsState(Registry.Status(Provider, Again[1]), "Active", "provider reload clean publication context");
+            }
+        }
+        Console.WriteLine("[CarbonLuau:Player1FCAddons] PASS public/transitive/shared cold modules, captured foreign facade, cached calls, failed replacement, required reconstruction, optional stale, provider unload/reload");
+    }
+
     private static void RunGiveItem(Runtime.NativeRuntime Native)
     {
         var Value = new PlayerInteractionFoundation1FBTests.Fixture();
@@ -328,8 +380,15 @@ internal static class AddonTests
                 Check(World.TakeItems.SharedGate.TryEnter(Lifetime.Token), "host mutation gate acquired");
                 try {
                     Check(Host.Execute("root.gate", P + "assert(not pcall(function() P:GiveItem('scrap',1) end)); assert(not pcall(function() P:TakeItem('scrap',1) end))").Status == Runtime.RuntimeStatus.OK, "root Give/Take contention");
-                    string[] Busy = Registry.RegisterSource(Consumer, "busygrant", "1.0.0", Bytes(P + "task.defer(function() assert(not pcall(function() P:GiveItem('scrap',1) end)); assert(not pcall(function() P:TakeItem('scrap',1) end)); print('busy') end)"));
+                    const string BusyCalls = "for _,F in {function() P:GiveItem('scrap',1) end,function() P:TakeItem('scrap',1) end} do local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'already in progress',1,true)) end; print('busy')";
+                    string[] Busy = Registry.RegisterSource(Consumer, "busygrant", "1.0.0", Bytes(P + "local function Busy() " + BusyCalls + " end; task.defer(Busy); game:GetService('Commands'):Register('busygrant',{},Busy)"));
                     Process(Registry); Check(Drain(Host) == "busy\n" && Value.Creates == 2, "addon Give/Take shares gate");
+                    var BusySession = Session(World, Registry.Status(Consumer, Busy[1])[7]);
+                    for (int Index = 0; Index < 100; ++Index) {
+                        Check(Host.Execute("root.gate.stress", P + BusyCalls).Status == Runtime.RuntimeStatus.OK, "root contention stress");
+                        Check(BusySession.Invoke("busygrant", View.UserId, new string[0]) && Drain(Host) == "busy\n", "addon contention stress");
+                    }
+                    Check(Value.Creates == 2 && World.GiveItems.TrackedResources == 0, "400 contended operations never enter COMMIT");
                 } finally {World.TakeItems.SharedGate.Exit(Lifetime.Token);}
                 Registry.UnloadProvider(Consumer); Registry.UnloadProvider(Provider); Drain(Host);
                 Check(Value.Creates == 2 && World.GiveItems.TrackedResources == 0 && World.GiveItems.BusyCount == 0, "provider unload no replay/resources");

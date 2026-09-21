@@ -25,6 +25,15 @@ for Name in ['libcarbonluau_native.so', 'carbonluau_compiler']:
 (Data / 'scripts').mkdir(parents=True, exist_ok=True)
 (Data / 'scripts/modules').mkdir(parents=True, exist_ok=True)
 (Data / 'scripts/init.luau').write_text('-- Isolated Player-1F-B qualification root\n')
+# Cold-module regression for the Player-1F-C publication-context correction.
+for Name, Mutation in {
+    'give': 'P:GiveItem("scrap",1)',
+    'take': 'P:TakeItem("scrap",1)',
+    'teleport': 'P:Teleport(Vector3.new(1,2,3))',
+}.items():
+    (Data / 'scripts/modules' / ('player1fc' + Name + '.luau')).write_text(
+        'local P=game:GetService("Players"):GetPlayers()[1]; assert(P~=nil); '
+        + Mutation + '; error("module failed after mutation")\n')
 OldFixture = Root / 'carbon/plugins/CarbonLuau.GiveItemG1Evidence.cs'
 if OldFixture.exists():
     shutil.move(str(OldFixture), str(Evidence / OldFixture.name))

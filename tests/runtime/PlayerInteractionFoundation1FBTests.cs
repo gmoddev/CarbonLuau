@@ -9,6 +9,7 @@ internal static class PlayerInteractionFoundation1FBTests
         internal ulong Id;
         internal int Amount, Slot;
         internal object Parent;
+        internal object Definition;
         internal Runtime.InventoryResourceState State = Runtime.InventoryResourceState.Temporary;
     }
     internal sealed class Fixture : Runtime.IInventoryGrantHost
@@ -20,7 +21,7 @@ internal static class PlayerInteractionFoundation1FBTests
         internal int Limit = 10, Creates, Cleanups, Scans, Transfers;
         internal bool Current = true;
         internal string Failure = "";
-        internal Action DuringTransfer;
+        internal Action DuringTransfer, DuringTake;
         internal ulong NextId;
         internal Runtime.PlayerView View()
         { return new Runtime.PlayerView {Identity = this, Connection = this, UserId = "76561198000000001", Name = "Grant fixture", Connected = Current,
@@ -39,7 +40,7 @@ internal static class PlayerInteractionFoundation1FBTests
                 object Parent = Containers[Index];
                 var Entries = Resources.FindAll(Value => Object.ReferenceEquals(Value.Parent, Parent));
                 Views[Index] = new Runtime.PhysicalInventoryContainer { Identity = Parent, Capacity = Capacity[Index], StackCount = Entries.Count,
-                    Read = Position => { Resource Value = Entries[Position]; return new Runtime.PhysicalInventoryStack(Parent, Definition, Value.Amount, true, Value, Value.Slot); }};
+                    Read = Position => { Resource Value = Entries[Position]; return new Runtime.PhysicalInventoryStack(Parent, Value.Definition ?? Definition, Value.Amount, true, Value, Value.Slot); }};
             }
             return new Runtime.PhysicalInventorySource {Main = Views[0], Belt = Views[1], Wear = Views[2]};
         }
@@ -52,7 +53,7 @@ internal static class PlayerInteractionFoundation1FBTests
             Creates++;
             if (Failure == "create") throw new InvalidOperationException("private create failure");
             if (Failure == "null") return null;
-            var Value = new Resource {Id = ++NextId, Amount = Amount}; Resources.Add(Value); return Value;
+            var Value = new Resource {Id = ++NextId, Amount = Amount, Definition = Definition}; Resources.Add(Value); return Value;
         }
         public bool Transfer(object Item, object Definition, Runtime.InventoryPlacementChunk Chunk)
         {
@@ -84,8 +85,10 @@ internal static class PlayerInteractionFoundation1FBTests
         }
         internal int Take(object Definition, int Amount)
         {
+            DuringTake?.Invoke();
             int Removed = 0;
-            foreach (Resource Value in Resources) if (Value.Parent != null && Removed < Amount) {
+            foreach (Resource Value in Resources) if (Value.Parent != null && Removed < Amount &&
+                Object.ReferenceEquals(Value.Definition ?? this.Definition, Definition)) {
                 int Used = Math.Min(Value.Amount, Amount - Removed); Value.Amount -= Used; Removed += Used;
                 if (Value.Amount == 0) {Value.Parent = null; Value.State = Runtime.InventoryResourceState.Consumed;}
             }

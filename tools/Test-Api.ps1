@@ -32,7 +32,7 @@ foreach ($Document in $Documents) {
         if (!(Test-Path -LiteralPath (Join-Path $Document.DirectoryName $Target))) { throw "Broken relative link: $($Document.Name): $Target" }
     }
 }
-foreach ($Example in @('player-events','player-position','player-health','player-inventory','player-teleport','player-take-item','hello-command')) {
+foreach ($Example in @('player-events','player-position','player-health','player-inventory','player-teleport','player-take-item','hello-command','player-status','player-give-item','player-shop','gui/inventory-reward')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',

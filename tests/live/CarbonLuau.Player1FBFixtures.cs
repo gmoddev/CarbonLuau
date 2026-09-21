@@ -110,6 +110,17 @@ namespace Carbon.Plugins
                 long Before = Count(Scrap);
                 CheckGrant(Host.Reload(PSource + "task.defer(function() P:GiveItem('scrap',1) end); error('failed candidate')").Status != RuntimeStatus.OK, "failed candidate");
                 CheckGrant(Count(Scrap) == Before && Gameplay.GiveItems.BusyCount == 0 && Gameplay.GiveItems.TrackedResources == 0, "no candidate grant/no gate/reference leak");
+                ulong GiveAttempts = Gameplay.GiveItems.Diagnostics.Attempts, TakeAttempts = Gameplay.TakeItems.Diagnostics.Attempts;
+                UnityEngine.Vector3 BeforePosition = Player.transform.position;
+                foreach (string Module in new[] {"give", "take", "teleport"}) {
+                    Result = Host.Execute("player1fc.cold." + Module,
+                        "local Ok,Err=pcall(require,'player1fc" + Module + "'); assert(not Ok and string.find(Err,'requires a committed domain',1,true))");
+                    CheckGrant(Result.Status == RuntimeStatus.OK, "cold module rejects before host: " + Result.Error);
+                }
+                CheckGrant(Count(Scrap) == Before && Player.transform.position == BeforePosition &&
+                    Gameplay.GiveItems.Diagnostics.Attempts == GiveAttempts && Gameplay.TakeItems.Diagnostics.Attempts == TakeAttempts,
+                    "cold modules zero inventory entry and unchanged server position");
+                Puts("[CarbonLuau:Player1FCLive] PASS first-load Give/Take/Teleport zero host mutation; unchanged physical quantity and position");
                 Puts(Prefix + "PASS production planner/adapter/VERIFY, main/belt/wear, full, callbacks/cleanup, 300 repeated operations, Give/Take gate, public API/reconnect/provisional/failed reload; no real client");
             } catch (Exception Error) {PrintError(Prefix + "FAIL " + Error);}
             finally {
