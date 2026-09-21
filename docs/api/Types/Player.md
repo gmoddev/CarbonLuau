@@ -102,3 +102,20 @@ else
     print("Player did not have enough scrap")
 end
 ```
+
+Handle errors separately when needed; do not blindly retry a failed call:
+
+```lua
+local CallOk, Removed = pcall(function()
+    return Player:TakeItem("scrap", 100)
+end)
+
+if not CallOk then
+    -- Validation/stale errors can occur before mutation; a host failure after
+    -- COMMIT may have changed inventory. Reconcile authoritative state first.
+elseif Removed then
+    print("Removed 100 scrap")
+else
+    print("No removal began")
+end
+```

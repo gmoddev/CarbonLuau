@@ -72,6 +72,7 @@ internal static class PlayerInteractionFoundation1FATests
 
     public static void RunModel()
     {
+        RunBoundaryCases();
         var Operation = new Runtime.PlayerTakeItemOperation();
         var Empty = new Fixture();
         Check(!Execute(Operation, Empty, "empty", Empty.Definition, 1), "empty inventory rejects before commit");
@@ -163,5 +164,57 @@ internal static class PlayerInteractionFoundation1FATests
             "bounded diagnostics and mutation gate return to baseline");
         Console.WriteLine("[CarbonLuau:Player1FAModel] PASS PREPARE/COMMIT/VERIFY, exact-player gate, bounds and 3000-operation stress in " +
             Watch.Elapsed.TotalMilliseconds.ToString("F2") + " ms");
+    }
+
+    private static void RunBoundaryCases()
+    {
+        var Operation = new Runtime.PlayerTakeItemOperation();
+        var Maximum = new Fixture(); Maximum.Add(Maximum.Main, Maximum.MainId, Int32.MaxValue);
+        Check(Execute(Operation, Maximum, "maximum-amount", Maximum.Definition, Int32.MaxValue) &&
+            Runtime.PhysicalInventoryObservation.CountForMutation(Maximum.Source(), Maximum.Definition) == 0 &&
+            Operation.BusyCount == 0, "Int32.MaxValue removal verifies without overflow or a retained gate");
+
+        // Reuse exactly the same token after every outcome: Count == 0 alone must
+        // not hide an unusable gate or accidentally retarget a connection lifetime.
+        foreach (string Failure in new[] {"reject", "stale-before", "host", "verify-host", "verify-bound", "verify-stale"}) {
+            var Value = new Fixture(); Value.Add(Value.Main, Value.MainId, 2);
+            int Commits = 0, Scans = 0, Resolves = 0;
+            Runtime.PlayerView View = Value.View();
+            View.Inventory = () => {
+                Scans++;
+                if (Scans == 2 && Failure == "verify-host")
+                    throw new InvalidOperationException("private verification exception");
+                var Source = Value.Source();
+                if (Scans == 2 && Failure == "verify-bound") Source.Main.Capacity = 65;
+                return Source;
+            };
+            View.TakeInventory = (Definition, Amount) => {
+                Commits++;
+                int Result = Value.Take(Definition, Amount);
+                if (Failure == "host") throw new InvalidOperationException("private post-mutation exception");
+                return Result;
+            };
+            Func<Runtime.PlayerView> Resolve = () => {
+                Resolves++;
+                return Failure == "stale-before" || (Failure == "verify-stale" && Resolves == 3) ? null : View;
+            };
+            if (Failure == "reject") {
+                Check(!Operation.Execute("reused", Resolve, Value.Definition, 3) && Commits == 0 && Scans == 1,
+                    "insufficient PREPARE performs no COMMIT or VERIFY");
+            } else {
+                string Error = Reject(() => Operation.Execute("reused", Resolve, Value.Definition, 1));
+                bool BeforeCommit = Failure == "stale-before";
+                Check(Error.Contains(BeforeCommit ? "no longer connected" : "may have changed") &&
+                    !Error.Contains("private") && Commits == (BeforeCommit ? 0 : 1),
+                    "failure classification and exception containment: " + Failure);
+                int ExpectedScans = BeforeCommit ? 0 : Failure == "host" || Failure == "verify-stale" ? 1 : 2;
+                Check(Scans == ExpectedScans, "one bounded VERIFY attempt without polling: " + Failure);
+            }
+            Check(Operation.BusyCount == 0 && Runtime.PhysicalInventoryObservation.CountForMutation(
+                Value.Source(), Value.Definition) == (Commits == 0 ? 2 : 1), "gate released with no rollback: " + Failure);
+            Check(Operation.Execute("reused", () => Value.View(), Value.Definition, 1) && Operation.BusyCount == 0,
+                "same exact token reusable after outcome: " + Failure);
+        }
+        Console.WriteLine("[CarbonLuau:Player1FABoundaries] PASS maximum amount, pre/post-COMMIT failure, bounded VERIFY and gate reuse");
     }
 }

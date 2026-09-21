@@ -136,6 +136,48 @@ deployment are recorded at the final tested revision in the completion report.
 ## Identity and remaining scope
 
 This additive method keeps package `0.4.0`, scripting API
-`0.4.0-experimental`, native ABI `1.4`, provider protocol `1.0`, package schema
+`0.4.0-experimental`, native ABI `1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema
 `1` and Luau revision `c6b830185af962c82003f86784e2fe036357c830` unchanged.
 `GiveItem`, Player-1F-B and Player-1F-C remain deferred.
+
+## Continuation audit — 2026-09-21
+
+Resumed from evidence commit `7111f494b5c1c27b299dcfdf0ff698e9f1967b8c`;
+the runtime implementation was already present in `82e940c55287d02830d8f3ed3a4f5142389db164`.
+Source review reconfirmed the qualified host call, exact-connection resolution
+before PREPARE/COMMIT and at VERIFY, the shared FacadeWorld-owned gate,
+publication-context rejection in the native bridge, and both success predicates.
+No production source, native/vendor code or version identity changed in this
+continuation. The provider version above corrects a documentation typo from
+`1.0` to the existing `CarbonLuau.Addons` / `1.2` in release.json and D12.
+
+Independently retrieved final-baseline CI status and logs:
+
+- [Windows, Linux and sanitizer validation](https://github.com/gmoddev/CarbonLuau/actions/runs/35585100724)
+  passed at `7111f494b5c1c27b299dcfdf0ff698e9f1967b8c`. Each of the Windows,
+  Linux and ASan/UBSan/leak native jobs passed all five CTests. Both managed
+  runtime jobs passed the Player, addon/provider, GUI, package, scheduler and
+  lifecycle suites. The focused 3,000-operation model reported 11.11 ms on
+  hosted Windows and 4.11 ms on hosted Linux; these are observations only.
+- [Documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/35585100787)
+  passed at that same revision. Hosted tests are not live Rust/Carbon evidence.
+
+Extended the existing focused model with maximum-amount successful removal,
+pre-COMMIT stale/rejection paths, exceptions after actual mutation, VERIFY host
+exceptions, over-bound VERIFY state, post-COMMIT stale state, exact scan counts
+and same-token gate reuse after each outcome. The new boundary cases and the
+original 3,000-operation stress passed in a small local managed-only check:
+PowerShell 7 Add-Type compiled the production FacadePolicy, PlayerDirectory,
+PlayerTeleportOperation, InventoryObservation and InventoryMutation sources
+with PlayerInteractionFoundation1FATests, then invoked RunModel. No native
+build or server was started locally. This check does not substitute for the
+.NET Framework/native integration matrix. API/architecture checks and
+`git diff --check` also passed. The public Player reference now includes the
+separate pcall example without implying rollback or safe automatic retry.
+
+Fresh worker/live runs were unavailable: `DockerPC` did not resolve from this
+Windows profile, and the configured `dockerbox` alias timed out on SSH port 22.
+No host configuration was changed or unrelated worker was substituted. The
+three exact-build live cycles above remain previously recorded evidence, not
+newly reproduced live results. No new real-client or graceful server-exit claim
+is made. GiveItem and Player-1F-B/C remain outside this task.
