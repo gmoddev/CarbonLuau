@@ -45,6 +45,9 @@ create no CarbonLuau-owned publication resource.
 
 ## Qualification
 
+Qualified source revision:
+`f8f9037c779f8fd091a24fa8e4eba55b7742bf45`.
+
 The focused real-VM fixtures cover zero, signed, fractional and maximum-range
 construction; NaN/infinity/overflow/type rejection; X/Y/Z/Magnitude;
 immutability; exact equality; every approved arithmetic operator; unsupported
@@ -62,8 +65,19 @@ release checks remain in the same complete runtime suite.
 An isolated Ubuntu 24.04 BigVPS container with four CPUs and 8 GiB passed all
 five release native CTests, the complete Mono real-native runtime suite, loader
 tests, architecture/API/release checks, deterministic packaging and all five
-ASan/UBSan/leak CTests. The focused fixture measured 2,000 live Position reads
-in 14.29 ms. This is a worker observation, not a public guarantee.
+ASan/UBSan/leak CTests. The final-head worker fixture measured 2,000 live
+Position reads in 12.04 ms. This is a worker observation, not a public
+guarantee.
+
+[Hosted validation](https://github.com/gmoddev/CarbonLuau/actions/runs/35567279475)
+passed Windows and Ubuntu native/runtime/loader/package jobs plus the sanitizer
+job at the qualified revision. The corresponding hosted fixtures measured
+11.12 ms on Windows and 18.24 ms on Ubuntu for 2,000 Position reads. The first
+hosted run exposed a test-only 5 ms GUI-2E rich-reload budget after the larger
+bootstrap; the evidence revision raises only that recovery fixture to its
+existing 20 ms budget. Production deadline defaults and behavior are unchanged.
+[Documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/35566639504)
+also passed.
 
 DockerPC was unavailable: the configured reverse-tunnel endpoint refused the
 connection. No Windows native/local or Windows live Carbon result is claimed.
