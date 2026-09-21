@@ -56,6 +56,11 @@ Revised D13 and
 read-only item observation, now implemented by Player-1C, plus implementation-
 gated `Player:GiveItem` and `Player:TakeItem`. Player-1F-A ships TakeItem using
 the exact Inventory-M2 adapter; GiveItem remains unimplemented.
+Its historical M2 G1 conclusion is superseded and requires supported-host
+requalification under [I12/D13](../Invariants.md#i12--trusted-in-process-host-interference).
+The intended `GiveItem(ShortName, Amount, Behavior?)` API defaults to
+`GiveItemBehavior.InventoryOnly`; neither the method nor enum is available.
+`DropRemainder` is future design only, not a reserved or exposed enum value.
 Their canonical result contract is `false` only before inventory COMMIT, `true`
 only after physical VERIFY, and a controlled error for post-COMMIT uncertainty.
 This policy change removes no implemented API and changes no package, scripting

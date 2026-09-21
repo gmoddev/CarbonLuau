@@ -93,6 +93,43 @@ Rust/Carbon implementation → managed adaptation → CarbonLuau scripting facad
 
 Signals, `task`-style functions, modules and services are accepted ergonomic directions, not Roblox emulation. Roblox-familiar GUI names and value semantics do not introduce a generic Roblox `Instance`/DataModel or client-replication contract. Do not add Workspace, ReplicatedStorage, `Instance.new`, generic Instance/DataModel behavior, client replication or Roblox networking because Luau is the language. API compatibility/version identity belongs to [Compatibility.md](Compatibility.md#version-identities).
 
+## I12 — Trusted in-process host interference
+
+CarbonLuau preserves its API semantics against its own implementation, the
+qualified supported Rust/Carbon host behavior, normal documented callback
+outcomes, and host uncertainty covered by existing failure semantics.
+
+**External interference** occurs when another trusted in-process component
+synchronously mutates host state relevant to an admitted CarbonLuau operation
+in a way that invalidates the operation's qualified premises. Examples include
+changes to Item.amount, effective stack limits, target slot/container contents,
+Item parent/state, inventory contents or operation-relevant world state during
+an inventory callback. This definition does not require malicious intent.
+Equally privileged trusted components can have equivalent host authority;
+CarbonLuau does not promise transactional isolation from such mutation. This is
+a semantic isolation boundary, not a security boundary. It applies generally
+to host-backed gameplay operations, including future operations whose supported
+Rust/Carbon path synchronously invokes trusted in-process code.
+
+The boundary does **not** excuse unsafe API selection, incorrect PREPARE,
+bounds or adapter arguments; prohibited generic GiveItem or automatic slots;
+incorrect swap/ignoreStackLimit flags; oversized planned chunks; intentional
+drop fallback; ordinary vanilla behavior on the qualified path; documented
+non-mutating callbacks or normal acceptance/rejection; CarbonLuau-controlled
+callbacks/effects; resource-accounting or VERIFY bugs; or failures already
+classified as indeterminate by D13. These remain CarbonLuau responsibilities.
+An unexplained failure must never be attributed to external interference
+without evidence of actual operation-relevant mutation outside CarbonLuau's
+control. An indeterminate result alone is not that evidence.
+
+Observed interference does not waive verification: claim success only if the
+existing operation-specific success predicate still proves it. If the effects
+leave the result uncertain, use the existing controlled indeterminate failure
+where appropriate, never claim rollback, never conceal prohibited effects, and
+retain bounded diagnostics where useful. No new outcome, recovery or replay
+mechanism is introduced. I1/I3/I4/I8/I9/I10 and D7/D10/D11 retain ownership,
+non-reentrancy, publication, exact-Player lifetime and failure authority.
+
 ## Decision register
 
 This is the single location for unresolved architecture/policy choices. Accepted directions are not reopened merely because implementation has not begun.
@@ -111,7 +148,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D10 — approved admitted-operation and provisional-effect model | Admission, resource ownership, publication and deadline are orthogonal as specified in the canonical D10 detail below. | Requalify admitted-operation, cross-domain facade or provisional-effect changes |
 | D11 — resolved Phase 3 identity contract; domain binding added | Existing exact connection-token semantics remain, with host-backed facade validity now also bound to the owning domain lifetime; see D11 detail below. | Requalify host identity/adapter or domain-lifetime changes |
 | D12 — resolved addon and GUI-capable experimental identity | The additive addon, GUI Foundation 1 and implemented GUI Foundation 2 layout/image/scrolling surfaces are assigned `CarbonLuau 0.4.0-experimental`; package, API, ABI, provider protocol, schema and Luau identities remain separate. `TextBox` is not implemented. Authenticated-client GUI observations remain unqualified and non-gating. | Requalify affected public behavior and assign an explicit migration/version decision for breaks |
-| D13 — resolved inventory ownership/failure model; TakeItem implemented | Rust inventory remains nontransactional, but a lack of universal rollback no longer categorically excludes a narrow operation. Eligible inventory mutation uses bounded mutation-free PREPARE, an explicit first-host-effect COMMIT boundary, strongest-defensible physical VERIFY, exact-Player Luau serialization and three distinct outcomes: pre-COMMIT `false`, verified `true`, or controlled post-COMMIT indeterminate error. Returned host resources remain under temporary CarbonLuau responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) retains the complete rationale; [InventoryMutationM2Validation.md](InventoryMutationM2Validation.md) qualifies G1–G5 and [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records the narrow TakeItem implementation. | Requalify host build, Carbon hook behavior, bounds or adapter-path changes; GiveItem remains separately gated |
+| D13 — resolved inventory ownership/failure model and I12 scope; TakeItem implemented | Bounded mutation-free PREPARE, explicit COMMIT, physical VERIFY and pre-COMMIT false / verified true / post-COMMIT indeterminate remain unchanged. Returned resources remain under temporary responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [Reassessment](InventoryOwnershipFailureReassessment.md) retains the rationale. [M2](InventoryMutationM2Validation.md) retains G2–G5 evidence; its G1 conclusion is superseded. [Player-1F-B](PlayerInteractionFoundation1FB.md) requires G1 requalification under I12; [Player-1F-A](PlayerInteractionFoundation1FA.md) retains qualified TakeItem. | Requalify GiveItem's supported-host no-drop path before implementation; requalify host, bounds or adapter changes |
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
 | D16 - resolved GUI Foundation 2 architecture; implemented subset qualified for experimental public release through 2F | Foundation 2 additively specializes D15 as specified below. GUI-2A/2B/2C/2E/2F implement and qualify deterministic layout, typed images and retained scrolling under the existing `0.4.0-experimental` identity. `TextBox` and typed text ingress remain deferred and unimplemented after the exact text-preservation gate failed. [GuiFoundation2.md](GuiFoundation2.md) retains the complete supporting design. | Requalify affected behavior; reconsider TextBox only with a bounded opaque text-preserving host transport |
@@ -293,15 +330,42 @@ transfer and removal work use a target-build-qualified capacity envelope, one
 fresh bounded VERIFY scan and no polling. One operation may never perform
 unbounded item work.
 
-Inventory-M2 qualified G1, a GiveItem planned no-world-drop adapter; G2,
+Inventory-M2 historically reported G1-G5 PASS, including a GiveItem planned
+no-world-drop adapter. **That G1 conclusion is superseded as incomplete** by
+the callback-ordering investigation and I12 adoption. M2 retains G2,
 returned-Item terminal-state observability; G3, TakeItem removal and
 verification behavior; G4, supported cleanup for returned unattached Items; and
 G5, concrete work bounds derived from supported container maxima, on Rust build
 `25353106` plus Carbon `2.0.259`. The exact adapter and evidence are recorded in
 [InventoryMutationM2Validation.md](InventoryMutationM2Validation.md). This
-qualification does not implement either public API. Failure during later
+evidence does not implement either public API. Failure during later
 implementation or requalification leaves that individual API unimplemented
 without weakening its contract or blocking an independently qualified sibling.
+Player-1F-B's [exact-build follow-up](PlayerInteractionFoundation1FB.md) found
+an uncovered acceptance-callback/stack-limit path into the split/drop fallback.
+I12 now resolves the semantic isolation boundary. GiveItem G1 is **PENDING
+REQUALIFICATION**, not PASS; the historical M2 cases and independently qualified
+TakeItem remain evidence.
+
+For the intended `GiveItemBehavior.InventoryOnly` mode, G1 now requires:
+
+> CarbonLuau must not select, invoke, or knowingly permit world-drop fallback as
+> part of its qualified GiveItem adapter. On the qualified supported-host
+> baseline, absent external trusted interference that mutates operation-relevant
+> state during synchronous callbacks, requested inventory delivery must not
+> become world delivery.
+
+This is not permission to ignore an observed drop or unexplained failure.
+InventoryOnly's existing success predicates above remain mandatory; detected
+world delivery of the requested grant or uncertain returned-resource state
+cannot be reported as success, even if external interference caused it.
+Known-invalid premises must not be knowingly passed to the host as a qualified
+transfer. Ordinary callback rejection, including rejection of a generated
+split under baseline behavior, cannot be relabeled external interference.
+The required supported-host and separately classified boundary-test matrix is
+in [Player-1F-B requalification](PlayerInteractionFoundation1FB.md#required-1f-b-requalification).
+This amendment changes qualification scope, not PREPARE/COMMIT/VERIFY,
+false/true/indeterminate, or TakeItem semantics.
 Historical
 [Phase4.md](Phase4.md#ownership-gate-d13) and
 [Phase4-Validation.md](Phase4-Validation.md) findings remain evidence of host
@@ -638,7 +702,7 @@ multiplication in either operand order and scalar division;
 `Player.MaxHealth`, `Player:CountItem(ShortName)`,
 `Player:HasItem(ShortName, Amount?)`; and `game:GetService("Items")` with
 `Items:Exists(ShortName)`; plus implementation-gated
-`Player:GiveItem(ShortName, Amount)` and
+`Player:GiveItem(ShortName, Amount, Behavior?)` and
 `Player:TakeItem(ShortName, Amount)` under D13. No other gameplay API is
 approved by this decision.
 
@@ -695,13 +759,27 @@ through `Int32.MaxValue`. For TakeItem, a canonical unknown item is a definite
 PREPARE rejection and returns false before COMMIT. GiveItem retains its
 separately gated configuration-error treatment until implemented.
 
-GiveItem means delivery into the exact Player's accepted ordinary top-level
+The intended GiveItem signature returns boolean and uses the project-owned
+`GiveItemBehavior` enum, initially only `GiveItemBehavior.InventoryOnly`.
+Omitting Behavior selects InventoryOnly; a boolean DropIfFull parameter is not
+accepted. Unsupported behavior values are programming errors before mutation.
+This is an implementation-gated API declaration, not a runtime exposure:
+neither GiveItem nor GiveItemBehavior exists yet. `DropRemainder` is only a
+possible future design name, not a reserved/accepted enum member or runtime
+value. It needs separate design and qualification of inserted/dropped amounts,
+ownership, partial placement, world-entity verification, return semantics,
+plugin interference and failures after partial placement/drop. Generic Rust
+GiveItem must not be assumed to satisfy that future contract.
+
+InventoryOnly means delivery into the exact Player's accepted ordinary top-level
 main/belt/wear inventory, with stacking and multiple stacks allowed but no exact
 slot/container guarantee. Partial placement is never success. Full inventory
 may return false only when PREPARE establishes impossibility before item
-creation. GiveItem never means inventory-or-world-drop, and remains unqualified
-unless a planned target-build transfer path cannot enter a world-drop fallback
-and every returned Item can be accounted for or subjected to supported cleanup.
+creation. InventoryOnly does not intentionally drop overflow; D13's revised G1
+requires a no-world-drop planned target-build path within I12's supported-host
+boundary, with every returned Item accounted for or subjected to supported
+cleanup. It remains unqualified until requalification passes. I12 does not
+convert observed world delivery into InventoryOnly success.
 
 TakeItem means verified removal of the requested physical quantity from the
 same accepted top-level inventory. Insufficient physical quantity may return

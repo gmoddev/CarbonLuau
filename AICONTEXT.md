@@ -39,8 +39,9 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Player Interaction Foundation 1C Items/inventory observation implementation and evidence | [PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md) |
 | Player Interaction Foundation 1D Teleport implementation and qualification | [PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md) |
 | Player Interaction Foundation 1F-A TakeItem implementation and qualification | [PlayerInteractionFoundation1FA.md](docs/PlayerInteractionFoundation1FA.md) |
+| Player Interaction Foundation 1F-B GiveItem investigation and requalification gate under I12 | [PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
-| Inventory-M2 exact-build G1-G5 qualification and adapter evidence | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
+| Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -57,11 +58,17 @@ PREPARE/COMMIT/VERIFY model. D18 now architecturally accepts bounded read-only
 item observation plus implementation-gated `Player:GiveItem` and `TakeItem`.
 Preserve [Phase4.md](docs/Phase4.md),
 [Phase4-Validation.md](docs/Phase4-Validation.md) and the historical structural
-checker as evidence. Inventory-M2 subsequently qualified revised D13 gates
-G1-G5 for the narrow adapter on Rust build `25353106` plus Carbon `2.0.259`, as
+checker as evidence. Inventory-M2 historically reported revised D13 gates
+G1-G5 PASS on Rust build `25353106` plus Carbon `2.0.259`, as
 recorded in [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md).
 Player-1F-A uses that qualification for the narrow public TakeItem adapter;
 GiveItem and broader mutation remain unimplemented.
+The Player-1F-B follow-up found an uncovered callback-to-split/drop path on the
+same pinned build, superseding the incomplete G1 conclusion. I12 now owns the
+general trusted in-process interference boundary; D13/D18 adopt that scope and
+the intended `GiveItem(ShortName, Amount, Behavior?)` shape with InventoryOnly
+default. G1 remains PENDING REQUALIFICATION, not PASS, as recorded in
+[PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md).
 Phase 5 hardening/qualification is complete within its recorded controlled-host
 envelope in [Phase5.md](docs/Phase5.md) and
 [Phase5-Validation.md](docs/Phase5-Validation.md). Authenticated real-client
@@ -239,7 +246,8 @@ Health/MaxHealth; Player-1C is bounded item identity and physical inventory
 observation; Player-1D is committed-only Teleport with exact-host and
 authenticated-client gates; Player-1E is combined read-only/spatial closure.
 Inventory-M1 owns the deterministic model without Rust mutation; Inventory-M2
-has completed exact target-build adapter qualification; Player-1F-A owns TakeItem,
+retains G2-G5 exact target-build evidence while G1 requires requalification
+under I12; Player-1F-A owns TakeItem,
 Player-1F-B owns GiveItem, and Player-1F-C owns combined mutation closure.
 TakeItem is implemented by Player-1F-A and GiveItem remains unimplemented; they
 qualify independently.

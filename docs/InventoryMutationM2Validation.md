@@ -1,10 +1,22 @@
 # Inventory-M2 exact-build adapter validation
 
 **Date:** 2026-09-21  
-**Disposition:** **PASS for G1-G5 on the qualified target build.** This closes
-the host-evidence gate only. `Player:GiveItem` and `Player:TakeItem` remain
-unimplemented until Player-1F-A/1F-B, and no public API or package identity
-changes in this phase.
+**Current disposition:** **Historical G1 PASS conclusion SUPERSEDED;
+G1 PENDING REQUALIFICATION under I12. G2-G5 evidence retained.**
+The original phase reported G1-G5 PASS before either public mutation existed.
+TakeItem was subsequently implemented and qualified by Player-1F-A and remains
+unchanged. GiveItem is still unimplemented; this record changes no identity.
+
+**Player-1F-B follow-up and policy adoption (2026-09-21):** Original M2 G1
+proof was incomplete: mutable acceptance occurs before a split/drop decision.
+The later investigation failed G1 under the previous whole-process guarantee;
+CarbonLuau cannot isolate arbitrary trusted mutation across that callback.
+[I12](Invariants.md#i12--trusted-in-process-host-interference) now places that
+external mutation outside semantic isolation, not outside result verification.
+This does not restore the old PASS. The explicit-slot/no-swap/no-ignoreStackLimit
+adapter must be requalified under the supported-host model and
+[Player-1F-B gate](PlayerInteractionFoundation1FB.md#required-1f-b-requalification)
+before implementation resumes. Historical observations below are preserved.
 
 ## Scope and provenance
 
@@ -56,15 +68,15 @@ The selected Windows/Linux method bodies and visibility are identical for
 `ItemContainer.Insert`, `ItemContainer.Take`, `PlayerInventory.ServerInit` and
 `PlayerInventory.Take`.
 
-## Qualified adapter
+## Historical adapter evidence and current qualification limits
 
-### G1 — no-world-drop Give path: PASS
+### G1 — historical PASS superseded; requalification pending
 
 The general `PlayerInventory.GiveItem`, `BasePlayer.GiveItem` and unconstrained
 `Item.MoveToContainer` paths are not qualified. `MoveToContainer` still has an
 oversized-container-stack split branch that may call `Drop`.
 
-The qualified path is narrower:
+The originally proposed qualified path was narrower:
 
 1. PREPARE scans only `containerMain`, `containerBelt` and `containerWear`.
 2. PREPARE selects every exact target slot and chunk amount without invoking
@@ -76,13 +88,15 @@ The qualified path is narrower:
    `MoveToContainer(Container, Slot, AllowStack, false, Player, false)`.
 5. The adapter never passes target slot `-1`, never enables
    `ignoreStackLimit`, never enables swap and never supplies an amount that can
-   enter the oversized split/drop branch.
+   enter the oversized split/drop branch under the qualified baseline. The
+   original argument did not account for a callback changing this premise.
 
 For an exact compatible stack, the inspected path adds the bounded amount,
 decrements the source, migrates ownership, removes the exhausted source and
 returns `true`. For a planned empty slot, it checks acceptance, detaches any old
 world/container state and assigns the selected parent. Neither qualified branch
-calls `Drop`. A host `false` or exception after creation is an indeterminate
+calls `Drop` when its premises hold. That conditional observation is not the
+complete revised G1 proof. A host `false` or exception after creation is an indeterminate
 post-COMMIT outcome, not ordinary `false`.
 
 ### G2 — returned-Item observability: PASS
@@ -159,7 +173,8 @@ ran on an isolated Windows server using the exact Rust build and Carbon
 - `PlayerInventory.Take(null, ...)` with matching host and physical deltas;
 - the exact vanilla capacity values.
 
-Observed result:
+Historical observed result (the G1 marker describes those fixture cases,
+not current G1 qualification):
 
 ```text
 [CarbonLuau:InventoryM2] PASS G1 explicit-slot/no-swap path produced no world entity or drop
@@ -175,9 +190,9 @@ graceful RCON `quit`; no authenticated client was required or used.
 
 ## Conclusion
 
-Inventory-M2 passes for Rust build `25353106` plus Carbon `2.0.259`. Revised
-D13's G1-G5 host-dependent questions are resolved for the narrow adapter above.
-This does not implement a mutation API and does not make Rust inventory
-transactional. The next authorized steps remain Player-1F-A (`TakeItem`) and,
-independently, Player-1F-B (`GiveItem`) using PREPARE/COMMIT/VERIFY and the exact
-false/true/indeterminate contract.
+The original blanket G1-G5 PASS conclusion is explicitly superseded. G2-G5
+observations on Rust build `25353106` plus Carbon `2.0.259` and the historical
+G1 fixture outcomes remain evidence, not a new supported-host G1 PASS.
+TakeItem remains independently qualified. GiveItem requires the revised
+Player-1F-B requalification gate before implementation. PREPARE/COMMIT/VERIFY,
+false/true/indeterminate and nontransactional host semantics are unchanged.

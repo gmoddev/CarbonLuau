@@ -3,6 +3,18 @@
 **Repository baseline:** `main` at `ab221bc55ab7e58d62383a712ecbd793d98782b1` — *Adopt Player Interaction Foundation 1 architecture*.
 **Scope:** architecture/research only. No implementation or repository modification.
 
+> **Current canonical amendment (2026-09-21):** This rationale is subordinate
+> to I12/D13/D18 in [Invariants.md](Invariants.md). I12 now defines the general
+> trusted in-process host-interference boundary; it does not excuse unsafe
+> adapters or ordinary acceptance/rejection. GiveItem's intended signature is
+> `Player:GiveItem(ShortName, Amount, Behavior?) -> boolean`, defaulting to
+> `GiveItemBehavior.InventoryOnly`. Two-argument examples remain valid intended
+> calls; neither method nor enum is implemented. `DropRemainder` is future
+> design only, not a reserved member. M2's original G1 conclusion is superseded
+> as incomplete; [Player-1F-B](PlayerInteractionFoundation1FB.md) requires
+> requalification under the supported-host model, not a documentation-only PASS.
+> TakeItem's qualified implementation and PREPARE/COMMIT/VERIFY are unchanged.
+
 The question is correctly reframed as what **CarbonLuau** must guarantee rather than whether Rust can provide globally transactional inventory operations.
 
 ---
@@ -623,7 +635,7 @@ It explicitly does **not** guarantee isolation against arbitrary trusted Carbon 
 Adopt:
 
 ```lua
-Player:GiveItem(ShortName, Amount) -> boolean
+Player:GiveItem(ShortName, Amount, Behavior?) -> boolean
 ```
 
 under the PREPARE/COMMIT/VERIFY contract.
@@ -698,7 +710,9 @@ Excluded:
 * external storage;
 * world entities.
 
-The adapter may use Rust-compatible ideal placement internally, but the public contract is container-neutral within the accepted set.
+The adapter must use bounded preplanned explicit slots on the qualified path,
+not automatic slot selection. The public contract remains container-neutral
+within the accepted set.
 
 ## Stacking
 
@@ -754,7 +768,11 @@ Historical D13 correctly rejected `BasePlayer.GiveItem` for exactly this reason.
 
 Current `MoveToContainer` still contains a split path that can call `Drop` when it cannot place a generated split remainder.
 
-Therefore the implementation must use an adapter whose planned transfer path cannot enter a drop fallback.
+Therefore the implementation must satisfy D13's revised G1 no-drop wording
+within I12's supported-host boundary. It cannot select or knowingly permit
+drop fallback; normal non-mutating callback acceptance/rejection remains in
+scope. Premise-invalidating external mutation is not isolated, but observed
+world delivery or uncertainty cannot be converted into InventoryOnly success.
 
 The recommended strategy is:
 
@@ -1341,7 +1359,10 @@ Architecture is resolved. Only these implementation gates remain.
 
 ### G1 — GiveItem no-world-drop adapter
 
-The exact target build must demonstrate a supported path where CarbonLuau's planned chunks cannot enter a Rust world-drop fallback.
+The exact target build must demonstrate D13's supported-host no-drop path under
+I12. The original M2 G1 conclusion is superseded, not restored by adopting that
+boundary. The required normal-host and separate hostile-mutation matrix is in
+[Player-1F-B](PlayerInteractionFoundation1FB.md#required-1f-b-requalification).
 
 Failure of G1:
 

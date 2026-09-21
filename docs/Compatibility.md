@@ -567,7 +567,7 @@ qualification and Player-1E (combined lifecycle, stress, documentation and
 public qualification closure). Revised D13 additionally routes Inventory-M1
 for the deterministic model and mutation gate, Player-1F-A for TakeItem,
 Player-1F-B for GiveItem and Player-1F-C for combined mutation closure.
-Inventory-M2 exact-target adapter qualification is complete. Player-1F-A uses
+Inventory-M2's G1 conclusion is superseded; G2-G5 evidence remains. Player-1F-A uses
 that exact adapter for TakeItem; GiveItem and combined mutation closure remain
 unimplemented.
 
@@ -586,16 +586,23 @@ The reusable scanner and evidence are recorded in
 [PlayerInteractionFoundation1C.md](PlayerInteractionFoundation1C.md).
 
 Inventory mutation requires exact-connection serialization, committed execution
-and target-build evidence. Inventory-M2 qualified GiveItem's G1 no-world-drop
-transfer, G2 returned-Item terminal-state observability and G4 supported cleanup;
+and target-build evidence. Inventory-M2 retains G2 returned-Item terminal-state
+observability and G4 supported cleanup;
 TakeItem's G3 host-result plus physical-delta verification; and shared G5 work
 bounds on Rust build `25353106` plus Carbon `2.0.259`. The narrow adapter and
 evidence are recorded in
 [InventoryMutationM2Validation.md](InventoryMutationM2Validation.md). TakeItem
 implementation and qualification are recorded in
 [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md).
-GiveItem may still remain unimplemented if its later implementation or
-requalification fails. The complete rationale is retained in
+GiveItem's historical G1 no-drop conclusion was incomplete and is superseded.
+[I12](Invariants.md#i12--trusted-in-process-host-interference) defines the general
+supported-host/interference scope; the required normal-host and separately
+labeled hostile-mutation matrix is in
+[Player-1F-B](PlayerInteractionFoundation1FB.md#required-1f-b-requalification).
+Its current status is PENDING REQUALIFICATION, not PASS. Policy adoption alone
+does not reopen production implementation. The intended optional Behavior enum
+defaults to InventoryOnly but no GiveItem or GiveItemBehavior runtime surface
+exists yet. The complete rationale is retained in
 [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md).
 
 Player-1D passed qualification of the exact Rust/Carbon relocation sequence on
