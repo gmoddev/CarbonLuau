@@ -50,9 +50,10 @@ teleport, moderation/admin mutation, networking, HTTP, filesystem APIs,
 arbitrary hooks/console execution, reflection, Roblox hierarchy/replication and
 `task.wait`. No Phase 4 API is shipped. [D18](../Invariants.md#d18--player-interaction-foundation-1)
 approves a future bounded read-only item identity/inventory surface plus
-committed-only Teleport, but architecture adoption does not make those APIs
-available. `Player:GiveItem`, `TakeItem` and other item mutation remain deferred
-under D13.
+committed-only Teleport and implementation-gated GiveItem/TakeItem, but
+architecture adoption does not make those APIs available. Revised D13 requires
+PREPARE/COMMIT/VERIFY and exact-Player serialization for those two mutations;
+richer inventory mutation and raw host objects remain deferred.
 
 Addon packages use exact dependency bindings, explicit exports and the readonly
 `addon` context. They are public experimental behavior beginning with

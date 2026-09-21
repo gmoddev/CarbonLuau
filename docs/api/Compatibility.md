@@ -27,10 +27,12 @@ change and migration decision. Experimental does not permit silent breaking chan
 No automatic version negotiation, long-term deprecation window or Roblox contract
 is promised. Consult [current qualification](../Phase3-Validation.md).
 
-D13 continues to defer unshipped `Player:GiveItem`, `TakeItem` and item mutation.
-[D18](../Invariants.md#d18--player-interaction-foundation-1) now approves bounded
-read-only item identity/inventory observation for future scoped implementation,
-but none of that Player Interaction Foundation 1 surface is currently shipped.
+Revised D13 and
+[D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
+read-only item observation plus implementation-gated `Player:GiveItem` and
+`Player:TakeItem` for future scoped work. Neither mutation is currently shipped.
+Their canonical result contract is `false` only before inventory COMMIT, `true`
+only after physical VERIFY, and a controlled error for post-COMMIT uncertainty.
 This policy change removes no implemented API and changes no package, scripting
 API or native ABI identity.
 

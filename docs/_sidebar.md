@@ -26,6 +26,7 @@
   - [GUI Foundation 3D](GuiFoundation3D.md)
   - [GUI Foundation 3E](GuiFoundation3E.md)
   - [Player Interaction Foundation 1 architecture](PlayerInteractionFoundation1.md)
+  - [Inventory ownership/failure reassessment](InventoryOwnershipFailureReassessment.md)
 - API
   - [Overview](api/README.md)
   - [Globals](api/Globals.md)

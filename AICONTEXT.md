@@ -1,6 +1,6 @@
 # CarbonLuau AI and contributor policy
 
-This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 is documented in [Phase2.md](docs/Phase2.md), [Phase2-Validation.md](docs/Phase2-Validation.md) and invariant D9. The authorized Phase 3 facade, approved provisional-effect policy and qualification status are in [Phase3.md](docs/Phase3.md), [Phase3-Validation.md](docs/Phase3-Validation.md) and D10–D12. Script authors start at the [public API reference](docs/api/README.md). D13 retains the Phase 4 item-mutation deferral; D18 separately owns the unimplemented Player Interaction Foundation 1 architecture.
+This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 is documented in [Phase2.md](docs/Phase2.md), [Phase2-Validation.md](docs/Phase2-Validation.md) and invariant D9. The authorized Phase 3 facade, approved provisional-effect policy and qualification status are in [Phase3.md](docs/Phase3.md), [Phase3-Validation.md](docs/Phase3-Validation.md) and D10–D12. Script authors start at the [public API reference](docs/api/README.md). Revised D13 owns the unimplemented inventory ownership/failure model, and D18 owns the unimplemented Player Interaction Foundation 1 surface.
 
 ## Authority and reading order
 
@@ -34,6 +34,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 3E lifecycle, scale, compatibility and release-candidate closure | [GuiFoundation3E.md](docs/GuiFoundation3E.md) |
 | Canonical Player Interaction Foundation 1 semantics | [D18 in Invariants.md](docs/Invariants.md#d18--player-interaction-foundation-1) |
 | Player Interaction Foundation 1 rationale, host evidence, phases and qualification gates | [PlayerInteractionFoundation1.md](docs/PlayerInteractionFoundation1.md) |
+| Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -42,21 +43,23 @@ This document owns contribution workflow and prompt construction. It applies to 
 
 Read this policy, Invariants and Compatibility before implementation; then read the current phase evidence and only the design sections and source needed for the task. The original design remains the accepted phase plan, not a claim that its future features exist. Runtime invariants apply when their owning feature is implemented. Do not implement a later feature simply to satisfy its future invariant now.
 
-The user approved D13 closure on 2026-09-14, deferring the original Phase 4 item
-convenience surface from v0.1. D18 now supersedes only the former product-scope
-exclusion of bounded read-only item identity and observation for future Player
-Interaction Foundation 1 work. `Player:GiveItem`, `TakeItem` and other item
-mutation remain deferred; D13's ownership, commit, abort and cleanup findings
-remain canonical. Preserve [Phase4.md](docs/Phase4.md),
-[Phase4-Validation.md](docs/Phase4-Validation.md) and the read-only structural
-checker as historical evidence; deferral is not proof of a safe adapter and
-D18 architecture adoption is not implementation.
+The user approved the original D13 closure on 2026-09-14, deferring the Phase 4
+item convenience surface from v0.1. Revised D13 preserves the historical facts
+that Rust inventory is nontransactional and lacks universal rollback, but
+supersedes categorical mutation deferral with a per-operation
+PREPARE/COMMIT/VERIFY model. D18 now architecturally accepts bounded read-only
+item observation plus implementation-gated `Player:GiveItem` and `TakeItem`.
+Preserve [Phase4.md](docs/Phase4.md),
+[Phase4-Validation.md](docs/Phase4-Validation.md) and the structural checker as
+historical evidence; revised architecture is not implementation or proof that
+the exact target-build gates pass.
 Phase 5 hardening/qualification is complete within its recorded controlled-host
 envelope in [Phase5.md](docs/Phase5.md) and
 [Phase5-Validation.md](docs/Phase5-Validation.md). Authenticated real-client
 qualification is explicitly deferred, non-gating and unqualified; that decision
-is not evidence of network delivery or a support claim. No Phase 4 item-mutation
-runtime/API addition or weaker ownership rule is authorized.
+is not evidence of network delivery or a support claim. No inventory-mutation
+runtime/API addition is authorized outside separately scoped Inventory-M and
+Player-1F work.
 The release-candidate identity and reproducibility procedure are owned by
 [release.json](release.json) and [Release.md](docs/Release.md). Public setup starts
 at [Installation.md](docs/Installation.md); release preparation must not reinterpret
@@ -219,13 +222,17 @@ Player Interaction Foundation 1 architecture is canonically owned by D18 in
 [PlayerInteractionFoundation1.md](docs/PlayerInteractionFoundation1.md) is the
 supporting rationale, host-evidence, implementation-sequencing and qualification
 record; it does not override D18, prove implementation or assign a release
-identity. D18 authorizes only explicitly scoped future Player-1A through
-Player-1E work. Player-1A is `Vector3` plus Position; Player-1B is read-only
+identity. The revised D13 rationale and mutation gates are in
+[InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md).
+D18 authorizes only explicitly scoped future Player-1A through Player-1F and
+Inventory-M work. Player-1A is `Vector3` plus Position; Player-1B is read-only
 Health/MaxHealth; Player-1C is bounded item identity and physical inventory
 observation; Player-1D is committed-only Teleport with exact-host and
-authenticated-client gates; Player-1E is combined closure. There is no
-TakeItem/GiveItem implementation phase, and D13's mutation ownership findings
-remain authoritative.
+authenticated-client gates; Player-1E is combined read-only/spatial closure.
+Inventory-M1 owns the deterministic model without Rust mutation, Inventory-M2
+owns exact target-build adapter qualification, Player-1F-A owns TakeItem,
+Player-1F-B owns GiveItem, and Player-1F-C owns combined mutation closure.
+GiveItem and TakeItem remain unimplemented and may qualify independently.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

@@ -102,7 +102,10 @@ Player Interaction Foundation 1 is resolved for future implementation by
 rationale and qualification routing in
 [PlayerInteractionFoundation1](PlayerInteractionFoundation1.md). It approves
 immutable `Vector3`, read-only exact-Player position/health/inventory
-observation, read-only item existence and committed-only Teleport. None of this
-surface is implemented by the architecture adoption. `TakeItem`, health
-mutation and `GiveItem` remain deferred; D13 continues to own item-mutation
-ownership and cleanup requirements.
+observation, read-only item existence, committed-only Teleport and
+implementation-gated GiveItem/TakeItem. None of this surface is implemented by
+the architecture adoptions. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
+exact-Player Luau serialization and false/true/indeterminate-error outcomes;
+the full rationale is in
+[Inventory Ownership / Failure Reassessment](InventoryOwnershipFailureReassessment.md).
+Health mutation and richer/raw inventory APIs remain deferred.

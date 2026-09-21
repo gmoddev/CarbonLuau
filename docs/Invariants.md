@@ -111,12 +111,12 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D10 — approved admitted-operation and provisional-effect model | Admission, resource ownership, publication and deadline are orthogonal as specified in the canonical D10 detail below. | Requalify admitted-operation, cross-domain facade or provisional-effect changes |
 | D11 — resolved Phase 3 identity contract; domain binding added | Existing exact connection-token semantics remain, with host-backed facade validity now also bound to the owning domain lifetime; see D11 detail below. | Requalify host identity/adapter or domain-lifetime changes |
 | D12 — resolved addon and GUI-capable experimental identity | The additive addon, GUI Foundation 1 and implemented GUI Foundation 2 layout/image/scrolling surfaces are assigned `CarbonLuau 0.4.0-experimental`; package, API, ABI, provider protocol, schema and Luau identities remain separate. `TextBox` is not implemented. Authenticated-client GUI observations remain unqualified and non-gating. | Requalify affected public behavior and assign an explicit migration/version decision for breaks |
-| D13 — resolved item-mutation deferral; read-only scope specialized by D18 | User approved the Phase 4 deferral on 2026-09-14. No maintainable supported path guarantees deterministic ownership and cleanup across qualified Rust item construction, insertion, stacking/splitting/drop behavior, partial mutation and callbacks, so `Player:GiveItem` and item mutation remain deferred. D18 supersedes only D13's former product-scope exclusion of bounded read-only item identity and observation; it does not weaken the ownership, commit, abort or cleanup findings. [Phase4.md](Phase4.md#ownership-gate-d13) remains historical investigation evidence. | Reconsider item mutation only with a stronger supported Rust/Carbon transactional API or safe-adapter evidence, explicit scope approval and qualification |
+| D13 — resolved inventory ownership/failure model; mutation implementation-gated | Rust inventory remains nontransactional, but a lack of universal rollback no longer categorically excludes a narrow operation. Eligible inventory mutation uses bounded mutation-free PREPARE, an explicit first-host-effect COMMIT boundary, strongest-defensible physical VERIFY, exact-Player Luau serialization and three distinct outcomes: pre-COMMIT `false`, verified `true`, or controlled post-COMMIT indeterminate error. Returned host resources remain under temporary CarbonLuau responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) retains the complete rationale. | Qualify each operation and G1–G5 on the exact target build; failure leaves that API unimplemented without weakening its contract |
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
 | D16 - resolved GUI Foundation 2 architecture; implemented subset qualified for experimental public release through 2F | Foundation 2 additively specializes D15 as specified below. GUI-2A/2B/2C/2E/2F implement and qualify deterministic layout, typed images and retained scrolling under the existing `0.4.0-experimental` identity. `TextBox` and typed text ingress remain deferred and unimplemented after the exact text-preservation gate failed. [GuiFoundation2.md](GuiFoundation2.md) retains the complete supporting design. | Requalify affected behavior; reconsider TextBox only with a bounded opaque text-preserving host transport |
 | D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
-| D18 — resolved Player Interaction Foundation 1 architecture; not implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; and committed-only teleport under the canonical detail below. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the complete supporting design, host evidence, phase routing and qualification plan. D18 assigns no release identity and authorizes no production surface outside a separately scoped Player-1A through Player-1E implementation task. | Implement only through the scoped Player-1 phases; requalify exact host adapters, bounds, lifetime, publication and client-observed Teleport behavior before support |
+| D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; not implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and implementation-gated `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original Foundation 1 rationale, while [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment. D18 assigns no release identity and authorizes no production surface outside separately scoped Player-1 or Inventory-M work. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 
 ### Canonical detail for resolved decisions
 
@@ -203,6 +203,105 @@ The gameplay facade introduced as `CarbonLuau 0.3.0-experimental` remains compat
 The v0.4.0 candidate maps package `0.4.0` to scripting API `0.4.0-experimental`, native ABI `1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, and the unchanged pinned Luau revision. These are separate identities even when one release records them together. Provider-defined C# capabilities are not part of protocol 1.2.
 
 Additive APIs preserve accepted names, types, authorization and lifetime/failure behavior unless an explicit breaking-version/migration decision says otherwise. Experimental status does not authorize silent breaks. D4/D7 same-reference sharing, stale-binding rejection and CarbonLuau-owned publication semantics are public compatibility behavior in 0.4.0-experimental. No stable or 1.0 identity is assigned. The lack of authenticated-client evidence does not block this experimental identity, but visual correctness, cursor behavior, actual client click receipt and client-side reconciliation remain unqualified and must not be implied by API availability.
+
+#### D13 — inventory ownership and failure model
+
+Rust item creation, insertion, stacking, splitting and removal remain live host
+mutations rather than globally atomic transactions. They may publish partial
+state, invoke callbacks or trusted plugins, and fail without a universal
+rollback point. World-drop fallback is unacceptable for an inventory-only
+grant, raw Item/container objects remain hidden, and D7 CarbonLuau publication
+is conceptually distinct from inventory mutation. The supported description is
+**CarbonLuau-serialized, definite-rejection inventory mutation**, not
+transactional Rust inventory.
+
+Every eligible operation is one synchronous owner-thread
+`PREPARE → COMMIT → VERIFY` facade call. PREPARE is bounded and mutation-free
+with respect to inventory: it revalidates the exact D11 Player/domain and
+committed context, validates canonical item identity and amount, performs a
+bounded nonrecursive physical main/belt/wear snapshot, and constructs a bounded
+feasibility plan. It must not invoke hookable predicates such as
+`CanAcceptItem`; host/plugin acceptance belongs to COMMIT. PREPARE can establish
+definite impossibility, but never guarantees COMMIT success.
+
+GiveItem COMMIT begins immediately before the first item-creation call, because
+host lifecycle/resource effects may occur before creation returns. TakeItem
+COMMIT begins immediately before entering the host removal operation. From that
+point onward an unexpected failure is potentially mutating and must never be
+downgraded to ordinary `false`.
+
+The public operational outcomes are exactly: **REJECTED**, only before COMMIT,
+returns `false` and guarantees no CarbonLuau inventory COMMIT began;
+**SUCCESS**, only after COMMIT and strongest-defensible physical verification,
+returns `true`; and **INDETERMINATE HOST FAILURE**, after COMMIT when success
+cannot safely be established, raises a controlled Luau error stating that
+inventory state may have changed. Programming errors, stale Player use,
+provisional execution and invalid arguments are errors rather than rejection.
+No outcome promises rollback, unchanged state or exactly-once host effects.
+
+CarbonLuau-owned plans, snapshots, buffers, gate state and domain/session data
+retain existing deterministic cleanup. A host resource successfully returned to
+CarbonLuau is under temporary responsibility until it is accepted into Player
+inventory, consumed by successful stack merge, removed through the supported
+cleanup path or transferred to another explicitly accepted host owner. It may
+not be silently abandoned; failed or vetoed supported cleanup is indeterminate.
+If a correctly invoked supported host API fails before returning a resource,
+inaccessible host-internal resources remain in the host failure domain:
+CarbonLuau records failure, claims no rollback, fabricates no reference and does
+not reproduce private Rust teardown. This narrow boundary does not weaken I1,
+I10 or CarbonLuau ownership generally.
+
+GiveItem VERIFY combines host transfer results, accounting for every returned
+created Item, and one fresh bounded physical scan. Success requires the same
+exact D11 connection, every CarbonLuau transfer reporting success, no deliberate
+or fallback world drop, every returned Item reaching accepted inventory or a
+successful terminal stack-consumption state, and `Q1 >= Q0 + Amount`. Count
+alone is insufficient and forensic provenance against arbitrary trusted plugins
+is not promised. TakeItem success requires both the host-reported removed amount
+equaling Amount and `Q0 - Q1 == Amount` using D18's physical scan rather than a
+hook-virtualized count. Any mismatch after COMMIT is indeterminate, not false.
+
+One logical in-flight mutation gate is keyed by D11 exact Player connection
+lifetime, independent of root/addon domain. It is owner-thread-only, spans one
+synchronous PREPARE/COMMIT/VERIFY call, is always released in `finally`, has no
+blocking mutex or waiting queue, and rejects recursive same-Player mutation with
+a controlled error. Sequential operations and operations for other Players may
+proceed after their applicable gate is free. Disconnect, replacement and VM
+recovery do not inherit or replay a gate or operation.
+
+CarbonLuau serializes only Luau-originated inventory mutations. Trusted Carbon
+plugins may synchronously reject, override or mutate inventory and perform other
+effects. Ordinary Carbon hook exceptions are generally contained by Carbon's
+dispatcher and remain distinct from direct Rust delegates/item-mod lifecycle
+failure; both interference classes require target-build qualification. Host-
+driven recursive VM entry remains prohibited, and resulting CarbonLuau work is
+admitted later through existing bounded scheduling.
+
+Both inventory mutations are committed-only irreversible host effects under
+D10. They revalidate the exact Player before PREPARE, immediately before COMMIT
+and during/after VERIFY where needed. Before-COMMIT disconnect is a controlled
+stale error; after-COMMIT disconnect is indeterminate. Candidate/module/cross-
+domain provisional paths cannot mutate or launder context, while deferred work
+may run only after successful publication. COMMIT and VERIFY are never split
+across Luau turns. Deadlines do not hard-preempt host code; timeout/fatal
+recovery after mutation implies neither rollback nor replay.
+
+Canonical names retain D18's 1..128 lowercase ASCII byte/no-NUL rules. Mutation
+Amount is a required exact integer from 1 through `Int32.MaxValue`. Physical
+inspection remains bounded, nonrecursive main/belt/wear traversal. Creation,
+transfer and removal work use a target-build-qualified capacity envelope, one
+fresh bounded VERIFY scan and no polling. One operation may never perform
+unbounded item work.
+
+Implementation remains gated on: G1, a GiveItem planned no-world-drop adapter;
+G2, returned-Item terminal-state observability; G3, TakeItem removal and
+verification behavior; G4, supported cleanup for returned unattached Items; and
+G5, concrete work bounds derived from supported container maxima. Failure of an
+individual gate leaves that API unimplemented without weakening its contract or
+blocking an independently qualified sibling operation. Historical
+[Phase4.md](Phase4.md#ownership-gate-d13) and
+[Phase4-Validation.md](Phase4-Validation.md) findings remain evidence of host
+nontransactionality, not the current categorical architecture conclusion.
 
 #### D14 — addon package, dependency and provider lifecycle
 
@@ -534,7 +633,10 @@ multiplication in either operand order and scalar division;
 `Player.Position`, `Player:Teleport(Position)`, `Player.Health`,
 `Player.MaxHealth`, `Player:CountItem(ShortName)`,
 `Player:HasItem(ShortName, Amount?)`; and `game:GetService("Items")` with
-`Items:Exists(ShortName)`. No other gameplay API is approved by this decision.
+`Items:Exists(ShortName)`; plus implementation-gated
+`Player:GiveItem(ShortName, Amount)` and
+`Player:TakeItem(ShortName, Amount)` under D13. No other gameplay API is
+approved by this decision.
 
 `Vector3` is a project-owned immutable value with no host, Player or domain
 lifetime. X/Y/Z are finite Luau numbers; every stored component and arithmetic
@@ -579,7 +681,31 @@ beyond bounded read-only `Exists` in Foundation 1. Its facade remains bound to
 and revalidates its owning domain lifetime under D10, and no host
 item/container object crosses into Luau.
 
-`Player:Teleport(Vector3)` is the sole Foundation 1 gameplay mutation and
+`GiveItem` and `TakeItem` are architecturally accepted but unimplemented
+committed-only inventory mutations under D13's PREPARE/COMMIT/VERIFY model.
+Both return `true` only for a verified physical postcondition, `false` only for
+definite PREPARE rejection before COMMIT, and a controlled error for any
+post-COMMIT uncertainty. Their required Amount is an exact integer from 1
+through `Int32.MaxValue`; canonical-but-unknown item identity is a controlled
+programming/configuration error for mutation rather than the ordinary absence
+used by read APIs.
+
+GiveItem means delivery into the exact Player's accepted ordinary top-level
+main/belt/wear inventory, with stacking and multiple stacks allowed but no exact
+slot/container guarantee. Partial placement is never success. Full inventory
+may return false only when PREPARE establishes impossibility before item
+creation. GiveItem never means inventory-or-world-drop, and remains unqualified
+unless a planned target-build transfer path cannot enter a world-drop fallback
+and every returned Item can be accounted for or subjected to supported cleanup.
+
+TakeItem means verified removal of the requested physical quantity from the
+same accepted top-level inventory. Insufficient physical quantity may return
+false only before removal COMMIT. A hook-returned count alone cannot prove
+success; D13 requires matching host result and bounded physical before/after
+delta. GiveItem and TakeItem qualify independently; public symmetry is not an
+invariant.
+
+`Player:Teleport(Vector3)` is the sole Foundation 1 spatial mutation and
 returns no values. It revalidates the exact current D11 Player connection and
 owning domain, requires committed execution plus an alive, non-spectating,
 non-wounded/non-incapacitated Player, and does not implicitly wake a sleeping
@@ -607,39 +733,42 @@ changing the API meaning.
 All new Player operations inherit D11 exact-connection and domain-lifetime
 semantics without another proxy type. Same-account reconnect never retargets an
 old proxy. After disconnect, `Position`, `Health`, `MaxHealth`, `CountItem`,
-`HasItem` and `Teleport` fail with the controlled stale-Player model, while an
-ordinary `Vector3` remains usable. Host access stays owner-thread-only. Reads
-are bounded direct observations and avoid intentionally invoking plugin hooks
-where possible. Synchronous host/plugin callbacks caused by Teleport must never
-recursively enter the active Luau VM; CarbonLuau-owned resulting work is copied
-into bounded payloads and admitted later under the existing scheduler.
+`HasItem`, `Teleport`, `GiveItem` and `TakeItem` fail with the controlled stale-
+Player model, while an ordinary `Vector3` remains usable. Host access stays
+owner-thread-only. Reads are bounded direct observations and avoid intentionally
+invoking plugin hooks where possible. Synchronous host/plugin callbacks caused
+by Teleport must never recursively enter the active Luau VM; CarbonLuau-owned
+resulting work is copied into bounded payloads and admitted later under the
+existing scheduler.
 
 Pure `Vector3` work plus `Position`, `Health`, `MaxHealth`, `Items:Exists`,
 `CountItem` and `HasItem` are allowed during provisional execution. Teleport is
-an irreversible committed-only host mutation under D7/D10 and is rejected from
-root/addon candidates, first-load modules and provisional dependency chains.
+an irreversible committed-only host mutation under D7/D10; GiveItem and
+TakeItem are the same under D13. All three are rejected from root/addon
+candidates, first-load modules and provisional dependency chains.
 Resource ownership, publication context and deadline remain orthogonal; a
 dependency or shared-module call cannot launder provisional context into a
-committed Teleport. Existing deferred work is the supported way to request
-Teleport only after successful publication, and failed candidates never drain it.
+committed mutation. Existing deferred work is the supported way to request one
+only after successful publication, and failed candidates never drain it.
 
 Errors preserve simple author semantics: malformed item identity, invalid
 Amount or invalid Vector3 are programming errors; unknown canonical items are
-false/zero; stale Player use is a controlled stale-Player error; ineligible
-Teleport state is a controlled operational error; and adapter failure is a
-controlled host-operation error. No Rust enum, exception or result wrapper is
-public. `pcall` remains the ordinary race/failure-handling mechanism.
+false/zero for read APIs but a programming/configuration error for mutation;
+stale Player use is a controlled stale-Player error; ineligible Teleport state
+is a controlled operational error; and adapter failure is a controlled host-
+operation error. No Rust enum, exception or result wrapper is public. Inventory
+mutation additionally preserves D13's exact false/true/error distinction, and
+`pcall` remains the ordinary mechanism for handling indeterminate host failure.
 
-Health mutation; `TakeItem`; `GiveItem`; richer inventory/container APIs; Item,
-`ItemDefinition`, numeric item IDs, `BasePlayer`, `BaseEntity` and
-`UnityEngine.Vector3`; Player velocity/rotation/CFrame/Transform; explicit
-wounded/dead APIs; and Vector3 Unit/Dot/Cross remain deferred. `TakeItem` has no
-Foundation 1 phase because current hook-overridable sequential removal does not
-establish a physical all-or-nothing or trustworthy removed-amount contract.
-`GiveItem` remains deferred under D13, including its construction, nested-
-resource, insertion, stacking/splitting/drop, commit and cleanup requirements.
-D18 supersedes only D13's former product-scope exclusion of read-only item
-identity and observation.
+Health mutation; richer inventory/container APIs; `GetInventory`, `GetItems`,
+exposed main/belt/wear objects, container/slot-specific giving, item movement,
+splitting, dropping, UID removal, nested/backpack mutation, condition/custom-
+data/skin/attachment options, multi-item transactions, rollback/undo and cross-
+Player transfer; raw Item, `ItemDefinition`, `ItemContainer`, UID/container IDs
+or Rust move flags; `BasePlayer`, `BaseEntity` and `UnityEngine.Vector3`; Player
+velocity/rotation/CFrame/Transform; explicit wounded/dead APIs; and Vector3
+Unit/Dot/Cross remain deferred. No transaction handle or rollback token enters
+Luau.
 
 D18 is additive to existing `Player.Name`, `UserId`, `IsConnected`,
 `SendMessage` and `HasPermission` behavior. Architecture adoption changes no
@@ -648,7 +777,13 @@ Luau identity. Future work is routed as Player-1A (`Vector3` and Position),
 Player-1B (Health and MaxHealth), Player-1C (Items existence plus CountItem and
 HasItem), Player-1D (Teleport and its host/client gates), and Player-1E
 (combined lifecycle, stress, documentation and public qualification closure).
-There is no TakeItem or GiveItem implementation phase.
+Inventory-M1 adds only the model, gate, bounded plans/snapshots and failure-
+injection algorithms with no Rust mutation or public API. Inventory-M2 qualifies
+the exact target-build Create/no-drop transfer, returned-resource, Take,
+cleanup and work-bound adapters. Player-1F-A then implements TakeItem,
+Player-1F-B implements GiveItem only after its stricter gates pass, and
+Player-1F-C performs combined lifecycle/public closure. No inventory production
+work is authorized by architecture adoption alone.
 
 **Evidence separation:** [Phase1-Validation.md](Phase1-Validation.md) owns the scoped execution-core results. [Phase2-Validation.md](Phase2-Validation.md) owns module/callback/recovery qualification; Phase 1 does not establish their safety. [Phase3-Validation.md](Phase3-Validation.md) owns first-facade qualification; [Phase4-Validation.md](Phase4-Validation.md) records the blocked item investigation, not an implemented item API.
 

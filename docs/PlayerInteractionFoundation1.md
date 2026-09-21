@@ -1,5 +1,13 @@
 # CarbonLuau Player Interaction Foundation 1 — proposed D18 architecture
 
+> **Canonical amendment (2026-09-21):** Revised D13 now accepts implementation-
+> gated `Player:GiveItem` and `Player:TakeItem` under bounded
+> PREPARE/COMMIT/VERIFY semantics. The original response below remains the
+> supporting Foundation 1 record; where it categorically defers those two
+> operations or says no Player-1F phase exists, the current D13/D18 text and
+> [Inventory Ownership / Failure Reassessment](InventoryOwnershipFailureReassessment.md)
+> supersede that conclusion. No inventory mutation is implemented by this note.
+
 **Baseline reviewed:** `main` at `b00bf21b1e1ef11b1524a10e2d094d3934024a7b` (`Complete GUI Foundation 3 qualification`), plus the current `AICONTEXT.md`, `docs/Invariants.md`, Player facade/bootstrap implementation, API docs, D11, and the retained Phase 4/D13 investigation. [Baseline commit](https://github.com/gmoddev/CarbonLuau/commit/b00bf21b1e1ef11b1524a10e2d094d3934024a7b?utm_source=chatgpt.com) [Canonical invariants](https://github.com/gmoddev/CarbonLuau/blob/main/docs/Invariants.md?utm_source=chatgpt.com) [D13 investigation](https://github.com/gmoddev/CarbonLuau/blob/main/docs/Phase4.md?utm_source=chatgpt.com)
 
 This is architecture/research only; no repository modification, implementation, or commit is implied.

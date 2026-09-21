@@ -550,22 +550,38 @@ Player Interaction Foundation 1 architecture. The complete host rationale,
 surface matrix, phase sequence and qualification plan are retained in
 [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md). This is
 policy adoption only: none of `Vector3`, Position, Health/MaxHealth, bounded
-item observation, the `Items` service or Teleport is implemented or part of the
-current public scripting surface.
+item observation, the `Items` service, Teleport, GiveItem or TakeItem is
+implemented or part of the current public scripting surface.
 
 Future work is separated into Player-1A (`Vector3` and Position), Player-1B
 (Health and MaxHealth), Player-1C (`Items:Exists`, CountItem and HasItem),
 Player-1D (Teleport) and Player-1E (combined lifecycle, stress, documentation
-and public qualification closure). There is no TakeItem or GiveItem phase.
-D13 continues to govern item construction, insertion, mutation, partial
-publication and cleanup; D18 reopens only bounded read-only identity and
-physical top-level inventory observation.
+and public qualification closure). Revised D13 additionally routes Inventory-M1
+for the deterministic model and mutation gate, Inventory-M2 for exact target-
+build adapter qualification, Player-1F-A for TakeItem, Player-1F-B for GiveItem
+and Player-1F-C for combined mutation closure. These phases are not implemented.
+
+D13 now accepts CarbonLuau-serialized, definite-rejection inventory mutation:
+bounded mutation-free PREPARE, explicit first-host-effect COMMIT and one bounded
+physical VERIFY. `false` means COMMIT never began, `true` means the physical
+postcondition was verified, and a controlled error after COMMIT means inventory
+may have changed. Rust inventory is not described as globally atomic; no
+rollback, plugin isolation or unchanged-state guarantee is added.
 
 Player-1C must establish an exact target-build, bounded, nonrecursive physical
 main/belt/wear adapter that does not accept a hook-virtualized count as the
 canonical answer. Its concrete inspected-stack/work bound is selected and
 documented only after target-build inspection. If that contract cannot be met,
 Player-1C is deferred rather than weakened.
+
+Inventory mutation requires exact-connection serialization, committed execution
+and target-build evidence. GiveItem must pass G1 no-world-drop transfer, G2
+returned-Item terminal-state observability and G4 supported cleanup handling.
+TakeItem must pass G3 host-result plus physical-delta verification. Both depend
+on G5 concrete inspection/placement/removal work bounds from actual supported
+container maxima. One API may remain deferred if its individual gates fail.
+The complete rationale is retained in
+[InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md).
 
 Player-1D has separate mandatory gates: qualification of the exact Rust/Carbon
 relocation sequence and authenticated-client evidence for destination

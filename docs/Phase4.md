@@ -9,8 +9,10 @@ It does not declare Items or Player:GiveItem available. The canonical decision o
 At D13 closure, the entire surface, including read-only Items:Exists, was
 deferred. No independent v0.1 use case was accepted for shipping Items alone. D18
 later supersedes only that product-scope exclusion for bounded read-only item
-identity and inventory observation in a future Player foundation; `GiveItem`,
-`TakeItem` and item mutation remain deferred. The
+identity and inventory observation in a future Player foundation. Revised D13
+later supersedes the categorical mutation conclusion as well, accepting only
+implementation-gated GiveItem/TakeItem under PREPARE/COMMIT/VERIFY. This file's
+host findings remain historical evidence; no mutation API is implemented. The
 [roadmap](CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases)
 now moves to Phase 5 hardening in a separate task. This is a product-scope
 resolution, not a finding that the adapter became safe. The investigation-time
