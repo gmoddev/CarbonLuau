@@ -81,6 +81,10 @@ internal static class Program
             try { PlayerInteractionFoundation1DTests.RunModel(); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
+        if (Args.Length >= 1 && Args[0] == "--player1fa-only") {
+            try { PlayerInteractionFoundation1FATests.RunModel(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        }
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauRuntime-" + Guid.NewGuid().ToString("N"));
         try
         {
@@ -105,6 +109,7 @@ internal static class Program
             GuiFoundation3ETests.RunModel();
             PlayerInteractionFoundation1CTests.RunModel();
             PlayerInteractionFoundation1DTests.RunModel();
+            PlayerInteractionFoundation1FATests.RunModel();
             var Low = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MinValue, MaxCallbackMilliseconds = int.MinValue }.Validate();
             var High = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MaxValue, MaxCallbackMilliseconds = int.MaxValue }.Validate();
             Check(Low.MaxVmMemoryMiB == 16 && Low.MaxCallbackMilliseconds == 1 && High.MaxVmMemoryMiB == 256 && High.MaxCallbackMilliseconds == 100, "clamps");

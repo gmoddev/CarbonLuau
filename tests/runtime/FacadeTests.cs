@@ -24,8 +24,21 @@ internal static class FacadeTests
             foreach (var Result in Host.Drain()) Logs += Result.Logs;
         return Logs;
     }
-    private static Runtime.PhysicalInventoryContainer InventoryContainer(object Identity, List<Runtime.PhysicalInventoryStack> Stacks)
-    { return new Runtime.PhysicalInventoryContainer {Identity = Identity, StackCount = Stacks.Count, Read = Index => Stacks[Index]}; }
+    private static Runtime.PhysicalInventoryContainer InventoryContainer(object Identity, List<Runtime.PhysicalInventoryStack> Stacks, int Capacity)
+    { return new Runtime.PhysicalInventoryContainer {Identity = Identity, StackCount = Stacks.Count, Capacity = Capacity, Read = Index => Stacks[Index]}; }
+    private static int TakePhysical(List<Runtime.PhysicalInventoryStack> Stacks, object Parent, object Definition, int Amount)
+    {
+        int Removed = 0;
+        for (int Index = 0; Index < Stacks.Count && Removed < Amount; ++Index) {
+            Runtime.PhysicalInventoryStack Stack = Stacks[Index];
+            if (!Stack.Valid || !Object.ReferenceEquals(Stack.Parent, Parent) ||
+                !Object.ReferenceEquals(Stack.Definition, Definition) || Stack.Amount <= 0) continue;
+            int Used = (int)Math.Min(Stack.Amount, Amount - Removed); Removed += Used;
+            long Left = Stack.Amount - Used;
+            Stacks[Index] = new Runtime.PhysicalInventoryStack(Parent, Definition, Left, Left > 0);
+        }
+        return Removed;
+    }
     public static void Run(Runtime.NativeRuntime Native, string Repository = null)
     {
         const string UserId = "76561198000000001";
@@ -34,16 +47,23 @@ internal static class FacadeTests
         var Position = new Runtime.PlayerPosition(10.5f, -20.25f, 30.75f);
         var TeleportState = new Runtime.PlayerTeleportState {Current = true, Alive = true};
         bool TeleportMutationFailure = false, TeleportVerification = true;
-        int TeleportMutations = 0, TeleportVerifications = 0;
+        int TeleportMutations = 0, TeleportVerifications = 0, TakeMutations = 0;
         float Health = 87.5f, MaxHealth = 137.25f;
         object Scrap = new object(), Wood = new object(), Rifle = new object();
         object MainId = new object(), BeltId = new object(), WearId = new object(), ExternalId = new object();
         var Main = new List<Runtime.PhysicalInventoryStack>(); var Belt = new List<Runtime.PhysicalInventoryStack>(); var Wear = new List<Runtime.PhysicalInventoryStack>();
         Func<Runtime.PhysicalInventorySource> Inventory = () => new Runtime.PhysicalInventorySource {
-            Main = InventoryContainer(MainId, Main), Belt = InventoryContainer(BeltId, Belt), Wear = InventoryContainer(WearId, Wear)};
+            Main = InventoryContainer(MainId, Main, 64), Belt = InventoryContainer(BeltId, Belt, 32), Wear = InventoryContainer(WearId, Wear, 32)};
         Func<Runtime.PlayerView> View = () => new Runtime.PlayerView { Identity = new object(), Connection = new object(), UserId = UserId,
             Name = "Fixture Player", Connected = true, Send = Message => Messages.Add(Message), Permission = Permission => Allowed,
             Position = () => Position, Health = () => Health, MaxHealth = () => MaxHealth, Inventory = Inventory,
+            TakeInventory = (Definition, Amount) => {
+                TakeMutations++;
+                int Removed = TakePhysical(Main, MainId, Definition, Amount);
+                Removed += TakePhysical(Belt, BeltId, Definition, Amount - Removed);
+                Removed += TakePhysical(Wear, WearId, Definition, Amount - Removed);
+                return Removed;
+            },
             Teleport = new Runtime.PlayerTeleportOperation(
                 () => TeleportState,
                 (Destination, Before) => {
@@ -150,6 +170,16 @@ internal static class FacadeTests
             Execute("assert(Old:CountItem('scrap')==100 and Old:CountItem('wood')==500); assert(Old:HasItem('scrap') and Old:HasItem('scrap',1) and Old:HasItem('scrap',100) and not Old:HasItem('scrap',101)); assert(not pcall(function() Old:HasItem('scrap',0) end)); assert(not pcall(function() Old:HasItem('scrap',-1) end)); assert(not pcall(function() Old:HasItem('scrap',1.5) end)); assert(not pcall(function() Old:HasItem('scrap',9007199254740992) end)); assert(not pcall(function() Old:HasItem('scrap',0/0) end)); assert(not pcall(function() Old:HasItem('scrap',1/0) end)); assert(not pcall(function() Old:HasItem('scrap','1') end)); assert(not pcall(function() Old:CountItem('Scrap') end))");
             Main[0] = new Runtime.PhysicalInventoryStack(MainId, Scrap, 51, true);
             Execute("assert(Old:CountItem('scrap')==101 and Old:HasItem('scrap',101))");
+            Execute("assert(Old:TakeItem('wood',1) and Old:CountItem('wood')==499); assert(not Old:TakeItem('wood',500)); assert(not Old:TakeItem('wood',2147483647)); assert(not Old:TakeItem('unknown.item',1)); assert(not pcall(function() Old:TakeItem('wood') end)); assert(not pcall(function() Old:TakeItem('wood',0) end)); assert(not pcall(function() Old:TakeItem('wood',-1) end)); assert(not pcall(function() Old:TakeItem('wood',1.5) end)); assert(not pcall(function() Old:TakeItem('wood',2147483648) end)); assert(not pcall(function() Old:TakeItem('Wood',1) end)); assert(not pcall(function() Old:TakeItem(1,1) end)); assert(not pcall(function() Old:TakeItem('wood','1') end))");
+            Check(TakeMutations == 1, "TakeItem true verifies one commit while false and invalid inputs never commit");
+            int BeforeProvisionalTake = TakeMutations;
+            Load("P=game:GetService('Players'); Old=P:GetPlayers()[1]; Snapshot=P:GetPlayers(); State.SavedPosition=Vector3.new(10.5,-20.25,30.75); State.SavedHealth=87.5; State.SavedMaxHealth=137.25; assert(Old:CountItem('wood')==499); assert(not pcall(function() Old:TakeItem('wood',1) end)); task.defer(function() assert(Old:TakeItem('wood',1)); print('take-committed') end)");
+            Check(TakeMutations == BeforeProvisionalTake, "provisional TakeItem rejects before host mutation");
+            Check(Drain(Host) == "take-committed\n" && TakeMutations == BeforeProvisionalTake + 1,
+                "deferred TakeItem executes exactly once after successful publication");
+            Source = "local P=game:GetService('Players'):GetPlayers()[1]; task.defer(function() P:TakeItem('wood',1) end); error('reject take')";
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.RUNTIME_ERROR && !Host.HasWork &&
+                TakeMutations == BeforeProvisionalTake + 1, "failed candidate never publishes deferred TakeItem");
             var SavedMain = new List<Runtime.PhysicalInventoryStack>(Main); var SavedBelt = new List<Runtime.PhysicalInventoryStack>(Belt); var SavedWear = new List<Runtime.PhysicalInventoryStack>(Wear);
             Main.Clear(); Belt.Clear(); Wear.Clear();
             for (int Index = 0; Index < Runtime.FacadePolicy.InventoryStacks; ++Index)
@@ -198,10 +228,10 @@ internal static class FacadeTests
             Execute("assert(not Old.IsConnected)");
             Check(Directory.Resolve(Lifetime.Token,UserId)==null,"observed invalidation is permanent even if host object/connection is reused");
             var Removed = Directory.Disconnect(UserId, Views[UserId].Identity); Views.Remove(UserId);
-            Execute("local Saved=require('state').SavedPosition; assert(Saved==Vector3.new(10.5,-20.25,30.75) and Saved*2==Vector3.new(21,-40.5,61.5)); assert(require('state').SavedHealth==87.5 and require('state').SavedMaxHealth==137.25); assert(not Old.IsConnected and Old.Name=='Fixture Player'); assert(#Snapshot==1); assert(not pcall(function() return Old.Position end)); assert(not pcall(function() return Old.Health end)); assert(not pcall(function() return Old.MaxHealth end)); assert(not pcall(function() Old:CountItem('scrap') end)); assert(not pcall(function() Old:HasItem('scrap') end)); assert(not pcall(function() Old:Teleport(Vector3.new(1,2,3)) end)); assert(not pcall(function() Old:SendMessage('stale') end)); assert(not pcall(function() Old:HasPermission('fixture.allowed') end))");
+            Execute("local Saved=require('state').SavedPosition; assert(Saved==Vector3.new(10.5,-20.25,30.75) and Saved*2==Vector3.new(21,-40.5,61.5),'saved vector'); assert(require('state').SavedHealth==87.5 and require('state').SavedMaxHealth==137.25,'saved vitals'); assert(not Old.IsConnected and Old.Name=='Fixture Player','stale snapshot'); assert(#Snapshot==1,'snapshot'); assert(not pcall(function() return Old.Position end),'stale position'); assert(not pcall(function() return Old.Health end),'stale health'); assert(not pcall(function() return Old.MaxHealth end),'stale max'); assert(not pcall(function() Old:CountItem('scrap') end),'stale count'); assert(not pcall(function() Old:HasItem('scrap') end),'stale has'); assert(not pcall(function() Old:TakeItem('scrap',1) end),'stale take'); assert(not pcall(function() Old:Teleport(Vector3.new(1,2,3)) end),'stale teleport'); assert(not pcall(function() Old:SendMessage('stale') end),'stale send'); assert(not pcall(function() Old:HasPermission('fixture.allowed') end),'stale permission')");
             Views[UserId] = View(); var Reconnected = Directory.Connect(Views[UserId]);
             Check(Reconnected.Token != Removed.Token && Directory.Resolve(Removed.Token, UserId) == null && Directory.Resolve("forged", UserId) == null, "reconnect/forged token never retargets");
-            Execute("assert(not Old.IsConnected and not pcall(function() return Old.Position end) and not pcall(function() return Old.Health end) and not pcall(function() return Old.MaxHealth end) and not pcall(function() return Old:CountItem('scrap') end) and not pcall(function() Old:Teleport(Vector3.new(1,2,3)) end)); local Fresh=P:GetPlayers()[1]; assert(Fresh~=Old and Fresh.IsConnected and Fresh.Position==Vector3.new(101.5,202.25,-303.75) and Fresh.Health==53.375 and Fresh.MaxHealth==142.625 and Fresh:CountItem('scrap')==101)");
+            Execute("assert(not Old.IsConnected,'old connected'); assert(not pcall(function() return Old.Position end),'old position'); assert(not pcall(function() return Old.Health end),'old health'); assert(not pcall(function() return Old.MaxHealth end),'old max'); assert(not pcall(function() return Old:CountItem('scrap') end),'old count'); assert(not pcall(function() Old:TakeItem('scrap',1) end),'old take'); assert(not pcall(function() Old:Teleport(Vector3.new(1,2,3)) end),'old teleport'); local Fresh=P:GetPlayers()[1]; assert(Fresh~=Old,'fresh identity'); assert(Fresh.IsConnected,'fresh connected'); assert(Fresh.Position==Vector3.new(101.5,202.25,-303.75),'fresh position'); assert(Fresh.Health==53.375,'fresh health'); assert(Fresh.MaxHealth==142.625,'fresh max'); assert(Fresh:CountItem('scrap')==101,'fresh count '..Fresh:CountItem('scrap'))");
 
             Load("local P=game:GetService('Players'); P.PlayerAdded:Connect(function() print('first') end); C=P.PlayerAdded:Connect(function() print('second') end); P.PlayerAdded:Connect(function() error('listener error') end); P.PlayerAdded:Connect(function() print('last') end); P.PlayerRemoving:Connect(function(V) assert(not V.IsConnected); print(V.UserId) end)");
             Check(!Host.HasWork, "no synthetic joins for current players"); World.Event("added", Reconnected);
@@ -312,13 +342,13 @@ internal static class FacadeTests
             } finally { Views[UserId].Send=NormalSend; }
         }
         if (Repository != null) {
-            foreach (string Example in new[]{"player-events", "player-position", "player-health", "player-teleport", "hello-command", "gui/hello", "gui/shared-live", "gui/per-player", "gui/activated", "gui/images", "gui/scrolling"}) {
+            foreach (string Example in new[]{"player-events", "player-position", "player-health", "player-teleport", "player-take-item", "hello-command", "gui/hello", "gui/shared-live", "gui/per-player", "gui/activated", "gui/images", "gui/scrolling"}) {
                 string Text=File.ReadAllText(Path.Combine(Repository,"examples",Example,"init.luau"));
                 using (var Host=new Runtime.ScriptHost(Native,Config,()=>new Runtime.ScriptSnapshot{EntryName="init.luau",EntrySource=Text},World))
                     Check(Host.Reload().Status==Runtime.RuntimeStatus.OK,"shipped example loads: "+Example);
             }
-            Console.WriteLine("[CarbonLuau:FacadeTest] PASS eleven shipped root examples loaded through real compiler/VM");
+            Console.WriteLine("[CarbonLuau:FacadeTest] PASS twelve shipped root examples loaded through real compiler/VM");
         }
-        Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, Vector3, Position, Teleport, Health, MaxHealth, Items, physical inventory, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
+        Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, Vector3, Position, Teleport, Health, MaxHealth, Items, physical inventory, TakeItem, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
     }
 }

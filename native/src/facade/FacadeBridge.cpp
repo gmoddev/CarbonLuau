@@ -23,12 +23,16 @@ int HostPrimitive(lua_State* State)
     if (!Owner.Host || !Owner.HostBuffer) luaL_error(State, "host unavailable for domain");
     if (lua_type(State, 1) != LUA_TNUMBER) luaL_error(State, "invalid host operation");
     double Value = lua_tonumber(State, 1);
-    if (Value < 1 || Value > 28 || Value != std::floor(Value)) luaL_error(State, "invalid host operation");
+    if (Value < 1 || Value > 29 || Value != std::floor(Value)) luaL_error(State, "invalid host operation");
     uint32_t Operation = uint32_t(Value);
-    if (Runtime.Admission && Runtime.Admission->Provisional && (Operation == 4 || Operation == 28))
+    if (Runtime.Admission && Runtime.Admission->Provisional && (Operation == 4 || Operation == 28 || Operation == 29)) {
+        if (Operation == 29 && Owner.Rejected != UINT64_MAX) ++Owner.Rejected;
         luaL_error(State, Operation == 4
             ? "SendMessage requires a committed domain; use task.defer for startup delivery"
-            : "Teleport requires a committed domain; use task.defer for startup movement");
+            : Operation == 28
+                ? "Teleport requires a committed domain; use task.defer for startup movement"
+                : "TakeItem requires a committed domain; use task.defer for startup mutation");
+    }
     if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8 || Operation == 21) && !Runtime.Publication->Uses(&Owner)) {
         if (!ControlPublication(Runtime, Owner, 10)) luaL_error(State, "host publication setup failed");
         Runtime.Publication->Facades.push_back(&Owner);

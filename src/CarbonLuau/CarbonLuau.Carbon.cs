@@ -39,6 +39,7 @@ namespace Carbon.Plugins
                 Health = () => Player.Health(),
                 MaxHealth = () => Player.MaxHealth(),
                 Inventory = () => ViewInventory(Player),
+                TakeInventory = (Definition, Amount) => Player.inventory.Take(null, ((ItemDefinition)Definition).itemid, Amount),
                 Teleport = new PlayerTeleportOperation(
                     () => {
                         bool IsCurrent = Current();
@@ -90,6 +91,7 @@ namespace Carbon.Plugins
             return new PhysicalInventoryContainer {
                 Identity = Container,
                 StackCount = Container.itemList.Count,
+                Capacity = Container.capacity,
                 Read = Index => {
                     Item Value = Container.itemList[Index];
                     return Value == null ? default(PhysicalInventoryStack) :

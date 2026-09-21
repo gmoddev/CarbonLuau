@@ -303,6 +303,13 @@ function PlayerMethods.HasItem(Player, ShortName, Amount)
     if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
     return Host(27, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount))[1] == "1"
 end
+function PlayerMethods.TakeItem(Player, ShortName, Amount)
+    local Value = Record(Player)
+    String(ShortName, "item short name")
+    Number(Amount, "item amount", 1, 2147483647)
+    if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
+    return Host(29, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount))[1] == "1"
+end
 local function EncodeGuiValue(Value, Integer)
     local Kind = type(Value)
     if Kind == "string" then return "string", Value end

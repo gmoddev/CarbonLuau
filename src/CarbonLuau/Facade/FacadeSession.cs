@@ -14,6 +14,7 @@ namespace Carbon.Plugins
             public readonly PlayerDirectory Players;
             public readonly ItemDirectory Items;
             public readonly ICommandRegistrar Registrar;
+            internal readonly PlayerTakeItemOperation TakeItems = new PlayerTakeItemOperation();
             internal readonly GuiRetainedWorld Gui;
             public FacadeSession Active { get; private set; }
             private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
@@ -297,7 +298,7 @@ namespace Carbon.Plugins
                 if (Code == 20) return Gui.Query(Fields);
                 if (Code == 21) return Gui.Mutate(Fields, Id);
                 int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 :
-                    Code == 25 ? 1 : Code == 26 ? 3 : Code == 27 ? 4 : Code == 28 ? 5 :
+                    Code == 25 ? 1 : Code == 26 ? 3 : (Code == 27 || Code == 29) ? 4 : Code == 28 ? 5 :
                     (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
                 if (Fields.Length != Expected) throw new FacadeException("invalid host arguments");
                 switch (Code) {
@@ -376,6 +377,17 @@ namespace Carbon.Plugins
                             Single.IsNaN(Z) || Single.IsInfinity(Z)) throw new FacadeException("invalid Teleport position");
                         View.Teleport.Execute(new PlayerPosition(X, Y, Z));
                         return new string[0];
+                    }
+                    case 29: {
+                        if (!Active || Disposed || !World.IsActive(this))
+                            throw new FacadeException("TakeItem requires a committed domain; use task.defer for startup mutation");
+                        FacadePolicy.ItemShortName(Fields[2]);
+                        long Parsed = FacadePolicy.ExactPositiveInteger(Fields[3], "item amount");
+                        if (Parsed > Int32.MaxValue) throw new FacadeException("item amount exceeds Int32.MaxValue");
+                        object Definition = World.Items.Resolve(Fields[2]);
+                        bool Result = World.TakeItems.Execute(Fields[0],
+                            () => World.Players.Resolve(Fields[0], Fields[1]), Definition, (int)Parsed);
+                        return new[] {Result ? "1" : "0"};
                     }
                     case 6: {
                         if (Fields[0] != "added" && Fields[0] != "removing") throw new FacadeException("unknown signal");

@@ -31,7 +31,7 @@ namespace Carbon.Plugins
         public sealed class PhysicalInventoryContainer
         {
             public object Identity;
-            public int StackCount;
+            public int StackCount, Capacity;
             public Func<int, PhysicalInventoryStack> Read;
         }
 
@@ -46,6 +46,11 @@ namespace Carbon.Plugins
         {
             public static long Count(PhysicalInventorySource Source, object Definition)
             { return Observe(Source, Definition, 0); }
+            internal static long CountForMutation(PhysicalInventorySource Source, object Definition)
+            {
+                ValidateMutationCapacity(Source);
+                return Observe(Source, Definition, 0);
+            }
             public static bool Has(PhysicalInventorySource Source, object Definition, long Amount)
             {
                 if (Amount < 1 || Amount > FacadePolicy.MaxExactLuauInteger)
@@ -77,6 +82,21 @@ namespace Carbon.Plugins
                     if (Threshold != 0 && Total >= Threshold) return Total;
                 }
                 return Total;
+            }
+            private static void ValidateMutationCapacity(PhysicalInventorySource Source)
+            {
+                if (Source == null) throw new FacadeException("inventory observation is unavailable");
+                var Containers = new[] {Source.Main, Source.Belt, Source.Wear};
+                int Capacity = 0;
+                foreach (PhysicalInventoryContainer Container in Containers) {
+                    if (Container == null || Container.Capacity < 0 || Container.StackCount < 0 ||
+                        Container.StackCount > Container.Capacity)
+                        throw new FacadeException("Player inventory capacity state is invalid");
+                    try { Capacity = checked(Capacity + Container.Capacity); }
+                    catch (OverflowException) { throw new FacadeException("Player inventory exceeds mutation capacity bound"); }
+                    if (Capacity > FacadePolicy.InventoryStacks)
+                        throw new FacadeException("Player inventory exceeds 128-entry mutation capacity bound");
+                }
             }
         }
     }
