@@ -45,6 +45,12 @@ The scanner reads only direct main, belt and wear entries, rejects more than 128
 entries before returning any answer, and never uses hook-virtualized count APIs.
 See the [Player-1C qualification record](../PlayerInteractionFoundation1C.md).
 
+Player-1D adds committed-only `Player:Teleport(Vector3)` under the same
+identity. It preserves D11 exact-connection identity, sleeping state and the
+D10 provisional-effect boundary. The exact-build server adapter is qualified,
+but authenticated-client convergence remains unqualified. See the
+[Player-1D qualification record](../PlayerInteractionFoundation1D.md).
+
 Revised D13 and
 [D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
 read-only item observation, now implemented by Player-1C, plus implementation-

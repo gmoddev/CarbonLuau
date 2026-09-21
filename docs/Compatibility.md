@@ -556,10 +556,15 @@ Player-1B implements live read-only exact-connection `Player.Health` and
 [PlayerInteractionFoundation1A.md](PlayerInteractionFoundation1A.md) and
 [PlayerInteractionFoundation1B.md](PlayerInteractionFoundation1B.md) and
 [PlayerInteractionFoundation1C.md](PlayerInteractionFoundation1C.md).
-Teleport, GiveItem and TakeItem remain unimplemented.
+Player-1D implements committed-only `Player:Teleport(Vector3)` and records the
+exact-build adapter plus available qualification in
+[PlayerInteractionFoundation1D.md](PlayerInteractionFoundation1D.md).
+Authenticated-client convergence remains unqualified. GiveItem and TakeItem
+remain unimplemented.
 
-Remaining work is separated into Player-1D (Teleport) and Player-1E (combined lifecycle, stress, documentation
-and public qualification closure). Revised D13 additionally routes Inventory-M1
+Remaining work is separated into supplemental authenticated-client Teleport
+qualification and Player-1E (combined lifecycle, stress, documentation and
+public qualification closure). Revised D13 additionally routes Inventory-M1
 for the deterministic model and mutation gate, Inventory-M2 for exact target-
 build adapter qualification, Player-1F-A for TakeItem, Player-1F-B for GiveItem
 and Player-1F-C for combined mutation closure. These phases are not implemented.
@@ -587,21 +592,25 @@ container maxima. One API may remain deferred if its individual gates fail.
 The complete rationale is retained in
 [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md).
 
-Player-1D has separate mandatory gates: qualification of the exact Rust/Carbon
-relocation sequence and authenticated-client evidence for destination
+Player-1D passed qualification of the exact Rust/Carbon relocation sequence on
+the supported server build. Authenticated-client evidence for destination
 convergence, rubber-band resistance, long-distance network-group transition,
-fall state, mount/parent handling and repeated teleports. Server/model evidence
-alone cannot establish authenticated-client Teleport behavior. These gates do
-not block the read-only Player-1A/1B/1C surfaces.
+fall state, mount/parent handling and repeated teleports remains unqualified.
+Server/model evidence does not establish that client behavior. This does not
+block the server-qualified experimental surface or the read-only Player slices.
 
-D18 adoption and Player-1A/1B change no identity. Package remains `0.4.0`, scripting API
+D18 adoption and Player-1A through Player-1D change no identity. Package remains `0.4.0`, scripting API
 remains `0.4.0-experimental`, native ABI remains `1.4`, provider protocol
 remains `CarbonLuau.Addons` / `1.2`, package schema remains `1`, and the pinned
-Luau revision is unchanged. Player-1A and Player-1B passed the available Linux
+Luau revision is unchanged. Player-1A through Player-1D passed the available Linux
 native/runtime, managed regression, deterministic packaging and sanitizer
 matrix. Player-1B additionally passed three controlled-host live Carbon cycles
-on the exact target build. DockerPC Windows native/local and Windows live were
-unavailable and are not claimed; hosted Windows CI is recorded separately.
+on the exact target build. The current workstation Windows managed/native
+runtime suite passed; its pre-existing Foundation G compiler-worker memory gate
+did not qualify. DockerPC Windows local/live was unavailable and is not claimed.
+Hosted Windows CI is recorded separately.
+Player-1D additionally passed exact-build live server qualification; its
+authenticated-client behavior and DockerPC live/local result remain unqualified.
 Later Player phases require their own
 applicable Windows/Linux/native/live/sanitizer qualification.
 

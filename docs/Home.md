@@ -110,8 +110,11 @@ live read-only `Player.Health` and `Player.MaxHealth`; Player-1C implements
 `Items:Exists`, `Player:CountItem` and `Player:HasItem`. See
 [Player Interaction Foundation 1A](PlayerInteractionFoundation1A.md) and
 [Player Interaction Foundation 1B](PlayerInteractionFoundation1B.md) and
-[Player Interaction Foundation 1C](PlayerInteractionFoundation1C.md). The later
-spatial and mutation surface remains unimplemented. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
+[Player Interaction Foundation 1C](PlayerInteractionFoundation1C.md). Player-1D
+implements committed-only `Player:Teleport(Vector3)` with exact-build server
+qualification; authenticated-client convergence remains unqualified. See
+[Player Interaction Foundation 1D](PlayerInteractionFoundation1D.md). The later
+mutation and closure surface remains unimplemented. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
 exact-Player Luau serialization and false/true/indeterminate-error outcomes;
 the full rationale is in
 [Inventory Ownership / Failure Reassessment](InventoryOwnershipFailureReassessment.md).

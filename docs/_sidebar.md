@@ -29,6 +29,7 @@
   - [Player Interaction Foundation 1A](PlayerInteractionFoundation1A.md)
   - [Player Interaction Foundation 1B](PlayerInteractionFoundation1B.md)
   - [Player Interaction Foundation 1C](PlayerInteractionFoundation1C.md)
+  - [Player Interaction Foundation 1D](PlayerInteractionFoundation1D.md)
   - [Inventory ownership/failure reassessment](InventoryOwnershipFailureReassessment.md)
 - API
   - [Overview](api/README.md)

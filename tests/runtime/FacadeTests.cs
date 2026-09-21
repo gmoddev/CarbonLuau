@@ -312,12 +312,12 @@ internal static class FacadeTests
             } finally { Views[UserId].Send=NormalSend; }
         }
         if (Repository != null) {
-            foreach (string Example in new[]{"player-events", "player-position", "player-health", "hello-command", "gui/hello", "gui/shared-live", "gui/per-player", "gui/activated", "gui/images", "gui/scrolling"}) {
+            foreach (string Example in new[]{"player-events", "player-position", "player-health", "player-teleport", "hello-command", "gui/hello", "gui/shared-live", "gui/per-player", "gui/activated", "gui/images", "gui/scrolling"}) {
                 string Text=File.ReadAllText(Path.Combine(Repository,"examples",Example,"init.luau"));
                 using (var Host=new Runtime.ScriptHost(Native,Config,()=>new Runtime.ScriptSnapshot{EntryName="init.luau",EntrySource=Text},World))
                     Check(Host.Reload().Status==Runtime.RuntimeStatus.OK,"shipped example loads: "+Example);
             }
-            Console.WriteLine("[CarbonLuau:FacadeTest] PASS ten shipped root examples loaded through real compiler/VM");
+            Console.WriteLine("[CarbonLuau:FacadeTest] PASS eleven shipped root examples loaded through real compiler/VM");
         }
         Console.WriteLine("[CarbonLuau:FacadeTest] PASS services, proxies, Vector3, Position, Teleport, Health, MaxHealth, Items, physical inventory, lifetime, D10, signals, transactional commands, permissions, bounds, stress, recovery");
     }

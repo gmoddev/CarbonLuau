@@ -36,6 +36,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Player Interaction Foundation 1 rationale, host evidence, phases and qualification gates | [PlayerInteractionFoundation1.md](docs/PlayerInteractionFoundation1.md) |
 | Player Interaction Foundation 1A Vector3/Position implementation and evidence | [PlayerInteractionFoundation1A.md](docs/PlayerInteractionFoundation1A.md) |
 | Player Interaction Foundation 1B Health/MaxHealth implementation and evidence | [PlayerInteractionFoundation1B.md](docs/PlayerInteractionFoundation1B.md) |
+| Player Interaction Foundation 1C Items/inventory observation implementation and evidence | [PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md) |
+| Player Interaction Foundation 1D Teleport implementation and qualification | [PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
@@ -242,7 +244,11 @@ in [PlayerInteractionFoundation1B.md](docs/PlayerInteractionFoundation1B.md).
 Player-1C implements the `Items` existence service plus bounded physical
 `Player:CountItem` and `Player:HasItem` as recorded in
 [PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md).
-This does not authorize or imply Player-1D+, Inventory-M or other gameplay APIs.
+Player-1D implements committed-only `Player:Teleport(Vector3)` as recorded in
+[PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md).
+The exact-build server adapter is qualified; authenticated-client convergence
+remains unqualified. This does not authorize or imply Player-1E+, Inventory-M
+or other gameplay APIs.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

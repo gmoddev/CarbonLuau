@@ -12,6 +12,10 @@ All notable public changes to CarbonLuau are recorded here.
   Player Interaction Foundation 1B, preserving independent finite host values.
 - Domain-bound `Items:Exists` and bounded physical `Player:CountItem` /
   `Player:HasItem` reads under Player Interaction Foundation 1C.
+- Committed-only `Player:Teleport(Vector3)` with exact D11 connection binding,
+  D10 provisional rejection, sleeping preservation, internal mount/parent
+  normalization and bounded server verification. Authenticated-client
+  convergence remains unqualified.
 - Experimental addon composition under scripting API `0.4.0-experimental`.
 - Bounded provider-owned schema-1 packages and immutable source snapshots.
 - Required and optional dependency lifetimes with exact replacement bindings.

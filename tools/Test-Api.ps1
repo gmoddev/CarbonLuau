@@ -9,6 +9,7 @@ $GuiReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui-Ref
 $GuiDescriptors = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiDescriptors.cs')
 $ReleaseNotes = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/releases/0.4.0.md')
 $Player1C = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1C.md')
+$Player1D = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1D.md')
 foreach ($Text in @($Bootstrap,$Managed,(Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Globals.md')),
     (Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Compatibility.md')),$GuiGuide,$GuiReference)) {
     if (!$Text.Contains($Version)) { throw 'API version differs between runtime and documentation' }
@@ -88,6 +89,9 @@ if (!$Bootstrap.Contains('function Items.Exists') -or !$ItemsReference.Contains(
 }
 foreach ($Claim in @('128 direct entries','main, belt and wear','PREPARE/VERIFY','`25353106`')) {
     if (!$Player1C.Contains($Claim)) { throw "Player-1C evidence omits: $Claim" }
+}
+foreach ($Claim in @('IMPLEMENTED / AUTHENTICATED-CLIENT UNQUALIFIED','`25353106`','`74b9b48e9375177bc17e76a4d939956d1076645b`','no values')) {
+    if (!$Player1D.Contains($Claim)) { throw "Player-1D evidence omits: $Claim" }
 }
 foreach ($Constructor in @('ImageSource.None','ImageSource.Sprite','ImageSource.Png','ImageSource.Item','ImageSource.SteamAvatar')) {
     if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains(($Constructor -split '\.')[1])) { throw "GUI image constructor differs between bootstrap and reference: $Constructor" }

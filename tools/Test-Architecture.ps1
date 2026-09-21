@@ -176,6 +176,12 @@ if (!$Transport.Contains('CuiHelper.AddUi') -or !$Transport.Contains('CuiHelper.
     throw 'GUI Foundation 1C Carbon adapter must use Rust CUI and exact Player connection identity'
 }
 
+$GameplayAdapter = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/CarbonLuau.Carbon.cs')
+foreach ($Required in @('DismountPlayer(Player, true)','SetParent(null, true, true)','MovePosition(Target)',
+        'ForcePositionTo','UpdateNetworkGroup()','SendNetworkUpdateImmediate()','SetServerFall(true)')) {
+    if (!$GameplayAdapter.Contains($Required)) { throw "Player-1D exact-build adapter step is missing: $Required" }
+}
+
 $Worker = Get-Content -Raw -LiteralPath (Join-Path $Root 'native/src/scripts/CompilerWorker.cpp')
 if ([regex]::Matches($Worker, 'Luau::compile').Count -ne 1) { throw 'Isolated compiler worker must own the Luau compile call' }
 foreach ($Path in @('native/src/scripts/Compiler.cpp','native/src/Runtime.cpp','native/src/scripts/ModuleLoader.cpp','native/src/facade/FacadeBridge.cpp')) {
