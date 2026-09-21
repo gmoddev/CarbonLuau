@@ -27,6 +27,8 @@ namespace Carbon.Plugins
             { return Measure(Target, Patch == null ? null : Patch.Elements, true, false); }
             public int MeasureDestroy(GuiBackendTarget Target)
             { if (Target == null) throw new InvalidOperationException("backend target is required"); return GuiRenderValue.Utf8Bytes(Target.ClientRootId); }
+            public int MeasureScroll(GuiBackendTarget Target, GuiScrollEffect Effect)
+            { return MeasureScrollPayload(Target, Effect); }
             public GuiBackendResult Replace(GuiBackendTarget Target, GuiRenderPlan Plan)
             { return Send(Target, Plan == null ? null : Plan.Elements, false, true, GuiBackendOperationKind.Replace); }
             public GuiBackendResult Update(GuiBackendTarget Target, GuiRenderPatch Patch)
@@ -36,6 +38,19 @@ namespace Carbon.Plugins
                 if (Target == null) throw new InvalidOperationException("backend target is required");
                 try { return Transport.Destroy(Target) ?? GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "Rust CUI destroy returned no result"); }
                 catch { return GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "Rust CUI destroy failed"); }
+            }
+            public GuiBackendResult Scroll(GuiBackendTarget Target, GuiScrollEffect Effect)
+            {
+                if (Target == null || Effect == null) throw new InvalidOperationException("backend target and scroll effect are required");
+                try {
+                    string Payload = SerializeScroll(Effect);
+                    if (GuiRenderValue.Utf8Bytes(Payload) > Limits.MaxSerializedOperationBytes)
+                        return GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "Rust CUI scroll payload exceeds the serialized operation bound");
+                    return Transport.Update(Target, Payload) ?? GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "Rust CUI scroll transport returned no result");
+                } catch (InvalidOperationException Error) {
+                    string Message = Error.Message.Length > 200 ? "Rust CUI scroll serialization failed" : Error.Message;
+                    return GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, Message);
+                } catch { return GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "Rust CUI scroll serialization/send failed"); }
             }
             private GuiBackendResult Send(GuiBackendTarget Target, GuiRenderElement[] Elements, bool Update, bool Replace, GuiBackendOperationKind Kind)
             {
@@ -58,6 +73,30 @@ namespace Carbon.Plugins
                 int Bytes = GuiRenderValue.Utf8Bytes(Serialize(Elements, Update, Replace));
                 if (Bytes > Limits.MaxSerializedOperationBytes) throw new InvalidOperationException("Rust CUI payload exceeds the serialized operation bound");
                 return Bytes;
+            }
+
+            private int MeasureScrollPayload(GuiBackendTarget Target, GuiScrollEffect Effect)
+            {
+                if (Target == null || Effect == null) throw new InvalidOperationException("backend target and scroll effect are required");
+                int Bytes = GuiRenderValue.Utf8Bytes(SerializeScroll(Effect));
+                if (Bytes > Limits.MaxSerializedOperationBytes) throw new InvalidOperationException("Rust CUI scroll payload exceeds the serialized operation bound");
+                return Bytes;
+            }
+
+            internal static string SerializeScroll(GuiScrollEffect Effect)
+            {
+                if (Effect == null) throw new InvalidOperationException("Rust CUI scroll effect is required");
+                var Builder = new StringBuilder();
+                using (var Writer = new JsonTextWriter(new StringWriter(Builder, CultureInfo.InvariantCulture))) {
+                    Writer.Formatting = Formatting.None; Writer.WriteStartArray(); Writer.WriteStartObject();
+                    Write(Writer, "name", Effect.ClientId); Writer.WritePropertyName("update"); Writer.WriteValue(true);
+                    Writer.WritePropertyName("components"); Writer.WriteStartArray(); Writer.WriteStartObject();
+                    Write(Writer, "type", "UnityEngine.UI.ScrollView");
+                    if (Effect.Horizontal.HasValue) { Writer.WritePropertyName("horizontalNormalizedPosition"); Writer.WriteValue(Effect.Horizontal.Value); }
+                    if (Effect.Vertical.HasValue) { Writer.WritePropertyName("verticalNormalizedPosition"); Writer.WriteValue(1 - Effect.Vertical.Value); }
+                    Writer.WriteEndObject(); Writer.WriteEndArray(); Writer.WriteEndObject(); Writer.WriteEndArray(); Writer.Flush();
+                }
+                return Builder.ToString();
             }
 
             internal static string Serialize(GuiRenderElement[] Elements, bool Update, bool Replace)

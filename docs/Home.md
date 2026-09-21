@@ -90,7 +90,8 @@ The additive GUI Foundation 3 architecture is resolved by
 with its detailed grid, clipping, font, scroll-effect, bounds and qualification
 guidance in [GUI Foundation 3](GuiFoundation3.md). Current source implements the
 deterministic grid in [GUI Foundation 3A](GuiFoundation3A.md), bounded clipping
-in [GUI Foundation 3B](GuiFoundation3B.md), and retained project-owned fonts in
-[GUI Foundation 3C](GuiFoundation3C.md). These slices have no assigned release
-identity; their authenticated-client gates remain explicit, scroll effects
-remain unimplemented, and Foundation 3 does not reopen deferred TextBox work.
+in [GUI Foundation 3B](GuiFoundation3B.md), retained project-owned fonts in
+[GUI Foundation 3C](GuiFoundation3C.md), and exact-Player one-way scrolling in
+[GUI Foundation 3D](GuiFoundation3D.md). These slices have no assigned release
+identity; their authenticated-client gates remain explicit, and Foundation 3
+does not reopen deferred TextBox work.

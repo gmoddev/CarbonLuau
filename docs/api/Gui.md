@@ -21,6 +21,12 @@ Current source also implements four immutable `GuiFont` values and retained
 but actual supported-client font rendering remains unqualified. This slice has
 no assigned package or scripting API release identity.
 
+Current source additionally implements exact-Player `ScrollingFrame:ScrollTo`,
+`ScrollToTop` and `ScrollToBottom` as bounded one-way Presentation effects.
+Their model, publication, backend serialization and lifecycle behavior are
+qualified, but actual supported-client scroll behavior remains unqualified.
+This slice has no assigned package or scripting API release identity.
+
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the
 same objects. CarbonLuau synchronizes committed changes after Luau returns.
@@ -98,6 +104,23 @@ current viewers. The host filenames remain private. Actual client rendering of
 the four faces, including absence of fallback, still requires the D17
 authenticated-client supplement.
 
+## Presentation-specific scrolling in current source
+
+```lua
+Screen:Show(Player)
+Scroll:ScrollTo(Player, Vector2.new(0.5, 0.5))
+Scroll:ScrollToTop(Player)
+Scroll:ScrollToBottom(Player)
+```
+
+Coordinates are normalized from top left `(0, 0)` to bottom right `(1, 1)`.
+Only axes enabled by `ScrollingDirection` are sent. Top and Bottom require Y
+scrolling and never synthesize an X value. Calls target the exact current Player
+Presentation, coalesce latest-wins per ScrollingFrame, and fail if that
+Presentation does not exist. They expose no `CanvasPosition`, readback,
+completion event or acknowledged state. Authenticated-client behavior remains
+pending the D17 qualification supplement.
+
 ## One tree or one tree per Player
 
 Calling `Screen:Show(Player)` for several Players creates several views of one
@@ -137,6 +160,7 @@ example and is not part of a published release identity yet:
 | Deterministic explicit grid, current source only | [`grid`](../../examples/gui/grid/init.luau) |
 | Rectangular Frame clipping, current source and client-unqualified | [`clipping`](../../examples/gui/clipping/init.luau) |
 | Retained text fonts, current source and client-unqualified | [`fonts`](../../examples/gui/fonts/init.luau) |
+| Exact-Player one-way scrolling, current source and client-unqualified | [`scroll-effects`](../../examples/gui/scroll-effects/init.luau) |
 
 These examples use only the public Luau surface. Raw Rust CUI is never exposed.
 

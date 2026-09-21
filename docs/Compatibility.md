@@ -509,6 +509,16 @@ replacement and recovery behavior. Windows native/local GUI-3C evidence is
 separately **DEFERRED / UNQUALIFIED** while DockerPC is unavailable; hosted
 Windows remains separate evidence.
 
+[GUI Foundation 3D](GuiFoundation3D.md) implements D17's exact-Player
+`ScrollTo`, `ScrollToTop` and `ScrollToBottom` Presentation effects with
+top-left normalized public coordinates, backend-private vertical inversion,
+bounded latest-wins state, transactional publication, rebuild-first retry and
+lifecycle cleanup. It is **IMPLEMENTED / CLIENT-UNQUALIFIED** until an
+authenticated current client qualifies orientation, both axes, two-viewer
+isolation, coalescing, rebuild ordering, retry and lifecycle behavior. Windows
+native/local GUI-3D evidence is separately **DEFERRED / UNQUALIFIED** while
+DockerPC is unavailable; hosted Windows remains separate evidence.
+
 D17 assigns no package or scripting API identity. Package `0.4.0`, scripting
 API `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package
 schema `1` and the pinned Luau revision remain unchanged. Foundation 3 release

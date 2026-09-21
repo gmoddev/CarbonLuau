@@ -22,6 +22,7 @@ $Expected = @(
     'src/CarbonLuau/Gui/GuiModelContracts.cs',
     'src/CarbonLuau/Gui/GuiRetainedRegistry.cs',
     'src/CarbonLuau/Gui/GuiRenderPlan.cs',
+    'src/CarbonLuau/Gui/GuiScrollEffects.cs',
     'src/CarbonLuau/Gui/GuiPresentation.cs',
     'src/CarbonLuau/Gui/IGuiBackend.cs',
     'src/CarbonLuau/Gui/InMemoryGuiBackend.cs',
@@ -123,6 +124,14 @@ foreach ($Required in @('ScrollingFrame','CanvasSize','ScrollingDirection','Scro
         throw "GUI Foundation 2C retained/projection owner is missing: $Required"
     }
 }
+foreach ($Required in @('GuiScrollIntent','GuiScrollEffect','MaxPendingScrollEffectsPerPresentation','PublishCommittedScrollEffects','MeasureScroll')) {
+    if (!$Registry.Contains($Required) -and !$RenderPlan.Contains($Required) -and
+        !(Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiScrollEffects.cs')).Contains($Required) -and
+        !(Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiConfig.cs')).Contains($Required) -and
+        !(Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/IGuiBackend.cs')).Contains($Required)) {
+        throw "GUI Foundation 3D Presentation-effect owner is missing: $Required"
+    }
+}
 foreach ($Required in @('ScrollView','PrivateChildRootId','ProjectedElementCost')) {
     if (!$RenderPlan.Contains($Required)) { throw "GUI Foundation 2C bounded render-plan owner is missing: $Required" }
 }
@@ -146,8 +155,14 @@ foreach ($Required in @('robotocondensed-regular.ttf','robotocondensed-bold.ttf'
     if ($Bootstrap.Contains($Required)) { throw "GUI Foundation 3C host font path leaked into the Luau facade: $Required" }
 }
 if (!$Backend.Contains('UnityEngine.UI.ScrollView') -or !$Backend.Contains('contentTransform') -or
-    $Backend.Contains('NormalizedPosition') -or $Presentation.Contains('CanvasPosition')) {
-    throw 'GUI Foundation 2C must project ScrollView content without retaining client scroll position'
+    $Presentation.Contains('CanvasPosition') -or $Registry.Contains('CanvasPosition')) {
+    throw 'GUI scrolling must project ScrollView content without retained client scroll position'
+}
+foreach ($Required in @('horizontalNormalizedPosition','verticalNormalizedPosition','SerializeScroll')) {
+    if (!$Backend.Contains($Required)) { throw "GUI Foundation 3D private backend mapping is missing: $Required" }
+    if ($Bootstrap.Contains($Required) -or $Presentation.Contains($Required) -or $Registry.Contains($Required)) {
+        throw "GUI Foundation 3D host scroll convention leaked outside the backend: $Required"
+    }
 }
 $ScriptHostText = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Scripts/ScriptHost.cs')
 if ($ScriptHostText.IndexOf('Vm.Callback') -ge $ScriptHostText.LastIndexOf('Facade.FlushGui')) {

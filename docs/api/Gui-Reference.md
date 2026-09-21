@@ -17,6 +17,10 @@ still pending. It is not part of a qualified public release surface.
 Foundation 3C's `GuiFont` and retained TextLabel/TextButton `Font` are
 implemented in current source. Actual rendering of all four fonts remains
 client-unqualified, and this slice has no assigned release identity.
+Foundation 3D's `ScrollingFrame:ScrollTo`, `ScrollToTop` and `ScrollToBottom`
+are implemented in current source as exact-Player one-way Presentation effects.
+Actual client scrolling remains unqualified, and this slice has no assigned
+release identity.
 
 ## Service and construction
 
@@ -146,6 +150,19 @@ retains the canvas configuration but not the current client scroll position,
 drag state or inertia. That state belongs separately to each Presentation and
 may reset after full reconciliation, Hide/Show, reconnect or replacement.
 `CanvasPosition` and `AutomaticCanvasSize` are not exposed.
+
+`ScrollingFrame` also exposes:
+
+| Method | Behavior |
+|---|---|
+| `ScrollTo(Player, Position)` | One-way effect for the exact current Presentation. Position is a finite `Vector2` in `0..1`, from top left to bottom right. Only enabled axes are sent. |
+| `ScrollToTop(Player)` | Sends only vertical `Y = 0`; rejects when Y scrolling is unavailable. |
+| `ScrollToBottom(Player)` | Sends only vertical `Y = 1`; rejects when Y scrolling is unavailable. |
+
+Effects are latest-wins per Presentation and ScrollingFrame, are consumed after
+local host acceptance, and are not retained/readable scroll state. A missing or
+stale Player Presentation is a controlled error. Authenticated-client behavior
+remains unqualified.
 
 `UIListLayout`, `UIPadding`, text controls and image controls compose normally
 inside a ScrollingFrame. Scripts set `CanvasSize` explicitly; CarbonLuau does

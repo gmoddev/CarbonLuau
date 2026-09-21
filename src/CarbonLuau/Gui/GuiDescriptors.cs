@@ -22,7 +22,8 @@ namespace Carbon.Plugins
             LayoutProjection = 100, ContentProjection = 101
         }
         internal enum GuiMethodId
-        { Create = 1, Clone = 2, Destroy = 3, GetChildren = 4, FindFirstChild = 5, IsA = 6, Show = 7, Hide = 8, IsShown = 9 }
+        { Create = 1, Clone = 2, Destroy = 3, GetChildren = 4, FindFirstChild = 5, IsA = 6, Show = 7, Hide = 8, IsShown = 9,
+            ScrollTo = 10, ScrollToTop = 11, ScrollToBottom = 12 }
         internal enum GuiEventId { Activated = 1 }
         [Flags] internal enum GuiCreationScope { None = 0, GuiService = 1, GuiObject = 2 }
         internal enum GuiLimitId { None = 0, NameUtf8Bytes = 1, TextUtf8Bytes = 2 }
@@ -161,7 +162,8 @@ namespace Carbon.Plugins
                 new GuiMethodDescriptor(GuiMethodId.Destroy, "Destroy"), new GuiMethodDescriptor(GuiMethodId.GetChildren, "GetChildren"),
                 new GuiMethodDescriptor(GuiMethodId.FindFirstChild, "FindFirstChild"), new GuiMethodDescriptor(GuiMethodId.IsA, "IsA"),
                 new GuiMethodDescriptor(GuiMethodId.Show, "Show"), new GuiMethodDescriptor(GuiMethodId.Hide, "Hide"),
-                new GuiMethodDescriptor(GuiMethodId.IsShown, "IsShown")
+                new GuiMethodDescriptor(GuiMethodId.IsShown, "IsShown"), new GuiMethodDescriptor(GuiMethodId.ScrollTo, "ScrollTo"),
+                new GuiMethodDescriptor(GuiMethodId.ScrollToTop, "ScrollToTop"), new GuiMethodDescriptor(GuiMethodId.ScrollToBottom, "ScrollToBottom")
             };
             private static readonly GuiEventDescriptor[] EventValues =
             { new GuiEventDescriptor(GuiEventId.Activated, "Activated", "Player") };
@@ -293,7 +295,8 @@ namespace Carbon.Plugins
                         Append(ObjectProperties("UDim2.fromOffset(100, 100)", "1"), ImageProperties()), CommonMethods, new[] {GuiEventId.Activated}),
                     new GuiClassDescriptor(GuiClassId.ScrollingFrame, "ScrollingFrame", GuiClassId.GuiObject, true,
                         GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
-                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "0"), ScrollingProperties()), CommonMethods, new GuiEventId[0]),
+                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "0"), ScrollingProperties()),
+                        Append(CommonMethods, GuiMethodId.ScrollTo, GuiMethodId.ScrollToTop, GuiMethodId.ScrollToBottom), new GuiEventId[0]),
                     new GuiClassDescriptor(GuiClassId.UIGridLayout, "UIGridLayout", GuiClassId.GuiNode, true, GuiCreationScope.GuiObject, false,
                         GridProperties(), CommonMethods, new GuiEventId[0])
                 };

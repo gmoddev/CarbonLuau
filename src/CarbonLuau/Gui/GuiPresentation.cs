@@ -14,8 +14,10 @@ namespace Carbon.Plugins
             internal bool WasSent, NeedsFullResync, SynchronizationUncertain, LastNeedsCursor;
             internal bool ActionInvalidationPending;
             internal ulong SentRevision, ProjectionBlockedRevision, LastAttemptCycle;
+            internal ulong ScrollEffectFlushCursor;
             internal int SuccessfulPatchBatches;
             internal readonly Dictionary<ulong, string> ActionTokens = new Dictionary<ulong, string>();
+            internal readonly SortedDictionary<ulong, GuiScrollIntent> PendingScrollEffects = new SortedDictionary<ulong, GuiScrollIntent>();
             internal GuiPresentation(ulong ScreenId, ulong Epoch, string PlayerToken, string PlayerUserId, string ClientPrefix)
             {
                 this.ScreenId = ScreenId; this.Epoch = Epoch; this.PlayerToken = PlayerToken;
@@ -34,10 +36,12 @@ namespace Carbon.Plugins
                 var Result = new GuiPresentation(ScreenId, Epoch, PlayerToken, PlayerUserId, ClientPrefix) {
                     WasSent = WasSent, NeedsFullResync = NeedsFullResync, SynchronizationUncertain = SynchronizationUncertain,
                     LastNeedsCursor = LastNeedsCursor, SentRevision = SentRevision, ProjectionBlockedRevision = ProjectionBlockedRevision,
-                    LastAttemptCycle = LastAttemptCycle, SuccessfulPatchBatches = SuccessfulPatchBatches,
+                    LastAttemptCycle = LastAttemptCycle, ScrollEffectFlushCursor = ScrollEffectFlushCursor,
+                    SuccessfulPatchBatches = SuccessfulPatchBatches,
                     ActionInvalidationPending = ActionInvalidationPending
                 };
                 foreach (var Value in ActionTokens) Result.ActionTokens.Add(Value.Key, Value.Value);
+                foreach (var Value in PendingScrollEffects) Result.PendingScrollEffects.Add(Value.Key, Value.Value);
                 return Result;
             }
         }

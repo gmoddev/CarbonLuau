@@ -4,7 +4,7 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
-        internal enum GuiBackendOperationKind { Replace = 1, Update = 2, Destroy = 3 }
+        internal enum GuiBackendOperationKind { Replace = 1, Update = 2, Destroy = 3, Scroll = 4 }
         internal enum GuiBackendResultCode { Accepted = 0, TargetUnavailable = 1, SendFailed = 2 }
 
         internal sealed class GuiBackendResult
@@ -28,9 +28,11 @@ namespace Carbon.Plugins
             int MeasureReplace(GuiBackendTarget Target, GuiRenderPlan Plan);
             int MeasureUpdate(GuiBackendTarget Target, GuiRenderPatch Patch);
             int MeasureDestroy(GuiBackendTarget Target);
+            int MeasureScroll(GuiBackendTarget Target, GuiScrollEffect Effect);
             GuiBackendResult Replace(GuiBackendTarget Target, GuiRenderPlan Plan);
             GuiBackendResult Update(GuiBackendTarget Target, GuiRenderPatch Patch);
             GuiBackendResult Destroy(GuiBackendTarget Target);
+            GuiBackendResult Scroll(GuiBackendTarget Target, GuiScrollEffect Effect);
         }
     }
 }

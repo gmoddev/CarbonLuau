@@ -86,6 +86,7 @@ try {
                 @{ Source = (Join-Path $Root 'examples/gui/item-skin/init.luau'); Name = 'examples/gui/item-skin/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/gui/steam-avatar/init.luau'); Name = 'examples/gui/steam-avatar/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/gui/scrolling-layout/init.luau'); Name = 'examples/gui/scrolling-layout/init.luau' },
+                @{ Source = (Join-Path $Root 'examples/gui/scroll-effects/init.luau'); Name = 'examples/gui/scroll-effects/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/gui/shared-rich/init.luau'); Name = 'examples/gui/shared-rich/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/gui/per-player-rich/init.luau'); Name = 'examples/gui/per-player-rich/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/scripts/init.luau'); Name = 'examples/scripts/init.luau' },

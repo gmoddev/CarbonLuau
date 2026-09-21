@@ -51,12 +51,15 @@ internal static class GuiFoundation1DTests
         public int MeasureReplace(Runtime.GuiBackendTarget Target, Runtime.GuiRenderPlan Plan) { return Inner.MeasureReplace(Target, Plan); }
         public int MeasureUpdate(Runtime.GuiBackendTarget Target, Runtime.GuiRenderPatch Patch) { return Inner.MeasureUpdate(Target, Patch); }
         public int MeasureDestroy(Runtime.GuiBackendTarget Target) { return Inner.MeasureDestroy(Target); }
+        public int MeasureScroll(Runtime.GuiBackendTarget Target, Runtime.GuiScrollEffect Effect) { return Inner.MeasureScroll(Target, Effect); }
         public Runtime.GuiBackendResult Replace(Runtime.GuiBackendTarget Target, Runtime.GuiRenderPlan Plan)
         { Delay(); return Inner.Replace(Target, Plan); }
         public Runtime.GuiBackendResult Update(Runtime.GuiBackendTarget Target, Runtime.GuiRenderPatch Patch)
         { Delay(); return Inner.Update(Target, Patch); }
         public Runtime.GuiBackendResult Destroy(Runtime.GuiBackendTarget Target)
         { Delay(); return Inner.Destroy(Target); }
+        public Runtime.GuiBackendResult Scroll(Runtime.GuiBackendTarget Target, Runtime.GuiScrollEffect Effect)
+        { Delay(); return Inner.Scroll(Target, Effect); }
         private static void Delay()
         { var Watch = Stopwatch.StartNew(); while (Watch.Elapsed.TotalMilliseconds < 3) { } }
     }

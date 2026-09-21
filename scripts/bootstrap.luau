@@ -335,11 +335,35 @@ function GuiObjectMethods.IsShown(Self, Player)
     local RecordValue = GuiRecord(Self); local PlayerValue = Record(Player)
     return Host(20, "shown", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)[1] == "1"
 end
+local function ScrollPlayer(Self, Player)
+    local RecordValue = GuiRecord(Self)
+    if RecordValue.ClassName ~= "ScrollingFrame" then Fail("scroll methods require ScrollingFrame") end
+    return RecordValue, Record(Player)
+end
+function GuiObjectMethods.ScrollTo(Self, Player, Position)
+    local RecordValue, PlayerValue = ScrollPlayer(Self, Player)
+    local ValueRecord = ValueRecords[Position]
+    if not ValueRecord or tostring(Position) ~= "Vector2" then Fail("ScrollTo expects Vector2") end
+    local X = Number(ValueRecord.X, "scroll X", 0, 1)
+    local Y = Number(ValueRecord.Y, "scroll Y", 0, 1)
+    Host(21, "scroll", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId, tostring(X), tostring(Y))
+end
+function GuiObjectMethods.ScrollToTop(Self, Player)
+    local RecordValue, PlayerValue = ScrollPlayer(Self, Player)
+    Host(21, "scrolltop", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)
+end
+function GuiObjectMethods.ScrollToBottom(Self, Player)
+    local RecordValue, PlayerValue = ScrollPlayer(Self, Player)
+    Host(21, "scrollbottom", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)
+end
 table.freeze(GuiObjectMethods)
 GuiObjectMeta.__index = function(Object, Key)
     local RecordValue = GuiRecord(Object)
     if Key == "Activated" then return GuiSignal(Object) end
     if (Key == "Show" or Key == "Hide" or Key == "IsShown") and RecordValue.ClassName ~= "ScreenGui" then
+        return DecodeGuiValue(Host(20, "get", RecordValue.Id, String(Key, "GUI property name")))
+    end
+    if (Key == "ScrollTo" or Key == "ScrollToTop" or Key == "ScrollToBottom") and RecordValue.ClassName ~= "ScrollingFrame" then
         return DecodeGuiValue(Host(20, "get", RecordValue.Id, String(Key, "GUI property name")))
     end
     if GuiObjectMethods[Key] then return GuiObjectMethods[Key] end

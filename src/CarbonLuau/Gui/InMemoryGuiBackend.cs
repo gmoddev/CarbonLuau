@@ -11,10 +11,10 @@ namespace Carbon.Plugins
             {
                 internal readonly long Sequence; internal readonly GuiBackendOperationKind Kind;
                 internal readonly GuiBackendTarget Target; internal readonly GuiRenderPlan Plan;
-                internal readonly GuiRenderPatch Patch; internal readonly GuiBackendResult Result;
+                internal readonly GuiRenderPatch Patch; internal readonly GuiScrollEffect ScrollEffect; internal readonly GuiBackendResult Result;
                 internal Call(long Sequence, GuiBackendOperationKind Kind, GuiBackendTarget Target,
-                    GuiRenderPlan Plan, GuiRenderPatch Patch, GuiBackendResult Result)
-                { this.Sequence = Sequence; this.Kind = Kind; this.Target = Target; this.Plan = Plan; this.Patch = Patch; this.Result = Result; }
+                    GuiRenderPlan Plan, GuiRenderPatch Patch, GuiScrollEffect ScrollEffect, GuiBackendResult Result)
+                { this.Sequence = Sequence; this.Kind = Kind; this.Target = Target; this.Plan = Plan; this.Patch = Patch; this.ScrollEffect = ScrollEffect; this.Result = Result; }
             }
 
             private sealed class State
@@ -33,6 +33,8 @@ namespace Carbon.Plugins
             { Required(Target, Patch); return Patch.EstimatedSerializedBytes; }
             public int MeasureDestroy(GuiBackendTarget Target)
             { if (Target == null) throw new InvalidOperationException("backend target is required"); return GuiRenderValue.Utf8Bytes(Target.ClientRootId); }
+            public int MeasureScroll(GuiBackendTarget Target, GuiScrollEffect Effect)
+            { Required(Target, Effect); return GuiRenderValue.Utf8Bytes(Effect.Describe()); }
 
             internal void FailNext(GuiBackendOperationKind Kind, GuiBackendResultCode Code, string Diagnostic)
             {
@@ -48,7 +50,7 @@ namespace Carbon.Plugins
             {
                 Required(Target, Plan); GuiBackendResult Result = ResultFor(GuiBackendOperationKind.Replace);
                 if (Result.Accepted) States[Target.Key] = new State { Plan = Plan };
-                Record(GuiBackendOperationKind.Replace, Target, Plan, null, Result); return Result;
+                Record(GuiBackendOperationKind.Replace, Target, Plan, null, null, Result); return Result;
             }
 
             public GuiBackendResult Update(GuiBackendTarget Target, GuiRenderPatch Patch)
@@ -58,7 +60,7 @@ namespace Carbon.Plugins
                     ? GuiBackendResult.Failure(GuiBackendResultCode.TargetUnavailable, "presentation target is not live")
                     : ResultFor(GuiBackendOperationKind.Update);
                 if (Result.Accepted) Current.LastPatch = Patch;
-                Record(GuiBackendOperationKind.Update, Target, null, Patch, Result); return Result;
+                Record(GuiBackendOperationKind.Update, Target, null, Patch, null, Result); return Result;
             }
 
             public GuiBackendResult Destroy(GuiBackendTarget Target)
@@ -66,7 +68,16 @@ namespace Carbon.Plugins
                 if (Target == null) throw new InvalidOperationException("backend target is required");
                 GuiBackendResult Result = ResultFor(GuiBackendOperationKind.Destroy);
                 if (Result.Accepted) States.Remove(Target.Key);
-                Record(GuiBackendOperationKind.Destroy, Target, null, null, Result); return Result;
+                Record(GuiBackendOperationKind.Destroy, Target, null, null, null, Result); return Result;
+            }
+
+            public GuiBackendResult Scroll(GuiBackendTarget Target, GuiScrollEffect Effect)
+            {
+                Required(Target, Effect); State Current;
+                GuiBackendResult Result = !States.TryGetValue(Target.Key, out Current)
+                    ? GuiBackendResult.Failure(GuiBackendResultCode.TargetUnavailable, "presentation target is not live")
+                    : ResultFor(GuiBackendOperationKind.Scroll);
+                Record(GuiBackendOperationKind.Scroll, Target, null, null, Effect, Result); return Result;
             }
 
             internal bool IsLive(GuiBackendTarget Target) { return Target != null && States.ContainsKey(Target.Key); }
@@ -85,7 +96,10 @@ namespace Carbon.Plugins
                 return GuiBackendResult.Success();
             }
             private void Record(GuiBackendOperationKind Kind, GuiBackendTarget Target, GuiRenderPlan Plan, GuiRenderPatch Patch, GuiBackendResult Result)
-            { CallValues.Add(new Call(NextSequence++, Kind, Target, Plan, Patch, Result)); }
+            { Record(Kind, Target, Plan, Patch, null, Result); }
+            private void Record(GuiBackendOperationKind Kind, GuiBackendTarget Target, GuiRenderPlan Plan, GuiRenderPatch Patch,
+                GuiScrollEffect ScrollEffect, GuiBackendResult Result)
+            { CallValues.Add(new Call(NextSequence++, Kind, Target, Plan, Patch, ScrollEffect, Result)); }
             private static void Required(object First, object Second)
             { if (First == null || Second == null) throw new InvalidOperationException("backend target and request are required"); }
         }

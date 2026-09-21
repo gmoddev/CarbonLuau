@@ -86,6 +86,7 @@ namespace Carbon.Plugins
             internal readonly Dictionary<string, ulong> Connections = new Dictionary<string, ulong>(StringComparer.Ordinal);
             internal readonly Dictionary<string, GuiPresentation> Presentations = new Dictionary<string, GuiPresentation>(StringComparer.Ordinal);
             internal readonly Dictionary<ulong, GuiScreenSynchronization> Synchronization = new Dictionary<ulong, GuiScreenSynchronization>();
+            internal readonly Dictionary<string, GuiScrollIntent> StagedScrollEffects = new Dictionary<string, GuiScrollIntent>(StringComparer.Ordinal);
             internal readonly Queue<GuiBackendTarget> PendingDestroys = new Queue<GuiBackendTarget>();
             internal int Screens;
             internal GuiRetainedState Copy()
@@ -95,6 +96,7 @@ namespace Carbon.Plugins
                 foreach (var Value in Connections) Result.Connections.Add(Value.Key, Value.Value);
                 foreach (var Value in Presentations) Result.Presentations.Add(Value.Key, Value.Value.Copy());
                 foreach (var Value in Synchronization) Result.Synchronization.Add(Value.Key, Value.Value.Copy());
+                foreach (var Value in StagedScrollEffects) Result.StagedScrollEffects.Add(Value.Key, Value.Value);
                 foreach (GuiBackendTarget Value in PendingDestroys) Result.PendingDestroys.Enqueue(Value);
                 return Result;
             }
@@ -108,6 +110,7 @@ namespace Carbon.Plugins
             internal readonly IGuiBackend Backend;
             internal readonly GuiActionDiagnostics ActionDiagnostics = new GuiActionDiagnostics();
             internal readonly GuiRuntimeDiagnostics RuntimeDiagnostics = new GuiRuntimeDiagnostics();
+            internal readonly GuiScrollDiagnostics ScrollDiagnostics = new GuiScrollDiagnostics();
             internal int LiveObjects { get; private set; }
             internal int LivePresentations { get; private set; }
             private readonly HashSet<GuiRetainedRegistry> Registries = new HashSet<GuiRetainedRegistry>();
@@ -122,6 +125,9 @@ namespace Carbon.Plugins
             internal int LiveRegistryCount { get { return Registries.Count; } }
             internal int PlayerActionRateCount { get { return PlayerActionRates.Count; } }
             internal int DomainActionOwnerCount { get { return DomainActions.Count; } }
+            internal int PendingScrollEffectCount {
+                get { int Result = 0; foreach (GuiRetainedRegistry Registry in Registries) Result += Registry.PendingScrollEffectCount; return Result; }
+            }
             internal GuiRetainedWorld(GuiLimits Limits) : this(Limits, null, new InMemoryGuiBackend()) { }
             internal GuiRetainedWorld(GuiLimits Limits, PlayerDirectory Players, IGuiBackend Backend)
             { this.Limits = Limits ?? throw new ArgumentNullException("Limits"); this.Players = Players; this.Backend = Backend ?? throw new ArgumentNullException("Backend"); }
@@ -216,6 +222,18 @@ namespace Carbon.Plugins
                     Actions.Count > Limits.MaxActionTokensGlobal - Count) throw new FacadeException("GUI action token limit reached");
             }
 
+            internal void EnsureScrollCapacity(GuiRetainedRegistry Registry, ulong ScreenId, string PlayerToken, ulong ScrollFrameId)
+            {
+                if (Registry == null) throw new FacadeException("invalid scroll-effect owner");
+                if (Registry.HasScrollEffect(ScreenId, PlayerToken, ScrollFrameId)) return;
+                if (Registry.PendingScrollEffectsForPresentation(ScreenId, PlayerToken) >= Limits.MaxPendingScrollEffectsPerPresentation ||
+                    Registry.PendingScrollEffectCount >= Limits.MaxPendingScrollEffectsPerDomain ||
+                    PendingScrollEffectCount >= Limits.MaxPendingScrollEffectsGlobal) {
+                    ScrollDiagnostics.RejectBound(); RuntimeDiagnostics.ResourceLimitRejected();
+                    throw new FacadeException("GUI pending scroll-effect limit reached");
+                }
+            }
+
             internal void InvalidateAction(string Token, GuiActionRejection Reason)
             {
                 GuiActionRecord Value;
@@ -296,18 +314,20 @@ namespace Carbon.Plugins
             internal string Status
             {
                 get {
-                    int Screens = 0, Connections = 0, Dirty = 0, FullResync = 0, Blocked = 0, PendingDestroys = 0;
+                    int Screens = 0, Connections = 0, Dirty = 0, FullResync = 0, Blocked = 0, PendingDestroys = 0, PendingScroll = 0;
                     foreach (GuiRetainedRegistry Registry in Registries) {
                         Screens += Registry.ScreenCount; Connections += Registry.ConnectionCount;
                         Dirty += Registry.DirtyPresentationCount; FullResync += Registry.FullResyncPresentationCount;
                         Blocked += Registry.BlockedPresentationCount; PendingDestroys += Registry.PendingDestroyCount;
+                        PendingScroll += Registry.PendingScrollEffectCount;
                     }
                     return "GUI live registries/objects/screens/presentations/connections/actions: " + Registries.Count + "/" +
                         LiveObjects + "/" + Screens + "/" + LivePresentations + "/" + Connections + "/" + Actions.Count +
                         "\nGUI presentation dirty/full-resync/blocked/pending-destroy: " + Dirty + "/" + FullResync + "/" + Blocked + "/" + PendingDestroys +
+                        "\nGUI pending scroll effects: " + PendingScroll +
                         "\nGUI backend full/patch/failures; resource-limit rejections: " + RuntimeDiagnostics.FullRebuilds + "/" +
                         RuntimeDiagnostics.Patches + "/" + RuntimeDiagnostics.BackendSendFailures + "; " + RuntimeDiagnostics.ResourceLimitRejections +
-                        "\n" + ActionStatus;
+                        "\n" + ScrollDiagnostics.Status() + "\n" + ActionStatus;
                 }
             }
             private static bool CanonicalToken(string Token)
@@ -344,6 +364,7 @@ namespace Carbon.Plugins
             internal int PresentationCount { get { return State.Presentations.Count; } }
             internal int PublicationDepth { get { return Publications.Count; } }
             internal int PendingDestroyCount { get { return State.PendingDestroys.Count; } }
+            internal int PendingScrollEffectCount { get { return CountScrollEffects(); } }
             internal int DirtyPresentationCount {
                 get {
                     int Result = 0;
@@ -403,7 +424,7 @@ namespace Carbon.Plugins
             internal void CommitPublication()
             {
                 RequireLive(); if (Publications.Count == 0) throw new FacadeException("invalid GUI publication commit"); Publications.Pop();
-                if (Publications.Count == 0) ReconcileCommittedActions();
+                if (Publications.Count == 0) { ReconcileCommittedActions(); PublishCommittedScrollEffects(); }
             }
             internal void RollbackPublication()
             {
@@ -474,8 +495,102 @@ namespace Carbon.Plugins
                     }
                     case "show": RequireFields(Fields, 4); Show(Node(Id(Fields[1])), Fields[2], Fields[3]); return new string[0];
                     case "hide": RequireFields(Fields, 4); Hide(Node(Id(Fields[1])), Fields[2], Fields[3]); return new string[0];
+                    case "scroll": {
+                        RequireFields(Fields, 6); double X = ScrollCoordinate(Fields[4]), Y = ScrollCoordinate(Fields[5]);
+                        StageScroll(Node(Id(Fields[1])), Fields[2], Fields[3], GuiScrollIntentKind.Position, X, Y); return new string[0];
+                    }
+                    case "scrolltop": RequireFields(Fields, 4); StageScroll(Node(Id(Fields[1])), Fields[2], Fields[3], GuiScrollIntentKind.Top, 0, 0); return new string[0];
+                    case "scrollbottom": RequireFields(Fields, 4); StageScroll(Node(Id(Fields[1])), Fields[2], Fields[3], GuiScrollIntentKind.Bottom, 0, 1); return new string[0];
                     default: throw new FacadeException("unknown GUI mutation");
                 } } catch (FacadeException Error) { World.RecordResourceLimit(Error); throw; }
+            }
+
+            private void StageScroll(GuiRetainedNode ScrollFrame, string PlayerToken, string PlayerUserId,
+                GuiScrollIntentKind Kind, double X, double Y)
+            {
+                if (ScrollFrame.ClassId != GuiClassId.ScrollingFrame) throw new FacadeException("scroll methods require ScrollingFrame");
+                GuiRetainedNode Screen = RootScreen(ScrollFrame);
+                if (Screen == null) throw new FacadeException("ScrollingFrame has no containing ScreenGui");
+                PlayerLifetime Player = World.ExactPlayer(PlayerToken, PlayerUserId);
+                if (Player == null) throw new FacadeException("Player is no longer connected");
+                GuiPresentation Presentation;
+                if (!State.Presentations.TryGetValue(PresentationKey(Screen.Identity.GuiObjectId, PlayerToken), out Presentation) ||
+                    Presentation.PlayerUserId != PlayerUserId)
+                    throw new FacadeException("ScrollingFrame has no current Presentation for Player");
+                string Direction = ScrollFrame.Properties[GuiPropertyId.ScrollingDirection].Text;
+                if ((Kind == GuiScrollIntentKind.Top || Kind == GuiScrollIntentKind.Bottom) && Direction != "Y" && Direction != "XY")
+                    throw new FacadeException("vertical scrolling is unavailable");
+                var Intent = new GuiScrollIntent(Screen.Identity.GuiObjectId, ScrollFrame.Identity.GuiObjectId, Player, Kind, X, Y);
+                World.EnsureScrollCapacity(this, Intent.ScreenId, Intent.PlayerToken, Intent.ScrollFrameId);
+                bool Replaced = HasScrollEffect(Intent.ScreenId, Intent.PlayerToken, Intent.ScrollFrameId);
+                if (Publications.Count != 0) State.StagedScrollEffects[Intent.Key] = Intent;
+                else Presentation.PendingScrollEffects[Intent.ScrollFrameId] = Intent;
+                World.ScrollDiagnostics.Accept(Replaced);
+            }
+
+            private void PublishCommittedScrollEffects()
+            {
+                if (State.StagedScrollEffects.Count == 0) return;
+                var Values = new List<GuiScrollIntent>(State.StagedScrollEffects.Values); State.StagedScrollEffects.Clear();
+                Values.Sort((Left, Right) => StringComparer.Ordinal.Compare(Left.Key, Right.Key));
+                foreach (GuiScrollIntent Intent in Values) {
+                    PlayerLifetime Player = World.ExactPlayer(Intent.PlayerToken, Intent.PlayerUserId);
+                    if (Player == null || !Object.ReferenceEquals(Player.Identity, Intent.PlayerIdentity) ||
+                        !Object.ReferenceEquals(Player.Connection, Intent.PlayerConnection)) {
+                        World.ScrollDiagnostics.DiscardPlayer(); continue;
+                    }
+                    GuiPresentation Presentation; GuiRetainedNode ScrollFrame;
+                    if (!State.Presentations.TryGetValue(PresentationKey(Intent.ScreenId, Intent.PlayerToken), out Presentation) ||
+                        !State.Nodes.TryGetValue(Intent.ScrollFrameId, out ScrollFrame) || ScrollFrame.ClassId != GuiClassId.ScrollingFrame ||
+                        RootScreen(ScrollFrame) == null || RootScreen(ScrollFrame).Identity.GuiObjectId != Intent.ScreenId) {
+                        World.ScrollDiagnostics.DiscardPresentation(); continue;
+                    }
+                    Presentation.PendingScrollEffects[Intent.ScrollFrameId] = Intent;
+                }
+            }
+
+            internal bool HasScrollEffect(ulong ScreenId, string PlayerToken, ulong ScrollFrameId)
+            {
+                GuiPresentation Presentation;
+                if (State.Presentations.TryGetValue(PresentationKey(ScreenId, PlayerToken), out Presentation) &&
+                    Presentation.PendingScrollEffects.ContainsKey(ScrollFrameId)) return true;
+                foreach (GuiScrollIntent Value in State.StagedScrollEffects.Values)
+                    if (Value.ScreenId == ScreenId && Value.PlayerToken == PlayerToken && Value.ScrollFrameId == ScrollFrameId) return true;
+                return false;
+            }
+
+            internal int PendingScrollEffectsForPresentation(ulong ScreenId, string PlayerToken)
+            {
+                var Values = new HashSet<ulong>(); GuiPresentation Presentation;
+                if (State.Presentations.TryGetValue(PresentationKey(ScreenId, PlayerToken), out Presentation))
+                    foreach (ulong Value in Presentation.PendingScrollEffects.Keys) Values.Add(Value);
+                foreach (GuiScrollIntent Value in State.StagedScrollEffects.Values)
+                    if (Value.ScreenId == ScreenId && Value.PlayerToken == PlayerToken) Values.Add(Value.ScrollFrameId);
+                return Values.Count;
+            }
+
+            private int CountScrollEffects()
+            {
+                var Values = new HashSet<string>(StringComparer.Ordinal);
+                foreach (GuiPresentation Presentation in State.Presentations.Values)
+                    foreach (ulong ScrollFrameId in Presentation.PendingScrollEffects.Keys)
+                        Values.Add(ScrollEffectKey(Presentation.ScreenId, Presentation.PlayerToken, ScrollFrameId));
+                foreach (GuiScrollIntent Intent in State.StagedScrollEffects.Values) Values.Add(Intent.Key);
+                return Values.Count;
+            }
+
+            private static string ScrollEffectKey(ulong ScreenId, string PlayerToken, ulong ScrollFrameId)
+            {
+                return ScreenId.ToString(CultureInfo.InvariantCulture) + ":" + PlayerToken.Length.ToString(CultureInfo.InvariantCulture) +
+                    ":" + PlayerToken + ":" + ScrollFrameId.ToString(CultureInfo.InvariantCulture);
+            }
+
+            private static double ScrollCoordinate(string Value)
+            {
+                double Result;
+                if (!Double.TryParse(Value, NumberStyles.Float, CultureInfo.InvariantCulture, out Result))
+                    throw new FacadeException("scroll coordinates must be finite and within 0..1");
+                GuiScrollIntent.ValidateCoordinate(Result); return Result == 0 ? 0 : Result;
             }
 
             private GuiRetainedNode Create(ulong ParentId, string ClassName)
@@ -533,6 +648,7 @@ namespace Carbon.Plugins
                     throw new FacadeException("unknown GUI object identity");
                 }
                 var RemovedIds = new List<ulong>(); Collect(Root, RemovedIds); var RemovedConnections = new List<string>();
+                DiscardScrollEffectsForNodes(RemovedIds);
                 GuiRetainedNode AffectedScreen = Root.ClassId == GuiClassId.ScreenGui ? Root : RootScreen(Root);
                 if (Root.ClassId == GuiClassId.ScreenGui) RemovePresentationsForScreen(Root.Identity.GuiObjectId);
                 if (Root.ParentId.HasValue) State.Nodes[Root.ParentId.Value].Children.Remove(ObjectId);
@@ -605,6 +721,7 @@ namespace Carbon.Plugins
                 int Objects = SubtreeCount(Child), Depth = SubtreeDepth(Child), Buttons = SubtreeButtons(Child), TextBytes = SubtreeTextBytes(Child);
                 if (Parent != null) ValidateAttachment(Child, Child.ClassId, Parent, Objects, Depth, Buttons, TextBytes, SubtreeProjectionCost(Child));
                 GuiRetainedNode OldScreen = RootScreen(Child), NewScreen = Parent == null ? null : RootScreen(Parent);
+                if (OldScreen != NewScreen) { var MovingIds = new List<ulong>(); Collect(Child, MovingIds); DiscardScrollEffectsForNodes(MovingIds); }
                 if (Child.ParentId.HasValue) State.Nodes[Child.ParentId.Value].Children.Remove(Child.Identity.GuiObjectId);
                 Child.ParentId = null; if (Parent != null) Attach(Child, Parent);
                 MarkStructural(OldScreen, GuiActionRejection.TargetUnavailable);
@@ -634,6 +751,7 @@ namespace Carbon.Plugins
                 RequireScreen(Screen); if (World.Resolve(PlayerToken, PlayerUserId) == null) throw new FacadeException("Player is no longer connected");
                 string Key = PresentationKey(Screen.Identity.GuiObjectId, PlayerToken); GuiPresentation Presentation;
                 if (!State.Presentations.TryGetValue(Key, out Presentation)) return;
+                DiscardPresentationScrollEffects(Presentation, false);
                 InvalidatePresentation(Presentation, GuiActionRejection.TargetUnavailable);
                 State.Presentations.Remove(Key); World.RemovePresentation(Presentation.PlayerToken);
                 if (Presentation.WasSent) State.PendingDestroys.Enqueue(Presentation.Target);
@@ -646,8 +764,12 @@ namespace Carbon.Plugins
                 var Screens = new HashSet<ulong>();
                 foreach (string Key in Keys) {
                     GuiPresentation Value = State.Presentations[Key]; Screens.Add(Value.ScreenId);
+                    DiscardPresentationScrollEffects(Value, true);
                     InvalidatePresentation(Value, GuiActionRejection.Stale); World.RemovePresentation(Value.PlayerToken); State.Presentations.Remove(Key);
                 }
+                var StagedKeys = new List<string>(); foreach (var Value in State.StagedScrollEffects)
+                    if (Value.Value.PlayerToken == Player.Token) StagedKeys.Add(Value.Key);
+                foreach (string Key in StagedKeys) { State.StagedScrollEffects.Remove(Key); World.ScrollDiagnostics.DiscardPlayer(); }
                 if (State.PendingDestroys.Count != 0) {
                     var Keep = new Queue<GuiBackendTarget>(); while (State.PendingDestroys.Count != 0) {
                         GuiBackendTarget Target = State.PendingDestroys.Dequeue(); if (Target.ExactPlayerConnectionToken != Player.Token) Keep.Enqueue(Target);
@@ -677,15 +799,18 @@ namespace Carbon.Plugins
                 if (TrackWorldCycle) Selected.LastAttemptCycle = FlushCycle;
                 PresentationFlushCursor = SelectedKey; PreferDestroy = true;
                 if (World.Resolve(Selected.PlayerToken, Selected.PlayerUserId) == null) {
+                    DiscardPresentationScrollEffects(Selected, true);
                     InvalidatePresentation(Selected, GuiActionRejection.Stale); State.Presentations.Remove(SelectedKey);
                     World.RemovePresentation(Selected.PlayerToken); PruneSynchronization(Selected.ScreenId); return 0;
                 }
                 GuiRetainedNode Screen;
                 if (!State.Nodes.TryGetValue(Selected.ScreenId, out Screen)) {
+                    DiscardPresentationScrollEffects(Selected, false);
                     InvalidatePresentation(Selected, GuiActionRejection.TargetUnavailable); State.Presentations.Remove(SelectedKey);
                     World.RemovePresentation(Selected.PlayerToken); State.Synchronization.Remove(Selected.ScreenId); return 0;
                 }
                 GuiScreenSynchronization Synchronization = State.Synchronization[Selected.ScreenId]; ulong Revision = Synchronization.Revision;
+                if (!PresentationNeedsRetainedWork(Selected)) return FlushScrollEffect(Selected, Screen, RemainingBytes);
                 bool Full = Selected.NeedsFullResync || !Selected.WasSent || Synchronization.FullRebuildRequired ||
                     Selected.SuccessfulPatchBatches >= Limits.PatchBatchesBeforeFull;
                 GuiRenderPlan Plan = null; GuiRenderPatch Patch = null; int Bytes;
@@ -755,15 +880,88 @@ namespace Carbon.Plugins
                 }
                 return Bytes;
             }
+            private int FlushScrollEffect(GuiPresentation Presentation, GuiRetainedNode Screen, int RemainingBytes)
+            {
+                GuiScrollIntent Intent = SelectScrollEffect(Presentation);
+                if (Intent == null) return Int32.MinValue;
+                PlayerLifetime Player = World.ExactPlayer(Intent.PlayerToken, Intent.PlayerUserId);
+                if (Player == null || !Object.ReferenceEquals(Player.Identity, Intent.PlayerIdentity) ||
+                    !Object.ReferenceEquals(Player.Connection, Intent.PlayerConnection)) {
+                    Presentation.PendingScrollEffects.Remove(Intent.ScrollFrameId); World.ScrollDiagnostics.DiscardPlayer(); return 0;
+                }
+                GuiRetainedNode ScrollFrame;
+                if (!State.Nodes.TryGetValue(Intent.ScrollFrameId, out ScrollFrame) || ScrollFrame.ClassId != GuiClassId.ScrollingFrame ||
+                    RootScreen(ScrollFrame) != Screen) {
+                    Presentation.PendingScrollEffects.Remove(Intent.ScrollFrameId); World.ScrollDiagnostics.DiscardPresentation(); return 0;
+                }
+                string Direction = ScrollFrame.Properties[GuiPropertyId.ScrollingDirection].Text;
+                double? Horizontal = null, Vertical = null;
+                if (Intent.Kind == GuiScrollIntentKind.Position) {
+                    if (Direction == "X" || Direction == "XY") Horizontal = Intent.X;
+                    if (Direction == "Y" || Direction == "XY") Vertical = Intent.Y;
+                } else {
+                    if (Direction != "Y" && Direction != "XY") {
+                        Presentation.PendingScrollEffects.Remove(Intent.ScrollFrameId); World.ScrollDiagnostics.DiscardPresentation(); return 0;
+                    }
+                    Vertical = Intent.Kind == GuiScrollIntentKind.Top ? 0 : 1;
+                }
+                var Effect = new GuiScrollEffect(Presentation.ObjectClientId(Intent.ScrollFrameId), Presentation.Epoch,
+                    Intent.ScrollFrameId, Horizontal, Vertical);
+                int Bytes;
+                try { Bytes = World.Backend.MeasureScroll(Presentation.Target, Effect); }
+                catch {
+                    World.BackendFailed(); World.ScrollDiagnostics.BackendFailed(); RequireFullRebuild(Presentation);
+                    Presentation.SynchronizationUncertain = true; return 0;
+                }
+                if (Bytes > RemainingBytes) return -Bytes;
+                GuiBackendResult Result;
+                try { Result = World.Backend.Scroll(Presentation.Target, Effect); }
+                catch { Result = GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "GUI backend scroll send failed"); }
+                if (Result.Accepted) {
+                    Presentation.PendingScrollEffects.Remove(Intent.ScrollFrameId); World.ScrollDiagnostics.SendAccepted();
+                } else {
+                    World.BackendFailed(); World.ScrollDiagnostics.BackendFailed(); RequireFullRebuild(Presentation);
+                    Presentation.SynchronizationUncertain = true; Presentation.SuccessfulPatchBatches = 0;
+                }
+                return Bytes;
+            }
+            private static GuiScrollIntent SelectScrollEffect(GuiPresentation Presentation)
+            {
+                GuiScrollIntent Selected = null;
+                foreach (var Value in Presentation.PendingScrollEffects) if (Value.Key > Presentation.ScrollEffectFlushCursor) { Selected = Value.Value; break; }
+                if (Selected == null) foreach (var Value in Presentation.PendingScrollEffects) { Selected = Value.Value; break; }
+                if (Selected != null) Presentation.ScrollEffectFlushCursor = Selected.ScrollFrameId;
+                return Selected;
+            }
             private void RemovePresentationsForScreen(ulong ScreenId)
             {
                 var Keys = new List<string>(); foreach (var Value in State.Presentations) if (Value.Value.ScreenId == ScreenId) Keys.Add(Value.Key);
                 foreach (string Key in Keys) {
                     GuiPresentation Presentation = State.Presentations[Key]; State.Presentations.Remove(Key); World.RemovePresentation(Presentation.PlayerToken);
+                    DiscardPresentationScrollEffects(Presentation, false);
                     InvalidatePresentation(Presentation, GuiActionRejection.TargetUnavailable);
                     if (Presentation.WasSent) State.PendingDestroys.Enqueue(Presentation.Target);
                 }
                 PruneSynchronization(ScreenId);
+            }
+            private void DiscardPresentationScrollEffects(GuiPresentation Presentation, bool PlayerStale)
+            {
+                if (Presentation == null || Presentation.PendingScrollEffects.Count == 0) return;
+                int Count = Presentation.PendingScrollEffects.Count; Presentation.PendingScrollEffects.Clear();
+                if (PlayerStale) World.ScrollDiagnostics.DiscardPlayer(Count); else World.ScrollDiagnostics.DiscardPresentation(Count);
+            }
+            private void DiscardScrollEffectsForNodes(ICollection<ulong> NodeIds)
+            {
+                if (NodeIds == null || NodeIds.Count == 0) return;
+                var Removed = new HashSet<ulong>(NodeIds);
+                foreach (GuiPresentation Presentation in State.Presentations.Values) {
+                    var Keys = new List<ulong>(); foreach (ulong Key in Presentation.PendingScrollEffects.Keys) if (Removed.Contains(Key)) Keys.Add(Key);
+                    foreach (ulong Key in Keys) Presentation.PendingScrollEffects.Remove(Key);
+                    World.ScrollDiagnostics.DiscardPresentation(Keys.Count);
+                }
+                var StagedKeys = new List<string>(); foreach (var Value in State.StagedScrollEffects)
+                    if (Removed.Contains(Value.Value.ScrollFrameId)) StagedKeys.Add(Value.Key);
+                foreach (string Key in StagedKeys) { State.StagedScrollEffects.Remove(Key); World.ScrollDiagnostics.DiscardPresentation(); }
             }
             private bool SelectPresentation(ulong FlushCycle, bool TrackWorldCycle, out string SelectedKey, out GuiPresentation Selected)
             {
@@ -781,7 +979,13 @@ namespace Carbon.Plugins
                 GuiScreenSynchronization Synchronization;
                 if (!State.Synchronization.TryGetValue(Presentation.ScreenId, out Synchronization) ||
                     Presentation.ProjectionBlockedRevision == Synchronization.Revision) return false;
-                return Presentation.NeedsFullResync || Presentation.SentRevision < Synchronization.Revision;
+                return PresentationNeedsRetainedWork(Presentation) || (Presentation.WasSent && Presentation.PendingScrollEffects.Count != 0);
+            }
+            private bool PresentationNeedsRetainedWork(GuiPresentation Presentation)
+            {
+                GuiScreenSynchronization Synchronization;
+                return State.Synchronization.TryGetValue(Presentation.ScreenId, out Synchronization) &&
+                    (Presentation.NeedsFullResync || Presentation.SentRevision < Synchronization.Revision);
             }
             private void MarkStructural(GuiRetainedNode Screen, GuiActionRejection ActionReason = GuiActionRejection.Stale)
             {
@@ -1257,6 +1461,7 @@ namespace Carbon.Plugins
             public void Dispose()
             {
                 if (Disposed) return; Disposed = true;
+                int PendingScroll = CountScrollEffects(); if (PendingScroll != 0) World.ScrollDiagnostics.DiscardPresentation(PendingScroll);
                 World.ReconcileActions(this, null, GuiActionRejection.Stale);
                 var Destroyed = new HashSet<string>(StringComparer.Ordinal);
                 foreach (GuiPresentation Value in State.Presentations.Values) {

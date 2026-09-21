@@ -30,6 +30,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 3A deterministic-grid implementation and evidence | [GuiFoundation3A.md](docs/GuiFoundation3A.md) |
 | GUI Foundation 3B clipping implementation and evidence | [GuiFoundation3B.md](docs/GuiFoundation3B.md) |
 | GUI Foundation 3C retained-font implementation and evidence | [GuiFoundation3C.md](docs/GuiFoundation3C.md) |
+| GUI Foundation 3D Presentation-scroll-effect implementation and evidence | [GuiFoundation3D.md](docs/GuiFoundation3D.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -193,6 +194,14 @@ slice. Its implementation and qualification record is
 CLIENT-UNQUALIFIED pending D17's mandatory authenticated-client font-rendering
 supplement. It assigns no Foundation 3 release identity and authorizes no
 ScrollTo or GUI-3D+ work.
+GUI Foundation 3D implements only D17's exact-Player, bounded latest-wins
+`ScrollingFrame:ScrollTo`, `ScrollToTop` and `ScrollToBottom` Presentation
+effects, publication specialization, backend mapping, retry and lifecycle
+integration. Its implementation and qualification record is
+[GuiFoundation3D.md](docs/GuiFoundation3D.md). The feature is IMPLEMENTED /
+CLIENT-UNQUALIFIED pending D17's mandatory authenticated-client scroll
+supplement. It assigns no Foundation 3 release identity and authorizes no
+GUI-3E or Foundation 4 work.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

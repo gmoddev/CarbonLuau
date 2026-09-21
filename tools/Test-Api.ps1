@@ -34,7 +34,7 @@ foreach ($Example in @('player-events','hello-command')) {
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',
         'layout-vertical','layout-horizontal','padding','layout-order','image-label','image-button',
-        'item-skin','steam-avatar','scrolling-layout','shared-rich','per-player-rich','grid','clipping','fonts')) {
+        'item-skin','steam-avatar','scrolling-layout','shared-rich','per-player-rich','grid','clipping','fonts','scroll-effects')) {
     $ExamplePath = Join-Path $Root "examples/gui/$Example/init.luau"
     if (!(Test-Path -LiteralPath $ExamplePath)) { throw "Missing runnable GUI example: $Example" }
     $ExampleText = Get-Content -Raw -LiteralPath $ExamplePath
@@ -60,7 +60,7 @@ foreach ($Name in @('Name','ClassName','Parent','Position','Size','AnchorPoint',
         'CellSize','CellPadding','FillDirectionMaxCells','ClipsDescendants','Font')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits property: $Name" }
 }
-foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','IsA','Show','Hide','IsShown','Activated')) {
+foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','IsA','Show','Hide','IsShown','Activated','ScrollTo','ScrollToTop','ScrollToBottom')) {
     if (!$GuiReference.Contains($Name) -or !$Bootstrap.Contains($Name)) { throw "GUI method/event differs between bootstrap and reference: $Name" }
 }
 foreach ($Constructor in @('UDim.new','UDim2.new','UDim2.fromScale','UDim2.fromOffset','Vector2.new','Color3.new','Color3.fromRGB')) {
@@ -74,6 +74,9 @@ foreach ($Member in @('GuiFont.RobotoCondensedRegular','GuiFont.RobotoCondensedB
 }
 if ($Bootstrap -match 'function\s+GuiFont\.' -or $Bootstrap -match '(?i)GuiFont.*\.ttf') {
     throw 'GuiFont must expose singleton values without constructors or host font paths'
+}
+if ($GuiDescriptors -match '\bCanvasPosition\b' -or $Bootstrap -match '\bCanvasPosition\b') {
+    throw 'GUI Foundation 3D must not expose retained or readable CanvasPosition'
 }
 foreach ($Claim in @('desired server state','does not transfer','not acknowledged','Player')) {
     if (!$GuiGuide.Contains($Claim)) { throw "GUI guide is missing required observable-semantics claim: $Claim" }

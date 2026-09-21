@@ -31,7 +31,8 @@ Addon packages are registered by a loaded Carbon provider plugin. CarbonLuau doe
 
 The GUI surface offers ScreenGui, Frame, TextLabel, TextButton, ImageLabel,
 ImageButton, ScrollingFrame, typed ImageSource values, deterministic list and
-padding layout, current-source Frame clipping and retained GuiFont values,
+padding layout, current-source Frame clipping, retained GuiFont values and
+Presentation-specific one-way scroll methods,
 explicit per-Player Show/Hide and secure Activated callbacks.
 The implemented Foundation 2 controls have completed lifecycle qualification.
 See the
@@ -48,6 +49,9 @@ Provider-defined C# capabilities, root-to-addon imports, package downloads, vers
 `GuiFont` and text `Font` are also implemented in current source, but the four
 faces remain outside the qualified public surface until authenticated-client
 rendering and no-fallback behavior are verified.
+`ScrollingFrame:ScrollTo`, `ScrollToTop` and `ScrollToBottom` are implemented
+in current source, but actual client orientation, isolation and retry behavior
+remain outside the qualified public surface until authenticated-client testing.
 
 Authenticated real-client behavior and Shockbyte full-runtime behavior remain outside the qualified support envelope. See [API compatibility and limits](docs/api/Compatibility.md) and [platform compatibility](docs/Compatibility.md) for details.
 

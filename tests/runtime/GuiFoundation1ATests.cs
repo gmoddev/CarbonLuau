@@ -36,7 +36,7 @@ internal static class GuiFoundation1ATests
     {
         Runtime.GuiSchema.Validate();
         Runtime.GuiClassDescriptor[] Classes = Runtime.GuiSchema.Classes;
-        Check(Classes.Length == 12 && Runtime.GuiSchema.Methods.Length == 9 && Runtime.GuiSchema.Events.Length == 1 &&
+        Check(Classes.Length == 12 && Runtime.GuiSchema.Methods.Length == 12 && Runtime.GuiSchema.Events.Length == 1 &&
             Runtime.GuiSchema.ValueTypes.Length == 6, "schema descriptor counts are complete");
         var ClassIds = new HashSet<Runtime.GuiClassId>(); var ClassNames = new HashSet<string>(StringComparer.Ordinal);
         var PublicNames = new List<string>();

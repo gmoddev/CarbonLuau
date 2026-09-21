@@ -15,6 +15,8 @@ namespace Carbon.Plugins
             internal int MaxNameUtf8Bytes = 64, MaxTextUtf8Bytes = 2048, MaxTextUtf8BytesPerScreen = 32 * 1024;
             internal int MaxTrackedDirtyObjectsPerDomain = 512, MaxCloneObjects = 128, MaxCloneDepth = 16;
             internal int MaxEffectiveClipDepth = 4;
+            internal int MaxPendingScrollEffectsPerPresentation = 16, MaxPendingScrollEffectsPerDomain = 512;
+            internal int MaxPendingScrollEffectsGlobal = 4096;
             internal int MaxProjectedElementsPerScreen, MaxRenderElementsPerOperation = 257, MaxRenderPropertiesPerElement = 16;
             internal int MaxSerializedOperationBytes = 64 * 1024, MaxPresentationSendsPerFlush = 64;
             internal int MaxSerializedBytesPerFlush = 256 * 1024, GuiFlushBudgetMicroseconds = 1000;
@@ -38,6 +40,9 @@ namespace Carbon.Plugins
                 Positive(MaxCloneObjects, "MaxCloneObjects"); Positive(MaxCloneDepth, "MaxCloneDepth");
                 Positive(MaxEffectiveClipDepth, "MaxEffectiveClipDepth");
                 AtMost(MaxEffectiveClipDepth, 4, "MaxEffectiveClipDepth cannot exceed the canonical clipping bound");
+                Positive(MaxPendingScrollEffectsPerPresentation, "MaxPendingScrollEffectsPerPresentation");
+                Positive(MaxPendingScrollEffectsPerDomain, "MaxPendingScrollEffectsPerDomain");
+                Positive(MaxPendingScrollEffectsGlobal, "MaxPendingScrollEffectsGlobal");
                 if (MaxProjectedElementsPerScreen < 0) throw new InvalidOperationException("MaxProjectedElementsPerScreen cannot be negative");
                 Positive(MaxRenderElementsPerOperation, "MaxRenderElementsPerOperation");
                 Positive(MaxRenderPropertiesPerElement, "MaxRenderPropertiesPerElement");
@@ -60,6 +65,10 @@ namespace Carbon.Plugins
                 AtMost(MaxTrackedDirtyObjectsPerDomain, MaxObjectsPerDomain, "tracked dirty objects must fit the domain object bound");
                 AtMost(MaxActionTokensPerPresentation, MaxActionTokensPerDomain, "presentation tokens must fit the domain token bound");
                 AtMost(MaxActionTokensPerDomain, MaxActionTokensGlobal, "domain tokens must fit the global token bound");
+                AtMost(MaxPendingScrollEffectsPerPresentation, MaxPendingScrollEffectsPerDomain,
+                    "presentation scroll effects must fit the domain scroll-effect bound");
+                AtMost(MaxPendingScrollEffectsPerDomain, MaxPendingScrollEffectsGlobal,
+                    "domain scroll effects must fit the global scroll-effect bound");
                 AtMost(MaxTextUtf8Bytes, MaxTextUtf8BytesPerScreen, "one text value must fit the screen text bound");
                 AtMost(MaxSerializedOperationBytes, MaxSerializedBytesPerFlush, "one operation must fit the flush byte bound");
                 if (MaxRenderElementsPerOperation < MaxObjectsPerScreen)
@@ -86,6 +95,7 @@ namespace Carbon.Plugins
             internal readonly int MaxNameUtf8Bytes, MaxTextUtf8Bytes, MaxTextUtf8BytesPerScreen;
             internal readonly int MaxTrackedDirtyObjectsPerDomain, MaxCloneObjects, MaxCloneDepth;
             internal readonly int MaxEffectiveClipDepth;
+            internal readonly int MaxPendingScrollEffectsPerPresentation, MaxPendingScrollEffectsPerDomain, MaxPendingScrollEffectsGlobal;
             internal readonly int MaxProjectedElementsPerScreen, MaxRenderElementsPerOperation, MaxRenderPropertiesPerElement;
             internal readonly int MaxSerializedOperationBytes, MaxPresentationSendsPerFlush, MaxSerializedBytesPerFlush;
             internal readonly int GuiFlushBudgetMicroseconds, PatchBatchesBeforeFull;
@@ -107,6 +117,9 @@ namespace Carbon.Plugins
                 MaxTrackedDirtyObjectsPerDomain = Value.MaxTrackedDirtyObjectsPerDomain; MaxCloneObjects = Value.MaxCloneObjects;
                 MaxCloneDepth = Value.MaxCloneDepth; MaxProjectedElementsPerScreen = ProjectionLimit;
                 MaxEffectiveClipDepth = Value.MaxEffectiveClipDepth;
+                MaxPendingScrollEffectsPerPresentation = Value.MaxPendingScrollEffectsPerPresentation;
+                MaxPendingScrollEffectsPerDomain = Value.MaxPendingScrollEffectsPerDomain;
+                MaxPendingScrollEffectsGlobal = Value.MaxPendingScrollEffectsGlobal;
                 MaxRenderElementsPerOperation = Value.MaxRenderElementsPerOperation;
                 MaxRenderPropertiesPerElement = Value.MaxRenderPropertiesPerElement;
                 MaxSerializedOperationBytes = Value.MaxSerializedOperationBytes;
