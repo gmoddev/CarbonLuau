@@ -31,6 +31,7 @@ if SharedValueEqual == nil then
             if Left.Kind == "SteamAvatar" then return Left.UserId == Right.UserId end
             return false
         end
+        if string.sub(Kind, 1, 8) == "GuiFont." then return true end
         return false
     end
 end
@@ -110,7 +111,30 @@ end
 function ImageSource.SteamAvatar(UserId)
     return Value("ImageSource", {Kind = "SteamAvatar", UserId = UnsignedDecimalId(UserId, "Steam user identifier")})
 end
-table.freeze(UDim); table.freeze(UDim2); table.freeze(Vector2); table.freeze(Color3); table.freeze(ImageSource)
+local GuiFontRecords = setmetatable({}, {__mode = "k"})
+local GuiFontMeta = {}
+GuiFontMeta.__index = function() Fail("GuiFont has no fields") end
+GuiFontMeta.__newindex = function() Fail("GuiFont values are immutable") end
+GuiFontMeta.__tostring = function(Value)
+    local Identity = GuiFontRecords[Value]
+    if not Identity then Fail("invalid GuiFont value") end
+    return "GuiFont." .. Identity
+end
+GuiFontMeta.__eq = SharedValueEqual
+GuiFontMeta.__metatable = "CarbonLuau.GuiFont"
+table.freeze(GuiFontMeta)
+local function Font(Identity)
+    local Result = MakeUserdata(GuiFontMeta)
+    GuiFontRecords[Result] = Identity
+    return Result
+end
+local GuiFont = {
+    RobotoCondensedRegular = Font("RobotoCondensedRegular"),
+    RobotoCondensedBold = Font("RobotoCondensedBold"),
+    DroidSansMono = Font("DroidSansMono"),
+    PermanentMarker = Font("PermanentMarker"),
+}
+table.freeze(UDim); table.freeze(UDim2); table.freeze(Vector2); table.freeze(Color3); table.freeze(ImageSource); table.freeze(GuiFont)
 local function Record(Player)
     local Value = Records[Player]
     if not Value then Fail("invalid Player proxy") end
@@ -224,6 +248,7 @@ local function EncodeGuiValue(Value, Integer)
             if Value.Kind == "SteamAvatar" then return "imagesource", "SteamAvatar", Value.UserId end
             if Value.Kind == "Item" then return "imagesource", "Item", tostring(Value.ItemId), Value.SkinId end
         end
+        if string.sub(ValueKind, 1, 8) == "GuiFont." then return "guifont", string.sub(ValueKind, 9) end
     end
     Fail("unsupported GUI property value")
 end
@@ -243,6 +268,11 @@ local function DecodeGuiValue(Fields)
         if Fields[2] == "Png" then return ImageSource.Png(Fields[3]) end
         if Fields[2] == "Item" then return ImageSource.Item(tonumber(Fields[3]), Fields[4] == "" and nil or Fields[4]) end
         if Fields[2] == "SteamAvatar" then return ImageSource.SteamAvatar(Fields[3]) end
+    end
+    if Kind == "guifont" then
+        local Result = GuiFont[Fields[2]]
+        if Result == nil then Fail("invalid GUI font identity") end
+        return Result
     end
     if Kind == "object" then return GetGuiObject(Fields[2], Fields[3]) end
     Fail("invalid GUI host value")
@@ -363,4 +393,4 @@ local function Dispatch(Fields)
         Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))
     else Callback(Player) end
 end
-return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Color3 = Color3, ImageSource = ImageSource}), SharedValueEqual
+return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont}), SharedValueEqual

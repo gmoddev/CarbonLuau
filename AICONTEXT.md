@@ -28,6 +28,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Canonical GUI Foundation 3 additive semantics | [D17 in Invariants.md](docs/Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent) |
 | GUI Foundation 3 rationale, surface matrices, implementation guidance and qualification gates | [GuiFoundation3.md](docs/GuiFoundation3.md) |
 | GUI Foundation 3A deterministic-grid implementation and evidence | [GuiFoundation3A.md](docs/GuiFoundation3A.md) |
+| GUI Foundation 3B clipping implementation and evidence | [GuiFoundation3B.md](docs/GuiFoundation3B.md) |
+| GUI Foundation 3C retained-font implementation and evidence | [GuiFoundation3C.md](docs/GuiFoundation3C.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -184,6 +186,13 @@ qualification record is [GuiFoundation3B.md](docs/GuiFoundation3B.md).
 The feature is IMPLEMENTED / CLIENT-UNQUALIFIED pending D17's mandatory
 authenticated-client visual and hit-region supplement. It assigns no Foundation
 3 release identity and authorizes no GuiFont, ScrollTo or GUI-3C+ work.
+GUI Foundation 3C implements only D17's immutable `GuiFont`, retained
+`TextLabel.Font`/`TextButton.Font`, backend mapping and patch-synchronization
+slice. Its implementation and qualification record is
+[GuiFoundation3C.md](docs/GuiFoundation3C.md). The feature is IMPLEMENTED /
+CLIENT-UNQUALIFIED pending D17's mandatory authenticated-client font-rendering
+supplement. It assigns no Foundation 3 release identity and authorizes no
+ScrollTo or GUI-3D+ work.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

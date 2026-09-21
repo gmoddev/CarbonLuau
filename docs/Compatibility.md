@@ -500,6 +500,15 @@ until the mandatory authenticated-client visual and clipped-hit supplement
 passes. Windows native/local GUI-3B evidence is separately **DEFERRED /
 UNQUALIFIED** while DockerPC is unavailable; hosted Windows does not replace it.
 
+[GUI Foundation 3C](GuiFoundation3C.md) implements D17's immutable `GuiFont`,
+retained TextLabel/TextButton `Font`, canonical render identity, explicit
+private backend mapping and patch-synchronization slice. It is **IMPLEMENTED /
+CLIENT-UNQUALIFIED** until an authenticated supported current client proves all
+four fonts render without fallback and qualifies mutation, multi-viewer,
+replacement and recovery behavior. Windows native/local GUI-3C evidence is
+separately **DEFERRED / UNQUALIFIED** while DockerPC is unavailable; hosted
+Windows remains separate evidence.
+
 D17 assigns no package or scripting API identity. Package `0.4.0`, scripting
 API `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package
 schema `1` and the pinned Luau revision remain unchanged. Foundation 3 release

@@ -125,7 +125,9 @@ namespace Carbon.Plugins
                 if (Value != null) Write(Writer, "text", Require(Value, GuiRenderValueKind.String).Text);
                 Value = Find(Properties, GuiRenderPropertyId.FontSize, false);
                 if (Value != null) { Writer.WritePropertyName("fontSize"); Writer.WriteValue(Require(Value, GuiRenderValueKind.Integer).Integer); }
-                if (!Partial) Write(Writer, "font", "robotocondensed-regular.ttf");
+                Value = Find(Properties, GuiRenderPropertyId.Font, false);
+                if (Value != null) Write(Writer, "font", Font(Require(Value, GuiRenderValueKind.GuiFont).FontIdentity));
+                else if (!Partial) Require(Value, GuiRenderValueKind.GuiFont);
                 GuiRenderValue XValue = Find(Properties, GuiRenderPropertyId.TextXAlignment, false);
                 GuiRenderValue YValue = Find(Properties, GuiRenderPropertyId.TextYAlignment, false);
                 if (XValue != null || YValue != null) {
@@ -213,7 +215,7 @@ namespace Carbon.Plugins
             private static bool HasTextProperty(GuiRenderProperty[] Properties)
             { return Find(Properties, GuiRenderPropertyId.Text, false) != null || Find(Properties, GuiRenderPropertyId.TextColor, false) != null ||
                 Find(Properties, GuiRenderPropertyId.FontSize, false) != null || Find(Properties, GuiRenderPropertyId.TextXAlignment, false) != null ||
-                Find(Properties, GuiRenderPropertyId.TextYAlignment, false) != null; }
+                Find(Properties, GuiRenderPropertyId.TextYAlignment, false) != null || Find(Properties, GuiRenderPropertyId.Font, false) != null; }
             private static bool HasScrollProperty(GuiRenderProperty[] Properties)
             { return Find(Properties, GuiRenderPropertyId.ScrollContentAnchorMin, false) != null ||
                 Find(Properties, GuiRenderPropertyId.ScrollHorizontal, false) != null ||
@@ -235,6 +237,16 @@ namespace Carbon.Plugins
                 string Vertical = Y == "Top" ? "Upper" : Y == "Bottom" ? "Lower" : "Middle";
                 string Horizontal = X == "Left" ? "Left" : X == "Right" ? "Right" : "Center";
                 return Vertical + Horizontal;
+            }
+            private static string Font(GuiFontIdentity Value)
+            {
+                switch (Value) {
+                    case GuiFontIdentity.RobotoCondensedRegular: return "robotocondensed-regular.ttf";
+                    case GuiFontIdentity.RobotoCondensedBold: return "robotocondensed-bold.ttf";
+                    case GuiFontIdentity.DroidSansMono: return "droidsansmono.ttf";
+                    case GuiFontIdentity.PermanentMarker: return "permanentmarker.ttf";
+                    default: throw new InvalidOperationException("unknown GUI font identity");
+                }
             }
             private static void Write(JsonTextWriter Writer, string Name, string Value)
             { Writer.WritePropertyName(Name); Writer.WriteValue(Value); }

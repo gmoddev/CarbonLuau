@@ -7,7 +7,7 @@ namespace Carbon.Plugins
     {
         internal enum GuiClassId
         { GuiNode = 1, GuiObject = 2, ScreenGui = 3, Frame = 4, TextLabel = 5, TextButton = 6, UIListLayout = 7, UIPadding = 8, ImageLabel = 9, ImageButton = 10, ScrollingFrame = 11, UIGridLayout = 12 }
-        internal enum GuiValueTypeId { UDim = 1, UDim2 = 2, Vector2 = 3, Color3 = 4, ImageSource = 5 }
+        internal enum GuiValueTypeId { UDim = 1, UDim2 = 2, Vector2 = 3, Color3 = 4, ImageSource = 5, GuiFont = 6 }
         internal enum GuiPropertyId
         {
             Name = 1, ClassName = 2, Parent = 3, Position = 4, Size = 5, AnchorPoint = 6, Visible = 7,
@@ -18,7 +18,7 @@ namespace Carbon.Plugins
             Image = 26, ImageColor3 = 27, ImageTransparency = 28,
             CanvasSize = 29, ScrollingDirection = 30, ScrollingEnabled = 31,
             CellSize = 32, CellPadding = 33, FillDirectionMaxCells = 34,
-            ClipsDescendants = 35,
+            ClipsDescendants = 35, Font = 36,
             LayoutProjection = 100, ContentProjection = 101
         }
         internal enum GuiMethodId
@@ -26,7 +26,7 @@ namespace Carbon.Plugins
         internal enum GuiEventId { Activated = 1 }
         [Flags] internal enum GuiCreationScope { None = 0, GuiService = 1, GuiObject = 2 }
         internal enum GuiLimitId { None = 0, NameUtf8Bytes = 1, TextUtf8Bytes = 2 }
-        internal enum GuiValueKind { String, Boolean, Integer, Number, GuiNodeReference, UDim, UDim2, Vector2, Color3, ImageSource }
+        internal enum GuiValueKind { String, Boolean, Integer, Number, GuiNodeReference, UDim, UDim2, Vector2, Color3, ImageSource, GuiFont }
         internal enum GuiMutationKind { Metadata, Patchable, LayoutAffecting, Structural }
 
         internal sealed class GuiPropertyDescriptor
@@ -151,6 +151,8 @@ namespace Carbon.Plugins
                 "FillDirectionMaxCells", GuiValueKind.Integer, GuiMutationKind.LayoutAffecting, 1, 64);
             private static readonly GuiPropertyDescriptor ClipsDescendants = new GuiPropertyDescriptor(GuiPropertyId.ClipsDescendants,
                 "ClipsDescendants", GuiValueKind.Boolean, GuiMutationKind.Structural);
+            private static readonly GuiPropertyDescriptor Font = new GuiPropertyDescriptor(GuiPropertyId.Font,
+                "Font", GuiValueKind.GuiFont, GuiMutationKind.Patchable);
 
             private static readonly GuiClassDescriptor[] ClassValues = BuildClasses();
             private static readonly GuiMethodDescriptor[] MethodValues =
@@ -185,7 +187,8 @@ namespace Carbon.Plugins
                     new GuiValueFieldDescriptor("SkinId", GuiValueKind.String), new GuiValueFieldDescriptor("UserId", GuiValueKind.String)},
                     new GuiValueConstructorDescriptor("None"), new GuiValueConstructorDescriptor("Sprite", "Name"),
                     new GuiValueConstructorDescriptor("Png", "Id"), new GuiValueConstructorDescriptor("Item", "ItemId", "SkinId?"),
-                    new GuiValueConstructorDescriptor("SteamAvatar", "UserId"))
+                    new GuiValueConstructorDescriptor("SteamAvatar", "UserId")),
+                new GuiValueTypeDescriptor(GuiValueTypeId.GuiFont, "GuiFont", new GuiValueFieldDescriptor[0])
             };
 
             internal static GuiClassDescriptor[] Classes { get { return (GuiClassDescriptor[])ClassValues.Clone(); } }
@@ -305,7 +308,8 @@ namespace Carbon.Plugins
             private static GuiPropertyUse[] TextProperties()
             {
                 return new[] {Use(Text, true, ""), Use(TextColor3, true, "Color3(0, 0, 0)"), Use(TextTransparency, true, "0"),
-                    Use(TextSize, true, "14"), Use(TextXAlignment, true, "Center"), Use(TextYAlignment, true, "Center")};
+                    Use(TextSize, true, "14"), Use(TextXAlignment, true, "Center"), Use(TextYAlignment, true, "Center"),
+                    Use(Font, true, "GuiFont.RobotoCondensedRegular")};
             }
             private static GuiPropertyUse[] FrameProperties()
             { return new[] {Use(ClipsDescendants, true, "false")}; }

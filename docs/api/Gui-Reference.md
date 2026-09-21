@@ -14,6 +14,9 @@ release identity; do not infer its availability from published `0.4.0` artifacts
 Foundation 3B's `Frame.ClipsDescendants` is also implemented in current source,
 but its mandatory authenticated-client visual and hit-region qualification is
 still pending. It is not part of a qualified public release surface.
+Foundation 3C's `GuiFont` and retained TextLabel/TextButton `Font` are
+implemented in current source. Actual rendering of all four fonts remains
+client-unqualified, and this slice has no assigned release identity.
 
 ## Service and construction
 
@@ -104,6 +107,7 @@ Each explicit Frame clip consumes one of the unchanged 257 projected elements.
 | `TextSize` | integer | `14` | `1..128`. |
 | `TextXAlignment` | string | `"Center"` | `"Left"`, `"Center"` or `"Right"`. |
 | `TextYAlignment` | string | `"Center"` | `"Top"`, `"Center"` or `"Bottom"`. |
+| `Font` | GuiFont | `GuiFont.RobotoCondensedRegular` | Exactly one of the four immutable GuiFont members. Implemented in current source; authenticated-client rendering remains unqualified. |
 
 `TextButton` additionally exposes:
 
@@ -226,10 +230,16 @@ normalized to zero.
 | `Vector2` | `Vector2.new(X, Y)` | `X`, `Y` each `-32768..32768`; AnchorPoint narrows this to `0..1` |
 | `Color3` | `Color3.new(R, G, B)`; `Color3.fromRGB(R, G, B)` | Normalized fields `0..1`; `fromRGB` requires integer `0..255` components |
 | `ImageSource` | `ImageSource.None()`; `ImageSource.Sprite(Name)`; `ImageSource.Png(Id)`; `ImageSource.Item(ItemId, SkinId?)`; `ImageSource.SteamAvatar(UserId)` | Read-only `Kind` and source-specific fields; Sprite is a canonical asset key, Png an opaque decimal string, ItemId signed int32, SkinId/UserId unsigned decimal strings |
+| `GuiFont` | No constructor | `GuiFont.RobotoCondensedRegular`, `GuiFont.RobotoCondensedBold`, `GuiFont.DroidSansMono`, `GuiFont.PermanentMarker` |
 
 The value constructors are globals in every entrypoint and module environment.
 They do not carry a host/domain lifetime and may be shared safely between
 domains.
+
+GuiFont members are singleton-like canonical identities. They expose no host
+font filename, arbitrary string/path conversion or filesystem capability.
+Equality compares canonical identity. Their private Carbon font mapping is an
+adapter detail; current-client visual availability is not yet qualified.
 
 ImageSource grants no filesystem, FileStorage, Carbon image-database, URL or
 network capability. Sprite names are 1..256 bytes and restricted to canonical

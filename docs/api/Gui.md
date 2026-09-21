@@ -16,6 +16,11 @@ Current source additionally implements `Frame.ClipsDescendants` with bounded
 private rectangular mask projection. The property is implemented but remains
 client-unqualified and is not yet in a qualified public release surface.
 
+Current source also implements four immutable `GuiFont` values and retained
+`TextLabel.Font`/`TextButton.Font`. The model and backend mapping are qualified,
+but actual supported-client font rendering remains unqualified. This slice has
+no assigned package or scripting API release identity.
+
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the
 same objects. CarbonLuau synchronizes committed changes after Luau returns.
@@ -72,6 +77,27 @@ the retained child tree. The private mask helper is not addressable from Luau.
 Authenticated-client visual and clipped-region click behavior is still pending
 the D17 qualification supplement.
 
+## Retained fonts in current source
+
+```lua
+local Label = Screen:Create("TextLabel")
+Label.Text = "Server status"
+Label.Font = GuiFont.RobotoCondensedBold
+
+local Button = Screen:Create("TextButton")
+Button.Text = "Details"
+Button.Font = GuiFont.DroidSansMono
+```
+
+The exact values are `GuiFont.RobotoCondensedRegular`,
+`GuiFont.RobotoCondensedBold`, `GuiFont.DroidSansMono` and
+`GuiFont.PermanentMarker`. There is no constructor, arbitrary string/path
+conversion or filesystem capability. Text controls default to regular, Font
+changes are retained and patchable, and one shared retained change reaches all
+current viewers. The host filenames remain private. Actual client rendering of
+the four faces, including absence of fallback, still requires the D17
+authenticated-client supplement.
+
 ## One tree or one tree per Player
 
 Calling `Screen:Show(Player)` for several Players creates several views of one
@@ -110,6 +136,7 @@ example and is not part of a published release identity yet:
 | One shared tree and cloned per-Player state | [`shared-rich`](../../examples/gui/shared-rich/init.luau), [`per-player-rich`](../../examples/gui/per-player-rich/init.luau) |
 | Deterministic explicit grid, current source only | [`grid`](../../examples/gui/grid/init.luau) |
 | Rectangular Frame clipping, current source and client-unqualified | [`clipping`](../../examples/gui/clipping/init.luau) |
+| Retained text fonts, current source and client-unqualified | [`fonts`](../../examples/gui/fonts/init.luau) |
 
 These examples use only the public Luau surface. Raw Rust CUI is never exposed.
 

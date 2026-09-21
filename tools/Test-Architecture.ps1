@@ -111,6 +111,13 @@ foreach ($Required in @('ClipsDescendants','ClipClientId','GuiRenderNodeKind.Cli
     }
 }
 $RenderPlan = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiRenderPlan.cs')
+foreach ($Required in @('GuiFontIdentity','GuiRenderPropertyId.Font','FromFont')) {
+    if (!$Presentation.Contains($Required) -and !$RenderPlan.Contains($Required) -and !$Registry.Contains($Required)) {
+        throw "GUI Foundation 3C canonical font owner is missing: $Required"
+    }
+}
+$ModuleLoader = Get-Content -Raw -LiteralPath (Join-Path $Root 'native/src/scripts/ModuleLoader.cpp')
+if (!$ModuleLoader.Contains('"GuiFont"')) { throw 'GUI Foundation 3C global binding is missing from domain environments' }
 foreach ($Required in @('ScrollingFrame','CanvasSize','ScrollingDirection','ScrollingEnabled','ScrollContentClientId')) {
     if (!$Registry.Contains($Required) -and !$Presentation.Contains($Required)) {
         throw "GUI Foundation 2C retained/projection owner is missing: $Required"
@@ -133,6 +140,10 @@ if (!$Backend.Contains('ActionCommand') -or !$Backend.Contains('"command"')) {
 }
 if (!$Backend.Contains('UnityEngine.UI.Mask') -or !$Backend.Contains('showMaskGraphic')) {
     throw 'GUI Foundation 3B private mask backend mapping is missing'
+}
+foreach ($Required in @('robotocondensed-regular.ttf','robotocondensed-bold.ttf','droidsansmono.ttf','permanentmarker.ttf')) {
+    if (!$Backend.Contains($Required)) { throw "GUI Foundation 3C explicit backend font mapping is missing: $Required" }
+    if ($Bootstrap.Contains($Required)) { throw "GUI Foundation 3C host font path leaked into the Luau facade: $Required" }
 }
 if (!$Backend.Contains('UnityEngine.UI.ScrollView') -or !$Backend.Contains('contentTransform') -or
     $Backend.Contains('NormalizedPosition') -or $Presentation.Contains('CanvasPosition')) {

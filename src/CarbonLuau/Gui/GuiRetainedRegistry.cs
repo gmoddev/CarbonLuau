@@ -15,12 +15,14 @@ namespace Carbon.Plugins
             internal readonly bool Boolean;
             internal readonly int Integer;
             internal readonly GuiImageSourceValue ImageSource;
+            internal readonly GuiFontIdentity FontIdentity;
             private readonly double[] NumberValues;
             internal double[] Numbers { get { return NumberValues == null ? null : (double[])NumberValues.Clone(); } }
 
             private GuiStoredValue(GuiValueKind Kind, string Text = null, bool Boolean = false, int Integer = 0,
-                GuiImageSourceValue ImageSource = null, params double[] Numbers)
-            { this.Kind = Kind; this.Text = Text; this.Boolean = Boolean; this.Integer = Integer; this.ImageSource = ImageSource; NumberValues = Numbers; }
+                GuiImageSourceValue ImageSource = null, GuiFontIdentity FontIdentity = GuiFontIdentity.RobotoCondensedRegular,
+                params double[] Numbers)
+            { this.Kind = Kind; this.Text = Text; this.Boolean = Boolean; this.Integer = Integer; this.ImageSource = ImageSource; this.FontIdentity = FontIdentity; NumberValues = Numbers; }
             internal static GuiStoredValue String(string Value) { return new GuiStoredValue(GuiValueKind.String, Text: Value); }
             internal static GuiStoredValue Bool(bool Value) { return new GuiStoredValue(GuiValueKind.Boolean, Boolean: Value); }
             internal static GuiStoredValue Int(int Value) { return new GuiStoredValue(GuiValueKind.Integer, Integer: Value); }
@@ -31,6 +33,7 @@ namespace Carbon.Plugins
             internal static GuiStoredValue Vector2(double X, double Y) { return new GuiStoredValue(GuiValueKind.Vector2, Numbers: new[] {Normalize(X), Normalize(Y)}); }
             internal static GuiStoredValue Color3(double R, double G, double B) { return new GuiStoredValue(GuiValueKind.Color3, Numbers: new[] {Normalize(R), Normalize(G), Normalize(B)}); }
             internal static GuiStoredValue Image(GuiImageSourceValue Value) { return new GuiStoredValue(GuiValueKind.ImageSource, ImageSource: Value); }
+            internal static GuiStoredValue Font(GuiFontIdentity Value) { return new GuiStoredValue(GuiValueKind.GuiFont, FontIdentity: Value); }
             private static double Normalize(double Value) { return Value == 0 ? 0 : Value; }
 
             internal string[] Encode()
@@ -45,13 +48,14 @@ namespace Carbon.Plugins
                     case GuiValueKind.Vector2: return new[] {"vector2", Format(NumberValues[0]), Format(NumberValues[1])};
                     case GuiValueKind.Color3: return new[] {"color3", Format(NumberValues[0]), Format(NumberValues[1]), Format(NumberValues[2])};
                     case GuiValueKind.ImageSource: return ImageSource.Encode();
+                    case GuiValueKind.GuiFont: return new[] {"guifont", FontIdentity.ToString()};
                     default: throw new FacadeException("unsupported GUI value kind");
                 }
             }
             internal bool SameAs(GuiStoredValue Other)
             {
                 if (Other == null || Kind != Other.Kind || Text != Other.Text || Boolean != Other.Boolean || Integer != Other.Integer ||
-                    !Object.Equals(ImageSource, Other.ImageSource)) return false;
+                    !Object.Equals(ImageSource, Other.ImageSource) || FontIdentity != Other.FontIdentity) return false;
                 if (NumberValues == null || Other.NumberValues == null) return NumberValues == Other.NumberValues;
                 if (NumberValues.Length != Other.NumberValues.Length) return false;
                 for (int Index = 0; Index < NumberValues.Length; ++Index) if (NumberValues[Index] != Other.NumberValues[Index]) return false;
@@ -1042,6 +1046,18 @@ namespace Carbon.Plugins
                     }
                     case GuiValueKind.ImageSource:
                         return GuiStoredValue.Image(GuiImageSourceValue.Parse(Fields, KindIndex));
+                    case GuiValueKind.GuiFont: {
+                        if (Kind != "guifont" || Fields.Length != KindIndex + 2) throw new FacadeException("GUI property expects GuiFont");
+                        GuiFontIdentity Value;
+                        switch (Fields[KindIndex + 1]) {
+                            case "RobotoCondensedRegular": Value = GuiFontIdentity.RobotoCondensedRegular; break;
+                            case "RobotoCondensedBold": Value = GuiFontIdentity.RobotoCondensedBold; break;
+                            case "DroidSansMono": Value = GuiFontIdentity.DroidSansMono; break;
+                            case "PermanentMarker": Value = GuiFontIdentity.PermanentMarker; break;
+                            default: throw new FacadeException("GUI font identity is not allowed");
+                        }
+                        return GuiStoredValue.Font(Value);
+                    }
                     default: throw new FacadeException("unsupported GUI property type");
                 }
             }
@@ -1104,6 +1120,7 @@ namespace Carbon.Plugins
                     Node.Properties[GuiPropertyId.Text] = GuiStoredValue.String(""); Node.Properties[GuiPropertyId.TextColor3] = GuiStoredValue.Color3(0, 0, 0);
                     Node.Properties[GuiPropertyId.TextTransparency] = GuiStoredValue.Number(0); Node.Properties[GuiPropertyId.TextSize] = GuiStoredValue.Int(14);
                     Node.Properties[GuiPropertyId.TextXAlignment] = GuiStoredValue.String("Center"); Node.Properties[GuiPropertyId.TextYAlignment] = GuiStoredValue.String("Center");
+                    Node.Properties[GuiPropertyId.Font] = GuiStoredValue.Font(GuiFontIdentity.RobotoCondensedRegular);
                 }
                 if (Node.ClassId == GuiClassId.ImageLabel || Node.ClassId == GuiClassId.ImageButton) {
                     Node.Properties[GuiPropertyId.Image] = GuiStoredValue.Image(GuiImageSourceValue.Parse(new[] {"imagesource", "None"}, 0));

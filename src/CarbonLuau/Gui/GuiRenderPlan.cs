@@ -8,6 +8,7 @@ namespace Carbon.Plugins
     public partial class CarbonLuau
     {
         internal enum GuiRenderNodeKind { Container = 1, Text = 2, Button = 3, Image = 4, ScrollView = 5, Clip = 6 }
+        internal enum GuiFontIdentity { RobotoCondensedRegular = 1, RobotoCondensedBold = 2, DroidSansMono = 3, PermanentMarker = 4 }
         internal enum GuiRenderPropertyId
         {
             AnchorMin = 1, AnchorMax = 2, OffsetMin = 3, OffsetMax = 4, Pivot = 5, Visible = 6,
@@ -16,9 +17,9 @@ namespace Carbon.Plugins
             ImageSource = 15, ImageColor = 16,
             ScrollContentAnchorMin = 17, ScrollContentAnchorMax = 18,
             ScrollContentOffsetMin = 19, ScrollContentOffsetMax = 20, ScrollContentPivot = 21,
-            ScrollHorizontal = 22, ScrollVertical = 23, ScrollEnabled = 24
+            ScrollHorizontal = 22, ScrollVertical = 23, ScrollEnabled = 24, Font = 25
         }
-        internal enum GuiRenderValueKind { Boolean = 1, Integer = 2, Number = 3, String = 4, Vector2 = 5, Color = 6, ImageSource = 7 }
+        internal enum GuiRenderValueKind { Boolean = 1, Integer = 2, Number = 3, String = 4, Vector2 = 5, Color = 6, ImageSource = 7, GuiFont = 8 }
 
         internal struct GuiRenderVector2
         {
@@ -49,10 +50,11 @@ namespace Carbon.Plugins
             internal readonly int Integer; internal readonly double Number; internal readonly string Text;
             internal readonly GuiRenderVector2 Vector; internal readonly GuiRenderColor Color;
             internal readonly GuiImageSourceValue ImageSource;
+            internal readonly GuiFontIdentity FontIdentity;
             private GuiRenderValue(GuiRenderValueKind Kind, bool Boolean = false, int Integer = 0, double Number = 0,
                 string Text = null, GuiRenderVector2 Vector = default(GuiRenderVector2), GuiRenderColor Color = default(GuiRenderColor),
-                GuiImageSourceValue ImageSource = null)
-            { this.Kind = Kind; this.Boolean = Boolean; this.Integer = Integer; this.Number = Number; this.Text = Text; this.Vector = Vector; this.Color = Color; this.ImageSource = ImageSource; }
+                GuiImageSourceValue ImageSource = null, GuiFontIdentity FontIdentity = GuiFontIdentity.RobotoCondensedRegular)
+            { this.Kind = Kind; this.Boolean = Boolean; this.Integer = Integer; this.Number = Number; this.Text = Text; this.Vector = Vector; this.Color = Color; this.ImageSource = ImageSource; this.FontIdentity = FontIdentity; }
             internal static GuiRenderValue FromBoolean(bool Value) { return new GuiRenderValue(GuiRenderValueKind.Boolean, Boolean: Value); }
             internal static GuiRenderValue FromInteger(int Value) { return new GuiRenderValue(GuiRenderValueKind.Integer, Integer: Value); }
             internal static GuiRenderValue FromNumber(double Value)
@@ -77,6 +79,12 @@ namespace Carbon.Plugins
             { return new GuiRenderValue(GuiRenderValueKind.Color, Color: new GuiRenderColor(R, G, B, A)); }
             internal static GuiRenderValue FromImageSource(GuiImageSourceValue Value)
             { if (Value == null) throw new InvalidOperationException("render image source is required"); return new GuiRenderValue(GuiRenderValueKind.ImageSource, ImageSource: Value); }
+            internal static GuiRenderValue FromFont(GuiFontIdentity Value)
+            {
+                if (Value < GuiFontIdentity.RobotoCondensedRegular || Value > GuiFontIdentity.PermanentMarker)
+                    throw new InvalidOperationException("render font identity is invalid");
+                return new GuiRenderValue(GuiRenderValueKind.GuiFont, FontIdentity: Value);
+            }
             internal string Describe()
             {
                 switch (Kind) {
@@ -87,6 +95,7 @@ namespace Carbon.Plugins
                     case GuiRenderValueKind.Vector2: return Vector.X.ToString("R", CultureInfo.InvariantCulture) + "," + Vector.Y.ToString("R", CultureInfo.InvariantCulture);
                     case GuiRenderValueKind.Color: return Color.R.ToString("R", CultureInfo.InvariantCulture) + "," + Color.G.ToString("R", CultureInfo.InvariantCulture) + "," + Color.B.ToString("R", CultureInfo.InvariantCulture) + "," + Color.A.ToString("R", CultureInfo.InvariantCulture);
                     case GuiRenderValueKind.ImageSource: return ImageSource.Describe();
+                    case GuiRenderValueKind.GuiFont: return FontIdentity.ToString();
                     default: throw new InvalidOperationException("unknown render value kind");
                 }
             }

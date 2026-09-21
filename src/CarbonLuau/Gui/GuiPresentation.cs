@@ -115,6 +115,7 @@ namespace Carbon.Plugins
                     bool Text = Dirty.Value.Contains(GuiPropertyId.Text);
                     bool TextColor = HasAny(Dirty.Value, GuiPropertyId.TextColor3, GuiPropertyId.TextTransparency);
                     bool TextSize = Dirty.Value.Contains(GuiPropertyId.TextSize);
+                    bool Font = Dirty.Value.Contains(GuiPropertyId.Font);
                     bool TextAlignment = HasAny(Dirty.Value, GuiPropertyId.TextXAlignment, GuiPropertyId.TextYAlignment);
                     var TextProperties = new List<GuiRenderProperty>();
                     if (Dirty.Value.Contains(GuiPropertyId.ContentProjection)) AddContentLayout(State, Node, TextProperties);
@@ -124,6 +125,7 @@ namespace Carbon.Plugins
                         TextProperties.Add(Color(GuiRenderPropertyId.TextColor, ColorValue, 1 - Number(Node, GuiPropertyId.TextTransparency)));
                     }
                     if (TextSize) TextProperties.Add(Integer(GuiRenderPropertyId.FontSize, Integer(Node, GuiPropertyId.TextSize)));
+                    if (Font) TextProperties.Add(FontValue(GuiRenderPropertyId.Font, Property(Node, GuiPropertyId.Font).FontIdentity));
                     if (TextAlignment) {
                         TextProperties.Add(String(GuiRenderPropertyId.TextXAlignment, TextValue(Node, GuiPropertyId.TextXAlignment)));
                         TextProperties.Add(String(GuiRenderPropertyId.TextYAlignment, TextValue(Node, GuiPropertyId.TextYAlignment)));
@@ -190,6 +192,7 @@ namespace Carbon.Plugins
                             String(GuiRenderPropertyId.Text, TextValue(Node, GuiPropertyId.Text)),
                             Color(GuiRenderPropertyId.TextColor, TextColor, 1 - Number(Node, GuiPropertyId.TextTransparency)),
                             Integer(GuiRenderPropertyId.FontSize, Integer(Node, GuiPropertyId.TextSize)),
+                            FontValue(GuiRenderPropertyId.Font, Property(Node, GuiPropertyId.Font).FontIdentity),
                             String(GuiRenderPropertyId.TextXAlignment, TextValue(Node, GuiPropertyId.TextXAlignment)),
                             String(GuiRenderPropertyId.TextYAlignment, TextValue(Node, GuiPropertyId.TextYAlignment))));
                     }
@@ -555,6 +558,7 @@ namespace Carbon.Plugins
             private static GuiRenderProperty Vector(GuiRenderPropertyId Id, double X, double Y) { return new GuiRenderProperty(Id, GuiRenderValue.FromVector(X, Y)); }
             private static GuiRenderProperty Color(GuiRenderPropertyId Id, double[] Value, double Alpha) { return new GuiRenderProperty(Id, GuiRenderValue.FromColor(Value[0], Value[1], Value[2], Alpha)); }
             private static GuiRenderProperty Image(GuiRenderPropertyId Id, GuiImageSourceValue Value) { return new GuiRenderProperty(Id, GuiRenderValue.FromImageSource(Value)); }
+            private static GuiRenderProperty FontValue(GuiRenderPropertyId Id, GuiFontIdentity Value) { return new GuiRenderProperty(Id, GuiRenderValue.FromFont(Value)); }
         }
 
         internal sealed class GuiFullRebuildRequiredException : Exception

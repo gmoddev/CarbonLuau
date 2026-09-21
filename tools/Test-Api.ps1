@@ -34,7 +34,7 @@ foreach ($Example in @('player-events','hello-command')) {
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',
         'layout-vertical','layout-horizontal','padding','layout-order','image-label','image-button',
-        'item-skin','steam-avatar','scrolling-layout','shared-rich','per-player-rich','grid','clipping')) {
+        'item-skin','steam-avatar','scrolling-layout','shared-rich','per-player-rich','grid','clipping','fonts')) {
     $ExamplePath = Join-Path $Root "examples/gui/$Example/init.luau"
     if (!(Test-Path -LiteralPath $ExamplePath)) { throw "Missing runnable GUI example: $Example" }
     $ExampleText = Get-Content -Raw -LiteralPath $ExamplePath
@@ -47,7 +47,7 @@ foreach ($Path in @('examples/addons/economy/addon.json','examples/addons/econom
         'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root $Path))) { throw "Missing addon example file: $Path" }
 }
-foreach ($Name in @('ScreenGui','Frame','TextLabel','TextButton','ImageLabel','ImageButton','ScrollingFrame','UIListLayout','UIGridLayout','UIPadding','GuiObject','UDim','UDim2','Vector2','Color3','ImageSource')) {
+foreach ($Name in @('ScreenGui','Frame','TextLabel','TextButton','ImageLabel','ImageButton','ScrollingFrame','UIListLayout','UIGridLayout','UIPadding','GuiObject','UDim','UDim2','Vector2','Color3','ImageSource','GuiFont')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits public type: $Name" }
     if ($Name -notin @('GuiObject','UDim','UDim2','Vector2','Color3') -and !$GuiDescriptors.Contains(('"{0}"' -f $Name))) {
         throw "GUI descriptor omits implemented public type: $Name"
@@ -57,7 +57,7 @@ foreach ($Name in @('Name','ClassName','Parent','Position','Size','AnchorPoint',
         'BackgroundTransparency','ZIndex','LayoutOrder','Text','TextColor3','TextTransparency','TextSize','TextXAlignment','TextYAlignment',
         'Padding','FillDirection','HorizontalAlignment','VerticalAlignment','PaddingTop','PaddingBottom','PaddingLeft','PaddingRight',
         'Image','ImageColor3','ImageTransparency','CanvasSize','ScrollingDirection','ScrollingEnabled',
-        'CellSize','CellPadding','FillDirectionMaxCells','ClipsDescendants')) {
+        'CellSize','CellPadding','FillDirectionMaxCells','ClipsDescendants','Font')) {
     if (!$GuiReference.Contains(('`{0}`' -f $Name))) { throw "GUI reference omits property: $Name" }
 }
 foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','IsA','Show','Hide','IsShown','Activated')) {
@@ -68,6 +68,12 @@ foreach ($Constructor in @('UDim.new','UDim2.new','UDim2.fromScale','UDim2.fromO
 }
 foreach ($Constructor in @('ImageSource.None','ImageSource.Sprite','ImageSource.Png','ImageSource.Item','ImageSource.SteamAvatar')) {
     if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains(($Constructor -split '\.')[1])) { throw "GUI image constructor differs between bootstrap and reference: $Constructor" }
+}
+foreach ($Member in @('GuiFont.RobotoCondensedRegular','GuiFont.RobotoCondensedBold','GuiFont.DroidSansMono','GuiFont.PermanentMarker')) {
+    if (!$GuiReference.Contains($Member) -or !$Bootstrap.Contains(($Member -split '\.')[1])) { throw "GUI font member differs between bootstrap and reference: $Member" }
+}
+if ($Bootstrap -match 'function\s+GuiFont\.' -or $Bootstrap -match '(?i)GuiFont.*\.ttf') {
+    throw 'GuiFont must expose singleton values without constructors or host font paths'
 }
 foreach ($Claim in @('desired server state','does not transfer','not acknowledged','Player')) {
     if (!$GuiGuide.Contains($Claim)) { throw "GUI guide is missing required observable-semantics claim: $Claim" }
