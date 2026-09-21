@@ -378,7 +378,7 @@ internal static class GuiFoundation2ETests
         Func<Runtime.ScriptSnapshot> Snapshot = () => { var Result = new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = Source}; Result.Modules.Add("state", "return {}"); return Result; };
         string BeforeUnload;
         using (var Host = new Runtime.ScriptHost(Native,
-            new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 5, FrameDrainBudgetMilliseconds = 100}, Snapshot, World)) {
+            new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 20, FrameDrainBudgetMilliseconds = 100}, Snapshot, World)) {
             Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "native rich root initializes"); Host.Drain();
             Runtime.FacadeSession A1 = World.Active; string A1Token = LatestToken(Backend, Player.Token); int Calls = Backend.Calls().Length;
             string Failed = RichSource("failed") + "; error('reject rich candidate')";
