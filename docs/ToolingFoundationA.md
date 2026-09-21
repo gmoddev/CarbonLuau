@@ -1,6 +1,10 @@
 # Tooling Foundation A implementation design
 
-Status: planned, not implemented. Start with [AICONTEXT](../AICONTEXT.md),
+Status: partial implementation is preserved in isolated worktrees and remains
+unqualified. The [analysis security amendment](ToolingLanguageAnalysisSecurity.md)
+resolves its original non-execution stop condition and is the required security
+handoff before resuming. No executable implementation ships in this documentation
+branch. Start with [AICONTEXT](../AICONTEXT.md),
 [D19](Invariants.md#d19--official-editor-tooling), [baseline](ToolingBaseline.md)
 and [contract models](ToolingContracts.md). These tooling phases are separate
 from historical runtime/addon Foundation A–G and GUI foundations.
@@ -15,7 +19,10 @@ a net10 library. Reconcile changes since this revision before extracting.
 1. Freeze package, path, descriptor, retained/layout and API binding fixtures at
    the implementation revision. Preserve observed qualification limits.
 2. Introduce a pure `src/CarbonLuau.Core/CarbonLuau.Core.csproj` targeting
-   `netstandard2.0` with C# 7.3-compatible source. Tooling references the assembly;
+   `net48;net10.0` with C# 7.3-compatible source. The preserved partial work
+   corrected the original netstandard2.0 proposal because existing ZIP
+   ExternalAttributes checks are unavailable there; preserve production checks
+   and dependencies. Tooling references the assembly;
    Carbon's source ZIP compiles the same Core source with thin plugin adapters.
    Prove actual Carbon source compiler support before replacing production paths.
    No production runtime/library dependency upgrade is authorized by this plan.
@@ -23,8 +30,10 @@ a net10 library. Reconcile changes since this revision before extracting.
    provider entry types as wrappers where external callers rely on them. Then
    extract descriptors/values and pure retained/layout state behind snapshot inputs.
 4. Add authoritative metadata/catalog generation and bidirectional API drift tests.
-5. Add static project/metadata transport and the extension's detection/LSP/diagnostic
-   integration. Preview/native execution stays out of Foundation A.
+5. Add static project/metadata transport and the extension's detection/diagnostic
+   integration. LSP analysis requires the D19 supervised snapshot process, trust
+   transitions, owned configuration and bounded proxy. Preview execution stays
+   out of Foundation A; do not classify type-function evaluation as static.
 
 | Current files / exact seam | Destination and necessary split |
 |---|---|
@@ -91,8 +100,10 @@ and reject stale results. Missing local dependencies and invalid packages are
 different diagnostics. Watch only relevant roots; external mappings require trust.
 
 LSP distribution: bundled verified upstream executable per platform in a qualified
-pack, spawned directly with a controlled argument vector over stdio, standard
-Luau mode, pinned generated definitions/docs and trusted transform. No shell
+pack, spawned by the tooling supervisor with a controlled argument vector over stdio, standard
+Luau mode, pinned generated definitions/docs and trusted transform. Admit bounded
+snapshots only after Workspace Trust; apply the analysis security amendment's
+configuration ancestry, proxy, process limit and cleanup gates. No shell
 interpolation/workspace executable/plugin path. Pick the actual upstream version,
 embedded Luau commit, flags and plugin API by corpus tests, not the design's
 historical release example. Runtime compiler acceptance remains authoritative;
@@ -109,12 +120,12 @@ to make language integration useful. Implement initialize/getMetadata/
 validateProject/resolveProjectGraph/shutdown there with bounded protocol tests;
 Foundation B expands supervision and preview. This dependency adjustment keeps
 the task's A language/diagnostic scope executable without pushing semantics into
-TypeScript. No preview/native execution or build command is pulled into A.
+TypeScript. No preview execution or addon build command is pulled into A.
 
 ## Validation and CI gates
 
 - Core dependency scan rejects Carbon/Rust/Unity references, plugin facade types
-  and accidental native loading. Compile netstandard2.0 plus production net48
+  and accidental production native loading. Compile Core net48/net10.0 plus production net48
   source composition and tooling net10.0 on appropriate workers.
 - Existing `tests/runtime/AddonTests.cs`, `FoundationETests.cs`, ScriptTests,
   GUI Foundation 1–3 and facade fixtures must pass after extraction. Add differential
@@ -134,7 +145,8 @@ TypeScript. No preview/native execution or build command is pulled into A.
   source-map locations and runtime compiler/LSP disagreement.
 - Protocol boundary tests: oversized headers/bodies, bad IDs/JSON/versions/schema,
   queue pressure, cancellation/stale revisions and graceful shutdown. No script
-  executes in static validation, including Restricted Mode.
+  executes in static validation, including Restricted Mode. Trusted executable
+  analysis additionally passes the [D19 security matrix](ToolingLanguageAnalysisSecurity.md#20-security-qualification-matrix).
 - Extension: npm ci, TypeScript build, ESLint, manifest checks, trust/activation
   tests, then VS Code E2E for standalone/root/addon/multi-root and unsupported API.
 - Carbon CI gets a separate tooling job; do not widen server-release globs.
@@ -163,5 +175,6 @@ the supporting design's old letters as new implementation authority.
 Stop affected implementation if Core becomes the whole plugin, server assemblies
 are required, TypeScript would duplicate semantics, metadata needs unaudited
 manual runtime duplication, LSP requires changing runtime require, execution
-would enter extension/coordinator/WebView, or macOS requires server dependencies.
+would enter extension/coordinator/WebView, analysis would bypass D19 trust/process/
+snapshot policy, or macOS requires server dependencies.
 Report evidence and rule owner instead of silently weakening the baseline.

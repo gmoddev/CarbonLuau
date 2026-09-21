@@ -9,6 +9,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | How to scope work and construct prompts | This document |
 | Official editor tooling ownership, contracts and security | [D19 in Invariants.md](docs/Invariants.md#d19--official-editor-tooling) and [ToolingBaseline.md](docs/ToolingBaseline.md) |
 | Tooling Foundation A implementation design and later routing | [ToolingFoundationA.md](docs/ToolingFoundationA.md) |
+| Language-analysis execution, Workspace Trust, process limits and Foundation A security handoff | [D19 analysis security amendment](docs/ToolingLanguageAnalysisSecurity.md) and [investigation evidence](docs/ToolingLanguageAnalysisSecurityEvidence.md) |
 | Product purpose, architecture, trust, ownership, ABI, threading, lifecycle and resource rules | [Invariants.md](docs/Invariants.md) |
 | Provisional/open/deferred decisions and implementation gates | [Decision register in Invariants.md](docs/Invariants.md#decision-register) |
 | Canonical GUI Foundation 1 semantics | [D15 in Invariants.md](docs/Invariants.md#d15--gui-foundation-1-retained-presentation-model) |

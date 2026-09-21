@@ -171,6 +171,17 @@ never an independent TypeScript implementation.
 [ToolingBaseline.md](ToolingBaseline.md) owns the detailed tooling contracts,
 security, identities and repository boundary under this decision;
 [ToolingFoundationA.md](ToolingFoundationA.md) owns implementation routing.
+The [D19 language-analysis amendment](ToolingLanguageAnalysisSecurity.md) owns
+the distinction between StaticInspection, ExecutableAnalysis and PreviewExecution.
+Restricted Mode permits only StaticInspection. ExecutableAnalysis requires
+Workspace Trust and a qualified tooling-supervised LSP process over bounded
+snapshots: type functions and the pack-owned transform may execute there;
+workspace configuration/plugins may not. Workspace-controlled code never runs
+in extension host, WebView or static coordinator. Process separation, VM limits,
+Workspace Trust and OS sandboxing are distinct; no portable OS sandbox is claimed.
+Trust never selects tool paths or relaxes analysis bounds. Preview gates remain
+unchanged. The amendment resolves the architectural stop condition, not the
+partial Foundation A implementation's qualification gates.
 The [supplied design](design/CarbonLuau_VSCode_Tooling_Architecture.md) is supporting
 evidence at its recorded revision. Adoption changes no runtime API, ABI, provider
 protocol, package schema, release identity or authenticated-client qualification.

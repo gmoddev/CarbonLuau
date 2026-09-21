@@ -128,6 +128,8 @@ alias. Required manifest fields before shipping:
 | RuntimeLuauRevision / ToolingNativeAbi | exact VM/compiler and optional tooling-native boundary |
 | LanguageServerVersion / LanguageServerLuauRevision | pinned upstream binary and exact embedded Luau commit |
 | TransformRevision / ConfigurationDigest | compatible trusted analysis plugin and flags |
+| AnalysisSecurityPolicyVersion / AnalysisProfile | policy 1 TrustedSnapshotAnalysis; trusted-workspace execution, not a non-executing LSP claim |
+| AnalysisContainmentProfile / qualification evidence | exact platform resource/lifetime controls; distinguish hard limits, soft monitoring and OS sandbox claims |
 | Platforms | exact target with host, native, LSP, definitions/docs/metadata paths and SHA-256 for every artifact |
 | Provenance / Licenses / Verification | build provenance, notices and signed manifest or equivalent verifiable attestation |
 
@@ -138,3 +140,10 @@ paths must be relative, confined and non-symlink escaping. Runtime release.json
 is unchanged; no fabricated pack version, LSP pin or native ABI is assigned until
 qualified artifacts exist. The extension baseline version `0.0.1` is development
 bootstrap identity only, not a Marketplace or scripting API release.
+
+The [D19 analysis amendment](ToolingLanguageAnalysisSecurity.md) requires bounded
+LSP proxy framing and scoped URI/response admission separately from the static
+host protocol. A boolean LanguageServerQualified cannot replace policy/pack/
+platform compatibility checks. Unknown analysis policy disables language features;
+independently compatible static inspection may remain available. No new protocol
+operation or executable launcher is implemented by this documentation amendment.

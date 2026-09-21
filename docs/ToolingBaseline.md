@@ -6,6 +6,13 @@ Implementation gates and exact source routing are in
 [ToolingFoundationA.md](ToolingFoundationA.md). Baseline means contracts and a
 minimal extension bootstrap, not completed Foundation A or a usable tooling pack.
 
+The subsequent partial Foundation A implementation encountered executable LSP
+configuration/type functions. [D19 analysis security](ToolingLanguageAnalysisSecurity.md)
+resolves that architectural stop condition with a trusted-only supervised snapshot
+profile. The implementation remains unqualified and its LSP startup stays disabled
+until the amended gates pass. That amendment owns the exact analysis policy;
+historical non-execution wording applies to StaticInspection, not all type analysis.
+
 ## Provenance and precedence
 
 The complete [approved architecture](design/CarbonLuau_VSCode_Tooling_Architecture.md)
@@ -72,6 +79,12 @@ from canonical tooling. Literal requires are transformed only for analysis;
 runtime source, visibility, imports and package contents never change. Pin the
 experimental plugin API, adapter/configuration revision and source-map behavior
 inside each tooling pack. Workspace code/configuration cannot select plugins.
+Executable LSP analysis, including this trusted transform, runs only in the
+separate supervised language process after Workspace Trust. Its snapshot/config,
+type-function, proxy, resource and platform rules are defined by the
+[analysis security amendment](ToolingLanguageAnalysisSecurity.md). No workspace
+`.config.luau`, `.luaurc`, `.robloxrc` or arbitrary LSP/plugin settings enter that
+session. Generated configuration is data-only and owned by CarbonLuau.
 
 ## Project discovery and local dependencies
 
@@ -109,6 +122,9 @@ or Rust CUI JSON. No operation is implemented by this baseline.
 Workspace Luau is untrusted. Preview runs only in the same executable's fresh
 `--preview-worker` child mode with a fresh VM/domain/module-cache lifecycle for
 each snapshot. Never execute it in extension host, WebView or coordinator.
+Language analysis is a distinct trust class with its own supervised LSP process,
+not preview execution. The limits and fresh-worker rules in the following
+paragraphs apply to preview; do not apply them as undocumented LSP limits.
 Default limits are 1 second hard execution wall time, 64 MiB Luau heap and
 256 MiB process ceiling, with 8 MiB framed input/result bounds. Heap policy is
 internally versioned/configurable within the accepted 16..256 MiB range; defaults
@@ -166,8 +182,14 @@ to allowed URIs by the extension. No arbitrary workspace filesystem exposure.
 ## Trust, UX and privacy
 
 Use VS Code Workspace Trust with `untrustedWorkspaces.supported = limited`.
-Restricted Mode allows safe syntax/language analysis, packaged definitions/docs,
-metadata and non-executing static diagnostics using only official pinned tools.
+Restricted Mode allows parse-only syntax, packaged API information/docs,
+metadata and non-executing canonical diagnostics using official pinned tools;
+it must not start luau-lsp. Trusted workspaces may automatically receive
+ExecutableAnalysis under the qualified D19 analysis profile, including type
+functions but excluding workspace executable configuration/custom plugins.
+Check trust at launch and dispatch, handle grant and revocation/reload cleanup,
+and preserve static functionality when analysis is unavailable. Explain this
+once in status/Output without repeated prompts. Trust is consent, not an OS sandbox.
 Never load workspace executables/plugins/tool paths. Preview, artifact-writing
 builds/tasks, live integration, fixtures and external dependency mappings require
 trust. Check `workspace.isTrusted` in handlers as well as `isWorkspaceTrusted` UI
