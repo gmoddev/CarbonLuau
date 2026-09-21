@@ -41,7 +41,8 @@ and v0.3.0 artifacts are unchanged. The machine-readable mapping is
 [release.json](../release.json), with build and provenance instructions in the
 [release guide](Release.md).
 
-GUI Foundation 1 is an approved but unimplemented D15 architecture. Its package
+GUI Foundation 1 is an approved D15 architecture with the Foundation 1A/1B
+substrate and retained runtime implemented but presentations/rendering deferred. Its package
 and scripting API identity is **UNASSIGNED / release-planning gated**. The design
 does not alter package `0.4.0`, scripting API `0.4.0-experimental`, native ABI
 `1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` or the
@@ -295,6 +296,22 @@ This phase does not qualify a retained runtime, production Rust CUI adapter,
 client rendering, UI interaction or D15 publication journal. Public GUI claims
 still require the complete architecture gate above, including authenticated-client
 evidence for rendering and click behavior.
+
+### GUI Foundation 1B evidence contract
+
+[GUI Foundation 1B](GuiFoundation1B.md) implements the domain-bound `Gui`
+service, opaque retained object/value userdata, bounded tree lifecycle, GUI
+Signal ownership and the D7/D10 publication journal. Its affected evidence is
+constructor/field/equality validation; every class/property default and bound;
+identity, ordering, parenting, clone/destroy and teardown behavior; nested and
+caught publication rollback; exact foreign-owner commit/rollback/stale-owner
+handling; shared-VM cross-domain values; GUI-1A plus Foundations A-G regressions;
+Windows/Linux runtime tests; and affected sanitizer coverage.
+
+Foundation 1B does not qualify presentations, Player/viewer state, production
+rendering, layout translation, synchronization, action tokens, client event
+ingress or visible/click behavior. Those remain later GUI gates, and the GUI
+package/scripting identity remains unassigned.
 
 ## Phase 0 consistency review
 

@@ -23,15 +23,15 @@ int HostPrimitive(lua_State* State)
     if (!Owner.Host || !Owner.HostBuffer) luaL_error(State, "host unavailable for domain");
     if (lua_type(State, 1) != LUA_TNUMBER) luaL_error(State, "invalid host operation");
     double Value = lua_tonumber(State, 1);
-    if (Value < 1 || Value > 8 || Value != std::floor(Value)) luaL_error(State, "invalid host operation");
+    if (Value < 1 || Value > 21 || Value != std::floor(Value)) luaL_error(State, "invalid host operation");
     uint32_t Operation = uint32_t(Value);
     if (Runtime.Admission && Runtime.Admission->Provisional && Operation == 4)
         luaL_error(State, "SendMessage requires a committed domain; use task.defer for startup delivery");
-    if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8) && !Runtime.Publication->Uses(&Owner)) {
+    if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8 || Operation == 21) && !Runtime.Publication->Uses(&Owner)) {
         if (!ControlPublication(Runtime, Owner, 10)) luaL_error(State, "host publication setup failed");
         Runtime.Publication->Facades.push_back(&Owner);
     }
-    if (lua_gettop(State) > 4) luaL_error(State, "host argument count exceeds limit");
+    if (lua_gettop(State) > 10) luaL_error(State, "host argument count exceeds limit");
     char Request[16384]; size_t Used = 0;
     for (int Index = 2; Index <= lua_gettop(State); ++Index) {
         if (lua_type(State, Index) != LUA_TSTRING) luaL_error(State, "expected host string");
@@ -53,15 +53,26 @@ int HostPrimitive(lua_State* State)
     return 1;
 }
 
-struct FacadeInput { Domain* Owner; const std::string* Bytecode; };
+int MakeFacadeUserdata(lua_State* State)
+{
+    if (lua_gettop(State) != 1 || lua_type(State, 1) != LUA_TTABLE) luaL_error(State, "invalid private userdata descriptor");
+    lua_newuserdata(State, 0); lua_pushvalue(State, 1); lua_setmetatable(State, -2); return 1;
+}
+
+struct FacadeInput { Vm* Runtime; Domain* Owner; const std::string* Bytecode; };
 int InstallFacade(lua_State* State)
 {
     auto& Input = *static_cast<FacadeInput*>(lua_touserdata(State, 1));
-    Domain& Owner = *Input.Owner;
+    Vm& Runtime = *Input.Runtime; Domain& Owner = *Input.Owner;
     if (luau_load(State, "carbonluau.facade", Input.Bytecode->data(), Input.Bytecode->size(), 0) != LUA_OK) lua_error(State);
     lua_pushlightuserdata(State, &Owner);
     lua_pushcclosure(State, HostPrimitive, "host", 1);
-    lua_call(State, 1, 2);
+    lua_pushcfunction(State, MakeFacadeUserdata, "private userdata");
+    if (Runtime.GuiValueEqual == LUA_NOREF) lua_pushnil(State); else lua_getref(State, Runtime.GuiValueEqual);
+    lua_call(State, 3, 4);
+    if (Runtime.GuiValueEqual == LUA_NOREF) Runtime.GuiValueEqual = lua_ref(State, -1);
+    lua_pop(State, 1);
+    Owner.GuiBindings = lua_ref(State, -1); lua_pop(State, 1);
     Owner.Dispatch = lua_ref(State, -1); lua_pop(State, 1);
     Owner.Game = lua_ref(State, -1); lua_pop(State, 1);
     return 0;
@@ -104,7 +115,7 @@ ClStatus cl_domain_facade(ClHandle Id, ClHandle DomainId, ClHostCall Host) try
     if (Host(Owner->HostIdentity, 0, "", 0, Owner->HostBuffer->data(), uint32_t(Owner->HostBuffer->size()), &Written) != 0) {
         ReleaseDomain(*Runtime, *Owner); return CL_INTERNAL_ERROR;
     }
-    FacadeInput Input{Owner, &Compilation.Payload};
+    FacadeInput Input{Runtime, Owner, &Compilation.Payload};
     if (lua_cpcall(Runtime->State, InstallFacade, &Input) != LUA_OK) { ReleaseDomain(*Runtime, *Owner); return CL_MEMORY_LIMIT; }
     lua_settop(Runtime->State, 0);
     return CL_OK;

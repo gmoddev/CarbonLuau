@@ -12,6 +12,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Canonical GUI Foundation 1 semantics | [D15 in Invariants.md](docs/Invariants.md#d15--gui-foundation-1-retained-presentation-model) |
 | GUI Foundation 1 rationale and implementation guidance | [GuiFoundation1.md](docs/GuiFoundation1.md) |
 | GUI Foundation 1A internal substrate and evidence | [GuiFoundation1A.md](docs/GuiFoundation1A.md) |
+| GUI Foundation 1B retained runtime and evidence | [GuiFoundation1B.md](docs/GuiFoundation1B.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -75,6 +76,10 @@ The internal descriptors, limit snapshot, Carbon-independent render/backend
 contracts and deterministic mock backend implemented by GUI Foundation 1A are
 recorded in [GuiFoundation1A.md](docs/GuiFoundation1A.md). They do not authorize
 public GUI bindings, retained-object behavior, presentations or CUI rendering.
+GUI Foundation 1B's retained objects, immutable value userdata, ownership,
+tree lifecycle, GUI Signals and D7/D10 publication journal are recorded in
+[GuiFoundation1B.md](docs/GuiFoundation1B.md). They do not authorize
+presentations, client rendering/event ingress or a GUI-capable release identity.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

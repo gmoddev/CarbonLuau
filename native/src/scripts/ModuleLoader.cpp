@@ -233,6 +233,11 @@ void InstallDomainBindings(lua_State* State, Domain& Owner)
     lua_setreadonly(State, -1, true);
     lua_setglobal(State, "task");
     if (Owner.Game != LUA_NOREF) { lua_getref(State, Owner.Game); lua_setglobal(State, "game"); }
+    if (Owner.GuiBindings != LUA_NOREF) {
+        lua_getref(State, Owner.GuiBindings);
+        for (const char* Name : {"UDim", "UDim2", "Vector2", "Color3"}) { lua_getfield(State, -1, Name); lua_setglobal(State, Name); }
+        lua_pop(State, 1);
+    }
     if (!Owner.PackageId.empty()) {
         lua_newtable(State);
         lua_pushlstring(State, Owner.PackageId.data(), Owner.PackageId.size()); lua_setfield(State, -2, "Id");
