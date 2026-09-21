@@ -29,7 +29,7 @@ foreach ($Document in $Documents) {
         if (!(Test-Path -LiteralPath (Join-Path $Document.DirectoryName $Target))) { throw "Broken relative link: $($Document.Name): $Target" }
     }
 }
-foreach ($Example in @('player-events','player-position','hello-command')) {
+foreach ($Example in @('player-events','player-position','player-health','hello-command')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',
@@ -69,6 +69,12 @@ foreach ($Constructor in @('UDim.new','UDim2.new','UDim2.fromScale','UDim2.fromO
 }
 if (!$Bootstrap.Contains('Vector3.new') -or !(Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/Vector3.md')).Contains('Vector3.new')) {
     throw 'Vector3 constructor differs between bootstrap and reference'
+}
+$PlayerReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/Player.md')
+foreach ($Property in @('Health','MaxHealth')) {
+    if (!$Bootstrap.Contains(('Key == "{0}"' -f $Property)) -or !$PlayerReference.Contains(('`Player.{0}`' -f $Property))) {
+        throw "Player property differs between bootstrap and reference: $Property"
+    }
 }
 foreach ($Constructor in @('ImageSource.None','ImageSource.Sprite','ImageSource.Png','ImageSource.Item','ImageSource.SteamAvatar')) {
     if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains(($Constructor -split '\.')[1])) { throw "GUI image constructor differs between bootstrap and reference: $Constructor" }

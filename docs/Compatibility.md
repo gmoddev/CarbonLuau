@@ -549,14 +549,15 @@ valid within its original envelope.
 Player Interaction Foundation 1 architecture. The complete host rationale,
 surface matrix, phase sequence and qualification plan are retained in
 [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md). Player-1A
-now implements immutable `Vector3` and read-only exact-connection
-`Player.Position` under `0.4.0-experimental`; its qualification record is
-[PlayerInteractionFoundation1A.md](PlayerInteractionFoundation1A.md).
-Health/MaxHealth, bounded item observation, the `Items` service, Teleport,
+implements immutable `Vector3` and read-only exact-connection `Player.Position`;
+Player-1B implements live read-only exact-connection `Player.Health` and
+`Player.MaxHealth` under `0.4.0-experimental`. Their qualification records are
+[PlayerInteractionFoundation1A.md](PlayerInteractionFoundation1A.md) and
+[PlayerInteractionFoundation1B.md](PlayerInteractionFoundation1B.md).
+Bounded item observation, the `Items` service, Teleport,
 GiveItem and TakeItem remain unimplemented.
 
-Remaining work is separated into Player-1B (Health and MaxHealth),
-Player-1C (`Items:Exists`, CountItem and HasItem),
+Remaining work is separated into Player-1C (`Items:Exists`, CountItem and HasItem),
 Player-1D (Teleport) and Player-1E (combined lifecycle, stress, documentation
 and public qualification closure). Revised D13 additionally routes Inventory-M1
 for the deterministic model and mutation gate, Inventory-M2 for exact target-
@@ -592,13 +593,15 @@ fall state, mount/parent handling and repeated teleports. Server/model evidence
 alone cannot establish authenticated-client Teleport behavior. These gates do
 not block the read-only Player-1A/1B/1C surfaces.
 
-D18 adoption and Player-1A change no identity. Package remains `0.4.0`, scripting API
+D18 adoption and Player-1A/1B change no identity. Package remains `0.4.0`, scripting API
 remains `0.4.0-experimental`, native ABI remains `1.4`, provider protocol
 remains `CarbonLuau.Addons` / `1.2`, package schema remains `1`, and the pinned
-Luau revision is unchanged. Player-1A passed the available Linux native/runtime,
-managed regression, deterministic packaging and sanitizer matrix. DockerPC
-Windows native/local and live Carbon were unavailable and are not claimed;
-hosted Windows CI is recorded separately. Later Player phases require their own
+Luau revision is unchanged. Player-1A and Player-1B passed the available Linux
+native/runtime, managed regression, deterministic packaging and sanitizer
+matrix. Player-1B additionally passed three controlled-host live Carbon cycles
+on the exact target build. DockerPC Windows native/local and Windows live were
+unavailable and are not claimed; hosted Windows CI is recorded separately.
+Later Player phases require their own
 applicable Windows/Linux/native/live/sanitizer qualification.
 
 ## Phase 0 consistency review

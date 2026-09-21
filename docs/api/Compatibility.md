@@ -33,6 +33,12 @@ inside the finite System.Single range; Position is one bounded exact-connection
 host lookup and one root world-position read. See the
 [Player-1A qualification record](../PlayerInteractionFoundation1A.md).
 
+Player-1B adds read-only `Player.Health` and `Player.MaxHealth` under that same
+identity. Each access performs one exact-connection lookup and one direct live
+host read. Finite results are preserved independently without clamping; stale
+connections and non-finite host values raise controlled errors. See the
+[Player-1B qualification record](../PlayerInteractionFoundation1B.md).
+
 Revised D13 and
 [D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
 read-only item observation plus implementation-gated `Player:GiveItem` and

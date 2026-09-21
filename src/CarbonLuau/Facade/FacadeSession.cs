@@ -290,7 +290,7 @@ namespace Carbon.Plugins
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
                 if (Code == 20) return Gui.Query(Fields);
                 if (Code == 21) return Gui.Mutate(Fields, Id);
-                int Expected = Code == 1 ? 0 : (Code == 3 || Code == 22) ? 2 : (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
+                int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 : (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
                 if (Fields.Length != Expected) throw new FacadeException("invalid host arguments");
                 switch (Code) {
                     case 1: {
@@ -328,6 +328,16 @@ namespace Carbon.Plugins
                             throw new FacadeException("Player position is invalid");
                         return new[] {Position.X.ToString("R", CultureInfo.InvariantCulture),
                             Position.Y.ToString("R", CultureInfo.InvariantCulture), Position.Z.ToString("R", CultureInfo.InvariantCulture)};
+                    }
+                    case 23: case 24: {
+                        var View = World.Players.Resolve(Fields[0], Fields[1]);
+                        if (View == null) throw new FacadeException("Player is no longer connected");
+                        Func<float> Read = Code == 23 ? View.Health : View.MaxHealth;
+                        string Name = Code == 23 ? "health" : "maximum health";
+                        if (Read == null) throw new FacadeException("Player " + Name + " is unavailable");
+                        float Value = Read();
+                        if (Single.IsNaN(Value) || Single.IsInfinity(Value)) throw new FacadeException("Player " + Name + " is invalid");
+                        return new[] {Value.ToString("R", CultureInfo.InvariantCulture)};
                     }
                     case 6: {
                         if (Fields[0] != "added" && Fields[0] != "removing") throw new FacadeException("unknown signal");

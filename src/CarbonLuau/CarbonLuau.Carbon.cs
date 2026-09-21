@@ -31,7 +31,9 @@ namespace Carbon.Plugins
                 Position = () => {
                     var Value = Player.transform.position;
                     return new PlayerPosition(Value.x, Value.y, Value.z);
-                }
+                },
+                Health = () => Player.Health(),
+                MaxHealth = () => Player.MaxHealth()
             };
         }
         private void InitializeGameplay()

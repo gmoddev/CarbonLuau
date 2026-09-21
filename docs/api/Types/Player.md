@@ -1,7 +1,7 @@
 # Player
 
-Availability: core proxy in experimental API `0.3.0-experimental`; Position is
-added in `0.4.0-experimental`. Obtained from Players,
+Availability: core proxy in experimental API `0.3.0-experimental`; Position,
+Health and MaxHealth are added in `0.4.0-experimental`. Obtained from Players,
 Signals or CommandContext; there is no constructor. A frozen proxy represents
 one connection in one generation, never a BasePlayer or a transferable host handle.
 
@@ -11,15 +11,19 @@ one connection in one generation, never a BasePlayer or a transferable host hand
 | `Player.UserId` | read-only string | Decimal account ID, never a floating-point number. |
 | `Player.IsConnected` | read-only boolean | Fresh host resolution and connection identity check. False when the connection is gone/replaced. |
 | `Player.Position` | read-only [Vector3](Vector3.md) | Fresh exact-connection root world position. Stale/disconnected access errors; no snapshot is retained. |
+| `Player.Health` | read-only number | Fresh exact-connection host health. The finite value is not clamped to MaxHealth. |
+| `Player.MaxHealth` | read-only number | Fresh exact-connection current host maximum health, including host overrides/modifiers. It is not assumed to be 100. |
 | `Player:SendMessage(Message: string)` | no values | Sends system chat through Rust `BasePlayer.ChatMessage`; 1024 UTF-8 bytes maximum, no NUL. The command name/channel is host-fixed, not script-controlled. |
 | `Player:HasPermission(Permission: string)` | boolean | Fresh Carbon permission query for this live connection; no permission mutation. |
 
-Every operation revalidates identity, including property access. Position is a
-bounded direct observation and is allowed during provisional initialization.
-Sleeping, wounded and mounted/parented host-valid players remain readable;
+Every operation revalidates identity, including property access. Position,
+Health and MaxHealth are bounded direct observations allowed during provisional
+initialization. Sleeping, wounded, dead-but-host-valid and mounted/parented
+host-valid players remain readable;
 mounted/parented reads use the root Transform's world position. Each read returns
 a new immutable value that remains usable after later movement or disconnect.
-After disconnect, Name/UserId remain safe snapshot values; Position, SendMessage and HasPermission raise
+After disconnect, Name/UserId remain safe snapshot values; Position, Health,
+MaxHealth, SendMessage and HasPermission raise
 `Player is no longer connected`. Same-account reconnect creates a different proxy.
 Generation retirement destroys VM-local script references and rejects late host work.
 Once host invalidity is observed, the old token stays invalid even if the host

@@ -115,7 +115,8 @@ internal static class AddonTests
         var Views = new Dictionary<string, Runtime.PlayerView>();
         const string UserId = "76561198000000009";
         Views[UserId] = new Runtime.PlayerView {Identity = new object(), Connection = new object(), UserId = UserId,
-            Name = "Addon Fixture", Connected = true, Send = Message => { }, Permission = Permission => true};
+            Name = "Addon Fixture", Connected = true, Send = Message => { }, Permission = Permission => true,
+            Health = () => 64.5f, MaxHealth = () => 140.25f};
         var Registrar = new Registrar();
         var World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => Views.ContainsKey(Id) ? Views[Id] : null), Registrar);
         World.Players.Connect(Views[UserId]);
@@ -287,7 +288,13 @@ internal static class AddonTests
     private static void RunPublicModules(Runtime.NativeRuntime Native)
     {
         var Registrar = new Registrar();
-        var World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Registrar);
+        const string UserId = "76561198000000010";
+        var View = new Runtime.PlayerView {Identity = new object(), Connection = new object(), UserId = UserId,
+            Name = "Public Module Fixture", Connected = true, Send = Message => { }, Permission = Permission => true,
+            Health = () => 64.5f, MaxHealth = () => 140.25f};
+        var Directory = new Runtime.PlayerDirectory(Id => Id == UserId ? View : null);
+        var World = new Runtime.FacadeWorld(Directory, Registrar);
+        Directory.Connect(View);
         var Config = new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20};
         Func<Runtime.ScriptSnapshot> Root = () => new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = "return true"};
         object Provider = new object(), Consumers = new object();
@@ -359,15 +366,15 @@ internal static class AddonTests
                 IsState(Registry.Status(Consumers, GuardConsumer[1]), "Active", "cross-addon cycle, depth boundary, and yield failures remain catchable");
 
                 byte[] LifeOne = PublicPackage("life", "1.0.0", new string[0], new string[0], "return true", "api", new string[0],
-                    new EntrySpec("api.luau", "return {Generation='1',Pure=5,Vector=Vector3.new(1,2,3),Host=function() return #game:GetService('Players'):GetPlayers() end}"));
+                    new EntrySpec("api.luau", "return {Generation='1',Pure=5,Vector=Vector3.new(1,2,3),Player=game:GetService('Players'):GetPlayers()[1],Host=function() return #game:GetService('Players'):GetPlayers() end}"));
                 string[] Life = Registry.RegisterArchive(Provider, LifeOne); Process(Registry);
                 string[] Optional = Registry.RegisterArchive(Consumers, PublicPackage("lifeoptional", "1.0.0", new string[0], new[] {"life"},
-                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert(V.Vector==Vector3.new(1,2,3)); task.defer(function() assert(V.Generation=='1' and V.Pure==5 and V.Vector*2==Vector3.new(2,4,6)); V.Pure+=1; assert(not pcall(V.Host)); assert(not pcall(require,'@life')); assert(not addon:IsDependencyAvailable('life')); print('retained-a1') end)", null, new string[0])); Process(Registry);
+                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert(V.Vector==Vector3.new(1,2,3) and V.Player.Health==64.5 and V.Player.MaxHealth==140.25); task.defer(function() assert(V.Generation=='1' and V.Pure==5 and V.Vector*2==Vector3.new(2,4,6)); V.Pure+=1; assert(not pcall(V.Host)); assert(not pcall(function() return V.Player.Health end)); assert(not pcall(function() return V.Player.MaxHealth end)); assert(not pcall(require,'@life')); assert(not addon:IsDependencyAvailable('life')); print('retained-a1') end)", null, new string[0])); Process(Registry);
                 string[] Required = Registry.RegisterArchive(Consumers, PublicPackage("liferequired", "1.0.0", new[] {"life"}, new string[0],
-                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert((V.Generation=='1' and V.Vector==Vector3.new(1,2,3)) or (V.Generation=='2' and V.Vector==Vector3.new(4,5,6)) or (V.Generation=='3' and V.Vector==Vector3.new(7,8,9))); task.defer(function() print('required-'..V.Generation) end)", null, new string[0])); Process(Registry);
+                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert((V.Generation=='1' and V.Vector==Vector3.new(1,2,3)) or (V.Generation=='2' and V.Vector==Vector3.new(4,5,6)) or (V.Generation=='3' and V.Vector==Vector3.new(7,8,9))); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25); task.defer(function() print('required-'..V.Generation) end)", null, new string[0])); Process(Registry);
                 string OldOptional = Registry.Status(Consumers, Optional[1])[7], OldRequired = Registry.Status(Consumers, Required[1])[7];
                 byte[] LifeTwo = PublicPackage("life", "2.0.0", new string[0], new string[0], "return true", "api", new string[0],
-                    new EntrySpec("api.luau", "return {Generation='2',Pure=9,Vector=Vector3.new(4,5,6),Host=function() return #game:GetService('Players'):GetPlayers() end}"));
+                    new EntrySpec("api.luau", "return {Generation='2',Pure=9,Vector=Vector3.new(4,5,6),Player=game:GetService('Players'):GetPlayers()[1],Host=function() return #game:GetService('Players'):GetPlayers() end}"));
                 Registry.ReplaceArchive(Provider, Life[1], LifeTwo);
                 Check(Registry.ProcessOne(), "dependency A2 replacement commits");
                 IsState(Registry.Status(Consumers, Optional[1]), "Active", "optional consumer remains active after A1 retirement");
@@ -379,9 +386,9 @@ internal static class AddonTests
                 Check(Drain(Host) == "retained-a1\nrequired-2\n", "retained A1 pure value survives while its host facade and stale import fail; required consumer resolves A2");
 
                 string[] Retained = Registry.RegisterArchive(Consumers, PublicPackage("retainedoptional", "1.0.0", new string[0], new[] {"life"},
-                    "local V=require('@life'); task.defer(function() assert(V.Generation=='2' and V.Pure==9); print('retained-a2') end)", null, new string[0])); Process(Registry);
+                    "local V=require('@life'); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25); task.defer(function() assert(V.Generation=='2' and V.Pure==9); assert(not pcall(function() return V.Player.Health end)); print('retained-a2') end)", null, new string[0])); Process(Registry);
                 Registry.ReplaceArchive(Provider, Life[1], PublicPackage("life", "3.0.0", new string[0], new string[0], "return true", "api", new string[0],
-                    new EntrySpec("api.luau", "return {Generation='3',Pure=11,Vector=Vector3.new(7,8,9)}")));
+                    new EntrySpec("api.luau", "return {Generation='3',Pure=11,Vector=Vector3.new(7,8,9),Player=game:GetService('Players'):GetPlayers()[1]}")));
                 Process(Registry);
                 Check(Drain(Host).Contains("retained-a2"), "ordinary A2 value remains usable after retirement and never targets A3");
 

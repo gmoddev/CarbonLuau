@@ -94,6 +94,7 @@ API `0.4.0-experimental`. Native ABI `1.4`, provider protocol `1.2`, package
 schema `1` and the pinned Luau revision are unchanged. Host operation 22 extends
 the existing private callback protocol without changing its exported ABI.
 
-Player.Health, Player.MaxHealth, Items, CountItem, HasItem, Teleport, GiveItem,
-TakeItem, Inventory-M1/M2, Vector3 Unit/Dot/Cross, Velocity, Rotation, CFrame and
-entity/world APIs remain unimplemented.
+Player.Health and Player.MaxHealth are implemented separately by Player-1B.
+Items, CountItem, HasItem, Teleport, GiveItem, TakeItem, Inventory-M1/M2,
+Vector3 Unit/Dot/Cross, Velocity, Rotation, CFrame and entity/world APIs remain
+unimplemented.

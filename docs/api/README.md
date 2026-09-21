@@ -13,7 +13,7 @@ This is server-side Luau, not Roblox API compatibility.
 | `game` and service discovery | [Globals](Globals.md) |
 | Players, connected-player snapshots, join/leave events | [Players](Services/Players.md) |
 | Player-issued chat commands | [Commands](Services/Commands.md) |
-| Player identity, messaging, permission query | [Player](Types/Player.md) |
+| Player identity, live position/health observation, messaging and permission query | [Player](Types/Player.md) |
 | Immutable world-coordinate values | [Vector3](Types/Vector3.md) |
 | Command payload | [CommandContext](Types/CommandContext.md) |
 | Event subscription | [Signal](Types/Signal.md), [Connection](Types/Connection.md) |
@@ -46,10 +46,12 @@ Players.PlayerAdded:Connect(function(Player)
 end)
 ```
 
-Player-1A adds immutable `Vector3` and the live read-only `Player.Position`
-property under `0.4.0-experimental`; see its
-[qualification record](../PlayerInteractionFoundation1A.md). Not implemented in
-the current scripting surface: inventory, entities, health, teleport,
+Player-1A adds immutable `Vector3` and the live read-only `Player.Position`;
+Player-1B adds live read-only `Player.Health` and `Player.MaxHealth` under the
+same `0.4.0-experimental` identity. See the
+[Player-1A](../PlayerInteractionFoundation1A.md) and
+[Player-1B](../PlayerInteractionFoundation1B.md) qualification records. Not implemented in
+the current scripting surface: inventory, entities, health mutation, teleport,
 moderation/admin mutation, networking, HTTP, filesystem APIs,
 arbitrary hooks/console execution, reflection, Roblox hierarchy/replication and
 `task.wait`. No Phase 4 API is shipped. [D18](../Invariants.md#d18--player-interaction-foundation-1)

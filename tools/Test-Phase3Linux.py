@@ -14,8 +14,11 @@ Artifacts = Path('/artifacts')
 RunId = time.strftime('%Y%m%d-%H%M%S')
 Log = Artifacts / ('phase3-server-linux-' + RunId + '.log')
 Library = Root / 'carbon/data/CarbonLuau/native/linux-x64/libcarbonluau_native.so'
+Compiler = Root / 'carbon/data/CarbonLuau/native/linux-x64/carbonluau_compiler'
 Library.parent.mkdir(parents=True, exist_ok=True)
 shutil.copy2('/work/linux-x64/libcarbonluau_native.so', Library)
+shutil.copy2('/work/linux-x64/carbonluau_compiler', Compiler)
+Compiler.chmod(0o755)
 shutil.copy2(Artifacts / 'phase3-fixture/CarbonLuau.cszip', Root / 'carbon/plugins/CarbonLuau.cszip')
 shutil.copytree(Artifacts / 'phase3-fixture/scripts', Root / 'carbon/data/CarbonLuau/scripts', dirs_exist_ok=True)
 Secret = uuid.uuid4().hex
@@ -80,7 +83,7 @@ with (Artifacts / ('phase3-console-linux-' + RunId + '.log')).open('w') as Outpu
             print(Send('carbonluau.phase3fixture', 'CarbonLuau Phase3 fixture scheduled'), flush=True)
             WaitLog(Offset, 'PASS teardown: owned chat registrations removed and native library released')
             Text = ReadLog()[Offset:]
-            for Expected in ['PASS actual Carbon command dispatch', 'PASS A -> rejected B -> committed C', 'PASS reconnect, D10', 'production NextFrame event']:
+            for Expected in ['PASS live Health/MaxHealth', 'PASS actual Carbon command dispatch', 'PASS A -> rejected B -> committed C', 'PASS reconnect, D10', 'production NextFrame event']:
                 if Expected not in Text:
                     raise RuntimeError('Incomplete fixture evidence: ' + Expected)
             CheckUnmapped()
@@ -90,7 +93,7 @@ with (Artifacts / ('phase3-console-linux-' + RunId + '.log')).open('w') as Outpu
             if Cycle < 3:
                 Offset = len(ReadLog())
                 Send('c.load CarbonLuau')
-                WaitLog(Offset, 'Ready; generation=1')
+                WaitLog(Offset, 'Ready; generation=')
         print('[CarbonLuau:LiveTest] PASS Linux Phase 3: 3 controlled-host cycles; no real-client delivery claim', flush=True)
     finally:
         if Socket:

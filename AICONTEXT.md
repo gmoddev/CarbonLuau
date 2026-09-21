@@ -35,6 +35,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Canonical Player Interaction Foundation 1 semantics | [D18 in Invariants.md](docs/Invariants.md#d18--player-interaction-foundation-1) |
 | Player Interaction Foundation 1 rationale, host evidence, phases and qualification gates | [PlayerInteractionFoundation1.md](docs/PlayerInteractionFoundation1.md) |
 | Player Interaction Foundation 1A Vector3/Position implementation and evidence | [PlayerInteractionFoundation1A.md](docs/PlayerInteractionFoundation1A.md) |
+| Player Interaction Foundation 1B Health/MaxHealth implementation and evidence | [PlayerInteractionFoundation1B.md](docs/PlayerInteractionFoundation1B.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
@@ -234,10 +235,11 @@ Inventory-M1 owns the deterministic model without Rust mutation, Inventory-M2
 owns exact target-build adapter qualification, Player-1F-A owns TakeItem,
 Player-1F-B owns GiveItem, and Player-1F-C owns combined mutation closure.
 GiveItem and TakeItem remain unimplemented and may qualify independently.
-Player-1A implements and qualifies only immutable `Vector3` and read-only
-`Player.Position` as recorded in
-[PlayerInteractionFoundation1A.md](docs/PlayerInteractionFoundation1A.md).
-This does not authorize or imply Player-1B+, Inventory-M or other gameplay APIs.
+Player-1A implements immutable `Vector3` and read-only `Player.Position` as
+recorded in [PlayerInteractionFoundation1A.md](docs/PlayerInteractionFoundation1A.md).
+Player-1B implements read-only `Player.Health` and `Player.MaxHealth` as recorded
+in [PlayerInteractionFoundation1B.md](docs/PlayerInteractionFoundation1B.md).
+This does not authorize or imply Player-1C+, Inventory-M or other gameplay APIs.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

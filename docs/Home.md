@@ -103,9 +103,11 @@ rationale and qualification routing in
 [PlayerInteractionFoundation1](PlayerInteractionFoundation1.md). It approves
 immutable `Vector3`, read-only exact-Player position/health/inventory
 observation, read-only item existence, committed-only Teleport and
-implementation-gated GiveItem/TakeItem. Player-1A now implements immutable
-`Vector3` and read-only exact-connection `Player.Position`; see
-[Player Interaction Foundation 1A](PlayerInteractionFoundation1A.md). The later
+implementation-gated GiveItem/TakeItem. Player-1A implements immutable
+`Vector3` and read-only exact-connection `Player.Position`; Player-1B implements
+live read-only `Player.Health` and `Player.MaxHealth`. See
+[Player Interaction Foundation 1A](PlayerInteractionFoundation1A.md) and
+[Player Interaction Foundation 1B](PlayerInteractionFoundation1B.md). The later
 surface remains unimplemented. Revised D13 defines bounded PREPARE/COMMIT/VERIFY,
 exact-Player Luau serialization and false/true/indeterminate-error outcomes;
 the full rationale is in

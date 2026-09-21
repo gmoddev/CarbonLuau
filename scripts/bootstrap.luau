@@ -219,6 +219,8 @@ local function GetPlayer(Token, UserId, Name)
                 local Position = Host(22, Token, UserId)
                 return Vector3.new(tonumber(Position[1]), tonumber(Position[2]), tonumber(Position[3]))
             end
+            if Key == "Health" then return tonumber(Host(23, Token, UserId)[1]) end
+            if Key == "MaxHealth" then return tonumber(Host(24, Token, UserId)[1]) end
             return PlayerMethods[Key]
         end,
     }
