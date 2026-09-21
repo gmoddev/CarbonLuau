@@ -41,8 +41,9 @@ and v0.3.0 artifacts are unchanged. The machine-readable mapping is
 [release.json](../release.json), with build and provenance instructions in the
 [release guide](Release.md).
 
-GUI Foundation 1 is an approved D15 architecture with the Foundation 1A/1B
-substrate and retained runtime implemented but presentations/rendering deferred. Its package
+GUI Foundation 1 is an approved D15 architecture implemented through Foundation
+1E, including the retained runtime, presentations, synchronization and secure
+`TextButton.Activated` ingress. Its package
 and scripting API identity is **UNASSIGNED / release-planning gated**. The design
 does not alter package `0.4.0`, scripting API `0.4.0-experimental`, native ABI
 `1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1` or the
@@ -350,6 +351,27 @@ Authenticated-client evidence remains mandatory for actual visual layout,
 cursor behavior, client reconciliation and click receipt. Numeric flush, payload
 and checkpoint values remain internal tuning values rather than public
 compatibility promises. The GUI package/scripting identity remains unassigned.
+
+### GUI Foundation 1E evidence contract
+
+[GUI Foundation 1E](GuiFoundation1E.md) implements one private Player-origin
+Carbon command, 128-bit opaque presentation-bound action tokens, exact Player
+connection validation, bounded per-action and per-Player rates, atomic bounded
+listener fanout and operation-9 revalidation immediately before Luau entry. Its
+affected evidence is distinct per-Player tokens; malformed, forged,
+cross-Player, stale, hidden and destroyed rejection; Hide/Show, full-rebuild,
+uncertainty, disconnect, domain and VM lifecycle rotation; property-patch token
+retention; queue, listener and registry bounds; publication rollback and commit;
+normal Activated callback ordering and mutation; hostile-input stress; GUI-1A
+through 1D and Foundations A-G regressions; Windows/Linux runtime lanes;
+packaging; live Carbon registration where available; and affected sanitizer
+coverage.
+
+Authenticated real-client click receipt remains mandatory before claiming that
+a Rust client delivered the private command or visibly completed an
+interaction. Hosted or local model tests and server-side Carbon registration do
+not substitute for that evidence. The GUI package/scripting identity remains
+unassigned.
 
 ## Phase 0 consistency review
 

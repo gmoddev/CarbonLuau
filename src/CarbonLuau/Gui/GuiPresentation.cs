@@ -8,11 +8,14 @@ namespace Carbon.Plugins
     {
         internal sealed class GuiPresentation
         {
-            internal readonly ulong ScreenId, Epoch;
+            internal readonly ulong ScreenId;
+            internal ulong Epoch;
             internal readonly string PlayerToken, PlayerUserId, ClientPrefix;
             internal bool WasSent, NeedsFullResync, SynchronizationUncertain, LastNeedsCursor;
+            internal bool ActionInvalidationPending;
             internal ulong SentRevision, ProjectionBlockedRevision, LastAttemptCycle;
             internal int SuccessfulPatchBatches;
+            internal readonly Dictionary<ulong, string> ActionTokens = new Dictionary<ulong, string>();
             internal GuiPresentation(ulong ScreenId, ulong Epoch, string PlayerToken, string PlayerUserId, string ClientPrefix)
             {
                 this.ScreenId = ScreenId; this.Epoch = Epoch; this.PlayerToken = PlayerToken;
@@ -24,11 +27,14 @@ namespace Carbon.Plugins
             internal string TextClientId(ulong ObjectId) { return ClientPrefix + "t" + ObjectId.ToString("x", CultureInfo.InvariantCulture); }
             internal GuiPresentation Copy()
             {
-                return new GuiPresentation(ScreenId, Epoch, PlayerToken, PlayerUserId, ClientPrefix) {
+                var Result = new GuiPresentation(ScreenId, Epoch, PlayerToken, PlayerUserId, ClientPrefix) {
                     WasSent = WasSent, NeedsFullResync = NeedsFullResync, SynchronizationUncertain = SynchronizationUncertain,
                     LastNeedsCursor = LastNeedsCursor, SentRevision = SentRevision, ProjectionBlockedRevision = ProjectionBlockedRevision,
-                    LastAttemptCycle = LastAttemptCycle, SuccessfulPatchBatches = SuccessfulPatchBatches
+                    LastAttemptCycle = LastAttemptCycle, SuccessfulPatchBatches = SuccessfulPatchBatches,
+                    ActionInvalidationPending = ActionInvalidationPending
                 };
+                foreach (var Value in ActionTokens) Result.ActionTokens.Add(Value.Key, Value.Value);
+                return Result;
             }
         }
 
@@ -49,6 +55,9 @@ namespace Carbon.Plugins
         internal static class GuiRenderCompiler
         {
             internal static GuiRenderPlan Compile(GuiRetainedState State, GuiRetainedNode Screen, GuiPresentation Presentation, GuiLimits Limits)
+            { return Compile(State, Screen, Presentation, Limits, null); }
+            internal static GuiRenderPlan Compile(GuiRetainedState State, GuiRetainedNode Screen, GuiPresentation Presentation,
+                GuiLimits Limits, Func<GuiRetainedNode, string> ActionCommand)
             {
                 if (State == null || Screen == null || Presentation == null || Limits == null || Screen.ClassId != GuiClassId.ScreenGui)
                     throw new InvalidOperationException("GUI render compiler requires a live ScreenGui presentation");
@@ -59,7 +68,7 @@ namespace Carbon.Plugins
                     Vector(GuiRenderPropertyId.OffsetMin, 0, 0), Vector(GuiRenderPropertyId.OffsetMax, 0, 0),
                     Vector(GuiRenderPropertyId.Pivot, 0.5, 0.5), Boolean(GuiRenderPropertyId.Visible, true),
                     Boolean(GuiRenderPropertyId.NeedsCursor, NeedsCursor)));
-                AppendChildren(State, Screen, Presentation.RootClientId, Presentation, Limits, Elements);
+                AppendChildren(State, Screen, Presentation.RootClientId, Presentation, Limits, Elements, true, ActionCommand);
                 int Estimated = 16;
                 foreach (GuiRenderElement Element in Elements) Estimated = checked(Estimated + Element.CanonicalUtf8Bytes + 64);
                 if (Estimated > Limits.MaxSerializedOperationBytes) throw new FacadeException("GUI full presentation exceeds the serialized operation bound");
@@ -88,6 +97,9 @@ namespace Carbon.Plugins
                         double[] ColorValue = Numbers(Node, GuiPropertyId.BackgroundColor3);
                         Main.Add(Color(GuiRenderPropertyId.BackgroundColor, ColorValue, 1 - Number(Node, GuiPropertyId.BackgroundTransparency)));
                     }
+                    string ActionToken;
+                    if (Node.ClassId == GuiClassId.TextButton && Presentation.ActionTokens.TryGetValue(Dirty.Key, out ActionToken))
+                        Main.Add(String(GuiRenderPropertyId.ActionCommand, GuiRetainedWorld.ActionCommand + " " + ActionToken));
                     if (Main.Count != 0) Elements.Add(new GuiRenderElement(Presentation.ObjectClientId(Dirty.Key), null,
                         Node.ClassId == GuiClassId.TextButton ? GuiRenderNodeKind.Button : GuiRenderNodeKind.Container, Limits, Main.ToArray()));
                     bool Text = Dirty.Value.Contains(GuiPropertyId.Text);
@@ -115,7 +127,8 @@ namespace Carbon.Plugins
             }
 
             private static void AppendChildren(GuiRetainedState State, GuiRetainedNode Parent, string ParentClientId,
-                GuiPresentation Presentation, GuiLimits Limits, List<GuiRenderElement> Elements)
+                GuiPresentation Presentation, GuiLimits Limits, List<GuiRenderElement> Elements, bool AncestorsVisible,
+                Func<GuiRetainedNode, string> ActionCommand)
             {
                 var Ordered = new List<GuiRetainedNode>();
                 foreach (ulong ChildId in Parent.Children) Ordered.Add(State.Nodes[ChildId]);
@@ -126,6 +139,7 @@ namespace Carbon.Plugins
                     return Result != 0 ? Result : Left.Identity.GuiObjectId.CompareTo(Right.Identity.GuiObjectId);
                 });
                 foreach (GuiRetainedNode Node in Ordered) {
+                    bool EffectiveVisible = AncestorsVisible && Boolean(Node, GuiPropertyId.Visible);
                     string ClientId = Presentation.ObjectClientId(Node.Identity.GuiObjectId);
                     GuiRenderNodeKind Kind = Node.ClassId == GuiClassId.TextButton ? GuiRenderNodeKind.Button : GuiRenderNodeKind.Container;
                     var Properties = new List<GuiRenderProperty>();
@@ -134,6 +148,10 @@ namespace Carbon.Plugins
                     double[] Background = Numbers(Node, GuiPropertyId.BackgroundColor3);
                     Properties.Add(Color(GuiRenderPropertyId.BackgroundColor, Background,
                         1 - Number(Node, GuiPropertyId.BackgroundTransparency)));
+                    if (EffectiveVisible && Node.ClassId == GuiClassId.TextButton && ActionCommand != null) {
+                        string Command = ActionCommand(Node);
+                        if (Command != null) Properties.Add(String(GuiRenderPropertyId.ActionCommand, Command));
+                    }
                     Elements.Add(new GuiRenderElement(ClientId, ParentClientId, Kind, Limits, Properties.ToArray()));
                     if (Node.ClassId == GuiClassId.TextLabel || Node.ClassId == GuiClassId.TextButton) {
                         double[] TextColor = Numbers(Node, GuiPropertyId.TextColor3);
@@ -148,7 +166,7 @@ namespace Carbon.Plugins
                             String(GuiRenderPropertyId.TextXAlignment, TextValue(Node, GuiPropertyId.TextXAlignment)),
                             String(GuiRenderPropertyId.TextYAlignment, TextValue(Node, GuiPropertyId.TextYAlignment))));
                     }
-                    AppendChildren(State, Node, ClientId, Presentation, Limits, Elements);
+                    AppendChildren(State, Node, ClientId, Presentation, Limits, Elements, EffectiveVisible, ActionCommand);
                 }
             }
 

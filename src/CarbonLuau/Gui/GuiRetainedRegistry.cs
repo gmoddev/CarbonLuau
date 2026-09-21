@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography;
 
@@ -92,12 +93,21 @@ namespace Carbon.Plugins
 
         internal sealed class GuiRetainedWorld
         {
+            internal const string ActionCommand = "carbonluau.gui.action";
             internal readonly GuiLimits Limits;
             internal readonly PlayerDirectory Players;
             internal readonly IGuiBackend Backend;
+            internal readonly GuiActionDiagnostics ActionDiagnostics = new GuiActionDiagnostics();
             internal int LiveObjects { get; private set; }
             internal int LivePresentations { get; private set; }
             private readonly Dictionary<string, int> PlayerPresentations = new Dictionary<string, int>(StringComparer.Ordinal);
+            private readonly Dictionary<string, GuiActionRecord> Actions = new Dictionary<string, GuiActionRecord>(StringComparer.Ordinal);
+            private readonly Dictionary<GuiRetainedRegistry, int> DomainActions = new Dictionary<GuiRetainedRegistry, int>();
+            private readonly Dictionary<string, GuiPlayerActionRate> PlayerActionRates = new Dictionary<string, GuiPlayerActionRate>(StringComparer.Ordinal);
+            private readonly Dictionary<string, GuiRetiredAction> RetiredActions = new Dictionary<string, GuiRetiredAction>(StringComparer.Ordinal);
+            private readonly Queue<string> RetiredActionOrder = new Queue<string>();
+            internal int LiveActionCount { get { return Actions.Count; } }
+            internal int RetiredActionCount { get { return RetiredActions.Count; } }
             internal GuiRetainedWorld(GuiLimits Limits) : this(Limits, null, new InMemoryGuiBackend()) { }
             internal GuiRetainedWorld(GuiLimits Limits, PlayerDirectory Players, IGuiBackend Backend)
             { this.Limits = Limits ?? throw new ArgumentNullException("Limits"); this.Players = Players; this.Backend = Backend ?? throw new ArgumentNullException("Backend"); }
@@ -137,10 +147,129 @@ namespace Carbon.Plugins
             }
             internal PlayerView Resolve(string Token, string UserId)
             { return Players == null ? null : Players.Resolve(Token, UserId); }
+            internal PlayerLifetime ExactPlayer(string Token, string UserId)
+            {
+                if (Players == null) return null;
+                PlayerLifetime Result = Players.Find(UserId);
+                return Result != null && Result.Token == Token ? Result : null;
+            }
             internal string NewClientPrefix()
             {
                 var Bytes = new byte[16]; using (RandomNumberGenerator Random = RandomNumberGenerator.Create()) Random.GetBytes(Bytes);
                 return "cluau_" + BitConverter.ToString(Bytes).Replace("-", "").ToLowerInvariant() + "_";
+            }
+
+            internal string NewActionToken(HashSet<string> Pending)
+            {
+                for (int Attempt = 0; Attempt < 16; ++Attempt) {
+                    var Bytes = new byte[16]; using (RandomNumberGenerator Random = RandomNumberGenerator.Create()) Random.GetBytes(Bytes);
+                    string Token = BitConverter.ToString(Bytes).Replace("-", "").ToLowerInvariant();
+                    if (!Actions.ContainsKey(Token) && !RetiredActions.ContainsKey(Token) && (Pending == null || !Pending.Contains(Token))) return Token;
+                }
+                throw new FacadeException("GUI action identity generation failed");
+            }
+
+            internal void ActivateActions(GuiRetainedRegistry Registry, IList<GuiActionRecord> Values)
+            {
+                if (Values == null || Values.Count == 0) return;
+                int DomainCount; DomainActions.TryGetValue(Registry, out DomainCount);
+                if (Values.Count > Limits.MaxActionTokensPerPresentation || DomainCount > Limits.MaxActionTokensPerDomain - Values.Count ||
+                    Actions.Count > Limits.MaxActionTokensGlobal - Values.Count)
+                    throw new FacadeException("GUI action token limit reached");
+                foreach (GuiActionRecord Value in Values) if (Value == null || Value.Registry != Registry || Actions.ContainsKey(Value.Token))
+                    throw new FacadeException("invalid GUI action publication");
+                long Now = Stopwatch.GetTimestamp();
+                foreach (GuiActionRecord Value in Values) {
+                    Actions.Add(Value.Token, Value);
+                    GuiPlayerActionRate PlayerRate;
+                    if (!PlayerActionRates.TryGetValue(Value.PlayerToken, out PlayerRate)) {
+                        PlayerRate = new GuiPlayerActionRate(Limits, Now); PlayerActionRates.Add(Value.PlayerToken, PlayerRate);
+                    }
+                    PlayerRate.References++;
+                }
+                DomainActions[Registry] = DomainCount + Values.Count;
+            }
+
+            internal void EnsureActionCapacity(GuiRetainedRegistry Registry, int Count)
+            {
+                int DomainCount; DomainActions.TryGetValue(Registry, out DomainCount);
+                if (Count < 0 || Count > Limits.MaxActionTokensPerPresentation || DomainCount > Limits.MaxActionTokensPerDomain - Count ||
+                    Actions.Count > Limits.MaxActionTokensGlobal - Count) throw new FacadeException("GUI action token limit reached");
+            }
+
+            internal void InvalidateAction(string Token, GuiActionRejection Reason)
+            {
+                GuiActionRecord Value;
+                if (!Actions.TryGetValue(Token, out Value)) return;
+                Actions.Remove(Token);
+                int DomainCount;
+                if (DomainActions.TryGetValue(Value.Registry, out DomainCount)) {
+                    if (DomainCount <= 1) DomainActions.Remove(Value.Registry); else DomainActions[Value.Registry] = DomainCount - 1;
+                }
+                GuiPlayerActionRate PlayerRate;
+                if (PlayerActionRates.TryGetValue(Value.PlayerToken, out PlayerRate) && --PlayerRate.References <= 0)
+                    PlayerActionRates.Remove(Value.PlayerToken);
+                Retire(Token, Reason);
+            }
+
+            internal void ReconcileActions(GuiRetainedRegistry Registry, HashSet<string> Keep, GuiActionRejection Reason)
+            {
+                var Remove = new List<string>();
+                foreach (var Value in Actions) if (Value.Value.Registry == Registry && (Keep == null || !Keep.Contains(Value.Key))) Remove.Add(Value.Key);
+                foreach (string Token in Remove) InvalidateAction(Token, Reason);
+            }
+
+            private void Retire(string Token, GuiActionRejection Reason)
+            {
+                if (RetiredActions.ContainsKey(Token)) return;
+                while (RetiredActions.Count >= Limits.MaxActionTokensGlobal && RetiredActionOrder.Count != 0)
+                    RetiredActions.Remove(RetiredActionOrder.Dequeue());
+                RetiredActions.Add(Token, new GuiRetiredAction(Reason)); RetiredActionOrder.Enqueue(Token);
+            }
+
+            internal bool TryAdmit(PlayerLifetime Sender, string Token, out GuiActionAdmission Admission)
+            {
+                Admission = null;
+                if (!CanonicalToken(Token)) { ActionDiagnostics.Reject(GuiActionRejection.Malformed); return false; }
+                GuiActionRecord Record;
+                if (!Actions.TryGetValue(Token, out Record)) {
+                    GuiRetiredAction Retired;
+                    ActionDiagnostics.Reject(RetiredActions.TryGetValue(Token, out Retired) ? Retired.Reason : GuiActionRejection.Unknown);
+                    return false;
+                }
+                PlayerView Current = Sender == null || Players == null ? null : Players.Resolve(Sender.Token, Sender.UserId);
+                if (Current == null || Sender.Token != Record.PlayerToken || Sender.UserId != Record.PlayerUserId ||
+                    !Object.ReferenceEquals(Sender.Identity, Record.PlayerIdentity) || !Object.ReferenceEquals(Sender.Connection, Record.PlayerConnection)) {
+                    ActionDiagnostics.Reject(GuiActionRejection.CrossPlayer); return false;
+                }
+                string[] Registrations; GuiActionRejection Reason = Record.Registry.ValidateAction(Record, null, out Registrations);
+                if (Reason != GuiActionRejection.None) { ActionDiagnostics.Reject(Reason); return false; }
+                long Now = Stopwatch.GetTimestamp(); GuiPlayerActionRate PlayerRate;
+                if (!PlayerActionRates.TryGetValue(Record.PlayerToken, out PlayerRate) || !Record.Rate.Allow(Now) || !PlayerRate.Rate.Allow(Now)) {
+                    ActionDiagnostics.Reject(GuiActionRejection.RateLimited); return false;
+                }
+                Admission = new GuiActionAdmission(Record, Registrations); return true;
+            }
+
+            internal bool ValidateQueued(string Token, string Registration, string PlayerToken, string PlayerUserId,
+                ulong ScreenId, ulong Epoch, ulong ButtonId)
+            {
+                GuiActionRecord Record; string[] Ignored;
+                bool Valid = Actions.TryGetValue(Token, out Record) && Record.PlayerToken == PlayerToken && Record.PlayerUserId == PlayerUserId &&
+                    Record.ScreenId == ScreenId && Record.PresentationEpoch == Epoch && Record.ButtonId == ButtonId &&
+                    Record.Registry.ValidateAction(Record, Registration, out Ignored) == GuiActionRejection.None;
+                if (!Valid) ActionDiagnostics.Reject(GuiActionRejection.PreEntryStale);
+                return Valid;
+            }
+
+            internal void Accepted() { ActionDiagnostics.Accept(); }
+            internal void QueueRejected() { ActionDiagnostics.Reject(GuiActionRejection.QueueFull); }
+            internal string ActionStatus { get { return ActionDiagnostics.Status() + "; active/retired: " + Actions.Count + "/" + RetiredActions.Count; } }
+            private static bool CanonicalToken(string Token)
+            {
+                if (Token == null || Token.Length != 32) return false;
+                foreach (char Value in Token) if (!((Value >= '0' && Value <= '9') || (Value >= 'a' && Value <= 'f'))) return false;
+                return true;
             }
         }
 
@@ -192,7 +321,10 @@ namespace Carbon.Plugins
                 Publications.Push(State.Copy());
             }
             internal void CommitPublication()
-            { RequireLive(); if (Publications.Count == 0) throw new FacadeException("invalid GUI publication commit"); Publications.Pop(); }
+            {
+                RequireLive(); if (Publications.Count == 0) throw new FacadeException("invalid GUI publication commit"); Publications.Pop();
+                if (Publications.Count == 0) ReconcileCommittedActions();
+            }
             internal void RollbackPublication()
             {
                 RequireLive(); if (Publications.Count == 0) throw new FacadeException("invalid GUI publication rollback");
@@ -250,11 +382,14 @@ namespace Carbon.Plugins
                         int Count = 0; foreach (ulong Owner in State.Connections.Values) if (Owner == Button.Identity.GuiObjectId) Count++;
                         if (Count >= Limits.MaxSignalConnectionsPerButton || State.Connections.Count >= Limits.MaxGuiSignalConnectionsPerDomain)
                             throw new FacadeException("GUI Signal connection limit reached");
-                        string Registration = NextRegistration(); State.Connections.Add(Registration, Button.Identity.GuiObjectId); return new[] {Registration};
+                        string Registration = NextRegistration(); State.Connections.Add(Registration, Button.Identity.GuiObjectId);
+                        MarkStructural(RootScreen(Button)); return new[] {Registration};
                     }
                     case "disconnect": {
                         RequireFields(Fields, 3); ulong ObjectId = Id(Fields[1]); ulong Owner;
-                        if (State.Connections.TryGetValue(Fields[2], out Owner) && Owner == ObjectId) State.Connections.Remove(Fields[2]);
+                        if (State.Connections.TryGetValue(Fields[2], out Owner) && Owner == ObjectId) {
+                            GuiRetainedNode Button = Node(ObjectId); State.Connections.Remove(Fields[2]); MarkStructural(RootScreen(Button));
+                        }
                         return new string[0];
                     }
                     case "show": RequireFields(Fields, 4); Show(Node(Id(Fields[1])), Fields[2], Fields[3]); return new string[0];
@@ -329,7 +464,8 @@ namespace Carbon.Plugins
                     State.Nodes.Remove(RemovedId);
                 }
                 if (Root.ClassId == GuiClassId.ScreenGui) State.Synchronization.Remove(Root.Identity.GuiObjectId);
-                World.Adjust(-RemovedIds.Count); if (AffectedScreen != null && Root.ClassId != GuiClassId.ScreenGui) MarkStructural(AffectedScreen);
+                World.Adjust(-RemovedIds.Count); if (AffectedScreen != null && Root.ClassId != GuiClassId.ScreenGui)
+                    MarkStructural(AffectedScreen, GuiActionRejection.TargetUnavailable);
                 return RemovedConnections.ToArray();
             }
 
@@ -349,7 +485,9 @@ namespace Carbon.Plugins
                 }
                 Node.Properties[Use.Descriptor.Id] = Value;
                 GuiRetainedNode ScreenValue = RootScreen(Node);
-                if (Use.Descriptor.MutationKind == GuiMutationKind.Structural) MarkStructural(ScreenValue);
+                if (Use.Descriptor.Id == GuiPropertyId.Visible && ContainsConnectedButton(Node))
+                    MarkStructural(ScreenValue, GuiActionRejection.TargetUnavailable);
+                else if (Use.Descriptor.MutationKind == GuiMutationKind.Structural) MarkStructural(ScreenValue);
                 else if (Use.Descriptor.MutationKind == GuiMutationKind.Patchable) MarkPatchable(ScreenValue, Node.Identity.GuiObjectId, Use.Descriptor.Id);
             }
 
@@ -369,7 +507,8 @@ namespace Carbon.Plugins
                 GuiRetainedNode OldScreen = RootScreen(Child), NewScreen = Parent == null ? null : RootScreen(Parent);
                 if (Child.ParentId.HasValue) State.Nodes[Child.ParentId.Value].Children.Remove(Child.Identity.GuiObjectId);
                 Child.ParentId = null; if (Parent != null) Attach(Child, Parent);
-                MarkStructural(OldScreen); if (NewScreen != OldScreen) MarkStructural(NewScreen);
+                MarkStructural(OldScreen, GuiActionRejection.TargetUnavailable);
+                if (NewScreen != OldScreen) MarkStructural(NewScreen, GuiActionRejection.TargetUnavailable);
             }
 
             private void Show(GuiRetainedNode Screen, string PlayerToken, string PlayerUserId)
@@ -377,7 +516,7 @@ namespace Carbon.Plugins
                 RequireScreen(Screen); if (World.Resolve(PlayerToken, PlayerUserId) == null) throw new FacadeException("Player is no longer connected");
                 string Key = PresentationKey(Screen.Identity.GuiObjectId, PlayerToken); GuiPresentation Existing;
                 if (State.Presentations.TryGetValue(Key, out Existing)) {
-                    if (Existing.SynchronizationUncertain) { Existing.NeedsFullResync = true; Existing.ProjectionBlockedRevision = 0; }
+                    if (Existing.SynchronizationUncertain) { RequireFullRebuild(Existing); Existing.ProjectionBlockedRevision = 0; }
                     return;
                 }
                 int Viewers = 0; foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) Viewers++;
@@ -395,6 +534,7 @@ namespace Carbon.Plugins
                 RequireScreen(Screen); if (World.Resolve(PlayerToken, PlayerUserId) == null) throw new FacadeException("Player is no longer connected");
                 string Key = PresentationKey(Screen.Identity.GuiObjectId, PlayerToken); GuiPresentation Presentation;
                 if (!State.Presentations.TryGetValue(Key, out Presentation)) return;
+                InvalidatePresentation(Presentation, GuiActionRejection.TargetUnavailable);
                 State.Presentations.Remove(Key); World.RemovePresentation(Presentation.PlayerToken);
                 if (Presentation.WasSent) State.PendingDestroys.Enqueue(Presentation.Target);
                 PruneSynchronization(Screen.Identity.GuiObjectId);
@@ -404,7 +544,10 @@ namespace Carbon.Plugins
                 RequireLive(); if (Player == null) return;
                 var Keys = new List<string>(); foreach (var Value in State.Presentations) if (Value.Value.PlayerToken == Player.Token) Keys.Add(Value.Key);
                 var Screens = new HashSet<ulong>();
-                foreach (string Key in Keys) { GuiPresentation Value = State.Presentations[Key]; Screens.Add(Value.ScreenId); World.RemovePresentation(Value.PlayerToken); State.Presentations.Remove(Key); }
+                foreach (string Key in Keys) {
+                    GuiPresentation Value = State.Presentations[Key]; Screens.Add(Value.ScreenId);
+                    InvalidatePresentation(Value, GuiActionRejection.Stale); World.RemovePresentation(Value.PlayerToken); State.Presentations.Remove(Key);
+                }
                 if (State.PendingDestroys.Count != 0) {
                     var Keep = new Queue<GuiBackendTarget>(); while (State.PendingDestroys.Count != 0) {
                         GuiBackendTarget Target = State.PendingDestroys.Dequeue(); if (Target.ExactPlayerConnectionToken != Player.Token) Keep.Enqueue(Target);
@@ -431,11 +574,13 @@ namespace Carbon.Plugins
                 if (TrackWorldCycle) Selected.LastAttemptCycle = FlushCycle;
                 PresentationFlushCursor = SelectedKey; PreferDestroy = true;
                 if (World.Resolve(Selected.PlayerToken, Selected.PlayerUserId) == null) {
-                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); PruneSynchronization(Selected.ScreenId); return 0;
+                    InvalidatePresentation(Selected, GuiActionRejection.Stale); State.Presentations.Remove(SelectedKey);
+                    World.RemovePresentation(Selected.PlayerToken); PruneSynchronization(Selected.ScreenId); return 0;
                 }
                 GuiRetainedNode Screen;
                 if (!State.Nodes.TryGetValue(Selected.ScreenId, out Screen)) {
-                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); State.Synchronization.Remove(Selected.ScreenId); return 0;
+                    InvalidatePresentation(Selected, GuiActionRejection.TargetUnavailable); State.Presentations.Remove(SelectedKey);
+                    World.RemovePresentation(Selected.PlayerToken); State.Synchronization.Remove(Selected.ScreenId); return 0;
                 }
                 GuiScreenSynchronization Synchronization = State.Synchronization[Selected.ScreenId]; ulong Revision = Synchronization.Revision;
                 bool Full = Selected.NeedsFullResync || !Selected.WasSent || Synchronization.FullRebuildRequired ||
@@ -446,8 +591,24 @@ namespace Carbon.Plugins
                     catch (GuiFullRebuildRequiredException) { Full = true; }
                     catch (InvalidOperationException) { Full = true; }
                 }
+                if (Full) RequireFullRebuild(Selected);
+                var CandidateActions = new List<GuiActionRecord>();
+                var CandidateTokens = new Dictionary<ulong, string>();
+                var PendingTokens = new HashSet<string>(StringComparer.Ordinal);
                 if (Full) {
-                    try { Plan = GuiRenderCompiler.Compile(State, Screen, Selected, Limits); Bytes = World.Backend.MeasureReplace(Selected.Target, Plan); }
+                    try {
+                        PlayerLifetime ExactPlayer = World.ExactPlayer(Selected.PlayerToken, Selected.PlayerUserId);
+                        if (ExactPlayer == null) throw new InvalidOperationException("GUI Player lifetime is stale");
+                        Plan = GuiRenderCompiler.Compile(State, Screen, Selected, Limits, Button => {
+                            if (!HasConnection(Button.Identity.GuiObjectId)) return null;
+                            string Token = World.NewActionToken(PendingTokens); PendingTokens.Add(Token);
+                            var Record = new GuiActionRecord(Token, this, Selected, Button, ExactPlayer, Limits, Stopwatch.GetTimestamp());
+                            CandidateActions.Add(Record); CandidateTokens.Add(Button.Identity.GuiObjectId, Token);
+                            return GuiRetainedWorld.ActionCommand + " " + Token;
+                        });
+                        World.EnsureActionCapacity(this, CandidateActions.Count);
+                        Bytes = World.Backend.MeasureReplace(Selected.Target, Plan);
+                    }
                     catch {
                         Selected.NeedsFullResync = false; Selected.SynchronizationUncertain = true;
                         Selected.ProjectionBlockedRevision = Revision; return 0;
@@ -455,7 +616,7 @@ namespace Carbon.Plugins
                 } else {
                     try { Bytes = World.Backend.MeasureUpdate(Selected.Target, Patch); }
                     catch {
-                        Selected.NeedsFullResync = true; Selected.SuccessfulPatchBatches = 0;
+                        RequireFullRebuild(Selected); Selected.SuccessfulPatchBatches = 0;
                         return 0;
                     }
                 }
@@ -464,15 +625,25 @@ namespace Carbon.Plugins
                 try { Result = Full ? World.Backend.Replace(Selected.Target, Plan) : World.Backend.Update(Selected.Target, Patch); }
                 catch { Result = GuiBackendResult.Failure(GuiBackendResultCode.SendFailed, "GUI backend send failed"); }
                 if (Result.Accepted) {
+                    if (Full) {
+                        try { World.ActivateActions(this, CandidateActions); }
+                        catch {
+                            AdvancePresentationEpoch(Selected); Selected.NeedsFullResync = true; Selected.SynchronizationUncertain = true;
+                            Selected.SuccessfulPatchBatches = 0; return Bytes;
+                        }
+                        Selected.ActionTokens.Clear(); foreach (var Value in CandidateTokens) Selected.ActionTokens.Add(Value.Key, Value.Value);
+                    }
                     Selected.WasSent = true; Selected.SentRevision = Revision; Selected.NeedsFullResync = false;
                     Selected.SynchronizationUncertain = false; Selected.ProjectionBlockedRevision = 0;
                     Selected.LastNeedsCursor = GuiRenderCompiler.NeedsCursorFor(State, Screen);
                     Selected.SuccessfulPatchBatches = Full ? 0 : Selected.SuccessfulPatchBatches + 1;
                     PruneSynchronization(Selected.ScreenId);
                 } else if (!Full || Result.Code != GuiBackendResultCode.TargetUnavailable || World.Resolve(Selected.PlayerToken, Selected.PlayerUserId) != null) {
-                    Selected.NeedsFullResync = true; Selected.SynchronizationUncertain = true; Selected.SuccessfulPatchBatches = 0;
+                    if (Full) AdvancePresentationEpoch(Selected);
+                    RequireFullRebuild(Selected); Selected.SynchronizationUncertain = true; Selected.SuccessfulPatchBatches = 0;
                 } else {
-                    State.Presentations.Remove(SelectedKey); World.RemovePresentation(Selected.PlayerToken); PruneSynchronization(Selected.ScreenId);
+                    InvalidatePresentation(Selected, GuiActionRejection.Stale); State.Presentations.Remove(SelectedKey);
+                    World.RemovePresentation(Selected.PlayerToken); PruneSynchronization(Selected.ScreenId);
                 }
                 return Bytes;
             }
@@ -481,6 +652,7 @@ namespace Carbon.Plugins
                 var Keys = new List<string>(); foreach (var Value in State.Presentations) if (Value.Value.ScreenId == ScreenId) Keys.Add(Value.Key);
                 foreach (string Key in Keys) {
                     GuiPresentation Presentation = State.Presentations[Key]; State.Presentations.Remove(Key); World.RemovePresentation(Presentation.PlayerToken);
+                    InvalidatePresentation(Presentation, GuiActionRejection.TargetUnavailable);
                     if (Presentation.WasSent) State.PendingDestroys.Enqueue(Presentation.Target);
                 }
                 PruneSynchronization(ScreenId);
@@ -503,12 +675,12 @@ namespace Carbon.Plugins
                     Presentation.ProjectionBlockedRevision == Synchronization.Revision) return false;
                 return Presentation.NeedsFullResync || Presentation.SentRevision < Synchronization.Revision;
             }
-            private void MarkStructural(GuiRetainedNode Screen)
+            private void MarkStructural(GuiRetainedNode Screen, GuiActionRejection ActionReason = GuiActionRejection.Stale)
             {
                 if (Screen == null) return; GuiScreenSynchronization Synchronization = Advance(Screen.Identity.GuiObjectId);
                 Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = HasPresentation(Screen.Identity.GuiObjectId);
                 foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) {
-                    Value.NeedsFullResync = true; Value.ProjectionBlockedRevision = 0; Value.SuccessfulPatchBatches = 0;
+                    RequireFullRebuild(Value, ActionReason); Value.ProjectionBlockedRevision = 0; Value.SuccessfulPatchBatches = 0;
                 }
             }
             private void MarkPatchable(GuiRetainedNode Screen, ulong ObjectId, GuiPropertyId Property)
@@ -520,7 +692,7 @@ namespace Carbon.Plugins
                 if (!Synchronization.DirtyObjects.TryGetValue(ObjectId, out Properties)) {
                     if (TrackedDirtyObjects() >= Limits.MaxTrackedDirtyObjectsPerDomain) {
                         Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = true;
-                        foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) Value.NeedsFullResync = true;
+                        foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == Screen.Identity.GuiObjectId) RequireFullRebuild(Value);
                         return;
                     }
                     Properties = new HashSet<GuiPropertyId>(); Synchronization.DirtyObjects.Add(ObjectId, Properties);
@@ -543,6 +715,85 @@ namespace Carbon.Plugins
                 GuiScreenSynchronization Synchronization; if (!State.Synchronization.TryGetValue(ScreenId, out Synchronization)) return;
                 foreach (GuiPresentation Value in State.Presentations.Values) if (Value.ScreenId == ScreenId && Value.SentRevision < Synchronization.Revision) return;
                 Synchronization.DirtyObjects.Clear(); Synchronization.FullRebuildRequired = false;
+            }
+
+            private bool HasConnection(ulong ButtonId)
+            { foreach (ulong Value in State.Connections.Values) if (Value == ButtonId) return true; return false; }
+            private bool ContainsConnectedButton(GuiRetainedNode Root)
+            {
+                if (Root.ClassId == GuiClassId.TextButton && HasConnection(Root.Identity.GuiObjectId)) return true;
+                foreach (ulong Child in Root.Children) if (ContainsConnectedButton(State.Nodes[Child])) return true;
+                return false;
+            }
+            private bool EffectivelyVisible(GuiRetainedNode Button, GuiRetainedNode Screen)
+            {
+                for (GuiRetainedNode Value = Button; Value != null && Value != Screen;
+                    Value = Value.ParentId.HasValue ? State.Nodes[Value.ParentId.Value] : null) {
+                    GuiStoredValue Visible;
+                    if (!Value.Properties.TryGetValue(GuiPropertyId.Visible, out Visible) || !Visible.Boolean) return false;
+                    if (!Value.ParentId.HasValue) return false;
+                }
+                return RootScreen(Button) == Screen;
+            }
+            private void RequireFullRebuild(GuiPresentation Presentation, GuiActionRejection Reason = GuiActionRejection.Stale)
+            {
+                bool Rotate = Presentation.WasSent && !Presentation.NeedsFullResync;
+                if (Presentation.ActionTokens.Count != 0 || Presentation.ActionInvalidationPending) {
+                    InvalidatePresentation(Presentation, Reason); Rotate = true;
+                }
+                if (Rotate) AdvancePresentationEpoch(Presentation);
+                Presentation.NeedsFullResync = true;
+            }
+            private void AdvancePresentationEpoch(GuiPresentation Presentation)
+            {
+                if (NextPresentationEpoch == ulong.MaxValue) throw new FacadeException("GUI presentation epoch exhausted");
+                Presentation.Epoch = NextPresentationEpoch++;
+            }
+            private void InvalidatePresentation(GuiPresentation Presentation, GuiActionRejection Reason)
+            {
+                if (Publications.Count != 0) { Presentation.ActionInvalidationPending = true; return; }
+                foreach (string Token in Presentation.ActionTokens.Values) World.InvalidateAction(Token, Reason);
+                Presentation.ActionTokens.Clear(); Presentation.ActionInvalidationPending = false;
+            }
+            private void ReconcileCommittedActions()
+            {
+                var Keep = new HashSet<string>(StringComparer.Ordinal);
+                foreach (GuiPresentation Presentation in State.Presentations.Values) {
+                    if (Presentation.ActionInvalidationPending) {
+                        foreach (string Token in Presentation.ActionTokens.Values) World.InvalidateAction(Token, GuiActionRejection.Stale);
+                        Presentation.ActionTokens.Clear(); Presentation.ActionInvalidationPending = false;
+                    }
+                    foreach (string Token in Presentation.ActionTokens.Values) Keep.Add(Token);
+                }
+                World.ReconcileActions(this, Keep, GuiActionRejection.Stale);
+            }
+
+            internal GuiActionRejection ValidateAction(GuiActionRecord Record, string Registration, out string[] Registrations)
+            {
+                Registrations = new string[0];
+                if (Disposed || Record == null || Record.Registry != this || Record.VmGenerationId != VmGenerationId ||
+                    Record.DomainLifetimeId != DomainLifetimeId) return GuiActionRejection.Stale;
+                GuiPresentation Presentation;
+                if (!State.Presentations.TryGetValue(PresentationKey(Record.ScreenId, Record.PlayerToken), out Presentation) ||
+                    Presentation.Epoch != Record.PresentationEpoch || Presentation.ActionInvalidationPending) return GuiActionRejection.Stale;
+                string ActiveToken;
+                if (!Presentation.ActionTokens.TryGetValue(Record.ButtonId, out ActiveToken) || ActiveToken != Record.Token) return GuiActionRejection.Stale;
+                PlayerLifetime Player = World.ExactPlayer(Record.PlayerToken, Record.PlayerUserId);
+                if (Player == null || !Object.ReferenceEquals(Player.Identity, Record.PlayerIdentity) ||
+                    !Object.ReferenceEquals(Player.Connection, Record.PlayerConnection)) return GuiActionRejection.Stale;
+                GuiRetainedNode Screen, Button;
+                if (!State.Nodes.TryGetValue(Record.ScreenId, out Screen) || Screen.ClassId != GuiClassId.ScreenGui ||
+                    !State.Nodes.TryGetValue(Record.ButtonId, out Button) || Button.ClassId != GuiClassId.TextButton ||
+                    !EffectivelyVisible(Button, Screen)) return GuiActionRejection.TargetUnavailable;
+                var Values = new List<KeyValuePair<ulong, string>>();
+                foreach (var Value in State.Connections) if (Value.Value == Record.ButtonId) {
+                    ulong Numeric; if (UInt64.TryParse(Value.Key, NumberStyles.None, CultureInfo.InvariantCulture, out Numeric))
+                        Values.Add(new KeyValuePair<ulong, string>(Numeric, Value.Key));
+                }
+                Values.Sort((Left, Right) => Left.Key.CompareTo(Right.Key));
+                if (Values.Count == 0 || (Registration != null && !Values.Exists(Value => Value.Value == Registration)))
+                    return GuiActionRejection.TargetUnavailable;
+                Registrations = Values.ConvertAll(Value => Value.Value).ToArray(); return GuiActionRejection.None;
             }
             private static void RequireScreen(GuiRetainedNode Screen)
             { if (Screen.ClassId != GuiClassId.ScreenGui) throw new FacadeException("Show, Hide and IsShown require ScreenGui"); }
@@ -683,6 +934,7 @@ namespace Carbon.Plugins
             public void Dispose()
             {
                 if (Disposed) return; Disposed = true;
+                World.ReconcileActions(this, null, GuiActionRejection.Stale);
                 var Destroyed = new HashSet<string>(StringComparer.Ordinal);
                 foreach (GuiPresentation Value in State.Presentations.Values) {
                     World.RemovePresentation(Value.PlayerToken);

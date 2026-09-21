@@ -70,6 +70,25 @@ namespace Carbon.Plugins
                 if (Host != null && !Host.Busy) RequestDrain();
             } catch (Exception) { PrintWarning("[CarbonLuau:Players] Disconnection event rejected (host context)."); }
         }
+        [ConsoleCommand("carbonluau.gui.action")]
+        private void GuiActionCommand(ConsoleSystem.Arg Arg)
+        {
+            try {
+                if (Stopping || Gameplay == null || Host == null || Arg == null || Arg.Connection == null) return;
+                BasePlayer Player = Arg.Connection.player as BasePlayer;
+                if (Player == null || !Player.IsConnected || Player.Connection == null ||
+                    !Object.ReferenceEquals(Player.Connection, Arg.Connection)) return;
+                var Arguments = Arg.Args;
+                string Token = Arguments != null && Arguments.Length == 1 ? Arguments[0].ToString() : null;
+                if (Token == null || Token.Length > 32) {
+                    Gameplay.Gui.ActionDiagnostics.Reject(GuiActionRejection.Malformed); return;
+                }
+                PlayerLifetime Lifetime = Gameplay.Players.Find(Player.UserIDString);
+                if (Lifetime == null || !Object.ReferenceEquals(Lifetime.Identity, Player) ||
+                    !Object.ReferenceEquals(Lifetime.Connection, Player.Connection)) return;
+                if (Gameplay.AdmitGuiAction(Lifetime, Token) && !Host.Busy) RequestDrain();
+            } catch (Exception) { /* Untrusted client input is rejected without per-request logging. */ }
+        }
         private void RegisterActivePermissions()
         {
             // Permissions are metadata published only after successful commit.

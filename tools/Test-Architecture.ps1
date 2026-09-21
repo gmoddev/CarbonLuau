@@ -16,6 +16,7 @@ $Expected = @(
     'src/CarbonLuau/Addons/AddonRegistry.cs',
     'src/CarbonLuau/Addons/DependencyGraph.cs',
     'src/CarbonLuau/Gui/GuiConfig.cs',
+    'src/CarbonLuau/Gui/GuiActions.cs',
     'src/CarbonLuau/Gui/GuiDescriptors.cs',
     'src/CarbonLuau/Gui/GuiModelContracts.cs',
     'src/CarbonLuau/Gui/GuiRetainedRegistry.cs',
@@ -73,11 +74,9 @@ if (!$Bootstrap.Contains('if Name == "Gui" then return Gui end') -or !$Bootstrap
 foreach ($Required in @('GuiObjectMethods.Show','GuiObjectMethods.Hide','GuiObjectMethods.IsShown')) {
     if (!$Bootstrap.Contains($Required)) { throw "GUI Foundation 1C public screen lifecycle is missing: $Required" }
 }
-foreach ($Deferred in @('MaxActionTokensPerPresentation','MaxActionInteractionsPerSecond')) {
-    if ($Bootstrap.Contains($Deferred)) { throw "GUI Foundation 1D crossed into deferred interaction behavior: $Deferred" }
-}
 $Presentation = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiPresentation.cs')
 $Registry = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiRetainedRegistry.cs')
+$Actions = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiActions.cs')
 if (!$Presentation.Contains('GuiRenderCompiler') -or !$Registry.Contains('RandomNumberGenerator')) {
     throw 'GUI Foundation 1C must own deterministic render compilation and opaque presentation identity'
 }
@@ -86,9 +85,17 @@ foreach ($Required in @('GuiScreenSynchronization','CompilePatch','FullRebuildRe
         throw "GUI Foundation 1D synchronization owner is missing: $Required"
     }
 }
+foreach ($Required in @('RandomNumberGenerator','MaxActionTokensGlobal','ValidateQueued','GuiActionDiagnostics','MaxPlayerInteractionsPerSecond')) {
+    if (!$Actions.Contains($Required) -and !$Registry.Contains($Required)) {
+        throw "GUI Foundation 1E interaction owner is missing: $Required"
+    }
+}
 $Backend = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/RustCuiBackend.cs')
 if (!$Backend.Contains('MeasureUpdate') -or !$Backend.Contains('Transport.Update') -or !$Backend.Contains('update')) {
     throw 'GUI Foundation 1D Rust CUI update path is missing'
+}
+if (!$Backend.Contains('ActionCommand') -or !$Backend.Contains('"command"')) {
+    throw 'GUI Foundation 1E Rust CUI action command serialization is missing'
 }
 $ScriptHostText = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Scripts/ScriptHost.cs')
 if ($ScriptHostText.IndexOf('Vm.Callback') -ge $ScriptHostText.LastIndexOf('Facade.FlushGui')) {
@@ -114,4 +121,4 @@ foreach ($Path in $Expected | Where-Object { $_ -like 'native/src/*.cpp' -or $_ 
     if (!$CMake.Contains($Relative)) { throw "Native owner missing from build graph: $Relative" }
 }
 
-Write-Output '[CarbonLuau:ArchitectureTest] PASS: managed/native invariant owners, retained GUI synchronization boundary, exact Rust CUI update adapter, deferred interaction behavior, compiler boundary and native build graph'
+Write-Output '[CarbonLuau:ArchitectureTest] PASS: managed/native invariant owners, retained GUI synchronization, secure action ingress, exact Rust CUI adapter, compiler boundary and native build graph'

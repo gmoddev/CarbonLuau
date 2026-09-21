@@ -95,6 +95,7 @@ namespace Carbon.Plugins
                 if (Addons != null) Status += "\nAddon protocol: " + AddonPolicy.ProtocolName + " " + AddonPolicy.ProtocolVersion +
                     "; package schema: " + AddonPolicy.Schema + "\nAddons: " + Addons.Count + "; snapshot bytes: " +
                     Addons.SnapshotBytes + " / " + AddonPolicy.MaxAggregateSnapshotBytes;
+                if (Gameplay != null) Status += "\n" + Gameplay.GuiActionStatus;
                 Arg.ReplyWith(Status);
             }
             catch (Exception) { Arg.ReplyWith("CarbonLuau: unavailable\nReason: runtime context failure; see server log"); }

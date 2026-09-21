@@ -84,7 +84,8 @@ namespace Carbon.Plugins
                 Writer.WritePropertyName("components"); Writer.WriteStartArray();
                 GuiRenderValue Background = Find(Properties, GuiRenderPropertyId.BackgroundColor, false);
                 if (Element.Kind == GuiRenderNodeKind.Container && Background != null) WriteColorComponent(Writer, "UnityEngine.UI.Image", Background);
-                else if (Element.Kind == GuiRenderNodeKind.Button && (Background != null || !Update)) WriteButton(Writer, Background);
+                else if (Element.Kind == GuiRenderNodeKind.Button && (Background != null || !Update))
+                    WriteButton(Writer, Background, Find(Properties, GuiRenderPropertyId.ActionCommand, false));
                 else if (Element.Kind == GuiRenderNodeKind.Text && (HasTextProperty(Properties) || !Update)) WriteText(Writer, Properties, Update);
                 if (HasRectProperty(Properties) || !Update) WriteRect(Writer, Properties, Update);
                 GuiRenderValue Cursor = Find(Properties, GuiRenderPropertyId.NeedsCursor, false);
@@ -98,10 +99,11 @@ namespace Carbon.Plugins
                 Writer.WriteStartObject(); Write(Writer, "type", Type); Write(Writer, "color", Color(Require(Value, GuiRenderValueKind.Color).Color));
                 Writer.WriteEndObject();
             }
-            private static void WriteButton(JsonTextWriter Writer, GuiRenderValue Background)
+            private static void WriteButton(JsonTextWriter Writer, GuiRenderValue Background, GuiRenderValue Action)
             {
                 Writer.WriteStartObject(); Write(Writer, "type", "UnityEngine.UI.Button");
                 if (Background != null) Write(Writer, "color", Color(Require(Background, GuiRenderValueKind.Color).Color));
+                if (Action != null) Write(Writer, "command", Require(Action, GuiRenderValueKind.String).Text);
                 Writer.WriteEndObject();
             }
             private static void WriteText(JsonTextWriter Writer, GuiRenderProperty[] Properties, bool Partial)

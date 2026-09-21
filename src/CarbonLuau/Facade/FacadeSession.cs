@@ -29,9 +29,11 @@ namespace Carbon.Plugins
             public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar)
                 : this(Players, Registrar, null) { }
             internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, IGuiBackend Backend)
+                : this(Players, Registrar, new GuiConfig().Validate(), Backend) { }
+            internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, GuiLimits Limits, IGuiBackend Backend)
             {
                 this.Players = Players ?? throw new ArgumentNullException("Players"); this.Registrar = Registrar;
-                GuiLimits Limits = new GuiConfig().Validate(); Gui = new GuiRetainedWorld(Limits, Players, Backend ?? new InMemoryGuiBackend());
+                Gui = new GuiRetainedWorld(Limits ?? throw new ArgumentNullException("Limits"), Players, Backend ?? new InMemoryGuiBackend());
             }
             public void Commit(FacadeSession Next)
             {
@@ -83,6 +85,24 @@ namespace Carbon.Plugins
                 if (Active != null) Active.Gui.Disconnect(Player);
                 foreach (FacadeSession Session in Addons.Values) Session.Gui.Disconnect(Player);
             }
+            internal bool AdmitGuiAction(PlayerLifetime Sender, string Token)
+            {
+                Players.CheckOwner(); GuiActionAdmission Admission;
+                if (!Gui.TryAdmit(Sender, Token, out Admission)) return false;
+                FacadeSession Session = null;
+                if (Active != null && Active.DomainLifetimeId == checked((long)Admission.Record.DomainLifetimeId) &&
+                    Active.VmGenerationId == checked((long)Admission.Record.VmGenerationId)) Session = Active;
+                else {
+                    FacadeSession Candidate;
+                    if (Addons.TryGetValue(checked((long)Admission.Record.DomainLifetimeId), out Candidate) &&
+                        Candidate.VmGenerationId == checked((long)Admission.Record.VmGenerationId)) Session = Candidate;
+                }
+                if (Session == null || !Session.TryEnqueueGuiAction(Admission, Sender)) {
+                    Gui.QueueRejected(); return false;
+                }
+                Gui.Accepted(); return true;
+            }
+            internal string GuiActionStatus { get { return Gui.ActionStatus; } }
             internal void FlushGui(System.Diagnostics.Stopwatch Watch, int Milliseconds)
             {
                 Players.CheckOwner(); int Sends = 0, Bytes = 0, WithoutProgress = 0;
@@ -159,6 +179,24 @@ namespace Carbon.Plugins
                 foreach (var Listener in Listeners) if (Listener.Value == Kind)
                     Enqueue(new[] {Kind, Listener.Key.ToString(CultureInfo.InvariantCulture), Player.Token, Player.UserId, Player.Name});
             }
+            internal bool TryEnqueueGuiAction(GuiActionAdmission Admission, PlayerLifetime Player)
+            {
+                if (!Active || Disposed || !World.IsActive(this) || Admission == null || Player == null) return false;
+                string[] Registrations = Admission.Registrations; GuiActionRecord Record = Admission.Record;
+                if (Registrations == null || Registrations.Length == 0 || Pending.Count > Capacity - Registrations.Length) { Rejected++; return false; }
+                var Payloads = new List<byte[]>(Registrations.Length);
+                try {
+                    foreach (string Registration in Registrations) {
+                        byte[] Payload = FacadePolicy.Pack("activated", Registration, Player.Token, Player.UserId, Player.Name,
+                            Record.Token, Record.ScreenId.ToString(CultureInfo.InvariantCulture),
+                            Record.PresentationEpoch.ToString(CultureInfo.InvariantCulture), Record.ButtonId.ToString(CultureInfo.InvariantCulture));
+                        if (Payload.Length > 16384) throw new FacadeException("GUI action payload exceeds limit");
+                        Payloads.Add(Payload);
+                    }
+                } catch { Rejected++; return false; }
+                foreach (byte[] Payload in Payloads) Pending.Enqueue(Payload);
+                return true;
+            }
             public bool Invoke(string Name, string UserId, string[] Arguments)
             {
                 World.Players.CheckOwner(); ScriptCommand Command;
@@ -204,6 +242,13 @@ namespace Carbon.Plugins
                     if (Fields.Length < 6 || !Commands.TryGetValue(Fields[5], out Command) || Command.Id != Fields[1]) return false;
                     var View = World.Players.Resolve(Fields[2], Fields[3]);
                     return View != null && (Command.Permission.Length == 0 || View.Permission(Command.Permission));
+                }
+                if (Fields[0] == "activated") {
+                    ulong ScreenId, Epoch, ButtonId;
+                    return Fields.Length == 9 && UInt64.TryParse(Fields[6], NumberStyles.None, CultureInfo.InvariantCulture, out ScreenId) &&
+                        UInt64.TryParse(Fields[7], NumberStyles.None, CultureInfo.InvariantCulture, out Epoch) &&
+                        UInt64.TryParse(Fields[8], NumberStyles.None, CultureInfo.InvariantCulture, out ButtonId) &&
+                        World.Gui.ValidateQueued(Fields[5], Fields[1], Fields[2], Fields[3], ScreenId, Epoch, ButtonId);
                 }
                 ulong IdValue; string Kind;
                 return ulong.TryParse(Fields[1], out IdValue) && Listeners.TryGetValue(IdValue, out Kind) && Kind == Fields[0];

@@ -41,6 +41,20 @@ def WaitLog(Offset, Expected, Seconds=30):
     raise RuntimeError('Missing log: ' + Expected)
 
 
+def ConnectRcon(Seconds=30):
+    Deadline = time.monotonic() + Seconds
+    LastError = None
+    while time.monotonic() < Deadline:
+        if Server.poll() is not None:
+            raise RuntimeError('Server exited before RCON became reachable')
+        try:
+            return websocket.create_connection('ws://127.0.0.1:28116/' + Secret, timeout=5)
+        except (OSError, websocket.WebSocketException) as Error:
+            LastError = Error
+            time.sleep(0.5)
+    raise RuntimeError('RCON did not become reachable: ' + str(LastError))
+
+
 def Send(Command):
     global Identifier
     Identifier += 1
@@ -93,7 +107,7 @@ with (Artifacts / 'server-linux-console.log').open('w') as Output:
         print('[CarbonLuau:LiveTest] Waiting for Linux Carbon startup', flush=True)
         WaitLog(0, 'Server startup complete', 600)
         WaitLog(0, 'Native probe loaded successfully')
-        Socket = websocket.create_connection('ws://127.0.0.1:28116/' + Secret, timeout=15)
+        Socket = ConnectRcon()
         Health()
         for Cycle in range(1, 11):
             Unload()
