@@ -543,6 +543,102 @@ supplemental run must test GUI-3A source revision
 descendant. Historical Windows qualification for earlier foundations remains
 valid within its original envelope.
 
+## Player Interaction Foundation 1 architecture gate
+
+[D18](Invariants.md#d18--player-interaction-foundation-1) adopts the additive
+Player Interaction Foundation 1 architecture. The complete host rationale,
+surface matrix, phase sequence and qualification plan are retained in
+[PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md). Player-1A
+implements immutable `Vector3` and read-only exact-connection `Player.Position`;
+Player-1B implements live read-only exact-connection `Player.Health` and
+`Player.MaxHealth`; Player-1C implements `Items:Exists` plus bounded physical
+`Player:CountItem` and `Player:HasItem` under `0.4.0-experimental`. Their qualification records are
+[PlayerInteractionFoundation1A.md](PlayerInteractionFoundation1A.md) and
+[PlayerInteractionFoundation1B.md](PlayerInteractionFoundation1B.md) and
+[PlayerInteractionFoundation1C.md](PlayerInteractionFoundation1C.md).
+Player-1D implements committed-only `Player:Teleport(Vector3)` and records the
+exact-build adapter plus available qualification in
+[PlayerInteractionFoundation1D.md](PlayerInteractionFoundation1D.md).
+Authenticated-client convergence remains unqualified. Player-1F-A implements
+TakeItem; Player-1F-B implements InventoryOnly GiveItem with its
+[target/platform qualification](PlayerInteractionFoundation1FB-Validation.md).
+
+Supplemental authenticated-client Teleport qualification remains deferred.
+Player-1F-C closes the combined lifecycle, stress, documentation and public
+qualification planned as Player-1E within its recorded scope. Revised D13 routes Inventory-M1
+for the deterministic model and mutation gate, Player-1F-A for TakeItem,
+Player-1F-B for GiveItem and Player-1F-C for combined mutation closure.
+Inventory-M2's G1 conclusion is superseded; G2-G5 evidence remains. Player-1F-A uses
+that exact adapter for TakeItem; Player-1F-B records supported-host GiveItem
+requalification. Player-1F-C records the combined mutation closure below.
+
+Player-1F-C initially reproduced a D18 failure at `9b27ba5` on Windows and Linux:
+cold modules loaded during committed execution could perform GiveItem, TakeItem
+and Teleport before publication. The correction consults both outer admission
+and current first-load publication; cached committed calls remain allowed.
+See [the preserved failure and resumed qualification](PlayerInteractionFoundation1FC.md)
+for platform, live-host, stress, packaging and client-evidence limits.
+
+D13 now accepts CarbonLuau-serialized, definite-rejection inventory mutation:
+bounded mutation-free PREPARE, explicit first-host-effect COMMIT and one bounded
+physical VERIFY. `false` means COMMIT never began, `true` means the physical
+postcondition was verified, and a controlled error after COMMIT means inventory
+may have changed. Rust inventory is not described as globally atomic; no
+rollback, plugin isolation or unchanged-state guarantee is added.
+
+Player-1C establishes an exact target-build, bounded, nonrecursive physical
+main/belt/wear adapter that does not accept a hook-virtualized count as the
+canonical answer. Its hard limit is 128 direct entries across the three accepted
+containers, compared with the target build's normal 24 + 6 + 8 capacities.
+The reusable scanner and evidence are recorded in
+[PlayerInteractionFoundation1C.md](PlayerInteractionFoundation1C.md).
+
+Inventory mutation requires exact-connection serialization, committed execution
+and target-build evidence. Inventory-M2 retains G2 returned-Item terminal-state
+observability and G4 supported cleanup;
+TakeItem's G3 host-result plus physical-delta verification; and shared G5 work
+bounds on Rust build `25353106` plus Carbon `2.0.259`. The narrow adapter and
+evidence are recorded in
+[InventoryMutationM2Validation.md](InventoryMutationM2Validation.md). TakeItem
+implementation and qualification are recorded in
+[PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md).
+GiveItem's historical G1 no-drop conclusion was incomplete and is superseded.
+[I12](Invariants.md#i12--trusted-in-process-host-interference) defines the general
+supported-host/interference scope; the required normal-host and separately
+labeled hostile-mutation matrix is in
+[Player-1F-B](PlayerInteractionFoundation1FB.md#required-1f-b-requalification).
+Player-1F-B subsequently implemented GiveItem and the InventoryOnly enum and
+recorded supported-host requalification in
+[its validation record](PlayerInteractionFoundation1FB-Validation.md).
+That historical evidence did not cover the Player-1F-C cold-module restriction;
+the correction is qualified separately above. The complete historical rationale is retained in
+[InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md).
+
+Player-1D passed qualification of the exact Rust/Carbon relocation sequence on
+the supported server build. Authenticated-client evidence for destination
+convergence, rubber-band resistance, long-distance network-group transition,
+fall state, mount/parent handling and repeated teleports remains unqualified.
+Server/model evidence does not establish that client behavior. This does not
+block the server-qualified experimental surface or the read-only Player slices.
+
+D18 adoption and Player-1A through Player-1F-A change no identity. Package remains `0.4.0`, scripting API
+remains `0.4.0-experimental`, native ABI remains `1.4`, provider protocol
+remains `CarbonLuau.Addons` / `1.2`, package schema remains `1`, and the pinned
+Luau revision is unchanged. Player-1A through Player-1F-A passed the available Linux
+native/runtime, managed regression, deterministic packaging and sanitizer
+matrix. Player-1B additionally passed three controlled-host live Carbon cycles
+on the exact target build. In those historical runs the workstation Windows managed/native
+runtime suite passed; its pre-existing Foundation G compiler-worker memory gate
+did not qualify. DockerPC Windows local/live was unavailable and is not claimed.
+Hosted Windows CI is recorded separately.
+Player-1F-C subsequently passed native/managed/containment tests on the available
+Windows worker; this does not retroactively qualify Foundation G's deferred
+Windows live gate or provide a Windows live Carbon result.
+Player-1D additionally passed exact-build live server qualification; its
+authenticated-client behavior and DockerPC live/local result remain unqualified.
+Later Player phases require their own
+applicable Windows/Linux/native/live/sanitizer qualification.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:

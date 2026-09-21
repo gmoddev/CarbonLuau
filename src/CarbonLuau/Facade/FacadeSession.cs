@@ -12,7 +12,10 @@ namespace Carbon.Plugins
         public sealed class FacadeWorld
         {
             public readonly PlayerDirectory Players;
+            public readonly ItemDirectory Items;
             public readonly ICommandRegistrar Registrar;
+            internal readonly PlayerTakeItemOperation TakeItems = new PlayerTakeItemOperation();
+            internal readonly PlayerGiveItemOperation GiveItems;
             internal readonly GuiRetainedWorld Gui;
             public FacadeSession Active { get; private set; }
             private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
@@ -27,12 +30,18 @@ namespace Carbon.Plugins
                 }
             }
             public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar)
-                : this(Players, Registrar, null) { }
+                : this(Players, Registrar, new ItemDirectory(Name => null), new GuiConfig().Validate(), null) { }
             internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, IGuiBackend Backend)
-                : this(Players, Registrar, new GuiConfig().Validate(), Backend) { }
+                : this(Players, Registrar, new ItemDirectory(Name => null), new GuiConfig().Validate(), Backend) { }
+            public FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, ItemDirectory Items)
+                : this(Players, Registrar, Items, new GuiConfig().Validate(), null) { }
             internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, GuiLimits Limits, IGuiBackend Backend)
+                : this(Players, Registrar, new ItemDirectory(Name => null), Limits, Backend) { }
+            internal FacadeWorld(PlayerDirectory Players, ICommandRegistrar Registrar, ItemDirectory Items, GuiLimits Limits, IGuiBackend Backend)
             {
                 this.Players = Players ?? throw new ArgumentNullException("Players"); this.Registrar = Registrar;
+                this.Items = Items ?? throw new ArgumentNullException("Items");
+                GiveItems = new PlayerGiveItemOperation(TakeItems.SharedGate);
                 Gui = new GuiRetainedWorld(Limits ?? throw new ArgumentNullException("Limits"), Players, Backend ?? new InMemoryGuiBackend());
             }
             public void Commit(FacadeSession Next)
@@ -290,7 +299,9 @@ namespace Carbon.Plugins
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
                 if (Code == 20) return Gui.Query(Fields);
                 if (Code == 21) return Gui.Mutate(Fields, Id);
-                int Expected = Code == 1 ? 0 : Code == 3 ? 2 : (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
+                int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 :
+                    Code == 25 ? 1 : Code == 26 ? 3 : (Code == 27 || Code == 29) ? 4 : (Code == 28 || Code == 30) ? 5 :
+                    (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
                 if (Fields.Length != Expected) throw new FacadeException("invalid host arguments");
                 switch (Code) {
                     case 1: {
@@ -316,6 +327,71 @@ namespace Carbon.Plugins
                         }
                         FacadePolicy.Identifier(Fields[2], true);
                         return new[] {View.Permission(Fields[2]) ? "1" : "0"};
+                    }
+                    case 22: {
+                        var View = World.Players.Resolve(Fields[0], Fields[1]);
+                        if (View == null) throw new FacadeException("Player is no longer connected");
+                        if (View.Position == null) throw new FacadeException("Player position is unavailable");
+                        PlayerPosition Position = View.Position();
+                        if (Single.IsNaN(Position.X) || Single.IsInfinity(Position.X) ||
+                            Single.IsNaN(Position.Y) || Single.IsInfinity(Position.Y) ||
+                            Single.IsNaN(Position.Z) || Single.IsInfinity(Position.Z))
+                            throw new FacadeException("Player position is invalid");
+                        return new[] {Position.X.ToString("R", CultureInfo.InvariantCulture),
+                            Position.Y.ToString("R", CultureInfo.InvariantCulture), Position.Z.ToString("R", CultureInfo.InvariantCulture)};
+                    }
+                    case 23: case 24: {
+                        var View = World.Players.Resolve(Fields[0], Fields[1]);
+                        if (View == null) throw new FacadeException("Player is no longer connected");
+                        Func<float> Read = Code == 23 ? View.Health : View.MaxHealth;
+                        string Name = Code == 23 ? "health" : "maximum health";
+                        if (Read == null) throw new FacadeException("Player " + Name + " is unavailable");
+                        float Value = Read();
+                        if (Single.IsNaN(Value) || Single.IsInfinity(Value)) throw new FacadeException("Player " + Name + " is invalid");
+                        return new[] {Value.ToString("R", CultureInfo.InvariantCulture)};
+                    }
+                    case 25: {
+                        return new[] {World.Items.Resolve(Fields[0]) == null ? "0" : "1"};
+                    }
+                    case 26: case 27: {
+                        FacadePolicy.ItemShortName(Fields[2]);
+                        long Amount = Code == 27 ? FacadePolicy.ExactPositiveInteger(Fields[3], "item amount") : 0;
+                        var View = World.Players.Resolve(Fields[0], Fields[1]);
+                        if (View == null) throw new FacadeException("Player is no longer connected");
+                        object Definition = World.Items.Resolve(Fields[2]);
+                        if (Definition == null) return new[] {"0"};
+                        if (View.Inventory == null) throw new FacadeException("Player inventory is unavailable");
+                        PhysicalInventorySource Source = View.Inventory();
+                        if (Code == 27) return new[] {PhysicalInventoryObservation.Has(Source, Definition, Amount) ? "1" : "0"};
+                        return new[] {PhysicalInventoryObservation.Count(Source, Definition).ToString(CultureInfo.InvariantCulture)};
+                    }
+                    case 28: {
+                        if (!Active || Disposed || !World.IsActive(this))
+                            throw new FacadeException("Teleport requires a committed domain; use task.defer for startup movement");
+                        var View = World.Players.Resolve(Fields[0], Fields[1]);
+                        if (View == null) throw new FacadeException("Player is no longer connected");
+                        if (View.Teleport == null) throw new FacadeException("Player teleport is unavailable");
+                        float X, Y, Z;
+                        if (!Single.TryParse(Fields[2], NumberStyles.Float, CultureInfo.InvariantCulture, out X) ||
+                            !Single.TryParse(Fields[3], NumberStyles.Float, CultureInfo.InvariantCulture, out Y) ||
+                            !Single.TryParse(Fields[4], NumberStyles.Float, CultureInfo.InvariantCulture, out Z) ||
+                            Single.IsNaN(X) || Single.IsInfinity(X) || Single.IsNaN(Y) || Single.IsInfinity(Y) ||
+                            Single.IsNaN(Z) || Single.IsInfinity(Z)) throw new FacadeException("invalid Teleport position");
+                        View.Teleport.Execute(new PlayerPosition(X, Y, Z));
+                        return new string[0];
+                    }
+                    case 29: case 30: {
+                        if (!Active || Disposed || !World.IsActive(this))
+                            throw new FacadeException((Code == 29 ? "TakeItem" : "GiveItem") + " requires a committed domain; use task.defer for startup mutation");
+                        FacadePolicy.ItemShortName(Fields[2]);
+                        long Parsed = FacadePolicy.ExactPositiveInteger(Fields[3], "item amount");
+                        if (Parsed > Int32.MaxValue) throw new FacadeException("item amount exceeds Int32.MaxValue");
+                        object Definition = World.Items.Resolve(Fields[2]);
+                        if (Code == 30 && Fields[4] != "InventoryOnly") throw new FacadeException("unsupported GiveItem behavior");
+                        bool Result = Code == 29 ? World.TakeItems.Execute(Fields[0],
+                            () => World.Players.Resolve(Fields[0], Fields[1]), Definition, (int)Parsed) :
+                            World.GiveItems.Execute(Fields[0], () => World.Players.Resolve(Fields[0], Fields[1]), Definition, (int)Parsed);
+                        return new[] {Result ? "1" : "0"};
                     }
                     case 6: {
                         if (Fields[0] != "added" && Fields[0] != "removing") throw new FacadeException("unknown signal");

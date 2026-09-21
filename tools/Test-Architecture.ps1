@@ -1,4 +1,5 @@
 $ErrorActionPreference = 'Stop'
+& (Join-Path $PSScriptRoot 'Test-GiveItemSafety.ps1')
 $Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 $Expected = @(
@@ -10,8 +11,11 @@ $Expected = @(
     'src/CarbonLuau/Scripts/RuntimeDomain.cs',
     'src/CarbonLuau/Scripts/ScriptHost.cs',
     'src/CarbonLuau/Facade/PlayerDirectory.cs',
+    'src/CarbonLuau/Facade/PlayerTeleportOperation.cs',
     'src/CarbonLuau/Facade/CommandRegistry.cs',
     'src/CarbonLuau/Facade/FacadeSession.cs',
+    'src/CarbonLuau/Facade/InventoryObservation.cs',
+    'src/CarbonLuau/Facade/InventoryMutation.cs',
     'src/CarbonLuau/Addons/AddonPackage.cs',
     'src/CarbonLuau/Addons/AddonRegistry.cs',
     'src/CarbonLuau/Addons/DependencyGraph.cs',
@@ -172,6 +176,19 @@ $Transport = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Carb
 if (!$Transport.Contains('CuiHelper.AddUi') -or !$Transport.Contains('CuiHelper.DestroyUi') -or
     !$Transport.Contains('ExactPlayerConnectionToken')) {
     throw 'GUI Foundation 1C Carbon adapter must use Rust CUI and exact Player connection identity'
+}
+
+$GameplayAdapter = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/CarbonLuau.Carbon.cs')
+foreach ($Required in @('DismountPlayer(Player, true)','SetParent(null, true, true)','MovePosition(Target)',
+        'ForcePositionTo','UpdateNetworkGroup()','SendNetworkUpdateImmediate()','SetServerFall(true)')) {
+    if (!$GameplayAdapter.Contains($Required)) { throw "Player-1D exact-build adapter step is missing: $Required" }
+}
+$InventoryMutation = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Facade/InventoryMutation.cs')
+foreach ($Required in @('PlayerTakeItemOperation','InventoryMutationGate','CountForMutation','HostReturned != Amount','Delta != Amount')) {
+    if (!$InventoryMutation.Contains($Required)) { throw "Player-1F-A mutation owner is missing: $Required" }
+}
+if (!$GameplayAdapter.Contains('Player.inventory.Take(null, ((ItemDefinition)Definition).itemid, Amount)')) {
+    throw 'Player-1F-A must use the Inventory-M2-qualified PlayerInventory.Take adapter'
 }
 
 $Worker = Get-Content -Raw -LiteralPath (Join-Path $Root 'native/src/scripts/CompilerWorker.cpp')

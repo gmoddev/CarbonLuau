@@ -1,6 +1,14 @@
 #include "RuntimeInternal.hpp"
 
 namespace CarbonLuau::Runtime {
+bool CanMutateHost(const Vm& Runtime)
+{
+    // A publication scope is either a provisional candidate or an executing
+    // first-load module. It follows synchronous cross-domain calls, but is gone
+    // before later calls to cached exports. Do not alter admission or deadline.
+    return Runtime.Admission && !Runtime.Admission->Provisional && !Runtime.Publication;
+}
+
 bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation)
 {
     if (!Owner.Host || !Owner.HostBuffer) return true;

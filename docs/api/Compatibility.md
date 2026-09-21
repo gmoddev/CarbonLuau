@@ -27,15 +27,70 @@ change and migration decision. Experimental does not permit silent breaking chan
 No automatic version negotiation, long-term deprecation window or Roblox contract
 is promised. Consult [current qualification](../Phase3-Validation.md).
 
-D13 defers the unshipped Items/Items:Exists and Player:GiveItem proposal from v0.1.
-This is a [roadmap scope revision](../CarbonLuau_FirstVersion_Design.md#31-suggested-implementation-phases),
-not removal of an implemented API. Package, scripting API and native ABI identities
-are unchanged; no script migration is required for this deferral.
+Player-1A adds immutable `Vector3` and read-only `Player.Position` under the
+existing `0.4.0-experimental` identity. Components and vector arithmetic remain
+inside the finite System.Single range; Position is one bounded exact-connection
+host lookup and one root world-position read. See the
+[Player-1A qualification record](../PlayerInteractionFoundation1A.md).
+
+Player-1B adds read-only `Player.Health` and `Player.MaxHealth` under that same
+identity. Each access performs one exact-connection lookup and one direct live
+host read. Finite results are preserved independently without clamping; stale
+connections and non-finite host values raise controlled errors. See the
+[Player-1B qualification record](../PlayerInteractionFoundation1B.md).
+
+Player-1C adds the domain-bound `Items` service with `Exists`, plus bounded
+physical `Player:CountItem` and `Player:HasItem` reads under the same identity.
+The scanner reads only direct main, belt and wear entries, rejects more than 128
+entries before returning any answer, and never uses hook-virtualized count APIs.
+See the [Player-1C qualification record](../PlayerInteractionFoundation1C.md).
+
+Player-1D adds committed-only `Player:Teleport(Vector3)` under the same
+identity. It preserves D11 exact-connection identity, sleeping state and the
+D10 provisional-effect boundary. The exact-build server adapter is qualified,
+but authenticated-client convergence remains unqualified. See the
+[Player-1D qualification record](../PlayerInteractionFoundation1D.md).
+
+Revised D13 and
+[D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
+read-only item observation, now implemented by Player-1C, plus implementation-
+gated `Player:GiveItem` and `Player:TakeItem`. Player-1F-A ships TakeItem using
+the exact Inventory-M2 adapter; Player-1F-B implements GiveItem with the
+[requalified supported-host path](../PlayerInteractionFoundation1FB-Validation.md).
+The historical blanket M2 G1 conclusion remains superseded.
+`GiveItem(ShortName, Amount, Behavior?)` defaults to the sole typed member
+`GiveItemBehavior.InventoryOnly`.
+`DropRemainder` is future design only, not a reserved or exposed enum value.
+Their canonical result contract is `false` only before inventory COMMIT, `true`
+only after physical VERIFY, and a controlled error for post-COMMIT uncertainty.
+This additive implementation removes no implemented API and changes no package, scripting
+API or native ABI identity.
+
+[Player-1F-C](../PlayerInteractionFoundation1FC.md) records the correction of a
+cold-module mutation bug in `9b27ba5` and combined closure. Provisional outer
+admission **or** active first-load publication forbids committed-only mutation,
+including nested/public/shared calls. Cached exports called later by committed
+execution remain usable. Reads stay allowed; no deadline reset, inventory
+reservation, transaction, rollback or exactly-once recovery is implied.
+
+[I12](../Invariants.md#i12--trusted-in-process-host-interference) defines the
+trusted in-process interference boundary. Normal vanilla behavior, ordinary
+callback acceptance/rejection and CarbonLuau's own planning/verification bugs
+are not excluded. Equally privileged plugins can change inventory, stack limits
+or item state inside callbacks; no whole-process isolation is promised. Observed
+uncertainty cannot become success. Errors after creation may include partial
+accepted delivery or failed cleanup; reconcile host state rather than blindly
+retrying. Neither timeout nor recovery provides rollback or exactly-once delivery.
 
 | Resource | Bound |
 |---|---|
 | Connected-player population / snapshot | 1024; larger host population fails closed |
 | Player name / user ID | 128 UTF-8 bytes / 20 ASCII decimal digits |
+| Vector3 components | Finite System.Single range; no clamping |
+| Item short name / physical inventory entries | 1..128 lowercase ASCII bytes / 128 direct main+belt+wear entries |
+| HasItem amount / counted quantity | Exact positive integer through `2^53 - 1` / checked exact Luau integer |
+| TakeItem amount / verification | Exact integer 1..`Int32.MaxValue`; one bounded fresh scan after COMMIT |
+| GiveItem amount / plan / verification | Required exact integer 1..`Int32.MaxValue`; 128 total main/belt/wear slots/entries, 128 chunks, one fresh VERIFY scan |
 | Listeners | 128 per signal, 256 per generation |
 | Commands | 64 per generation; initialization-only |
 | Command / permission name | 32 / 128 ASCII bytes |

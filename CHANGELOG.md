@@ -4,8 +4,32 @@ All notable public changes to CarbonLuau are recorded here.
 
 ## Unreleased
 
+### Fixed
+
+- Cold module initialization now rejects committed-only Player mutations even
+  inside a committed callback, including nested/public/shared module calls.
+  Later committed calls to cached exports remain allowed. Player-1F-C preserves
+  the original `9b27ba5` failure evidence and qualifies the correction.
+
 ### Added
 
+- Committed-only `Player:GiveItem(ShortName, Amount, Behavior?)`, defaulting to
+  typed `GiveItemBehavior.InventoryOnly`; bounded complete planning, exact-slot
+  transfer, returned-item accounting/cleanup and combined physical VERIFY.
+  No intentional drop fallback, post-COMMIT false, rollback or automatic retry.
+- Immutable `Vector3` arithmetic and live read-only exact-connection
+  `Player.Position` under Player Interaction Foundation 1A.
+- Live read-only exact-connection `Player.Health` and `Player.MaxHealth` under
+  Player Interaction Foundation 1B, preserving independent finite host values.
+- Domain-bound `Items:Exists` and bounded physical `Player:CountItem` /
+  `Player:HasItem` reads under Player Interaction Foundation 1C.
+- Committed-only `Player:Teleport(Vector3)` with exact D11 connection binding,
+  D10 provisional rejection, sleeping preservation, internal mount/parent
+  normalization and bounded server verification. Authenticated-client
+  convergence remains unqualified.
+- Committed-only `Player:TakeItem(ShortName, Amount)` with mutation-free
+  PREPARE, the Inventory-M2-qualified Rust removal path and dual host/physical
+  VERIFY. Post-COMMIT uncertainty is an error and never claims rollback.
 - Experimental addon composition under scripting API `0.4.0-experimental`.
 - Bounded provider-owned schema-1 packages and immutable source snapshots.
 - Required and optional dependency lifetimes with exact replacement bindings.
@@ -30,6 +54,13 @@ All notable public changes to CarbonLuau are recorded here.
 
 ### Validation
 
+- Qualified Vector3 bounds/arithmetic, cross-domain value lifetime and
+  Player.Position lifecycle/provisional behavior on the Linux runtime and
+  sanitizer matrix; hosted Windows evidence is recorded separately.
+- Qualified Health/MaxHealth live reads, dynamic maximum health, non-clamping,
+  exact-connection lifetime, provisional and cross-domain behavior.
+- Qualified exact short-name lookup and checked physical main/belt/wear scanning
+  with a hard 128-entry envelope, exact-connection lifetime and addon sharing.
 - Qualified root-only, 1, 10, 50 and 100-addon configurations on Windows and Linux.
 - Qualified shared-heap exhaustion, parser boundaries, scheduler saturation,
   provider lifecycle, CarbonLuau reload with providers retained, and native teardown.

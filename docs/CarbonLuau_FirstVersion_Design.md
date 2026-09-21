@@ -13,6 +13,13 @@ from v0.1, including Player:GiveItem and Items:Exists. They are not outstanding
 v0.1 acceptance requirements. [Section 31](#31-suggested-implementation-phases)
 is the current roadmap; [Phase4.md](Phase4.md) preserves the investigation.
 
+**Later additive architecture (2026-09-21):** D18 first superseded D13's former
+product-scope exclusion of bounded read-only item identity and inventory
+observation. Revised D13 then accepted implementation-gated GiveItem/TakeItem
+under PREPARE/COMMIT/VERIFY without claiming globally transactional Rust
+inventory. Neither change reopens v0.1 Phase 4 or implements an API. See
+[D13/D18](Invariants.md#decision-register).
+
 ---
 
 ## 1. Objective
@@ -1196,8 +1203,12 @@ phase; no `game:GetService`, Signals, Player proxies or player hooks are include
 
 ### Phase 4 — item conveniences: deferred from v0.1
 
-D13 defers Player:GiveItem and Items/Items:Exists together. They are not prerequisites
-for Phase 5 or remaining v0.1 implementation requirements. The historical
+D13 deferred Player:GiveItem and Items/Items:Exists together from v0.1. They are
+not prerequisites for Phase 5 or remaining v0.1 implementation requirements. D18
+later reopens only bounded read-only identity and observation for a separately
+scoped future foundation. Revised D13 additionally accepts implementation-gated
+GiveItem/TakeItem through Inventory-M and Player-1F work; it does not create a
+new v0.1 Phase 4. The historical
 [investigation and rejected adapter](Phase4.md) remain preserved. Existing task
 primitives belong to the qualified Phase 2 substrate, not this deferral.
 

@@ -23,19 +23,104 @@ namespace Carbon.Plugins
             if (Player == null || !Player.IsConnected || Player.Connection == null) return null;
             if (!Player.Connection.connected || !Player.Connection.active ||
                 Player.Connection.userid.ToString(System.Globalization.CultureInfo.InvariantCulture) != Player.UserIDString) return null;
+            Network.Connection Connection = Player.Connection;
+            Func<bool> Current = () => Player != null && Player.IsConnected && Player.Connection != null &&
+                Object.ReferenceEquals(Player.Connection, Connection) && Connection.connected && Connection.active &&
+                Object.ReferenceEquals(Connection.player, Player) && Object.ReferenceEquals(BasePlayer.FindByID(Player.userID), Player);
             return new PlayerView {
                 Identity = Player, Connection = Player.Connection, UserId = Player.UserIDString, Name = Player.displayName,
                 Connected = Player.IsConnected,
                 Send = Message => Player.ChatMessage(Message),
-                Permission = Permission => permission.UserHasPermission(Player.UserIDString, Permission)
+                Permission = Permission => permission.UserHasPermission(Player.UserIDString, Permission),
+                Position = () => {
+                    var Value = Player.transform.position;
+                    return new PlayerPosition(Value.x, Value.y, Value.z);
+                },
+                Health = () => Player.Health(),
+                MaxHealth = () => Player.MaxHealth(),
+                Inventory = () => ViewInventory(Player),
+                TakeInventory = (Definition, Amount) => Player.inventory.Take(null, ((ItemDefinition)Definition).itemid, Amount),
+                GiveInventory = new RustInventoryGrantHost(Player),
+                Teleport = new PlayerTeleportOperation(
+                    () => {
+                        bool IsCurrent = Current();
+                        return new PlayerTeleportState {
+                            Current = IsCurrent,
+                            Alive = IsCurrent && Player.IsAlive(),
+                            Spectating = IsCurrent && Player.IsSpectating(),
+                            Wounded = IsCurrent && Player.IsWounded(),
+                            Incapacitated = IsCurrent && Player.IsIncapacitated(),
+                            Sleeping = IsCurrent && Player.IsSleeping(),
+                            Mounted = IsCurrent && Player.GetMounted() != null,
+                            Parented = IsCurrent && Player.HasParent()
+                        };
+                    },
+                    (Destination, Before) => {
+                        var Target = new UnityEngine.Vector3(Destination.X, Destination.Y, Destination.Z);
+                        Player.PauseFlyHackDetection(5f);
+                        Player.PauseSpeedHackDetection(5f);
+                        Player.PauseTickDistanceDetection(5f);
+                        Player.ApplyStallProtection(4f);
+                        BaseMountable Mount = Player.GetMounted();
+                        if (Mount != null) Mount.DismountPlayer(Player, true);
+                        if (Player.GetMounted() != null) throw new InvalidOperationException("host refused dismount");
+                        if (Player.HasParent()) Player.SetParent(null, true, true);
+                        if (Player.HasParent()) throw new InvalidOperationException("host refused unparent");
+                        Player.UpdateUnparentTime();
+                        Player.SetServerFall(true);
+                        try {
+                            Player.MovePosition(Target);
+                            Player.UpdateEstimatedVelocity(Target, Target, 1f);
+                            Player.ClientRPC(RpcTarget.Player("ForcePositionTo", Player), Target);
+                            Player.UpdateNetworkGroup();
+                            Player.SendNetworkUpdateImmediate();
+                        } finally {
+                            if (!Before.Sleeping) Player.SetServerFall(false);
+                        }
+                    },
+                    (Destination, Before) => {
+                        if (!Current()) return false;
+                        UnityEngine.Vector3 Actual = Player.transform.position;
+                        return Actual.x == Destination.X && Actual.y == Destination.Y && Actual.z == Destination.Z &&
+                            Player.GetMounted() == null && !Player.HasParent() && Player.IsSleeping() == Before.Sleeping;
+                    })
             };
+        }
+        private static PhysicalInventoryContainer ViewInventoryContainer(ItemContainer Container)
+        {
+            if (Container == null || Container.itemList == null) throw new InvalidOperationException("Player inventory container is unavailable");
+            return new PhysicalInventoryContainer {
+                Identity = Container,
+                StackCount = Container.itemList.Count,
+                Capacity = Container.capacity,
+                Read = Index => {
+                    Item Value = Container.itemList[Index];
+                    return Value == null ? default(PhysicalInventoryStack) :
+                        new PhysicalInventoryStack(Value.parent, Value.info, Value.amount, Value.IsValid(), Value, Value.position);
+                }
+            };
+        }
+        private static PhysicalInventorySource ViewInventory(BasePlayer Player)
+        {
+            if (Player == null || Player.inventory == null) throw new InvalidOperationException("Player inventory is unavailable");
+            return new PhysicalInventorySource {
+                Main = ViewInventoryContainer(Player.inventory.containerMain),
+                Belt = ViewInventoryContainer(Player.inventory.containerBelt),
+                Wear = ViewInventoryContainer(Player.inventory.containerWear)
+            };
+        }
+        private static object ReadItemDefinition(string ShortName)
+        {
+            ItemDefinition Definition = ItemManager.FindItemDefinition(ShortName);
+            return Definition != null && String.Equals(Definition.shortname, ShortName, StringComparison.Ordinal) ? Definition : null;
         }
         private void InitializeGameplay()
         {
             CommandRegistrar = new CarbonCommandRegistrar(this);
             var Players = new PlayerDirectory(ReadPlayer);
-            Gameplay = new FacadeWorld(Players, CommandRegistrar,
-                new RustCuiBackend(new GuiConfig().Validate(), new CarbonRustCuiTransport(Players)));
+            var Limits = new GuiConfig().Validate();
+            Gameplay = new FacadeWorld(Players, CommandRegistrar, new ItemDirectory(ReadItemDefinition), Limits,
+                new RustCuiBackend(Limits, new CarbonRustCuiTransport(Players)));
         }
         private void SeedPlayers()
         {

@@ -9,6 +9,11 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
+        public struct PlayerPosition
+        {
+            public readonly float X, Y, Z;
+            public PlayerPosition(float X, float Y, float Z) { this.X = X; this.Y = Y; this.Z = Z; }
+        }
         public sealed class PlayerView
         {
             public object Identity, Connection;
@@ -16,6 +21,12 @@ namespace Carbon.Plugins
             public bool Connected;
             public Action<string> Send;
             public Func<string, bool> Permission;
+            public Func<PlayerPosition> Position;
+            public Func<float> Health, MaxHealth;
+            public Func<PhysicalInventorySource> Inventory;
+            public Func<object, int, int> TakeInventory;
+            public IInventoryGrantHost GiveInventory;
+            public PlayerTeleportOperation Teleport;
         }
         public sealed class PlayerLifetime
         {

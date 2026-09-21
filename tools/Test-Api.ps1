@@ -8,15 +8,18 @@ $GuiGuide = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui.md')
 $GuiReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui-Reference.md')
 $GuiDescriptors = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiDescriptors.cs')
 $ReleaseNotes = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/releases/0.4.0.md')
+$Player1C = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1C.md')
+$Player1D = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1D.md')
+$Player1FA = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1FA.md')
 foreach ($Text in @($Bootstrap,$Managed,(Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Globals.md')),
     (Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Compatibility.md')),$GuiGuide,$GuiReference)) {
     if (!$Text.Contains($Version)) { throw 'API version differs between runtime and documentation' }
 }
-foreach ($Service in @('Players','Commands','Gui')) {
+foreach ($Service in @('Players','Commands','Gui','Items')) {
     if (!$Bootstrap.Contains(('if Name == "{0}"' -f $Service))) { throw "Missing registered service: $Service" }
     if ($Service -ne 'Gui' -and !(Test-Path -LiteralPath (Join-Path $Root "docs/api/Services/$Service.md"))) { throw "Missing service reference: $Service" }
 }
-foreach ($Type in @('Player','CommandContext','Signal','Connection')) {
+foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection','GiveItemBehavior')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "docs/api/Types/$Type.md"))) { throw "Missing type reference: $Type" }
 }
 $Documents = @(Get-Item (Join-Path $Root 'README.md')) + @(Get-Item (Join-Path $Root 'CHANGELOG.md')) +
@@ -29,7 +32,7 @@ foreach ($Document in $Documents) {
         if (!(Test-Path -LiteralPath (Join-Path $Document.DirectoryName $Target))) { throw "Broken relative link: $($Document.Name): $Target" }
     }
 }
-foreach ($Example in @('player-events','hello-command')) {
+foreach ($Example in @('player-events','player-position','player-health','player-inventory','player-teleport','player-take-item','hello-command','player-status','player-give-item','player-shop','gui/inventory-reward')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',
@@ -66,6 +69,36 @@ foreach ($Name in @('Create','Clone','Destroy','GetChildren','FindFirstChild','I
 }
 foreach ($Constructor in @('UDim.new','UDim2.new','UDim2.fromScale','UDim2.fromOffset','Vector2.new','Color3.new','Color3.fromRGB')) {
     if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains($Constructor)) { throw "GUI constructor differs between bootstrap and reference: $Constructor" }
+}
+if (!$Bootstrap.Contains('Vector3.new') -or !(Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/Vector3.md')).Contains('Vector3.new')) {
+    throw 'Vector3 constructor differs between bootstrap and reference'
+}
+$PlayerReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/Player.md')
+foreach ($Property in @('Health','MaxHealth')) {
+    if (!$Bootstrap.Contains(('Key == "{0}"' -f $Property)) -or !$PlayerReference.Contains(('`Player.{0}`' -f $Property))) {
+        throw "Player property differs between bootstrap and reference: $Property"
+    }
+}
+foreach ($Method in @('CountItem','HasItem','Teleport','TakeItem','GiveItem')) {
+    if (!$Bootstrap.Contains(('function PlayerMethods.{0}' -f $Method)) -or !$PlayerReference.Contains(('`Player:{0}' -f $Method))) {
+        throw "Player method differs between bootstrap and reference: $Method"
+    }
+}
+$ItemsReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Services/Items.md')
+$BehaviorReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/GiveItemBehavior.md')
+if (!$Bootstrap.Contains('GiveItemBehavior.InventoryOnly') -or !$BehaviorReference.Contains('GiveItemBehavior.InventoryOnly') -or
+    !$PlayerReference.Contains('Behavior: GiveItemBehavior?')) { throw 'GiveItem typed behavior differs between runtime and public reference' }
+if (!$Bootstrap.Contains('function Items.Exists') -or !$ItemsReference.Contains('`Items:Exists')) {
+    throw 'Items service differs between bootstrap and reference'
+}
+foreach ($Claim in @('128 direct entries','main, belt and wear','PREPARE/VERIFY','`25353106`')) {
+    if (!$Player1C.Contains($Claim)) { throw "Player-1C evidence omits: $Claim" }
+}
+foreach ($Claim in @('IMPLEMENTED / AUTHENTICATED-CLIENT UNQUALIFIED','`25353106`','`74b9b48e9375177bc17e76a4d939956d1076645b`','no values')) {
+    if (!$Player1D.Contains($Claim)) { throw "Player-1D evidence omits: $Claim" }
+}
+foreach ($Claim in @('PREPARE, COMMIT and VERIFY','Player.inventory.Take(null','Q0 - Q1 == requestedAmount','1,000 successful','GiveItem')) {
+    if (!$Player1FA.Contains($Claim)) { throw "Player-1F-A evidence omits: $Claim" }
 }
 foreach ($Constructor in @('ImageSource.None','ImageSource.Sprite','ImageSource.Png','ImageSource.Item','ImageSource.SteamAvatar')) {
     if (!$GuiReference.Contains($Constructor) -or !$Bootstrap.Contains(($Constructor -split '\.')[1])) { throw "GUI image constructor differs between bootstrap and reference: $Constructor" }
