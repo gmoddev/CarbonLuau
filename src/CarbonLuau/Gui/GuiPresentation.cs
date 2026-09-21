@@ -310,7 +310,7 @@ namespace Carbon.Plugins
                 var Children = new List<GuiRetainedNode>();
                 foreach (ulong ChildId in Parent.Children) {
                     GuiRetainedNode Child = State.Nodes[ChildId];
-                    if (Child.ClassId == GuiClassId.UIListLayout) Layout = Child;
+                    if (Child.ClassId == GuiClassId.UIListLayout || Child.ClassId == GuiClassId.UIGridLayout) Layout = Child;
                     else if (GuiSchema.IsA(Child.ClassId, "GuiObject")) Children.Add(Child);
                 }
                 var Result = new Dictionary<ulong, GuiProjectedRect>();
@@ -326,6 +326,7 @@ namespace Carbon.Plugins
                     Order = Parent.Children.IndexOf(Left.Identity.GuiObjectId).CompareTo(Parent.Children.IndexOf(Right.Identity.GuiObjectId));
                     return Order != 0 ? Order : Left.Identity.GuiObjectId.CompareTo(Right.Identity.GuiObjectId);
                 });
+                if (Layout.ClassId == GuiClassId.UIGridLayout) return ProjectGridChildren(Content, Layout, Children, Visible);
                 bool Vertical = TextValue(Layout, GuiPropertyId.FillDirection) == "Vertical";
                 GuiAffine MainExtent = new GuiAffine(0, 0);
                 var Sizes = new Dictionary<ulong, GuiProjectedRect>();
@@ -354,6 +355,40 @@ namespace Carbon.Plugins
                     GuiAffine YPosition = GuiAffine.Add(YStart, GuiAffine.Multiply(YSize, Anchor[1]));
                     Result.Add(Child.Identity.GuiObjectId, new GuiProjectedRect(XPosition, YPosition, XSize, YSize));
                     Cursor = GuiAffine.Add(Cursor, GuiAffine.Add(Vertical ? YSize : XSize, Gap));
+                }
+                foreach (GuiRetainedNode Child in Children)
+                    if (!Result.ContainsKey(Child.Identity.GuiObjectId)) Result.Add(Child.Identity.GuiObjectId, ProjectRetained(Content, Child));
+                return Result;
+            }
+
+            private static Dictionary<ulong, GuiProjectedRect> ProjectGridChildren(GuiContentRect Content, GuiRetainedNode Layout,
+                List<GuiRetainedNode> Children, List<GuiRetainedNode> Visible)
+            {
+                var Result = new Dictionary<ulong, GuiProjectedRect>();
+                double[] CellValue = Numbers(Layout, GuiPropertyId.CellSize), PaddingValue = Numbers(Layout, GuiPropertyId.CellPadding);
+                GuiAffine XCell = GuiAffine.Add(GuiAffine.Multiply(Content.XSize, CellValue[0]), new GuiAffine(0, CellValue[1]));
+                GuiAffine YCell = GuiAffine.Add(GuiAffine.Multiply(Content.YSize, CellValue[2]), new GuiAffine(0, CellValue[3]));
+                GuiAffine XGap = GuiAffine.Add(GuiAffine.Multiply(Content.XSize, PaddingValue[0]), new GuiAffine(0, PaddingValue[1]));
+                GuiAffine YGap = GuiAffine.Add(GuiAffine.Multiply(Content.YSize, PaddingValue[2]), new GuiAffine(0, PaddingValue[3]));
+                int Count = Visible.Count, Maximum = Integer(Layout, GuiPropertyId.FillDirectionMaxCells);
+                bool Horizontal = TextValue(Layout, GuiPropertyId.FillDirection) == "Horizontal";
+                int Columns = Count == 0 ? 0 : Horizontal ? Math.Min(Count, Maximum) : (Count + Maximum - 1) / Maximum;
+                int Rows = Count == 0 ? 0 : Horizontal ? (Count + Maximum - 1) / Maximum : Math.Min(Count, Maximum);
+                GuiAffine GridWidth = Columns == 0 ? Affine(0, 0) : GuiAffine.Add(GuiAffine.Multiply(XCell, Columns), GuiAffine.Multiply(XGap, Columns - 1));
+                GuiAffine GridHeight = Rows == 0 ? Affine(0, 0) : GuiAffine.Add(GuiAffine.Multiply(YCell, Rows), GuiAffine.Multiply(YGap, Rows - 1));
+                GuiAffine GridX = GuiAffine.Add(Content.XStart, GuiAffine.Multiply(GuiAffine.Subtract(Content.XSize, GridWidth),
+                    AlignmentFactor(TextValue(Layout, GuiPropertyId.HorizontalAlignment))));
+                GuiAffine GridY = GuiAffine.Add(Content.YStart, GuiAffine.Multiply(GuiAffine.Subtract(Content.YSize, GridHeight),
+                    AlignmentFactor(TextValue(Layout, GuiPropertyId.VerticalAlignment))));
+                for (int Index = 0; Index < Count; ++Index) {
+                    int Column = Horizontal ? Index % Maximum : Index / Maximum;
+                    int Row = Horizontal ? Index / Maximum : Index % Maximum;
+                    GuiAffine XStart = GuiAffine.Add(GridX, GuiAffine.Multiply(GuiAffine.Add(XCell, XGap), Column));
+                    GuiAffine YStart = GuiAffine.Add(GridY, GuiAffine.Multiply(GuiAffine.Add(YCell, YGap), Row));
+                    GuiRetainedNode Child = Visible[Index]; double[] Anchor = Numbers(Child, GuiPropertyId.AnchorPoint);
+                    GuiAffine XPosition = GuiAffine.Add(XStart, GuiAffine.Multiply(XCell, Anchor[0]));
+                    GuiAffine YPosition = GuiAffine.Add(YStart, GuiAffine.Multiply(YCell, Anchor[1]));
+                    Result.Add(Child.Identity.GuiObjectId, new GuiProjectedRect(XPosition, YPosition, XCell, YCell));
                 }
                 foreach (GuiRetainedNode Child in Children)
                     if (!Result.ContainsKey(Child.Identity.GuiObjectId)) Result.Add(Child.Identity.GuiObjectId, ProjectRetained(Content, Child));

@@ -27,6 +27,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | GUI Foundation 2F public qualification and release-candidate closure | [GuiFoundation2F.md](docs/GuiFoundation2F.md) |
 | Canonical GUI Foundation 3 additive semantics | [D17 in Invariants.md](docs/Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent) |
 | GUI Foundation 3 rationale, surface matrices, implementation guidance and qualification gates | [GuiFoundation3.md](docs/GuiFoundation3.md) |
+| GUI Foundation 3A deterministic-grid implementation and evidence | [GuiFoundation3A.md](docs/GuiFoundation3A.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
 | Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
 | What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
@@ -168,6 +169,13 @@ surface guidance, implementation sequencing and qualification planning; it does
 not override D17, prove implementation or assign a release identity. D17 is
 additive to D15/D16 and authorizes only explicitly scoped GUI-3A through GUI-3E
 implementation work. `TextBox` remains deferred under D16 and is not reopened.
+GUI Foundation 3A implements only D17's deterministic `UIGridLayout` slice:
+retained descriptors, list-or-grid exclusivity, affine direct-child projection,
+retained Position/Size authority restoration and bounded dirty synchronization.
+Its implementation and qualification record is
+[GuiFoundation3A.md](docs/GuiFoundation3A.md). It assigns no Foundation 3
+release identity and authorizes no clipping, font, scroll-effect or GUI-3B+
+work.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

@@ -6,7 +6,7 @@ namespace Carbon.Plugins
     public partial class CarbonLuau
     {
         internal enum GuiClassId
-        { GuiNode = 1, GuiObject = 2, ScreenGui = 3, Frame = 4, TextLabel = 5, TextButton = 6, UIListLayout = 7, UIPadding = 8, ImageLabel = 9, ImageButton = 10, ScrollingFrame = 11 }
+        { GuiNode = 1, GuiObject = 2, ScreenGui = 3, Frame = 4, TextLabel = 5, TextButton = 6, UIListLayout = 7, UIPadding = 8, ImageLabel = 9, ImageButton = 10, ScrollingFrame = 11, UIGridLayout = 12 }
         internal enum GuiValueTypeId { UDim = 1, UDim2 = 2, Vector2 = 3, Color3 = 4, ImageSource = 5 }
         internal enum GuiPropertyId
         {
@@ -17,6 +17,7 @@ namespace Carbon.Plugins
             PaddingTop = 22, PaddingBottom = 23, PaddingLeft = 24, PaddingRight = 25,
             Image = 26, ImageColor3 = 27, ImageTransparency = 28,
             CanvasSize = 29, ScrollingDirection = 30, ScrollingEnabled = 31,
+            CellSize = 32, CellPadding = 33, FillDirectionMaxCells = 34,
             LayoutProjection = 100, ContentProjection = 101
         }
         internal enum GuiMethodId
@@ -143,6 +144,10 @@ namespace Carbon.Plugins
             private static readonly GuiPropertyDescriptor ScrollingDirection = new GuiPropertyDescriptor(GuiPropertyId.ScrollingDirection, "ScrollingDirection", GuiValueKind.String,
                 GuiMutationKind.Structural, null, null, GuiLimitId.None, "X", "Y", "XY");
             private static readonly GuiPropertyDescriptor ScrollingEnabled = new GuiPropertyDescriptor(GuiPropertyId.ScrollingEnabled, "ScrollingEnabled", GuiValueKind.Boolean, GuiMutationKind.Structural);
+            private static readonly GuiPropertyDescriptor CellSize = new GuiPropertyDescriptor(GuiPropertyId.CellSize, "CellSize", GuiValueKind.UDim2, GuiMutationKind.LayoutAffecting);
+            private static readonly GuiPropertyDescriptor CellPadding = new GuiPropertyDescriptor(GuiPropertyId.CellPadding, "CellPadding", GuiValueKind.UDim2, GuiMutationKind.LayoutAffecting);
+            private static readonly GuiPropertyDescriptor FillDirectionMaxCells = new GuiPropertyDescriptor(GuiPropertyId.FillDirectionMaxCells,
+                "FillDirectionMaxCells", GuiValueKind.Integer, GuiMutationKind.LayoutAffecting, 1, 64);
 
             private static readonly GuiClassDescriptor[] ClassValues = BuildClasses();
             private static readonly GuiMethodDescriptor[] MethodValues =
@@ -282,7 +287,9 @@ namespace Carbon.Plugins
                         Append(ObjectProperties("UDim2.fromOffset(100, 100)", "1"), ImageProperties()), CommonMethods, new[] {GuiEventId.Activated}),
                     new GuiClassDescriptor(GuiClassId.ScrollingFrame, "ScrollingFrame", GuiClassId.GuiObject, true,
                         GuiCreationScope.GuiService | GuiCreationScope.GuiObject, true,
-                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "0"), ScrollingProperties()), CommonMethods, new GuiEventId[0])
+                        Append(ObjectProperties("UDim2.fromOffset(100, 100)", "0"), ScrollingProperties()), CommonMethods, new GuiEventId[0]),
+                    new GuiClassDescriptor(GuiClassId.UIGridLayout, "UIGridLayout", GuiClassId.GuiNode, true, GuiCreationScope.GuiObject, false,
+                        GridProperties(), CommonMethods, new GuiEventId[0])
                 };
             }
             private static GuiPropertyUse[] ObjectProperties(string SizeDefault, string TransparencyDefault)
@@ -308,6 +315,13 @@ namespace Carbon.Plugins
                 return new[] {Use(Name, true, "UIPadding"), Use(ClassName, false, "UIPadding"), Use(Parent, true, "nil"),
                     Use(PaddingTop, true, "UDim.new(0, 0)"), Use(PaddingBottom, true, "UDim.new(0, 0)"),
                     Use(PaddingLeft, true, "UDim.new(0, 0)"), Use(PaddingRight, true, "UDim.new(0, 0)")};
+            }
+            private static GuiPropertyUse[] GridProperties()
+            {
+                return new[] {Use(Name, true, "UIGridLayout"), Use(ClassName, false, "UIGridLayout"), Use(Parent, true, "nil"),
+                    Use(CellSize, true, "UDim2.fromOffset(100, 100)"), Use(CellPadding, true, "UDim2.fromOffset(0, 0)"),
+                    Use(FillDirection, true, "Horizontal"), Use(FillDirectionMaxCells, true, "1"),
+                    Use(HorizontalAlignment, true, "Left"), Use(VerticalAlignment, true, "Top")};
             }
             private static GuiPropertyUse[] ImageProperties()
             {

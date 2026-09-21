@@ -477,8 +477,10 @@ remain unqualified and non-gating.
 [D17](Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent)
 adopts the additive Foundation 3 architecture. [GuiFoundation3.md](GuiFoundation3.md)
 owns detailed rationale, exact surface matrices, implementation sequencing and
-qualification planning. This policy adoption implements no Foundation 3
-production behavior and does not change existing Foundation 1/2 evidence.
+qualification planning. [GUI Foundation 3A](GuiFoundation3A.md) implements the
+deterministic `UIGridLayout` slice in source without assigning it a release
+identity. It does not change existing Foundation 1/2 evidence or begin
+clipping, font or scroll-effect work.
 
 Future Foundation 3 public qualification must separately establish deterministic
 grid behavior, clipping visuals and hit eligibility, supported-client availability
@@ -493,8 +495,19 @@ D17 assigns no package or scripting API identity. Package `0.4.0`, scripting
 API `0.4.0-experimental`, native ABI `1.4`, provider protocol `1.2`, package
 schema `1` and the pinned Luau revision remain unchanged. Foundation 3 release
 identity remains gated on implementation, qualification and explicit release
-planning. `TextBox` remains deferred and unimplemented under D16's exact-text
-transport gate.
+planning; in particular, the implemented 3A grid is not yet included in the
+already qualified `0.4.0-experimental` public surface. `TextBox` remains
+deferred and unimplemented under D16's exact-text transport gate.
+
+GUI-3A Windows native/local qualification is **DEFERRED / UNQUALIFIED** because
+the required DockerPC infrastructure is unavailable. This GUI-3A-specific gate
+is non-gating by explicit scope decision and must remain distinct from both
+hosted Windows CI and Foundation G's Windows live/local deferral. Hosted Windows
+CI does not qualify the missing native/local DockerPC environment. A future
+supplemental run must test GUI-3A source revision
+`5f87ba0ff79326f2a6d24c05030e4918eb57e836` or a documented source-equivalent
+descendant. Historical Windows qualification for earlier foundations remains
+valid within its original envelope.
 
 ## Phase 0 consistency review
 

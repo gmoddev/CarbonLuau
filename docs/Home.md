@@ -89,5 +89,7 @@ The additive GUI Foundation 3 architecture is resolved by
 [D17](Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent),
 with its detailed grid, clipping, font, scroll-effect, bounds and qualification
 guidance in [GUI Foundation 3](GuiFoundation3.md). Foundation 3 is architecture
-only at this point: it has no production implementation or release identity,
-and it does not reopen deferred TextBox work.
+with its deterministic grid slice now implemented and recorded in
+[GUI Foundation 3A](GuiFoundation3A.md). The grid has no assigned release
+identity yet; clipping, fonts and scroll effects remain unimplemented, and
+Foundation 3 does not reopen deferred TextBox work.

@@ -566,13 +566,19 @@ namespace Carbon.Plugins
                     MarkStructural(ScreenValue, GuiActionRejection.TargetUnavailable);
                 else if (Use.Descriptor.MutationKind == GuiMutationKind.Structural) MarkStructural(ScreenValue);
                 else if (Use.Descriptor.MutationKind == GuiMutationKind.Patchable) {
-                    MarkPatchable(ScreenValue, Node.Identity.GuiObjectId, Use.Descriptor.Id);
-                    if ((Use.Descriptor.Id == GuiPropertyId.Size || Use.Descriptor.Id == GuiPropertyId.Visible) && HasListParent(Node))
+                    bool GridManaged = HasGridParent(Node);
+                    if (GridManaged && (Use.Descriptor.Id == GuiPropertyId.Position || Use.Descriptor.Id == GuiPropertyId.Size)) return;
+                    if (GridManaged && Use.Descriptor.Id == GuiPropertyId.AnchorPoint)
                         MarkLayoutAffected(State.Nodes[Node.ParentId.Value]);
+                    else {
+                        MarkPatchable(ScreenValue, Node.Identity.GuiObjectId, Use.Descriptor.Id);
+                        if ((Use.Descriptor.Id == GuiPropertyId.Size || Use.Descriptor.Id == GuiPropertyId.Visible) && HasLayoutParent(Node))
+                            MarkLayoutAffected(State.Nodes[Node.ParentId.Value]);
+                    }
                 } else if (Use.Descriptor.MutationKind == GuiMutationKind.LayoutAffecting) {
-                    if (Node.ClassId == GuiClassId.UIListLayout || Node.ClassId == GuiClassId.UIPadding) {
+                    if (IsLayoutHelper(Node.ClassId)) {
                         if (Node.ParentId.HasValue) MarkLayoutAffected(State.Nodes[Node.ParentId.Value]);
-                    } else if (Use.Descriptor.Id == GuiPropertyId.LayoutOrder && HasListParent(Node))
+                    } else if (Use.Descriptor.Id == GuiPropertyId.LayoutOrder && HasLayoutParent(Node))
                         MarkLayoutAffected(State.Nodes[Node.ParentId.Value]);
                 }
             }
@@ -917,12 +923,15 @@ namespace Carbon.Plugins
                 int Buttons, int TextBytes, int ProjectedElements)
             {
                 if (!GuiSchema.GetClass(Parent.ClassId).CanHaveChildren) throw new FacadeException("GUI parent cannot have children");
-                if ((ChildClass == GuiClassId.UIListLayout || ChildClass == GuiClassId.UIPadding) && !GuiSchema.IsA(Parent.ClassId, "GuiObject"))
+                if (IsLayoutHelper(ChildClass) && !GuiSchema.IsA(Parent.ClassId, "GuiObject"))
                     throw new FacadeException("GUI layout helpers require a GuiObject parent");
-                if (ChildClass == GuiClassId.UIListLayout || ChildClass == GuiClassId.UIPadding) {
+                if (IsLayoutHelper(ChildClass)) {
                     foreach (ulong SiblingId in Parent.Children) {
                         if (Child != null && SiblingId == Child.Identity.GuiObjectId) continue;
-                        if (State.Nodes[SiblingId].ClassId == ChildClass) throw new FacadeException("GUI layout helper cardinality limit reached");
+                        GuiClassId SiblingClass = State.Nodes[SiblingId].ClassId;
+                        if ((IsLayoutManager(ChildClass) && IsLayoutManager(SiblingClass)) ||
+                            (ChildClass == GuiClassId.UIPadding && SiblingClass == GuiClassId.UIPadding))
+                            throw new FacadeException("GUI layout helper cardinality limit reached");
                     }
                 }
                 int RenderableChildren = 0;
@@ -991,8 +1000,11 @@ namespace Carbon.Plugins
                         return GuiStoredValue.UDim(Value[0], Value[1]);
                     }
                     case GuiValueKind.UDim2: {
-                        double[] Value = ParseNumber(Fields, KindIndex, "udim2", 4); ValidateRange(Value[0], -8, 8, Descriptor.Name); ValidateRange(Value[2], -8, 8, Descriptor.Name);
-                        ValidateRange(Value[1], -32768, 32768, Descriptor.Name); ValidateRange(Value[3], -32768, 32768, Descriptor.Name); return GuiStoredValue.UDim2(Value[0], Value[1], Value[2], Value[3]);
+                        double[] Value = ParseNumber(Fields, KindIndex, "udim2", 4);
+                        bool NonNegative = Descriptor.Id == GuiPropertyId.CellSize || Descriptor.Id == GuiPropertyId.CellPadding;
+                        ValidateRange(Value[0], NonNegative ? 0 : -8, 8, Descriptor.Name); ValidateRange(Value[2], NonNegative ? 0 : -8, 8, Descriptor.Name);
+                        ValidateRange(Value[1], NonNegative ? 0 : -32768, 32768, Descriptor.Name); ValidateRange(Value[3], NonNegative ? 0 : -32768, 32768, Descriptor.Name);
+                        return GuiStoredValue.UDim2(Value[0], Value[1], Value[2], Value[3]);
                     }
                     case GuiValueKind.Vector2: {
                         double[] Value = ParseNumber(Fields, KindIndex, "vector2", 2); double Minimum = Descriptor.Minimum ?? -32768, Maximum = Descriptor.Maximum ?? 32768;
@@ -1030,6 +1042,15 @@ namespace Carbon.Plugins
                 if (Node.ClassId == GuiClassId.UIListLayout) {
                     Node.Properties[GuiPropertyId.Padding] = GuiStoredValue.UDim(0, 0);
                     Node.Properties[GuiPropertyId.FillDirection] = GuiStoredValue.String("Vertical");
+                    Node.Properties[GuiPropertyId.HorizontalAlignment] = GuiStoredValue.String("Left");
+                    Node.Properties[GuiPropertyId.VerticalAlignment] = GuiStoredValue.String("Top");
+                    return;
+                }
+                if (Node.ClassId == GuiClassId.UIGridLayout) {
+                    Node.Properties[GuiPropertyId.CellSize] = GuiStoredValue.UDim2(0, 100, 0, 100);
+                    Node.Properties[GuiPropertyId.CellPadding] = GuiStoredValue.UDim2(0, 0, 0, 0);
+                    Node.Properties[GuiPropertyId.FillDirection] = GuiStoredValue.String("Horizontal");
+                    Node.Properties[GuiPropertyId.FillDirectionMaxCells] = GuiStoredValue.Int(1);
                     Node.Properties[GuiPropertyId.HorizontalAlignment] = GuiStoredValue.String("Left");
                     Node.Properties[GuiPropertyId.VerticalAlignment] = GuiStoredValue.String("Top");
                     return;
@@ -1109,6 +1130,18 @@ namespace Carbon.Plugins
                     if (State.Nodes[ChildId].ClassId == GuiClassId.UIListLayout) return true;
                 return false;
             }
+            private bool HasGridParent(GuiRetainedNode Node)
+            {
+                if (!Node.ParentId.HasValue) return false;
+                foreach (ulong ChildId in State.Nodes[Node.ParentId.Value].Children)
+                    if (State.Nodes[ChildId].ClassId == GuiClassId.UIGridLayout) return true;
+                return false;
+            }
+            private bool HasLayoutParent(GuiRetainedNode Node) { return HasListParent(Node) || HasGridParent(Node); }
+            private static bool IsLayoutManager(GuiClassId ClassId)
+            { return ClassId == GuiClassId.UIListLayout || ClassId == GuiClassId.UIGridLayout; }
+            private static bool IsLayoutHelper(GuiClassId ClassId)
+            { return IsLayoutManager(ClassId) || ClassId == GuiClassId.UIPadding; }
             private int ScreenTextBytes(GuiRetainedNode Screen) { return SubtreeTextBytes(Screen); }
             private int DepthFromRoot(GuiRetainedNode Node) { int Result = 1; while (Node.ParentId.HasValue) { Result++; Node = State.Nodes[Node.ParentId.Value]; } return Result; }
             private GuiRetainedNode RootScreen(GuiRetainedNode Node)

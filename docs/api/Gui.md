@@ -8,6 +8,10 @@ Foundation 2F qualification. `TextBox` is not implemented. `Submitted` is not
 implemented. The current Rust command transport cannot preserve the required
 submitted text exactly, so CarbonLuau does not expose a lossy substitute.
 
+Current source also contains Foundation 3A's deterministic `UIGridLayout` for
+qualification. It has no assigned package or scripting API release identity
+yet and is not implied by published `0.4.0` artifacts.
+
 CarbonLuau provides a small server-driven retained GUI API. You create a tree
 once, show its `ScreenGui` to one or more connected Players, and then update the
 same objects. CarbonLuau synchronizes committed changes after Luau returns.
@@ -73,7 +77,8 @@ updates or Signal connections.
 ## Runnable examples
 
 The release bundle and repository include focused examples for each supported
-Foundation 2 pattern:
+Foundation 2 pattern. The grid example is a current-source qualification
+example and is not part of a published release identity yet:
 
 | Pattern | Example |
 |---|---|
@@ -83,6 +88,7 @@ Foundation 2 pattern:
 | Item, skin and Steam avatar sources | [`item-skin`](../../examples/gui/item-skin/init.luau), [`steam-avatar`](../../examples/gui/steam-avatar/init.luau) |
 | Explicit scrolling and list layout inside scrolling | [`scrolling`](../../examples/gui/scrolling/init.luau), [`scrolling-layout`](../../examples/gui/scrolling-layout/init.luau) |
 | One shared tree and cloned per-Player state | [`shared-rich`](../../examples/gui/shared-rich/init.luau), [`per-player-rich`](../../examples/gui/per-player-rich/init.luau) |
+| Deterministic explicit grid, current source only | [`grid`](../../examples/gui/grid/init.luau) |
 
 These examples use only the public Luau surface. Raw Rust CUI is never exposed.
 
@@ -154,6 +160,45 @@ acknowledged to scripts.
 Changing ImageColor3 or ImageTransparency can use a patch. Changing Image is a
 structural reconciliation. ImageButton uses the same presentation-bound,
 exact-Player secure Activated path as TextButton.
+
+## Deterministic grids
+
+`UIGridLayout` arranges direct visible GuiObject children in explicit rows and
+columns computed entirely from retained server state.
+
+```lua
+local Panel = Screen:Create("Frame")
+Panel.Size = UDim2.fromOffset(420, 260)
+
+local Padding = Panel:Create("UIPadding")
+Padding.PaddingLeft = UDim.new(0, 12)
+Padding.PaddingTop = UDim.new(0, 12)
+
+local Grid = Panel:Create("UIGridLayout")
+Grid.CellSize = UDim2.fromOffset(96, 48)
+Grid.CellPadding = UDim2.fromOffset(8, 8)
+Grid.FillDirection = "Horizontal"
+Grid.FillDirectionMaxCells = 4
+Grid.HorizontalAlignment = "Center"
+Grid.VerticalAlignment = "Top"
+
+for Index = 1, 8 do
+    local Cell = Panel:Create("TextLabel")
+    Cell.LayoutOrder = Index
+    Cell.Text = `Cell {Index}`
+end
+```
+
+Horizontal fill advances columns before wrapping; vertical fill advances rows.
+The explicit `FillDirectionMaxCells` range is 1 through 64. No viewport query,
+automatic fit or client geometry determines topology. A parent may contain a
+list or grid manager, not both, while `UIPadding` may coexist with either.
+
+Under a grid, the computed cell controls projected Position and Size. Authored
+Position and Size remain retained, readable and writable, and become projection
+authority again when the child leaves the grid. Hidden children consume no
+cell. Geometry order uses LayoutOrder, attachment order and object identity;
+ZIndex remains render order and GetChildren remains attachment order.
 
 ## Retained scrolling
 
@@ -248,7 +293,7 @@ author-visible bounds:
 | Resource | Bound |
 |---|---:|
 | Objects in one ScreenGui / tree depth / arranged GuiObject children of one object | 128 / 16 / 64 |
-| UIListLayout / UIPadding children of one parent | 1 / 1 |
+| UIListLayout or UIGridLayout / UIPadding children of one parent | 1 total layout manager / 1 |
 | Objects / ScreenGuis in one domain | 1,024 / 32 |
 | Objects globally | 8,192 |
 | Screens for one Player connection / viewers of one ScreenGui | 16 / 256 |

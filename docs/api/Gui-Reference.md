@@ -8,6 +8,10 @@ qualification. `TextBox` is not implemented and `Submitted` is not implemented
 because the current Rust command transport failed D16's exact text-preservation
 gate.
 
+Foundation 3A's `UIGridLayout` is implemented in current source for
+qualification. It has not yet been assigned to a package or scripting API
+release identity; do not infer its availability from published `0.4.0` artifacts.
+
 ## Service and construction
 
 ```lua
@@ -19,7 +23,7 @@ local Frame = Screen:Create("Frame")
 `Gui:Create(ClassName)` accepts `ScreenGui`, `Frame`, `TextLabel`, `TextButton`,
 `ImageLabel`, `ImageButton` and `ScrollingFrame`. `ScreenGui` roots can only be created through
 `Gui`. Calling `Create` on a GuiObject accepts those non-screen GuiObjects plus
-`UIListLayout` or `UIPadding` and parents the new child to the receiver.
+`UIListLayout`, `UIGridLayout` or `UIPadding` and parents the new child to the receiver.
 
 ## Classes
 
@@ -63,7 +67,7 @@ These methods describe server intent, not acknowledged client state.
 | `BackgroundColor3` | Color3 | `Color3.new(1, 1, 1)` | Each component `0..1`. |
 | `BackgroundTransparency` | number | Class-specific | Finite `0..1`; `0` is opaque. |
 | `ZIndex` | integer | `1` | `0..1000`; sibling-local render order. |
-| `LayoutOrder` | integer | `0` | `-32768..32767`; geometric order under a sibling UIListLayout only. |
+| `LayoutOrder` | integer | `0` | `-32768..32767`; geometric order under a sibling UIListLayout or UIGridLayout. |
 
 Class-specific defaults:
 
@@ -150,6 +154,35 @@ attachment order and object identity. Hidden children consume no list space.
 Retained `Size` and `AnchorPoint` participate in projection; retained `Position`
 is preserved but ignored for arranged placement until the layout is removed.
 
+### UIGridLayout
+
+`UIGridLayout` is a retained, non-rendering `GuiNode`, not a `GuiObject`. It can
+only be created under a GuiObject and cannot have children. A parent may contain
+one `UIListLayout` or one `UIGridLayout`, never both. One `UIPadding` may coexist
+with either layout manager.
+
+| Property | Type | Default | Validation/behavior |
+|---|---|---|---|
+| `Parent` | GuiObject or nil | `nil` | Same owner, no cycle, and no sibling list/grid manager. |
+| `CellSize` | UDim2 | `UDim2.fromOffset(100, 100)` | Each scale component `0..8`; each offset component `0..32768`. |
+| `CellPadding` | UDim2 | `UDim2.fromOffset(0, 0)` | Each scale component `0..8`; each offset component `0..32768`. |
+| `FillDirection` | string | `"Horizontal"` | `"Horizontal"` or `"Vertical"`. |
+| `FillDirectionMaxCells` | integer | `1` | `1..64`; explicit columns for horizontal fill or rows for vertical fill before wrapping. |
+| `HorizontalAlignment` | string | `"Left"` | `"Left"`, `"Center"` or `"Right"`. |
+| `VerticalAlignment` | string | `"Top"` | `"Top"`, `"Center"` or `"Bottom"`. |
+
+The grid arranges direct visible GuiObject children by `LayoutOrder`, retained
+attachment order and object identity. Hidden children consume no cell. The
+explicit max-cell property defines topology; CarbonLuau never derives wrapping
+from client pixels. `ZIndex` and `GetChildren()` behavior remain independent.
+
+While a child is grid managed, its cell controls both projected position and
+projected size. The child's retained `Position` and `Size` remain immediately
+readable and writable but are not rewritten and do not control that projected
+rectangle. `AnchorPoint` participates only in encoding the computed rectangle.
+Removing the grid restores the latest retained Position and Size as projection
+authority. Grid helpers emit no render element or host layout-group component.
+
 ### UIPadding
 
 `UIPadding` is also a retained, non-rendering `GuiNode`, cannot have children and
@@ -163,8 +196,8 @@ is limited to one per GuiObject parent.
 | `PaddingLeft` | UDim | zero | Scale `0..1`, offset `0..32768`. |
 | `PaddingRight` | UDim | zero | Scale `0..1`, offset `0..32768`. |
 
-Padding affects the content rectangle used for direct child projection, list
-layout and built-in text. It does not resize the parent's background.
+Padding affects the content rectangle used for direct child projection, list or
+grid layout and built-in text. It does not resize the parent's background.
 
 ## Immutable value types
 

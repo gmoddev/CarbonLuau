@@ -65,3 +65,8 @@ configuration with client-local scroll position under the same
 hover/focus and raw CUI remain unsupported. Authenticated-client visual, cursor, image-load,
 click-receipt and reconciliation observations remain unqualified even though
 the experimental source surface is available.
+
+Foundation 3A's deterministic `UIGridLayout` is implemented in current source
+for qualification but has not been assigned to a package or scripting API
+release identity. Clipping, project-owned fonts and one-way scroll effects are
+not implemented by 3A.

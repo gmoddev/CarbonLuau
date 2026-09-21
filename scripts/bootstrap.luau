@@ -323,7 +323,7 @@ GuiObjectMeta.__newindex = function(Object, Key, Value)
         if not Parent then Fail("Parent expects a same-domain GUI object or nil") end
         Host(21, "set", RecordValue.Id, Key, "object", Parent.Id); return
     end
-    Host(21, "set", RecordValue.Id, Key, EncodeGuiValue(Value, Key == "ZIndex" or Key == "TextSize" or Key == "LayoutOrder"))
+    Host(21, "set", RecordValue.Id, Key, EncodeGuiValue(Value, Key == "ZIndex" or Key == "TextSize" or Key == "LayoutOrder" or Key == "FillDirectionMaxCells"))
 end
 GuiObjectMeta.__tostring = function(Object) return GuiRecord(Object).ClassName end
 GuiObjectMeta.__metatable = "CarbonLuau.GuiObject"

@@ -551,7 +551,9 @@ Foundation 3 is Roblox-familiar, not Roblox-equivalent:
 
 ## Implementation sequence
 
-No implementation begins as part of architecture adoption.
+Architecture adoption itself began no implementation. GUI-3A was subsequently
+implemented as the isolated deterministic-grid slice recorded in
+[GuiFoundation3A.md](GuiFoundation3A.md); the later sequence remains gated.
 
 ### GUI-3A: schema and deterministic grid
 
@@ -646,5 +648,6 @@ ABI `1.4`, provider protocol `1.2`, package schema `1` and pinned Luau revision
 `c6b830185af962c82003f86784e2fe036357c830`.
 
 Foundation 3 release identity remains gated on implementation, qualification
-and later explicit release planning. This record does not begin GUI-3A and does
-not alter any production source.
+and later explicit release planning. This architecture record did not itself
+begin GUI-3A or alter production source. The later GUI-3A implementation record
+does not assign an identity to its grid surface.
