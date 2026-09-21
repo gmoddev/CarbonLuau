@@ -33,7 +33,9 @@ namespace Carbon.Plugins
         private void InitializeGameplay()
         {
             CommandRegistrar = new CarbonCommandRegistrar(this);
-            Gameplay = new FacadeWorld(new PlayerDirectory(ReadPlayer), CommandRegistrar);
+            var Players = new PlayerDirectory(ReadPlayer);
+            Gameplay = new FacadeWorld(Players, CommandRegistrar,
+                new RustCuiBackend(new GuiConfig().Validate(), new CarbonRustCuiTransport(Players)));
         }
         private void SeedPlayers()
         {
@@ -63,6 +65,7 @@ namespace Carbon.Plugins
                 Gameplay.Players.CheckOwner();
                 if (Player == null) return;
                 var Lifetime = Gameplay.Players.Disconnect(Player.UserIDString, Player);
+                Gameplay.DisconnectGui(Lifetime);
                 Gameplay.Event("removing", Lifetime);
                 if (Host != null && !Host.Busy) RequestDrain();
             } catch (Exception) { PrintWarning("[CarbonLuau:Players] Disconnection event rejected (host context)."); }

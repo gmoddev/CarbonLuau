@@ -313,6 +313,24 @@ rendering, layout translation, synchronization, action tokens, client event
 ingress or visible/click behavior. Those remain later GUI gates, and the GUI
 package/scripting identity remains unassigned.
 
+### GUI Foundation 1C evidence contract
+
+[GUI Foundation 1C](GuiFoundation1C.md) implements internal Presentations,
+`ScreenGui:Show`/`Hide`/`IsShown`, exact D11 Player connection binding,
+deterministic full render plans, D15 layout translation, opaque client IDs and
+the production Rust CUI backend. Its affected evidence is presentation and
+publication transitions; disconnect/reconnect and teardown; deterministic
+parent/Z ordering; layout, color, text and cursor golden plans; bounded CUI JSON;
+backend unavailable/failure containment; actual Luau facade calls; server-side
+Carbon AddUI/DestroyUI integration where available; GUI-1A/1B and Foundations
+A-G regressions; Windows/Linux runtime lanes; and affected sanitizer coverage.
+
+Foundation 1C does not qualify automatic property patches, dirty tracking,
+patch/full selection, periodic reconciliation, action tokens, the private client
+command, interaction limits or Activated ingress/delivery. Authenticated-client
+evidence remains mandatory for visual layout, cursor, click and client
+reconciliation claims. The GUI package/scripting identity remains unassigned.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:
