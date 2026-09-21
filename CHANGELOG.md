@@ -6,6 +6,10 @@ All notable public changes to CarbonLuau are recorded here.
 
 ### Added
 
+- Committed-only `Player:GiveItem(ShortName, Amount, Behavior?)`, defaulting to
+  typed `GiveItemBehavior.InventoryOnly`; bounded complete planning, exact-slot
+  transfer, returned-item accounting/cleanup and combined physical VERIFY.
+  No intentional drop fallback, post-COMMIT false, rollback or automatic retry.
 - Immutable `Vector3` arithmetic and live read-only exact-connection
   `Player.Position` under Player Interaction Foundation 1A.
 - Live read-only exact-connection `Player.Health` and `Player.MaxHealth` under

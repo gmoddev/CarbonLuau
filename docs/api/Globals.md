@@ -19,6 +19,9 @@ only in its owning generation; there is no cross-reload state preservation.
 `Vector3` is also a frozen global constructor table beginning with
 `0.4.0-experimental`. See the [Vector3 reference](Types/Vector3.md).
 
+`GiveItemBehavior` is a frozen global table in `0.4.0-experimental`, with only
+the typed `InventoryOnly` member. See [GiveItemBehavior](Types/GiveItemBehavior.md).
+
 ```lua
 print(game.ApiName, game.ApiVersion, game.ApiStatus)
 local Items = game:GetService("Items")

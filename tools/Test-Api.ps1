@@ -19,7 +19,7 @@ foreach ($Service in @('Players','Commands','Gui','Items')) {
     if (!$Bootstrap.Contains(('if Name == "{0}"' -f $Service))) { throw "Missing registered service: $Service" }
     if ($Service -ne 'Gui' -and !(Test-Path -LiteralPath (Join-Path $Root "docs/api/Services/$Service.md"))) { throw "Missing service reference: $Service" }
 }
-foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection')) {
+foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection','GiveItemBehavior')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "docs/api/Types/$Type.md"))) { throw "Missing type reference: $Type" }
 }
 $Documents = @(Get-Item (Join-Path $Root 'README.md')) + @(Get-Item (Join-Path $Root 'CHANGELOG.md')) +
@@ -79,12 +79,15 @@ foreach ($Property in @('Health','MaxHealth')) {
         throw "Player property differs between bootstrap and reference: $Property"
     }
 }
-foreach ($Method in @('CountItem','HasItem','Teleport','TakeItem')) {
+foreach ($Method in @('CountItem','HasItem','Teleport','TakeItem','GiveItem')) {
     if (!$Bootstrap.Contains(('function PlayerMethods.{0}' -f $Method)) -or !$PlayerReference.Contains(('`Player:{0}' -f $Method))) {
         throw "Player method differs between bootstrap and reference: $Method"
     }
 }
 $ItemsReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Services/Items.md')
+$BehaviorReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/GiveItemBehavior.md')
+if (!$Bootstrap.Contains('GiveItemBehavior.InventoryOnly') -or !$BehaviorReference.Contains('GiveItemBehavior.InventoryOnly') -or
+    !$PlayerReference.Contains('Behavior: GiveItemBehavior?')) { throw 'GiveItem typed behavior differs between runtime and public reference' }
 if (!$Bootstrap.Contains('function Items.Exists') -or !$ItemsReference.Contains('`Items:Exists')) {
     throw 'Items service differs between bootstrap and reference'
 }

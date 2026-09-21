@@ -65,6 +65,6 @@ try {
         $Field = @($Container.Fields | Where-Object Name -CEQ $Name)
         Assert-Evidence ($Field.Count -eq 1 -and $Field[0].IsPublic) "public mutable $Name"
     }
-    Write-Host "[CarbonLuau:Player1FB] Static exposure confirmed: $script:Checks checks; GiveItem G1 PENDING REQUALIFICATION under I12 (not PASS)."
+    Write-Host "[CarbonLuau:Player1FB] Static exposure confirmed: $script:Checks checks; this exposure checker does not establish supported-host G1 PASS. See separate live qualification."
 }
 finally { foreach ($Assembly in $Opened) { $Assembly.Dispose() } }

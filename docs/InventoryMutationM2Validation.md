@@ -2,10 +2,11 @@
 
 **Date:** 2026-09-21  
 **Current disposition:** **Historical G1 PASS conclusion SUPERSEDED;
-G1 PENDING REQUALIFICATION under I12. G2-G5 evidence retained.**
+G1 supported-host requalification is now recorded by Player-1F-B. G2-G5 evidence retained.**
 The original phase reported G1-G5 PASS before either public mutation existed.
 TakeItem was subsequently implemented and qualified by Player-1F-A and remains
-unchanged. GiveItem is still unimplemented; this record changes no identity.
+unchanged. GiveItem's subsequent implementation is recorded in
+[Player-1F-B validation](PlayerInteractionFoundation1FB-Validation.md); this historical record changes no identity.
 
 **Player-1F-B follow-up and policy adoption (2026-09-21):** Original M2 G1
 proof was incomplete: mutable acceptance occurs before a split/drop decision.
@@ -14,9 +15,10 @@ CarbonLuau cannot isolate arbitrary trusted mutation across that callback.
 [I12](Invariants.md#i12--trusted-in-process-host-interference) now places that
 external mutation outside semantic isolation, not outside result verification.
 This does not restore the old PASS. The explicit-slot/no-swap/no-ignoreStackLimit
-adapter must be requalified under the supported-host model and
+adapter required requalification under the supported-host model and
 [Player-1F-B gate](PlayerInteractionFoundation1FB.md#required-1f-b-requalification)
-before implementation resumes. Historical observations below are preserved.
+before implementation resumed. That later evidence is linked above; historical
+observations below are preserved.
 
 ## Scope and provenance
 
@@ -70,7 +72,7 @@ The selected Windows/Linux method bodies and visibility are identical for
 
 ## Historical adapter evidence and current qualification limits
 
-### G1 — historical PASS superseded; requalification pending
+### G1 — historical PASS superseded; later requalification recorded separately
 
 The general `PlayerInventory.GiveItem`, `BasePlayer.GiveItem` and unconstrained
 `Item.MoveToContainer` paths are not qualified. `MoveToContainer` still has an
@@ -193,6 +195,6 @@ graceful RCON `quit`; no authenticated client was required or used.
 The original blanket G1-G5 PASS conclusion is explicitly superseded. G2-G5
 observations on Rust build `25353106` plus Carbon `2.0.259` and the historical
 G1 fixture outcomes remain evidence, not a new supported-host G1 PASS.
-TakeItem remains independently qualified. GiveItem requires the revised
-Player-1F-B requalification gate before implementation. PREPARE/COMMIT/VERIFY,
+TakeItem remains independently qualified. GiveItem's revised
+Player-1F-B requalification and implementation are linked above. PREPARE/COMMIT/VERIFY,
 false/true/indeterminate and nontransactional host semantics are unchanged.

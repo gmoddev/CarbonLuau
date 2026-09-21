@@ -1,4 +1,57 @@
-# Player Interaction Foundation 1F-B — GiveItem evidence and requalification
+# Player Interaction Foundation 1F-B — GiveItem implementation and evidence
+
+## Current implementation
+
+The separately authorized implementation starting at `03b6d68346e01747e3b9250f1f4c4668ae3d8383`
+adds `Player:GiveItem(ShortName, Amount, Behavior?) -> boolean`, with only typed
+`GiveItemBehavior.InventoryOnly` (the default). The current implementation,
+qualification scope, limitations and reproduction record are in
+[Player-1F-B validation](PlayerInteractionFoundation1FB-Validation.md).
+Author semantics are in [Player](api/Types/Player.md#giveitem) and
+[GiveItemBehavior](api/Types/GiveItemBehavior.md). I12/D13/D18 remain canonical;
+no change to their operational semantics is made.
+
+Implementation owners:
+
+- `Facade/InventoryGrant.cs`: complete bounded plan, returned-resource accounting,
+  cleanup and combined VERIFY. It consumes the Player-1C physical records, not a
+  separate inventory model. Q0 uses the frozen planning snapshot; Q1 uses one
+  fresh bounded scan. Arrays/list capacity never exceed 128 chunks.
+- `CarbonLuau.Inventory.Carbon.cs`: exact-build host adaptation, conservative
+  callback-free placement guards and explicit-slot transfer. Default unmodified
+  merge candidates only; actual returned Item compatibility is revalidated before
+  transfer. Wear/belt conflict relocation is excluded with readonly compatibility
+  guards; one clothing/restriction-bearing chunk per eligible container avoids
+  conflicts between planned chunks. Slot-mask containers and backpack/parachute
+  wear are not selected. No generic transfer, automatic slot or Drop fallback.
+- `FacadeWorld`: GiveItem shares TakeItem's existing exact-connection gate.
+- Build-embedded bootstrap and native facade ingress: typed enum, scalar/string
+  transport, and provisional admission rejection even through shared modules.
+
+Each returned Item is tracked before observation/transfer. Qualified accepted
+items remain Rust-owned even after an insertion callback throws. Consumed merge
+sources are accounted by transfer success plus UID/state. Only a still-valid,
+unattached, non-world temporary is eligible for `Remove(0)` cleanup; no global
+removal drain is used in production. Missing returns, changed identities, world
+state, unqualified resource states or failed cleanup produce an indeterminate
+error, never success or post-COMMIT false. Cleanup failures/unaccounted resources
+have saturating counters; transient borrowed references are released on exit.
+Zero retained references does not falsely claim a failed cleanup succeeded.
+
+No item-specific Player identity, capability policy, lock, queue, polling,
+rollback, retries, raw item facade or ABI change was introduced. Amount remains
+required and bounded by D18; planning may reject a valid large amount before
+creation when the complete safe plan cannot fit. Ordinary host rejection after
+creation remains an error. Main/belt/wear capacities and entry counts are checked
+before planning; bounded readonly compatibility checks may revisit those entries
+for candidate slots, never traverse nested/external inventories.
+
+## Historical investigation and policy adoption
+
+The remainder records the earlier stopped investigation and policy-only adoption.
+Statements below such as “unimplemented”, “pending” and “not run” describe those
+historical tasks, not the later implementation above. Their callback/drop finding
+and the supersession of the original blanket M2 G1 claim remain valid.
 
 Date: 2026-09-21. Starting implementation baseline and investigation source:
 `3f6a3196b28e2243dc8802d3b8ff2374196f3c89`, branch `main`.

@@ -30,6 +30,7 @@ namespace Carbon.Plugins
             private const string IndeterminateMessage =
                 "TakeItem host failure after commit began; inventory state may have changed";
             private readonly InventoryMutationGate Gate = new InventoryMutationGate();
+            internal InventoryMutationGate SharedGate { get { return Gate; } }
             internal readonly InventoryMutationDiagnostics Diagnostics = new InventoryMutationDiagnostics();
             internal int BusyCount { get { return Gate.Count; } }
 

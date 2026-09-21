@@ -110,6 +110,7 @@ internal static class Program
             PlayerInteractionFoundation1CTests.RunModel();
             PlayerInteractionFoundation1DTests.RunModel();
             PlayerInteractionFoundation1FATests.RunModel();
+            PlayerInteractionFoundation1FBTests.RunModel();
             var Low = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MinValue, MaxCallbackMilliseconds = int.MinValue }.Validate();
             var High = new Runtime.RuntimeConfig { MaxVmMemoryMiB = int.MaxValue, MaxCallbackMilliseconds = int.MaxValue }.Validate();
             Check(Low.MaxVmMemoryMiB == 16 && Low.MaxCallbackMilliseconds == 1 && High.MaxVmMemoryMiB == 256 && High.MaxCallbackMilliseconds == 100, "clamps");
@@ -177,6 +178,7 @@ internal static class Program
                 GuiFoundation3BTests.RunNative(Native);
                 GuiFoundation3CTests.RunNative(Native);
                 GuiFoundation3DTests.RunNative(Native);
+                PlayerInteractionFoundation1FBTests.RunNative(Native);
                 AddonTests.Run(Native, Args.Length > 3 ? Args[3] : null);
                 FoundationETests.Run(Native);
                 Native.Dispose(); Native.Dispose();

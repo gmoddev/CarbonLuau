@@ -560,7 +560,8 @@ Player-1D implements committed-only `Player:Teleport(Vector3)` and records the
 exact-build adapter plus available qualification in
 [PlayerInteractionFoundation1D.md](PlayerInteractionFoundation1D.md).
 Authenticated-client convergence remains unqualified. Player-1F-A implements
-TakeItem; GiveItem remains unimplemented.
+TakeItem; Player-1F-B implements InventoryOnly GiveItem with its
+[target/platform qualification](PlayerInteractionFoundation1FB-Validation.md).
 
 Remaining work is separated into supplemental authenticated-client Teleport
 qualification and Player-1E (combined lifecycle, stress, documentation and
@@ -568,8 +569,8 @@ public qualification closure). Revised D13 additionally routes Inventory-M1
 for the deterministic model and mutation gate, Player-1F-A for TakeItem,
 Player-1F-B for GiveItem and Player-1F-C for combined mutation closure.
 Inventory-M2's G1 conclusion is superseded; G2-G5 evidence remains. Player-1F-A uses
-that exact adapter for TakeItem; GiveItem and combined mutation closure remain
-unimplemented.
+that exact adapter for TakeItem; Player-1F-B records supported-host GiveItem
+requalification. Combined mutation closure remains unimplemented.
 
 D13 now accepts CarbonLuau-serialized, definite-rejection inventory mutation:
 bounded mutation-free PREPARE, explicit first-host-effect COMMIT and one bounded

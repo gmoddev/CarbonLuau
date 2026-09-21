@@ -14,7 +14,7 @@ This is server-side Luau, not Roblox API compatibility.
 | Players, connected-player snapshots, join/leave events | [Players](Services/Players.md) |
 | Player-issued chat commands | [Commands](Services/Commands.md) |
 | Player identity, live position/health observation, messaging and permission query | [Player](Types/Player.md) |
-| Rust item identity, bounded physical inventory observation and verified TakeItem | [Items](Services/Items.md), [Player](Types/Player.md) |
+| Rust item identity, bounded physical inventory observation and verified TakeItem/GiveItem | [Items](Services/Items.md), [Player](Types/Player.md), [GiveItemBehavior](Types/GiveItemBehavior.md) |
 | Immutable world-coordinate values | [Vector3](Types/Vector3.md) |
 | Command payload | [CommandContext](Types/CommandContext.md) |
 | Event subscription | [Signal](Types/Signal.md), [Connection](Types/Connection.md) |
@@ -51,20 +51,23 @@ Player-1A adds immutable `Vector3` and the live read-only `Player.Position`;
 Player-1B adds live read-only `Player.Health` and `Player.MaxHealth`; Player-1C
 adds `Items:Exists`, `Player:CountItem` and `Player:HasItem` under the same
 identity; Player-1D adds committed-only `Player:Teleport(Vector3)` and
-Player-1F-A adds committed-only verified `Player:TakeItem`. See the
+Player-1F-A adds committed-only verified `Player:TakeItem`; Player-1F-B adds
+`Player:GiveItem(ShortName, Amount, Behavior?)`, defaulting to typed InventoryOnly. See the
 [Player-1A](../PlayerInteractionFoundation1A.md) and
 [Player-1B](../PlayerInteractionFoundation1B.md) and
 [Player-1C](../PlayerInteractionFoundation1C.md) and
 [Player-1D](../PlayerInteractionFoundation1D.md) and
-[Player-1F-A](../PlayerInteractionFoundation1FA.md) qualification records. Not implemented in
-the current scripting surface: GiveItem, raw inventory objects, entities, health mutation,
+[Player-1F-A](../PlayerInteractionFoundation1FA.md) and
+[Player-1F-B](../PlayerInteractionFoundation1FB-Validation.md) qualification records. Not implemented in
+the current scripting surface: raw inventory objects, entities, health mutation,
 moderation/admin mutation, networking, HTTP, filesystem APIs,
 arbitrary hooks/console execution, reflection, Roblox hierarchy/replication and
 `task.wait`. No Phase 4 API is shipped. [D18](../Invariants.md#d18--player-interaction-foundation-1)
 also approves committed-only Teleport and implementation-gated GiveItem/TakeItem.
 Teleport is available with exact-build server qualification and an explicit
 authenticated-client deferral. TakeItem is available with exact-build
-PREPARE/COMMIT/VERIFY qualification; GiveItem is not available.
+PREPARE/COMMIT/VERIFY qualification; GiveItem uses a bounded complete placement plan
+and the supported-host InventoryOnly adapter.
 Revised D13 requires PREPARE/COMMIT/VERIFY and exact-Player serialization for inventory mutation;
 richer inventory mutation and raw host objects remain deferred.
 

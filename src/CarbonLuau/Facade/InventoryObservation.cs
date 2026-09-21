@@ -24,8 +24,12 @@ namespace Carbon.Plugins
             public readonly object Parent, Definition;
             public readonly long Amount;
             public readonly bool Valid;
+            public readonly object Identity;
+            public readonly int Position;
             public PhysicalInventoryStack(object Parent, object Definition, long Amount, bool Valid)
-            { this.Parent = Parent; this.Definition = Definition; this.Amount = Amount; this.Valid = Valid; }
+                : this(Parent, Definition, Amount, Valid, null, -1) { }
+            public PhysicalInventoryStack(object Parent, object Definition, long Amount, bool Valid, object Identity, int Position)
+            { this.Parent = Parent; this.Definition = Definition; this.Amount = Amount; this.Valid = Valid; this.Identity = Identity; this.Position = Position; }
         }
 
         public sealed class PhysicalInventoryContainer
@@ -83,7 +87,7 @@ namespace Carbon.Plugins
                 }
                 return Total;
             }
-            private static void ValidateMutationCapacity(PhysicalInventorySource Source)
+            internal static void ValidateMutationCapacity(PhysicalInventorySource Source)
             {
                 if (Source == null) throw new FacadeException("inventory observation is unavailable");
                 var Containers = new[] {Source.Main, Source.Belt, Source.Wear};

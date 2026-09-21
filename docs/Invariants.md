@@ -148,12 +148,12 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D10 — approved admitted-operation and provisional-effect model | Admission, resource ownership, publication and deadline are orthogonal as specified in the canonical D10 detail below. | Requalify admitted-operation, cross-domain facade or provisional-effect changes |
 | D11 — resolved Phase 3 identity contract; domain binding added | Existing exact connection-token semantics remain, with host-backed facade validity now also bound to the owning domain lifetime; see D11 detail below. | Requalify host identity/adapter or domain-lifetime changes |
 | D12 — resolved addon and GUI-capable experimental identity | The additive addon, GUI Foundation 1 and implemented GUI Foundation 2 layout/image/scrolling surfaces are assigned `CarbonLuau 0.4.0-experimental`; package, API, ABI, provider protocol, schema and Luau identities remain separate. `TextBox` is not implemented. Authenticated-client GUI observations remain unqualified and non-gating. | Requalify affected public behavior and assign an explicit migration/version decision for breaks |
-| D13 — resolved inventory ownership/failure model and I12 scope; TakeItem implemented | Bounded mutation-free PREPARE, explicit COMMIT, physical VERIFY and pre-COMMIT false / verified true / post-COMMIT indeterminate remain unchanged. Returned resources remain under temporary responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [Reassessment](InventoryOwnershipFailureReassessment.md) retains the rationale. [M2](InventoryMutationM2Validation.md) retains G2–G5 evidence; its G1 conclusion is superseded. [Player-1F-B](PlayerInteractionFoundation1FB.md) requires G1 requalification under I12; [Player-1F-A](PlayerInteractionFoundation1FA.md) retains qualified TakeItem. | Requalify GiveItem's supported-host no-drop path before implementation; requalify host, bounds or adapter changes |
+| D13 — resolved inventory ownership/failure model and I12 scope; TakeItem/GiveItem implemented | Bounded mutation-free PREPARE, explicit COMMIT, physical VERIFY and pre-COMMIT false / verified true / post-COMMIT indeterminate remain unchanged. Returned resources remain under temporary responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [Reassessment](InventoryOwnershipFailureReassessment.md) retains the rationale. [M2](InventoryMutationM2Validation.md) retains G2–G5 evidence; its G1 conclusion is superseded. [Player-1F-B](PlayerInteractionFoundation1FB-Validation.md) records supported-host G1 requalification and GiveItem InventoryOnly; [Player-1F-A](PlayerInteractionFoundation1FA.md) retains qualified TakeItem. | Requalify host, bounds or adapter changes; preserve per-target limits |
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
 | D16 - resolved GUI Foundation 2 architecture; implemented subset qualified for experimental public release through 2F | Foundation 2 additively specializes D15 as specified below. GUI-2A/2B/2C/2E/2F implement and qualify deterministic layout, typed images and retained scrolling under the existing `0.4.0-experimental` identity. `TextBox` and typed text ingress remain deferred and unimplemented after the exact text-preservation gate failed. [GuiFoundation2.md](GuiFoundation2.md) retains the complete supporting design. | Requalify affected behavior; reconsider TextBox only with a bounded opaque text-preserving host transport |
 | D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
-| D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and implementation-gated `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record the read/spatial implementations, and [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem. Authenticated-client Teleport behavior, GiveItem and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
+| D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 
 ### Canonical detail for resolved decisions
 
@@ -343,9 +343,11 @@ implementation or requalification leaves that individual API unimplemented
 without weakening its contract or blocking an independently qualified sibling.
 Player-1F-B's [exact-build follow-up](PlayerInteractionFoundation1FB.md) found
 an uncovered acceptance-callback/stack-limit path into the split/drop fallback.
-I12 now resolves the semantic isolation boundary. GiveItem G1 is **PENDING
-REQUALIFICATION**, not PASS; the historical M2 cases and independently qualified
-TakeItem remain evidence.
+I12 resolves the semantic isolation boundary. Player-1F-B now records the
+supported-host G1 requalification and production implementation in
+[its validation record](PlayerInteractionFoundation1FB-Validation.md); this does
+not restore the superseded blanket M2 conclusion. Historical M2 cases and
+independently qualified TakeItem remain evidence.
 
 For the intended `GiveItemBehavior.InventoryOnly` mode, G1 now requires:
 
@@ -751,20 +753,19 @@ item/container object crosses into Luau.
 
 `GiveItem` and `TakeItem` are committed-only inventory mutations under D13's
 PREPARE/COMMIT/VERIFY model. TakeItem is implemented by Player-1F-A; GiveItem
-remains implementation-gated.
+InventoryOnly is implemented by Player-1F-B within its recorded qualification.
 Both return `true` only for a verified physical postcondition, `false` only for
 definite PREPARE rejection before COMMIT, and a controlled error for any
 post-COMMIT uncertainty. Their required Amount is an exact integer from 1
 through `Int32.MaxValue`. For TakeItem, a canonical unknown item is a definite
-PREPARE rejection and returns false before COMMIT. GiveItem retains its
-separately gated configuration-error treatment until implemented.
+PREPARE rejection and returns false before COMMIT. GiveItem treats an unknown
+canonical item as a configuration error before creation.
 
-The intended GiveItem signature returns boolean and uses the project-owned
+The GiveItem signature returns boolean and uses the project-owned
 `GiveItemBehavior` enum, initially only `GiveItemBehavior.InventoryOnly`.
 Omitting Behavior selects InventoryOnly; a boolean DropIfFull parameter is not
 accepted. Unsupported behavior values are programming errors before mutation.
-This is an implementation-gated API declaration, not a runtime exposure:
-neither GiveItem nor GiveItemBehavior exists yet. `DropRemainder` is only a
+Player-1F-B exposes only InventoryOnly. `DropRemainder` is only a
 possible future design name, not a reserved/accepted enum member or runtime
 value. It needs separate design and qualification of inserted/dropped amounts,
 ownership, partial placement, world-entity verification, return semantics,
@@ -778,7 +779,7 @@ may return false only when PREPARE establishes impossibility before item
 creation. InventoryOnly does not intentionally drop overflow; D13's revised G1
 requires a no-world-drop planned target-build path within I12's supported-host
 boundary, with every returned Item accounted for or subjected to supported
-cleanup. It remains unqualified until requalification passes. I12 does not
+cleanup. Qualification is recorded per target in Player-1F-B. I12 does not
 convert observed world delivery into InventoryOnly success.
 
 TakeItem means verified removal of the requested physical quantity from the

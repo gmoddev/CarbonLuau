@@ -1,7 +1,7 @@
 # Player
 
 Availability: core proxy in experimental API `0.3.0-experimental`; Position,
-Health, MaxHealth, CountItem, HasItem, Teleport and TakeItem are added in `0.4.0-experimental`. Obtained from Players,
+Health, MaxHealth, CountItem, HasItem, Teleport, TakeItem and GiveItem are added in `0.4.0-experimental`. Obtained from Players,
 Signals or CommandContext; there is no constructor. A frozen proxy represents
 one connection in one generation, never a BasePlayer or a transferable host handle.
 
@@ -16,6 +16,7 @@ one connection in one generation, never a BasePlayer or a transferable host hand
 | `Player:CountItem(ShortName: string)` | number | Exact checked physical quantity across top-level main, belt and wear stacks. |
 | `Player:HasItem(ShortName: string, Amount: number?)` | boolean | Whether that physical quantity reaches Amount; omitted Amount is 1. |
 | `Player:TakeItem(ShortName: string, Amount: number)` | boolean | Removes and verifies the exact physical quantity. Committed execution only. |
+| `Player:GiveItem(ShortName: string, Amount: number, Behavior: GiveItemBehavior?)` | boolean | Verified inventory delivery. Behavior defaults to [GiveItemBehavior.InventoryOnly](GiveItemBehavior.md). Committed execution only. |
 | `Player:Teleport(Position: Vector3)` | no values | Moves this exact live Player to the requested raw Rust world coordinate. Committed execution only. |
 | `Player:SendMessage(Message: string)` | no values | Sends system chat through Rust `BasePlayer.ChatMessage`; 1024 UTF-8 bytes maximum, no NUL. The command name/channel is host-fixed, not script-controlled. |
 | `Player:HasPermission(Permission: string)` | boolean | Fresh Carbon permission query for this live connection; no permission mutation. |
@@ -119,3 +120,49 @@ else
     print("No removal began")
 end
 ```
+
+## GiveItem
+
+`true` means complete requested inventory delivery was verified. `false` means
+the complete request could not be safely planned and no item creation began.
+A host error after mutation began means final success could not be verified;
+inventory may already have changed. No rollback, partial-success result, drop
+fallback or automatic retry is provided. A later script error does not undo a grant.
+
+Amount is **required**, an exact integer from 1 through `Int32.MaxValue`.
+ShortName uses the [Items](../Services/Items.md) canonical 1–128 lowercase ASCII
+rules. Unknown items, malformed inputs, unsupported behaviors and stale Players
+raise controlled errors before creation. Only the exact current connection is
+eligible; a reconnect never revives an old proxy.
+
+```lua
+local Granted = Player:GiveItem("scrap", 10)
+-- Equivalent: Player:GiveItem("scrap", 10, GiveItemBehavior.InventoryOnly)
+if Granted then
+    Player:SendMessage("Granted 10 scrap.")
+else
+    Player:SendMessage("No safe inventory capacity for the complete grant.")
+end
+```
+
+The bounded planner uses direct main/belt/wear inventory only: at most 128 total
+slots/entries and 128 transfer chunks. It considers compatible default-item
+stacks before empty slots. There is no caller-selected slot or container.
+Complex/skinned/custom-data stacks may be excluded from merging. Clothing and
+belt conflicts, slot-mask containers, backpack/parachute wear and other
+unqualified placements are excluded; therefore `false` can occur even when
+the Rust UI appears to have space. Multi-stack grants are allowed only when the
+whole request fits the bounded safe plan. No world overflow is intentionally
+created. Callback rejection **after creation** is an error, not `false`.
+
+GiveItem is prohibited during provisional initialization, including calls through
+shared dependency modules. `task.defer` may grant after successful publication;
+failed candidates never execute those deferred grants. GiveItem and TakeItem
+share one exact-Player mutation gate across root/addon execution. No new player
+permission is required by the method; command-caller permissions remain enforced
+by [Commands](../Services/Commands.md).
+
+Introduced in `0.4.0-experimental`. Server-authoritative evidence and limits are
+in [Player-1F-B](../../PlayerInteractionFoundation1FB-Validation.md); real-client
+receipt is not claimed. See [compatibility](../Compatibility.md) for the trusted
+in-process interference boundary and indeterminate failure handling.

@@ -25,6 +25,7 @@ namespace Carbon.Plugins
             public Func<float> Health, MaxHealth;
             public Func<PhysicalInventorySource> Inventory;
             public Func<object, int, int> TakeInventory;
+            public IInventoryGrantHost GiveInventory;
             public PlayerTeleportOperation Teleport;
         }
         public sealed class PlayerLifetime

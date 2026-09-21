@@ -1,4 +1,5 @@
 $ErrorActionPreference = 'Stop'
+& (Join-Path $PSScriptRoot 'Test-GiveItemSafety.ps1')
 $Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
 $Expected = @(

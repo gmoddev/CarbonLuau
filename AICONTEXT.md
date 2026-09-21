@@ -39,7 +39,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Player Interaction Foundation 1C Items/inventory observation implementation and evidence | [PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md) |
 | Player Interaction Foundation 1D Teleport implementation and qualification | [PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md) |
 | Player Interaction Foundation 1F-A TakeItem implementation and qualification | [PlayerInteractionFoundation1FA.md](docs/PlayerInteractionFoundation1FA.md) |
-| Player Interaction Foundation 1F-B GiveItem investigation and requalification gate under I12 | [PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md) |
+| Player Interaction Foundation 1F-B GiveItem implementation and historical investigation | [PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md), [qualification](docs/PlayerInteractionFoundation1FB-Validation.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
@@ -62,13 +62,15 @@ checker as evidence. Inventory-M2 historically reported revised D13 gates
 G1-G5 PASS on Rust build `25353106` plus Carbon `2.0.259`, as
 recorded in [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md).
 Player-1F-A uses that qualification for the narrow public TakeItem adapter;
-GiveItem and broader mutation remain unimplemented.
+Player-1F-B adds separately requalified GiveItem InventoryOnly. Broader mutation
+remains unimplemented.
 The Player-1F-B follow-up found an uncovered callback-to-split/drop path on the
 same pinned build, superseding the incomplete G1 conclusion. I12 now owns the
 general trusted in-process interference boundary; D13/D18 adopt that scope and
 the intended `GiveItem(ShortName, Amount, Behavior?)` shape with InventoryOnly
-default. G1 remains PENDING REQUALIFICATION, not PASS, as recorded in
-[PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md).
+default. The historical investigation and subsequent supported-host G1
+requalification are recorded in [PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md)
+and [its validation record](docs/PlayerInteractionFoundation1FB-Validation.md).
 Phase 5 hardening/qualification is complete within its recorded controlled-host
 envelope in [Phase5.md](docs/Phase5.md) and
 [Phase5-Validation.md](docs/Phase5-Validation.md). Authenticated real-client
@@ -246,10 +248,10 @@ Health/MaxHealth; Player-1C is bounded item identity and physical inventory
 observation; Player-1D is committed-only Teleport with exact-host and
 authenticated-client gates; Player-1E is combined read-only/spatial closure.
 Inventory-M1 owns the deterministic model without Rust mutation; Inventory-M2
-retains G2-G5 exact target-build evidence while G1 requires requalification
-under I12; Player-1F-A owns TakeItem,
+retains G2-G5 exact target-build evidence while G1's supported-host requalification
+under I12 is recorded by Player-1F-B; Player-1F-A owns TakeItem,
 Player-1F-B owns GiveItem, and Player-1F-C owns combined mutation closure.
-TakeItem is implemented by Player-1F-A and GiveItem remains unimplemented; they
+TakeItem is implemented by Player-1F-A and GiveItem InventoryOnly by Player-1F-B; they
 qualify independently.
 Player-1A implements immutable `Vector3` and read-only `Player.Position` as
 recorded in [PlayerInteractionFoundation1A.md](docs/PlayerInteractionFoundation1A.md).
@@ -263,8 +265,8 @@ Player-1D implements committed-only `Player:Teleport(Vector3)` as recorded in
 Player-1F-A implements committed-only verified `Player:TakeItem` as recorded in
 [PlayerInteractionFoundation1FA.md](docs/PlayerInteractionFoundation1FA.md).
 The exact-build server adapter is qualified; authenticated-client convergence
-remains unqualified. This does not authorize or imply GiveItem, Player-1F-B/C
-or other gameplay APIs.
+remains unqualified. The separate Player-1F-B qualification is linked above;
+neither API authorizes Player-1F-C closure or other gameplay APIs.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

@@ -231,6 +231,7 @@ internal static class AddonTests
         Check(Native.LiveVmCount == 0, "Foundation B host teardown returns VM count to baseline");
         RunDependencyLifecycle(Native);
         RunPublicModules(Native);
+        RunGiveItem(Native);
         if (SourceRoot != null) RunExamples(Native, Config, Root, SourceRoot);
 
         InvalidArchive(Archive("{", new EntrySpec("init.luau", "return true")), "malformed JSON rejected");
@@ -296,6 +297,47 @@ internal static class AddonTests
     private static string Drain(Runtime.ScriptHost Host)
     {
         string Logs = ""; foreach (Runtime.ExecutionResult Result in Host.Drain()) Logs += Result.Logs; return Logs;
+    }
+
+    private static void RunGiveItem(Runtime.NativeRuntime Native)
+    {
+        var Value = new PlayerInteractionFoundation1FBTests.Fixture();
+        var View = Value.View(); var Players = new Runtime.PlayerDirectory(Id => View); Players.Connect(View);
+        var World = new Runtime.FacadeWorld(Players, new Registrar(), new Runtime.ItemDirectory(Name => Name == "scrap" ? Value.Definition : null));
+        object Provider = new object(), Consumer = new object();
+        const string P = "local P=game:GetService('Players'):GetPlayers()[1]; ";
+        using (var Host = new Runtime.ScriptHost(Native, new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20},
+            () => new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = "return true"}, World)) {
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "grant root ready");
+            using (var Registry = new Runtime.AddonRegistry(Host, Native.HostLifetimeId)) {
+                string[] Library = Registry.RegisterArchive(Provider, PublicPackage("grantlib", "1.0.0", new string[0], new string[0],
+                    "require('api')", "api", new string[0], new EntrySpec("api.luau", P + "return {Player=P,Behavior=GiveItemBehavior.InventoryOnly,Give=function() return P:GiveItem('scrap',1) end}")));
+                Process(Registry); IsState(Registry.Status(Provider, Library[1]), "Active", "grant library active");
+                string Source = "local A=require('@grantlib'); assert(A.Behavior==GiveItemBehavior.InventoryOnly); " +
+                    "assert(not pcall(A.Give)); assert(not pcall(function() A.Player:GiveItem('scrap',1,A.Behavior) end)); " +
+                    "task.defer(function() assert(A.Player:GiveItem('scrap',1,A.Behavior)); print('addon-grant') end)";
+                string[] Registration = Registry.RegisterArchive(Consumer, PublicPackage("grantconsumer", "1.0.0", new[] {"grantlib"}, new string[0], Source, null, new string[0]));
+                Process(Registry); IsState(Registry.Status(Consumer, Registration[1]), "Active", "provisional shared-module laundering rejected");
+                Check(Value.Creates == 0 && Drain(Host) == "addon-grant\n" && Value.Creates == 1, "foreign enum accepted; deferred committed grant");
+                Registry.ReplaceArchive(Consumer, Registration[1], PublicPackage("grantconsumer", "1.0.1", new[] {"grantlib"}, new string[0], Source + "; error('fail')", null, new string[0]));
+                Process(Registry); Drain(Host); Check(Value.Creates == 1, "failed addon candidate never grants");
+                Registry.ReplaceArchive(Consumer, Registration[1], PublicPackage("grantconsumer", "1.0.2", new[] {"grantlib"}, new string[0], Source, null, new string[0]));
+                Process(Registry); Check(Drain(Host) == "addon-grant\n" && Value.Creates == 2, "successful addon replacement grants once");
+                // The exact same world gate governs root and all addon sessions, without VM reentry.
+                Runtime.PlayerLifetime Lifetime = Players.Find(View.UserId);
+                Check(World.TakeItems.SharedGate.TryEnter(Lifetime.Token), "host mutation gate acquired");
+                try {
+                    Check(Host.Execute("root.gate", P + "assert(not pcall(function() P:GiveItem('scrap',1) end)); assert(not pcall(function() P:TakeItem('scrap',1) end))").Status == Runtime.RuntimeStatus.OK, "root Give/Take contention");
+                    string[] Busy = Registry.RegisterSource(Consumer, "busygrant", "1.0.0", Bytes(P + "task.defer(function() assert(not pcall(function() P:GiveItem('scrap',1) end)); assert(not pcall(function() P:TakeItem('scrap',1) end)); print('busy') end)"));
+                    Process(Registry); Check(Drain(Host) == "busy\n" && Value.Creates == 2, "addon Give/Take shares gate");
+                } finally {World.TakeItems.SharedGate.Exit(Lifetime.Token);}
+                Registry.UnloadProvider(Consumer); Registry.UnloadProvider(Provider); Drain(Host);
+                Check(Value.Creates == 2 && World.GiveItems.TrackedResources == 0 && World.GiveItems.BusyCount == 0, "provider unload no replay/resources");
+                string[] Reloaded = Registry.RegisterSource(Provider, "grantagain", "1.0.0", Bytes(P + "task.defer(function() assert(P:GiveItem('scrap',1)); print('again') end)"));
+                Process(Registry); Check(Drain(Host) == "again\n" && Value.Creates == 3, "provider registration after unload");
+            }
+        }
+        Console.WriteLine("[CarbonLuau:Player1FBAddons] PASS shared-module provisional rejection, typed foreign values, replacement, shared gate and provider lifecycle");
     }
 
     private static void RunPublicModules(Runtime.NativeRuntime Native)

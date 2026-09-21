@@ -9,10 +9,10 @@
 > adapters or ordinary acceptance/rejection. GiveItem's intended signature is
 > `Player:GiveItem(ShortName, Amount, Behavior?) -> boolean`, defaulting to
 > `GiveItemBehavior.InventoryOnly`. Two-argument examples remain valid intended
-> calls; neither method nor enum is implemented. `DropRemainder` is future
+> calls; Player-1F-B now implements that subset. `DropRemainder` is future
 > design only, not a reserved member. M2's original G1 conclusion is superseded
-> as incomplete; [Player-1F-B](PlayerInteractionFoundation1FB.md) requires
-> requalification under the supported-host model, not a documentation-only PASS.
+> as incomplete; [Player-1F-B](PlayerInteractionFoundation1FB.md) records
+> the subsequent implementation and supported-host requalification, not a documentation-only PASS.
 > TakeItem's qualified implementation and PREPARE/COMMIT/VERIFY are unchanged.
 
 The question is correctly reframed as what **CarbonLuau** must guarantee rather than whether Rust can provide globally transactional inventory operations.

@@ -55,16 +55,25 @@ Revised D13 and
 [D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
 read-only item observation, now implemented by Player-1C, plus implementation-
 gated `Player:GiveItem` and `Player:TakeItem`. Player-1F-A ships TakeItem using
-the exact Inventory-M2 adapter; GiveItem remains unimplemented.
-Its historical M2 G1 conclusion is superseded and requires supported-host
-requalification under [I12/D13](../Invariants.md#i12--trusted-in-process-host-interference).
-The intended `GiveItem(ShortName, Amount, Behavior?)` API defaults to
-`GiveItemBehavior.InventoryOnly`; neither the method nor enum is available.
+the exact Inventory-M2 adapter; Player-1F-B implements GiveItem with the
+[requalified supported-host path](../PlayerInteractionFoundation1FB-Validation.md).
+The historical blanket M2 G1 conclusion remains superseded.
+`GiveItem(ShortName, Amount, Behavior?)` defaults to the sole typed member
+`GiveItemBehavior.InventoryOnly`.
 `DropRemainder` is future design only, not a reserved or exposed enum value.
 Their canonical result contract is `false` only before inventory COMMIT, `true`
 only after physical VERIFY, and a controlled error for post-COMMIT uncertainty.
-This policy change removes no implemented API and changes no package, scripting
+This additive implementation removes no implemented API and changes no package, scripting
 API or native ABI identity.
+
+[I12](../Invariants.md#i12--trusted-in-process-host-interference) defines the
+trusted in-process interference boundary. Normal vanilla behavior, ordinary
+callback acceptance/rejection and CarbonLuau's own planning/verification bugs
+are not excluded. Equally privileged plugins can change inventory, stack limits
+or item state inside callbacks; no whole-process isolation is promised. Observed
+uncertainty cannot become success. Errors after creation may include partial
+accepted delivery or failed cleanup; reconcile host state rather than blindly
+retrying. Neither timeout nor recovery provides rollback or exactly-once delivery.
 
 | Resource | Bound |
 |---|---|
@@ -74,6 +83,7 @@ API or native ABI identity.
 | Item short name / physical inventory entries | 1..128 lowercase ASCII bytes / 128 direct main+belt+wear entries |
 | HasItem amount / counted quantity | Exact positive integer through `2^53 - 1` / checked exact Luau integer |
 | TakeItem amount / verification | Exact integer 1..`Int32.MaxValue`; one bounded fresh scan after COMMIT |
+| GiveItem amount / plan / verification | Required exact integer 1..`Int32.MaxValue`; 128 total main/belt/wear slots/entries, 128 chunks, one fresh VERIFY scan |
 | Listeners | 128 per signal, 256 per generation |
 | Commands | 64 per generation; initialization-only |
 | Command / permission name | 32 / 128 ASCII bytes |

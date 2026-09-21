@@ -38,6 +38,7 @@ if SharedValueEqual == nil then
             return false
         end
         if string.sub(Kind, 1, 8) == "GuiFont." then return true end
+        if Kind == "GiveItemBehavior.InventoryOnly" then return true end
         return false
     end
 end
@@ -189,6 +190,14 @@ local GuiFont = {
     PermanentMarker = Font("PermanentMarker"),
 }
 table.freeze(UDim); table.freeze(UDim2); table.freeze(Vector2); table.freeze(Vector3); table.freeze(Color3); table.freeze(ImageSource); table.freeze(GuiFont)
+local GiveItemBehaviorMeta = table.freeze({
+    __index = function() Fail("GiveItemBehavior has no fields") end,
+    __newindex = function() Fail("GiveItemBehavior values are immutable") end,
+    __tostring = function() return "GiveItemBehavior.InventoryOnly" end,
+    __eq = SharedValueEqual,
+    __metatable = "CarbonLuau.GiveItemBehavior",
+})
+local GiveItemBehavior = table.freeze({InventoryOnly = MakeUserdata(GiveItemBehaviorMeta)})
 local function Record(Player)
     local Value = Records[Player]
     if not Value then Fail("invalid Player proxy") end
@@ -309,6 +318,16 @@ function PlayerMethods.TakeItem(Player, ShortName, Amount)
     Number(Amount, "item amount", 1, 2147483647)
     if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
     return Host(29, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount))[1] == "1"
+end
+function PlayerMethods.GiveItem(Player, ShortName, Amount, Behavior)
+    local Value = Record(Player)
+    String(ShortName, "item short name")
+    Number(Amount, "item amount", 1, 2147483647)
+    if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
+    if Behavior == nil then Behavior = GiveItemBehavior.InventoryOnly end
+    if type(Behavior) ~= "userdata" or getmetatable(Behavior) ~= "CarbonLuau.GiveItemBehavior" or
+        tostring(Behavior) ~= "GiveItemBehavior.InventoryOnly" then Fail("expected GiveItemBehavior.InventoryOnly") end
+    return Host(30, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount), "InventoryOnly")[1] == "1"
 end
 local function EncodeGuiValue(Value, Integer)
     local Kind = type(Value)
@@ -507,4 +526,4 @@ local function Dispatch(Fields)
         Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))
     else Callback(Player) end
 end
-return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Vector3 = Vector3, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont}), SharedValueEqual
+return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Vector3 = Vector3, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont, GiveItemBehavior = GiveItemBehavior}), SharedValueEqual

@@ -9,9 +9,9 @@
 > supersede that conclusion. Player-1F-A now implements only TakeItem; see
 > [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md).
 > I12 now scopes trusted in-process host interference generally. D13's original
-> M2 G1 conclusion is superseded pending supported-host requalification, and
+> M2 G1 conclusion remains superseded; Player-1F-B records supported-host requalification, and
 > D18's intended GiveItem signature includes optional Behavior defaulting to
-> GiveItemBehavior.InventoryOnly. Neither method nor enum is exposed; see
+> GiveItemBehavior.InventoryOnly. Player-1F-B now exposes that subset; see
 > [Player-1F-B](PlayerInteractionFoundation1FB.md).
 
 **Baseline reviewed:** `main` at `b00bf21b1e1ef11b1524a10e2d094d3934024a7b` (`Complete GUI Foundation 3 qualification`), plus the current `AICONTEXT.md`, `docs/Invariants.md`, Player facade/bootstrap implementation, API docs, D11, and the retained Phase 4/D13 investigation. [Baseline commit](https://github.com/gmoddev/CarbonLuau/commit/b00bf21b1e1ef11b1524a10e2d094d3934024a7b?utm_source=chatgpt.com) [Canonical invariants](https://github.com/gmoddev/CarbonLuau/blob/main/docs/Invariants.md?utm_source=chatgpt.com) [D13 investigation](https://github.com/gmoddev/CarbonLuau/blob/main/docs/Phase4.md?utm_source=chatgpt.com)

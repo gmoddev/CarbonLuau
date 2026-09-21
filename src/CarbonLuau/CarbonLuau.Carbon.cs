@@ -40,6 +40,7 @@ namespace Carbon.Plugins
                 MaxHealth = () => Player.MaxHealth(),
                 Inventory = () => ViewInventory(Player),
                 TakeInventory = (Definition, Amount) => Player.inventory.Take(null, ((ItemDefinition)Definition).itemid, Amount),
+                GiveInventory = new RustInventoryGrantHost(Player),
                 Teleport = new PlayerTeleportOperation(
                     () => {
                         bool IsCurrent = Current();
@@ -95,7 +96,7 @@ namespace Carbon.Plugins
                 Read = Index => {
                     Item Value = Container.itemList[Index];
                     return Value == null ? default(PhysicalInventoryStack) :
-                        new PhysicalInventoryStack(Value.parent, Value.info, Value.amount, Value.IsValid());
+                        new PhysicalInventoryStack(Value.parent, Value.info, Value.amount, Value.IsValid(), Value, Value.position);
                 }
             };
         }
