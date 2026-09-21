@@ -57,6 +57,10 @@ Authenticated real-client behavior and Shockbyte full-runtime behavior remain ou
 
 Start with [AICONTEXT.md](AICONTEXT.md), which maps each rule to its canonical document. [Invariants](docs/Invariants.md) owns architecture, security, and lifecycle requirements. [Compatibility](docs/Compatibility.md) owns support and validation policy. Historical phase contracts and qualification records remain in `docs/` for traceability.
 
+## AI Disclaimer
+
+AI tools are used during the development of this addon. However, the project's architecture, design decisions, requirements, and overall direction are substantially human-designed and reviewed. AI is used primarily as a development and implementation aid rather than as the source of the project's design.
+
 ## License
 
 Project licensing and third-party attribution are documented in [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
