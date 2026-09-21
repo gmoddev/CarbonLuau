@@ -26,7 +26,11 @@ foreach ($Guard in @('ValidateMutationCapacity(Source)','CountForMutation','Chun
 $Commit = $Core.IndexOf('// COMMIT:')
 if ($Core.Substring($Commit) -match 'return false;') { throw 'False is forbidden after COMMIT' }
 if (!$Facade.Contains('new PlayerGiveItemOperation(TakeItems.SharedGate)')) { throw 'Give/Take gate split' }
-if (!$Native.Contains('Operation == 30') -or !$Native.Contains('Runtime.Admission->Provisional')) { throw 'Missing native provisional ingress guard' }
+$Publication = Get-Content -Raw (Join-Path $Root 'native/src/runtime/Publication.cpp')
+if (!$Native.Contains('Operation == 30') -or !$Native.Contains('!CanMutateHost(Runtime)') -or
+    !$Publication.Contains('Runtime.Admission && !Runtime.Admission->Provisional && !Runtime.Publication')) {
+    throw 'Missing authoritative admission/publication mutation guard'
+}
 if (!$Bootstrap.Contains('getmetatable(Behavior) ~= "CarbonLuau.GiveItemBehavior"')) { throw 'Behavior must be typed' }
 if ($Bootstrap -match 'DropRemainder|DropIfFull') { throw 'Future drop behavior exposed' }
 Write-Output '[CarbonLuau:GiveItemSafety] PASS exact adapter, bounded planning, combined VERIFY, shared gate, typed InventoryOnly and no post-COMMIT false (structural supplement, not host proof)'

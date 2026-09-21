@@ -5,6 +5,8 @@
 - [0.3.0 release notes](releases/0.3.0.md)
 - Architecture
   - [Canonical invariants](Invariants.md)
+  - [Tooling Foundation A](ToolingFoundationACompletion.md)
+  - [Language-analysis security](ToolingLanguageAnalysisSecurity.md)
   - [GUI Foundation 1](GuiFoundation1.md)
   - [GUI Foundation 1A](GuiFoundation1A.md)
   - [GUI Foundation 1B](GuiFoundation1B.md)
@@ -31,6 +33,8 @@
   - [Player Interaction Foundation 1C](PlayerInteractionFoundation1C.md)
   - [Player Interaction Foundation 1D](PlayerInteractionFoundation1D.md)
   - [Player Interaction Foundation 1F-A](PlayerInteractionFoundation1FA.md)
+  - [Player Interaction Foundation 1F-B](PlayerInteractionFoundation1FB-Validation.md)
+  - [Player Interaction Foundation 1F-C](PlayerInteractionFoundation1FC.md)
   - [Inventory ownership/failure reassessment](InventoryOwnershipFailureReassessment.md)
 - API
   - [Overview](api/README.md)
@@ -39,6 +43,8 @@
   - [Commands](api/Services/Commands.md)
   - [Items](api/Services/Items.md)
   - [Player](api/Types/Player.md)
+  - [GiveItemBehavior](api/Types/GiveItemBehavior.md)
+  - [Player examples](api/Player-Examples.md)
   - [Vector3](api/Types/Vector3.md)
   - [CommandContext](api/Types/CommandContext.md)
   - [Signal](api/Types/Signal.md)

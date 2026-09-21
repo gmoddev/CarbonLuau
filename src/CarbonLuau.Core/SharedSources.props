@@ -1,0 +1,9 @@
+<Project>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiDescriptors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Addons/CoreAddonPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Addons/PackageSources.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Modules/ModulePath.cs" />
+  </ItemGroup>
+</Project>

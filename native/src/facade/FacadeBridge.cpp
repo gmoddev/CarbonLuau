@@ -25,7 +25,7 @@ int HostPrimitive(lua_State* State)
     double Value = lua_tonumber(State, 1);
     if (Value < 1 || Value > 30 || Value != std::floor(Value)) luaL_error(State, "invalid host operation");
     uint32_t Operation = uint32_t(Value);
-    if (Runtime.Admission && Runtime.Admission->Provisional && (Operation == 4 || Operation == 28 || Operation == 29 || Operation == 30)) {
+    if ((Operation == 4 || Operation == 28 || Operation == 29 || Operation == 30) && !CanMutateHost(Runtime)) {
         if ((Operation == 29 || Operation == 30) && Owner.Rejected != UINT64_MAX) ++Owner.Rejected;
         luaL_error(State, Operation == 4
             ? "SendMessage requires a committed domain; use task.defer for startup delivery"

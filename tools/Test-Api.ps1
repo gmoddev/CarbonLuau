@@ -6,7 +6,7 @@ $Release = Get-Content -Raw -LiteralPath (Join-Path $Root 'release.json') | Conv
 $Version = $Release.apiVersion
 $GuiGuide = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui.md')
 $GuiReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui-Reference.md')
-$GuiDescriptors = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiDescriptors.cs')
+$GuiDescriptors = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau.Core/Gui/SharedGuiDescriptors.cs')
 $ReleaseNotes = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/releases/0.4.0.md')
 $Player1C = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1C.md')
 $Player1D = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1D.md')
@@ -32,7 +32,7 @@ foreach ($Document in $Documents) {
         if (!(Test-Path -LiteralPath (Join-Path $Document.DirectoryName $Target))) { throw "Broken relative link: $($Document.Name): $Target" }
     }
 }
-foreach ($Example in @('player-events','player-position','player-health','player-inventory','player-teleport','player-take-item','hello-command')) {
+foreach ($Example in @('player-events','player-position','player-health','player-inventory','player-teleport','player-take-item','hello-command','player-status','player-give-item','player-shop','gui/inventory-reward')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "examples/$Example/init.luau"))) { throw "Missing runnable example: $Example" }
 }
 foreach ($Example in @('hello','shared-live','per-player','activated','images','scrolling',

@@ -1,5 +1,6 @@
 param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures)
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Get-CoreSources.ps1')
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -20,7 +21,9 @@ try {
     $Archive = New-Object IO.Compression.ZipArchive($Stream, [IO.Compression.ZipArchiveMode]::Create, $true)
     try {
         $SourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\src\CarbonLuau'))
-        Get-ChildItem $SourceRoot -Recurse -File -Filter '*.cs' | Sort-Object FullName | ForEach-Object {
+        $Sources = @(Get-ChildItem $SourceRoot -Recurse -File -Filter '*.cs') + @(Get-CoreSources (Join-Path $PSScriptRoot '..'))
+        if (@($Sources | Group-Object Name | Where-Object Count -gt 1).Count) { throw 'Duplicate flattened production source filename' }
+        $Sources | Sort-Object Name | ForEach-Object {
             Add-DeterministicEntry $Archive $_.FullName $_.Name
         }
         if ($IncludePhase1Fixtures) {

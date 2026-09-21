@@ -19,9 +19,9 @@ $Expected = @(
     'src/CarbonLuau/Addons/AddonPackage.cs',
     'src/CarbonLuau/Addons/AddonRegistry.cs',
     'src/CarbonLuau/Addons/DependencyGraph.cs',
-    'src/CarbonLuau/Gui/GuiConfig.cs',
+    'src/CarbonLuau.Core/Gui/SharedGuiConfig.cs',
     'src/CarbonLuau/Gui/GuiActions.cs',
-    'src/CarbonLuau/Gui/GuiDescriptors.cs',
+    'src/CarbonLuau.Core/Gui/SharedGuiDescriptors.cs',
     'src/CarbonLuau/Gui/GuiImageSource.cs',
     'src/CarbonLuau/Gui/GuiModelContracts.cs',
     'src/CarbonLuau/Gui/GuiRetainedRegistry.cs',
@@ -131,7 +131,7 @@ foreach ($Required in @('ScrollingFrame','CanvasSize','ScrollingDirection','Scro
 foreach ($Required in @('GuiScrollIntent','GuiScrollEffect','MaxPendingScrollEffectsPerPresentation','PublishCommittedScrollEffects','MeasureScroll')) {
     if (!$Registry.Contains($Required) -and !$RenderPlan.Contains($Required) -and
         !(Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiScrollEffects.cs')).Contains($Required) -and
-        !(Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiConfig.cs')).Contains($Required) -and
+        !(Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau.Core/Gui/SharedGuiConfig.cs')).Contains($Required) -and
         !(Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/IGuiBackend.cs')).Contains($Required)) {
         throw "GUI Foundation 3D Presentation-effect owner is missing: $Required"
     }

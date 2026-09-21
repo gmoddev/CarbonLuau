@@ -37,4 +37,4 @@ if (Test-Catalog $Catalog) { throw 'Unknown qualification accepted' }
 $Catalog.Members[0].Availability.Qualification = 'Experimental'
 $Catalog.Members[0].RuntimeLimit = 123
 if (Test-Catalog $Catalog) { throw 'Undeclared numeric policy accepted in catalog' }
-Write-Output '[CarbonLuau:ToolingContractTest] PASS: API schema positive/negative fixtures; runtime coverage/generation deferred to Tooling A'
+Write-Output '[CarbonLuau:ToolingContractTest] PASS API schema positive/negative fixtures; binding and generation checks run in tests/tooling'

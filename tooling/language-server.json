@@ -1,0 +1,31 @@
+{
+  "PackVersion": "foundation-a-development",
+  "ManifestSchema": 1,
+  "Qualification": "TrustedSnapshotControlsQualifiedWindowsLinux",
+  "LanguageServerQualified": true,
+  "QualifiedAnalysisPlatforms": ["win32-x64", "linux-x64"],
+  "QualificationBlocker": "macOS executable analysis is unqualified and remains disabled; Windows/Linux use the qualified supervised snapshot profile.",
+  "AnalysisSecurityPolicyVersion": 1,
+  "AnalysisProfile": "TrustedSnapshotAnalysis",
+  "AnalysisProxyRevision": 1,
+  "AnalysisContainmentProfiles": {
+    "win32-x64": "WindowsJobCommit1GiB-Active1-Suspended-v1",
+    "linux-x64": "LinuxAddressSpace2GiB-Rss1GiB-ProcessGroup-v1",
+    "darwin-x64": "MacRss1GiBSoft50ms-ProcessGroup-v1",
+    "darwin-arm64": "MacRss1GiBSoft50ms-ProcessGroup-v1"
+  },
+  "LanguageServerSourceRevision": "876d84b8caf4454c8df806ddc9eee0565228d7b6",
+  "ToolingNativeAbi": 1,
+  "LanguageServerVersion": "1.70.0",
+  "LanguageServerLuauRevision": "a62362a53ddc9c629b0e29378a84abb4534d8b64",
+  "TransformRevision": 2,
+  "SolverFlag": "LuauSolverV2=true",
+  "AnalysisFlags": ["LuauSolverV2=true", "DebugLuauTypeFunctionRuntimeHeapLimit=67108864"],
+  "AnalysisLimits": { "InitializationMs": 30000, "RequestMs": 15000, "TypeFunctionHeapBytes": 67108864, "PluginTimeoutMs": 1000, "FrameBytes": 8388608, "HeaderBytes": 4096, "JsonDepth": 32, "Requests": 16, "SourceBytes": 6291456, "Files": 2048, "Folders": 32, "TransformBytes": 33554432 },
+  "UpstreamAssets": {
+    "win32-x64": { "Name": "luau-lsp-win64.zip", "Sha256": "26e6d32069cb5dd74f06bbdc2f3033d3ba66da76d3dbdfc3dcc2b085ddaa274a" },
+    "linux-x64": { "Name": "luau-lsp-linux-x86_64.zip", "Sha256": "4ff08890ea0d4b6d9de25fdff1a4c87e0dc9f2e45d782c894e83475e51d55813" },
+    "darwin-x64": { "Name": "luau-lsp-macos.zip", "Sha256": "b0491a64f441a37f187b34f01c932ddcfc7f3603cefd043cd5a385da33ba7de8" },
+    "darwin-arm64": { "Name": "luau-lsp-macos.zip", "Sha256": "b0491a64f441a37f187b34f01c932ddcfc7f3603cefd043cd5a385da33ba7de8" }
+  }
+}

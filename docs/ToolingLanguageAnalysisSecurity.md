@@ -4,7 +4,11 @@ Decision: **READY TO RESUME TOOLING FOUNDATION A** under the requirements below.
 Accepted for architecture by the 2026-09-21 resolution task. This is permission
 to implement and qualify the amended design, not a passing implementation gate.
 The preserved extension's unconditional LSP startup block must remain until its
-replacement controls pass. No Foundation A executable changes are made here.
+replacement controls pass. This document owns the architecture; subsequent
+[Foundation A implementation evidence](ToolingFoundationACompletion.md) owns
+platform qualification. macOS remains static-only by the user's explicit
+decision when no macOS runner was available; no executable-analysis exception
+or reduced security profile is implied.
 
 ## 1. Decision in brief
 

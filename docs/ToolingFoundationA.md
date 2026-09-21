@@ -1,10 +1,12 @@
 # Tooling Foundation A implementation design
 
-Status: partial implementation is preserved in isolated worktrees and remains
-unqualified. The [analysis security amendment](ToolingLanguageAnalysisSecurity.md)
-resolves its original non-execution stop condition and is the required security
-handoff before resuming. No executable implementation ships in this documentation
-branch. Start with [AICONTEXT](../AICONTEXT.md),
+Status: the preserved partial implementation has been reconciled with current
+runtime Player/inventory changes under the
+[analysis security amendment](ToolingLanguageAnalysisSecurity.md). Read
+[implementation, qualification and handoff](ToolingFoundationACompletion.md)
+for current evidence and platform limits. The design below preserves the
+original extraction plan; later preview-specific extraction remains Foundation B.
+Start with [AICONTEXT](../AICONTEXT.md),
 [D19](Invariants.md#d19--official-editor-tooling), [baseline](ToolingBaseline.md)
 and [contract models](ToolingContracts.md). These tooling phases are separate
 from historical runtime/addon Foundation A–G and GUI foundations.

@@ -1,0 +1,34 @@
+name: Tooling Foundation A
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  tooling:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build independent Core, parser and tooling; check deterministic metadata
+        shell: pwsh
+        run: ./tools/Build-Tooling.ps1 -Extension build/extension-pack
+      - name: Validate API, architecture and server packaging isolation
+        shell: pwsh
+        run: |
+          ./tools/Test-ToolingContracts.ps1
+          ./tools/Test-Api.ps1
+          ./tools/Test-Architecture.ps1
+          ./tools/Test-Release.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tooling-development-${{ matrix.os }}
+          path: build/extension-pack/tooling/
+          if-no-files-found: error

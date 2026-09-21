@@ -13,6 +13,10 @@
 > D18's intended GiveItem signature includes optional Behavior defaulting to
 > GiveItemBehavior.InventoryOnly. Player-1F-B now exposes that subset; see
 > [Player-1F-B](PlayerInteractionFoundation1FB.md).
+> [Player-1F-C](PlayerInteractionFoundation1FC.md) records the cold-module
+> correctness fix and combined inventory/Player lifecycle/public closure,
+> including the originally planned Player-1E scope. Its platform and client
+> limitations remain explicit; the historical proposal below is not a status claim.
 
 **Baseline reviewed:** `main` at `b00bf21b1e1ef11b1524a10e2d094d3934024a7b` (`Complete GUI Foundation 3 qualification`), plus the current `AICONTEXT.md`, `docs/Invariants.md`, Player facade/bootstrap implementation, API docs, D11, and the retained Phase 4/D13 investigation. [Baseline commit](https://github.com/gmoddev/CarbonLuau/commit/b00bf21b1e1ef11b1524a10e2d094d3934024a7b?utm_source=chatgpt.com) [Canonical invariants](https://github.com/gmoddev/CarbonLuau/blob/main/docs/Invariants.md?utm_source=chatgpt.com) [D13 investigation](https://github.com/gmoddev/CarbonLuau/blob/main/docs/Phase4.md?utm_source=chatgpt.com)
 

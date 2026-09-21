@@ -159,6 +159,12 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 4096
+        },
+        "Representation": {
+          "enum": [
+            "Opaque",
+            "Record"
+          ]
         }
       }
     },
@@ -270,7 +276,8 @@
             "Method",
             "Signal",
             "Constructor",
-            "Singleton"
+            "Singleton",
+            "Operator"
           ]
         },
         "ValueType": {
@@ -320,7 +327,8 @@
                 "enum": [
                   "Method",
                   "Signal",
-                  "Constructor"
+                  "Constructor",
+                  "Operator"
                 ]
               }
             }

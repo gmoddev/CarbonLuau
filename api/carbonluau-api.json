@@ -1,0 +1,7518 @@
+{
+  "SchemaVersion": 1,
+  "Api": {
+    "Name": "CarbonLuau",
+    "Version": "0.4.0-experimental",
+    "Status": "Experimental"
+  },
+  "Types": [
+    {
+      "Id": "Addon",
+      "Name": "Addon",
+      "Kind": "Global",
+      "Summary": "Current addon identity and declared dependency availability.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Color3",
+      "Name": "Color3",
+      "Kind": "Value",
+      "Summary": "Immutable Color3.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "CommandContext",
+      "Name": "CommandContext",
+      "Kind": "Class",
+      "Summary": "Immutable command callback context.",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
+    },
+    {
+      "Id": "CommandOptions",
+      "Name": "CommandOptions",
+      "Kind": "Class",
+      "Summary": "Command registration options.",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
+    },
+    {
+      "Id": "Commands",
+      "Name": "Commands",
+      "Kind": "Service",
+      "Summary": "Bounded permission-aware command registration.",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Connection",
+      "Name": "Connection",
+      "Kind": "Class",
+      "Summary": "A disconnectable Signal subscription.",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Frame",
+      "Name": "Frame",
+      "Kind": "Class",
+      "Summary": "Retained Frame.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiObject"
+    },
+    {
+      "Id": "Game",
+      "Name": "Game",
+      "Kind": "Global",
+      "Summary": "Selected scripting API identity and services.",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "GiveItemBehavior",
+      "Name": "GiveItemBehavior",
+      "Kind": "Enum",
+      "Summary": "Immutable inventory placement behavior.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Gui",
+      "Name": "Gui",
+      "Kind": "Service",
+      "Summary": "Retained GUI construction.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "GuiFont",
+      "Name": "GuiFont",
+      "Kind": "Enum",
+      "Summary": "Immutable GuiFont.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "GuiNode",
+      "Name": "GuiNode",
+      "Kind": "Class",
+      "Summary": "Retained GuiNode.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "GuiObject",
+      "Name": "GuiObject",
+      "Kind": "Class",
+      "Summary": "Retained GuiObject.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiNode"
+    },
+    {
+      "Id": "ImageButton",
+      "Name": "ImageButton",
+      "Kind": "Class",
+      "Summary": "Retained ImageButton.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiObject"
+    },
+    {
+      "Id": "ImageLabel",
+      "Name": "ImageLabel",
+      "Kind": "Class",
+      "Summary": "Retained ImageLabel.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiObject"
+    },
+    {
+      "Id": "ImageSource",
+      "Name": "ImageSource",
+      "Kind": "Value",
+      "Summary": "Immutable ImageSource.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Items",
+      "Name": "Items",
+      "Kind": "Service",
+      "Summary": "Read-only item definition lookup.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Player",
+      "Name": "Player",
+      "Kind": "Class",
+      "Summary": "Connection-bound player facade.",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Players",
+      "Name": "Players",
+      "Kind": "Service",
+      "Summary": "Connected players and lifecycle signals.",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "ScreenGui",
+      "Name": "ScreenGui",
+      "Kind": "Class",
+      "Summary": "Retained ScreenGui.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiNode"
+    },
+    {
+      "Id": "ScrollingFrame",
+      "Name": "ScrollingFrame",
+      "Kind": "Class",
+      "Summary": "Retained ScrollingFrame.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiObject"
+    },
+    {
+      "Id": "Signal",
+      "Name": "Signal",
+      "Kind": "Class",
+      "Summary": "Bounded callback registration.",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Task",
+      "Name": "Task",
+      "Kind": "Global",
+      "Summary": "Bounded host-admitted scheduling.",
+      "Availability": {
+        "SinceApi": "0.2.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "TextButton",
+      "Name": "TextButton",
+      "Kind": "Class",
+      "Summary": "Retained TextButton.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiObject"
+    },
+    {
+      "Id": "TextLabel",
+      "Name": "TextLabel",
+      "Kind": "Class",
+      "Summary": "Retained TextLabel.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiObject"
+    },
+    {
+      "Id": "UDim",
+      "Name": "UDim",
+      "Kind": "Value",
+      "Summary": "Immutable UDim.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "UDim2",
+      "Name": "UDim2",
+      "Kind": "Value",
+      "Summary": "Immutable UDim2.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "UIGridLayout",
+      "Name": "UIGridLayout",
+      "Kind": "Class",
+      "Summary": "Retained UIGridLayout.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiNode"
+    },
+    {
+      "Id": "UIListLayout",
+      "Name": "UIListLayout",
+      "Kind": "Class",
+      "Summary": "Retained UIListLayout.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiNode"
+    },
+    {
+      "Id": "UIPadding",
+      "Name": "UIPadding",
+      "Kind": "Class",
+      "Summary": "Retained UIPadding.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "BaseTypeId": "GuiNode"
+    },
+    {
+      "Id": "Vector2",
+      "Name": "Vector2",
+      "Kind": "Value",
+      "Summary": "Immutable Vector2.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Vector3",
+      "Name": "Vector3",
+      "Kind": "Value",
+      "Summary": "Immutable finite spatial vector.",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    }
+  ],
+  "Members": [
+    {
+      "Id": "Addon.Id",
+      "Name": "Id",
+      "OwnerId": "Addon",
+      "Kind": "Property",
+      "Summary": "Addon.Id.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "Addon.IsDependencyAvailable",
+      "Name": "IsDependencyAvailable",
+      "OwnerId": "Addon",
+      "Kind": "Method",
+      "Summary": "Check the exact declared dependency binding.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Id",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Addon.Version",
+      "Name": "Version",
+      "OwnerId": "Addon",
+      "Kind": "Property",
+      "Summary": "Addon.Version.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "Color3.B",
+      "Name": "B",
+      "OwnerId": "Color3",
+      "Kind": "Property",
+      "Summary": "Immutable B.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Color3.G",
+      "Name": "G",
+      "OwnerId": "Color3",
+      "Kind": "Property",
+      "Summary": "Immutable G.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Color3.R",
+      "Name": "R",
+      "OwnerId": "Color3",
+      "Kind": "Property",
+      "Summary": "Immutable R.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Color3.fromRGB",
+      "Name": "fromRGB",
+      "OwnerId": "Color3",
+      "Kind": "Constructor",
+      "Summary": "Color3.fromRGB.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "R",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "G",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "B",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Color3"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Color3.new",
+      "Name": "new",
+      "OwnerId": "Color3",
+      "Kind": "Constructor",
+      "Summary": "Color3.new.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "R",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "G",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "B",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Color3"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "CommandContext.Arguments",
+      "Name": "Arguments",
+      "OwnerId": "CommandContext",
+      "Kind": "Property",
+      "Summary": "CommandContext.Arguments.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "{string}",
+      "Writable": false
+    },
+    {
+      "Id": "CommandContext.Name",
+      "Name": "Name",
+      "OwnerId": "CommandContext",
+      "Kind": "Property",
+      "Summary": "CommandContext.Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "CommandContext.Player",
+      "Name": "Player",
+      "OwnerId": "CommandContext",
+      "Kind": "Property",
+      "Summary": "CommandContext.Player.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Player",
+      "Writable": false
+    },
+    {
+      "Id": "CommandOptions.description",
+      "Name": "description",
+      "OwnerId": "CommandOptions",
+      "Kind": "Property",
+      "Summary": "CommandOptions.description.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string?",
+      "Writable": false
+    },
+    {
+      "Id": "CommandOptions.permission",
+      "Name": "permission",
+      "OwnerId": "CommandOptions",
+      "Kind": "Property",
+      "Summary": "CommandOptions.permission.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string?",
+      "Writable": false
+    },
+    {
+      "Id": "Commands.Register",
+      "Name": "Register",
+      "OwnerId": "Commands",
+      "Kind": "Method",
+      "Summary": "Register a bounded command with optional permission and description.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Options",
+              "Type": "CommandOptions",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Callback",
+              "Type": "(CommandContext) -> ()",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Connection.Disconnect",
+      "Name": "Disconnect",
+      "OwnerId": "Connection",
+      "Kind": "Method",
+      "Summary": "Disconnect this subscription.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Frame.AnchorPoint",
+      "Name": "AnchorPoint",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained AnchorPoint.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Vector2",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.BackgroundColor3",
+      "Name": "BackgroundColor3",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.BackgroundTransparency",
+      "Name": "BackgroundTransparency",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "Frame.ClipsDescendants",
+      "Name": "ClipsDescendants",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained ClipsDescendants.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "boolean",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.Clone",
+      "Name": "Clone",
+      "OwnerId": "Frame",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "Frame"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Frame.Create",
+      "Name": "Create",
+      "OwnerId": "Frame",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Frame.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "Frame",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Frame.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "Frame",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Frame.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "Frame",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Frame.IsA",
+      "Name": "IsA",
+      "OwnerId": "Frame",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Frame.LayoutOrder",
+      "Name": "LayoutOrder",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained LayoutOrder.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.Name",
+      "Name": "Name",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.Parent",
+      "Name": "Parent",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.Position",
+      "Name": "Position",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained Position.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.Size",
+      "Name": "Size",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained Size.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.Visible",
+      "Name": "Visible",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained Visible.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "boolean",
+      "Writable": true
+    },
+    {
+      "Id": "Frame.ZIndex",
+      "Name": "ZIndex",
+      "OwnerId": "Frame",
+      "Kind": "Property",
+      "Summary": "Retained ZIndex.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "Game.ApiName",
+      "Name": "ApiName",
+      "OwnerId": "Game",
+      "Kind": "Property",
+      "Summary": "Game.ApiName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"CarbonLuau\"",
+      "Writable": false
+    },
+    {
+      "Id": "Game.ApiStatus",
+      "Name": "ApiStatus",
+      "OwnerId": "Game",
+      "Kind": "Property",
+      "Summary": "Game.ApiStatus.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"Experimental\"",
+      "Writable": false
+    },
+    {
+      "Id": "Game.ApiVersion",
+      "Name": "ApiVersion",
+      "OwnerId": "Game",
+      "Kind": "Property",
+      "Summary": "Game.ApiVersion.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"0.4.0-experimental\"",
+      "Writable": false
+    },
+    {
+      "Id": "Game.GetService",
+      "Name": "GetService",
+      "OwnerId": "Game",
+      "Kind": "Method",
+      "Summary": "Get one of the explicitly supported CarbonLuau services.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "\"Commands\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Commands"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "\"Gui\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Gui"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "\"Items\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Items"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "\"Players\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Players"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GiveItemBehavior.InventoryOnly",
+      "Name": "InventoryOnly",
+      "OwnerId": "GiveItemBehavior",
+      "Kind": "Singleton",
+      "Summary": "Place only in inventory; never intentionally drop overflow.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "GiveItemBehavior",
+      "Writable": false
+    },
+    {
+      "Id": "Gui.Create",
+      "Name": "Create",
+      "OwnerId": "Gui",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScreenGui\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScreenGui"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiFont.DroidSansMono",
+      "Name": "DroidSansMono",
+      "OwnerId": "GuiFont",
+      "Kind": "Singleton",
+      "Summary": "Immutable font identity; client rasterization is unqualified.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "GuiFont",
+      "Writable": false
+    },
+    {
+      "Id": "GuiFont.PermanentMarker",
+      "Name": "PermanentMarker",
+      "OwnerId": "GuiFont",
+      "Kind": "Singleton",
+      "Summary": "Immutable font identity; client rasterization is unqualified.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "GuiFont",
+      "Writable": false
+    },
+    {
+      "Id": "GuiFont.RobotoCondensedBold",
+      "Name": "RobotoCondensedBold",
+      "OwnerId": "GuiFont",
+      "Kind": "Singleton",
+      "Summary": "Immutable font identity; client rasterization is unqualified.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "GuiFont",
+      "Writable": false
+    },
+    {
+      "Id": "GuiFont.RobotoCondensedRegular",
+      "Name": "RobotoCondensedRegular",
+      "OwnerId": "GuiFont",
+      "Kind": "Singleton",
+      "Summary": "Immutable font identity; client rasterization is unqualified.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "GuiFont",
+      "Writable": false
+    },
+    {
+      "Id": "GuiNode.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "GuiNode",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "GuiNode.Clone",
+      "Name": "Clone",
+      "OwnerId": "GuiNode",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "GuiNode"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiNode.Create",
+      "Name": "Create",
+      "OwnerId": "GuiNode",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiNode.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "GuiNode",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "GuiNode.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "GuiNode",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiNode.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "GuiNode",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiNode.IsA",
+      "Name": "IsA",
+      "OwnerId": "GuiNode",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiNode.Name",
+      "Name": "Name",
+      "OwnerId": "GuiNode",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.AnchorPoint",
+      "Name": "AnchorPoint",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained AnchorPoint.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Vector2",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.BackgroundColor3",
+      "Name": "BackgroundColor3",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.BackgroundTransparency",
+      "Name": "BackgroundTransparency",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "GuiObject.Clone",
+      "Name": "Clone",
+      "OwnerId": "GuiObject",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "GuiObject"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiObject.Create",
+      "Name": "Create",
+      "OwnerId": "GuiObject",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiObject.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "GuiObject",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "GuiObject.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "GuiObject",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiObject.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "GuiObject",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiObject.IsA",
+      "Name": "IsA",
+      "OwnerId": "GuiObject",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "GuiObject.LayoutOrder",
+      "Name": "LayoutOrder",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained LayoutOrder.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.Name",
+      "Name": "Name",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.Parent",
+      "Name": "Parent",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.Position",
+      "Name": "Position",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained Position.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.Size",
+      "Name": "Size",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained Size.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.Visible",
+      "Name": "Visible",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained Visible.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "boolean",
+      "Writable": true
+    },
+    {
+      "Id": "GuiObject.ZIndex",
+      "Name": "ZIndex",
+      "OwnerId": "GuiObject",
+      "Kind": "Property",
+      "Summary": "Retained ZIndex.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.Activated",
+      "Name": "Activated",
+      "OwnerId": "ImageButton",
+      "Kind": "Signal",
+      "Summary": "Admitted activation with the exact Player connection.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ImageButton.AnchorPoint",
+      "Name": "AnchorPoint",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained AnchorPoint.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Vector2",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.BackgroundColor3",
+      "Name": "BackgroundColor3",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.BackgroundTransparency",
+      "Name": "BackgroundTransparency",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "ImageButton.Clone",
+      "Name": "Clone",
+      "OwnerId": "ImageButton",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "ImageButton"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageButton.Create",
+      "Name": "Create",
+      "OwnerId": "ImageButton",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageButton.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "ImageButton",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ImageButton.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "ImageButton",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageButton.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "ImageButton",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageButton.Image",
+      "Name": "Image",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained Image.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "ImageSource",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.ImageColor3",
+      "Name": "ImageColor3",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained ImageColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.ImageTransparency",
+      "Name": "ImageTransparency",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained ImageTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.IsA",
+      "Name": "IsA",
+      "OwnerId": "ImageButton",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageButton.LayoutOrder",
+      "Name": "LayoutOrder",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained LayoutOrder.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.Name",
+      "Name": "Name",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.Parent",
+      "Name": "Parent",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.Position",
+      "Name": "Position",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained Position.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.Size",
+      "Name": "Size",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained Size.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.Visible",
+      "Name": "Visible",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained Visible.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "boolean",
+      "Writable": true
+    },
+    {
+      "Id": "ImageButton.ZIndex",
+      "Name": "ZIndex",
+      "OwnerId": "ImageButton",
+      "Kind": "Property",
+      "Summary": "Retained ZIndex.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.AnchorPoint",
+      "Name": "AnchorPoint",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained AnchorPoint.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Vector2",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.BackgroundColor3",
+      "Name": "BackgroundColor3",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.BackgroundTransparency",
+      "Name": "BackgroundTransparency",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "ImageLabel.Clone",
+      "Name": "Clone",
+      "OwnerId": "ImageLabel",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "ImageLabel"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageLabel.Create",
+      "Name": "Create",
+      "OwnerId": "ImageLabel",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageLabel.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "ImageLabel",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ImageLabel.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "ImageLabel",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageLabel.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "ImageLabel",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageLabel.Image",
+      "Name": "Image",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained Image.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "ImageSource",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.ImageColor3",
+      "Name": "ImageColor3",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained ImageColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.ImageTransparency",
+      "Name": "ImageTransparency",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained ImageTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.IsA",
+      "Name": "IsA",
+      "OwnerId": "ImageLabel",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageLabel.LayoutOrder",
+      "Name": "LayoutOrder",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained LayoutOrder.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.Name",
+      "Name": "Name",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.Parent",
+      "Name": "Parent",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.Position",
+      "Name": "Position",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained Position.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.Size",
+      "Name": "Size",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained Size.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.Visible",
+      "Name": "Visible",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained Visible.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "boolean",
+      "Writable": true
+    },
+    {
+      "Id": "ImageLabel.ZIndex",
+      "Name": "ZIndex",
+      "OwnerId": "ImageLabel",
+      "Kind": "Property",
+      "Summary": "Retained ZIndex.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ImageSource.Id",
+      "Name": "Id",
+      "OwnerId": "ImageSource",
+      "Kind": "Property",
+      "Summary": "Immutable Id.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "ImageSource.Item",
+      "Name": "Item",
+      "OwnerId": "ImageSource",
+      "Kind": "Constructor",
+      "Summary": "ImageSource.Item.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ItemId",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "SkinId",
+              "Type": "string?",
+              "Optional": true,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageSource"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageSource.ItemId",
+      "Name": "ItemId",
+      "OwnerId": "ImageSource",
+      "Kind": "Property",
+      "Summary": "Immutable ItemId.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "ImageSource.Kind",
+      "Name": "Kind",
+      "OwnerId": "ImageSource",
+      "Kind": "Property",
+      "Summary": "Immutable Kind.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "ImageSource.Name",
+      "Name": "Name",
+      "OwnerId": "ImageSource",
+      "Kind": "Property",
+      "Summary": "Immutable Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "ImageSource.None",
+      "Name": "None",
+      "OwnerId": "ImageSource",
+      "Kind": "Constructor",
+      "Summary": "ImageSource.None.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "ImageSource"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageSource.Png",
+      "Name": "Png",
+      "OwnerId": "ImageSource",
+      "Kind": "Constructor",
+      "Summary": "ImageSource.Png.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Id",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageSource"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageSource.SkinId",
+      "Name": "SkinId",
+      "OwnerId": "ImageSource",
+      "Kind": "Property",
+      "Summary": "Immutable SkinId.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "ImageSource.Sprite",
+      "Name": "Sprite",
+      "OwnerId": "ImageSource",
+      "Kind": "Constructor",
+      "Summary": "ImageSource.Sprite.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageSource"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageSource.SteamAvatar",
+      "Name": "SteamAvatar",
+      "OwnerId": "ImageSource",
+      "Kind": "Constructor",
+      "Summary": "ImageSource.SteamAvatar.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "UserId",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageSource"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ImageSource.UserId",
+      "Name": "UserId",
+      "OwnerId": "ImageSource",
+      "Kind": "Property",
+      "Summary": "Immutable UserId.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "Items.Exists",
+      "Name": "Exists",
+      "OwnerId": "Items",
+      "Kind": "Method",
+      "Summary": "Check whether a canonical item short name exists.",
+      "Preview": "ReadMock",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ShortName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Player.CountItem",
+      "Name": "CountItem",
+      "OwnerId": "Player",
+      "Kind": "Method",
+      "Summary": "Count observed physical inventory items by short name.",
+      "Preview": "ReadMock",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ShortName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "number"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Player.GiveItem",
+      "Name": "GiveItem",
+      "OwnerId": "Player",
+      "Kind": "Method",
+      "Summary": "Give a bounded amount with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error.",
+      "Preview": "HostMutation",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ShortName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Amount",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Behavior",
+              "Type": "GiveItemBehavior?",
+              "Optional": true,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Player.HasItem",
+      "Name": "HasItem",
+      "OwnerId": "Player",
+      "Kind": "Method",
+      "Summary": "Check physical inventory for an amount; the default is one.",
+      "Preview": "ReadMock",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ShortName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Amount",
+              "Type": "number?",
+              "Optional": true,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Player.HasPermission",
+      "Name": "HasPermission",
+      "OwnerId": "Player",
+      "Kind": "Method",
+      "Summary": "Check a host permission for this exact player connection.",
+      "Preview": "ReadMock",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Permission",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Player.Health",
+      "Name": "Health",
+      "OwnerId": "Player",
+      "Kind": "Property",
+      "Summary": "Player.Health.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Player.IsConnected",
+      "Name": "IsConnected",
+      "OwnerId": "Player",
+      "Kind": "Property",
+      "Summary": "Player.IsConnected.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "boolean",
+      "Writable": false
+    },
+    {
+      "Id": "Player.MaxHealth",
+      "Name": "MaxHealth",
+      "OwnerId": "Player",
+      "Kind": "Property",
+      "Summary": "Player.MaxHealth.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Player.Name",
+      "Name": "Name",
+      "OwnerId": "Player",
+      "Kind": "Property",
+      "Summary": "Player.Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "Player.Position",
+      "Name": "Position",
+      "OwnerId": "Player",
+      "Kind": "Property",
+      "Summary": "Player.Position.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Vector3",
+      "Writable": false
+    },
+    {
+      "Id": "Player.SendMessage",
+      "Name": "SendMessage",
+      "OwnerId": "Player",
+      "Kind": "Method",
+      "Summary": "Send bounded chat text to this connected player.",
+      "Preview": "HostMutation",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Message",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Player.TakeItem",
+      "Name": "TakeItem",
+      "OwnerId": "Player",
+      "Kind": "Method",
+      "Summary": "Remove a bounded amount with physical verification; indeterminate mutation raises an error.",
+      "Preview": "HostMutation",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ShortName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Amount",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Player.Teleport",
+      "Name": "Teleport",
+      "OwnerId": "Player",
+      "Kind": "Method",
+      "Summary": "Teleport a connected player after committed-only admission.",
+      "Preview": "HostMutation",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Position",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Player.UserId",
+      "Name": "UserId",
+      "OwnerId": "Player",
+      "Kind": "Property",
+      "Summary": "Player.UserId.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "Players.GetPlayerByUserId",
+      "Name": "GetPlayerByUserId",
+      "OwnerId": "Players",
+      "Kind": "Method",
+      "Summary": "Find a connected player by decimal user ID, or nil.",
+      "Preview": "ReadMock",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "UserId",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Player?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Players.GetPlayers",
+      "Name": "GetPlayers",
+      "OwnerId": "Players",
+      "Kind": "Method",
+      "Summary": "Return the currently connected Player proxies.",
+      "Preview": "ReadMock",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{Player}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Players.PlayerAdded",
+      "Name": "PlayerAdded",
+      "OwnerId": "Players",
+      "Kind": "Signal",
+      "Summary": "Fires when a connection is added.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Players.PlayerRemoving",
+      "Name": "PlayerRemoving",
+      "OwnerId": "Players",
+      "Kind": "Signal",
+      "Summary": "Fires when a connection is removed.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ScreenGui.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "ScreenGui",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "ScreenGui.Clone",
+      "Name": "Clone",
+      "OwnerId": "ScreenGui",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "ScreenGui"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScreenGui.Create",
+      "Name": "Create",
+      "OwnerId": "ScreenGui",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScreenGui.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "ScreenGui",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ScreenGui.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "ScreenGui",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScreenGui.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "ScreenGui",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScreenGui.Hide",
+      "Name": "Hide",
+      "OwnerId": "ScreenGui",
+      "Kind": "Method",
+      "Summary": "Hide this screen from an exact connected player.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ScreenGui.IsA",
+      "Name": "IsA",
+      "OwnerId": "ScreenGui",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScreenGui.IsShown",
+      "Name": "IsShown",
+      "OwnerId": "ScreenGui",
+      "Kind": "Method",
+      "Summary": "Check whether this screen has a presentation for the player.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScreenGui.Name",
+      "Name": "Name",
+      "OwnerId": "ScreenGui",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "ScreenGui.Parent",
+      "Name": "Parent",
+      "OwnerId": "ScreenGui",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": false
+    },
+    {
+      "Id": "ScreenGui.Show",
+      "Name": "Show",
+      "OwnerId": "ScreenGui",
+      "Kind": "Method",
+      "Summary": "Show this screen to an exact connected player.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.AnchorPoint",
+      "Name": "AnchorPoint",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained AnchorPoint.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Vector2",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.BackgroundColor3",
+      "Name": "BackgroundColor3",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.BackgroundTransparency",
+      "Name": "BackgroundTransparency",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.CanvasSize",
+      "Name": "CanvasSize",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained CanvasSize.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "ScrollingFrame.Clone",
+      "Name": "Clone",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.Create",
+      "Name": "Create",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.IsA",
+      "Name": "IsA",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.LayoutOrder",
+      "Name": "LayoutOrder",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained LayoutOrder.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.Name",
+      "Name": "Name",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.Parent",
+      "Name": "Parent",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.Position",
+      "Name": "Position",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained Position.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.ScrollTo",
+      "Name": "ScrollTo",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Method",
+      "Summary": "Queue bounded presentation-local scroll intent for the player.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Position",
+              "Type": "Vector2",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.ScrollToBottom",
+      "Name": "ScrollToBottom",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Method",
+      "Summary": "Queue scroll intent to the bottom for the player.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.ScrollToTop",
+      "Name": "ScrollToTop",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Method",
+      "Summary": "Queue scroll intent to the top for the player.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "ScrollingFrame.ScrollingDirection",
+      "Name": "ScrollingDirection",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained ScrollingDirection.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"X\" | \"Y\" | \"XY\"",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.ScrollingEnabled",
+      "Name": "ScrollingEnabled",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained ScrollingEnabled.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "boolean",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.Size",
+      "Name": "Size",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained Size.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.Visible",
+      "Name": "Visible",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained Visible.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "boolean",
+      "Writable": true
+    },
+    {
+      "Id": "ScrollingFrame.ZIndex",
+      "Name": "ZIndex",
+      "OwnerId": "ScrollingFrame",
+      "Kind": "Property",
+      "Summary": "Retained ZIndex.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "Signal.Connect",
+      "Name": "Connect",
+      "OwnerId": "Signal",
+      "Kind": "Method",
+      "Summary": "Connect a bounded Player callback.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Callback",
+              "Type": "(Player) -> ()",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Connection"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Task.defer",
+      "Name": "defer",
+      "OwnerId": "Task",
+      "Kind": "Constructor",
+      "Summary": "Schedule bounded primitive arguments.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.2.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Callback",
+              "Type": "(...any) -> ()",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Arguments",
+              "Type": "any",
+              "Optional": false,
+              "Variadic": true
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Task.delay",
+      "Name": "delay",
+      "OwnerId": "Task",
+      "Kind": "Constructor",
+      "Summary": "Schedule bounded primitive arguments.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.2.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Seconds",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Callback",
+              "Type": "(...any) -> ()",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Arguments",
+              "Type": "any",
+              "Optional": false,
+              "Variadic": true
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Task.spawn",
+      "Name": "spawn",
+      "OwnerId": "Task",
+      "Kind": "Constructor",
+      "Summary": "Schedule bounded primitive arguments.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.2.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Callback",
+              "Type": "(...any) -> ()",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Arguments",
+              "Type": "any",
+              "Optional": false,
+              "Variadic": true
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "TextButton.Activated",
+      "Name": "Activated",
+      "OwnerId": "TextButton",
+      "Kind": "Signal",
+      "Summary": "Admitted activation with the exact Player connection.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "TextButton.AnchorPoint",
+      "Name": "AnchorPoint",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained AnchorPoint.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Vector2",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.BackgroundColor3",
+      "Name": "BackgroundColor3",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.BackgroundTransparency",
+      "Name": "BackgroundTransparency",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "TextButton.Clone",
+      "Name": "Clone",
+      "OwnerId": "TextButton",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "TextButton"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextButton.Create",
+      "Name": "Create",
+      "OwnerId": "TextButton",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextButton.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "TextButton",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "TextButton.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "TextButton",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextButton.Font",
+      "Name": "Font",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained Font.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiFont",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "TextButton",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextButton.IsA",
+      "Name": "IsA",
+      "OwnerId": "TextButton",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextButton.LayoutOrder",
+      "Name": "LayoutOrder",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained LayoutOrder.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.Name",
+      "Name": "Name",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.Parent",
+      "Name": "Parent",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.Position",
+      "Name": "Position",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained Position.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.Size",
+      "Name": "Size",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained Size.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.Text",
+      "Name": "Text",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained Text.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.TextColor3",
+      "Name": "TextColor3",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained TextColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.TextSize",
+      "Name": "TextSize",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained TextSize.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.TextTransparency",
+      "Name": "TextTransparency",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained TextTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.TextXAlignment",
+      "Name": "TextXAlignment",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained TextXAlignment.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Left\" | \"Center\" | \"Right\"",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.TextYAlignment",
+      "Name": "TextYAlignment",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained TextYAlignment.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Top\" | \"Center\" | \"Bottom\"",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.Visible",
+      "Name": "Visible",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained Visible.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "boolean",
+      "Writable": true
+    },
+    {
+      "Id": "TextButton.ZIndex",
+      "Name": "ZIndex",
+      "OwnerId": "TextButton",
+      "Kind": "Property",
+      "Summary": "Retained ZIndex.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.AnchorPoint",
+      "Name": "AnchorPoint",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained AnchorPoint.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Vector2",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.BackgroundColor3",
+      "Name": "BackgroundColor3",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.BackgroundTransparency",
+      "Name": "BackgroundTransparency",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained BackgroundTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "TextLabel.Clone",
+      "Name": "Clone",
+      "OwnerId": "TextLabel",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "TextLabel"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextLabel.Create",
+      "Name": "Create",
+      "OwnerId": "TextLabel",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextLabel.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "TextLabel",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "TextLabel.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "TextLabel",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextLabel.Font",
+      "Name": "Font",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained Font.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiFont",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "TextLabel",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextLabel.IsA",
+      "Name": "IsA",
+      "OwnerId": "TextLabel",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "TextLabel.LayoutOrder",
+      "Name": "LayoutOrder",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained LayoutOrder.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.Name",
+      "Name": "Name",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.Parent",
+      "Name": "Parent",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.Position",
+      "Name": "Position",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained Position.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.Size",
+      "Name": "Size",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained Size.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.Text",
+      "Name": "Text",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained Text.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.TextColor3",
+      "Name": "TextColor3",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained TextColor3.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "Color3",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.TextSize",
+      "Name": "TextSize",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained TextSize.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.TextTransparency",
+      "Name": "TextTransparency",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained TextTransparency.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.TextXAlignment",
+      "Name": "TextXAlignment",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained TextXAlignment.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Left\" | \"Center\" | \"Right\"",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.TextYAlignment",
+      "Name": "TextYAlignment",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained TextYAlignment.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Top\" | \"Center\" | \"Bottom\"",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.Visible",
+      "Name": "Visible",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained Visible.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "boolean",
+      "Writable": true
+    },
+    {
+      "Id": "TextLabel.ZIndex",
+      "Name": "ZIndex",
+      "OwnerId": "TextLabel",
+      "Kind": "Property",
+      "Summary": "Retained ZIndex.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "UDim.Offset",
+      "Name": "Offset",
+      "OwnerId": "UDim",
+      "Kind": "Property",
+      "Summary": "Immutable Offset.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "UDim.Scale",
+      "Name": "Scale",
+      "OwnerId": "UDim",
+      "Kind": "Property",
+      "Summary": "Immutable Scale.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "UDim.new",
+      "Name": "new",
+      "OwnerId": "UDim",
+      "Kind": "Constructor",
+      "Summary": "UDim.new.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Scale",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Offset",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UDim"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UDim2.X",
+      "Name": "X",
+      "OwnerId": "UDim2",
+      "Kind": "Property",
+      "Summary": "Immutable X.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "UDim",
+      "Writable": false
+    },
+    {
+      "Id": "UDim2.Y",
+      "Name": "Y",
+      "OwnerId": "UDim2",
+      "Kind": "Property",
+      "Summary": "Immutable Y.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "UDim",
+      "Writable": false
+    },
+    {
+      "Id": "UDim2.fromOffset",
+      "Name": "fromOffset",
+      "OwnerId": "UDim2",
+      "Kind": "Constructor",
+      "Summary": "UDim2.fromOffset.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "XOffset",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "YOffset",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UDim2"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UDim2.fromScale",
+      "Name": "fromScale",
+      "OwnerId": "UDim2",
+      "Kind": "Constructor",
+      "Summary": "UDim2.fromScale.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "XScale",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "YScale",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UDim2"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UDim2.new",
+      "Name": "new",
+      "OwnerId": "UDim2",
+      "Kind": "Constructor",
+      "Summary": "UDim2.new.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "XScale",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "XOffset",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "YScale",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "YOffset",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UDim2"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIGridLayout.CellPadding",
+      "Name": "CellPadding",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Property",
+      "Summary": "Retained CellPadding.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "UIGridLayout.CellSize",
+      "Name": "CellSize",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Property",
+      "Summary": "Retained CellSize.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim2",
+      "Writable": true
+    },
+    {
+      "Id": "UIGridLayout.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "UIGridLayout.Clone",
+      "Name": "Clone",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIGridLayout.Create",
+      "Name": "Create",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIGridLayout.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "UIGridLayout.FillDirection",
+      "Name": "FillDirection",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Property",
+      "Summary": "Retained FillDirection.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Vertical\" | \"Horizontal\"",
+      "Writable": true
+    },
+    {
+      "Id": "UIGridLayout.FillDirectionMaxCells",
+      "Name": "FillDirectionMaxCells",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Property",
+      "Summary": "Retained FillDirectionMaxCells.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "number",
+      "Writable": true
+    },
+    {
+      "Id": "UIGridLayout.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIGridLayout.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIGridLayout.HorizontalAlignment",
+      "Name": "HorizontalAlignment",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Property",
+      "Summary": "Retained HorizontalAlignment.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Left\" | \"Center\" | \"Right\"",
+      "Writable": true
+    },
+    {
+      "Id": "UIGridLayout.IsA",
+      "Name": "IsA",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIGridLayout.Name",
+      "Name": "Name",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "UIGridLayout.Parent",
+      "Name": "Parent",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "UIGridLayout.VerticalAlignment",
+      "Name": "VerticalAlignment",
+      "OwnerId": "UIGridLayout",
+      "Kind": "Property",
+      "Summary": "Retained VerticalAlignment.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Top\" | \"Center\" | \"Bottom\"",
+      "Writable": true
+    },
+    {
+      "Id": "UIListLayout.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "UIListLayout",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "UIListLayout.Clone",
+      "Name": "Clone",
+      "OwnerId": "UIListLayout",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "UIListLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIListLayout.Create",
+      "Name": "Create",
+      "OwnerId": "UIListLayout",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIListLayout.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "UIListLayout",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "UIListLayout.FillDirection",
+      "Name": "FillDirection",
+      "OwnerId": "UIListLayout",
+      "Kind": "Property",
+      "Summary": "Retained FillDirection.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Vertical\" | \"Horizontal\"",
+      "Writable": true
+    },
+    {
+      "Id": "UIListLayout.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "UIListLayout",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIListLayout.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "UIListLayout",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIListLayout.HorizontalAlignment",
+      "Name": "HorizontalAlignment",
+      "OwnerId": "UIListLayout",
+      "Kind": "Property",
+      "Summary": "Retained HorizontalAlignment.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Left\" | \"Center\" | \"Right\"",
+      "Writable": true
+    },
+    {
+      "Id": "UIListLayout.IsA",
+      "Name": "IsA",
+      "OwnerId": "UIListLayout",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIListLayout.Name",
+      "Name": "Name",
+      "OwnerId": "UIListLayout",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "UIListLayout.Padding",
+      "Name": "Padding",
+      "OwnerId": "UIListLayout",
+      "Kind": "Property",
+      "Summary": "Retained Padding.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim",
+      "Writable": true
+    },
+    {
+      "Id": "UIListLayout.Parent",
+      "Name": "Parent",
+      "OwnerId": "UIListLayout",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "UIListLayout.VerticalAlignment",
+      "Name": "VerticalAlignment",
+      "OwnerId": "UIListLayout",
+      "Kind": "Property",
+      "Summary": "Retained VerticalAlignment.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "\"Top\" | \"Center\" | \"Bottom\"",
+      "Writable": true
+    },
+    {
+      "Id": "UIPadding.ClassName",
+      "Name": "ClassName",
+      "OwnerId": "UIPadding",
+      "Kind": "Property",
+      "Summary": "Retained ClassName.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "UIPadding.Clone",
+      "Name": "Clone",
+      "OwnerId": "UIPadding",
+      "Kind": "Method",
+      "Summary": "Clone this retained subtree within canonical bounds.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "UIPadding"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIPadding.Create",
+      "Name": "Create",
+      "OwnerId": "UIPadding",
+      "Kind": "Method",
+      "Summary": "Create a retained GUI object of the named supported class.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"Frame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Frame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"TextButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "TextButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIListLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIListLayout"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIPadding\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIPadding"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageLabel\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageLabel"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ImageButton\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ImageButton"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"ScrollingFrame\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "ScrollingFrame"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "\"UIGridLayout\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "UIGridLayout"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIPadding.Destroy",
+      "Name": "Destroy",
+      "OwnerId": "UIPadding",
+      "Kind": "Method",
+      "Summary": "Destroy this retained object and its owned subtree.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "UIPadding.FindFirstChild",
+      "Name": "FindFirstChild",
+      "OwnerId": "UIPadding",
+      "Kind": "Method",
+      "Summary": "Find a named direct child, or nil.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "GuiNode?"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIPadding.GetChildren",
+      "Name": "GetChildren",
+      "OwnerId": "UIPadding",
+      "Kind": "Method",
+      "Summary": "Return retained direct children in order.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "{GuiNode}"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIPadding.IsA",
+      "Name": "IsA",
+      "OwnerId": "UIPadding",
+      "Kind": "Method",
+      "Summary": "Check the canonical GUI class inheritance.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ClassName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "UIPadding.Name",
+      "Name": "Name",
+      "OwnerId": "UIPadding",
+      "Kind": "Property",
+      "Summary": "Retained Name.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "string",
+      "Writable": true
+    },
+    {
+      "Id": "UIPadding.PaddingBottom",
+      "Name": "PaddingBottom",
+      "OwnerId": "UIPadding",
+      "Kind": "Property",
+      "Summary": "Retained PaddingBottom.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim",
+      "Writable": true
+    },
+    {
+      "Id": "UIPadding.PaddingLeft",
+      "Name": "PaddingLeft",
+      "OwnerId": "UIPadding",
+      "Kind": "Property",
+      "Summary": "Retained PaddingLeft.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim",
+      "Writable": true
+    },
+    {
+      "Id": "UIPadding.PaddingRight",
+      "Name": "PaddingRight",
+      "OwnerId": "UIPadding",
+      "Kind": "Property",
+      "Summary": "Retained PaddingRight.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim",
+      "Writable": true
+    },
+    {
+      "Id": "UIPadding.PaddingTop",
+      "Name": "PaddingTop",
+      "OwnerId": "UIPadding",
+      "Kind": "Property",
+      "Summary": "Retained PaddingTop.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "UDim",
+      "Writable": true
+    },
+    {
+      "Id": "UIPadding.Parent",
+      "Name": "Parent",
+      "OwnerId": "UIPadding",
+      "Kind": "Property",
+      "Summary": "Retained Parent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "ValueType": "GuiNode?",
+      "Writable": true
+    },
+    {
+      "Id": "Vector2.X",
+      "Name": "X",
+      "OwnerId": "Vector2",
+      "Kind": "Property",
+      "Summary": "Immutable X.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Vector2.Y",
+      "Name": "Y",
+      "OwnerId": "Vector2",
+      "Kind": "Property",
+      "Summary": "Immutable Y.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Vector2.new",
+      "Name": "new",
+      "OwnerId": "Vector2",
+      "Kind": "Constructor",
+      "Summary": "Vector2.new.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "X",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Y",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Vector2"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Vector3.Magnitude",
+      "Name": "Magnitude",
+      "OwnerId": "Vector3",
+      "Kind": "Property",
+      "Summary": "Vector3.Magnitude.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Vector3.X",
+      "Name": "X",
+      "OwnerId": "Vector3",
+      "Kind": "Property",
+      "Summary": "Vector3.X.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Vector3.Y",
+      "Name": "Y",
+      "OwnerId": "Vector3",
+      "Kind": "Property",
+      "Summary": "Vector3.Y.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Vector3.Z",
+      "Name": "Z",
+      "OwnerId": "Vector3",
+      "Kind": "Property",
+      "Summary": "Vector3.Z.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "Vector3.__add",
+      "Name": "__add",
+      "OwnerId": "Vector3",
+      "Kind": "Operator",
+      "Summary": "Immutable Vector3 __add operator.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Left",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Right",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Vector3"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Vector3.__div",
+      "Name": "__div",
+      "OwnerId": "Vector3",
+      "Kind": "Operator",
+      "Summary": "Immutable Vector3 __div operator.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Left",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Right",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Vector3"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Vector3.__mul",
+      "Name": "__mul",
+      "OwnerId": "Vector3",
+      "Kind": "Operator",
+      "Summary": "Immutable Vector3 __mul operator.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Left",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Right",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Vector3"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "Left",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Right",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Vector3"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Vector3.__sub",
+      "Name": "__sub",
+      "OwnerId": "Vector3",
+      "Kind": "Operator",
+      "Summary": "Immutable Vector3 __sub operator.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Left",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Right",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Vector3"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Vector3.__unm",
+      "Name": "__unm",
+      "OwnerId": "Vector3",
+      "Kind": "Operator",
+      "Summary": "Immutable Vector3 __unm operator.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Operand",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Vector3"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Vector3.new",
+      "Name": "new",
+      "OwnerId": "Vector3",
+      "Kind": "Constructor",
+      "Summary": "Vector3.new.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "X",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Y",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Z",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Vector3"
+          ]
+        }
+      ]
+    }
+  ],
+  "LimitKeys": [
+    "Addon.ArchiveBytes",
+    "Addon.ExpandedBytes",
+    "Addon.ManifestBytes",
+    "Addon.SourceBytes",
+    "Addon.AggregateSourceBytes",
+    "Addon.Modules",
+    "Addon.Dependencies",
+    "Gui.ObjectsPerScreen",
+    "Gui.ProjectedElementsPerScreen",
+    "Gui.ClipDepth",
+    "Gui.TextBytesPerScreen"
+  ]
+}

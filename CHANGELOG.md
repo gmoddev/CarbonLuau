@@ -4,6 +4,13 @@ All notable public changes to CarbonLuau are recorded here.
 
 ## Unreleased
 
+### Fixed
+
+- Cold module initialization now rejects committed-only Player mutations even
+  inside a committed callback, including nested/public/shared module calls.
+  Later committed calls to cached exports remain allowed. Player-1F-C preserves
+  the original `9b27ba5` failure evidence and qualifies the correction.
+
 ### Added
 
 - Committed-only `Player:GiveItem(ShortName, Amount, Behavior?)`, defaulting to

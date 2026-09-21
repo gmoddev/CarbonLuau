@@ -1,0 +1,866 @@
+{
+  "@carbonluau/globaltype/Addon.Id": {
+    "documentation": "Addon.Id."
+  },
+  "@carbonluau/globaltype/Addon.IsDependencyAvailable": {
+    "documentation": "Check the exact declared dependency binding."
+  },
+  "@carbonluau/globaltype/Addon.Version": {
+    "documentation": "Addon.Version."
+  },
+  "@carbonluau/globaltype/Color3.B": {
+    "documentation": "Immutable B."
+  },
+  "@carbonluau/globaltype/Color3.G": {
+    "documentation": "Immutable G."
+  },
+  "@carbonluau/globaltype/Color3.R": {
+    "documentation": "Immutable R."
+  },
+  "@carbonluau/global/Color3.fromRGB": {
+    "documentation": "Color3.fromRGB."
+  },
+  "@carbonluau/global/Color3.new": {
+    "documentation": "Color3.new."
+  },
+  "@carbonluau/globaltype/CommandContext.Arguments": {
+    "documentation": "CommandContext.Arguments."
+  },
+  "@carbonluau/globaltype/CommandContext.Name": {
+    "documentation": "CommandContext.Name."
+  },
+  "@carbonluau/globaltype/CommandContext.Player": {
+    "documentation": "CommandContext.Player."
+  },
+  "@carbonluau/globaltype/CommandOptions.description": {
+    "documentation": "CommandOptions.description."
+  },
+  "@carbonluau/globaltype/CommandOptions.permission": {
+    "documentation": "CommandOptions.permission."
+  },
+  "@carbonluau/globaltype/Commands.Register": {
+    "documentation": "Register a bounded command with optional permission and description."
+  },
+  "@carbonluau/globaltype/Connection.Disconnect": {
+    "documentation": "Disconnect this subscription."
+  },
+  "@carbonluau/globaltype/Frame.AnchorPoint": {
+    "documentation": "Retained AnchorPoint."
+  },
+  "@carbonluau/globaltype/Frame.BackgroundColor3": {
+    "documentation": "Retained BackgroundColor3."
+  },
+  "@carbonluau/globaltype/Frame.BackgroundTransparency": {
+    "documentation": "Retained BackgroundTransparency."
+  },
+  "@carbonluau/globaltype/Frame.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/Frame.ClipsDescendants": {
+    "documentation": "Retained ClipsDescendants."
+  },
+  "@carbonluau/globaltype/Frame.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/Frame.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/Frame.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/Frame.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/Frame.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/Frame.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/Frame.LayoutOrder": {
+    "documentation": "Retained LayoutOrder."
+  },
+  "@carbonluau/globaltype/Frame.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/Frame.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/Frame.Position": {
+    "documentation": "Retained Position."
+  },
+  "@carbonluau/globaltype/Frame.Size": {
+    "documentation": "Retained Size."
+  },
+  "@carbonluau/globaltype/Frame.Visible": {
+    "documentation": "Retained Visible."
+  },
+  "@carbonluau/globaltype/Frame.ZIndex": {
+    "documentation": "Retained ZIndex."
+  },
+  "@carbonluau/globaltype/Game.ApiName": {
+    "documentation": "Game.ApiName."
+  },
+  "@carbonluau/globaltype/Game.ApiStatus": {
+    "documentation": "Game.ApiStatus."
+  },
+  "@carbonluau/globaltype/Game.ApiVersion": {
+    "documentation": "Game.ApiVersion."
+  },
+  "@carbonluau/globaltype/Game.GetService": {
+    "documentation": "Get one of the explicitly supported CarbonLuau services."
+  },
+  "@carbonluau/global/GiveItemBehavior.InventoryOnly": {
+    "documentation": "Place only in inventory; never intentionally drop overflow."
+  },
+  "@carbonluau/globaltype/Gui.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/global/GuiFont.DroidSansMono": {
+    "documentation": "Immutable font identity; client rasterization is unqualified."
+  },
+  "@carbonluau/global/GuiFont.PermanentMarker": {
+    "documentation": "Immutable font identity; client rasterization is unqualified."
+  },
+  "@carbonluau/global/GuiFont.RobotoCondensedBold": {
+    "documentation": "Immutable font identity; client rasterization is unqualified."
+  },
+  "@carbonluau/global/GuiFont.RobotoCondensedRegular": {
+    "documentation": "Immutable font identity; client rasterization is unqualified."
+  },
+  "@carbonluau/globaltype/GuiNode.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/GuiNode.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/GuiNode.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/GuiNode.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/GuiNode.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/GuiNode.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/GuiNode.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/GuiNode.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/GuiObject.AnchorPoint": {
+    "documentation": "Retained AnchorPoint."
+  },
+  "@carbonluau/globaltype/GuiObject.BackgroundColor3": {
+    "documentation": "Retained BackgroundColor3."
+  },
+  "@carbonluau/globaltype/GuiObject.BackgroundTransparency": {
+    "documentation": "Retained BackgroundTransparency."
+  },
+  "@carbonluau/globaltype/GuiObject.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/GuiObject.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/GuiObject.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/GuiObject.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/GuiObject.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/GuiObject.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/GuiObject.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/GuiObject.LayoutOrder": {
+    "documentation": "Retained LayoutOrder."
+  },
+  "@carbonluau/globaltype/GuiObject.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/GuiObject.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/GuiObject.Position": {
+    "documentation": "Retained Position."
+  },
+  "@carbonluau/globaltype/GuiObject.Size": {
+    "documentation": "Retained Size."
+  },
+  "@carbonluau/globaltype/GuiObject.Visible": {
+    "documentation": "Retained Visible."
+  },
+  "@carbonluau/globaltype/GuiObject.ZIndex": {
+    "documentation": "Retained ZIndex."
+  },
+  "@carbonluau/globaltype/ImageButton.Activated": {
+    "documentation": "Admitted activation with the exact Player connection."
+  },
+  "@carbonluau/globaltype/ImageButton.AnchorPoint": {
+    "documentation": "Retained AnchorPoint."
+  },
+  "@carbonluau/globaltype/ImageButton.BackgroundColor3": {
+    "documentation": "Retained BackgroundColor3."
+  },
+  "@carbonluau/globaltype/ImageButton.BackgroundTransparency": {
+    "documentation": "Retained BackgroundTransparency."
+  },
+  "@carbonluau/globaltype/ImageButton.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/ImageButton.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/ImageButton.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/ImageButton.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/ImageButton.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/ImageButton.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/ImageButton.Image": {
+    "documentation": "Retained Image."
+  },
+  "@carbonluau/globaltype/ImageButton.ImageColor3": {
+    "documentation": "Retained ImageColor3."
+  },
+  "@carbonluau/globaltype/ImageButton.ImageTransparency": {
+    "documentation": "Retained ImageTransparency."
+  },
+  "@carbonluau/globaltype/ImageButton.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/ImageButton.LayoutOrder": {
+    "documentation": "Retained LayoutOrder."
+  },
+  "@carbonluau/globaltype/ImageButton.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/ImageButton.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/ImageButton.Position": {
+    "documentation": "Retained Position."
+  },
+  "@carbonluau/globaltype/ImageButton.Size": {
+    "documentation": "Retained Size."
+  },
+  "@carbonluau/globaltype/ImageButton.Visible": {
+    "documentation": "Retained Visible."
+  },
+  "@carbonluau/globaltype/ImageButton.ZIndex": {
+    "documentation": "Retained ZIndex."
+  },
+  "@carbonluau/globaltype/ImageLabel.AnchorPoint": {
+    "documentation": "Retained AnchorPoint."
+  },
+  "@carbonluau/globaltype/ImageLabel.BackgroundColor3": {
+    "documentation": "Retained BackgroundColor3."
+  },
+  "@carbonluau/globaltype/ImageLabel.BackgroundTransparency": {
+    "documentation": "Retained BackgroundTransparency."
+  },
+  "@carbonluau/globaltype/ImageLabel.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/ImageLabel.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/ImageLabel.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/ImageLabel.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/ImageLabel.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/ImageLabel.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/ImageLabel.Image": {
+    "documentation": "Retained Image."
+  },
+  "@carbonluau/globaltype/ImageLabel.ImageColor3": {
+    "documentation": "Retained ImageColor3."
+  },
+  "@carbonluau/globaltype/ImageLabel.ImageTransparency": {
+    "documentation": "Retained ImageTransparency."
+  },
+  "@carbonluau/globaltype/ImageLabel.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/ImageLabel.LayoutOrder": {
+    "documentation": "Retained LayoutOrder."
+  },
+  "@carbonluau/globaltype/ImageLabel.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/ImageLabel.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/ImageLabel.Position": {
+    "documentation": "Retained Position."
+  },
+  "@carbonluau/globaltype/ImageLabel.Size": {
+    "documentation": "Retained Size."
+  },
+  "@carbonluau/globaltype/ImageLabel.Visible": {
+    "documentation": "Retained Visible."
+  },
+  "@carbonluau/globaltype/ImageLabel.ZIndex": {
+    "documentation": "Retained ZIndex."
+  },
+  "@carbonluau/globaltype/ImageSource.Id": {
+    "documentation": "Immutable Id."
+  },
+  "@carbonluau/global/ImageSource.Item": {
+    "documentation": "ImageSource.Item."
+  },
+  "@carbonluau/globaltype/ImageSource.ItemId": {
+    "documentation": "Immutable ItemId."
+  },
+  "@carbonluau/globaltype/ImageSource.Kind": {
+    "documentation": "Immutable Kind."
+  },
+  "@carbonluau/globaltype/ImageSource.Name": {
+    "documentation": "Immutable Name."
+  },
+  "@carbonluau/global/ImageSource.None": {
+    "documentation": "ImageSource.None."
+  },
+  "@carbonluau/global/ImageSource.Png": {
+    "documentation": "ImageSource.Png."
+  },
+  "@carbonluau/globaltype/ImageSource.SkinId": {
+    "documentation": "Immutable SkinId."
+  },
+  "@carbonluau/global/ImageSource.Sprite": {
+    "documentation": "ImageSource.Sprite."
+  },
+  "@carbonluau/global/ImageSource.SteamAvatar": {
+    "documentation": "ImageSource.SteamAvatar."
+  },
+  "@carbonluau/globaltype/ImageSource.UserId": {
+    "documentation": "Immutable UserId."
+  },
+  "@carbonluau/globaltype/Items.Exists": {
+    "documentation": "Check whether a canonical item short name exists."
+  },
+  "@carbonluau/globaltype/Player.CountItem": {
+    "documentation": "Count observed physical inventory items by short name."
+  },
+  "@carbonluau/globaltype/Player.GiveItem": {
+    "documentation": "Give a bounded amount with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error."
+  },
+  "@carbonluau/globaltype/Player.HasItem": {
+    "documentation": "Check physical inventory for an amount; the default is one."
+  },
+  "@carbonluau/globaltype/Player.HasPermission": {
+    "documentation": "Check a host permission for this exact player connection."
+  },
+  "@carbonluau/globaltype/Player.Health": {
+    "documentation": "Player.Health."
+  },
+  "@carbonluau/globaltype/Player.IsConnected": {
+    "documentation": "Player.IsConnected."
+  },
+  "@carbonluau/globaltype/Player.MaxHealth": {
+    "documentation": "Player.MaxHealth."
+  },
+  "@carbonluau/globaltype/Player.Name": {
+    "documentation": "Player.Name."
+  },
+  "@carbonluau/globaltype/Player.Position": {
+    "documentation": "Player.Position."
+  },
+  "@carbonluau/globaltype/Player.SendMessage": {
+    "documentation": "Send bounded chat text to this connected player."
+  },
+  "@carbonluau/globaltype/Player.TakeItem": {
+    "documentation": "Remove a bounded amount with physical verification; indeterminate mutation raises an error."
+  },
+  "@carbonluau/globaltype/Player.Teleport": {
+    "documentation": "Teleport a connected player after committed-only admission."
+  },
+  "@carbonluau/globaltype/Player.UserId": {
+    "documentation": "Player.UserId."
+  },
+  "@carbonluau/globaltype/Players.GetPlayerByUserId": {
+    "documentation": "Find a connected player by decimal user ID, or nil."
+  },
+  "@carbonluau/globaltype/Players.GetPlayers": {
+    "documentation": "Return the currently connected Player proxies."
+  },
+  "@carbonluau/globaltype/Players.PlayerAdded": {
+    "documentation": "Fires when a connection is added."
+  },
+  "@carbonluau/globaltype/Players.PlayerRemoving": {
+    "documentation": "Fires when a connection is removed."
+  },
+  "@carbonluau/globaltype/ScreenGui.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/ScreenGui.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/ScreenGui.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/ScreenGui.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/ScreenGui.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/ScreenGui.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/ScreenGui.Hide": {
+    "documentation": "Hide this screen from an exact connected player."
+  },
+  "@carbonluau/globaltype/ScreenGui.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/ScreenGui.IsShown": {
+    "documentation": "Check whether this screen has a presentation for the player."
+  },
+  "@carbonluau/globaltype/ScreenGui.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/ScreenGui.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/ScreenGui.Show": {
+    "documentation": "Show this screen to an exact connected player."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.AnchorPoint": {
+    "documentation": "Retained AnchorPoint."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.BackgroundColor3": {
+    "documentation": "Retained BackgroundColor3."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.BackgroundTransparency": {
+    "documentation": "Retained BackgroundTransparency."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.CanvasSize": {
+    "documentation": "Retained CanvasSize."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.LayoutOrder": {
+    "documentation": "Retained LayoutOrder."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.Position": {
+    "documentation": "Retained Position."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.ScrollTo": {
+    "documentation": "Queue bounded presentation-local scroll intent for the player."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.ScrollToBottom": {
+    "documentation": "Queue scroll intent to the bottom for the player."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.ScrollToTop": {
+    "documentation": "Queue scroll intent to the top for the player."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.ScrollingDirection": {
+    "documentation": "Retained ScrollingDirection."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.ScrollingEnabled": {
+    "documentation": "Retained ScrollingEnabled."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.Size": {
+    "documentation": "Retained Size."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.Visible": {
+    "documentation": "Retained Visible."
+  },
+  "@carbonluau/globaltype/ScrollingFrame.ZIndex": {
+    "documentation": "Retained ZIndex."
+  },
+  "@carbonluau/globaltype/Signal.Connect": {
+    "documentation": "Connect a bounded Player callback."
+  },
+  "@carbonluau/global/task.defer": {
+    "documentation": "Schedule bounded primitive arguments."
+  },
+  "@carbonluau/global/task.delay": {
+    "documentation": "Schedule bounded primitive arguments."
+  },
+  "@carbonluau/global/task.spawn": {
+    "documentation": "Schedule bounded primitive arguments."
+  },
+  "@carbonluau/globaltype/TextButton.Activated": {
+    "documentation": "Admitted activation with the exact Player connection."
+  },
+  "@carbonluau/globaltype/TextButton.AnchorPoint": {
+    "documentation": "Retained AnchorPoint."
+  },
+  "@carbonluau/globaltype/TextButton.BackgroundColor3": {
+    "documentation": "Retained BackgroundColor3."
+  },
+  "@carbonluau/globaltype/TextButton.BackgroundTransparency": {
+    "documentation": "Retained BackgroundTransparency."
+  },
+  "@carbonluau/globaltype/TextButton.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/TextButton.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/TextButton.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/TextButton.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/TextButton.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/TextButton.Font": {
+    "documentation": "Retained Font."
+  },
+  "@carbonluau/globaltype/TextButton.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/TextButton.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/TextButton.LayoutOrder": {
+    "documentation": "Retained LayoutOrder."
+  },
+  "@carbonluau/globaltype/TextButton.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/TextButton.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/TextButton.Position": {
+    "documentation": "Retained Position."
+  },
+  "@carbonluau/globaltype/TextButton.Size": {
+    "documentation": "Retained Size."
+  },
+  "@carbonluau/globaltype/TextButton.Text": {
+    "documentation": "Retained Text."
+  },
+  "@carbonluau/globaltype/TextButton.TextColor3": {
+    "documentation": "Retained TextColor3."
+  },
+  "@carbonluau/globaltype/TextButton.TextSize": {
+    "documentation": "Retained TextSize."
+  },
+  "@carbonluau/globaltype/TextButton.TextTransparency": {
+    "documentation": "Retained TextTransparency."
+  },
+  "@carbonluau/globaltype/TextButton.TextXAlignment": {
+    "documentation": "Retained TextXAlignment."
+  },
+  "@carbonluau/globaltype/TextButton.TextYAlignment": {
+    "documentation": "Retained TextYAlignment."
+  },
+  "@carbonluau/globaltype/TextButton.Visible": {
+    "documentation": "Retained Visible."
+  },
+  "@carbonluau/globaltype/TextButton.ZIndex": {
+    "documentation": "Retained ZIndex."
+  },
+  "@carbonluau/globaltype/TextLabel.AnchorPoint": {
+    "documentation": "Retained AnchorPoint."
+  },
+  "@carbonluau/globaltype/TextLabel.BackgroundColor3": {
+    "documentation": "Retained BackgroundColor3."
+  },
+  "@carbonluau/globaltype/TextLabel.BackgroundTransparency": {
+    "documentation": "Retained BackgroundTransparency."
+  },
+  "@carbonluau/globaltype/TextLabel.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/TextLabel.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/TextLabel.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/TextLabel.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/TextLabel.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/TextLabel.Font": {
+    "documentation": "Retained Font."
+  },
+  "@carbonluau/globaltype/TextLabel.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/TextLabel.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/TextLabel.LayoutOrder": {
+    "documentation": "Retained LayoutOrder."
+  },
+  "@carbonluau/globaltype/TextLabel.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/TextLabel.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/TextLabel.Position": {
+    "documentation": "Retained Position."
+  },
+  "@carbonluau/globaltype/TextLabel.Size": {
+    "documentation": "Retained Size."
+  },
+  "@carbonluau/globaltype/TextLabel.Text": {
+    "documentation": "Retained Text."
+  },
+  "@carbonluau/globaltype/TextLabel.TextColor3": {
+    "documentation": "Retained TextColor3."
+  },
+  "@carbonluau/globaltype/TextLabel.TextSize": {
+    "documentation": "Retained TextSize."
+  },
+  "@carbonluau/globaltype/TextLabel.TextTransparency": {
+    "documentation": "Retained TextTransparency."
+  },
+  "@carbonluau/globaltype/TextLabel.TextXAlignment": {
+    "documentation": "Retained TextXAlignment."
+  },
+  "@carbonluau/globaltype/TextLabel.TextYAlignment": {
+    "documentation": "Retained TextYAlignment."
+  },
+  "@carbonluau/globaltype/TextLabel.Visible": {
+    "documentation": "Retained Visible."
+  },
+  "@carbonluau/globaltype/TextLabel.ZIndex": {
+    "documentation": "Retained ZIndex."
+  },
+  "@carbonluau/globaltype/UDim.Offset": {
+    "documentation": "Immutable Offset."
+  },
+  "@carbonluau/globaltype/UDim.Scale": {
+    "documentation": "Immutable Scale."
+  },
+  "@carbonluau/global/UDim.new": {
+    "documentation": "UDim.new."
+  },
+  "@carbonluau/globaltype/UDim2.X": {
+    "documentation": "Immutable X."
+  },
+  "@carbonluau/globaltype/UDim2.Y": {
+    "documentation": "Immutable Y."
+  },
+  "@carbonluau/global/UDim2.fromOffset": {
+    "documentation": "UDim2.fromOffset."
+  },
+  "@carbonluau/global/UDim2.fromScale": {
+    "documentation": "UDim2.fromScale."
+  },
+  "@carbonluau/global/UDim2.new": {
+    "documentation": "UDim2.new."
+  },
+  "@carbonluau/globaltype/UIGridLayout.CellPadding": {
+    "documentation": "Retained CellPadding."
+  },
+  "@carbonluau/globaltype/UIGridLayout.CellSize": {
+    "documentation": "Retained CellSize."
+  },
+  "@carbonluau/globaltype/UIGridLayout.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/UIGridLayout.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/UIGridLayout.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/UIGridLayout.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/UIGridLayout.FillDirection": {
+    "documentation": "Retained FillDirection."
+  },
+  "@carbonluau/globaltype/UIGridLayout.FillDirectionMaxCells": {
+    "documentation": "Retained FillDirectionMaxCells."
+  },
+  "@carbonluau/globaltype/UIGridLayout.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/UIGridLayout.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/UIGridLayout.HorizontalAlignment": {
+    "documentation": "Retained HorizontalAlignment."
+  },
+  "@carbonluau/globaltype/UIGridLayout.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/UIGridLayout.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/UIGridLayout.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/UIGridLayout.VerticalAlignment": {
+    "documentation": "Retained VerticalAlignment."
+  },
+  "@carbonluau/globaltype/UIListLayout.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/UIListLayout.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/UIListLayout.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/UIListLayout.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/UIListLayout.FillDirection": {
+    "documentation": "Retained FillDirection."
+  },
+  "@carbonluau/globaltype/UIListLayout.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/UIListLayout.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/UIListLayout.HorizontalAlignment": {
+    "documentation": "Retained HorizontalAlignment."
+  },
+  "@carbonluau/globaltype/UIListLayout.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/UIListLayout.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/UIListLayout.Padding": {
+    "documentation": "Retained Padding."
+  },
+  "@carbonluau/globaltype/UIListLayout.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/UIListLayout.VerticalAlignment": {
+    "documentation": "Retained VerticalAlignment."
+  },
+  "@carbonluau/globaltype/UIPadding.ClassName": {
+    "documentation": "Retained ClassName."
+  },
+  "@carbonluau/globaltype/UIPadding.Clone": {
+    "documentation": "Clone this retained subtree within canonical bounds."
+  },
+  "@carbonluau/globaltype/UIPadding.Create": {
+    "documentation": "Create a retained GUI object of the named supported class."
+  },
+  "@carbonluau/globaltype/UIPadding.Destroy": {
+    "documentation": "Destroy this retained object and its owned subtree."
+  },
+  "@carbonluau/globaltype/UIPadding.FindFirstChild": {
+    "documentation": "Find a named direct child, or nil."
+  },
+  "@carbonluau/globaltype/UIPadding.GetChildren": {
+    "documentation": "Return retained direct children in order."
+  },
+  "@carbonluau/globaltype/UIPadding.IsA": {
+    "documentation": "Check the canonical GUI class inheritance."
+  },
+  "@carbonluau/globaltype/UIPadding.Name": {
+    "documentation": "Retained Name."
+  },
+  "@carbonluau/globaltype/UIPadding.PaddingBottom": {
+    "documentation": "Retained PaddingBottom."
+  },
+  "@carbonluau/globaltype/UIPadding.PaddingLeft": {
+    "documentation": "Retained PaddingLeft."
+  },
+  "@carbonluau/globaltype/UIPadding.PaddingRight": {
+    "documentation": "Retained PaddingRight."
+  },
+  "@carbonluau/globaltype/UIPadding.PaddingTop": {
+    "documentation": "Retained PaddingTop."
+  },
+  "@carbonluau/globaltype/UIPadding.Parent": {
+    "documentation": "Retained Parent."
+  },
+  "@carbonluau/globaltype/Vector2.X": {
+    "documentation": "Immutable X."
+  },
+  "@carbonluau/globaltype/Vector2.Y": {
+    "documentation": "Immutable Y."
+  },
+  "@carbonluau/global/Vector2.new": {
+    "documentation": "Vector2.new."
+  },
+  "@carbonluau/globaltype/Vector3.Magnitude": {
+    "documentation": "Vector3.Magnitude."
+  },
+  "@carbonluau/globaltype/Vector3.X": {
+    "documentation": "Vector3.X."
+  },
+  "@carbonluau/globaltype/Vector3.Y": {
+    "documentation": "Vector3.Y."
+  },
+  "@carbonluau/globaltype/Vector3.Z": {
+    "documentation": "Vector3.Z."
+  },
+  "@carbonluau/globaltype/Vector3.__add": {
+    "documentation": "Immutable Vector3 __add operator."
+  },
+  "@carbonluau/globaltype/Vector3.__div": {
+    "documentation": "Immutable Vector3 __div operator."
+  },
+  "@carbonluau/globaltype/Vector3.__mul": {
+    "documentation": "Immutable Vector3 __mul operator."
+  },
+  "@carbonluau/globaltype/Vector3.__sub": {
+    "documentation": "Immutable Vector3 __sub operator."
+  },
+  "@carbonluau/globaltype/Vector3.__unm": {
+    "documentation": "Immutable Vector3 __unm operator."
+  },
+  "@carbonluau/global/Vector3.new": {
+    "documentation": "Vector3.new."
+  }
+}

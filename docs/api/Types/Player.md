@@ -28,7 +28,7 @@ host-valid players remain readable;
 mounted/parented reads use the root Transform's world position. Each read returns
 a new immutable value that remains usable after later movement or disconnect.
 After disconnect, Name/UserId remain safe snapshot values; Position, Health,
-MaxHealth, CountItem, HasItem, TakeItem, Teleport, SendMessage and HasPermission raise
+MaxHealth, CountItem, HasItem, TakeItem, GiveItem, Teleport, SendMessage and HasPermission raise
 `Player is no longer connected`. Same-account reconnect creates a different proxy.
 Generation retirement destroys VM-local script references and rejects late host work.
 Once host invalidity is observed, the old token stays invalid even if the host
@@ -57,7 +57,13 @@ segments, and include a namespace dot. HasPermission itself requires no permissi
 SendMessage needs a live player but no additional permission: it cannot grant
 items, run arbitrary commands or change administrator state. **It is prohibited
 during provisional initialization**, including reload/recovery entrypoints and
-modules they require. Use deferred work for startup messages:
+modules they require. All committed-only methods (SendMessage, Teleport,
+TakeItem and GiveItem) also reject while a cold module is initializing, even
+when a committed callback called `require`. This follows nested/public/shared
+module calls and previously captured Player facades. Read-only observations
+remain allowed. Once initialization finishes, cached exported functions may
+mutate when called by committed execution; their definition inside a module
+does not permanently make them provisional. Use deferred work for startup messages:
 
 ```lua
 local Players = game:GetService("Players")
@@ -163,6 +169,13 @@ permission is required by the method; command-caller permissions remain enforced
 by [Commands](../Services/Commands.md).
 
 Introduced in `0.4.0-experimental`. Server-authoritative evidence and limits are
-in [Player-1F-B](../../PlayerInteractionFoundation1FB-Validation.md); real-client
+in [Player-1F-B](../../PlayerInteractionFoundation1FB-Validation.md) and the
+[combined closure](../../PlayerInteractionFoundation1FC.md); real-client
 receipt is not claimed. See [compatibility](../Compatibility.md) for the trusted
 in-process interference boundary and indeterminate failure handling.
+
+CountItem/HasItem do not reserve inventory. Sequential TakeItem/GiveItem calls
+are separate irreversible operations, not an atomic exchange; failure of a
+later grant does not refund an earlier payment. See the runnable
+[Player examples](../Player-Examples.md), including command/GUI rewards and an
+explicitly nontransactional shop demonstration.

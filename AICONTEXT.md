@@ -9,6 +9,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | How to scope work and construct prompts | This document |
 | Official editor tooling ownership, contracts and security | [D19 in Invariants.md](docs/Invariants.md#d19--official-editor-tooling) and [ToolingBaseline.md](docs/ToolingBaseline.md) |
 | Tooling Foundation A implementation design and later routing | [ToolingFoundationA.md](docs/ToolingFoundationA.md) |
+| Tooling Foundation A implementation, platform qualification and Foundation B handoff | [ToolingFoundationACompletion.md](docs/ToolingFoundationACompletion.md) |
 | Language-analysis execution, Workspace Trust, process limits and Foundation A security handoff | [D19 analysis security amendment](docs/ToolingLanguageAnalysisSecurity.md) and [investigation evidence](docs/ToolingLanguageAnalysisSecurityEvidence.md) |
 | Product purpose, architecture, trust, ownership, ABI, threading, lifecycle and resource rules | [Invariants.md](docs/Invariants.md) |
 | Provisional/open/deferred decisions and implementation gates | [Decision register in Invariants.md](docs/Invariants.md#decision-register) |
@@ -43,6 +44,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Player Interaction Foundation 1D Teleport implementation and qualification | [PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md) |
 | Player Interaction Foundation 1F-A TakeItem implementation and qualification | [PlayerInteractionFoundation1FA.md](docs/PlayerInteractionFoundation1FA.md) |
 | Player Interaction Foundation 1F-B GiveItem implementation and historical investigation | [PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md), [qualification](docs/PlayerInteractionFoundation1FB-Validation.md) |
+| Player Interaction Foundation 1F-C combined closure and cold-module mutation correction | [PlayerInteractionFoundation1FC.md](docs/PlayerInteractionFoundation1FC.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
