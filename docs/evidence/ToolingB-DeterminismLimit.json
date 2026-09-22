@@ -1,0 +1,225 @@
+{
+  "Scope": "Counterexamples to arbitrary-script determinism; accepted limitation, not failed deterministic-fixture qualification.",
+  "RuntimeLuauRevision": "c6b830185af962c82003f86784e2fe036357c830",
+  "Date": "2026-09-21",
+  "Runs": [
+    {
+      "ExitCode": 1,
+      "Cases": [
+        {
+          "Platform": "win32-x64",
+          "Case": "PointerText",
+          "Source": "local Screen = game:GetService(\"Gui\"):Create(\"ScreenGui\")\nlocal Label = Screen:Create(\"TextLabel\")\nLabel.Text = tostring({})",
+          "Equal": false,
+          "Witnesses": [
+            {
+              "Revision": "sha256:d5c6c40627de4c2910b0e34ce434509980d6c3d7909ba2b668691fda8f473978",
+              "PlanSha256": "5a3c5841e484f9bfabb20ad606d57f815946b728e52c8b6d68ffb5eb274002c0",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "table: 0x0000018796d912b0"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:d5c6c40627de4c2910b0e34ce434509980d6c3d7909ba2b668691fda8f473978",
+              "PlanSha256": "4e86e150772f4ae5a280012bd7266225456ce1c972f68457c2057a76f5d792f8",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "table: 0x00000219c47a4770"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:d5c6c40627de4c2910b0e34ce434509980d6c3d7909ba2b668691fda8f473978",
+              "PlanSha256": "7ecc7d9e82d9fd3d7ada74776360dbacac0b7ed4fa03272779fb56d54bfaa82a",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "table: 0x00000178511cb2d0"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:d5c6c40627de4c2910b0e34ce434509980d6c3d7909ba2b668691fda8f473978",
+              "PlanSha256": "bc48198235e593fcbd2639483635dad868e86edb763bc21e93461690bd0e70db",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "table: 0x000001d1fd3885e0"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "Platform": "win32-x64",
+          "Case": "ObjectKeyOrder",
+          "Source": "local Screen = game:GetService(\"Gui\"):Create(\"ScreenGui\")\nlocal Values = {}\nfor Index = 1, 32 do Values[{}] = Index end\nlocal Text = \"\"\nfor Key, Value in Values do Text ..= tostring(Value) .. \",\" end\nlocal Label = Screen:Create(\"TextLabel\")\nLabel.Text = Text",
+          "Equal": false,
+          "Witnesses": [
+            {
+              "Revision": "sha256:4efa7d87a3fe68e5961c0664e24baabe8c67679a86cc104215a9b577e1ee46fe",
+              "PlanSha256": "1f0f1a3ff0842ab5648ccac98eec58eba29813136735bd49084c08a1e0aeaa58",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "32,1,16,27,31,23,2,10,28,29,24,22,6,30,19,25,21,5,9,18,13,11,20,12,26,7,14,17,15,8,4,3,"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:4efa7d87a3fe68e5961c0664e24baabe8c67679a86cc104215a9b577e1ee46fe",
+              "PlanSha256": "c37fbb5272091761628e4f0aa7251332d2445a0447242959ec0bea4abff18c4b",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "15,5,21,28,27,11,4,17,10,6,19,31,22,1,29,7,32,23,26,25,24,30,12,8,13,18,16,14,3,9,20,2,"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:4efa7d87a3fe68e5961c0664e24baabe8c67679a86cc104215a9b577e1ee46fe",
+              "PlanSha256": "9e98f7c77d8f08cfcfc618663ee9d5fadccd16d22b85ea57b47ed26e892f5876",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "11,12,24,10,7,9,4,32,31,30,2,8,18,3,20,28,21,26,1,17,25,19,23,29,15,27,16,13,5,6,14,22,"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:4efa7d87a3fe68e5961c0664e24baabe8c67679a86cc104215a9b577e1ee46fe",
+              "PlanSha256": "716e62a95f71c45a894361e3d82501367ca0acef1bb4cc14f6574428da121e81",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "16,32,20,31,29,23,30,28,17,10,26,13,6,15,14,8,9,19,18,21,12,22,27,3,4,7,1,2,11,25,24,5,"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "ExitCode": 1,
+      "Cases": [
+        {
+          "Platform": "linux-x64",
+          "Case": "PointerText",
+          "Source": "local Screen = game:GetService(\"Gui\"):Create(\"ScreenGui\")\nlocal Label = Screen:Create(\"TextLabel\")\nLabel.Text = tostring({})",
+          "Equal": false,
+          "Witnesses": [
+            {
+              "Revision": "sha256:d5c6c40627de4c2910b0e34ce434509980d6c3d7909ba2b668691fda8f473978",
+              "PlanSha256": "98c20afd625c2c93f322adc908afbb356865e0a231013ac23cbb38fe8590c408",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "table: 0x0000653dac181d20"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:d5c6c40627de4c2910b0e34ce434509980d6c3d7909ba2b668691fda8f473978",
+              "PlanSha256": "eb6225953c2412c7b9b6c34a286e8402d6e1e4036349fba5ef570efe8cfa377e",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "table: 0x00005f64c9503ff0"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:d5c6c40627de4c2910b0e34ce434509980d6c3d7909ba2b668691fda8f473978",
+              "PlanSha256": "8be868f187bde7da1012268a9b8921ec9f1c969f330e7089a99dcb6d1d3db500",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "table: 0x00006549bc26be70"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:d5c6c40627de4c2910b0e34ce434509980d6c3d7909ba2b668691fda8f473978",
+              "PlanSha256": "04323e652e2c2d8191e927115c3830908c794003a706957cdf86106c10874628",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "table: 0x00005b466c8a0160"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "Platform": "linux-x64",
+          "Case": "ObjectKeyOrder",
+          "Source": "local Screen = game:GetService(\"Gui\"):Create(\"ScreenGui\")\nlocal Values = {}\nfor Index = 1, 32 do Values[{}] = Index end\nlocal Text = \"\"\nfor Key, Value in Values do Text ..= tostring(Value) .. \",\" end\nlocal Label = Screen:Create(\"TextLabel\")\nLabel.Text = Text",
+          "Equal": false,
+          "Witnesses": [
+            {
+              "Revision": "sha256:4efa7d87a3fe68e5961c0664e24baabe8c67679a86cc104215a9b577e1ee46fe",
+              "PlanSha256": "b89ae97b4d3fe89f348c604c89b80b00c05a540d8823b637c662c099cb4b8e41",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "22,11,9,29,19,24,12,30,1,32,7,2,28,27,21,6,5,26,25,31,23,8,10,20,3,4,13,15,16,17,18,14,"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:4efa7d87a3fe68e5961c0664e24baabe8c67679a86cc104215a9b577e1ee46fe",
+              "PlanSha256": "a5ddfa4530d4d6795c35e8ceb01577a715218aa092e584ebf1dff0103ea0b06f",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "14,15,7,31,1,28,29,30,32,10,25,22,27,26,24,16,9,18,13,21,19,20,17,6,8,11,12,4,23,2,3,5,"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:4efa7d87a3fe68e5961c0664e24baabe8c67679a86cc104215a9b577e1ee46fe",
+              "PlanSha256": "dc537c6f5d9a0ddba5c96497be6ec07165e0e2195aa6e25b2a2baf2b87c11504",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "32,27,24,15,9,2,10,29,21,26,25,13,7,31,17,5,20,28,8,3,22,11,19,18,4,16,14,30,23,1,6,12,"
+                ]
+              }
+            },
+            {
+              "Revision": "sha256:4efa7d87a3fe68e5961c0664e24baabe8c67679a86cc104215a9b577e1ee46fe",
+              "PlanSha256": "3c96cd185827c814b47e7c5f3ee79d1920ee0741a74a8a48379c74393ae291f3",
+              "Text": {
+                "Kind": "String",
+                "Encoded": [
+                  "string",
+                  "20,13,32,1,25,12,30,11,17,4,29,16,21,8,9,23,2,27,26,14,6,31,18,24,15,19,7,22,3,28,10,5,"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -12,6 +12,7 @@ internal static class Program
         try {
             if (OperatingSystem.IsWindows()) SetErrorMode(0x8003);
             if (Args.Length == 1 && Args[0] == "--stdio") return new Host().Run(Console.OpenStandardInput(), Console.OpenStandardOutput());
+            if (Args.Length == 1 && Args[0] == "--preview-worker") return PreviewWorker.Run(Console.OpenStandardInput(), Console.OpenStandardOutput());
             if (Args.Length == 1 && Args[0] == "--analysis-stdio") {
                 using var Supervisor = new AnalysisSupervisor();
                 return Supervisor.Run(Console.OpenStandardInput(), Console.OpenStandardOutput()).GetAwaiter().GetResult();

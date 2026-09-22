@@ -31,6 +31,12 @@ jobs:
         run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
       - name: Compile .NET Framework runtime tests
         run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
+      - name: Preview versus production GUI compiler (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --preview-equivalence "$pwd"
+      - name: Preview versus production GUI compiler (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --preview-equivalence "$PWD"
       - name: Windows runtime tests
         if: runner.os == 'Windows'
         run: ./dist/runtime/RuntimeTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongAbi.dll" "$pwd/build/Release/LegacyProbe.dll" "$pwd" "$pwd/build/Release/carbonluau_compiler.exe"

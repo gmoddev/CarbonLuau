@@ -1,4 +1,4 @@
-name: Tooling Foundation A
+name: Tooling Foundations A and B
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
@@ -17,6 +17,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Build independent Core, parser and tooling; check deterministic metadata
         shell: pwsh
         run: ./tools/Build-Tooling.ps1 -Extension build/extension-pack

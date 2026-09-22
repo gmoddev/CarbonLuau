@@ -5,5 +5,14 @@
     <Compile Include="$(MSBuildThisFileDirectory)Addons/CoreAddonPackage.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Addons/PackageSources.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Modules/ModulePath.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiTreeState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiObjectIdentity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiImageSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiRenderPlan.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiValidation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiRenderCompiler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiProjectionNames.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiTree.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Gui/SharedGuiPixelProjection.cs" />
   </ItemGroup>
 </Project>

@@ -13,6 +13,8 @@ Parser.add_argument("--platform", required=True, choices=["win32-x64", "linux-x6
 Parser.add_argument("--publish", type=Path, required=True)
 Parser.add_argument("--analysis", type=Path, required=True)
 Parser.add_argument("--launcher", type=Path, required=True)
+Parser.add_argument("--preview-native", type=Path)
+Parser.add_argument("--preview-launcher", type=Path)
 Parser.add_argument("--lsp-archive", type=Path, required=True)
 Parser.add_argument("--extension", type=Path, required=True)
 Parser.add_argument("--source-revision", help="Explicit base commit for worker source archives without Git metadata")
@@ -35,6 +37,15 @@ for File in Args.publish.iterdir():
 for File in [Args.analysis, Args.launcher, Root / "generated/carbonluau.d.luau", Root / "generated/carbonluau-docs.json"]:
     shutil.copyfile(File, Target / File.name)
     Files[File.name] = None
+if bool(Args.preview_native) != bool(Args.preview_launcher):
+    raise SystemExit("Supply both preview native bridge and launcher")
+if Args.preview_native:
+    if Args.platform not in Pin["PreviewContainmentProfiles"]:
+        raise SystemExit("Preview is not supported by this platform profile")
+    for File in [Args.preview_native, Args.preview_launcher]:
+        shutil.copyfile(File, Target / File.name)
+        Files[File.name] = None
+    (Target / Args.preview_launcher.name).chmod(0o755)
 with zipfile.ZipFile(Args.lsp_archive) as Archive:
     Matches = [Name for Name in Archive.namelist() if Path(Name).name == ServerName]
     if len(Matches) != 1:
@@ -57,5 +68,9 @@ Manifest = {**Pin, "Platform": Args.platform, "ApiVersion": Release["apiVersion"
             "AnalysisConfigurationAndTransformSourceSha256": hashlib.sha256((Root / "src/CarbonLuau.Tooling/AnalysisSnapshot.cs").read_bytes()).hexdigest(),
             "AnalysisSupervisorSourceSha256": hashlib.sha256((Root / "src/CarbonLuau.Tooling/AnalysisProcess.cs").read_bytes()).hexdigest(),
             "Definitions": "carbonluau.d.luau", "Documentation": "carbonluau-docs.json", "Files": dict(sorted(Files.items()))}
+Manifest["PreviewQualified"] = bool(Args.preview_native and Pin["PreviewQualified"])
+if Args.preview_native:
+    Manifest.update({"PreviewNative": Args.preview_native.name, "PreviewLauncher": Args.preview_launcher.name,
+                     "PreviewContainmentProfile": Pin["PreviewContainmentProfiles"][Args.platform]})
 (Target / "pack.json").write_text(json.dumps(Manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
 print("[CarbonLuau:ToolingPack] Provisioned local development pack:", Target)

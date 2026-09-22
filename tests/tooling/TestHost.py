@@ -17,7 +17,7 @@ Command = ["dotnet", str(Host), "--stdio"] if Host.suffix == ".dll" else [str(Ho
 Platform = {"win32": "win32", "linux": "linux", "darwin": "darwin"}[sys.platform] + "-" + ("arm64" if os.uname().machine == "arm64" else "x64" if sys.platform != "win32" else "x64") if sys.platform != "win32" else "win32-x64"
 Protocol = {"Name": "CarbonLuau.Tooling", "Major": 1, "Minor": 0}
 Api = "0.4.0-experimental"
-Pack = "foundation-a-development"
+Pack = json.loads((Root / "tooling/language-server.json").read_text())["PackVersion"]
 if sys.platform == "win32":
     ctypes.windll.kernel32.SetErrorMode(0x8003)
 
@@ -97,7 +97,7 @@ class HostTests(unittest.TestCase):
         Value["Protocol"] = {**Protocol, "Major": 2}
         self.assertEqual(Run([Value])[0][0]["Error"]["Code"], "IncompatibleProtocol")
         self.assertEqual(Run([Request(1, "getMetadata")])[0][0]["Error"]["Code"], "NotInitialized")
-        self.assertEqual(Run([Initialize(), Request(2, "preview")])[0][1]["Error"]["Code"], "UnknownMethod")
+        self.assertEqual(Run([Initialize(), Request(2, "preview")])[0][1]["Error"]["Code"], "InvalidRequest")
 
     def test_invalid_frames(self):
         for Raw in [b"x" * 4097, b"Content-Length: 8388609\r\n\r\n", b"Content-Length: 2\r\nContent-Length: 2\r\n\r\n{}",

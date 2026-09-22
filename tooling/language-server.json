@@ -1,5 +1,13 @@
 {
-  "PackVersion": "foundation-a-development",
+  "PackVersion": "foundation-b-development",
+  "PreviewQualified": true,
+  "PreviewSecurityPolicyVersion": 1,
+  "PreviewBridgeVersion": 1,
+  "PreviewPlanSchema": 1,
+  "PreviewContainmentProfiles": {
+    "win32-x64": "WindowsJobCommit256MiB-Active1-Suspended-v1",
+    "linux-x64": "LinuxData256MiB-AddressSpace2GiB-Rss256MiB-10ms-v1"
+  },
   "ManifestSchema": 1,
   "Qualification": "TrustedSnapshotControlsQualifiedWindowsLinux",
   "LanguageServerQualified": true,

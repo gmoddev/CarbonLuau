@@ -151,6 +151,16 @@ not authorization for fixtures or synthesized events in this baseline.
 
 ## Preview semantics, fidelity and WebView
 
+Foundation B determinism is scoped to deterministic scripts and deterministic
+projection of identical retained state (user decision, 2026-09-21). The pinned
+Luau VM's pointer-derived strings and object-key table iteration can affect
+visible results across fresh processes. Preserve those language semantics;
+do not rewrite source, sort script output, remove visible values from golden
+comparisons, or claim repeatability for arbitrary scripts. Preview starts with
+a fixed random seed; explicit script seeding keeps normal Luau behavior. Golden
+fixtures must be deterministic inputs. Counterexamples are retained in the
+Foundation B evidence, separately from passing semantic goldens.
+
 CarbonLuau tooling owns [ToolingPreviewPlan v1](ToolingContracts.md#preview-plan).
 It receives viewport dimensions and supplies final geometry, retained hierarchy,
 projected properties, clipping, paint data, fonts/images/scrolling, Z order,

@@ -1,0 +1,505 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CarbonLuau ToolingPreviewPlan v1",
+  "description": "Structural contract; canonical Core additionally reconstructs retained data and verifies geometry, hierarchy, accounting, property kinds and all runtime resource limits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "Screen",
+    "Viewport",
+    "Nodes",
+    "Clips",
+    "Accounting",
+    "AvailableScreens",
+    "SchemaVersion",
+    "ProjectRevision",
+    "SemanticRevision",
+    "ToolingBuildId",
+    "ApiVersion",
+    "PackVersion",
+    "ProjectId",
+    "Entry"
+  ],
+  "properties": {
+    "Screen": {
+      "$ref": "#/$defs/Screen"
+    },
+    "Viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Width",
+        "Height"
+      ],
+      "properties": {
+        "Width": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 8192
+        },
+        "Height": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 8192
+        }
+      }
+    },
+    "Nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Node"
+      }
+    },
+    "Clips": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "OwnerId",
+          "AncestorOwnerIds",
+          "RectPx",
+          "EffectiveRectPx",
+          "Depth"
+        ],
+        "properties": {
+          "OwnerId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,19}$"
+          },
+          "AncestorOwnerIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$"
+            }
+          },
+          "RectPx": {
+            "$ref": "#/$defs/Rect"
+          },
+          "EffectiveRectPx": {
+            "$ref": "#/$defs/Rect"
+          },
+          "Depth": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "Accounting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RetainedObjects",
+        "MaxObjectsPerScreen",
+        "ProjectedElements",
+        "MaxProjectedElementsPerScreen",
+        "MaximumArrangedChildren",
+        "MaxChildrenPerObject",
+        "MaximumClipDepth",
+        "MaxEffectiveClipDepth",
+        "CanonicalProjectionEstimatedBytes",
+        "EstimateScope"
+      ],
+      "properties": {
+        "RetainedObjects": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "MaxObjectsPerScreen": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ProjectedElements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "MaxProjectedElementsPerScreen": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "MaximumArrangedChildren": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "MaxChildrenPerObject": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "MaximumClipDepth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "MaxEffectiveClipDepth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "CanonicalProjectionEstimatedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "EstimateScope": {
+          "type": "string"
+        }
+      }
+    },
+    "AvailableScreens": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Screen"
+      }
+    },
+    "SchemaVersion": {
+      "const": 1
+    },
+    "ProjectRevision": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "SemanticRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "ToolingBuildId": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "ApiVersion": {
+      "type": "string"
+    },
+    "PackVersion": {
+      "type": "string"
+    },
+    "ProjectId": {
+      "type": "string"
+    },
+    "Entry": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "Rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "X",
+        "Y",
+        "Width",
+        "Height"
+      ],
+      "properties": {
+        "X": {
+          "type": "number"
+        },
+        "Y": {
+          "type": "number"
+        },
+        "Width": {
+          "type": "number"
+        },
+        "Height": {
+          "type": "number"
+        }
+      }
+    },
+    "Projected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RectPx",
+        "EffectiveClipRectPx",
+        "EffectiveVisible",
+        "PaintOrder",
+        "ClipDepth",
+        "LayoutOwnerId",
+        "DescendantClipOwnerIds",
+        "Interactive"
+      ],
+      "properties": {
+        "RectPx": {
+          "$ref": "#/$defs/Rect"
+        },
+        "EffectiveClipRectPx": {
+          "$ref": "#/$defs/Rect"
+        },
+        "EffectiveVisible": {
+          "type": "boolean"
+        },
+        "PaintOrder": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ClipDepth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "LayoutOwnerId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "DescendantClipOwnerIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,19}$"
+          }
+        },
+        "Interactive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Paint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Kind",
+        "RectPx",
+        "ClipRectPx",
+        "Visible",
+        "Order",
+        "Properties",
+        "Fidelity"
+      ],
+      "properties": {
+        "Kind": {
+          "enum": [
+            "Container",
+            "Text",
+            "Button",
+            "Image",
+            "ScrollView"
+          ]
+        },
+        "RectPx": {
+          "$ref": "#/$defs/Rect"
+        },
+        "ClipRectPx": {
+          "$ref": "#/$defs/Rect"
+        },
+        "Visible": {
+          "type": "boolean"
+        },
+        "Order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "Properties": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "Fidelity": {
+          "enum": [
+            "Authoritative",
+            "Approximate",
+            "Unavailable"
+          ]
+        }
+      }
+    },
+    "Node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Id",
+        "ParentId",
+        "ClassName",
+        "Name",
+        "Children",
+        "Retained",
+        "Source",
+        "Projected",
+        "Paint",
+        "Fidelity"
+      ],
+      "properties": {
+        "Id": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "ParentId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ClassName": {
+          "enum": [
+            "ScreenGui",
+            "Frame",
+            "TextLabel",
+            "TextButton",
+            "ImageLabel",
+            "ImageButton",
+            "ScrollingFrame",
+            "UIListLayout",
+            "UIGridLayout",
+            "UIPadding"
+          ]
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Children": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,19}$"
+          }
+        },
+        "Retained": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "Kind",
+              "Encoded"
+            ],
+            "properties": {
+              "Kind": {
+                "type": "string"
+              },
+              "Encoded": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "Source": {
+          "type": "null"
+        },
+        "Projected": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Projected"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Paint": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Paint"
+          }
+        },
+        "Fidelity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Geometry",
+            "RetainedValues"
+          ],
+          "properties": {
+            "Geometry": {
+              "const": "Authoritative"
+            },
+            "RetainedValues": {
+              "const": "Authoritative"
+            },
+            "FontIdentity": {
+              "const": "Authoritative"
+            },
+            "TextRasterization": {
+              "const": "Approximate"
+            },
+            "ImageIdentity": {
+              "const": "Authoritative"
+            },
+            "ImagePixels": {
+              "const": "Unavailable"
+            }
+          }
+        },
+        "Scroll": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ViewportRectPx",
+            "ContentRectPx",
+            "OffsetAuthority",
+            "PreviewLocalIntent",
+            "Fidelity"
+          ],
+          "properties": {
+            "ViewportRectPx": {
+              "$ref": "#/$defs/Rect"
+            },
+            "ContentRectPx": {
+              "$ref": "#/$defs/Rect"
+            },
+            "OffsetAuthority": {
+              "const": "PresentationLocal"
+            },
+            "PreviewLocalIntent": {
+              "const": "InitialTopLeft"
+            },
+            "Fidelity": {
+              "const": "ConvenienceOnly"
+            }
+          }
+        }
+      }
+    },
+    "Screen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Id",
+        "Name"
+      ],
+      "properties": {
+        "Id": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "Name": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

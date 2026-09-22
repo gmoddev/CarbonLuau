@@ -10,6 +10,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Official editor tooling ownership, contracts and security | [D19 in Invariants.md](docs/Invariants.md#d19--official-editor-tooling) and [ToolingBaseline.md](docs/ToolingBaseline.md) |
 | Tooling Foundation A implementation design and later routing | [ToolingFoundationA.md](docs/ToolingFoundationA.md) |
 | Tooling Foundation A implementation, platform qualification and Foundation B handoff | [ToolingFoundationACompletion.md](docs/ToolingFoundationACompletion.md) |
+| Tooling Foundation B preview implementation, scoped determinism and Foundation C interface | [ToolingFoundationB.md](docs/ToolingFoundationB.md) |
+| Tooling Foundation B qualification, delivery revisions and platform limits | [ToolingFoundationBCompletion.md](docs/ToolingFoundationBCompletion.md) |
 | Language-analysis execution, Workspace Trust, process limits and Foundation A security handoff | [D19 analysis security amendment](docs/ToolingLanguageAnalysisSecurity.md) and [investigation evidence](docs/ToolingLanguageAnalysisSecurityEvidence.md) |
 | Product purpose, architecture, trust, ownership, ABI, threading, lifecycle and resource rules | [Invariants.md](docs/Invariants.md) |
 | Provisional/open/deferred decisions and implementation gates | [Decision register in Invariants.md](docs/Invariants.md#decision-register) |

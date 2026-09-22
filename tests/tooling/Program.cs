@@ -33,3 +33,23 @@ foreach (string Path in new[] { "../module", "/module", "Module", "a\\b", "a//b"
 foreach (string Id in new[] { "carbonluau", "carbonluau.a", "A", "a..b", "_a", "a-" })
     Reject(() => AddonPolicy.ValidateId(Id), "invalid package ID accepted: " + Id);
 Console.WriteLine("[CarbonLuau:ToolingTests] PASS metadata relationships, deterministic goldens, negative binding/signature/service/font/native drift, identities and canonical path/ID policy");
+var Preview = new Carbon.Plugins.CarbonLuau.PreviewGuiSession(1, Change => { });
+string Screen = Preview.Call(21, new[] { "create", "", "ScreenGui" })[0];
+string Frame = Preview.Call(21, new[] { "create", Screen, "Frame" })[0];
+Preview.Call(21, new[] { "set", Frame, "Position", "udim2", "0.5", "0", "0.5", "0" });
+Preview.Call(21, new[] { "set", Frame, "AnchorPoint", "vector2", "0.5", "0.5" });
+JObject Plan = Preview.Plan(Screen, 1920, 1080);
+Check((double)Plan["Nodes"]![1]!["Projected"]!["RectPx"]!["X"]! == 910, "preview resolves canonical horizontal anchor");
+Check((double)Plan["Nodes"]![1]!["Projected"]!["RectPx"]!["Y"]! == 490, "preview resolves canonical vertical anchor");
+Check(JToken.DeepEquals(Plan, Preview.Plan(Screen, 1920, 1080)), "preview repeat determinism");
+Plan["AvailableScreens"] = Preview.Screens;
+Carbon.Plugins.CarbonLuau.PreviewGuiSession.ValidatePlan(Plan);
+JObject InvalidPlan = (JObject)Plan.DeepClone();
+InvalidPlan["Nodes"]![1]!["Projected"]!["RectPx"]!["X"] = 123;
+Reject(() => Carbon.Plugins.CarbonLuau.PreviewGuiSession.ValidatePlan(InvalidPlan), "noncanonical geometry accepted");
+InvalidPlan = (JObject)Plan.DeepClone(); InvalidPlan["Accounting"]!["ProjectedElements"] = 0;
+Reject(() => Carbon.Plugins.CarbonLuau.PreviewGuiSession.ValidatePlan(InvalidPlan), "false accounting accepted");
+Reject(() => Preview.Plan(Screen, double.NaN, 1080), "nonfinite preview viewport accepted");
+Reject(() => Preview.Call(21, new[] { "set", Frame, "Parent", "object", Frame }), "preview hierarchy cycle accepted");
+Console.WriteLine("[CarbonLuau:ToolingTests] PASS shared preview projection, anchor, determinism and hierarchy checks");
+PreviewGoldens.Run(Root, Args.Contains("--update-preview-goldens"));

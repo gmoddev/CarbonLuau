@@ -11,6 +11,69 @@ internal sealed class ProjectModel
     private readonly List<Project> Projects = [];
     private readonly JArray Diagnostics = [], Imports = [];
     private const int MaxDiagnostics = 256;
+    // Reuses the same bounded admission and package parser as static inspection.
+    // Returned sources are in memory; the worker performs no workspace filesystem reads.
+    internal (PreviewProject Selected, List<PreviewProject> Activation) Preview(JObject Input, string ProjectId, string? Entry)
+    {
+        Inspect(Input);
+        Project Selected = Projects.SingleOrDefault(Value => Value.Id == ProjectId)
+            ?? throw new ProtocolError("InvalidPreviewEntry", "Preview project is absent from the admitted snapshot.");
+        var Available = Projects.Where(Value => Value.Package != null)
+            .GroupBy(Value => Value.Package!.Id, StringComparer.Ordinal).ToDictionary(Group => Group.Key, Group => Group.ToArray(), StringComparer.Ordinal);
+        var Closure = new Dictionary<string, Project>(StringComparer.Ordinal);
+        void Visit(Project Value) {
+            if (Value.Package == null) return;
+            if (!Closure.TryAdd(Value.Package.Id, Value)) return;
+            if (Closure.Count > AddonPolicy.MaxRegistrations) throw new ProtocolError("InputLimit", "Preview dependency count exceeds the canonical registration limit.");
+            foreach (string Id in Value.Package.Dependencies(false).Concat(Value.Package.Dependencies(true))) {
+                if (Available.TryGetValue(Id, out var Matches)) {
+                    if (Matches.Length != 1) throw new ProtocolError("ModuleError", "Preview dependency is ambiguous: " + Id);
+                    Visit(Matches[0]);
+                } else if (Value.Package.Dependencies(false).Contains(Id, StringComparer.Ordinal))
+                    throw new ProtocolError("ModuleError", "Required preview dependency has no supplied local package: " + Id);
+            }
+        }
+        PreviewProject ConvertProject(Project Value, string? SelectedEntry) {
+            if (Value.Kind == "Addon" && Value.Package == null) throw new ProtocolError("InvalidProject", "Preview addon failed canonical package admission.");
+            if (Value.Package != null) {
+                PackageSources Sources = Value.Package.GetSources();
+                if (SelectedEntry != null && SelectedEntry != "init.luau") {
+                    ModulePath.Validate(SelectedEntry, true);
+                    if (!Sources.Modules.TryGetValue(SelectedEntry[..^5], out string? Source)) throw new ProtocolError("InvalidPreviewEntry", "Selected addon entry is absent.");
+                    Sources = new PackageSources(Source, Sources.Modules);
+                }
+                return new(Value.Id, SelectedEntry ?? "init.luau", Sources, Value.Package);
+            }
+            string EntryName = SelectedEntry ?? "init.luau";
+            ModulePath.Validate(EntryName, true);
+            Source EntrySource = Value.Sources.SingleOrDefault(File => File.Path == EntryName)
+                ?? throw new ProtocolError("InvalidPreviewEntry", "Select an existing Luau entry in this project.");
+            var Modules = new SortedDictionary<string, string>(StringComparer.Ordinal);
+            int Total = Protocol.Utf8.GetByteCount(EntrySource.Text);
+            if (Total > AddonPolicy.MaxSourceBytes || EntrySource.Text.Contains('\0')) throw new ProtocolError("InputLimit", "Preview entry violates canonical source bounds.");
+            foreach (Source File in Value.Sources.Where(File => File.Path.StartsWith("modules/", StringComparison.Ordinal))) {
+                string Path = File.Path[8..]; ModulePath.Validate(Path, true);
+                int Size = Protocol.Utf8.GetByteCount(File.Text); Total = checked(Total + Size);
+                if (Size > AddonPolicy.MaxSourceBytes || File.Text.Contains('\0') || Total > AddonPolicy.MaxAggregateSourceBytes || Modules.Count >= AddonPolicy.MaxSourceModules)
+                    throw new ProtocolError("InputLimit", "Preview module snapshot violates canonical source bounds.");
+                Modules.Add(Path[..^5], File.Text);
+            }
+            return new(Value.Id, EntryName, new PackageSources(EntrySource.Text, Modules), null);
+        }
+        Visit(Selected);
+        // Exactly the runtime's ordinal activation selection: required targets must
+        // already be active; optional targets bind only when already active.
+        var Ordered = new List<PreviewProject>(); var Activated = new HashSet<string>(StringComparer.Ordinal);
+        while (Closure.Count != 0) {
+            Project? Next = Closure.Values.OrderBy(Value => Value.Package!.Id, StringComparer.Ordinal)
+                .FirstOrDefault(Value => Value.Package!.Dependencies(false).All(Activated.Contains));
+            if (Next == null) throw new ProtocolError("ModuleError", "Required dependency cycle blocks preview activation.");
+            Ordered.Add(ConvertProject(Next, Next == Selected ? Entry : null));
+            Activated.Add(Next.Package!.Id); Closure.Remove(Next.Package.Id);
+        }
+        if (Selected.Package == null) Ordered.Add(ConvertProject(Selected, Entry));
+        return (Ordered.Single(Value => Value.Id == Selected.Id), Ordered);
+    }
     internal JObject Inspect(JObject Input)
     {
         Protocol.Fields(Input, "Folders");

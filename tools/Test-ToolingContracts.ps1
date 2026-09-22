@@ -38,3 +38,15 @@ $Catalog.Members[0].Availability.Qualification = 'Experimental'
 $Catalog.Members[0].RuntimeLimit = 123
 if (Test-Catalog $Catalog) { throw 'Undeclared numeric policy accepted in catalog' }
 Write-Output '[CarbonLuau:ToolingContractTest] PASS API schema positive/negative fixtures; binding and generation checks run in tests/tooling'
+$PreviewSchema = Join-Path $Root 'tooling/preview-plan.schema.json'
+$Goldens = Get-Content -Raw (Join-Path $Root 'tests/tooling/PreviewGoldens.json') | ConvertFrom-Json -AsHashtable
+foreach ($Golden in $Goldens) {
+    $Plan = $Golden.Plan
+    $Plan.SchemaVersion = 1; $Plan.ProjectRevision = 'sha256:' + ('a' * 64)
+    $Plan.SemanticRevision = 'b' * 40; $Plan.ToolingBuildId = 'sha256:' + ('c' * 64)
+    $Plan.ApiVersion = '0.4.0-experimental'; $Plan.PackVersion = 'fixture'; $Plan.ProjectId = 'fixture/'; $Plan.Entry = 'init.luau'
+    if (!(Test-Json -Json ($Plan | ConvertTo-Json -Depth 30 -Compress) -SchemaFile $PreviewSchema)) { throw "Preview schema rejected $($Golden.Name)" }
+}
+$Plan.SchemaVersion = 2
+if (Test-Json -Json ($Plan | ConvertTo-Json -Depth 30 -Compress) -SchemaFile $PreviewSchema -ErrorAction SilentlyContinue) { throw 'Unknown preview schema accepted' }
+Write-Output '[CarbonLuau:ToolingContractTest] PASS preview-plan schema on 17 canonical goldens and unknown-version rejection'

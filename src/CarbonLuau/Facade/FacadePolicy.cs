@@ -9,8 +9,6 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
-        private sealed class FacadeException : InvalidOperationException
-        { public FacadeException(string Message) : base(Message) { } }
         public static class FacadePolicy
         {
             public const string ApiName = "CarbonLuau", ApiVersion = "0.4.0-experimental";
@@ -21,10 +19,7 @@ namespace Carbon.Plugins
             public const long MaxExactLuauInteger = 9007199254740991L;
             public static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
             public static void Text(string Value, int Bytes, string Label)
-            {
-                if (Value == null || Value.Length > Bytes || Value.IndexOf('\0') >= 0 || Utf8.GetByteCount(Value) > Bytes)
-                    throw new FacadeException(Label + " exceeds limit or contains NUL");
-            }
+            { GuiTextPolicy.Text(Value, Bytes, Label); }
             public static void Identifier(string Value, bool Permission)
             {
                 Text(Value, Permission ? PermissionBytes : CommandBytes, Permission ? "permission name" : "command name");

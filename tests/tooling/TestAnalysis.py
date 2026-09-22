@@ -11,6 +11,7 @@ import unittest
 
 Host = Path(os.environ["CARBONLUAU_TOOLING_HOST"])
 Protocol = {"Name": "CarbonLuau.Tooling", "Major": 1, "Minor": 0}
+Pin = json.loads((Host.parent / "language-server.json").read_text())
 
 
 class Session:
@@ -49,7 +50,7 @@ class Session:
     def Snapshot(self, Files, Trusted=True):
         Snapshot = {"Folders": [{"Id": "0", "Files": [{"Path": Name, "Text": Text} for Name, Text in Files.items()]}]}
         Canonical = json.dumps(Snapshot, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
-        self.Revision = "sha256:" + hashlib.sha256((Canonical + "\n0.4.0-experimental\nfoundation-a-development").encode()).hexdigest()
+        self.Revision = "sha256:" + hashlib.sha256((Canonical + "\n0.4.0-experimental\n" + Pin["PackVersion"]).encode()).hexdigest()
         return self.Request("snapshot", {"Trusted": Trusted, "Snapshot": Snapshot})
 
     def Language(self, Path="init.luau", Operation="textDocument/diagnostic", Position=None):

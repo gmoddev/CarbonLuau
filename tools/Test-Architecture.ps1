@@ -63,7 +63,7 @@ if (Get-ChildItem (Join-Path $Root 'native/src') -Recurse -File -Filter '*.inl')
     throw 'Private native .inl implementation coupling returned'
 }
 
-$GuiSources = @(Get-ChildItem (Join-Path $Root 'src/CarbonLuau/Gui') -File -Filter '*.cs')
+$GuiSources = @(Get-ChildItem (Join-Path $Root 'src/CarbonLuau/Gui') -File -Filter '*.cs') + @(Get-ChildItem (Join-Path $Root 'src/CarbonLuau.Core/Gui') -File -Filter '*.cs')
 foreach ($GuiSource in $GuiSources) {
     $GuiText = Get-Content -Raw -LiteralPath $GuiSource.FullName
     if ($GuiText -match 'System\.Reflection|GetProperties\s*\(|GetMethods\s*\(|GetEvents\s*\(') {
@@ -82,6 +82,9 @@ foreach ($Required in @('GuiObjectMethods.Show','GuiObjectMethods.Hide','GuiObje
 }
 $Presentation = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiPresentation.cs')
 $Registry = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiRetainedRegistry.cs')
+$Presentation += Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau.Core/Gui/SharedGuiRenderCompiler.cs')
+$Presentation += Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau.Core/Gui/SharedGuiProjectionNames.cs')
+$Registry += Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau.Core/Gui/SharedGuiTree.cs')
 $Actions = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiActions.cs')
 if (!$Presentation.Contains('GuiRenderCompiler') -or !$Registry.Contains('RandomNumberGenerator')) {
     throw 'GUI Foundation 1C must own deterministic render compilation and opaque presentation identity'
@@ -116,6 +119,7 @@ foreach ($Required in @('ClipsDescendants','ClipClientId','GuiRenderNodeKind.Cli
     }
 }
 $RenderPlan = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau/Gui/GuiRenderPlan.cs')
+$RenderPlan += Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau.Core/Gui/SharedGuiRenderPlan.cs')
 foreach ($Required in @('GuiFontIdentity','GuiRenderPropertyId.Font','FromFont')) {
     if (!$Presentation.Contains($Required) -and !$RenderPlan.Contains($Required) -and !$Registry.Contains($Required)) {
         throw "GUI Foundation 3C canonical font owner is missing: $Required"
@@ -192,9 +196,11 @@ if (!$GameplayAdapter.Contains('Player.inventory.Take(null, ((ItemDefinition)Def
 }
 
 $Worker = Get-Content -Raw -LiteralPath (Join-Path $Root 'native/src/scripts/CompilerWorker.cpp')
-if ([regex]::Matches($Worker, 'Luau::compile').Count -ne 1) { throw 'Isolated compiler worker must own the Luau compile call' }
+$CompilePolicy = Get-Content -Raw -LiteralPath (Join-Path $Root 'native/src/scripts/CompilePolicy.hpp')
+if ([regex]::Matches($CompilePolicy, 'Luau::compile').Count -ne 1 -or !$Worker.Contains('CompileBoundedSource')) { throw 'Disposable compiler/preview workers must use the shared bounded compile policy' }
 foreach ($Path in @('native/src/scripts/Compiler.cpp','native/src/Runtime.cpp','native/src/scripts/ModuleLoader.cpp','native/src/facade/FacadeBridge.cpp')) {
-    if ((Get-Content -Raw -LiteralPath (Join-Path $Root $Path)).Contains('Luau::compile')) {
+    $Text = Get-Content -Raw -LiteralPath (Join-Path $Root $Path)
+    if ($Text.Contains('Luau::compile') -or $Text.Contains('CompilePolicy.hpp')) {
         throw "Luau compile call escaped compiler owner: $Path"
     }
 }

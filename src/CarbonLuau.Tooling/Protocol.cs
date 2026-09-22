@@ -4,9 +4,10 @@ using Newtonsoft.Json.Linq;
 
 namespace CarbonLuau.Tooling;
 
-internal sealed class ProtocolError(string Code, string Message) : Exception(Message)
+internal sealed class ProtocolError(string Code, string Message, JObject? Details = null) : Exception(Message)
 {
     internal string Code { get; } = Code;
+    internal JObject? Details { get; } = Details;
 }
 
 internal static class Protocol

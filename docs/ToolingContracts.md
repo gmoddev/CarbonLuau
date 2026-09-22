@@ -110,6 +110,46 @@ IDs, references, property kinds, accounting and bounded text/node counts before
 forwarding. The 8 MiB frame ceiling is additional to canonical GUI resource limits.
 Retained hierarchy and projected paint nodes are distinct: private clip/scroll
 projection costs cannot disappear because the inspector shows only retained nodes.
+
+### Foundation B preview operation
+
+`preview` uses the existing `CarbonLuau.Tooling` 1.0 envelope. `Params` contains
+`Snapshot` (the existing bounded Folders/Files object), `ProjectId`, optional
+relative `Entry` (default `init.luau`), optional `ScreenId`, `Viewport` with Width
+and Height, `ApiVersion`, `PackVersion`, `ToolingBuildId`, `SemanticRevision`,
+`PreviewPlanSchema: 1`, and `WorkspaceTrusted: true`. No raw filesystem or binary
+paths/settings are accepted. ProjectRevision hashes **all** these inputs with
+the canonical sorted-object serialization and selected API/pack identity.
+
+Result is [ToolingPreviewPlan schema 1](../tooling/preview-plan.schema.json).
+`SchemaVersion` is the exact emitted version field. Every Node has Retained,
+Projected (null for helpers), Paint, Fidelity and Source (null in B). Clips lists
+clip owner IDs, ancestor owners, local/effective rectangles and depth. Node
+Projected.DescendantClipOwnerIds describes clipping inherited by descendants;
+EffectiveClipRectPx describes the node's own inherited effective clip. All
+rectangles use top-left viewport pixel coordinates; layout decisions are already
+resolved. Negative retained-derived dimensions remain explicit; effective clip
+rectangles are intersected with nonnegative extents.
+
+Errors retain the envelope ID/revision and bounded Code/Message. Relevant codes
+include CompileError, ModuleError, UnsupportedPreviewApi, GuiError, PreviewMemory,
+PreviewDeadline, PreviewCrash, PreviewProtocol, PreviewCanceled, PreviewReap,
+WorkspaceUntrusted and IncompatiblePack. Admission uses the existing bounded
+project/entry/limit error codes. Native exits that cannot be attributed to memory
+are reported as PreviewCrash, not guessed OOMs. `Details.Screens` supports explicit
+screen selection; no failed plan is reused.
+
+`cancel` uses a new envelope ID and Params `{RequestId, ProjectRevision}` matching
+a pending preview. Cancellation bypasses the serial work queue; stale targets
+return StaleCancellation. Closing stdin cancels active preview and terminates the
+session. The extension uses this EOF cleanup on source/trust invalidation with a
+dedicated coordinator, preserving static and language sessions.
+
+The internal worker protocol is `CarbonLuau.PreviewWorker` 1.0. Its Ready/Execute/
+Completed envelopes bind an unpredictable nonce and exact input revision.
+Admission can return a structured error before Ready; a plan before the Execute
+grant is forbidden. The coordinator permits exactly one completed result and
+requires EOF/exit, then validates the full semantic plan through Core.
 No CUI payload, production action/connection token or server identifier is allowed.
 The concrete serializer/schema and golden fixtures are Foundation B work; this
 baseline fixes ownership and required content without inventing an unused renderer.

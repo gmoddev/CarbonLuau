@@ -12,16 +12,14 @@ internal sealed class Host
     private readonly JObject Catalog = JObject.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "carbonluau-api.json")));
     private readonly JObject Pin = JObject.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "language-server.json")));
     private bool Initialized;
-    internal int Run(Stream Input, Stream Output)
+    private bool PreviewBlocked;
+    internal int Run(Stream Input, Stream Output) => new Coordinator(this).Run(Input, Output).GetAwaiter().GetResult();
+    internal async Task<JObject> Handle(JObject Request, CancellationToken Cancellation)
     {
-        while (true) {
-            JObject? Request = Protocol.Read(Input);
-            if (Request == null) return 0;
             // An unidentifiable request cannot safely be correlated; close the stream.
             if (Request["Id"]?.Type != JTokenType.Integer || !int.TryParse(Request["Id"]!.ToString(), out int Id) || Id < 1)
                 throw new ProtocolError("InvalidId", "Request Id must be an integer from 1 to 2147483647.");
             var Response = new JObject { ["Protocol"] = Protocol.Identity, ["Id"] = Id };
-            bool Stop = false;
             try {
                 Protocol.Fields(Request, "Protocol", "Id", "Method", "Params", "ProjectRevision");
                 if (Request["Protocol"] is not JObject Contract || !JToken.DeepEquals(Contract, Protocol.Identity))
@@ -38,17 +36,23 @@ internal sealed class Host
                     Response["ProjectRevision"] = Revision;
                     Result = new ProjectModel().Inspect(Params);
                     Result["Api"] = Metadata["Api"]!.DeepClone();
-                } else if (Method == "shutdown") { Protocol.Fields(Params); Result = new JObject { ["Stopped"] = true }; Stop = true; }
+                } else if (Method == "preview") {
+                    if (PreviewBlocked) throw new ProtocolError("PreviewReap", "Restart Tooling after an unreaped worker failure.");
+                    string Revision = Protocol.Text(Request, "ProjectRevision", 71);
+                    if (Revision != RevisionFor(Params)) throw new ProtocolError("RevisionMismatch", "Preview revision does not match all inputs, viewport and selected tooling.");
+                    Response["ProjectRevision"] = Revision;
+                    Result = await PreviewProcess.Run(Params, Revision, Cancellation);
+                } else if (Method == "shutdown") { Protocol.Fields(Params); Result = new JObject { ["Stopped"] = true }; }
                 else throw new ProtocolError("UnknownMethod", "This tooling operation is not implemented.");
-                if (Method != "validateProject" && Method != "resolveProjectGraph" && Request["ProjectRevision"] != null)
+                if (Method != "validateProject" && Method != "resolveProjectGraph" && Method != "preview" && Request["ProjectRevision"] != null)
                     throw new ProtocolError("InvalidRequest", "ProjectRevision is only valid for project operations.");
                 Response["Result"] = Result;
-            } catch (Exception Error) when (Error is ProtocolError || Error is InvalidOperationException || Error is ArgumentException || Error is InvalidCastException || Error is FormatException || Error is JsonException) {
-                Response["Error"] = new JObject { ["Code"] = Error is ProtocolError Known ? Known.Code : "InvalidRequest", ["Message"] = AddonPolicy.Diagnostic(Error.Message) };
+            } catch (Exception Error) when (Error is ProtocolError || Error is InvalidOperationException || Error is ArgumentException || Error is InvalidCastException || Error is FormatException || Error is JsonException || Error is OperationCanceledException) {
+                if (Error is ProtocolError Reap && Reap.Code == "PreviewReap") PreviewBlocked = true;
+                Response["Error"] = new JObject { ["Code"] = Error is ProtocolError Known ? Known.Code : Error is OperationCanceledException ? "PreviewCanceled" : "InvalidRequest", ["Message"] = AddonPolicy.Diagnostic(Error.Message) };
+                if (Error is ProtocolError Detailed && Detailed.Details != null) Response["Error"]!["Details"] = Detailed.Details.DeepClone();
             }
-            Protocol.Write(Output, Response);
-            if (Stop) return 0;
-        }
+            return Response;
     }
     private JObject Initialize(JObject Params)
     {
@@ -63,14 +67,17 @@ internal sealed class Host
         if (Protocol.Text(Params, "Platform") != Platform || !(new[] { "win32-x64", "linux-x64", "darwin-x64", "darwin-arm64" }).Contains(Platform))
             throw new ProtocolError("UnsupportedPlatform", "Tooling platform does not match this process.");
         if (Protocol.Text(Params, "PackVersion") != (string)Pin["PackVersion"]!) throw new ProtocolError("IncompatiblePack", "Tooling pack identity mismatch.");
-        if (Params["Capabilities"] is not JArray Capabilities || Capabilities.Any(Value => Value.Type != JTokenType.String || !new[] { "StaticAnalysis", "Metadata" }.Contains((string)Value!)))
+        bool Preview = false;
+        try { _ = new PreviewPack(); Preview = true; } catch (Exception Error) when (Error is ProtocolError or IOException) { }
+        var Available = new List<string> { "StaticAnalysis", "Metadata" }; if (Preview) Available.Add("PreviewExecution");
+        if (Params["Capabilities"] is not JArray Capabilities || Capabilities.Any(Value => Value.Type != JTokenType.String || !Available.Contains((string)Value!)))
             throw new ProtocolError("UnsupportedCapability", "Requested tooling capability is unavailable.");
         Initialized = true;
         return new JObject { ["Protocol"] = Protocol.Identity, ["Api"] = Metadata["Api"]!.DeepClone(),
             ["PackageSchemas"] = new JArray(AddonPolicy.Schema), ["ApiMetadataSchema"] = 1, ["PreviewPlanSchema"] = 1,
             ["RuntimeLuauRevision"] = Metadata["RuntimeLuauRevision"]!.DeepClone(), ["Pack"] = Pin.DeepClone(),
-            ["Platform"] = Platform, ["Capabilities"] = new JArray("StaticAnalysis", "Metadata"), ["Limits"] = Metadata["Limits"]!.DeepClone(),
-            ["MaxFrameBytes"] = Protocol.MaxFrame, ["MaxOutstandingRequests"] = 1 };
+            ["Platform"] = Platform, ["Capabilities"] = new JArray(Available), ["Limits"] = Metadata["Limits"]!.DeepClone(),
+            ["MaxFrameBytes"] = Protocol.MaxFrame, ["MaxOutstandingRequests"] = 4 };
     }
     internal string RevisionFor(JObject Params) => "sha256:" + Convert.ToHexStringLower(SHA256.HashData(Protocol.Utf8.GetBytes(
         Canonical(Params).ToString(Formatting.None) + "\n" + (string)Metadata["Api"]!["Version"]! + "\n" + (string)Pin["PackVersion"]!)));

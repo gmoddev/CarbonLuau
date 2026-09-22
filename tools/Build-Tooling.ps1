@@ -35,9 +35,28 @@ if (!$LanguageServerArchive) {
 }
 $Library = if ($IsWindows) { Join-Path $Native 'Release/carbonluau_analysis.dll' } elseif ($IsLinux) { Join-Path $Native 'libcarbonluau_analysis.so' } else { Join-Path $Native 'libcarbonluau_analysis.dylib' }
 $Launcher = if ($IsWindows) { Join-Path $Native 'Release/carbonluau-analysis-launcher.exe' } else { Join-Path $Native 'carbonluau-analysis-launcher' }
-Invoke-Checked python @((Join-Path $Root 'tools/Provision-ToolingPack.py'), '--platform', $Platform, '--publish', $Publish, '--analysis', $Library, '--launcher', $Launcher, '--lsp-archive', $LanguageServerArchive, '--extension', $Extension)
+$Provision = @((Join-Path $Root 'tools/Provision-ToolingPack.py'), '--platform', $Platform, '--publish', $Publish, '--analysis', $Library, '--launcher', $Launcher, '--lsp-archive', $LanguageServerArchive, '--extension', $Extension)
+if ($Platform -in @('win32-x64', 'linux-x64')) {
+    $PreviewNative = Join-Path $Output 'preview-native'
+    Invoke-Checked cmake @('-S', (Join-Path $Root 'native'), '-B', $PreviewNative, '-DCMAKE_BUILD_TYPE=Release', '-DCARBONLUAU_BUILD_PREVIEW=ON')
+    Invoke-Checked cmake @('--build', $PreviewNative, '--config', 'Release', '--target', 'carbonluau_preview', 'carbonluau-preview-launcher', '--parallel', '2')
+    $PreviewLibrary = if ($IsWindows) { Join-Path $PreviewNative 'Release/carbonluau_preview.dll' } else { Join-Path $PreviewNative 'libcarbonluau_preview.so' }
+    $PreviewLauncher = if ($IsWindows) { Join-Path $PreviewNative 'Release/carbonluau-preview-launcher.exe' } else { Join-Path $PreviewNative 'carbonluau-preview-launcher' }
+    $Provision += @('--preview-native', $PreviewLibrary, '--preview-launcher', $PreviewLauncher)
+}
+Invoke-Checked python $Provision
 $Pack = Join-Path ([IO.Path]::GetFullPath($Extension)) "tooling/$Platform"
 $env:CARBONLUAU_TOOLING_HOST = Join-Path $Pack $(if ($IsWindows) { 'carbonluau-tooling.exe' } else { 'carbonluau-tooling' })
 Invoke-Checked python @((Join-Path $Root 'tests/tooling/TestHost.py'))
 if ($Platform -in $Pin.QualifiedAnalysisPlatforms) { Invoke-Checked python @((Join-Path $Root 'tests/tooling/TestAnalysis.py')) }
+if ($Pin.PreviewQualified -and $Platform -in @('win32-x64', 'linux-x64')) {
+    Invoke-Checked node @((Join-Path $Root 'tests/tooling/TestPreview.cjs'), $Pack)
+    $Fixture = Join-Path $Output 'preview-fixture'
+    Invoke-Checked dotnet @('publish', (Join-Path $Root 'tests/tooling/PreviewFixture'), '-c', 'Release', '-r', $Rid, '--self-contained', 'true', '-o', $Fixture, '-m:2')
+    $TestPack = Join-Path $Output 'preview-test-pack'
+    New-Item -ItemType Directory -Force -Path $TestPack | Out-Null
+    Get-ChildItem -LiteralPath $Pack -File | Copy-Item -Destination $TestPack
+    Get-ChildItem -LiteralPath $Fixture -File | Where-Object Name -Like 'PreviewFixture*' | Copy-Item -Destination $TestPack
+    Invoke-Checked node @((Join-Path $Root 'tests/tooling/TestPreview.cjs'), $TestPack, '--supervisor-fixture')
+}
 Write-Output "[CarbonLuau:ToolingPack] Ready for platform qualification: $Pack"

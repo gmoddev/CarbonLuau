@@ -2,6 +2,11 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
+#ifdef CARBONLUAU_PREVIEW_LAUNCHER
+static constexpr unsigned long long ProcessBytes = 256ull * 1024 * 1024;
+#else
+static constexpr unsigned long long ProcessBytes = 1024ull * 1024 * 1024;
+#endif
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -24,7 +29,7 @@ int wmain(int Count, wchar_t** Args) {
     JOBOBJECT_EXTENDED_LIMIT_INFORMATION Limits{};
     Limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_PROCESS_MEMORY | JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
     Limits.BasicLimitInformation.ActiveProcessLimit = 1;
-    Limits.ProcessMemoryLimit = SIZE_T(1024) * 1024 * 1024;
+    Limits.ProcessMemoryLimit = SIZE_T(ProcessBytes);
     if (!SetInformationJobObject(Job, JobObjectExtendedLimitInformation, &Limits, sizeof(Limits))) return 122;
     SIZE_T Size = 0;
     InitializeProcThreadAttributeList(nullptr, 1, 0, &Size);
@@ -86,6 +91,10 @@ int main(int Count, char** Args) {
         if (prctl(PR_SET_PDEATHSIG, SIGKILL) != 0 || getppid() != Launcher || Launcher == 1) _exit(125);
         rlimit Limit{rlim_t(2) * 1024 * 1024 * 1024, rlim_t(2) * 1024 * 1024 * 1024};
         if (setrlimit(RLIMIT_AS, &Limit) != 0) _exit(126);
+#ifdef CARBONLUAU_PREVIEW_LAUNCHER
+        rlimit Data{rlim_t(ProcessBytes), rlim_t(ProcessBytes)};
+        if (setrlimit(RLIMIT_DATA, &Data) != 0) _exit(126);
+#endif
 #endif
         rlimit Core{0, 0}; if (setrlimit(RLIMIT_CORE, &Core) != 0) _exit(127);
         execv(Args[2], Args + 2); _exit(128);
@@ -106,12 +115,16 @@ int main(int Count, char** Args) {
         if (proc_pidinfo(Child, PROC_PIDTASKINFO, 0, &Info, sizeof(Info)) == sizeof(Info)) Resident = Info.pti_resident_size;
         else Stopping = 1;
 #endif
-        if (Stopping || getppid() != Parent || Resident > 1024ull * 1024 * 1024) {
+        if (Stopping || getppid() != Parent || Resident > ProcessBytes) {
             kill(-Child, SIGKILL); kill(Child, SIGKILL);
             while (waitpid(Child, &Status, 0) < 0 && errno == EINTR) {}
             return 129;
         }
+#ifdef CARBONLUAU_PREVIEW_LAUNCHER
+        usleep(10000);
+#else
         usleep(50000);
+#endif
     }
     kill(-Child, SIGKILL);
     return WIFEXITED(Status) ? WEXITSTATUS(Status) : 130;
