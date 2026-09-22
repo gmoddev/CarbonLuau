@@ -160,7 +160,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 
 #### D19 — official editor tooling
 
-Accepted architecture, not implemented tooling behavior. CarbonLuau owns shared
+Accepted architecture, implemented through Tooling Foundations A–C. CarbonLuau owns shared
 Core semantics, API metadata, generated definitions, package/module validation,
 tooling coordinator/worker and preview-plan generation. The separate
 `gmoddev/carbonluau-vscode` repository owns editor integration and paint-only UX.
@@ -188,10 +188,11 @@ protocol, package schema, release identity or authenticated-client qualification
 Do not infer authorization for preview, fixtures, live integration, debugging or
 visual authoring from the existence of this baseline.
 
-Tooling qualification gates still open: exact upstream LSP/Luau/transform pairing
-(Foundation A), per-platform worker containment including macOS (B), and publisher
-namespace/signing/attestation administration (E). These are implementation gates,
-not permission to weaken semantic ownership or claim untested platform support.
+Tooling A/B qualification records establish the pinned language pairing and
+Windows/Linux worker controls; the extension's Foundation C record establishes
+the paint-only preview consumer. macOS remains static-only. Distribution
+signing/attestation and publication administration remain separate gates; local
+release-candidate VSIX packaging is not a signature or publication claim.
 
 #### D2 — limits in addon-capable operation
 

@@ -12,12 +12,20 @@ glibc Linux x64. ARM, x86, macOS and non-glibc Linux are not qualified.
 - File and console/RCON access sufficient to install a Carbon plugin and run
   administrator commands.
 
-Qualification used Carbon `2.0.259.0` and Rust `2633` / Steam build `25230300`.
+Current Player/GUI host qualification used Carbon `2.0.259` and Rust Steam build
+`25353106`; the earlier loader baseline used Rust `2633` / build `25230300`.
 Other versions are not automatically supported; review the
 [compatibility policy](https://gmoddev.github.io/CarbonLuau/#/Compatibility)
 before deploying.
 
 ## Production layout
+
+For the separate developer extension, install the matching platform VSIX using
+VS Code's **Extensions: Install from VSIX**. See the
+[official tooling setup](https://github.com/gmoddev/carbonluau-vscode#install).
+The extension contains its tooling pack; no Carbon installation or source checkout
+is required. Windows/Linux x64 support trusted language analysis and GUI preview;
+macOS arm64 is static-only. Restricted Mode retains static project diagnostics.
 
 Install only the native runtime and compiler worker matching the server platform:
 

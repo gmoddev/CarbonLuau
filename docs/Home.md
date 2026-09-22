@@ -2,8 +2,9 @@
 
 CarbonLuau embeds a pinned Luau VM for bounded, server-side scripting on
 Carbon-modded Rust servers. Published `v0.3.0` contains the first gameplay facade.
-The qualified `v0.4.0` candidate adds experimental addon composition and GUI;
-Windows x64, glibc Linux x64, sanitizers and live Carbon passed the recorded matrix.
+The `v0.4.0` candidate adds experimental addon composition, Player inventory
+mutation, Teleport, GUI and official VS Code language/project tooling and preview.
+Platform and client qualification limits remain in [Compatibility](Compatibility.md).
 
 Start with [installation](Installation.md), then use the
 [experimental API reference](api/README.md). Read the
@@ -43,7 +44,7 @@ receipt by an authenticated client was not tested and is not claimed.
 - Deterministic UIListLayout/UIPadding and retained ScrollingFrame configuration.
 - Explicit per-Player Show/Hide and secure button Activated callbacks.
 
-Inventory mutation/raw inventory objects, arbitrary Rust hooks, filesystem/network access,
+InventoryOnly GiveItem and verified TakeItem are implemented; raw inventory objects, arbitrary Rust hooks, filesystem/network access,
 Roblox replication and `task.wait` are not included. See the [0.3.0 release notes](releases/0.3.0.md)
 for the published baseline and the [0.4.0 release notes](releases/0.4.0.md)
 plus [Foundation E qualification](FoundationE.md) and

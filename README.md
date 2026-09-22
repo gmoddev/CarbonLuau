@@ -1,12 +1,12 @@
 # CarbonLuau
 
-CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers through a small, bounded native bridge.
+CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers, with a Roblox/Luau-familiar scripting model, addons, Player gameplay APIs and retained GUI.
 
-The latest published release is [v0.3.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.3.0). The `main` branch is the qualified v0.4.0 release candidate and adds experimental addon composition and server-driven retained GUI. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), the [installation guide](docs/Installation.md), or the [public API reference](docs/api/README.md).
+The latest published release is [v0.3.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.3.0). The `0.4.0` candidate is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
 
 ## Install and write a script
 
-CarbonLuau targets Windows x64 and glibc Linux x64 servers running Carbon. The qualified worker baseline is Carbon 2.0.259.0 with Rust 2633. See [compatibility](docs/Compatibility.md) for the complete support policy.
+CarbonLuau targets Windows x64 and glibc Linux x64 servers running Carbon. Current host evidence uses Carbon 2.0.259 and Rust build 25353106. See [compatibility](docs/Compatibility.md) for the exact platform and feature qualification limits.
 
 Use the release archive matching the server OS. Install `CarbonLuau.cszip` in `carbon/plugins` and both matching native files, the runtime DLL or SO and its compiler worker, in `carbon/data/CarbonLuau/native/win-x64` or `native/linux-x64`. On Linux, run `chmod 0755 carbon/data/CarbonLuau/native/linux-x64/carbonluau_compiler` after extraction. Put your entrypoint at `carbon/data/CarbonLuau/scripts/init.luau` and create its `modules` directory, even when empty. Do not mix platform binaries or overwrite existing scripts.
 
@@ -25,26 +25,33 @@ For clean-checkout builds, checksums, and provenance, see the [release reproduci
 
 ## What is included
 
-The v0.4.0 candidate provides sandboxed Luau execution, bounded logging and memory, execution and compilation deadlines, reloads, controlled modules and tasks, and the Players, Signals, Commands, Items and Gui facades. Player-1A through Player-1D add immutable `Vector3` values, live position and health reads, bounded physical item observation, and committed-only `Player:Teleport`. The candidate also provides bounded provider-owned addon packages, exact dependency lifetimes, explicit public modules, and package-qualified `require("@id[/path]")` inside one shared VM. The scripting identity is `CarbonLuau 0.4.0-experimental`.
+The `CarbonLuau 0.4.0-experimental` API provides controlled modules/tasks, Player events, permission-protected commands, live position/health reads, inventory checks, verified GiveItem/TakeItem and Teleport. Execution uses bounded logging, memory and deadlines. Provider-owned addon packages share one VM with exact dependency lifetimes and explicit public modules imported through `require("@id[/path]")`.
 
 Addon packages are registered by a loaded Carbon provider plugin. CarbonLuau does not scan an addon directory or download packages. See [addon composition](docs/api/Addons.md), the [provider protocol](docs/api/Addon-Providers.md), and the [Foundation E qualification record](docs/FoundationE.md).
 
 The GUI surface offers ScreenGui, Frame, TextLabel, TextButton, ImageLabel,
 ImageButton, ScrollingFrame, typed ImageSource values, deterministic list and
-padding layout, current-source Frame clipping, retained GuiFont values and
+padding/grid layout, bounded Frame clipping, retained GuiFont values and
 Presentation-specific one-way scroll methods,
 explicit per-Player Show/Hide and secure Activated callbacks.
-The implemented Foundation 2 and Foundation 3 controls have completed
-server-side model, lifecycle, scale and release-candidate qualification.
-See the
-[GUI guide](docs/api/Gui.md). Authenticated-client visual,
+See the [GUI guide](docs/api/Gui.md). Authenticated-client visual,
 cursor, click-receipt and reconciliation behavior remains unqualified.
+
+[Official VS Code tooling](https://github.com/gmoddev/carbonluau-vscode) provides
+syntax, API reference and project diagnostics, plus trusted language analysis
+and GUI preview on Windows/Linux x64. The preview includes hierarchy, properties,
+viewport controls and resource usage; geometry comes from the runtime's shared
+implementation. Install a matching platform VSIX without a source checkout.
+macOS remains static-only. Preview uses offline image/font approximations and
+does not simulate gameplay or connect to a server.
 
 ## Limits
 
 Callbacks and host inputs are bounded, deadlines are cooperative, and the VM cap is not a whole-server memory cap. Successful reload cancels old listeners and commands; failed candidates preserve them. CarbonLuau does not expose raw Rust objects, arbitrary console execution, filesystem or network APIs, or a Roblox hierarchy.
 
-Provider-defined C# capabilities, root-to-addon imports, package downloads, version solving, multiple package instances, restricted exposure profiles, and async capabilities remain deferred. CarbonLuau has one shared VM heap cap, not per-addon hard heap isolation. Deterministic `UIListLayout`/`UIPadding`, typed images and `ScrollingFrame` are part of the experimental `0.4.0-experimental` surface. TextBox is not implemented because the current Rust command transport cannot preserve submitted text exactly; advanced GUI styling is also not implemented. D18's Vector3, Position, Health, MaxHealth, read-only item/inventory slices, committed-only Teleport and verified `Player:TakeItem`/`Player:GiveItem` are implemented. GiveItem exposes only typed InventoryOnly (the default); see [Player-1F-B qualification](docs/PlayerInteractionFoundation1FB-Validation.md). Teleport is server-qualified but not authenticated-client-qualified. Raw inventory objects, world-drop fallback and rollback APIs remain excluded.
+Inventory mutation is not transactional: false means mutation never started, true means its physical postcondition was verified, and a post-mutation error may leave changes. GiveItem supports only InventoryOnly. Raw inventory objects, world-drop fallback, health mutation, TextBox, package downloads and version solving are unavailable. Teleport is server-qualified but not authenticated-client-qualified.
+
+TextBox is not implemented because the current host cannot preserve submitted text exactly.
 
 `Frame.ClipsDescendants`, `GuiFont`, text `Font`, and the `ScrollTo` methods are
 part of the experimental source surface. Their authenticated-client visual,

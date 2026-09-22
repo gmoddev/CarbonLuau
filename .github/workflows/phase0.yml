@@ -63,6 +63,12 @@ jobs:
           $Compiler = if ($IsWindows) { 'build/Release/carbonluau_compiler.exe' } else { 'build/carbonluau_compiler' }
           ./tools/Test-Release.ps1 -Rid $Rid -NativeLibrary $Native -CompilerWorker $Compiler
           ./tools/New-ReleaseArtifacts.ps1 -Rid $Rid -NativeLibrary $Native -CompilerWorker $Compiler
+      - name: Clean installation from release bundle and bundled examples
+        shell: pwsh
+        run: |
+          if ($IsWindows) { ./dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.4.0-win-x64.zip" }
+          else { mono dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.4.0-linux-x64.zip" }
+          if ($LASTEXITCODE -ne 0) { throw 'Clean bundle installation failed' }
       - uses: actions/upload-artifact@v4
         with:
           name: carbonluau-${{ matrix.os }}
