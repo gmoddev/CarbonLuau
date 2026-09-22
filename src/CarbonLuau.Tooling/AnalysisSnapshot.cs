@@ -101,6 +101,6 @@ internal sealed class AnalysisSnapshot : IDisposable
     public void Dispose()
     {
         // Root is generated here, never derived from a workspace path or protocol field.
-        if (Directory.Exists(Root)) Directory.Delete(Root, true);
+        AnalysisSnapshotCleanup.Remove(Root);
     }
 }

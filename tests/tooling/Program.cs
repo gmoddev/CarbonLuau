@@ -53,3 +53,4 @@ Reject(() => Preview.Plan(Screen, double.NaN, 1080), "nonfinite preview viewport
 Reject(() => Preview.Call(21, new[] { "set", Frame, "Parent", "object", Frame }), "preview hierarchy cycle accepted");
 Console.WriteLine("[CarbonLuau:ToolingTests] PASS shared preview projection, anchor, determinism and hierarchy checks");
 PreviewGoldens.Run(Root, Args.Contains("--update-preview-goldens"));
+SnapshotCleanupTests.Run();

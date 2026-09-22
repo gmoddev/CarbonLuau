@@ -7,17 +7,22 @@ The accepted scoped determinism rule is in [the canonical baseline](ToolingBasel
 
 ## Delivery record
 
-Local qualification passed before the implementation commit. Remote CI and exact
-delivery revisions are recorded below when available; a pending run is not a pass.
+Local qualification passed before the implementation commit. The following
+implementation revisions and CI outcomes are recorded below. A Windows extension
+CI run exposed a private analysis-directory sharing violation during rapid
+snapshot replacement. The correction retries only Windows sharing/lock violations
+for a one-second budget after process/watch disposal; a persistent failure still
+closes the supervisor. Real held-file tests cover delayed release and persistent
+failure. Preview/analysis execution limits and Workspace Trust are unchanged.
 
 | Item | Recorded result |
 |---|---|
-| Runtime implementation/evidence commit | Pending commit |
-| Extension implementation commit | Pending commit |
-| Runtime validation CI | Pending push |
-| Runtime tooling CI | Pending push |
-| Runtime baseline CI | Pending push |
-| Extension CI | Pending push |
+| Runtime implementation/evidence commit | [`6552a3b3ff127a897a205d76a9f79e974a720d78`](https://github.com/gmoddev/CarbonLuau/commit/6552a3b3ff127a897a205d76a9f79e974a720d78) |
+| Extension implementation commit | [`30e82cdb55b70e09fc6daf12e04daf197ac43b6b`](https://github.com/gmoddev/carbonluau-vscode/commit/30e82cdb55b70e09fc6daf12e04daf197ac43b6b) |
+| Runtime validation CI | [PASS: Windows, Linux, sanitizers](https://github.com/gmoddev/CarbonLuau/actions/runs/35677388316) |
+| Runtime tooling CI | [PASS: Windows/Linux execution and macOS static](https://github.com/gmoddev/CarbonLuau/actions/runs/35677388350) |
+| Runtime baseline CI | [PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/35677388358) |
+| Extension CI | [Initial run](https://github.com/gmoddev/carbonluau-vscode/actions/runs/35677413183): Linux and macOS static passed; Windows exposed the cleanup race above. Corrected run pending. |
 
 ## Required completion report
 
