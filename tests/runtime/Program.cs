@@ -9,6 +9,10 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length == 2 && Args[0] == "--preview-equivalence") {
+            try { PreviewEquivalenceTests.Run(Args[1]); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:PreviewEquivalence] FAIL: " + Error); return 1; }
+        }
         if (Args.Length >= 1 && Args[0] == "--gui-only") {
             try { GuiFoundation1ATests.Run(Args.Length > 1 ? Args[1] : null); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }

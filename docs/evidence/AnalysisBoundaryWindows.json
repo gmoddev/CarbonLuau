@@ -1,0 +1,48 @@
+[
+  {
+    "Name": "OrdinaryBodyNotExecuted",
+    "Exit": 0,
+    "Output": "[WARN] No definitions file provided by client\n",
+    "ElapsedSeconds": 0.047
+  },
+  {
+    "Name": "ConfigBaseDoesNotSuppress",
+    "Exit": 1,
+    "Output": "[WARN] No definitions file provided by client\n[INFO] Loading Luau configuration from <fixture>\\.config.luau\nmain.luau(1,7): LocalUnused: Variable 'X' is never used; prefix with '_' to silence\n<fixture>\\.luaurc: config:1: CONFIG_EXECUTED_WITH_BASE\n",
+    "ElapsedSeconds": 0.047
+  },
+  {
+    "Name": "ConfigCapabilities",
+    "Exit": 1,
+    "Output": "[WARN] No definitions file provided by client\n[INFO] Loading Luau configuration from <fixture>\\.config.luau\nmain.luau(1,7): LocalUnused: Variable 'X' is never used; prefix with '_' to silence\n<fixture>\\.luaurc: config:1: CAPS:nil:nil:nil:nil:nil:nil\n",
+    "ElapsedSeconds": 0.031
+  },
+  {
+    "Name": "ConfigInfinite",
+    "KilledByHarnessAfterSeconds": 2,
+    "ElapsedSeconds": 2.0
+  },
+  {
+    "Name": "TypeCapabilities",
+    "Exit": 1,
+    "Output": "[WARN] No definitions file provided by client\nmain.luau(3,23): TypeError: Unknown global 'io'; consider assigning to it first\nmain.luau(3,42): TypeError: Unknown global 'require'; consider assigning to it first\nmain.luau(3,66): TypeError: Unknown global 'os'; consider assigning to it first\nmain.luau(3,85): TypeError: Unknown global 'loadfile'; consider assigning to it first\nmain.luau(3,110): TypeError: Unknown global 'package'; consider assigning to it first\nmain.luau(5,15): TypeError: 'Probe' type function errored at runtime: [string \"Probe\"]:3: CAPS:nil:nil:nil:nil:nil\nmain.luau(6,19): TypeError: Expected this to be 'Probe<>', but got 'number'; \nthe reduced type is `never`, and `number` is not a subtype of `never`\n",
+    "ElapsedSeconds": 0.032
+  },
+  {
+    "Name": "TypeInfinite",
+    "KilledByHarnessAfterSeconds": 2,
+    "ElapsedSeconds": 2.015
+  },
+  {
+    "Name": "TypeHeapLimit",
+    "Exit": 1,
+    "Output": "[WARN] No definitions file provided by client\nmain.luau(6,15): TypeError: 'Probe' type function errored at runtime: not enough memory\nmain.luau(7,19): TypeError: Expected this to be 'Probe<>', but got 'number'; \nthe reduced type is `never`, and `number` is not a subtype of `never`\nmain.luau(3,7): LocalUnused: Variable 'Value' is never used; prefix with '_' to silence\n",
+    "ElapsedSeconds": 0.047
+  },
+  {
+    "Name": "OldSolver",
+    "Exit": 1,
+    "Output": "[WARN] No definitions file provided by client\nmain.luau(2,1): TypeError: This syntax is not supported\nmain.luau(5,15): TypeError: Unknown type 'Probe'\n",
+    "ElapsedSeconds": 0.031
+  }
+]

@@ -1,4 +1,40 @@
 -- Trusted, build-embedded facade. Host/userdata construction are private.
+-- @carbonluau-api {"Owner":"Signal","Name":"Connect","Kind":"Method","Args":[["Callback","(Player) -> ()"]],"Returns":["Connection"],"Summary":"Connect a bounded Player callback.","SinceApi":"0.3.0-experimental","Binding":"    function Value.Connect(Self, Callback)"}
+-- @carbonluau-api {"Owner":"Connection","Name":"Disconnect","Kind":"Method","Args":[],"Returns":[],"Summary":"Disconnect this subscription.","SinceApi":"0.3.0-experimental","Binding":"        function Connection.Disconnect(SelfConnection)"}
+-- Structured API declarations are co-located with the trusted implementation.
+-- @carbonluau-api {"Type":"Player","Kind":"Class","Summary":"Connection-bound player facade.","SinceApi":"0.3.0-experimental"}
+-- @carbonluau-api {"Type":"Players","Kind":"Service","Summary":"Connected players and lifecycle signals.","SinceApi":"0.3.0-experimental","Binding":"    if Name == \"Players\" then return Players end"}
+-- @carbonluau-api {"Type":"Commands","Kind":"Service","Summary":"Bounded permission-aware command registration.","SinceApi":"0.3.0-experimental","Binding":"    if Name == \"Commands\" then return Commands end"}
+-- @carbonluau-api {"Type":"Gui","Kind":"Service","Summary":"Retained GUI construction.","Binding":"    if Name == \"Gui\" then return Gui end"}
+-- @carbonluau-api {"Type":"Items","Kind":"Service","Summary":"Read-only item definition lookup.","Binding":"    if Name == \"Items\" then return Items end"}
+-- @carbonluau-api {"Type":"Game","Kind":"Global","Summary":"Selected scripting API identity and services.","SinceApi":"0.3.0-experimental"}
+-- @carbonluau-api {"Type":"Signal","Kind":"Class","Summary":"Bounded callback registration.","SinceApi":"0.3.0-experimental"}
+-- @carbonluau-api {"Type":"Connection","Kind":"Class","Summary":"A disconnectable Signal subscription.","SinceApi":"0.3.0-experimental"}
+-- @carbonluau-api {"Type":"CommandContext","Kind":"Class","Summary":"Immutable command callback context.","Representation":"Record","SinceApi":"0.3.0-experimental"}
+-- @carbonluau-api {"Type":"CommandOptions","Kind":"Class","Summary":"Command registration options.","Representation":"Record","SinceApi":"0.3.0-experimental"}
+-- @carbonluau-api {"Type":"Vector3","Kind":"Value","Summary":"Immutable finite spatial vector."}
+-- @carbonluau-api {"Type":"Addon","Kind":"Global","Summary":"Current addon identity and declared dependency availability."}
+-- @carbonluau-api {"Type":"Task","Kind":"Global","Summary":"Bounded host-admitted scheduling.","SinceApi":"0.2.0-experimental"}
+-- @carbonluau-api {"Owner":"Player","Name":"Name","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Player.Name.","SinceApi":"0.3.0-experimental","Binding":"            if Key == \"Name\" then return Info[1] == \"1\" and Info[2] or Name end"}
+-- @carbonluau-api {"Owner":"Player","Name":"UserId","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Player.UserId.","SinceApi":"0.3.0-experimental","Binding":"            if Key == \"UserId\" then return UserId end"}
+-- @carbonluau-api {"Owner":"Player","Name":"IsConnected","Kind":"Property","ValueType":"boolean","Writable":false,"Summary":"Player.IsConnected.","SinceApi":"0.3.0-experimental","Binding":"            if Key == \"IsConnected\" then return Info[1] == \"1\" end"}
+-- @carbonluau-api {"Owner":"Player","Name":"Position","Kind":"Property","ValueType":"Vector3","Writable":false,"Summary":"Player.Position.","Binding":"            if Key == \"Position\" then"}
+-- @carbonluau-api {"Owner":"Player","Name":"Health","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.Health.","Binding":"            if Key == \"Health\" then return tonumber(Host(23, Token, UserId)[1]) end"}
+-- @carbonluau-api {"Owner":"Player","Name":"MaxHealth","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.MaxHealth.","Binding":"            if Key == \"MaxHealth\" then return tonumber(Host(24, Token, UserId)[1]) end"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiName","Kind":"Property","ValueType":"\"CarbonLuau\"","Writable":false,"Summary":"Game.ApiName.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.4.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiVersion","Kind":"Property","ValueType":"\"0.4.0-experimental\"","Writable":false,"Summary":"Game.ApiVersion.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.4.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiStatus","Kind":"Property","ValueType":"\"Experimental\"","Writable":false,"Summary":"Game.ApiStatus.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.4.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Vector3","Name":"X","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.X.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
+-- @carbonluau-api {"Owner":"Vector3","Name":"Y","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Y.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
+-- @carbonluau-api {"Owner":"Vector3","Name":"Z","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Z.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
+-- @carbonluau-api {"Owner":"Vector3","Name":"Magnitude","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Magnitude.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
+-- @carbonluau-api {"Owner":"CommandContext","Name":"Player","Kind":"Property","ValueType":"Player","Writable":false,"Summary":"CommandContext.Player.","SinceApi":"0.3.0-experimental","Binding":"        Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))"}
+-- @carbonluau-api {"Owner":"CommandContext","Name":"Name","Kind":"Property","ValueType":"string","Writable":false,"Summary":"CommandContext.Name.","SinceApi":"0.3.0-experimental","Binding":"        Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))"}
+-- @carbonluau-api {"Owner":"CommandContext","Name":"Arguments","Kind":"Property","ValueType":"{string}","Writable":false,"Summary":"CommandContext.Arguments.","SinceApi":"0.3.0-experimental","Binding":"        Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))"}
+-- @carbonluau-api {"Owner":"CommandOptions","Name":"permission","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"CommandOptions.permission.","SinceApi":"0.3.0-experimental","Binding":"        if Key ~= \"permission\" and Key ~= \"description\" then Fail(\"unsupported command option\") end"}
+-- @carbonluau-api {"Owner":"CommandOptions","Name":"description","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"CommandOptions.description.","SinceApi":"0.3.0-experimental","Binding":"        if Key ~= \"permission\" and Key ~= \"description\" then Fail(\"unsupported command option\") end"}
+-- @carbonluau-api {"Owner":"Players","Name":"PlayerAdded","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is added.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
+-- @carbonluau-api {"Owner":"Players","Name":"PlayerRemoving","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is removed.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
 local Host, MakeUserdata, SharedValueEqual = ...
 local Callbacks = {}
 local Proxies = setmetatable({}, {__mode = "v"})
@@ -66,16 +102,21 @@ local function Value(Kind, RecordValue)
     return Result
 end
 local UDim = {}
+-- @carbonluau-api {"Owner":"UDim","Name":"new","Kind":"Constructor","Args":[["Scale","number"],["Offset","number"]],"Returns":["UDim"],"Summary":"UDim.new.","Preview":"Pure","Binding":"function UDim.new(Scale, Offset)"}
 function UDim.new(Scale, Offset)
     return Value("UDim", {Scale = Number(Scale, "UDim.Scale", -8, 8), Offset = Number(Offset, "UDim.Offset", -32768, 32768)})
 end
 local UDim2 = {}
+-- @carbonluau-api {"Owner":"UDim2","Name":"new","Kind":"Constructor","Args":[["XScale","number"],["XOffset","number"],["YScale","number"],["YOffset","number"]],"Returns":["UDim2"],"Summary":"UDim2.new.","Preview":"Pure","Binding":"function UDim2.new(XScale, XOffset, YScale, YOffset)"}
 function UDim2.new(XScale, XOffset, YScale, YOffset)
     return Value("UDim2", {X = UDim.new(XScale, XOffset), Y = UDim.new(YScale, YOffset)})
 end
+-- @carbonluau-api {"Owner":"UDim2","Name":"fromScale","Kind":"Constructor","Args":[["XScale","number"],["YScale","number"]],"Returns":["UDim2"],"Summary":"UDim2.fromScale.","Preview":"Pure","Binding":"function UDim2.fromScale(XScale, YScale) return UDim2.new(XScale, 0, YScale, 0) end"}
 function UDim2.fromScale(XScale, YScale) return UDim2.new(XScale, 0, YScale, 0) end
+-- @carbonluau-api {"Owner":"UDim2","Name":"fromOffset","Kind":"Constructor","Args":[["XOffset","number"],["YOffset","number"]],"Returns":["UDim2"],"Summary":"UDim2.fromOffset.","Preview":"Pure","Binding":"function UDim2.fromOffset(XOffset, YOffset) return UDim2.new(0, XOffset, 0, YOffset) end"}
 function UDim2.fromOffset(XOffset, YOffset) return UDim2.new(0, XOffset, 0, YOffset) end
 local Vector2 = {}
+-- @carbonluau-api {"Owner":"Vector2","Name":"new","Kind":"Constructor","Args":[["X","number"],["Y","number"]],"Returns":["Vector2"],"Summary":"Vector2.new.","Preview":"Pure","Binding":"function Vector2.new(X, Y)"}
 function Vector2.new(X, Y)
     return Value("Vector2", {X = Number(X, "Vector2.X", -32768, 32768), Y = Number(Y, "Vector2.Y", -32768, 32768)})
 end
@@ -88,20 +129,24 @@ local function Vector3Components(Value)
     return Value.X, Value.Y, Value.Z
 end
 ValueMeta("Vector3", function(Meta)
+-- @carbonluau-api {"Owner":"Vector3","Name":"__add","Kind":"Operator","Args":[["Left","Vector3"],["Right","Vector3"]],"Returns":["Vector3"],"Summary":"Immutable Vector3 __add operator.","Binding":"    Meta.__add = function(Left, Right)","Preview":"Pure"}
     Meta.__add = function(Left, Right)
         local LX, LY, LZ = Vector3Components(Left)
         local RX, RY, RZ = Vector3Components(Right)
         return Vector3.new(LX + RX, LY + RY, LZ + RZ)
     end
+-- @carbonluau-api {"Owner":"Vector3","Name":"__sub","Kind":"Operator","Args":[["Left","Vector3"],["Right","Vector3"]],"Returns":["Vector3"],"Summary":"Immutable Vector3 __sub operator.","Binding":"    Meta.__sub = function(Left, Right)","Preview":"Pure"}
     Meta.__sub = function(Left, Right)
         local LX, LY, LZ = Vector3Components(Left)
         local RX, RY, RZ = Vector3Components(Right)
         return Vector3.new(LX - RX, LY - RY, LZ - RZ)
     end
+-- @carbonluau-api {"Owner":"Vector3","Name":"__unm","Kind":"Operator","Args":[["Operand","Vector3"]],"Returns":["Vector3"],"Summary":"Immutable Vector3 __unm operator.","Binding":"    Meta.__unm = function(Operand)","Preview":"Pure"}
     Meta.__unm = function(Operand)
         local X, Y, Z = Vector3Components(Operand)
         return Vector3.new(-X, -Y, -Z)
     end
+-- @carbonluau-api {"Owner":"Vector3","Name":"__mul","Kind":"Operator","Args":[["Left","Vector3"],["Right","number"]],"Returns":["Vector3"],"Summary":"Immutable Vector3 __mul operator.","Binding":"    Meta.__mul = function(Left, Right)","Preview":"Pure","Overloads":[[["Left","Vector3"],["Right","number"]],[["Left","number"],["Right","Vector3"]]]}
     Meta.__mul = function(Left, Right)
         if IsVector3(Left) then
             local X, Y, Z = Vector3Components(Left)
@@ -112,6 +157,7 @@ ValueMeta("Vector3", function(Meta)
         local X, Y, Z = Vector3Components(Right)
         return Vector3.new(Scalar * X, Scalar * Y, Scalar * Z)
     end
+-- @carbonluau-api {"Owner":"Vector3","Name":"__div","Kind":"Operator","Args":[["Left","Vector3"],["Right","number"]],"Returns":["Vector3"],"Summary":"Immutable Vector3 __div operator.","Binding":"    Meta.__div = function(Left, Right)","Preview":"Pure"}
     Meta.__div = function(Left, Right)
         local X, Y, Z = Vector3Components(Left)
         local Scalar = FiniteNumber(Right, "Vector3 scalar")
@@ -120,6 +166,7 @@ ValueMeta("Vector3", function(Meta)
     end
 end)
 Vector3 = {}
+-- @carbonluau-api {"Owner":"Vector3","Name":"new","Kind":"Constructor","Args":[["X","number"],["Y","number"],["Z","number"]],"Returns":["Vector3"],"Summary":"Vector3.new.","Preview":"Pure","Binding":"function Vector3.new(X, Y, Z)"}
 function Vector3.new(X, Y, Z)
     X = Number(X, "Vector3.X", -MaxHostFloat, MaxHostFloat)
     Y = Number(Y, "Vector3.Y", -MaxHostFloat, MaxHostFloat)
@@ -127,9 +174,11 @@ function Vector3.new(X, Y, Z)
     return Value("Vector3", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})
 end
 local Color3 = {}
+-- @carbonluau-api {"Owner":"Color3","Name":"new","Kind":"Constructor","Args":[["R","number"],["G","number"],["B","number"]],"Returns":["Color3"],"Summary":"Color3.new.","Preview":"Pure","Binding":"function Color3.new(R, G, B)"}
 function Color3.new(R, G, B)
     return Value("Color3", {R = Number(R, "Color3.R", 0, 1), G = Number(G, "Color3.G", 0, 1), B = Number(B, "Color3.B", 0, 1)})
 end
+-- @carbonluau-api {"Owner":"Color3","Name":"fromRGB","Kind":"Constructor","Args":[["R","number"],["G","number"],["B","number"]],"Returns":["Color3"],"Summary":"Color3.fromRGB.","Preview":"Pure","Binding":"function Color3.fromRGB(R, G, B)"}
 function Color3.fromRGB(R, G, B)
     R, G, B = Number(R, "Color3.RGB", 0, 255), Number(G, "Color3.RGB", 0, 255), Number(B, "Color3.RGB", 0, 255)
     if R % 1 ~= 0 or G % 1 ~= 0 or B % 1 ~= 0 then Fail("Color3.fromRGB expects integer components") end
@@ -148,7 +197,9 @@ local function UnsignedDecimalId(Value, Label)
     return Value
 end
 local ImageSource = {}
+-- @carbonluau-api {"Owner":"ImageSource","Name":"None","Kind":"Constructor","Args":[],"Returns":["ImageSource"],"Summary":"ImageSource.None.","Preview":"Pure","Binding":"function ImageSource.None() return Value(\"ImageSource\", {Kind = \"None\"}) end"}
 function ImageSource.None() return Value("ImageSource", {Kind = "None"}) end
+-- @carbonluau-api {"Owner":"ImageSource","Name":"Sprite","Kind":"Constructor","Args":[["Name","string"]],"Returns":["ImageSource"],"Summary":"ImageSource.Sprite.","Preview":"Pure","Binding":"function ImageSource.Sprite(Name)"}
 function ImageSource.Sprite(Name)
     Name = String(Name, "ImageSource.Sprite name")
     if #Name == 0 or #Name > 256 or string.sub(Name, 1, 1) == "/" or string.sub(Name, -1) == "/" or
@@ -156,13 +207,16 @@ function ImageSource.Sprite(Name)
     for Segment in string.gmatch(Name, "[^/]+") do if Segment == "." or Segment == ".." then Fail("ImageSource.Sprite name is not a canonical asset key") end end
     return Value("ImageSource", {Kind = "Sprite", Name = Name})
 end
+-- @carbonluau-api {"Owner":"ImageSource","Name":"Png","Kind":"Constructor","Args":[["Id","string"]],"Returns":["ImageSource"],"Summary":"ImageSource.Png.","Preview":"Pure","Binding":"function ImageSource.Png(Id) return Value(\"ImageSource\", {Kind = \"Png\", Id = DecimalId(Id, \"PNG identifier\")}) end"}
 function ImageSource.Png(Id) return Value("ImageSource", {Kind = "Png", Id = DecimalId(Id, "PNG identifier")}) end
+-- @carbonluau-api {"Owner":"ImageSource","Name":"Item","Kind":"Constructor","Args":[["ItemId","number"],["SkinId","string?"]],"Returns":["ImageSource"],"Summary":"ImageSource.Item.","Preview":"Pure","Binding":"function ImageSource.Item(ItemId, SkinId)"}
 function ImageSource.Item(ItemId, SkinId)
     ItemId = Number(ItemId, "ImageSource.Item ItemId", -2147483648, 2147483647)
     if ItemId % 1 ~= 0 then Fail("ImageSource.Item ItemId must be an integer") end
     return Value("ImageSource", {Kind = "Item", ItemId = ItemId,
         SkinId = SkinId == nil and "" or UnsignedDecimalId(SkinId, "skin identifier")})
 end
+-- @carbonluau-api {"Owner":"ImageSource","Name":"SteamAvatar","Kind":"Constructor","Args":[["UserId","string"]],"Returns":["ImageSource"],"Summary":"ImageSource.SteamAvatar.","Preview":"Pure","Binding":"function ImageSource.SteamAvatar(UserId)"}
 function ImageSource.SteamAvatar(UserId)
     return Value("ImageSource", {Kind = "SteamAvatar", UserId = UnsignedDecimalId(UserId, "Steam user identifier")})
 end
@@ -184,12 +238,17 @@ local function Font(Identity)
     return Result
 end
 local GuiFont = {
+-- @carbonluau-api {"Owner":"GuiFont","Name":"RobotoCondensedRegular","Kind":"Singleton","ValueType":"GuiFont","Writable":false,"Summary":"Immutable font identity; client rasterization is unqualified.","Binding":"    RobotoCondensedRegular = Font(\"RobotoCondensedRegular\"),"}
     RobotoCondensedRegular = Font("RobotoCondensedRegular"),
+-- @carbonluau-api {"Owner":"GuiFont","Name":"RobotoCondensedBold","Kind":"Singleton","ValueType":"GuiFont","Writable":false,"Summary":"Immutable font identity; client rasterization is unqualified.","Binding":"    RobotoCondensedBold = Font(\"RobotoCondensedBold\"),"}
     RobotoCondensedBold = Font("RobotoCondensedBold"),
+-- @carbonluau-api {"Owner":"GuiFont","Name":"DroidSansMono","Kind":"Singleton","ValueType":"GuiFont","Writable":false,"Summary":"Immutable font identity; client rasterization is unqualified.","Binding":"    DroidSansMono = Font(\"DroidSansMono\"),"}
     DroidSansMono = Font("DroidSansMono"),
+-- @carbonluau-api {"Owner":"GuiFont","Name":"PermanentMarker","Kind":"Singleton","ValueType":"GuiFont","Writable":false,"Summary":"Immutable font identity; client rasterization is unqualified.","Binding":"    PermanentMarker = Font(\"PermanentMarker\"),"}
     PermanentMarker = Font("PermanentMarker"),
 }
 table.freeze(UDim); table.freeze(UDim2); table.freeze(Vector2); table.freeze(Vector3); table.freeze(Color3); table.freeze(ImageSource); table.freeze(GuiFont)
+-- @carbonluau-api {"Type":"GiveItemBehavior","Kind":"Enum","Summary":"Immutable inventory placement behavior."}
 local GiveItemBehaviorMeta = table.freeze({
     __index = function() Fail("GiveItemBehavior has no fields") end,
     __newindex = function() Fail("GiveItemBehavior values are immutable") end,
@@ -197,6 +256,7 @@ local GiveItemBehaviorMeta = table.freeze({
     __eq = SharedValueEqual,
     __metatable = "CarbonLuau.GiveItemBehavior",
 })
+-- @carbonluau-api {"Owner":"GiveItemBehavior","Name":"InventoryOnly","Kind":"Singleton","ValueType":"GiveItemBehavior","Writable":false,"Summary":"Place only in inventory; never intentionally drop overflow.","Binding":"local GiveItemBehavior = table.freeze({InventoryOnly = MakeUserdata(GiveItemBehaviorMeta)})"}
 local GiveItemBehavior = table.freeze({InventoryOnly = MakeUserdata(GiveItemBehaviorMeta)})
 local function Record(Player)
     local Value = Records[Player]
@@ -204,10 +264,12 @@ local function Record(Player)
     return Value
 end
 local PlayerMethods = {}
+-- @carbonluau-api {"Owner":"Player","Name":"SendMessage","Kind":"Method","Args":[["Message","string"]],"Returns":[],"Summary":"Send bounded chat text to this connected player.","Preview":"HostMutation","Binding":"function PlayerMethods.SendMessage(Player, Message)","SinceApi":"0.3.0-experimental"}
 function PlayerMethods.SendMessage(Player, Message)
     local Value = Record(Player)
     Host(4, Value.Token, Value.UserId, String(Message, "message"))
 end
+-- @carbonluau-api {"Owner":"Player","Name":"HasPermission","Kind":"Method","Args":[["Permission","string"]],"Returns":["boolean"],"Summary":"Check a host permission for this exact player connection.","Preview":"ReadMock","Binding":"function PlayerMethods.HasPermission(Player, Permission)","SinceApi":"0.3.0-experimental"}
 function PlayerMethods.HasPermission(Player, Permission)
     local Value = Record(Player)
     return Host(5, Value.Token, Value.UserId, String(Permission, "permission"))[1] == "1"
@@ -257,6 +319,7 @@ local function Signal(Kind)
     return table.freeze(Value)
 end
 local Players = {PlayerAdded = Signal("added"), PlayerRemoving = Signal("removing")}
+-- @carbonluau-api {"Owner":"Players","Name":"GetPlayers","Kind":"Method","Args":[],"Returns":["{Player}"],"Summary":"Return the currently connected Player proxies.","Preview":"ReadMock","Binding":"function Players.GetPlayers(Self)","SinceApi":"0.3.0-experimental"}
 function Players.GetPlayers(Self)
     if Self ~= Players then Fail("invalid Players service") end
     local Fields = Host(1)
@@ -264,6 +327,7 @@ function Players.GetPlayers(Self)
     for Index = 1, #Fields, 3 do Result[#Result + 1] = GetPlayer(Fields[Index], Fields[Index + 1], Fields[Index + 2]) end
     return Result
 end
+-- @carbonluau-api {"Owner":"Players","Name":"GetPlayerByUserId","Kind":"Method","Args":[["UserId","string"]],"Returns":["Player?"],"Summary":"Find a connected player by decimal user ID, or nil.","Preview":"ReadMock","Binding":"function Players.GetPlayerByUserId(Self, UserId)","SinceApi":"0.3.0-experimental"}
 function Players.GetPlayerByUserId(Self, UserId)
     if Self ~= Players then Fail("invalid Players service") end
     local Fields = Host(2, String(UserId, "userId"))
@@ -272,6 +336,7 @@ function Players.GetPlayerByUserId(Self, UserId)
 end
 table.freeze(Players)
 local Commands = {}
+-- @carbonluau-api {"Owner":"Commands","Name":"Register","Kind":"Method","Args":[["Name","string"],["Options","CommandOptions"],["Callback","(CommandContext) -> ()"]],"Returns":[],"Summary":"Register a bounded command with optional permission and description.","Preview":"Pure","Binding":"function Commands.Register(Self, Name, Options, Callback)","SinceApi":"0.3.0-experimental"}
 function Commands.Register(Self, Name, Options, Callback)
     if Self ~= Commands or type(Options) ~= "table" or type(Callback) ~= "function" then Fail("Commands:Register expects name, options and callback") end
     for Key in Options do
@@ -295,15 +360,18 @@ local function GuiRecord(Value)
     if not Result then Fail("invalid GUI object") end
     return Result
 end
+-- @carbonluau-api {"Owner":"Player","Name":"Teleport","Kind":"Method","Args":[["Position","Vector3"]],"Returns":[],"Summary":"Teleport a connected player after committed-only admission.","Preview":"HostMutation","Binding":"function PlayerMethods.Teleport(Player, Position)","Qualification":"ClientUnqualified"}
 function PlayerMethods.Teleport(Player, Position)
     local Value = Record(Player)
     local X, Y, Z = Vector3Components(Position)
     Host(28, Value.Token, Value.UserId, tostring(X), tostring(Y), tostring(Z))
 end
+-- @carbonluau-api {"Owner":"Player","Name":"CountItem","Kind":"Method","Args":[["ShortName","string"]],"Returns":["number"],"Summary":"Count observed physical inventory items by short name.","Preview":"ReadMock","Binding":"function PlayerMethods.CountItem(Player, ShortName)"}
 function PlayerMethods.CountItem(Player, ShortName)
     local Value = Record(Player)
     return tonumber(Host(26, Value.Token, Value.UserId, String(ShortName, "item short name"))[1])
 end
+-- @carbonluau-api {"Owner":"Player","Name":"HasItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number?"]],"Returns":["boolean"],"Summary":"Check physical inventory for an amount; the default is one.","Preview":"ReadMock","Binding":"function PlayerMethods.HasItem(Player, ShortName, Amount)"}
 function PlayerMethods.HasItem(Player, ShortName, Amount)
     local Value = Record(Player)
     String(ShortName, "item short name")
@@ -312,6 +380,7 @@ function PlayerMethods.HasItem(Player, ShortName, Amount)
     if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
     return Host(27, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount))[1] == "1"
 end
+-- @carbonluau-api {"Owner":"Player","Name":"TakeItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number"]],"Returns":["boolean"],"Summary":"Remove a bounded amount with physical verification; indeterminate mutation raises an error.","Preview":"HostMutation","Binding":"function PlayerMethods.TakeItem(Player, ShortName, Amount)","Qualification":"ClientUnqualified"}
 function PlayerMethods.TakeItem(Player, ShortName, Amount)
     local Value = Record(Player)
     String(ShortName, "item short name")
@@ -319,6 +388,7 @@ function PlayerMethods.TakeItem(Player, ShortName, Amount)
     if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
     return Host(29, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount))[1] == "1"
 end
+-- @carbonluau-api {"Owner":"Player","Name":"GiveItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number"],["Behavior","GiveItemBehavior?"]],"Returns":["boolean"],"Summary":"Give a bounded amount with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error.","Preview":"HostMutation","Binding":"function PlayerMethods.GiveItem(Player, ShortName, Amount, Behavior)","Qualification":"ClientUnqualified"}
 function PlayerMethods.GiveItem(Player, ShortName, Amount, Behavior)
     local Value = Record(Player)
     String(ShortName, "item short name")
@@ -400,40 +470,49 @@ local function GuiSignal(Object)
     GuiSignals[RecordValue.Id] = table.freeze(SignalValue)
     return GuiSignals[RecordValue.Id]
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"Create","Kind":"Method","Args":[["ClassName","string"]],"Returns":["GuiNode"],"Summary":"Create a retained GUI object of the named supported class.","Preview":"Pure","Binding":"function GuiObjectMethods.Create(Self, ClassName)"}
 function GuiObjectMethods.Create(Self, ClassName)
     local RecordValue = GuiRecord(Self)
     local Fields = Host(21, "create", RecordValue.Id, String(ClassName, "GUI class name"))
     return GetGuiObject(Fields[1], Fields[2])
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"GetChildren","Kind":"Method","Args":[],"Returns":["{GuiNode}"],"Summary":"Return retained direct children in order.","Preview":"Pure","Binding":"function GuiObjectMethods.GetChildren(Self)"}
 function GuiObjectMethods.GetChildren(Self)
     local Fields = Host(20, "children", GuiRecord(Self).Id)
     local Result = {}
     for Index = 1, #Fields, 2 do Result[#Result + 1] = GetGuiObject(Fields[Index], Fields[Index + 1]) end
     return Result
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"FindFirstChild","Kind":"Method","Args":[["Name","string"]],"Returns":["GuiNode?"],"Summary":"Find a named direct child, or nil.","Preview":"Pure","Binding":"function GuiObjectMethods.FindFirstChild(Self, Name)"}
 function GuiObjectMethods.FindFirstChild(Self, Name)
     local Fields = Host(20, "find", GuiRecord(Self).Id, String(Name, "child name"))
     return #Fields == 0 and nil or GetGuiObject(Fields[1], Fields[2])
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"IsA","Kind":"Method","Args":[["ClassName","string"]],"Returns":["boolean"],"Summary":"Check the canonical GUI class inheritance.","Preview":"Pure","Binding":"function GuiObjectMethods.IsA(Self, ClassName)"}
 function GuiObjectMethods.IsA(Self, ClassName)
     return Host(20, "isa", GuiRecord(Self).Id, String(ClassName, "GUI class name"))[1] == "1"
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"Clone","Kind":"Method","Args":[],"Returns":["GuiNode"],"Summary":"Clone this retained subtree within canonical bounds.","Preview":"Pure","Binding":"function GuiObjectMethods.Clone(Self)"}
 function GuiObjectMethods.Clone(Self)
     local Fields = Host(21, "clone", GuiRecord(Self).Id)
     return GetGuiObject(Fields[1], Fields[2])
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"Destroy","Kind":"Method","Args":[],"Returns":[],"Summary":"Destroy this retained object and its owned subtree.","Preview":"Pure","Binding":"function GuiObjectMethods.Destroy(Self)"}
 function GuiObjectMethods.Destroy(Self)
     local Fields = Host(21, "destroy", GuiRecord(Self).Id)
     for _, Id in Fields do Callbacks[Id] = nil end
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"Show","Kind":"Method","Args":[["Player","Player"]],"Returns":[],"Summary":"Show this screen to an exact connected player.","Preview":"Pure","Binding":"function GuiObjectMethods.Show(Self, Player)"}
 function GuiObjectMethods.Show(Self, Player)
     local RecordValue = GuiRecord(Self); local PlayerValue = Record(Player)
     Host(21, "show", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"Hide","Kind":"Method","Args":[["Player","Player"]],"Returns":[],"Summary":"Hide this screen from an exact connected player.","Preview":"Pure","Binding":"function GuiObjectMethods.Hide(Self, Player)"}
 function GuiObjectMethods.Hide(Self, Player)
     local RecordValue = GuiRecord(Self); local PlayerValue = Record(Player)
     Host(21, "hide", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"IsShown","Kind":"Method","Args":[["Player","Player"]],"Returns":["boolean"],"Summary":"Check whether this screen has a presentation for the player.","Preview":"Pure","Binding":"function GuiObjectMethods.IsShown(Self, Player)"}
 function GuiObjectMethods.IsShown(Self, Player)
     local RecordValue = GuiRecord(Self); local PlayerValue = Record(Player)
     return Host(20, "shown", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)[1] == "1"
@@ -443,6 +522,7 @@ local function ScrollPlayer(Self, Player)
     if RecordValue.ClassName ~= "ScrollingFrame" then Fail("scroll methods require ScrollingFrame") end
     return RecordValue, Record(Player)
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"ScrollTo","Kind":"Method","Args":[["Player","Player"],["Position","Vector2"]],"Returns":[],"Summary":"Queue bounded presentation-local scroll intent for the player.","Preview":"Pure","Binding":"function GuiObjectMethods.ScrollTo(Self, Player, Position)"}
 function GuiObjectMethods.ScrollTo(Self, Player, Position)
     local RecordValue, PlayerValue = ScrollPlayer(Self, Player)
     if typeof(Position) ~= "userdata" or tostring(Position) ~= "Vector2" then Fail("ScrollTo expects Vector2") end
@@ -450,10 +530,12 @@ function GuiObjectMethods.ScrollTo(Self, Player, Position)
     local Y = Number(Position.Y, "scroll Y", 0, 1)
     Host(21, "scroll", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId, tostring(X), tostring(Y))
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"ScrollToTop","Kind":"Method","Args":[["Player","Player"]],"Returns":[],"Summary":"Queue scroll intent to the top for the player.","Preview":"Pure","Binding":"function GuiObjectMethods.ScrollToTop(Self, Player)"}
 function GuiObjectMethods.ScrollToTop(Self, Player)
     local RecordValue, PlayerValue = ScrollPlayer(Self, Player)
     Host(21, "scrolltop", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)
 end
+-- @carbonluau-api {"Owner":"$Gui","Name":"ScrollToBottom","Kind":"Method","Args":[["Player","Player"]],"Returns":[],"Summary":"Queue scroll intent to the bottom for the player.","Preview":"Pure","Binding":"function GuiObjectMethods.ScrollToBottom(Self, Player)"}
 function GuiObjectMethods.ScrollToBottom(Self, Player)
     local RecordValue, PlayerValue = ScrollPlayer(Self, Player)
     Host(21, "scrollbottom", RecordValue.Id, PlayerValue.Token, PlayerValue.UserId)
@@ -492,6 +574,7 @@ GetGuiObject = function(Id, ClassName)
     return Object
 end
 local Gui = {}
+-- @carbonluau-api {"Owner":"Gui","Name":"Create","Kind":"Method","Args":[["ClassName","string"]],"Returns":["GuiNode"],"Summary":"Create a retained GUI object of the named supported class.","Preview":"Pure","Binding":"function Gui.Create(Self, ClassName)"}
 function Gui.Create(Self, ClassName)
     if Self ~= Gui then Fail("invalid Gui service") end
     local Fields = Host(21, "create", "", String(ClassName, "GUI class name"))
@@ -499,12 +582,14 @@ function Gui.Create(Self, ClassName)
 end
 table.freeze(Gui)
 local Items = {}
+-- @carbonluau-api {"Owner":"Items","Name":"Exists","Kind":"Method","Args":[["ShortName","string"]],"Returns":["boolean"],"Summary":"Check whether a canonical item short name exists.","Preview":"ReadMock","Binding":"function Items.Exists(Self, ShortName)"}
 function Items.Exists(Self, ShortName)
     if Self ~= Items then Fail("invalid Items service") end
     return Host(25, String(ShortName, "item short name"))[1] == "1"
 end
 table.freeze(Items)
 local Game = {ApiName = "CarbonLuau", ApiVersion = "0.4.0-experimental", ApiStatus = "Experimental"}
+-- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
 function Game.GetService(Self, Name)
     if Self ~= Game then Fail("invalid game facade") end
     String(Name, "service name")

@@ -15,8 +15,10 @@ $Checks = @(
     @{ Path = 'src/CarbonLuau/Facade/FacadePolicy.cs'; Text = "ApiVersion = `"$($Release.apiVersion)`"" },
     @{ Path = 'native/CMakeLists.txt'; Text = "project(CarbonLuauNative VERSION $($Release.packageVersion)" },
     @{ Path = 'native/src/Runtime.cpp'; Text = 'carbonluau_abi_version(void) { return 0x00010004; }' },
-    @{ Path = 'src/CarbonLuau/Addons/AddonPackage.cs'; Text = "ProtocolName = `"$($Release.providerProtocolName)`", ProtocolVersion = `"$($Release.providerProtocolVersion)`"" },
-    @{ Path = 'src/CarbonLuau/Addons/AddonPackage.cs'; Text = "Schema = $($Release.packageSchema)" },
+    @{ Path = 'src/CarbonLuau.Core/Addons/CoreAddonPackage.cs'; Text = "ProtocolName = `"$($Release.providerProtocolName)`", ProtocolVersion = `"$($Release.providerProtocolVersion)`"" },
+    @{ Path = 'src/CarbonLuau.Core/Addons/CoreAddonPackage.cs'; Text = "Schema = $($Release.packageSchema)" },
+    @{ Path = 'src/CarbonLuau/Addons/AddonPackage.cs'; Text = 'ProtocolName = global::CarbonLuau.Core.AddonPolicy.ProtocolName' },
+    @{ Path = 'src/CarbonLuau/Addons/AddonPackage.cs'; Text = 'Schema = global::CarbonLuau.Core.AddonPolicy.Schema' },
     @{ Path = 'native/third_party/LUAU_REVISION.txt'; Text = "Pinned commit: $($Release.luauRevision)" },
     @{ Path = 'docs/Release.md'; Text = $Release.tag }
 )

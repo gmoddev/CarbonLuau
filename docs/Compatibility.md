@@ -20,6 +20,17 @@ Carbon currently documents targeting .NET Framework 4.8 with `Carbon.targets`. D
 
 ## Version identities
 
+Developer tooling is separate from the production server support table above.
+[ToolingBaseline.md](ToolingBaseline.md) owns its independent extension, protocol,
+pack, metadata, preview-plan, tooling-native and LSP identities, developer-platform
+targets and qualification requirements. In particular, macOS tooling does not
+imply macOS CarbonLuau server support. Baseline adoption changes none of the
+runtime identities below. For a documentation/bootstrap-only tooling change,
+run document/contract checks, extension build/static/manifest checks and a
+deterministic server-package exclusion check. Full runtime regressions become
+mandatory when shared production code is actually extracted; see
+[ToolingFoundationA.md](ToolingFoundationA.md).
+
 Keep these identities conceptually separate and record those relevant to a result: Carbon build, Rust server build, pinned Luau commit/build options, CarbonLuau package version, project-owned native ABI compatibility, and CarbonLuau public scripting API compatibility.
 
 Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Phase 3 introduces package `0.3.0`, additive native ABI `1.2`, and the separate scripting identity `CarbonLuau` / `0.3.0-experimental` / `Experimental`, inspectable through read-only game fields and operator status. D8/D12 own the minimum policy; [public compatibility](api/Compatibility.md) documents it. Additive changes preserve existing contracts; removing/renaming an API or changing its types, lifetime, failures or authorization is breaking and requires an explicit version, documentation and migration decision. A larger deprecation/negotiation framework remains deferred.

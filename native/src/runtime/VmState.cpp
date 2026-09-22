@@ -159,6 +159,11 @@ int Initialize(lua_State* State)
     }
     lua_pushcfunction(State, Print, "print");
     lua_setglobal(State, "print");
+#ifdef CARBONLUAU_PREVIEW
+    // Preview has no ambient random seed. Explicit script randomseed remains Luau behavior.
+    lua_getglobal(State, "math"); lua_getfield(State, -1, "randomseed");
+    lua_pushinteger(State, 0); lua_call(State, 1, 0); lua_pop(State, 1);
+#endif
     luaL_sandbox(State);
     return 0;
 }

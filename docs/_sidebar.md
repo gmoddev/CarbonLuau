@@ -5,6 +5,8 @@
 - [0.3.0 release notes](releases/0.3.0.md)
 - Architecture
   - [Canonical invariants](Invariants.md)
+  - [Tooling Foundation A](ToolingFoundationACompletion.md)
+  - [Language-analysis security](ToolingLanguageAnalysisSecurity.md)
   - [GUI Foundation 1](GuiFoundation1.md)
   - [GUI Foundation 1A](GuiFoundation1A.md)
   - [GUI Foundation 1B](GuiFoundation1B.md)

@@ -1,5 +1,12 @@
+// @carbonluau-api {"Owner":"Addon","Name":"IsDependencyAvailable","Kind":"Method","Args":[["Id","string"]],"Returns":["boolean"],"Summary":"Check the exact declared dependency binding.","Binding":"        lua_setfield(State, -2, \"IsDependencyAvailable\");"}
+// @carbonluau-api {"Owner":"Task","Name":"spawn","Kind":"Constructor","Args":[["Callback","(...any) -> ()"],["Arguments","any",true]],"Returns":[],"Summary":"Schedule bounded primitive arguments.","Binding":"    for (const char* Name : {\"spawn\", \"defer\", \"delay\"}) {","SinceApi":"0.2.0-experimental"}
+// @carbonluau-api {"Owner":"Task","Name":"defer","Kind":"Constructor","Args":[["Callback","(...any) -> ()"],["Arguments","any",true]],"Returns":[],"Summary":"Schedule bounded primitive arguments.","Binding":"    for (const char* Name : {\"spawn\", \"defer\", \"delay\"}) {","SinceApi":"0.2.0-experimental"}
+// @carbonluau-api {"Owner":"Task","Name":"delay","Kind":"Constructor","Args":[["Seconds","number"],["Callback","(...any) -> ()"],["Arguments","any",true]],"Returns":[],"Summary":"Schedule bounded primitive arguments.","Binding":"    for (const char* Name : {\"spawn\", \"defer\", \"delay\"}) {","SinceApi":"0.2.0-experimental"}
+// @carbonluau-api {"Owner":"Addon","Name":"Id","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Addon.Id.","Binding":"        lua_pushlstring(State, Owner.PackageId.data(), Owner.PackageId.size()); lua_setfield(State, -2, \"Id\");"}
+// @carbonluau-api {"Owner":"Addon","Name":"Version","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Addon.Version.","Binding":"        lua_pushlstring(State, Owner.PackageVersion.data(), Owner.PackageVersion.size()); lua_setfield(State, -2, \"Version\");"}
 #include "../runtime/RuntimeInternal.hpp"
 #include "Compiler.hpp"
+#include "../semantics/ModulePolicy.hpp"
 
 namespace CarbonLuau::Runtime {
 uint64_t NowNs()
@@ -7,17 +14,7 @@ uint64_t NowNs()
     return uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count());
 }
-bool ModuleName(const char* Name, size_t Capacity)
-{
-    size_t Length = 0, Segment = 0;
-    while (Length < Capacity && Name[Length]) {
-        char C = Name[Length++];
-        if (C == '/') { if (!Segment) return false; Segment = 0; }
-        else if ((C >= 'a' && C <= 'z') || (C >= '0' && C <= '9') || C == '_' || C == '-') ++Segment;
-        else return false;
-    }
-    return Length > 0 && Length < Capacity && Segment > 0;
-}
+bool ModuleName(const char* Name, size_t Capacity) { return Semantics::ModuleName(Name, Capacity); }
 Domain& BoundDomain(lua_State* State)
 {
     Vm& Runtime = *static_cast<Vm*>(lua_callbacks(State)->userdata);
@@ -25,41 +22,8 @@ Domain& BoundDomain(lua_State* State)
     if (!Value || !GetDomain(Runtime, Value->Id)) luaL_error(State, "stale domain lifetime");
     return *Value;
 }
-bool PackageName(const char* Name)
-{
-    size_t Length = 0, Segment = 0, Segments = 1;
-    while (Length < 66 && Name[Length]) {
-        char C = Name[Length++];
-        if (C == '.') {
-            if (!Segment || Segments == 2) return false;
-            Segment = 0; ++Segments;
-        } else if ((C >= 'a' && C <= 'z') || (C >= '0' && C <= '9') || C == '_' || C == '-') {
-            if (!Segment && (C == '_' || C == '-')) return false;
-            if (++Segment > 32) return false;
-        } else return false;
-    }
-    if (!Length || Length > 65 || !Segment || Name[Length] || Name[Length - 1] == '_' || Name[Length - 1] == '-') return false;
-    return std::strcmp(Name, "carbonluau") != 0 && std::strncmp(Name, "carbonluau.", 11) != 0;
-}
-bool PackageVersion(const char* Version)
-{
-    size_t Length = 0;
-    while (Length < 33 && Version[Length]) ++Length;
-    if (!Length || Length > 32 || Version[Length]) return false;
-    const char* Cursor = Version;
-    for (int Part = 0; Part < 3; ++Part) {
-        const char* Start = Cursor; uint64_t Value = 0;
-        while (*Cursor && *Cursor != '.') {
-            if (*Cursor < '0' || *Cursor > '9' || Cursor - Start >= 10) return false;
-            Value = Value * 10 + uint64_t(*Cursor++ - '0');
-            if (Value > UINT32_MAX) return false;
-        }
-        if (Cursor == Start || (Cursor - Start > 1 && *Start == '0')) return false;
-        if (Part < 2) { if (*Cursor != '.') return false; ++Cursor; }
-        else if (*Cursor) return false;
-    }
-    return true;
-}
+bool PackageName(const char* Name) { return Semantics::PackageName(Name); }
+bool PackageVersion(const char* Version) { return Semantics::PackageVersion(Version); }
 void InstallDomainBindings(lua_State* State, Domain& Owner);
 int RequireModule(lua_State* State)
 {
@@ -71,31 +35,27 @@ int RequireModule(lua_State* State)
     if (Length >= 196 || std::strlen(Name) != Length)
         luaL_error(State, "module INVALID_ARGUMENT: expected a bounded canonical logical name");
     Domain* Owner = &Consumer;
-    std::string LogicalName;
+    std::string LogicalName, Package;
+    bool Declared = false, Available = false;
     if (Length && Name[0] == '@') {
         const char* Slash = std::strchr(Name + 1, '/');
-        std::string Package(Name + 1, Slash ? size_t(Slash - Name - 1) : Length - 1);
-        if (!PackageName(Package.c_str())) luaL_error(State, "package %s: INVALID_ARGUMENT", Name);
+        Package.assign(Name + 1, Slash ? size_t(Slash - Name - 1) : Length - 1);
         DependencyBinding* Binding = nullptr;
         for (auto& Candidate : Consumer.Dependencies) if (Candidate.Id == Package) { Binding = &Candidate; break; }
-        if (!Binding) luaL_error(State, "package @%s: UNDECLARED_DEPENDENCY", Package.c_str());
-        if (!Binding->Target || !GetDomain(Runtime, Binding->Target->Id, true))
-            luaL_error(State, "package @%s: DEPENDENCY_UNAVAILABLE", Package.c_str());
-        Owner = Binding->Target;
-        if (!Slash) {
-            if (Owner->MainModule.empty()) luaL_error(State, "package @%s: MAIN_NOT_DECLARED", Package.c_str());
-            LogicalName = Owner->MainModule;
-        } else {
-            LogicalName.assign(Slash + 1);
-            if (!ModuleName(LogicalName.c_str(), 128))
-                luaL_error(State, "package %s: INVALID_ARGUMENT", Name);
-            if (std::find(Owner->PublicModules.begin(), Owner->PublicModules.end(), LogicalName) == Owner->PublicModules.end())
-                luaL_error(State, "package %s: MODULE_NOT_PUBLIC", Name);
-        }
-    } else {
-        if (Length >= 128 || !ModuleName(Name, Length + 1))
+        Declared = Binding != nullptr;
+        Available = Binding && Binding->Target && GetDomain(Runtime, Binding->Target->Id, true);
+        if (Available) Owner = Binding->Target;
+    }
+    auto Resolution = Semantics::SelectModule(Name, Length, Declared, Available, Owner->MainModule, Owner->PublicModules, LogicalName);
+    switch (Resolution) {
+        case Semantics::ImportError::InvalidName:
             luaL_error(State, "module INVALID_ARGUMENT: use lowercase segments joined by single '/'; no extension or traversal");
-        LogicalName.assign(Name, Length);
+        case Semantics::ImportError::InvalidPackage: luaL_error(State, "package %s: INVALID_ARGUMENT", Name);
+        case Semantics::ImportError::Undeclared: luaL_error(State, "package @%s: UNDECLARED_DEPENDENCY", Package.c_str());
+        case Semantics::ImportError::Unavailable: luaL_error(State, "package @%s: DEPENDENCY_UNAVAILABLE", Package.c_str());
+        case Semantics::ImportError::MissingMain: luaL_error(State, "package @%s: MAIN_NOT_DECLARED", Package.c_str());
+        case Semantics::ImportError::PrivateModule: luaL_error(State, "package %s: MODULE_NOT_PUBLIC", Name);
+        case Semantics::ImportError::None: break;
     }
     auto Found = Owner->Modules.find(LogicalName);
     if (Found == Owner->Modules.end()) luaL_error(State, "module %s: NOT_FOUND", Name);

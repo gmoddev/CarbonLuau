@@ -1,5 +1,5 @@
 #include "CompilerProtocol.hpp"
-#include "Luau/Compiler.h"
+#include "CompilePolicy.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -60,21 +60,9 @@ int main()
             return 3;
         std::string Source(SourceLength, '\0');
         if (SourceLength && !ReadAll(reinterpret_cast<uint8_t*>(Source.data()), Source.size())) return 4;
-        uint32_t Status = 0;
-        std::string Payload;
-        try {
-            Luau::CompileOptions Options;
-            Options.optimizationLevel = 1;
-            Options.debugLevel = 1;
-            Payload = Luau::compile(Source, Options);
-            if (Payload.empty() || Payload.size() > CompilerProtocol::MaximumPayloadBytes) {
-                Status = 1; Payload = "compiler output exceeded its bound";
-            }
-        } catch (const std::exception& Error) {
-            Status = 1; Payload = Error.what();
-        } catch (...) {
-            Status = 1; Payload = "compiler worker exception";
-        }
+        CompileResult Compilation = CompileBoundedSource(Source);
+        uint32_t Status = Compilation.Status == CompileStatus::Success ? 0 : 1;
+        std::string Payload = Status == 0 ? std::move(Compilation.Payload) : std::move(Compilation.Diagnostic);
         if (Payload.size() > CompilerProtocol::MaximumPayloadBytes) Payload.resize(CompilerProtocol::MaximumPayloadBytes);
         std::vector<uint8_t> Response = CompilerProtocol::Response(Nonce, Status, Payload);
         if (!WriteAll(Response.data(), Response.size())) return 5;
