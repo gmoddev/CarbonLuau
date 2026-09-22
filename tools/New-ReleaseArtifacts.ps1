@@ -49,6 +49,8 @@ try {
         packageVersion = $Release.packageVersion
         api = "$($Release.apiName) $($Release.apiVersion)"
         nativeAbi = $Release.nativeAbi
+        providerProtocol = "$($Release.providerProtocolName)/$($Release.providerProtocolVersion)"
+        packageSchema = $Release.packageSchema
         luauRevision = $Release.luauRevision
         rid = $Rid
         sourceRevision = $SourceRevision
@@ -124,8 +126,18 @@ try {
                 @{ Source = (Join-Path $Root 'docs/api/Gui-Reference.md'); Name = 'GUI-REFERENCE.md' },
                 @{ Source = (Join-Path $Root 'LICENSE'); Name = 'LICENSE' },
                 @{ Source = (Join-Path $Root 'THIRD_PARTY_NOTICES.md'); Name = 'THIRD_PARTY_NOTICES.md' },
+                @{ Source = (Join-Path $Root 'native/third_party/luau/LICENSE.txt'); Name = 'LUAU-LICENSE.txt' },
+                @{ Source = (Join-Path $Root 'native/third_party/luau/lua_LICENSE.txt'); Name = 'LUA-LICENSE.txt' },
                 @{ Source = $ProvenancePath; Name = 'PROVENANCE.json' }
             )
+            # Include every existing public Luau/addon example, including the
+            # position/health/Teleport and local-module examples.
+            $Included = @{}; foreach ($File in $Files) { $Included[$File.Name] = $true }
+            foreach ($Example in (Get-ChildItem -LiteralPath (Join-Path $Root 'examples') -Recurse -File)) {
+                if ($Example.Extension -cne '.luau' -and $Example.Name -cne 'addon.json') { continue }
+                $Name = 'examples/' + [IO.Path]::GetRelativePath((Join-Path $Root 'examples'), $Example.FullName).Replace('\','/')
+                if (!$Included.ContainsKey($Name)) { $Files += @{ Source = $Example.FullName; Name = $Name } }
+            }
             foreach ($File in ($Files | Sort-Object Name)) {
                 Add-DeterministicEntry $Archive $File.Source $File.Name ([bool]$File.Executable)
             }

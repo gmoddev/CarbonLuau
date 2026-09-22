@@ -8,9 +8,11 @@ import subprocess
 import time
 import uuid
 import websocket
+import zipfile
 
 Parser = argparse.ArgumentParser()
 Parser.add_argument('--work', default='/work')
+Parser.add_argument('--bundle', help='Install exact release bundle instead of build/source artifacts')
 Args = Parser.parse_args()
 Work = Path(Args.work)
 Root = Work / 'runtime/server-linux'
@@ -18,10 +20,24 @@ Evidence = Work / 'evidence' / ('live-production-' + time.strftime('%Y%m%d-%H%M%
 Evidence.mkdir(parents=True, exist_ok=False)
 Log = Evidence / 'server.log'
 Data = Root / 'carbon/data/CarbonLuau'
+if Args.bundle:
+    # Only a task-owned disposable server is accepted by this runner. Reject
+    # pre-existing CarbonLuau data so this is a clean artifact installation.
+    if Data.exists():
+        raise RuntimeError('Clean bundle qualification requires absent CarbonLuau data')
+    with zipfile.ZipFile(Args.bundle) as Archive:
+        for Entry in Archive.infolist():
+            if Entry.filename.startswith('carbon/'):
+                Destination = (Root / Entry.filename).resolve()
+                if not Destination.is_relative_to(Root.resolve()):
+                    raise RuntimeError('Unsafe bundle path')
+                Archive.extract(Entry, Root)
+    (Data / 'native/linux-x64/carbonluau_compiler').chmod(0o755)
 Native = Data / 'native/linux-x64'
 Native.mkdir(parents=True, exist_ok=True)
-for Name in ['libcarbonluau_native.so', 'carbonluau_compiler']:
-    shutil.copy2(Work / 'build/release' / Name, Native / Name)
+if not Args.bundle:
+    for Name in ['libcarbonluau_native.so', 'carbonluau_compiler']:
+        shutil.copy2(Work / 'build/release' / Name, Native / Name)
 (Data / 'scripts').mkdir(parents=True, exist_ok=True)
 (Data / 'scripts/modules').mkdir(parents=True, exist_ok=True)
 (Data / 'scripts/init.luau').write_text('-- Isolated Player-1F-B qualification root\n')
@@ -37,7 +53,8 @@ for Name, Mutation in {
 OldFixture = Root / 'carbon/plugins/CarbonLuau.GiveItemG1Evidence.cs'
 if OldFixture.exists():
     shutil.move(str(OldFixture), str(Evidence / OldFixture.name))
-shutil.copy2(Work / 'tools/CarbonLuau.cszip', Root / 'carbon/plugins/CarbonLuau.cszip')
+if not Args.bundle:
+    shutil.copy2(Work / 'tools/CarbonLuau.cszip', Root / 'carbon/plugins/CarbonLuau.cszip')
 Secret = uuid.uuid4().hex
 Console = (Evidence / 'console.log').open('w')
 Server = subprocess.Popen(['bash', 'carbon.sh', '-batchmode', '-nographics', '-logfile', str(Log),

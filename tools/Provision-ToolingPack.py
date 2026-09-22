@@ -37,6 +37,12 @@ for File in Args.publish.iterdir():
 for File in [Args.analysis, Args.launcher, Root / "generated/carbonluau.d.luau", Root / "generated/carbonluau-docs.json"]:
     shutil.copyfile(File, Target / File.name)
     Files[File.name] = None
+for File, Name in [(Root / "LICENSE", "CarbonLuau-LICENSE.txt"),
+                   (Root / "native/third_party/luau/LICENSE.txt", "Luau-LICENSE.txt"),
+                   (Root / "native/third_party/luau/lua_LICENSE.txt", "Lua-LICENSE.txt"),
+                   (Root / "tooling/THIRD_PARTY_NOTICES.txt", "Tooling-THIRD-PARTY-NOTICES.txt")]:
+    shutil.copyfile(File, Target / Name)
+    Files[Name] = None
 if bool(Args.preview_native) != bool(Args.preview_launcher):
     raise SystemExit("Supply both preview native bridge and launcher")
 if Args.preview_native:

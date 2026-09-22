@@ -68,3 +68,16 @@ binaries.
 
 No tag or GitHub Release is created by these scripts or workflows. Publishing
 `v0.4.0` remains a separate, explicitly authorized action.
+
+## Matching editor artifacts
+
+The extension's `tooling-source.json` pins the exact runtime candidate. Its
+`tools/Package.py` creates platform VSIX files from the canonical pack, records
+both commits and payload identities, normalizes ZIP metadata, and checks repeated
+packaging for identical hashes. Extension version `0.0.1` and tooling pack
+`0.4.0-rc.1` are independent of scripting API `0.4.0-experimental` and protocol
+`CarbonLuau.Tooling/1.0`; none changes the runtime ABI or package schema.
+Windows/Linux x64 VSIX artifacts require clean installed-extension E2E; macOS
+arm64 artifacts remain explicitly static-only. Hashes establish integrity, not
+publisher signing or OS sandboxing. Candidate artifacts are local/CI evidence,
+not a Marketplace, Open VSX or GitHub Release publication.

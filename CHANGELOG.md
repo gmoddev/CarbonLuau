@@ -13,6 +13,12 @@ All notable public changes to CarbonLuau are recorded here.
 
 ### Added
 
+- Official VS Code language/project tooling with generated runtime API definitions,
+  manifest/package diagnostics and supervised trusted language analysis.
+- Bounded GUI preview with canonical geometry, hierarchy, inspector and resource
+  usage. Deterministic scripts repeat; arbitrary Luau scripts are not guaranteed
+  repeatable. Windows/Linux x64 execution; macOS remains static-only.
+
 - Committed-only `Player:GiveItem(ShortName, Amount, Behavior?)`, defaulting to
   typed `GiveItemBehavior.InventoryOnly`; bounded complete planning, exact-slot
   transfer, returned-item accounting/cleanup and combined physical VERIFY.
