@@ -2,7 +2,7 @@
 
 CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers, with a Roblox/Luau-familiar scripting model, addons, Player gameplay APIs and retained GUI.
 
-The latest published release is [v0.3.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.3.0). The `0.4.0` candidate is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
+The latest published release is [v0.4.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.4.0). The `0.4.0` release is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
 
 ## Install and write a script
 
