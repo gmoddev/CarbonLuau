@@ -13,6 +13,7 @@ import zipfile
 Parser = argparse.ArgumentParser()
 Parser.add_argument('--work', default='/work')
 Parser.add_argument('--bundle', help='Install exact release bundle instead of build/source artifacts')
+Parser.add_argument('--fixture-package', help='Separate fixture-only package, loaded after the unmodified bundle smoke')
 Args = Parser.parse_args()
 Work = Path(Args.work)
 Root = Work / 'runtime/server-linux'
@@ -21,6 +22,8 @@ Evidence.mkdir(parents=True, exist_ok=False)
 Log = Evidence / 'server.log'
 Data = Root / 'carbon/data/CarbonLuau'
 if Args.bundle:
+    if not Args.fixture_package:
+        raise RuntimeError('Bundle live smoke requires a separate fixture package for the subsequent host-adapter tests')
     # Only a task-owned disposable server is accepted by this runner. Reject
     # pre-existing CarbonLuau data so this is a clean artifact installation.
     if Data.exists():
@@ -85,6 +88,18 @@ try:
     Wait('Server startup complete', 900)
     Socket = websocket.create_connection('ws://127.0.0.1:28316/' + Secret, timeout=10)
     Wait('[CarbonLuau:Runtime] Ready;')
+    if Args.bundle:
+        Command('carbonluau.status')
+        Offset = len(Log.read_text(errors='replace'))
+        Command('c.unload CarbonLuau')
+        Wait('[CarbonLuau:Native] Native library unloaded successfully.', Offset=Offset)
+        print('[CarbonLuau:ReleaseLive] PASS unmodified release bundle load/generation/unload', flush=True)
+        # Qualification instrumentation is explicit and never enters the release
+        # artifact. Native/compiler files remain the installed bundle binaries.
+        shutil.copy2(Args.fixture_package, Root / 'carbon/plugins/CarbonLuau.cszip')
+        Offset = len(Log.read_text(errors='replace'))
+        Command('c.load CarbonLuau')
+        Wait('[CarbonLuau:Runtime] Ready;', Offset=Offset)
     for Cycle in range(2):
         Offset = len(Log.read_text(errors='replace'))
         Command('carbonluau.player1fbfixture')
@@ -97,6 +112,14 @@ try:
         for Pid in RustPids:
             if 'libcarbonluau_native.so' in Path('/proc', Pid, 'maps').read_text():
                 raise RuntimeError('Native mapping survived unload')
+        for Entry in Path('/proc').iterdir():
+            if not Entry.name.isdigit():
+                continue
+            try:
+                if (Entry / 'exe').resolve().name == 'carbonluau_compiler':
+                    raise RuntimeError('Compiler worker survived unload')
+            except (FileNotFoundError, PermissionError):
+                pass
         print('[CarbonLuau:Player1FBRunner] Cycle ' + str(Cycle + 1) + ' PASS including native unmap', flush=True)
         if Cycle == 0:
             Offset = len(Log.read_text(errors='replace'))
