@@ -157,6 +157,12 @@ internal static class GuiFoundation2FTests
                 Runtime.ExecutionResult Result = Host.Reload();
                 Check(Result.Status == Runtime.RuntimeStatus.OK, "public example executes: " + Example + ": " + Result.Error);
                 Host.Drain();
+                // A fresh installed process can spend its first 1 ms GUI flush
+                // budget JIT-compiling the flush path. Tick the normal bounded
+                // scheduler until the presentation is sent; keep runtime limits.
+                for (int Tick = 0; Tick < 100 && Backend.Calls().Length == 0; ++Tick) {
+                    System.Threading.Thread.Sleep(10); Host.Drain();
+                }
                 Check(World.Gui.LivePresentations >= 1 && Backend.Calls().Length >= 1,
                     "public example produces a retained Presentation: " + Example);
             }
