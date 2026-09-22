@@ -8,27 +8,35 @@ The accepted scoped determinism rule is in [the canonical baseline](ToolingBasel
 ## Delivery record
 
 Local qualification passed before the implementation commit. The following
-implementation revisions and CI outcomes are recorded below. A Windows extension
+implementation revisions and passing CI outcomes are recorded below. A Windows extension
 CI run exposed a private analysis-directory sharing violation during rapid
 snapshot replacement. The correction retries only Windows sharing/lock violations
 for a one-second budget after process/watch disposal; a persistent failure still
 closes the supervisor. Real held-file tests cover delayed release and persistent
 failure. Preview/analysis execution limits and Workspace Trust are unchanged.
+The correction passed real held-file tests, five repeated Windows snapshot and
+shutdown cycles, the full 25-test Windows extension suite and Linux analysis
+regressions before commit. This final completion update changes evidence only.
 
 | Item | Recorded result |
 |---|---|
 | Runtime implementation/evidence commit | [`6552a3b3ff127a897a205d76a9f79e974a720d78`](https://github.com/gmoddev/CarbonLuau/commit/6552a3b3ff127a897a205d76a9f79e974a720d78) |
 | Extension implementation commit | [`30e82cdb55b70e09fc6daf12e04daf197ac43b6b`](https://github.com/gmoddev/carbonluau-vscode/commit/30e82cdb55b70e09fc6daf12e04daf197ac43b6b) |
-| Runtime validation CI | [PASS: Windows, Linux, sanitizers](https://github.com/gmoddev/CarbonLuau/actions/runs/35677388316) |
-| Runtime tooling CI | [PASS: Windows/Linux execution and macOS static](https://github.com/gmoddev/CarbonLuau/actions/runs/35677388350) |
-| Runtime baseline CI | [PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/35677388358) |
-| Extension CI | [Initial run](https://github.com/gmoddev/carbonluau-vscode/actions/runs/35677413183): Linux and macOS static passed; Windows exposed the cleanup race above. Corrected run pending. |
+| Final runtime implementation / cleanup correction | [`3d0fce97ecc3aeb6f078f26c03b5328198d38fbe`](https://github.com/gmoddev/CarbonLuau/commit/3d0fce97ecc3aeb6f078f26c03b5328198d38fbe) |
+| Final extension / corrected canonical pin | [`c93210ea692607ddd8d2ecb607753f8e30e4f7fa`](https://github.com/gmoddev/carbonluau-vscode/commit/c93210ea692607ddd8d2ecb607753f8e30e4f7fa) |
+| Runtime validation CI | [PASS: Windows, Linux, sanitizers](https://github.com/gmoddev/CarbonLuau/actions/runs/35677995777) |
+| Runtime tooling CI | [PASS: Windows/Linux execution and macOS static](https://github.com/gmoddev/CarbonLuau/actions/runs/35677995786) |
+| Runtime baseline CI | [PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/35677995782) |
+| Extension CI | [PASS: Windows/Linux actual editor and macOS static](https://github.com/gmoddev/carbonluau-vscode/actions/runs/35678021331) |
+
+The [initial extension run](https://github.com/gmoddev/carbonluau-vscode/actions/runs/35677413183)
+passed Linux and macOS static checks but exposed the Windows cleanup race above.
+It is preserved as failed evidence, not counted as a passing qualification.
 
 ## Required completion report
 
-1. **Verdict:** PASS for the agreed Windows/Linux Foundation B scope after the
-   recorded local gates. macOS execution remains unqualified/static-only. Remote
-   CI status is reported separately above.
+1. **Verdict:** PASS for the agreed Windows/Linux Foundation B scope after local
+   and hosted CI gates. macOS execution remains unqualified/static-only.
 2. **CarbonLuau starting commit:** current main
    `c37c36e0508a759c899dfdd4a1545cc923a88fc6`.
 3. **Extension starting commit:** current main
@@ -38,7 +46,8 @@ failure. Preview/analysis execution limits and Workspace Trust are unchanged.
    `e7256299d78e8c24c10272ecb326e8512cd8758e`. No reconciliation commit or conflict;
    completed Player work was preserved.
 5. **Foundation B commits:** see delivery record. Implementation, tests, protocol,
-   shared-source routing and determinism evidence are committed together.
+   shared-source routing and determinism evidence were committed together;
+   the bounded cleanup correction and final evidence follow separately.
 6. **Final tested commits:** the delivery record identifies immutable CI heads.
    Pre-commit execution used the same source in isolated worker directories with
    explicit local pack provenance; that provenance is not a release identity.
@@ -176,7 +185,8 @@ failure. Preview/analysis execution limits and Workspace Trust are unchanged.
 36. **Branches/worktrees:** both use `codex/tooling-foundation-b`, runtime
     `CarbonLuau-tooling-b` and extension `carbonluau-vscode-b`, isolated from the
     shared main checkout. Earlier worktrees/stashes and
-    `carbonluau-cleanup-ZPFPMR` remain untouched. Delivery does not merge main.
+    `carbonluau-cleanup-ZPFPMR` remain untouched. Both branches are pushed;
+    delivery does not merge main. No implementation changes remain uncommitted.
 
 ## Reproduction and worker ownership
 
