@@ -1,9 +1,18 @@
-# Proposed D21 durability amendment — NOT ADOPTED
+# D21 durability amendment — APPROVED 2026-09-23
 
-For explicit user review, 2026-09-23. Supporting
-[investigation](PersistenceDurabilityInvestigation.md). No production or canonical
-behavior is changed by this proposal. The decision remains owned by
-[D21](Invariants.md#d21--persistence-foundation-1), not this file.
+The user explicitly approved this amendment on 2026-09-23. Its changes are now
+applied to [D21](Invariants.md#d21--persistence-foundation-1) and
+[PersistenceFoundation1.md](PersistenceFoundation1.md), which remain canonical.
+This file retains the reviewed proposal text below as adoption history, not a
+parallel policy owner; the original filename is retained for link stability.
+Supporting [investigation](PersistenceDurabilityInvestigation.md) is recorded at
+`a163bec302f13cc4c091c2cb7b80cd882a26ed5f`. No production implementation, new
+qualification result, release identity, or Persistence-1B work is included.
+
+Adoption checks: the canonical D21 replacement matches the approved paragraph;
+`tools/Test-Architecture.ps1`, `tools/Test-Api.ps1` and Git whitespace checks pass.
+Only documentation changed. Prior research/runtime evidence is preserved, not
+rerun or promoted by these static checks.
 
 ## Proposed D21 replacement
 

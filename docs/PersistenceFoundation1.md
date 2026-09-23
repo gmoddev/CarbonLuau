@@ -265,7 +265,7 @@ locks held or awaited by a Luau callback. Other tools/plugins must not edit the
 database while online. One database makes corruption a storage-service-wide
 availability risk; namespace isolation is logical, not separate crash isolation.
 
-Use rollback `journal_mode=DELETE`, `synchronous=EXTRA`, fixed page size above,
+Use rollback `journal_mode=PERSIST`, `synchronous=EXTRA`, fixed page size above,
 `max_page_count`, bounded cache, `temp_store=MEMORY`, mmap disabled, no automatic
 VACUUM, no ATTACH, extension loading, dynamic schema or user SQL. Verify effective
 settings, do not assume a PRAGMA was accepted. Fixed parameterized operations only.
@@ -274,9 +274,19 @@ limits. Startup checks known schema, format, bounds and database integrity befor
 Ready. Interrupted journal recovery is performed by SQLite, never manual deletion
 of a hot journal. No WAL/checkpoint subsystem is needed for one serial worker.
 
+Configure PERSIST/EXTRA on every connection; do not rely on the mode being
+remembered across reopen. Retain the journal with journal_size_limit=-1;
+do not set it to zero or use cleanup to change the commit mechanism.
+SQLite owns journal contents and hot-journal recovery. A retained
+store.sqlite3-journal is expected storage, not a disposable stale file.
+Initial directory/database/journal creation and recovery must be qualified
+before Ready. Disable cache spill for the fixed single-key workload and
+qualify its memory and physical-journal bound. No custom VFS or external
+post-commit file/volume-flush layer is part of Foundation 1.
+
 Database page ceiling is not by itself a journal/disk quota. Before opening an
 existing file, verify file sizes under the directory budget; otherwise stop without
-reading it into memory. Qualify worst-case DELETE journal growth under the fixed
+reading it into memory. Qualify worst-case active and retained PERSIST journal allocation under the fixed
 page/transaction settings and prohibit workload features that could create unbounded
 temporary files. Reserve journal headroom; `journal_size_limit` alone is not an
 active-journal bound. Persistence-1A must prove the 1,280 MiB total ceiling or stop
@@ -285,21 +295,32 @@ External files/backups are operator-owned and cannot be bounded by this service.
 
 ## 7. Durability, atomicity and uncertainty
 
-For Set/Remove, **success callback means SQLite COMMIT returned success after the
-configured durable journal/VFS synchronization**, and the worker response was
-validated. This is not in-memory acceptance, an OS write-buffer flush alone, or
-promise to save on shutdown. Each key mutation and its quota accounting form one
-transaction; no torn public value or partial quota update. No multikey public
-transaction. Remove's true/false is determined in that same transaction.
+For Set/Remove, success means the transaction containing the key mutation
+and its quota accounting completed SQLite COMMIT successfully after the
+required journal, database and retained-journal commit-marker synchronization,
+and CarbonLuau validated its worker response before reporting completion.
+There is no success at enqueue, memory update or database flush alone.
+The PERSIST commit marker is the synchronized invalid journal header.
+Remove's true/false is determined inside that same transaction. No public
+multikey transaction is introduced.
 
 Selected basis: SQLite's [atomic commit design](https://sqlite.org/atomiccommit.html),
 [EXTRA synchronization](https://sqlite.org/pragma.html#pragma_synchronous), and
 [transaction failure semantics](https://sqlite.org/lang_transaction.html).
-EXTRA adds the rollback-journal directory synchronization appropriate to DELETE
-mode. This is a defensible intended boundary, not a new Windows/Linux power-loss
-test result. Filesystem/VFS/device compliance with flush and atomicity assumptions
-is required; lying disks, hardware failure, external editing and unsupported mounts
-are not covered. No universal hardware/power-loss guarantee or backup is promised.
+PERSIST commits by invalidating and synchronizing the retained journal
+after database synchronization. FULL and EXTRA have the same ordinary
+PERSIST commit sequence in the qualified pin; EXTRA remains the configured
+policy. This avoids relying on per-commit journal deletion durability.
+It does not eliminate initial file/directory creation, recovery, locking,
+filesystem/device or virtualization assumptions. Process-crash recovery
+evidence is distinct from OS-crash or physical power-loss qualification.
+
+The [2026-09-23 approved amendment](PersistenceD21Amendment-Proposed.md) adopts
+the [investigation's](PersistenceDurabilityInvestigation.md) implementation path,
+not production qualification. The original DELETE/EXTRA proof gap remains
+historical evidence, not observed NTFS data loss. Lying disks, hardware failure,
+external editing and unsupported mounts are not covered. No universal
+hardware/power-loss guarantee or backup is promised.
 
 | Event | Contract |
 |---|---|
@@ -308,7 +329,7 @@ are not covered. No universal hardware/power-loss guarantee or backup is promise
 | Crash before commit | SQLite recovers to a complete prior state under qualified assumptions. No success was reported. |
 | Commit then crash/lost response | New value may be durable without any callback. Outcome is indeterminate to the caller. |
 | Server/process crash after success | Acknowledged commit is recovered under the selected backend contract, not dependent on Luau state. |
-| OS crash/power loss | Same intended durability only under qualified SQLite/VFS/filesystem/device guarantees; no stronger promise. |
+| OS crash/power loss | Intended durability is conditional on the qualified complete storage stack honoring synchronization, ordering and namespace recovery. No tested OS-crash or physical power-loss claim follows from process-kill tests. |
 | Disk full, write/sync/delete failure | No success. Definite StorageFull/StorageError only after proven rollback/no commit; otherwise Indeterminate and service recovery before more work. |
 | Partial physical write | Journal recovery protects transaction boundaries within backend assumptions; corruption triggers fail-closed behavior, not a partial decoded value. |
 | Rename failure | No application-level rename is in normal Set/Remove. Worker initialization/maintenance failure never becomes success; no fallback copy-overwrite. |
@@ -564,7 +585,7 @@ or transformation callback.
 12. Provisional reads: async Get rejected; disk-free facade acquisition allowed.
 13. Provisional writes: reject via authoritative predicate; defer only after commit.
 14. Backend: private pinned SQLite worker, fixed statements and one database.
-15. Durability: verified successful durable COMMIT, subject to qualified OS/VFS/device.
+15. Durability: PERSIST/EXTRA synchronized retained-journal commit marker plus validated worker result, subject to the process/OS/power-loss distinctions in section 7.
 16. Atomicity: one key plus accounting per transaction, no public multikey operation.
 17. Crash: recover old/new complete state; lost response can be indeterminate.
 18. Corruption: controlled error, disable service, preserve files, no automatic reset.

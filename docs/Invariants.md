@@ -156,7 +156,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
 | D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
-| D21 — resolved Persistence Foundation 1 architecture; unimplemented; 1A durability gate blocked | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. [1A investigation](PersistenceFoundation1A.md) records the unqualified Windows post-delete durability premise. | Establish a supported equivalent Windows durable boundary or explicitly approve a canonical change; then separately qualify 1A/1B/1C. No weakened durability or current version change |
+| D21 — resolved Persistence Foundation 1 architecture; PERSIST durability amendment approved; unimplemented | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The [durability investigation](PersistenceDurabilityInvestigation.md) establishes the approved PERSIST/EXTRA implementation path; the historical DELETE proof gap is preserved. | Separately qualify 1A/1B/1C, including startup/recovery, codec, quotas, physical bounds, worker containment and platform integration. No production PASS or current version change |
 
 ### Canonical detail for resolved decisions
 
@@ -366,27 +366,35 @@ must check byte/depth/count/allocation/deadline bounds and execute no metamethod
 Names/keys are exact validated logical identifiers, never filesystem paths.
 
 Select one private pinned SQLite database in a supervised storage helper, with
-fixed parameterized operations, rollback DELETE journaling and EXTRA synchronization
-verified against qualified local Windows/Linux VFS/filesystem behavior. Do not use
-Carbon/Oxide direct JSON writes or its generic SQLite queue as evidence of this
-contract. One transaction mutates a key and durable quota accounting atomically.
-Success callback follows verified durable COMMIT, not memory/queue acceptance;
-hardware/OS dishonesty is not covered. Uncertain post-dispatch mutations report
-Indeterminate, never rollback/exactly-once/retry. Corruption or unsupported format
-fails closed and preserves storage for operator recovery, never defaults/overwrites.
+fixed parameterized operations, rollback PERSIST journaling and EXTRA
+synchronization verified against qualified local Windows/Linux VFS/filesystem
+behavior. Each connection must configure and verify these settings before Ready.
+Commit uses SQLite's retained-journal invalidation and synchronization, not
+journal-file deletion. Do not use Carbon/Oxide direct JSON writes or its generic
+SQLite queue as evidence of this contract. One transaction mutates a key and
+durable quota accounting atomically. Success follows checked SQLite COMMIT after
+its ordered journal, database and journal-commit-marker synchronization, and a
+validated worker result; it never means queue or memory acceptance. Successfully
+acknowledged transactions survive ordinary worker/server-process crashes when
+reopening the same intact storage under the qualified filesystem/device
+assumptions. OS-crash and power-loss durability are conditional on the complete
+OS/VFS/filesystem/virtualization/device stack honoring synchronization, ordering
+and namespace recovery; do not claim tested physical power-loss survival without
+such testing. Hardware/OS dishonesty and catastrophic or external storage damage
+are not covered. Uncertain post-dispatch mutations report Indeterminate, never
+rollback/exactly-once/retry. Corruption or unsupported format fails closed and
+preserves storage, including journals, for operator recovery, never defaults or
+overwrites it. Retained journals count toward the existing physical directory
+ceiling and must not be manually deleted or zeroed during startup or shutdown.
 
-**Current qualification gate:** the [Persistence-1A investigation](PersistenceFoundation1A.md)
-observed SQLite 3.53.4 `win32` accepting EXTRA while ignoring the journal-delete
-directory-sync request. No equivalent Windows durable boundary is established by
-that result. Production 1A implementation is blocked pending that proof or an
-explicitly approved canonical change. This is not proof of NTFS data loss or a
-categorical SQLite rejection; the accepted contract above is unchanged.
-
-The [follow-up durability investigation](PersistenceDurabilityInvestigation.md)
-recommends built-in PERSIST/EXTRA with process-crash and sync-fault evidence on
-both platforms. The [exact D21 amendment](PersistenceD21Amendment-Proposed.md)
-awaits explicit approval; it is not adopted by this research record. Production
-1A remains gated, and no OS/power-loss or production integration PASS is implied.
+**Current qualification gate:** the historical DELETE/EXTRA Windows directory-sync
+proof gap remains recorded in [PersistenceFoundation1A.md](PersistenceFoundation1A.md).
+[PersistenceDurabilityInvestigation.md](PersistenceDurabilityInvestigation.md)
+establishes the built-in PERSIST/EXTRA path for implementation, not production
+qualification. Persistence-1A must still prove startup/recovery, codec, quotas,
+physical bounds, worker containment, failure handling and platform integration
+before PASS. The [durability amendment](PersistenceD21Amendment-Proposed.md) was
+explicitly approved on 2026-09-23; this changes no runtime or release identity.
 
 One serial worker receives bounded bytes/scalars only. Per-namespace FIFO and fair
 global dispatch, reserved completion capacity, rate/count/byte/disk limits and a

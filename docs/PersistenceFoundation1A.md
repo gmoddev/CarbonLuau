@@ -8,9 +8,10 @@ matching fetched `origin/main` at investigation start).
 below describe that attempt, before the separately authorized follow-up. The
 [durability investigation](PersistenceDurabilityInvestigation.md) now recommends
 PERSIST/EXTRA and preserves this DELETE negative evidence. Its
-[D21 amendment](PersistenceD21Amendment-Proposed.md) awaits approval. The follow-up
-authorizes committing research (including this history), not adopting the
-amendment or claiming production 1A PASS. Current CMake also includes the new
+[D21 amendment](PersistenceD21Amendment-Proposed.md) was subsequently approved on
+2026-09-23 and applied canonically. The historical research commit did not adopt
+it or claim production 1A PASS; approval also does not establish that PASS.
+Current CMake includes the new
 mode probe; the original CMake hash below is historical, not its current hash.
 
 [D21](Invariants.md#d21--persistence-foundation-1) and

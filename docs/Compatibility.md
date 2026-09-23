@@ -707,8 +707,8 @@ Windows/Linux call-path probes are not production storage or power-loss PASS.
 The [durability follow-up](PersistenceDurabilityInvestigation.md) recommends stock
 PERSIST/EXTRA after Windows NTFS and Linux ext4-container process-crash, sync-fault
 and Linux ASan/UBSan research checks. Its [D21 amendment](PersistenceD21Amendment-Proposed.md)
-is **proposed, not adopted**. Canonical DELETE remains unchanged; production 1A
-awaits approval and its full implementation/qualification gates. These results
+was **approved on 2026-09-23**: canonical storage now selects PERSIST/EXTRA.
+Production 1A still requires its full implementation/qualification gates. These results
 do not qualify OS crash, physical power loss or actual Carbon acknowledgement.
 
 Documentation/evidence-only closure needs canonical-routing, link, signature,

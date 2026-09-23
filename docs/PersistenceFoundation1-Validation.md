@@ -2,6 +2,12 @@
 
 Date: 2026-09-23. Verdict: **CANONICAL BASELINE READY (design only)**.
 
+Subsequent durability research and the user-approved PERSIST/EXTRA amendment are
+recorded in [PersistenceDurabilityInvestigation.md](PersistenceDurabilityInvestigation.md)
+and the [adoption record](PersistenceD21Amendment-Proposed.md). D21 and the design
+now incorporate that amendment. This initial validation remains historical
+architecture evidence, not production durability qualification.
+
 Starting CarbonLuau commit: `72efcf253f46c5d4499bd7f2b5a69ae4ceb23946`.
 Fetched origin/main still matched that baseline. Entity negative evidence and D20
 adoption commit: `771742634bd65b0a3183e8d876c91554b12db9f7`.

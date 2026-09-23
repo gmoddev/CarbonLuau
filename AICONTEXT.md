@@ -53,8 +53,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Authoritative Entity lifetime investigation, negative evidence and D20 deferral | [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
 | Canonical Persistence Foundation 1 architecture (next runtime foundation; not implemented) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
 | Persistence design source evidence, consistency review and qualification limits | [PersistenceFoundation1-Validation.md](docs/PersistenceFoundation1-Validation.md) |
-| Persistence-1A Windows durability gate and reproducible SQLite VFS investigation (blocked; no production implementation) | [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md) |
-| Persistence durability follow-up: recommended PERSIST path, platform probes and amendment awaiting approval | [PersistenceDurabilityInvestigation.md](docs/PersistenceDurabilityInvestigation.md) and [proposed D21 amendment — not adopted](docs/PersistenceD21Amendment-Proposed.md) |
+| Historical Persistence-1A DELETE Windows durability proof gap and reproducible SQLite VFS investigation (no production implementation) | [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md) |
+| Persistence durability follow-up: approved PERSIST path, platform probes and adoption record | [PersistenceDurabilityInvestigation.md](docs/PersistenceDurabilityInvestigation.md) and [approved D21 amendment](docs/PersistenceD21Amendment-Proposed.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |

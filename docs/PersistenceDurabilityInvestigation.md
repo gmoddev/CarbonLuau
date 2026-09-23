@@ -2,6 +2,13 @@
 
 Date: 2026-09-23. Baseline: `271bff7df3e13bf287cafecaa2e2feff9c80689f`.
 
+**Subsequent adoption:** the user approved the [D21 amendment](PersistenceD21Amendment-Proposed.md)
+on 2026-09-23. Canonical D21 and PersistenceFoundation1.md now select PERSIST/EXTRA.
+The report below preserves the findings and pending-approval status as recorded
+in research commit `a163bec302f13cc4c091c2cb7b80cd882a26ed5f`; its statements that
+DELETE remains canonical or approval is pending describe that earlier point only.
+Adoption adds no production implementation or platform qualification evidence.
+
 **DURABILITY PATH RESOLVED — READY TO RESUME PERSISTENCE-1A**, subject to approval
 of the [separate proposed D21 amendment](PersistenceD21Amendment-Proposed.md).
 This is a research verdict, not production implementation/qualification PASS or
