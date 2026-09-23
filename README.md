@@ -64,6 +64,11 @@ Authenticated real-client behavior and Shockbyte full-runtime behavior remain ou
 
 ## Contributing
 
+Next runtime design: [Persistence Foundation 1](docs/PersistenceFoundation1.md)
+(architecture only; no storage API shipped). [World/Entity Foundation 1](docs/WorldEntityFoundation1.md)
+is host-primitive-gated/deferred; Entity-1A remains blocked by the
+[exact-lifetime proof gap](docs/WorldEntityLifetimeInvestigation.md).
+
 Start with [AICONTEXT.md](AICONTEXT.md), which maps each rule to its canonical document. [Invariants](docs/Invariants.md) owns architecture, security, and lifecycle requirements. [Compatibility](docs/Compatibility.md) owns support and validation policy. Historical phase contracts and qualification records remain in `docs/` for traceability.
 
 ## AI Disclaimer

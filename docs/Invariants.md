@@ -156,6 +156,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
 | D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
+| D21 — resolved Persistence Foundation 1 architecture; unimplemented | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. | Next runtime foundation: separately scoped Persistence-1A/1B/1C; prove worker, durability, namespace, publication and lifecycle gates before public support; no current version change |
 
 ### Canonical detail for resolved decisions
 
@@ -328,6 +329,71 @@ architecture is after the published 0.4.0 line, `0.5.0-experimental` is a natura
 future release-planning candidate if Entity-1 closes, but no such identity is assigned
 until implementation/public qualification.
 
+
+#### D21 — Persistence Foundation 1
+
+Persistence is the next runtime foundation; this is architecture adoption only.
+D20 remains independently HOST-PRIMITIVE-GATED / DEFERRED. The exact future
+surface is `game:GetService("DataStoreService")`, synchronous disk-free
+`GetDataStore(StoreName)`, and `DataStore:GetAsync(Key, Callback)`,
+`SetAsync(Key, Value, Callback)`, `RemoveAsync(Key, Callback)`. Async means
+non-yielding bounded submission and a separate later owner-thread callback,
+not a suspended Luau frame. Immediate return acknowledges acceptance only.
+[PersistenceFoundation1.md](PersistenceFoundation1.md) owns the detailed
+callback results/errors, logical names, value format and hard design ceilings.
+
+Persistent namespaces are host-selected Root or Addon/canonical stable PackageId,
+not provider/version/domain/VM identity. Data survives replacement, retirement,
+reload and restart; facade/callback authority does not. Reusing a stable package ID
+intentionally resumes its data under the installed-provider trust model. Store
+calls require current admitted domain == facade ResourceOwner. Sharing a facade
+or invoking a foreign exported closure does not transfer private namespace
+authority or switch D10's admission. No cross-addon shared store is approved.
+
+GetDataStore may participate in provisional facade publication without I/O.
+All async operations, including reads, require an existing nonprovisional admission
+and **no active publication scope**, reusing the authoritative mutation predicate.
+Writes are irreversible, never journaled as candidate publication or replayed.
+Reads are conservatively committed-only because Foundation 1 introduces no
+asynchronous initialization or yielding module model. Deferred work may submit
+only after commit; failed candidates/modules never dispatch persistence work.
+
+Values are bounded snapshots of booleans, finite binary64 numbers, UTF-8 strings,
+dense arrays and string-keyed maps. Nil means absence, not a stored value. Reject
+cycles, metatables, functions, threads, userdata and host objects. Preserve finite
+double bits without coercion; Get returns fresh ordinary values. Snapshot/decoding
+must check byte/depth/count/allocation/deadline bounds and execute no metamethods.
+Names/keys are exact validated logical identifiers, never filesystem paths.
+
+Select one private pinned SQLite database in a supervised storage helper, with
+fixed parameterized operations, rollback DELETE journaling and EXTRA synchronization
+verified against qualified local Windows/Linux VFS/filesystem behavior. Do not use
+Carbon/Oxide direct JSON writes or its generic SQLite queue as evidence of this
+contract. One transaction mutates a key and durable quota accounting atomically.
+Success callback follows verified durable COMMIT, not memory/queue acceptance;
+hardware/OS dishonesty is not covered. Uncertain post-dispatch mutations report
+Indeterminate, never rollback/exactly-once/retry. Corruption or unsupported format
+fails closed and preserves storage for operator recovery, never defaults/overwrites.
+
+One serial worker receives bounded bytes/scalars only. Per-namespace FIFO and fair
+global dispatch, reserved completion capacity, rate/count/byte/disk limits and a
+fixed request deadline bound work. Background I/O never touches Luau or host game
+objects. Owner-thread intake revalidates host/VM/domain epochs and admits completion
+later through existing fair, non-reentrant scheduling. No owner-thread file/process
+wait or blocking OS mutex. Original admitted deadlines are unchanged; the later
+callback is a new bounded admission, never a resumed timed-out operation.
+Retirement drops undispatched work/stale callbacks; a dispatched write may commit.
+Fence replacement work behind that transaction or confirmed worker death/recovery;
+never accumulate stuck replacement workers or call native code after unload.
+
+Foundation 1 excludes Update/transform, multikey transactions, key enumeration,
+queries, TTL, shared/cloud/remote stores, arbitrary files/SQL, automatic object
+persistence and Player/Entity serialization. Use existing D19 metadata ownership
+when implemented, with no tooling changes now. Persistence-1A is private backend/
+codec/namespace supervision; 1B is public facade/admission; 1C is crash/lifecycle/
+quota/platform/public closure. Future 0.5.0-experimental is a release-planning
+candidate instead of waiting for Entity, not an assigned version. No production
+API, package/API/ABI/provider/schema/Luau identity changes by this adoption.
 
 #### D2 — limits in addon-capable operation
 

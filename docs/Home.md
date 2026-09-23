@@ -55,6 +55,13 @@ The current source ownership map is recorded in
 
 ## Architecture direction
 
+The next runtime foundation is [Persistence Foundation 1](PersistenceFoundation1.md)
+under [D21](Invariants.md#d21--persistence-foundation-1), currently **design only**.
+DataStoreService is not an implemented API. World/Entity's accepted future design
+is [host-primitive-gated/deferred](WorldEntityFoundation1.md); Entity-1A is blocked
+by the [authoritative lifetime proof gap](WorldEntityLifetimeInvestigation.md),
+not a demonstrated ordinary-gameplay pooled-reuse bug.
+
 [Invariants](Invariants.md) owns canonical runtime policy. The approved GUI
 Foundation 1 contract is decision
 [D15](Invariants.md#d15--gui-foundation-1-retained-presentation-model), with

@@ -51,6 +51,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | World/Entity Foundation 1 rationale, host evidence, phase routing and qualification gates | [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) |
 | World/Entity Foundation 1A blocked lifetime-proof investigation (not implementation) | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) |
 | Authoritative Entity lifetime investigation, negative evidence and D20 deferral | [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
+| Canonical Persistence Foundation 1 architecture (next runtime foundation; not implemented) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
+| Persistence design source evidence, consistency review and qualification limits | [PersistenceFoundation1-Validation.md](docs/PersistenceFoundation1-Validation.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
@@ -297,6 +299,16 @@ filtering, spatial queries, lifecycle Signals, Spawn, Destroy and specialized
 entity capabilities require later explicit architecture rather than being
 implicitly authorized by D20. D20 changes no current package/API/ABI/provider/
 schema/Luau identity.
+
+Persistence Foundation 1 is the next runtime foundation under
+[D21](docs/Invariants.md#d21--persistence-foundation-1). Its
+[design](docs/PersistenceFoundation1.md) selects private root/addon namespaces,
+callback-based non-yielding storage and a bounded private SQLite worker;
+[design validation](docs/PersistenceFoundation1-Validation.md) is not runtime
+qualification. Separately scoped Persistence-1A/1B/1C work must implement and
+qualify it. No public DataStoreService, storage worker, API metadata or version
+change is authorized merely by this design adoption. Entity work remains gated;
+persistence does not weaken Entity identity or serialize Player/Entity facades.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

@@ -5,6 +5,10 @@
 - [0.3.0 release notes](releases/0.3.0.md)
 - Architecture
   - [Canonical invariants](Invariants.md)
+  - [World/Entity — host-primitive-gated](WorldEntityFoundation1.md)
+  - [Entity lifetime blocker evidence](WorldEntityLifetimeInvestigation.md)
+  - [Persistence Foundation 1 — design only](PersistenceFoundation1.md)
+  - [Persistence architecture validation](PersistenceFoundation1-Validation.md)
   - [Tooling Foundation A](ToolingFoundationACompletion.md)
   - [Language-analysis security](ToolingLanguageAnalysisSecurity.md)
   - [GUI Foundation 1](GuiFoundation1.md)

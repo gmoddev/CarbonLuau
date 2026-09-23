@@ -689,6 +689,34 @@ native ABI, provider protocol, package schema or Luau revision. The published
 be planned for `0.5.0-experimental`, but no such identity is assigned until
 Entity-1C public closure.
 
+## Persistence Foundation 1 architecture gate
+
+[D21](Invariants.md#d21--persistence-foundation-1) and
+[PersistenceFoundation1.md](PersistenceFoundation1.md) adopt the next runtime
+foundation, **design only**. No DataStoreService/worker/SQLite dependency or public
+metadata exists by adoption. [Design validation](PersistenceFoundation1-Validation.md)
+records upstream research and local architecture checks, not crash/durability or
+platform PASS. Current release identities and prior valid runtime evidence remain
+unchanged; 0.5.0-experimental is only a future release-planning candidate.
+
+Documentation/evidence-only closure needs canonical-routing, link, signature,
+decision/bounds, whitespace, scope and fixture-syntax checks, not unrelated native,
+live-server or sanitizer matrices. Preserved Entity research checks are historical
+evidence, not newly executed Entity qualification.
+
+Persistence-1A must pin the helper/SQLite source and qualify codec, worker process,
+protocol, filesystem confinement, durable commit, journal recovery, disk/quota
+limits and corruption behavior. Persistence-1B adds non-yielding callback admission,
+namespace authority, publication/failed candidates, deadlines and stale completions.
+Persistence-1C closes Windows x64 and glibc Linux x64 Carbon integration, replacement,
+provider unload, shared-VM recovery, server restart, crash/lost-ack uncertainty,
+failure injection, physical disk/memory/queue bounds, affected native sanitizer/
+allocation-fault and existing regression matrices, public metadata/docs and
+final-source CI. Process-kill tests do not prove power-loss safety on arbitrary
+hardware. Record SQLite revision, effective PRAGMAs, filesystem/VFS, worker limits,
+host versions and exact source/artifacts for each result. Shockbyte remains
+separately unqualified. Do not promote the design to implementation PASS.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:
