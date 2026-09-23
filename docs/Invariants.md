@@ -155,6 +155,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
+| D20 — resolved World/Entity Foundation 1 read-only architecture | Foundation 1 approves the domain-bound `Workspace` service, exact-lifetime `Entity` facade, string current-world `Id`, full canonical `Prefab`, read-only world-space `Position`, and keyed `GetEntityById` only. Whole-world enumeration, spatial query, lifecycle Signals and all world mutation remain deferred. [WorldEntityFoundation1.md](WorldEntityFoundation1.md) owns host evidence, detailed lifetime rules, phase routing and future mutation gates. | Implement only through Entity-1A–1C; requalify exact Rust/Carbon registry/lifetime behavior before public support and require an explicit later architecture amendment for query/Signal/Spawn/Destroy expansion |
 
 ### Canonical detail for resolved decisions
 
@@ -194,7 +195,121 @@ the paint-only preview consumer. macOS remains static-only. Distribution
 signing/attestation and publication administration remain separate gates; local
 release-candidate VSIX packaging is not a signature or publication claim.
 
-#### D2 — limits in addon-capable operation
+#### D20 — World/Entity Foundation 1
+
+World/Entity Foundation 1 approves exactly this future read-only surface:
+\`game:GetService("Workspace")\`; \`Workspace:GetEntityById(Id: string) -> Entity?\`;
+and the generic host-backed \`Entity\` properties \`Id: string\`, \`Prefab: string\`
+and \`Position: Vector3\`. \`Workspace\` is Rust-world ergonomics, not a Roblox
+DataModel hierarchy. No raw BaseNetworkable/BaseEntity/Transform/GameObject,
+serverEntities collection, host type hierarchy, reflection or generic host-call
+escape enters Luau. [WorldEntityFoundation1.md](WorldEntityFoundation1.md) owns the
+supporting host research and implementation-facing detail.
+
+A public Entity represents one exact currently registered BaseEntity host lifetime.
+CarbonLuau assigns an internal monotonically increasing EntityLifetimeToken, never
+reused within the loaded CarbonLuau host instance, and binds it to the exact managed
+host object, captured nonzero network ID, current keyed registry occupancy and
+captured prefab-lifetime evidence. Every host-backed operation revalidates the owning
+domain/publication/VM lifetime plus that exact host evidence on the owner thread.
+Destroyed, pooled, replaced, ID-changed or registry-replaced host state retires the
+old lifetime permanently. A stale proxy never re-resolves by ID and never retargets a
+replacement entity. The implementation must not strongly retain destroyed host
+objects merely to preserve facade identity.
+
+Entity equality compares the CarbonLuau host instance plus exact private entity
+lifetime token and never performs a host access. Two proxies for the same exact host
+lifetime may compare equal across domains; domain retirement can still make one proxy
+unusable. Equality remains available for stale proxies, but every host-backed
+property/method otherwise fails closed. Ordinary values already returned from an
+Entity, including Vector3/string snapshots, remain ordinary Luau values after
+retirement.
+
+\`Entity.Id\` is **not** exact lifetime identity. It is the canonical decimal string
+of the current nonzero 64-bit host network lookup key: 1..20 ASCII digits, no leading
+zero/sign/whitespace/exponent, parsed exactly as UInt64. Luau numbers are not
+accepted because they cannot exactly represent all UInt64 values. The ID is a
+current-world/process lookup key only and must not be treated as a persistence key
+or proof that a later lookup is the same entity lifetime. A well-formed unknown ID
+returns nil; malformed/noncanonical input is a programming error.
+\`GetEntityById\` must use a target-qualified keyed server-registry lookup plus
+constant validation and must never scan the registry. Registry entries that are not
+live BaseEntity values are ordinary absence for this service.
+
+\`Entity.Prefab\` is the exact full canonical host PrefabName/resource identity
+captured for the exact lifetime, after live validation. Foundation 1 exposes no
+Unity object name, ShortPrefabName, numeric prefab ID or resource object. The
+canonical design ceiling is 512 UTF-8 bytes with no NUL; exceeding it is a controlled
+host-state failure, not truncation. Future prefab input/spawn must separately
+qualify one bounded canonical server-prefab namespace and may not interpret a
+path-looking string as arbitrary filesystem/resource access.
+
+\`Entity.Position\` is a read-only live observation of the exact BaseEntity root
+\`Transform.position\` in Rust/Unity world coordinates, reusing D18's immutable
+project-owned Vector3. Parenting does not change the public coordinate space. No
+local coordinate, collider center, eye offset, terrain projection, Transform object
+or stale cached position is exposed. Nonfinite/unrepresentable host coordinates are
+controlled host-state failures.
+
+Entity proxies are non-owning domain-bound host facades. Lookup is allowed during
+provisional/cold-module execution because it is a read, but a newly-created proxy
+participates in D7/D10 publication: if the publication scope that created it fails,
+that proxy is permanently stale even if an ordinary Luau reference escaped.
+Sharing an already-committed proxy does not transfer its ResourceOwner or Rust entity
+ownership. Failed candidates preserve existing committed proxies; successful
+root/addon/provider retirement stales proxies owned by the retiring domain without
+destroying the world entity. A new domain may resolve a fresh proxy to a still-live
+host entity. Fatal VM recovery/reload invalidates old proxies, preserves Rust world
+state and never replays effects.
+
+Foundation 1 adopts no whole-world enumeration, prefab-filter query, spatial/radius
+query, lifecycle Signal or synthetic startup event. Rust worlds can contain hundreds
+of thousands of entities; a returned-result cap does not make an O(all entities)
+scan bounded. D20 creates no CarbonLuau world index. Current spawn/kill/load hook
+ordering is also not adopted as a simple symmetric EntityAdded/EntityRemoving
+contract. Any future collection/event surface requires explicit inspected-work,
+returned-result/queue and lifecycle-ordering bounds.
+
+Host-owned entities remain Rust-owned. If a future Spawn API succeeds, its entity
+likewise becomes ordinary Rust world state and is **not** auto-destroyed on addon,
+provider, domain, VM or CarbonLuau retirement. Persistent versus explicitly
+temporary creation must be separate contracts. Entity proxy identity never crosses a
+server process/restart merely because Rust may save an entity or reuse/restore a
+network ID.
+
+Spawn and Destroy are **deferred and unimplemented**. A future Spawn adapter must own
+canonical prefab validation, Create+Spawn as one operation, temporary returned-host
+resource responsibility, networking/registry verification, persistence semantics and
+a post-COMMIT uncertainty model. A future Destroy adapter must use the qualified
+normal Rust Kill path rather than raw Unity destruction, account for synchronous
+hook veto/interference, and verify retirement. No public spelling/signature is
+reserved by D20.
+
+Future Spawn, Destroy, Position writes and specialized entity mutations are
+committed-only irreversible host effects. They must reuse Player-1F-C's corrected
+authoritative mutation predicate: an existing nonprovisional admission **and no active
+publication scope**. Dependencies, nested/cold modules, pcall or scheduling cannot
+launder eligibility. I12 applies only when there is concrete evidence that another
+trusted in-process component synchronously changed operation-relevant state; it does
+not excuse unsafe adapter selection, bounds, resource accounting, normal callback
+outcomes or verification defects. Host-driven recursive VM entry remains prohibited;
+any future CarbonLuau-owned resulting event is admitted later through I4 bounded
+scheduling.
+
+Foundation 1's implementation routing is exactly: Entity-1A internal exact
+identity/lifetime/publication substrate; Entity-1B the read-only Workspace/Entity
+surface plus exact Rust build \`25353106\` / Carbon \`2.0.259\` registry, prefab,
+Position, startup/shutdown and churn qualification; Entity-1C cross-domain,
+replacement, provider unload, reload/fatal recovery, save/restart semantics,
+identity-table scale, public metadata/docs and release planning. Enumeration,
+spatial query, Signals, Spawn, Destroy and specialized capabilities require later
+explicit architecture rather than being implicitly authorized follow-on phases.
+
+D20 adoption changes no package/API/ABI/provider/schema/Luau identity. Because the
+architecture is after the published 0.4.0 line, \`0.5.0-experimental\` is a natural
+future release-planning candidate if Entity-1 closes, but no such identity is assigned
+until implementation/public qualification.
+\n\n#### D2 — limits in addon-capable operation
 
 Defaults remain 64 MiB/3 ms; clamps remain 16..256 MiB and 1..100 ms. Source remains 64 KiB, loaded bytecode 1 MiB, log buffer 4 KiB, with the existing native registry bound of 32 live VMs and one host thread per VM. Compiler/bridge/managed/source-snapshot memory remains outside the VM heap cap. Foundation G adds a fixed one-second compiler wall deadline and a production 256 MiB worker-process memory limit; neither is a whole-process cap.
 
