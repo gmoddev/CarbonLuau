@@ -27,7 +27,7 @@ The extension contains its tooling pack; no Carbon installation or source checko
 is required. Windows/Linux x64 support trusted language analysis and GUI preview;
 macOS arm64 is static-only. Restricted Mode retains static project diagnostics.
 
-Install only the native runtime and compiler worker matching the server platform:
+Install only the native runtime, compiler worker and private storage worker matching the server platform:
 
 ```text
 carbon/
@@ -38,7 +38,8 @@ carbon/
         |-- native/
         |   `-- win-x64/
         |       |-- carbonluau_native.dll
-        |       `-- carbonluau_compiler.exe
+        |       |-- carbonluau_compiler.exe
+        |       `-- carbonluau_storage.exe
         `-- scripts/
             |-- init.luau
             `-- modules/
@@ -50,22 +51,39 @@ For Linux, replace the `win-x64` subtree with:
 native/
 `-- linux-x64/
     |-- libcarbonluau_native.so
-    `-- carbonluau_compiler
+    |-- carbonluau_compiler
+    `-- carbonluau_storage
 ```
 
 Do not mix Windows and Linux files, and never install files from a test fixture
 package. The plugin loads one normalized, platform-specific runtime path;
-that runtime launches only its sibling compiler worker.
+that runtime launches only its sibling compiler worker. A separate managed
+supervisor launches the private storage worker off the game thread. Persistence-1A
+adds no public Luau persistence API. Storage failure does not disable scripting.
+
+The private worker owns `carbon/data/CarbonLuau/persistence/store.sqlite3` and
+its retained rollback journal. Use the qualified local NTFS/ext4 storage profile;
+network shares, cloud-synchronized folders and unqualified filesystem features
+are unsupported. Do not open or modify the database with other tools while the
+worker is running, enable WAL, or delete/zero the journal. Unsupported WAL formats
+are rejected; CarbonLuau does not silently convert them. Preserve failed storage
+for offline operator recovery rather than deleting it to make startup succeed.
+
+Logical quotas (16 MiB/namespace, 256 MiB/global) and SQLite page/file-length
+limits are hard bounds. The 1,280 MiB allocated-file figure is an operational
+budget/qualification target, **not** a strict physical allocation guarantee.
+See [Persistence-1A evidence and limits](PersistenceFoundation1A.md).
 
 ## Install and start
 
 1. Stop the Rust server or follow your normal safe Carbon plugin-maintenance
    procedure.
 2. Copy `CarbonLuau.cszip` to `carbon/plugins/CarbonLuau.cszip`.
-3. Copy the matching native runtime and compiler worker to the exact platform path above. On Linux, make the extracted worker executable:
+3. Copy the matching native runtime and both workers to the exact platform path above. On Linux, make the extracted workers executable:
 
    ```bash
    chmod 0755 carbon/data/CarbonLuau/native/linux-x64/carbonluau_compiler
+   chmod 0755 carbon/data/CarbonLuau/native/linux-x64/carbonluau_storage
    ```
 4. Create `carbon/data/CarbonLuau/scripts/modules`, even if it is initially empty.
 5. Create `carbon/data/CarbonLuau/scripts/init.luau` or copy one of the bundled

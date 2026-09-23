@@ -48,6 +48,9 @@ struct Domain {
     std::vector<Callback> Queue;
     std::vector<StagedModule> PendingModules;
     std::vector<Callback> PendingCallbacks;
+    // Separate intake slots: ordinary task/event queues cannot consume these.
+    // 1B will attach VM-owned callback references; no such public binding in 1A.
+    std::array<uint64_t,8> StorageReservations{};
     ClHostCall Host = nullptr;
     uint64_t HostIdentity = 0;
     int Game = LUA_NOREF, Dispatch = LUA_NOREF, GuiBindings = LUA_NOREF;
@@ -86,6 +89,7 @@ struct Vm {
     AdmissionContext* Admission = nullptr;
     PublicationScope* Publication = nullptr;
     bool IntegrityFailed = false;
+    uint32_t StorageReserved = 0;
     int GuiValueEqual = LUA_NOREF;
     ~Vm();
 };
@@ -137,6 +141,11 @@ void ReleaseDomain(Vm& Runtime, Domain& Value);
 Domain* AddDomain(Vm& Runtime, uint32_t MaxQueued);
 bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation);
 bool CanMutateHost(const Vm& Runtime);
+// Private Persistence-1A admission seam. Namespace authority follows the
+// admitted resource owner, never the provenance of a borrowed export closure.
+bool CanDispatchStorage(const Vm& Runtime, const Domain& ResourceOwner);
+bool ReserveStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId);
+bool ReleaseStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId);
 void RollbackPublication(PublicationScope& Scope);
 int FindStaged(Vm& Runtime, Domain* Owner, Module* Value);
 void Interrupt(lua_State* State, int Gc);

@@ -12,6 +12,7 @@
     <Compile Include="../../src/CarbonLuau/Facade/*.cs" Link="Facade/%(Filename)%(Extension)" />
     <Compile Include="../../src/CarbonLuau/Addons/*.cs" Link="Addons/%(Filename)%(Extension)" />
     <Compile Include="../../src/CarbonLuau/Gui/*.cs" Link="Gui/%(Filename)%(Extension)" />
+    <Compile Include="../../src/CarbonLuau/Persistence/*.cs" Link="Persistence/%(Filename)%(Extension)" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <Reference Include="System.IO.Compression" />

@@ -9,6 +9,33 @@ bool CanMutateHost(const Vm& Runtime)
     return Runtime.Admission && !Runtime.Admission->Provisional && !Runtime.Publication;
 }
 
+bool CanDispatchStorage(const Vm& Runtime, const Domain& ResourceOwner)
+{
+    return Runtime.Owner==std::this_thread::get_id() && Runtime.State && !Runtime.IntegrityFailed &&
+        ResourceOwner.Alive && ResourceOwner.Active && CanMutateHost(Runtime) &&
+        Runtime.Admission->Owner==&ResourceOwner;
+}
+
+bool ReserveStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId)
+{
+    if (!RequestId || !CanDispatchStorage(Runtime,ResourceOwner) || Runtime.StorageReserved>=128) return false;
+    auto& Slots=ResourceOwner.StorageReservations;
+    if (std::find(Slots.begin(),Slots.end(),RequestId)!=Slots.end()) return false;
+    auto Slot=std::find(Slots.begin(),Slots.end(),0);
+    if (Slot==Slots.end()) return false;
+    *Slot=RequestId; ++Runtime.StorageReserved; return true;
+}
+
+bool ReleaseStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId)
+{
+    if (!RequestId || Runtime.Owner!=std::this_thread::get_id() ||
+        GetDomain(Runtime,ResourceOwner.Id)!=&ResourceOwner) return false;
+    auto& Slots=ResourceOwner.StorageReservations;
+    auto Slot=std::find(Slots.begin(),Slots.end(),RequestId);
+    if (Slot==Slots.end()) return false;
+    *Slot=0; --Runtime.StorageReserved; return true;
+}
+
 bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation)
 {
     if (!Owner.Host || !Owner.HostBuffer) return true;

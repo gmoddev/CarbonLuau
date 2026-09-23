@@ -31,7 +31,7 @@ namespace Carbon.Plugins
                 RuntimeDomain Candidate = null; Busy = true;
                 try {
                     ScriptSnapshot Snapshot = Package.ToScriptSnapshot();
-                    Candidate = new RuntimeDomain(Native, Vm, Settings, Snapshot);
+                    Candidate = new RuntimeDomain(Native, Vm, Settings, Snapshot, Package.Id);
                     Candidate.Addon(Package, Bindings);
                     if (Facade != null) Candidate.Facade(new FacadeSession(Facade, Candidate.VmGenerationId, Candidate.DomainLifetimeId, Settings.MaxQueuedCallbacks));
                     ExecutionResult Result = Candidate.Execute("addon." + Package.Id + ".init", Snapshot.EntrySource, Settings.MaxCallbackMilliseconds);
@@ -95,4 +95,3 @@ namespace Carbon.Plugins
         }
     }
 }
-

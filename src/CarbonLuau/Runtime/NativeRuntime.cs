@@ -19,6 +19,7 @@ namespace Carbon.Plugins
             private static long NextHostLifetimeId;
             private bool Disposed;
             private bool InsideNative;
+            internal StorageQueue Storage;
             public long HostLifetimeId { get; private set; }
             public uint AbiVersion { get; private set; }
             public string Rid { get { return Loader.Rid; } }
@@ -93,7 +94,9 @@ namespace Carbon.Plugins
             {
                 CheckOwner();
                 if (!Vms.Contains(Handle)) return;
+                ulong StorageVm=Storage==null ? 0 : GenerationInfo(Handle).VmGenerationId;
                 Require(DestroyVm(Handle));
+                if (Storage!=null) Storage.RetireVm(StorageVm);
                 FacadeRoots.Remove(Handle);
                 Vms.Remove(Handle);
                 DestroyedVmCount++;
@@ -142,6 +145,7 @@ namespace Carbon.Plugins
             {
                 if (Disposed) return;
                 CheckOwner();
+                if (Storage!=null) Storage.RetireAll();
                 foreach (ulong Handle in new List<ulong>(Vms)) Destroy(Handle);
                 Disposed = true;
                 CreateVm = null; DestroyVm = null; DestroyThread = null; ReadInfo = null; ReadGenerationInfo = null; LoadSource = null; Resume = null;
@@ -150,4 +154,3 @@ namespace Carbon.Plugins
         }
     }
 }
-

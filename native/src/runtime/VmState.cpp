@@ -64,6 +64,9 @@ void ReleaseDomain(Vm& Runtime, Domain& Value)
 {
     if (!Value.Alive) return;
     Value.Alive = false; Value.Active = false;
+    for (auto& Reservation : Value.StorageReservations) {
+        if (Reservation) { --Runtime.StorageReserved; Reservation=0; }
+    }
     Value.Discarded += Value.Queue.size() + Value.PendingCallbacks.size();
     Runtime.RetiredDiscarded += Value.Queue.size() + Value.PendingCallbacks.size();
     if (Runtime.State) {

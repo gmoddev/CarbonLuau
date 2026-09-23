@@ -2,6 +2,7 @@ param(
     [Parameter(Mandatory)][ValidateSet('win-x64','linux-x64')][string]$Rid,
     [Parameter(Mandatory)][string]$NativeLibrary,
     [Parameter(Mandatory)][string]$CompilerWorker,
+    [string]$StorageWorker,
     [string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist\release')
 )
 $ErrorActionPreference = 'Stop'
@@ -11,6 +12,10 @@ $CompilerPath = (Resolve-Path -LiteralPath $CompilerWorker).Path
 $Release = Get-Content -Raw -LiteralPath (Join-Path $Root 'release.json') | ConvertFrom-Json
 $ExpectedNativeName = if ($Rid -eq 'win-x64') { 'carbonluau_native.dll' } else { 'libcarbonluau_native.so' }
 $ExpectedCompilerName = if ($Rid -eq 'win-x64') { 'carbonluau_compiler.exe' } else { 'carbonluau_compiler' }
+$ExpectedStorageName = if ($Rid -eq 'win-x64') { 'carbonluau_storage.exe' } else { 'carbonluau_storage' }
+if (!$StorageWorker) { $StorageWorker = Join-Path ([IO.Path]::GetDirectoryName($NativePath)) $ExpectedStorageName }
+$StoragePath = (Resolve-Path -LiteralPath $StorageWorker).Path
+if ([IO.Path]::GetFileName($StoragePath) -cne $ExpectedStorageName) { throw "Storage worker for $Rid must be named $ExpectedStorageName" }
 if ([IO.Path]::GetFileName($NativePath) -cne $ExpectedNativeName) {
     throw "Native library for $Rid must be named $ExpectedNativeName"
 }
@@ -43,6 +48,9 @@ try {
 
     $SourceRevision = (& git -C $Root rev-parse HEAD).Trim()
     if ($LASTEXITCODE) { throw 'Unable to determine source revision' }
+    $SourceChanges = @(& git -C $Root status --porcelain --untracked-files=normal)
+    if ($LASTEXITCODE) { throw 'Unable to determine source working-tree state' }
+    $SourceState = if ($SourceChanges.Count) { 'uncommitted-working-tree' } else { 'committed' }
     $Provenance = [ordered]@{
         releaseVersion = $Release.releaseVersion
         tag = $Release.tag
@@ -54,9 +62,15 @@ try {
         luauRevision = $Release.luauRevision
         rid = $Rid
         sourceRevision = $SourceRevision
+        sourceState = $SourceState
         packageSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $PackagePath).Hash.ToLowerInvariant()
         nativeSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $NativePath).Hash.ToLowerInvariant()
         compilerSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $CompilerPath).Hash.ToLowerInvariant()
+        storageSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $StoragePath).Hash.ToLowerInvariant()
+        storageProtocol = 1
+        sqliteVersion = '3.53.4'
+        sqliteCompileOptions = @('THREADSAFE=0', 'OMIT_LOAD_EXTENSION', 'OMIT_WAL')
+        sqliteSourceId = '2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc'
     }
     $ProvenancePath = Join-Path $Work 'PROVENANCE.json'
     [IO.File]::WriteAllText($ProvenancePath, (($Provenance | ConvertTo-Json) + "`n"), (New-Object Text.UTF8Encoding($false)))
@@ -71,6 +85,7 @@ try {
                 @{ Source = $PackagePath; Name = 'carbon/plugins/CarbonLuau.cszip' },
                 @{ Source = $NativePath; Name = "carbon/data/CarbonLuau/native/$Rid/$ExpectedNativeName" },
                 @{ Source = $CompilerPath; Name = "carbon/data/CarbonLuau/native/$Rid/$ExpectedCompilerName"; Executable = ($Rid -eq 'linux-x64') },
+                @{ Source = $StoragePath; Name = "carbon/data/CarbonLuau/native/$Rid/$ExpectedStorageName"; Executable = ($Rid -eq 'linux-x64') },
                 @{ Source = (Join-Path $Root 'examples/hello-command/init.luau'); Name = 'examples/hello-command/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/player-events/init.luau'); Name = 'examples/player-events/init.luau' },
                 @{ Source = (Join-Path $Root 'examples/player-take-item/init.luau'); Name = 'examples/player-take-item/init.luau' },

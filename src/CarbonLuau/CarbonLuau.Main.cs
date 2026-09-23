@@ -46,6 +46,7 @@ namespace Carbon.Plugins
                 InitializeGameplay();
                 Host = new ScriptHost(Native, Settings, () => ScriptSnapshot.Load(Oxide.Core.Interface.Oxide.DataDirectory, Settings), Gameplay);
                 Addons = new AddonRegistry(Host, Native.HostLifetimeId);
+                InitializePersistence();
                 Puts("[CarbonLuau:Native] Native probe loaded successfully. Platform: " + Native.Rid + "; ABI: " +
                     (Native.AbiVersion >> 16) + "." + (Native.AbiVersion & 65535));
             }
@@ -96,6 +97,7 @@ namespace Carbon.Plugins
                     "; package schema: " + AddonPolicy.Schema + "\nAddons: " + Addons.Count + "; snapshot bytes: " +
                     Addons.SnapshotBytes + " / " + AddonPolicy.MaxAggregateSnapshotBytes;
                 if (Gameplay != null) Status += "\n" + Gameplay.GuiStatus;
+                if (Persistence != null) Status += "\n" + Persistence.Status;
                 Arg.ReplyWith(Status);
             }
             catch (Exception) { Arg.ReplyWith("CarbonLuau: unavailable\nReason: runtime context failure; see server log"); }
@@ -128,6 +130,7 @@ namespace Carbon.Plugins
         private void ReleaseNative()
         {
             Stopping = true;
+            StopPersistence();
             DrainWakeDueNs = 0; DrainWakeToken++;
             if ((Host != null && Host.Busy) || RegisteringPermissions) {
                 if (Host != null) Host.RequestStop();

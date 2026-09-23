@@ -1,13 +1,17 @@
 # CarbonLuau Persistence Foundation 1
 
-Status: **CANONICAL DESIGN BASELINE — NOT IMPLEMENTED**, 2026-09-23.
+Status: **CANONICAL DESIGN BASELINE — PERSISTENCE-1A FINAL QUALIFICATION IN PROGRESS**,
+2026-09-23. Partial private implementation exists; no Persistence-1A PASS or public
+API qualification is claimed. The approved [physical-budget amendment](PersistencePhysicalD21Amendment-Proposed.md)
+is adopted subject to its remaining startup/profile qualification conditions.
 
 [D21](Invariants.md#d21--persistence-foundation-1) owns the architecture. This
 document owns its detailed signatures, bounds, storage contract and phased gates;
 the [validation record](PersistenceFoundation1-Validation.md) separates inspected
 source evidence from proposed policy. No example below runs on current 0.4.0.
 
-Persistence is the next runtime foundation to implement under a separate task.
+Persistence is the next runtime foundation; separately scoped implementation and
+final qualification proceed under resolved D21, not another architecture investigation.
 It does not depend on reopening D20: World/Entity remains
 HOST-PRIMITIVE-GATED / DEFERRED, Entity-1A BLOCKED. Persist application identifiers
 such as string Player.UserId, never Entity.Id as evidence of persistent identity.
@@ -170,9 +174,11 @@ Map property names have the value-string rules, not store/key path restrictions:
 0..128 UTF-8 bytes, no NUL; duplicate encoded keys are invalid on decode. Ordinary
 value strings allow 0..16 KiB valid UTF-8 bytes, no NUL. Text is not executable.
 
-All numbers below are **accepted Foundation 1 design ceilings**, not measured
-performance/support claims. Implementation may lower them with a documented D21
-amendment before public release, never silently broaden them.
+All numbers below are **accepted Foundation 1 design limits**, except the allocated-file
+operational safety budget, which is a qualification target and diagnostic threshold
+under section 6, not a hard physical invariant. They are not measured performance/
+support claims. Implementation may lower them with a documented D21 amendment before
+public release, never silently broaden them.
 
 | Resource | Ceiling/accounting |
 |---|---|
@@ -192,12 +198,13 @@ amendment before public release, never silently broaden them.
 | Async request lifetime | 5 seconds from acceptance, no extension at dispatch |
 | Worker | one process, one outstanding command, 256 MiB process limit |
 | Database | 4 KiB pages, 131,072-page ceiling = 512 MiB |
-| Persistence directory allocation budget | 1,280 MiB including database, rollback journal and bounded diagnostics |
+| Persistence allocated-file operational budget | 1,280 MiB, observed at startup/pre-operation/post-operation on a qualified local filesystem; includes all CarbonLuau-owned persistence files and retained journals. Not a never-exceeded in-flight physical disk quota; section 6 defines measurement scope and backend extent limits. |
 | Diagnostic retention | at most 8 MiB total, rotating; no stored values |
 
 Logical bytes charge each row its store-name + key + full value-envelope bytes;
 repeated store names count repeatedly. Namespace ID overhead and indexes are covered
-by count/physical limits. Updates subtract old row charge and add new in the same
+by count/backend byte-extent limits and section 6 allocation accounting. Updates
+subtract old row charge and add new in the same
 transaction. Removes release quota only at commit. Quotas survive reload/restart
 through durable accounting; validate counters on worker startup against bounded
 tables. Check all length/count arithmetic for overflow before allocation.
@@ -281,17 +288,70 @@ SQLite owns journal contents and hot-journal recovery. A retained
 store.sqlite3-journal is expected storage, not a disposable stale file.
 Initial directory/database/journal creation and recovery must be qualified
 before Ready. Disable cache spill for the fixed single-key workload and
-qualify its memory and physical-journal bound. No custom VFS or external
+qualify its memory and journal byte-extent bounds. No custom VFS or external
 post-commit file/volume-flush layer is part of Foundation 1.
 
-Database page ceiling is not by itself a journal/disk quota. Before opening an
-existing file, verify file sizes under the directory budget; otherwise stop without
-reading it into memory. Qualify worst-case active and retained PERSIST journal allocation under the fixed
-page/transaction settings and prohibit workload features that could create unbounded
-temporary files. Reserve journal headroom; `journal_size_limit` alone is not an
-active-journal bound. Persistence-1A must prove the 1,280 MiB total ceiling or stop
-and amend the design, not market the 256 MiB logical limit as a physical disk cap.
-External files/backups are operator-owned and cannot be bounded by this service.
+Database page ceiling is not by itself an allocated-disk quota. With the pinned
+qualified SQLite, fixed 4,096-byte pages, max_page_count=131072, PERSIST/EXTRA,
+journal_size_limit=-1, cache_spill=OFF, auto_vacuum=NONE, temp_store=MEMORY,
+mmap=0 and no chunk-size override, bound database EOF to 536,870,912 bytes and
+retained rollback-journal EOF to 537,985,024 bytes. Qualify startup, hot-journal
+recovery, statement failure and fixed one-key transactions against these bounds;
+do not generalize the normal-workload proof to incompatible existing formats.
+Reject unsupported WAL/auxiliary/conversion paths before using them. Preserve
+supported SQLite hot-journal recovery rather than implementing manual repair.
+
+Count the database, retained/active journal, ownership metadata and any future
+bounded diagnostic or temporary files owned by persistence. Unexpected files
+remain a startup failure; temporary paths cannot evade accounting by residing
+elsewhere. Foundation 1 creates no disk-backed statement/sort temporary files,
+copy/rebuild files or VACUUM images. Adding such a path requires a new bound and
+qualification. Retained/deleted-open files must not be omitted if a future
+supported path creates them. No log rotation overlap is implicitly exempt.
+
+Measure ordinary file allocation using Windows FileStandardInfo.AllocationSize
+or Linux st_blocks multiplied by 512, recording the exact filesystem profile.
+These platform measurements are not identical accounting definitions and do
+not include a portable, complete share of filesystem metadata, filesystem
+journals, snapshots or virtual-disk backing overhead. Do not advertise their
+sum as an exact physical device footprint. Keep checked arithmetic and bounded
+file enumeration. Check allocation and file-byte bounds before opening existing
+storage, before each operation and after it completes. Refuse further admission
+on a failed check and preserve the files; do not delete, compact or truncate
+valid storage merely to regain budget. A post-commit failure does not roll back
+the mutation and must preserve the established Indeterminate/no-replay policy.
+
+The 1,280 MiB number is an operational allocation budget on qualified local
+Windows NTFS and Linux ext4 profiles, not a strict physical quota enforced inside
+filesystem calls. Qualification must record allocation geometry and relevant
+filesystem/mount features, normal and maximum-size workloads, sparse/preallocated
+input handling, journal high-water, page exhaustion, recovery and observed
+transient allocation at available instrumentation boundaries. A filesystem name
+alone is insufficient qualification. Network/FUSE/cloud-synchronized storage,
+unqualified copy-on-write/snapshot/deduplication/compression profiles and ext4
+bigalloc profiles remain unsupported until separately qualified. Stock SQLite
+must not request unqualified preallocation. No administrator-configured quota,
+dedicated volume, custom VFS or external flush layer is a default requirement.
+
+Logical quotas and qualified backend byte-extent bounds remain hard limits.
+Whether actual allocation stays within the operational envelope between checks
+is conditional on the qualified filesystem's behavior; observations are not a
+universal mathematical proof. If a deployment requires a never-exceeded physical
+quota, Foundation 1 does not satisfy that requirement without a separately
+designed and qualified filesystem/storage enforcement mechanism. External files
+and backups remain operator-owned; independent disk exhaustion can cause a
+controlled storage failure. External interference does not excuse CarbonLuau's
+own allocation or accounting errors.
+
+The [physical-allocation investigation](PersistencePhysicalAllocationInvestigation.md)
+observed no 1,280 MiB breach; this is empirical evidence, not a theorem or 1A PASS.
+Its historical enforcement/proof gap remains preserved. The
+[2026-09-23 adoption](PersistencePhysicalD21Amendment-Proposed.md) changes that
+resource guarantee, conditional on final qualification. The WAL startup rejection
+fix remains mandatory: reject unsupported WAL mode before conversion or WAL/SHM
+creation, including page-1 restoration through hot-journal recovery. A main-header
+check alone does not close that gate; preserve normal supported recovery and
+qualify incompatible geometry, auto-vacuum and crafted journal/header combinations.
 
 ## 7. Durability, atomicity and uncertainty
 
@@ -512,8 +572,11 @@ pure value/name/quota descriptors; Carbon integration and process ownership stay
 in their existing layers. Introduce native ABI changes only if actual exports/layout
 change; never pass VM/host objects. Gate on deterministic tests plus helper crash
 tests, exact binary64 fixtures, unsupported values, corrupt input, file/path escape,
-disk-full/short-write/flush failures, directory lock, journal recovery, global disk
-ceiling, hung-worker containment and no native-library-after-unload access.
+disk-full/short-write/flush failures, directory lock, journal recovery, hard
+logical/backend byte-extent bounds and qualified allocated-file operational-budget
+checks, hung-worker containment and no native-library-after-unload access. Final
+qualification must close section 6's mandatory WAL startup rejection fix and
+filesystem-profile follow-up before 1A PASS or the 1B handoff.
 
 ### Persistence-1B — DataStoreService and completion admission
 
@@ -595,7 +658,9 @@ or transformation callback.
     is a new bounded admission, not a resumed/extended old one.
 22. Update: deferred; no replayable transforms/locks across Luau.
 23. Cross-addon: no shared stores or foreign facade use; ordinary data sharing only.
-24. Quotas: section 5 fixes value, count, byte, queue, rate, worker and physical caps.
+24. Quotas: section 5 fixes value, count, logical-byte, queue, rate and worker limits;
+    section 6 keeps hard backend byte-extent bounds and defines the 1,280 MiB
+    operational safety budget, qualification target and diagnostic threshold.
 25. Format: version 1 typed/checksummed envelope and fixed database schema;
     author-managed application version fields.
 26. Security: allowlisted storage, no paths/SQL/raw objects, bounded untrusted decode.
@@ -606,5 +671,6 @@ or transformation callback.
 
 No unresolved ordinary API choice remains. Implementation qualification is still
 required: stop if the selected VFS cannot meet durability, decoder/supervisor cannot
-be bounded, mailbox/scheduler cannot preserve I4/D10, physical disk bound fails,
+be bounded, mailbox/scheduler cannot preserve I4/D10, section 6's hard backend
+byte-extent bounds or qualified operational-budget checks fail,
 or namespace authority requires raw paths. Do not silently weaken this contract.

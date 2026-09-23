@@ -17,14 +17,19 @@ namespace Carbon.Plugins
             internal ulong NativeHandle { get { return Handle; } }
             public readonly long VmGenerationId, DomainLifetimeId;
             public FacadeSession FacadeSession { get; private set; }
+            internal StorageQueue.Binding StorageBinding { get; private set; }
             public bool Alive { get { return Handle != 0 && Vm.Alive; } }
             public VmInfo Info { get { return Vm.Info; } }
-            public RuntimeDomain(NativeRuntime Native, RuntimeGeneration Vm, RuntimeConfig Config, ScriptSnapshot Snapshot)
+            public RuntimeDomain(NativeRuntime Native, RuntimeGeneration Vm, RuntimeConfig Config, ScriptSnapshot Snapshot, string PackageId=null)
             {
                 this.Native = Native; this.Vm = Vm;
                 VmGenerationId = checked((long)Native.GenerationInfo(Vm.Handle).VmGenerationId);
                 Handle = Native.DomainCreate(Vm.Handle, Config, Snapshot);
                 DomainLifetimeId = checked((long)Handle);
+                if (Native.Storage!=null) {
+                    try { StorageBinding=Native.Storage.Bind((ulong)VmGenerationId,(ulong)DomainLifetimeId,PackageId); }
+                    catch (InvalidOperationException) { /* persistence admission unavailable; runtime remains independent */ }
+                }
             }
             public void Facade(FacadeSession Session) { FacadeSession = Session; Native.DomainFacade(Vm.Handle, Handle, Session); }
             internal void Addon(AddonPackageSnapshot Package, AddonDomainBinding[] Bindings)
@@ -41,10 +46,10 @@ namespace Carbon.Plugins
             public void Dispose()
             {
                 if (Handle == 0) return;
+                if (StorageBinding!=null) { Native.Storage.Retire(StorageBinding); StorageBinding=null; }
                 ulong Owned = Handle; Handle = 0;
                 if (Vm.Alive) Native.DomainDestroy(Vm.Handle, Owned); else Native.ReleaseDomainFacade(Owned);
             }
         }
     }
 }
-

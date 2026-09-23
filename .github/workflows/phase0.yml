@@ -27,6 +27,17 @@ jobs:
         run: |
           ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_native.dll
           ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_compiler.exe
+          ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_storage.exe
+      - name: Compile private persistence transport tests
+        run: dotnet build tests/persistence/ManagedTests.csproj -c Release -o dist/persistence
+      - name: Windows private worker and lost-ack tests
+        if: runner.os == 'Windows'
+        working-directory: dist/persistence
+        run: ./ManagedTests.exe "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureLostAck.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureHang.exe"
+      - name: Linux private worker and lost-ack tests
+        if: runner.os == 'Linux'
+        working-directory: dist/persistence
+        run: mono ManagedTests.exe "$GITHUB_WORKSPACE/build/carbonluau_storage" "$GITHUB_WORKSPACE/build/StorageFixtureLostAck" "$GITHUB_WORKSPACE/build/StorageFixtureHang"
       - name: Compile .NET Framework loader tests
         run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
       - name: Compile .NET Framework runtime tests
@@ -69,6 +80,11 @@ jobs:
           if ($IsWindows) { ./dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.4.0-win-x64.zip" }
           else { mono dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.4.0-linux-x64.zip" }
           if ($LASTEXITCODE -ne 0) { throw 'Clean bundle installation failed' }
+      - name: Clean extracted private storage worker and import audit
+        shell: pwsh
+        run: |
+          $Rid = if ($IsWindows) { 'win-x64' } else { 'linux-x64' }
+          ./tools/Test-PersistencePackaging.ps1 -Bundle "dist/release/CarbonLuau-v0.4.0-$Rid.zip" -ManagedTests dist/persistence/ManagedTests.exe -WorkDirectory $env:RUNNER_TEMP
       - uses: actions/upload-artifact@v4
         with:
           name: carbonluau-${{ matrix.os }}
@@ -79,8 +95,10 @@ jobs:
             dist/examples/
             build/Release/carbonluau_native.dll
             build/Release/carbonluau_compiler.exe
+            build/Release/carbonluau_storage.exe
             build/libcarbonluau_native.so
             build/carbonluau_compiler
+            build/carbonluau_storage
       - name: Upload release candidate
         uses: actions/upload-artifact@v4
         with:

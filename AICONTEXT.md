@@ -51,9 +51,10 @@ This document owns contribution workflow and prompt construction. It applies to 
 | World/Entity Foundation 1 rationale, host evidence, phase routing and qualification gates | [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) |
 | World/Entity Foundation 1A blocked lifetime-proof investigation (not implementation) | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) |
 | Authoritative Entity lifetime investigation, negative evidence and D20 deferral | [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
-| Canonical Persistence Foundation 1 architecture (next runtime foundation; not implemented) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
+| Canonical Persistence Foundation 1 architecture (resolved; private 1A final qualification in progress) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
 | Persistence design source evidence, consistency review and qualification limits | [PersistenceFoundation1-Validation.md](docs/PersistenceFoundation1-Validation.md) |
-| Historical Persistence-1A DELETE Windows durability proof gap and reproducible SQLite VFS investigation (no production implementation) | [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md) |
+| Persistence-1A partial private implementation; final qualification in progress, WAL startup rejection fix mandatory; historical DELETE and physical-proof negative evidence preserved | [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md); current approved resource contract is D21 and the adopted amendment below, not historical blocker wording |
+| Persistence physical-allocation investigation and approved operational-budget amendment, adopted 2026-09-23 with qualification condition | [Investigation](docs/PersistencePhysicalAllocationInvestigation.md) and [adopted D21 amendment](docs/PersistencePhysicalD21Amendment-Proposed.md); 1,280 MiB is an operational safety budget/qualification target/diagnostic threshold, not a hard physical invariant; no 1A PASS |
 | Persistence durability follow-up: approved PERSIST path, platform probes and adoption record | [PersistenceDurabilityInvestigation.md](docs/PersistenceDurabilityInvestigation.md) and [approved D21 amendment](docs/PersistenceD21Amendment-Proposed.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
@@ -308,7 +309,19 @@ Persistence Foundation 1 is the next runtime foundation under
 callback-based non-yielding storage and a bounded private SQLite worker;
 [design validation](docs/PersistenceFoundation1-Validation.md) is not runtime
 qualification. Separately scoped Persistence-1A/1B/1C work must implement and
-qualify it. No public DataStoreService, storage worker, API metadata or version
+qualify it. The partial private 1A implementation is in **final qualification in
+progress**, not PASS. The user explicitly approved and adopted the
+[physical-budget amendment](docs/PersistencePhysicalD21Amendment-Proposed.md) on
+2026-09-23, conditional on scoped startup/profile qualification. Hard 16-MiB
+namespace / 256-MiB global logical quotas and SQLite page/file-length bounds
+remain; 1,280 MiB is an operational safety budget, qualification target and
+diagnostic threshold, not a hard physical invariant. No breach observed is
+empirical evidence, not a theorem. The WAL startup rejection fix is mandatory,
+including page-1 restoration through hot-journal recovery, before unsupported
+conversion or WAL/SHM creation; preserve supported recovery. D21 is resolved,
+not another architecture investigation. Preserve historical DELETE and
+physical-allocation negative evidence. Do not begin 1B before 1A qualifies.
+No public DataStoreService, storage worker, API metadata or version
 change is authorized merely by this design adoption. Entity work remains gated;
 persistence does not weaken Entity identity or serialize Player/Entity facades.
 
