@@ -95,7 +95,11 @@ namespace Carbon.Plugins
                 try { Output.EndWrite(Pending); } finally { Pending.AsyncWaitHandle.Close(); Outstanding=null; }
                 // Process.StandardInput's FileStream may buffer small frames.
                 // Flush off-thread, under the same immutable request deadline.
-                OutstandingFlush=Output.FlushAsync();
+                // Framework FileStream.FlushAsync also invokes FlushFileBuffers:
+                // on a pipe that waits for peer consumption and can fail after a
+                // peer has already sent its final reply. Flush only our managed
+                // buffer, off-thread and under the same transport deadline.
+                OutstandingFlush=Task.Run(() => Output.Flush());
                 Await(OutstandingFlush,End);
                 try { OutstandingFlush.GetAwaiter().GetResult(); }
                 finally { OutstandingFlush.Dispose(); OutstandingFlush=null; }

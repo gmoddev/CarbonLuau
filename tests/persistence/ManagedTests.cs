@@ -287,8 +287,14 @@ class ManagedTests
         string Directory=Path.Combine(Environment.CurrentDirectory,"managed-storage-"+Guid.NewGuid().ToString("N"));
         using (var Probe=new Host.StorageProcess(()=>false)) {
             try { Probe.Start(Executable,Directory); }
-            catch (Host.StorageProcess.StartupFailure Failure) {
-                throw new Exception("direct startup rejected with code "+Failure.Code,Failure);
+            catch (Exception Failure) {
+                var Child=(Process)typeof(Host.StorageProcess).GetField("Child",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(Probe);
+                if (Child!=null && Child.WaitForExit(1000)) {
+                    char[] Text=new char[1024]; int Count=Child.StandardError.Read(Text,0,Text.Length);
+                    Console.WriteLine("[CarbonLuau:Persistence] Startup diagnostic: "+new string(Text,0,Count));
+                }
+                var Rejected=Failure as Host.StorageProcess.StartupFailure;
+                throw new Exception("direct startup failure"+(Rejected==null ? "" : " code="+Rejected.Code),Failure);
             }
             finally { Check(Probe.Stop()); }
         }

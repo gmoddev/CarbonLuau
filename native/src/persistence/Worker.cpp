@@ -138,19 +138,24 @@ void VerifyContainment()
 }
 int main(int Count,char** Args)
 {
+    const char* Stage="containment";
     try {
         Require(Count==2); unsigned Parent=unsigned(std::stoul(Args[1])); Contain(Parent);
         Bytes Frame; Require(ReadFrame(Frame)); VerifyContainment();
+        Stage="initialization";
         Reader Init{Frame}; Require(!std::memcmp(Init.Take(4),"CLPI",4) && Init.U32()==1);
         const auto Directory=Init.String(32768); Require(ValidText(Directory,32768) && Init.Position==Frame.size());
         auto Path=std::filesystem::u8path(Directory);
         Require(Path.is_absolute(),Error::StorageUnavailable);
+        Stage="directory";
         // Host passes the fixed persistence child; parent directories must exist.
         CheckDirectory(Path.parent_path());
         if (!std::filesystem::exists(Path)) std::filesystem::create_directory(Path);
-        CheckFilesystem(Path);
-        Ownership Owner(Path); Backend Store(Path,Clock::now()+std::chrono::seconds(30));
+        Stage="filesystem"; CheckFilesystem(Path);
+        Stage="ownership"; Ownership Owner(Path);
+        Stage="backend"; Backend Store(Path,Clock::now()+std::chrono::seconds(30));
         Bytes Ready{'C','L','P','R'}; Put32(Ready,1); Put32(Ready,0); Require(WriteFrame(Ready));
+        Stage="protocol";
         uint64_t Last=0;
         while (ReadFrame(Frame)) {
             Reader Input{Frame}; Require(!std::memcmp(Input.Take(4),"CLPQ",4) && Input.U32()==1);
@@ -185,6 +190,10 @@ int main(int Count,char** Args)
         }
         return 0;
     } catch (const Failure& Problem) {
+        std::fprintf(stderr,"[CarbonLuau:Storage] failure stage=%s code=%u\n",Stage,unsigned(Problem.Code));
         Bytes Reply{'C','L','P','R'}; Put32(Reply,1); Put32(Reply,uint32_t(Problem.Code)); WriteFrame(Reply); return 2;
-    } catch (...) { return 3; }
+    } catch (...) {
+        std::fprintf(stderr,"[CarbonLuau:Storage] failure stage=%s code=exception\n",Stage);
+        return 3;
+    }
 }
