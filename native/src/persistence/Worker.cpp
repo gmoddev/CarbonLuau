@@ -28,9 +28,15 @@ bool ReadAll(uint8_t* Data, size_t Size)
 { while (Size) { int Count=int(_read(0,Data,unsigned(std::min<size_t>(Size,16384)))); if (Count<=0) return false; Data+=Count; Size-=size_t(Count); } return true; }
 bool WriteAll(const uint8_t* Data, size_t Size)
 { while (Size) { int Count=int(_write(1,Data,unsigned(std::min<size_t>(Size,16384)))); if (Count<=0) return false; Data+=Count; Size-=size_t(Count); } return true; }
-bool ReadFrame(Bytes& Frame)
+bool ReadFrame(Bytes& Frame, bool Initial=false)
 {
     uint8_t Header[4]; if (!ReadAll(Header,4)) return false;
+    // Framework Process.Start can emit its redirected StreamWriter's UTF-8
+    // preamble before the managed host accesses BaseStream. Accept it once,
+    // only at initialization; do not alter the process-global console encoding.
+    if (Initial && Header[0]==0xef && Header[1]==0xbb && Header[2]==0xbf) {
+        Header[0]=Header[3]; Require(ReadAll(Header+1,3));
+    }
     uint32_t Length=Read32(Header); Require(Length>=8 && Length<=MaximumFrame-4);
     Frame.resize(Length); Require(ReadAll(Frame.data(),Frame.size())); return true;
 }
@@ -141,7 +147,8 @@ int main(int Count,char** Args)
     const char* Stage="containment";
     try {
         Require(Count==2); unsigned Parent=unsigned(std::stoul(Args[1])); Contain(Parent);
-        Bytes Frame; Require(ReadFrame(Frame)); VerifyContainment();
+        Stage="initial-frame"; Bytes Frame; Require(ReadFrame(Frame,true));
+        Stage="containment"; VerifyContainment();
         Stage="initialization";
         Reader Init{Frame}; Require(!std::memcmp(Init.Take(4),"CLPI",4) && Init.U32()==1);
         const auto Directory=Init.String(32768); Require(ValidText(Directory,32768) && Init.Position==Frame.size());

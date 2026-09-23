@@ -33,7 +33,7 @@ jobs:
       - name: Windows private worker and lost-ack tests
         if: runner.os == 'Windows'
         working-directory: dist/persistence
-        run: ./ManagedTests.exe "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureLostAck.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureHang.exe"
+        run: ./ManagedTests.exe --utf8-input "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureLostAck.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureHang.exe"
       - name: Linux private worker and lost-ack tests
         if: runner.os == 'Linux'
         working-directory: dist/persistence

@@ -329,6 +329,23 @@ class ManagedTests
         while (!Supervisor.IsFinished && Host.StorageProcess.Now<End);
         throw new Exception("worker unavailable: "+Supervisor.Status);
     }
+    static void ProtocolInputTests(string Executable)
+    {
+        string Directory=Path.Combine(Environment.CurrentDirectory,"protocol-storage-"+Guid.NewGuid().ToString("N"));
+        using (var Probe=new Host.StorageProcess(()=>false)) {
+            try {
+                Probe.Start(Executable,Directory);
+                var Flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+                var Child=(Process)typeof(Host.StorageProcess).GetField("Child",Flags).GetValue(Probe);
+                var Input=Child.StandardInput.BaseStream;
+                byte[] LatePreamble={0xef,0xbb,0xbf,8};
+                Input.Write(LatePreamble,0,LatePreamble.Length); Input.Flush();
+                var Reply=(byte[])typeof(Host.StorageProcess).GetMethod("Read",Flags).Invoke(Probe,new object[] {Host.StorageProcess.Now+5000});
+                Check(Reply.Length==12 && Encoding.ASCII.GetString(Reply,0,4)=="CLPR" && Host.StorageProcess.U32(Reply,8)==1);
+            } finally { Check(Probe.Stop()); }
+        }
+        Console.WriteLine("[CarbonLuau:Persistence] UTF-8 preamble accepted only before initialization; later framing remains strict PASS");
+    }
     static void FaultTests(string Executable,bool Committed)
     {
         string Directory=Path.Combine(Environment.CurrentDirectory,"fault-storage-"+Guid.NewGuid().ToString("N"));
@@ -510,12 +527,17 @@ class ManagedTests
     static int Main(string[] Args)
     {
         try {
+            if (Args.Length>0 && Args[0]=="--utf8-input") {
+                Console.InputEncoding=new UTF8Encoding(true);
+                var Rest=new string[Args.Length-1]; Array.Copy(Args,1,Rest,0,Rest.Length); Args=Rest;
+                Console.WriteLine("[CarbonLuau:Persistence] Test-process UTF-8 input preamble enabled");
+            }
             if (Args.Length==2 && Args[0]=="--ownership") {
                 try { using(var Guard=new Host.StorageOwnership(Args[1])) { return 0; } } catch(IOException) { return 23; }
             }
             if (Args.Length==3 && Args[0]=="--parent") return ParentFixture(Args[1],Args[2]);
             QueueTests(); BoundsTests(); NamespaceRetentionTests(); ProtocolTests(); OwnershipTests();
-            if (Args.Length>=1) { ProcessTests(Path.GetFullPath(Args[0])); ShutdownTests(Path.GetFullPath(Args[0])); ParentDeathTests(Path.GetFullPath(Args[0])); DuplicateWorkerTests(Path.GetFullPath(Args[0])); PreflightDisableTests(Path.GetFullPath(Args[0])); }
+            if (Args.Length>=1) { ProcessTests(Path.GetFullPath(Args[0])); ProtocolInputTests(Path.GetFullPath(Args[0])); ShutdownTests(Path.GetFullPath(Args[0])); ParentDeathTests(Path.GetFullPath(Args[0])); DuplicateWorkerTests(Path.GetFullPath(Args[0])); PreflightDisableTests(Path.GetFullPath(Args[0])); }
             if (Args.Length==3) { FaultTests(Path.GetFullPath(Args[1]),true); FaultTests(Path.GetFullPath(Args[2]),false); }
             return 0;
         }
