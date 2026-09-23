@@ -699,6 +699,18 @@ records upstream research and local architecture checks, not crash/durability or
 platform PASS. Current release identities and prior valid runtime evidence remain
 unchanged; 0.5.0-experimental is only a future release-planning candidate.
 
+[Persistence-1A investigation](PersistenceFoundation1A.md) records a Windows
+durability qualification blocker: effective EXTRA readback does not imply the
+inspected `win32` VFS performs post-delete directory synchronization. Its separate
+Windows/Linux call-path probes are not production storage or power-loss PASS.
+
+The [durability follow-up](PersistenceDurabilityInvestigation.md) recommends stock
+PERSIST/EXTRA after Windows NTFS and Linux ext4-container process-crash, sync-fault
+and Linux ASan/UBSan research checks. Its [D21 amendment](PersistenceD21Amendment-Proposed.md)
+is **proposed, not adopted**. Canonical DELETE remains unchanged; production 1A
+awaits approval and its full implementation/qualification gates. These results
+do not qualify OS crash, physical power loss or actual Carbon acknowledgement.
+
 Documentation/evidence-only closure needs canonical-routing, link, signature,
 decision/bounds, whitespace, scope and fixture-syntax checks, not unrelated native,
 live-server or sanitizer matrices. Preserved Entity research checks are historical
