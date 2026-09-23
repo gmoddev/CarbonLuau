@@ -121,7 +121,11 @@ int main(int ArgumentCount, char** Arguments)
     }
 #ifndef CARBONLUAU_SANITIZE
     SetCompilerExecutableForTesting(Arguments[9]);
-    Check(CompileSource("return 1").Status == CompileStatus::WorkerFailure,
+    CompileResult Memory = CompileSource("return 1");
+    if (Memory.Status != CompileStatus::WorkerFailure)
+        std::fprintf(stderr, "[CarbonLuau:CompilerTest] memory status=%d diagnostic=%s\n",
+            int(Memory.Status), Memory.Diagnostic.c_str());
+    Check(Memory.Status == CompileStatus::WorkerFailure,
         "worker memory limit terminates an oversized allocation");
     Check(!CompilerWorkerRunningForTesting(), "memory-limited worker was reclaimed");
     SetCompilerExecutableForTesting(Arguments[1]);
