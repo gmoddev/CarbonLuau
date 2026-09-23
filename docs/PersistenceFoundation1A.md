@@ -158,10 +158,25 @@ These fixture/launcher corrections did not relax production assertions.
 ### Current completion and 1B handoff
 
 Starting revision and already-pushed durability adoption remain
-`1b160ef0d9b574c327889976f455f4f9487ea7c2`. The physical-budget amendment is now
-adopted. Implementation/evidence revisions and hosted CI will be recorded after
-the local qualification commit; no self-referential or invented tested SHA is
-assigned here. Architecture/API/link/whitespace checks passed locally.
+`1b160ef0d9b574c327889976f455f4f9487ea7c2`. Implementation and physical-budget
+adoption were committed/pushed as `80d364fcd34299512b3cb257a9eee6974385a2d9`.
+Architecture/API/link/whitespace checks passed locally. The separate closure
+commit is identifiable by Git history; it cannot contain its own SHA.
+
+Hosted implementation-source validation is recorded by
+[runtime run 35928271952](https://github.com/gmoddev/CarbonLuau/actions/runs/35928271952),
+[tooling run 35928271825](https://github.com/gmoddev/CarbonLuau/actions/runs/35928271825)
+and [documentation run 35928271826](https://github.com/gmoddev/CarbonLuau/actions/runs/35928271826).
+Linux runtime, sanitizers, all-platform tooling and documentation passed. The
+first Windows attempt passed all persistence native tests but failed the existing
+CompilerContainment oversized-allocation WorkerFailure assertion. That compiler
+code/fixture is unchanged from the starting revision and passed locally; the
+initial hosted log does not identify the actual returned status. The unchanged
+Windows-job retry passed all 14 native tests, then failed the new managed worker
+fixture. Its optimized stack did not identify the exact assertion; test-only
+line/status and filesystem diagnostics were added for that separate failure.
+These failed attempts are retained, not counted as an overall pass or proof of
+a diagnosed transient cause. 1A remains open until hosted qualification closes.
 
 The implementation/limits map below still describes the final private substrate:
 schema/envelope 1; exact finite binary64; stable tagged namespaces; atomic per-key

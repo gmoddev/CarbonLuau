@@ -9,7 +9,8 @@ using Host=Carbon.Plugins.CarbonLuau;
 using Queue=Carbon.Plugins.CarbonLuau.StorageQueue;
 class ManagedTests
 {
-    static void Check(bool Good) { if (!Good) throw new InvalidOperationException("persistence assertion"); }
+    static void Check(bool Good, [System.Runtime.CompilerServices.CallerLineNumber] int Line=0)
+    { if (!Good) throw new InvalidOperationException("persistence assertion at source line "+Line); }
     static void Rejected(Action Action) { try { Action(); } catch (InvalidOperationException) { return; } throw new Exception("expected rejection"); }
     static void Invalid(Action Action) { try { Action(); } catch (ArgumentException) { return; } catch (IOException) { return; } throw new Exception("expected invalid data rejection"); }
     static void Finish(Queue Queue,ulong Now)
@@ -277,15 +278,19 @@ class ManagedTests
     }
     static void ProcessTests(string Executable)
     {
+        if (Environment.OSVersion.Platform==PlatformID.Win32NT) {
+            var Drive=new DriveInfo(Path.GetPathRoot(Environment.CurrentDirectory));
+            Console.WriteLine("[CarbonLuau:Persistence] Fixture volume: "+Drive.DriveFormat+"; "+Drive.DriveType);
+            for (var Parent=new DirectoryInfo(Environment.CurrentDirectory); Parent!=null; Parent=Parent.Parent)
+                Console.WriteLine("[CarbonLuau:Persistence] Fixture ancestor: "+Parent.FullName+"; "+Parent.Attributes);
+        }
         string Directory=Path.Combine(Environment.CurrentDirectory,"managed-storage-"+Guid.NewGuid().ToString("N"));
         for (int Cycle=0; Cycle<3; ++Cycle) {
             var Queue=new Queue((ulong)Cycle+1,()=>Host.StorageProcess.Now);
             var Supervisor=new Host.StorageSupervisor(Queue,Executable,Directory);
             var Owner=Queue.Bind(2,3,null); Supervisor.Start();
             try {
-                ulong End=Host.StorageProcess.Now+32000;
-                while (!Queue.Ready && !Supervisor.IsFinished && Host.StorageProcess.Now<End) { Supervisor.Tick(); Thread.Sleep(10); }
-                Check(Queue.Ready);
+                Ready(Supervisor,Queue);
                 if (Cycle==0) {
                     Queue.Submit(Owner,2,3,true,Host.StorageQueue.Operation.Set,"Store","Key",Envelope(),1);
                     var Saved=Wait(Supervisor,Queue); Check(Saved.Error==Host.StorageQueue.Error.None && Saved.Found); Queue.Release(Saved);

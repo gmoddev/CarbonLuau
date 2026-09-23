@@ -72,7 +72,7 @@ for offline operator recovery rather than deleting it to make startup succeed.
 Logical quotas (16 MiB/namespace, 256 MiB/global) and SQLite page/file-length
 limits are hard bounds. The 1,280 MiB allocated-file figure is an operational
 budget/qualification target, **not** a strict physical allocation guarantee.
-See [Persistence-1A evidence and limits](PersistenceFoundation1A.md).
+See [Persistence-1A evidence and limits](https://github.com/gmoddev/CarbonLuau/blob/main/docs/PersistenceFoundation1A.md).
 
 ## Install and start
 
