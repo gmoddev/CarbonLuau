@@ -285,6 +285,13 @@ class ManagedTests
                 Console.WriteLine("[CarbonLuau:Persistence] Fixture ancestor: "+Parent.FullName+"; "+Parent.Attributes);
         }
         string Directory=Path.Combine(Environment.CurrentDirectory,"managed-storage-"+Guid.NewGuid().ToString("N"));
+        using (var Probe=new Host.StorageProcess(()=>false)) {
+            try { Probe.Start(Executable,Directory); }
+            catch (Host.StorageProcess.StartupFailure Failure) {
+                throw new Exception("direct startup rejected with code "+Failure.Code,Failure);
+            }
+            finally { Check(Probe.Stop()); }
+        }
         for (int Cycle=0; Cycle<3; ++Cycle) {
             var Queue=new Queue((ulong)Cycle+1,()=>Host.StorageProcess.Now);
             var Supervisor=new Host.StorageSupervisor(Queue,Executable,Directory);
