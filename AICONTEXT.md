@@ -49,6 +49,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Player Interaction Foundation 1F-C combined closure and cold-module mutation correction | [PlayerInteractionFoundation1FC.md](docs/PlayerInteractionFoundation1FC.md) |
 | Canonical World/Entity Foundation 1 semantics | [D20 in Invariants.md](docs/Invariants.md#d20--worldentity-foundation-1) |
 | World/Entity Foundation 1 rationale, host evidence, phase routing and qualification gates | [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) |
+| World/Entity Foundation 1A blocked lifetime-proof investigation (not implementation) | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) |
+| Authoritative Entity lifetime investigation, negative evidence and D20 deferral | [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
@@ -282,8 +284,12 @@ World/Entity Foundation 1 architecture is canonically owned by D20 in
 [Invariants.md](docs/Invariants.md#d20--worldentity-foundation-1).
 [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) is the supporting
 host-evidence, rationale, exact-lifetime, phase-routing and qualification record.
-D20 is architecture-only: no production `Workspace` or `Entity` API is
-implemented by adoption. Entity-1A is the internal exact-lifetime/publication
+D20 is **HOST-PRIMITIVE-GATED / DEFERRED**: accepted future architecture, with
+Entity-1A **BLOCKED** until a supported authoritative incarnation/retirement
+mechanism closes the exact-lifetime proof. Preserve the negative evidence and
+its correction: actual pooled BaseEntity reuse was not demonstrated on the tested
+prefab. No production `Workspace` or `Entity` API may proceed while gated.
+After that gate closes, Entity-1A is the internal exact-lifetime/publication
 substrate; Entity-1B is the keyed read-only `Workspace:GetEntityById` plus
 `Entity.Id`, `Entity.Prefab` and `Entity.Position` exact-host qualification;
 Entity-1C is lifecycle/scale/public closure. Whole-world enumeration, prefab

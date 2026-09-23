@@ -155,7 +155,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
-| D20 — resolved World/Entity Foundation 1 read-only architecture | Foundation 1 approves the domain-bound `Workspace` service, exact-lifetime `Entity` facade, string current-world `Id`, full canonical `Prefab`, read-only world-space `Position`, and keyed `GetEntityById` only. Whole-world enumeration, spatial query, lifecycle Signals and all world mutation remain deferred. [WorldEntityFoundation1.md](WorldEntityFoundation1.md) owns host evidence, detailed lifetime rules, phase routing and future mutation gates. | Implement only through Entity-1A–1C; requalify exact Rust/Carbon registry/lifetime behavior before public support and require an explicit later architecture amendment for query/Signal/Spawn/Destroy expansion |
+| D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
 
 ### Canonical detail for resolved decisions
 
@@ -196,6 +196,24 @@ signing/attestation and publication administration remain separate gates; local
 release-candidate VSIX packaging is not a signature or publication claim.
 
 #### D20 — World/Entity Foundation 1
+
+**HOST-PRIMITIVE-GATED / DEFERRED (2026-09-23).** The following remains accepted
+future architecture, not a ready implementation. Entity-1A is **BLOCKED** until a
+supported authoritative mechanism distinguishes exact host incarnations or retires
+the private lifetime token before another incarnation can satisfy the old facade's
+validation premises. An incarnation ID, registry insertion/removal generation,
+complete supported post-retirement notification, or equivalent proven primitive
+could satisfy this gate; no upstream implementation is prescribed.
+
+Object + network ID + prefab/current-occupancy snapshots are necessary checks,
+not sufficient lifetime proof. The [investigation](WorldEntityLifetimeInvestigation.md)
+found registry removal/reinsertion bypassing tested hooks and kill veto preserving
+the entity. No complete mechanism was established; **actual pooled BaseEntity reuse
+was NOT demonstrated** on the tested prefab. This is a proof gap, not evidence that
+ordinary Rust gameplay definitely retargets pooled entities. Preserve exact
+no-retargeting: no best-effort or merely valid-at-access facade, polling/world scan,
+raw host escape, or Harmony/detour dependency to enable this read-only surface.
+No production Workspace/Entity implementation may proceed while this gate is open.
 
 World/Entity Foundation 1 approves exactly this future read-only surface:
 `game:GetService("Workspace")`; `Workspace:GetEntityById(Id: string) -> Entity?`;
@@ -296,7 +314,7 @@ outcomes or verification defects. Host-driven recursive VM entry remains prohibi
 any future CarbonLuau-owned resulting event is admitted later through I4 bounded
 scheduling.
 
-Foundation 1's implementation routing is exactly: Entity-1A internal exact
+After the host-primitive gate closes, Foundation 1's implementation routing is: Entity-1A internal exact
 identity/lifetime/publication substrate; Entity-1B the read-only Workspace/Entity
 surface plus exact Rust build `25353106` / Carbon `2.0.259` registry, prefab,
 Position, startup/shutdown and churn qualification; Entity-1C cross-domain,

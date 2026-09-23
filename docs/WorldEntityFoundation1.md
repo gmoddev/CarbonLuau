@@ -1,6 +1,14 @@
 # CarbonLuau World/Entity Foundation 1
 
-Status: **CANONICAL ARCHITECTURE BASELINE — no production Workspace/Entity implementation**
+Status: **HOST-PRIMITIVE-GATED / DEFERRED — accepted future architecture; Entity-1A BLOCKED**
+
+Closure adopted 2026-09-23: [D20](Invariants.md#d20--worldentity-foundation-1)
+requires a supported authoritative incarnation/retirement primitive before any
+production implementation. The [completed investigation](WorldEntityLifetimeInvestigation.md)
+preserves the negative evidence and upstream question. The snapshot predicate below
+is necessary but insufficient; it is not a ready adapter. Actual pooled BaseEntity
+reuse was **not demonstrated** on the tested prefab. All implementation phases below
+are conditional on this gate, not current implementation authorization.
 
 Adopted by D20. This document owns the supporting host research, design rationale,
 phase routing and qualification gates for the first CarbonLuau world/entity surface.
@@ -314,6 +322,10 @@ prove that future operations still refer to the same exact host lifetime:
 The token is not the host network ID and is never exposed to Luau.
 
 ### Validation predicate
+
+These sampled checks do not prove continuity across an unobserved registry
+removal/reinsertion or reincarnation. The authoritative host-primitive gate must
+also close; a private token/stale latch cannot detect a transition never observed.
 
 Every host-backed Entity operation must, on the owner thread, fail closed unless all
 applicable checks still hold:
@@ -795,11 +807,14 @@ inheritance or generic `CallMethod`.**
 
 ## 20. Implementation routing
 
-Architecture adoption alone authorizes no production API.
+Architecture adoption alone authorizes no production API. Entity-1A is BLOCKED;
+Entity-1B/1C are deferred until D20's host-primitive gate closes. Persistence
+Foundation 1 is the next design track, not a workaround for Entity identity.
 
 ### Entity-1A — exact identity/lifetime substrate
 
-Implement internal owner-thread world-readiness and observed-entity lifetime records,
+Only after the authoritative host proof is established, implement internal
+owner-thread world-readiness and observed-entity lifetime records,
 including:
 
 - private monotonic lifetime tokens;
@@ -917,8 +932,9 @@ The following remain outside Foundation 1:
 1. **Service name:** `Workspace`.
 2. **Generic abstraction:** one project-owned `Entity` facade over live registered
    BaseEntity world objects.
-3. **Exact lifetime:** private monotonic EntityLifetimeToken plus exact managed object,
-   captured ID, registry occupancy and domain/VM/publication checks.
+3. **Exact lifetime:** private monotonic EntityLifetimeToken plus a supported
+   authoritative host-incarnation/retirement proof (currently missing), exact managed
+   object, captured ID, registry occupancy and domain/VM/publication checks.
 4. **Stale behavior:** permanent fail-closed host access; equality only remains.
 5. **Equality:** same CarbonLuau host instance + same exact lifetime token.
 6. **Public IDs:** yes, because keyed interop/lookup is the only bounded Foundation 1

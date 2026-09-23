@@ -659,7 +659,11 @@ owns the host research, exact-lifetime model, bounded surface and implementation
 gates. No production `Workspace` or `Entity` API exists merely because the
 architecture is adopted.
 
-The authorized first implementation sequence is Entity-1A through Entity-1C only.
+**HOST-PRIMITIVE-GATED / DEFERRED:** Entity-1A is BLOCKED by the missing supported
+authoritative incarnation/retirement proof. The [investigation](WorldEntityLifetimeInvestigation.md)
+records bypassed registry-transition hooks and kill veto, but no demonstrated
+same-object pooled reincarnation. Snapshot heuristics cannot close this gate.
+Only after the gate closes may the Entity-1A through Entity-1C sequence proceed.
 Entity-1B may expose `game:GetService("Workspace")`,
 `Workspace:GetEntityById(Id: string) -> Entity?`, and read-only
 `Entity.Id`, `Entity.Prefab` and `Entity.Position` only after the exact
