@@ -27,13 +27,13 @@ generic host-call bridge.
 
 ## 1. Baseline and evidence classification
 
-Architecture review started from CarbonLuau \`main\` at
-\`943b58fb5d2f8f147113a7720c67556bb785068c\`.
+Architecture review started from CarbonLuau `main` at
+`943b58fb5d2f8f147113a7720c67556bb785068c`.
 
 CarbonLuau's current feature-qualified host record for the Player/inventory work is
-Rust Dedicated Server app \`258550\`, build \`25353106\`, plus Carbon \`2.0.259\`,
-protocol \`2026.09.03.0\`, revision
-\`21063e8490adf412101bcc7d1cfe9d6280f61e80\`. That exact target is the required
+Rust Dedicated Server app `258550`, build `25353106`, plus Carbon `2.0.259`,
+protocol `2026.09.03.0`, revision
+`21063e8490adf412101bcc7d1cfe9d6280f61e80`. That exact target is the required
 starting point for Entity-1 implementation qualification. Historical Phase 0 worker
 evidence names an older Rust build and does not supersede the later exact-build
 feature evidence.
@@ -49,8 +49,8 @@ Evidence is separated as follows.
   mutation predicate: a host mutation requires an existing nonprovisional admission
   and **no active publication scope**.
 - [D18](Invariants.md#d18--player-interaction-foundation-1) already qualifies the
-  project-owned \`Vector3\` value and the public meaning of a live world-space
-  \`Position\` read for Player.
+  project-owned `Vector3` value and the public meaning of a live world-space
+  `Position` read for Player.
 - I4, D7, D10, D11, D14 and I12 remain authoritative for owner-thread access,
   publication, domains, replacement, recovery and trusted in-process interference.
 
@@ -60,7 +60,7 @@ Current Carbon source exposes the following useful lifecycle facts:
 
 - Carbon's
   [OnEntitySpawn patch](https://github.com/CarbonCommunity/Carbon/blob/main/src/Carbon.Hooks/Carbon.Hooks.Community/src/Entity/OnEntitySpawn.cs)
-  is a prefix on \`BaseNetworkable.Spawn()\`. It proves that synchronous plugin code
+  is a prefix on `BaseNetworkable.Spawn()`. It proves that synchronous plugin code
   can run on the spawn path before the normal Spawn body completes.
 - Carbon's
   [server-initialized patch](https://github.com/CarbonCommunity/Carbon/blob/main/src/Carbon.Hooks/Carbon.Hooks.Base/src/Static/IOnServerInitialized.cs)
@@ -68,10 +68,10 @@ Current Carbon source exposes the following useful lifecycle facts:
   hotloaded plugins.
 - Carbon exposes
   [server shutdown metadata](https://github.com/CarbonCommunity/Carbon/blob/main/src/Carbon.Hooks/Carbon.Hooks.Community/src/Server/OnServerShutdown.cs).
-- Carbon's current production metadata still identifies Carbon \`2.0.259\` /
-  protocol \`2026.09.03.0\`; current public Rust release metadata has moved since
+- Carbon's current production metadata still identifies Carbon `2.0.259` /
+  protocol `2026.09.03.0`; current public Rust release metadata has moved since
   CarbonLuau's exact build qualification. New Rust releases therefore remain
-  requalification inputs rather than proof for build \`25353106\`.
+  requalification inputs rather than proof for build `25353106`.
 
 These sources are current upstream evidence. They do not replace exact-binary
 qualification where Foundation 1 depends on a specific Rust implementation detail.
@@ -81,11 +81,11 @@ qualification where Foundation 1 depends on a specific Rust implementation detai
 Current generated Oxide hook documentation exposes useful Rust call ordering:
 
 - [OnEntitySpawned](https://docs.oxidemod.com/hooks/entity/OnEntitySpawned) is called
-  from \`BaseNetworkable.Spawn()\` after server initialization/network-group setup and
+  from `BaseNetworkable.Spawn()` after server initialization/network-group setup and
   after the entity is marked spawned, but before the immediate/global network update
   tail completes.
 - [OnEntityKill](https://docs.oxidemod.com/hooks/entity/OnEntityKill) is called from
-  \`BaseNetworkable.Kill(...)\` and a non-null hook result overrides the normal kill
+  `BaseNetworkable.Kill(...)` and a non-null hook result overrides the normal kill
   path. Destroy is therefore not a callback-free primitive.
 - [OnEntityLoaded](https://docs.oxidemod.com/hooks/entity/OnEntityLoaded) is called
   while a network object is being loaded from save. A load callback is not the same
@@ -101,16 +101,16 @@ during implementation.
 ### NetworkableId representation evidence
 
 Facepunch's current
-[\`Rust.Data.NetworkableId\`](https://github.com/Facepunch/Rust.Polyfill/blob/master/Rust.Data/NetworkableId.cs)
-is a struct containing a \`ulong Value\` with zero meaning invalid. A Luau number is
+[`Rust.Data.NetworkableId`](https://github.com/Facepunch/Rust.Polyfill/blob/master/Rust.Data/NetworkableId.cs)
+is a struct containing a `ulong Value` with zero meaning invalid. A Luau number is
 not an acceptable lossless representation for every 64-bit unsigned value.
 Foundation 1 therefore uses a canonical decimal **string** for the public lookup
-key and keeps the host \`NetworkableId\` type private.
+key and keeps the host `NetworkableId` type private.
 
 ### Position and entity-count evidence
 
 Unity defines
-[\`Transform.position\`](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Transform-position.html)
+[`Transform.position`](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Transform-position.html)
 as the world-space position. D18 already adopts the same world/local distinction for
 Player. Entity.Position reuses that semantic.
 
@@ -118,7 +118,7 @@ A full Rust world can be very large. Facepunch has published a production exampl
 with
 [362,299 entities](https://rust.facepunch.com/news/bags-to-riches). Third-party
 server reports commonly describe hundreds of thousands of entities later in a wipe.
-That makes an arbitrary whole-\`serverEntities\` scan from a Luau callback an
+That makes an arbitrary whole-`serverEntities` scan from a Luau callback an
 unacceptable default design merely to provide convenient enumeration.
 
 ## 2. Host model adopted by CarbonLuau
@@ -126,7 +126,7 @@ unacceptable default design merely to provide convenient enumeration.
 Foundation 1 distinguishes three things that Rust itself often combines.
 
 1. **Host lookup key** — the entity's current nonzero network ID. This is represented
-   publicly only as \`Entity.Id: string\`.
+   publicly only as `Entity.Id: string`.
 2. **Exact host entity lifetime** — one concrete live server-registered BaseEntity
    object for as long as that exact object remains the registry occupant for the
    captured host ID.
@@ -141,8 +141,8 @@ never exposed.
 Rust's global server registry is a BaseNetworkable registry. Foundation 1 does not
 make BaseNetworkable the public abstraction.
 
-A Foundation 1 \`Entity\` exists only for a currently live, server-registered object
-that resolves as \`BaseEntity\`. Registry entries that are not BaseEntity are normal
+A Foundation 1 `Entity` exists only for a currently live, server-registered object
+that resolves as `BaseEntity`. Registry entries that are not BaseEntity are normal
 lookup absence for this API. This prevents the public contract from inheriting the
 widest and least gameplay-specific Rust base class.
 
@@ -154,11 +154,11 @@ and Player permissions/identity remain exclusively the Players facade's concern.
 
 ### Registry
 
-Foundation 1 may use \`BaseNetworkable.serverEntities\` internally, but it never
+Foundation 1 may use `BaseNetworkable.serverEntities` internally, but it never
 exposes that collection or a live view of it. The first public operation is keyed
-lookup only. Entity-1B must prove that the exact target's keyed \`Find(NetworkableId)\`
+lookup only. Entity-1B must prove that the exact target's keyed `Find(NetworkableId)`
 path is available and does not implement the lookup as a scan. If that gate fails,
-\`GetEntityById\` does not ship.
+`GetEntityById` does not ship.
 
 ### World readiness
 
@@ -187,7 +187,7 @@ No constructor for Entity exists.
 
 ### Workspace
 
-\`Workspace\` is the service name. It is intentionally familiar to Roblox/Luau
+`Workspace` is the service name. It is intentionally familiar to Roblox/Luau
 authors, while its documentation explicitly says it represents the Rust server world
 and is not a Roblox DataModel container.
 
@@ -197,26 +197,26 @@ error.
 
 ### GetEntityById
 
-\`Workspace:GetEntityById(Id)\` is the only Foundation 1 discovery operation.
+`Workspace:GetEntityById(Id)` is the only Foundation 1 discovery operation.
 
 The input is a canonical decimal ASCII representation of a nonzero unsigned 64-bit
 lookup key:
 
 - 1 through 20 bytes/digits;
-- digits \`0\` through \`9\` only;
+- digits `0` through `9` only;
 - no sign, whitespace, decimal point, exponent or NUL;
 - no leading zero;
-- parsed value must be 1 through \`UInt64.MaxValue\`.
+- parsed value must be 1 through `UInt64.MaxValue`.
 
 Malformed/noncanonical input is a programming error. A well-formed ID that is not
-currently a live server-registered BaseEntity returns \`nil\`.
+currently a live server-registered BaseEntity returns `nil`.
 
 The method performs one target-qualified keyed registry lookup plus constant bounded
-validation. It must never scan \`serverEntities\`.
+validation. It must never scan `serverEntities`.
 
 ### Entity.Id
 
-\`Entity.Id\` is the canonical decimal string corresponding to the captured host
+`Entity.Id` is the canonical decimal string corresponding to the captured host
 network lookup key.
 
 It is **not** a persistent entity identity:
@@ -224,7 +224,7 @@ It is **not** a persistent entity identity:
 - it is scoped to the current Rust world/process state;
 - CarbonLuau does not promise that Rust never reuses a value;
 - scripts must not persist it as proof that a later entity is the same lifetime;
-- a later \`GetEntityById(oldId)\` may legitimately return a different Entity lifetime
+- a later `GetEntityById(oldId)` may legitimately return a different Entity lifetime
   if the host has reused that key.
 
 The safety promise is narrower and stronger: an **existing Entity proxy never
@@ -234,15 +234,15 @@ Numbers are never accepted as entity IDs. This avoids 64-bit precision ambiguity
 
 ### Entity.Prefab
 
-\`Entity.Prefab\` is the exact canonical full Rust prefab identity captured for the
+`Entity.Prefab` is the exact canonical full Rust prefab identity captured for the
 exact host lifetime, using the host's full PrefabName/resource identity rather than a
 Unity GameObject name or ShortPrefabName.
 
 Foundation 1 does not expose:
 
-- \`Name\`;
-- \`ShortPrefabName\`;
-- \`prefabID\`;
+- `Name`;
+- `ShortPrefabName`;
+- `prefabID`;
 - a Unity resource object.
 
 The full prefab string is preferred because short prefab names can be ambiguous and a
@@ -259,8 +259,8 @@ filesystem/resource loading.
 
 ### Entity.Position
 
-\`Entity.Position\` is a read-only live observation of the exact BaseEntity root
-\`Transform.position\`, converted to D18's existing immutable project-owned Vector3.
+`Entity.Position` is a read-only live observation of the exact BaseEntity root
+`Transform.position`, converted to D18's existing immutable project-owned Vector3.
 
 Semantics:
 
@@ -274,22 +274,22 @@ Semantics:
 
 The entity lifetime is revalidated before the host read. Nonfinite or otherwise
 unrepresentable host coordinates are a controlled host-state error rather than a
-fabricated \`Vector3.new(0, 0, 0)\`.
+fabricated `Vector3.new(0, 0, 0)`.
 
 A Vector3 already returned to Luau remains an ordinary immutable value after the
 entity or domain retires.
 
 ### Deliberately absent generic properties
 
-Foundation 1 does not expose \`Entity.Name\`, \`OwnerId\`, \`IsValid\`,
-\`ClassName\`, Rust type names, parent/children, network group, rotation, velocity,
+Foundation 1 does not expose `Entity.Name`, `OwnerId`, `IsValid`,
+`ClassName`, Rust type names, parent/children, network group, rotation, velocity,
 health or inventory.
 
-\`OwnerID\` is a Rust field with 64-bit representation and host-specific meaning. It
+`OwnerID` is a Rust field with 64-bit representation and host-specific meaning. It
 does not become a generic CarbonLuau ownership concept merely because the field
 exists.
 
-An \`IsValid\` property would also invite a check-then-use race. Every host-backed
+An `IsValid` property would also invite a check-then-use race. Every host-backed
 operation is required to validate exact lifetime at the operation boundary anyway.
 
 ## 4. Exact host-lifetime identity
@@ -300,7 +300,7 @@ CarbonLuau maintains an owner-thread-only identity registry for **observed** ent
 lifetimes. It is not a copy/index of the entire Rust world.
 
 When a Workspace lookup first observes a qualifying BaseEntity, CarbonLuau assigns a
-private monotonically increasing \`EntityLifetimeToken\`, never reused within the
+private monotonically increasing `EntityLifetimeToken`, never reused within the
 loaded CarbonLuau host instance. The identity record captures enough information to
 prove that future operations still refer to the same exact host lifetime:
 
@@ -352,7 +352,7 @@ contract.
 ### Entity equality
 
 Two Entity proxies compare equal iff they refer to the same CarbonLuau host instance
-and the same private exact \`EntityLifetimeToken\`.
+and the same private exact `EntityLifetimeToken`.
 
 The proxy's owning domain is not part of entity identity. Therefore two proxies
 obtained by different live domains can compare equal while both refer to the same
@@ -366,7 +366,7 @@ Equality:
 - never considers an ID-reused replacement equal to the retired entity.
 
 This is stronger and more useful than ordinary userdata identity without confusing
-public \`Id\` with lifetime identity.
+public `Id` with lifetime identity.
 
 ## 5. Facade/publication lifetime
 
@@ -375,7 +375,7 @@ Entity proxies are non-owning host-backed CarbonLuau facades.
 Each proxy carries:
 
 - exact EntityLifetimeToken;
-- immutable origin \`ResourceOwner\` domain;
+- immutable origin `ResourceOwner` domain;
 - VM/host generation identity;
 - publication eligibility for the scope in which that proxy was created.
 
@@ -450,7 +450,7 @@ VM/host instance.
 
 Carbon's initialized-state hook is the readiness boundary to qualify. A hotloaded
 CarbonLuau instance queries current host state on demand. Foundation 1 sends no
-synthetic \`EntityAdded\` events for already-existing entities.
+synthetic `EntityAdded` events for already-existing entities.
 
 ### Shutdown
 
@@ -462,13 +462,13 @@ being released.
 ### Save/load and restart
 
 A server save may serialize ordinary Rust world entities according to host rules.
-Foundation 1 does not alter \`enableSaving\`, force persistence or attach
+Foundation 1 does not alter `enableSaving`, force persistence or attach
 CarbonLuau-owned persistence metadata.
 
 A loaded entity in a later world/process is a new host lifetime even if Rust happens
 to restore the same numeric network ID. Entity proxy identity never crosses a server
 restart. Persistent script references require a separate future design using an
-application-level persistence key, not \`Entity.Id\`.
+application-level persistence key, not `Entity.Id`.
 
 ## 8. Ownership model
 
@@ -532,16 +532,16 @@ world index is authorized.
 
 ## 10. Lifecycle Signals
 
-Foundation 1 does **not** expose \`Workspace.EntityAdded\` or
-\`Workspace.EntityRemoving\`.
+Foundation 1 does **not** expose `Workspace.EntityAdded` or
+`Workspace.EntityRemoving`.
 
 The host currently provides useful hooks, but their ordering is not a simple symmetric
 CarbonLuau lifecycle contract:
 
-- a Carbon \`OnEntitySpawn\` prefix can run before Spawn completes;
-- the generated \`OnEntitySpawned\` callback runs inside Spawn before the networking
+- a Carbon `OnEntitySpawn` prefix can run before Spawn completes;
+- the generated `OnEntitySpawned` callback runs inside Spawn before the networking
   tail completes;
-- \`OnEntityKill\` can veto the normal kill path;
+- `OnEntityKill` can veto the normal kill path;
 - save-loaded entities can exist before CarbonLuau hotload;
 - shutdown and world loading have separate lifecycles.
 
@@ -570,18 +570,18 @@ Future prefab input is required to:
 - perform no fuzzy/display-name lookup;
 - not expose prefab IDs or Unity resource objects.
 
-\`Workspace:PrefabExists\` is not useful enough before Spawn/query support exists, so
+`Workspace:PrefabExists` is not useful enough before Spawn/query support exists, so
 it is deferred rather than creating another thin service method.
 
 ## 12. Spawn research and decision
 
 **Decision: deferred from World/Entity Foundation 1.**
 
-No \`Workspace:Spawn\` spelling/signature is reserved by D20.
+No `Workspace:Spawn` spelling/signature is reserved by D20.
 
 The likely host adapter shape is a single CarbonLuau operation that internally owns
 both entity creation and Spawn. Luau must never receive a pre-spawn BaseEntity or be
-required to call \`CreateEntity\`, \`Spawn\`, \`SendNetworkUpdate\` or network-group
+required to call `CreateEntity`, `Spawn`, `SendNetworkUpdate` or network-group
 methods separately.
 
 Before a Spawn API can be adopted, an exact-build implementation design must qualify:
@@ -614,12 +614,12 @@ not all qualified by current CarbonLuau evidence, Spawn remains out of Foundatio
 
 **Decision: deferred from World/Entity Foundation 1.**
 
-No \`Entity:Destroy()\` spelling is assigned to the current public identity.
+No `Entity:Destroy()` spelling is assigned to the current public identity.
 
 The correct future direction is the normal Rust entity kill path, not raw
-\`UnityEngine.Object.Destroy\`, manual registry removal or separate network update
-calls. Current generated host evidence shows \`BaseNetworkable.Kill\` calls
-\`OnEntityKill\` and allows a non-null plugin result to override normal kill behavior.
+`UnityEngine.Object.Destroy`, manual registry removal or separate network update
+calls. Current generated host evidence shows `BaseNetworkable.Kill` calls
+`OnEntityKill` and allows a non-null plugin result to override normal kill behavior.
 
 A future Destroy API must therefore qualify on the exact target:
 
@@ -701,7 +701,7 @@ Foundation 1 uses ordinary CarbonLuau error conventions rather than Result<T,E>.
 | Situation | Luau behavior |
 |---|---|
 | malformed/noncanonical entity ID | programming error |
-| well-formed ID absent from current live BaseEntity registry | \`nil\` |
+| well-formed ID absent from current live BaseEntity registry | `nil` |
 | Workspace used before world readiness/during shutdown | controlled operational error |
 | stale Entity proxy | controlled stale-reference error |
 | destroyed/pooled/reused host object discovered during validation | controlled stale-reference error |
@@ -722,15 +722,15 @@ small.
 
 - Entity ID: 1..20 ASCII digits, canonical nonzero unsigned-64 decimal.
 - No Foundation 1 user-supplied prefab input.
-- One entity may be returned by one \`GetEntityById\` call.
+- One entity may be returned by one `GetEntityById` call.
 
 ### Host work
 
-- \`GetEntityById\`: one keyed registry lookup plus constant validation; no registry
+- `GetEntityById`: one keyed registry lookup plus constant validation; no registry
   iteration.
-- \`Entity.Id\` / \`Prefab\`: constant lifetime validation plus bounded snapshot
+- `Entity.Id` / `Prefab`: constant lifetime validation plus bounded snapshot
   return.
-- \`Entity.Position\`: constant lifetime validation plus one root world-position read.
+- `Entity.Position`: constant lifetime validation plus one root world-position read.
 - No lifecycle event queue exists in Foundation 1.
 - No enumeration/spatial result array exists in Foundation 1.
 - No Spawn/Destroy request exists in Foundation 1.
@@ -791,7 +791,7 @@ specialized facade:
 The exact author-facing acquisition spelling for those future facades is deferred
 until the first real capability is designed. What is decided now is the architectural
 direction: **typed CarbonLuau capability facades, not reflection, host-class
-inheritance or generic \`CallMethod\`.**
+inheritance or generic `CallMethod`.**
 
 ## 20. Implementation routing
 
@@ -827,7 +827,7 @@ Entity.Prefab
 Entity.Position
 ~~~
 
-Qualify exact Rust build \`25353106\` plus Carbon \`2.0.259\` for:
+Qualify exact Rust build `25353106` plus Carbon `2.0.259` for:
 
 - keyed registry lookup;
 - live BaseEntity discrimination;
@@ -872,9 +872,9 @@ This architecture is designed after the published 0.4.0 line.
 
 D20 adoption changes **no** package version, scripting API identity, native ABI,
 provider protocol, package schema or Luau pin. It does not retroactively add
-Workspace/Entity to \`0.4.0-experimental\`.
+Workspace/Entity to `0.4.0-experimental`.
 
-If Entity-1A through 1C later complete as an additive release, \`0.5.0-experimental\`
+If Entity-1A through 1C later complete as an additive release, `0.5.0-experimental`
 is the natural release-planning candidate, but D20 intentionally leaves that identity
 unassigned until implementation/public-closure evidence exists.
 
@@ -914,8 +914,8 @@ The following remain outside Foundation 1:
 
 ## 23. Resolved decision matrix
 
-1. **Service name:** \`Workspace\`.
-2. **Generic abstraction:** one project-owned \`Entity\` facade over live registered
+1. **Service name:** `Workspace`.
+2. **Generic abstraction:** one project-owned `Entity` facade over live registered
    BaseEntity world objects.
 3. **Exact lifetime:** private monotonic EntityLifetimeToken plus exact managed object,
    captured ID, registry occupancy and domain/VM/publication checks.
@@ -926,9 +926,9 @@ The following remain outside Foundation 1:
 7. **ID representation:** canonical nonzero decimal string for current-world lookup;
    not persistence or lifetime identity.
 8. **Position:** read-only BaseEntity root world Transform.position -> D18 Vector3.
-9. **Prefab/name:** \`Prefab\` is full canonical PrefabName; Name and ShortPrefabName
+9. **Prefab/name:** `Prefab` is full canonical PrefabName; Name and ShortPrefabName
    deferred.
-10. **Lookup:** \`Workspace:GetEntityById(string) -> Entity?\`, keyed/no scan.
+10. **Lookup:** `Workspace:GetEntityById(string) -> Entity?`, keyed/no scan.
 11. **Enumeration/query:** none in Foundation 1; deferred rather than scan the world.
 12. **Spatial query:** deferred pending exact efficient inclusion semantics.
 13. **Lifecycle Signals:** deferred; current hook ordering is not adopted as a simple

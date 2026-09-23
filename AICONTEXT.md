@@ -1,6 +1,6 @@
 # CarbonLuau AI and contributor policy
 
-This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 is documented in [Phase2.md](docs/Phase2.md), [Phase2-Validation.md](docs/Phase2-Validation.md) and invariant D9. The authorized Phase 3 facade, approved provisional-effect policy and qualification status are in [Phase3.md](docs/Phase3.md), [Phase3-Validation.md](docs/Phase3-Validation.md) and D10–D12. Script authors start at the [public API reference](docs/api/README.md). Revised D13 owns inventory ownership/failure semantics, and D18 owns Player Interaction Foundation 1; their implemented status is routed below.
+This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 is documented in [Phase2.md](docs/Phase2.md), [Phase2-Validation.md](docs/Phase2-Validation.md) and invariant D9. The authorized Phase 3 facade, approved provisional-effect policy and qualification status are in [Phase3.md](docs/Phase3.md), [Phase3-Validation.md](docs/Phase3-Validation.md) and D10–D12. Script authors start at the [public API reference](docs/api/README.md). Revised D13 owns inventory ownership/failure semantics, D18 owns Player Interaction Foundation 1, and D20 owns the read-only World/Entity Foundation 1 architecture; their implemented or design-only status is routed below.
 
 ## Authority and reading order
 
@@ -47,6 +47,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Player Interaction Foundation 1F-A TakeItem implementation and qualification | [PlayerInteractionFoundation1FA.md](docs/PlayerInteractionFoundation1FA.md) |
 | Player Interaction Foundation 1F-B GiveItem implementation and historical investigation | [PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md), [qualification](docs/PlayerInteractionFoundation1FB-Validation.md) |
 | Player Interaction Foundation 1F-C combined closure and cold-module mutation correction | [PlayerInteractionFoundation1FC.md](docs/PlayerInteractionFoundation1FC.md) |
+| Canonical World/Entity Foundation 1 semantics | [D20 in Invariants.md](docs/Invariants.md#d20--worldentity-foundation-1) |
+| World/Entity Foundation 1 rationale, host evidence, phase routing and qualification gates | [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
@@ -274,6 +276,21 @@ Player-1F-A implements committed-only verified `Player:TakeItem` as recorded in
 The exact-build server adapter is qualified; authenticated-client convergence
 remains unqualified. The separate Player-1F-B qualification is linked above;
 neither API authorizes Player-1F-C closure or other gameplay APIs.
+
+
+World/Entity Foundation 1 architecture is canonically owned by D20 in
+[Invariants.md](docs/Invariants.md#d20--worldentity-foundation-1).
+[WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) is the supporting
+host-evidence, rationale, exact-lifetime, phase-routing and qualification record.
+D20 is architecture-only: no production `Workspace` or `Entity` API is
+implemented by adoption. Entity-1A is the internal exact-lifetime/publication
+substrate; Entity-1B is the keyed read-only `Workspace:GetEntityById` plus
+`Entity.Id`, `Entity.Prefab` and `Entity.Position` exact-host qualification;
+Entity-1C is lifecycle/scale/public closure. Whole-world enumeration, prefab
+filtering, spatial queries, lifecycle Signals, Spawn, Destroy and specialized
+entity capabilities require later explicit architecture rather than being
+implicitly authorized by D20. D20 changes no current package/API/ABI/provider/
+schema/Luau identity.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

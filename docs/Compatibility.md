@@ -650,6 +650,41 @@ authenticated-client behavior and DockerPC live/local result remain unqualified.
 Later Player phases require their own
 applicable Windows/Linux/native/live/sanitizer qualification.
 
+
+## World/Entity Foundation 1 architecture gate
+
+[D20](Invariants.md#d20--worldentity-foundation-1) adopts a design-only read-safe
+world/entity baseline. [WorldEntityFoundation1.md](WorldEntityFoundation1.md)
+owns the host research, exact-lifetime model, bounded surface and implementation
+gates. No production `Workspace` or `Entity` API exists merely because the
+architecture is adopted.
+
+The authorized first implementation sequence is Entity-1A through Entity-1C only.
+Entity-1B may expose `game:GetService("Workspace")`,
+`Workspace:GetEntityById(Id: string) -> Entity?`, and read-only
+`Entity.Id`, `Entity.Prefab` and `Entity.Position` only after the exact
+target proves keyed registry lookup, exact BaseEntity lifetime validation,
+prefab capture/bounds, root world-space Transform reads and lifecycle behavior.
+The starting feature-sensitive host target is Rust Dedicated Server app
+`258550`, build `25353106`, with Carbon `2.0.259`, protocol
+`2026.09.03.0`, revision `21063e8490adf412101bcc7d1cfe9d6280f61e80`,
+matching the later Player/inventory evidence. Current upstream Rust metadata has
+advanced beyond that build; current upstream source/docs are research input, not
+a substitute for target-build qualification.
+
+Foundation 1 intentionally has no collection query, radius query, lifecycle
+Signal, Spawn or Destroy compatibility promise. A result limit does not authorize
+an O(all server entities) scan, and D20 establishes no CarbonLuau world index.
+Future collection/event APIs require explicit inspected-work/result/queue bounds.
+Future Spawn/Destroy/Position mutations require their own exact-host evidence and
+Player-1F-C's corrected committed-only mutation predicate.
+
+D20 architecture adoption changes no package version, scripting API identity,
+native ABI, provider protocol, package schema or Luau revision. The published
+0.4.0 line is unchanged. An implemented additive World/Entity surface may later
+be planned for `0.5.0-experimental`, but no such identity is assigned until
+Entity-1C public closure.
+
 ## Phase 0 consistency review
 
 Reviewed baseline `a88f2eb` on 2026-09-14 against the rules introduced by this policy task:

@@ -198,9 +198,9 @@ release-candidate VSIX packaging is not a signature or publication claim.
 #### D20 — World/Entity Foundation 1
 
 World/Entity Foundation 1 approves exactly this future read-only surface:
-\`game:GetService("Workspace")\`; \`Workspace:GetEntityById(Id: string) -> Entity?\`;
-and the generic host-backed \`Entity\` properties \`Id: string\`, \`Prefab: string\`
-and \`Position: Vector3\`. \`Workspace\` is Rust-world ergonomics, not a Roblox
+`game:GetService("Workspace")`; `Workspace:GetEntityById(Id: string) -> Entity?`;
+and the generic host-backed `Entity` properties `Id: string`, `Prefab: string`
+and `Position: Vector3`. `Workspace` is Rust-world ergonomics, not a Roblox
 DataModel hierarchy. No raw BaseNetworkable/BaseEntity/Transform/GameObject,
 serverEntities collection, host type hierarchy, reflection or generic host-call
 escape enters Luau. [WorldEntityFoundation1.md](WorldEntityFoundation1.md) owns the
@@ -225,18 +225,18 @@ property/method otherwise fails closed. Ordinary values already returned from an
 Entity, including Vector3/string snapshots, remain ordinary Luau values after
 retirement.
 
-\`Entity.Id\` is **not** exact lifetime identity. It is the canonical decimal string
+`Entity.Id` is **not** exact lifetime identity. It is the canonical decimal string
 of the current nonzero 64-bit host network lookup key: 1..20 ASCII digits, no leading
 zero/sign/whitespace/exponent, parsed exactly as UInt64. Luau numbers are not
 accepted because they cannot exactly represent all UInt64 values. The ID is a
 current-world/process lookup key only and must not be treated as a persistence key
 or proof that a later lookup is the same entity lifetime. A well-formed unknown ID
 returns nil; malformed/noncanonical input is a programming error.
-\`GetEntityById\` must use a target-qualified keyed server-registry lookup plus
+`GetEntityById` must use a target-qualified keyed server-registry lookup plus
 constant validation and must never scan the registry. Registry entries that are not
 live BaseEntity values are ordinary absence for this service.
 
-\`Entity.Prefab\` is the exact full canonical host PrefabName/resource identity
+`Entity.Prefab` is the exact full canonical host PrefabName/resource identity
 captured for the exact lifetime, after live validation. Foundation 1 exposes no
 Unity object name, ShortPrefabName, numeric prefab ID or resource object. The
 canonical design ceiling is 512 UTF-8 bytes with no NUL; exceeding it is a controlled
@@ -244,8 +244,8 @@ host-state failure, not truncation. Future prefab input/spawn must separately
 qualify one bounded canonical server-prefab namespace and may not interpret a
 path-looking string as arbitrary filesystem/resource access.
 
-\`Entity.Position\` is a read-only live observation of the exact BaseEntity root
-\`Transform.position\` in Rust/Unity world coordinates, reusing D18's immutable
+`Entity.Position` is a read-only live observation of the exact BaseEntity root
+`Transform.position` in Rust/Unity world coordinates, reusing D18's immutable
 project-owned Vector3. Parenting does not change the public coordinate space. No
 local coordinate, collider center, eye offset, terrain projection, Transform object
 or stale cached position is exposed. Nonfinite/unrepresentable host coordinates are
@@ -298,7 +298,7 @@ scheduling.
 
 Foundation 1's implementation routing is exactly: Entity-1A internal exact
 identity/lifetime/publication substrate; Entity-1B the read-only Workspace/Entity
-surface plus exact Rust build \`25353106\` / Carbon \`2.0.259\` registry, prefab,
+surface plus exact Rust build `25353106` / Carbon `2.0.259` registry, prefab,
 Position, startup/shutdown and churn qualification; Entity-1C cross-domain,
 replacement, provider unload, reload/fatal recovery, save/restart semantics,
 identity-table scale, public metadata/docs and release planning. Enumeration,
@@ -306,10 +306,12 @@ spatial query, Signals, Spawn, Destroy and specialized capabilities require late
 explicit architecture rather than being implicitly authorized follow-on phases.
 
 D20 adoption changes no package/API/ABI/provider/schema/Luau identity. Because the
-architecture is after the published 0.4.0 line, \`0.5.0-experimental\` is a natural
+architecture is after the published 0.4.0 line, `0.5.0-experimental` is a natural
 future release-planning candidate if Entity-1 closes, but no such identity is assigned
 until implementation/public qualification.
-\n\n#### D2 — limits in addon-capable operation
+
+
+#### D2 — limits in addon-capable operation
 
 Defaults remain 64 MiB/3 ms; clamps remain 16..256 MiB and 1..100 ms. Source remains 64 KiB, loaded bytecode 1 MiB, log buffer 4 KiB, with the existing native registry bound of 32 live VMs and one host thread per VM. Compiler/bridge/managed/source-snapshot memory remains outside the VM heap cap. Foundation G adds a fixed one-second compiler wall deadline and a production 256 MiB worker-process memory limit; neither is a whole-process cap.
 
