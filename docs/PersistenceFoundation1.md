@@ -353,6 +353,11 @@ creation, including page-1 restoration through hot-journal recovery. A main-head
 check alone does not close that gate; preserve normal supported recovery and
 qualify incompatible geometry, auto-vacuum and crafted journal/header combinations.
 
+[Persistence-1A](PersistenceFoundation1A.md) now records the qualified private
+implementation, including that startup/recovery correction and the measured
+filesystem profiles. This does not turn the operational budget into a hard
+physical invariant or qualify public API/Carbon integration.
+
 ## 7. Durability, atomicity and uncertainty
 
 For Set/Remove, success means the transaction containing the key mutation
@@ -577,6 +582,10 @@ logical/backend byte-extent bounds and qualified allocated-file operational-budg
 checks, hung-worker containment and no native-library-after-unload access. Final
 qualification must close section 6's mandatory WAL startup rejection fix and
 filesystem-profile follow-up before 1A PASS or the 1B handoff.
+
+**Implemented/qualified:** [PersistenceFoundation1A.md](PersistenceFoundation1A.md)
+records the private substrate PASS and exact 1B handoff. The later phases below
+are not implemented by that closure.
 
 ### Persistence-1B — DataStoreService and completion admission
 

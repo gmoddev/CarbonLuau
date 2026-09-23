@@ -13,12 +13,18 @@ retained for historical links.
 qualification target and diagnostic threshold, not a hard physical invariant.
 Hard 16-MiB namespace / 256-MiB global logical quotas and SQLite page/file-length
 bounds remain. No breach observed is empirical evidence, not a theorem. Final
-Persistence-1A qualification is in progress; approval is not PASS. The WAL startup
+Approval alone was not PASS. The WAL startup
 rejection fix is mandatory, including page-1 restoration through hot-journal
 recovery, before unsupported conversion or WAL/SHM creation. Preserve supported
 hot-journal recovery and close the investigation's scoped filesystem-profile
 follow-up. D21 is resolved; this is final qualification, not another architecture
 investigation. Historical negative evidence remains intact; do not begin 1B.
+
+**Qualification closure:** [Persistence-1A](PersistenceFoundation1A.md) now records
+private-substrate PASS, including WAL rejection/hot-journal recovery, exact
+filesystem profiles and final-source Windows/Linux CI. The adoption condition is
+satisfied within that recorded scope; no public API, actual Carbon persistence
+integration or power-loss guarantee is implied.
 
 ## Exact replacement: D21 retained-journal/allocation sentences
 

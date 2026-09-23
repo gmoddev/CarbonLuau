@@ -689,12 +689,12 @@ native ABI, provider protocol, package schema or Luau revision. The published
 be planned for `0.5.0-experimental`, but no such identity is assigned until
 Entity-1C public closure.
 
-## Persistence Foundation 1 architecture gate
+## Persistence Foundation 1 qualification
 
 [D21](Invariants.md#d21--persistence-foundation-1) and
 [PersistenceFoundation1.md](PersistenceFoundation1.md) adopt the next runtime
-foundation, **design only**. No DataStoreService/worker/SQLite dependency or public
-metadata exists by adoption. [Design validation](PersistenceFoundation1-Validation.md)
+foundation. Its original adoption was **design only**, not implementation of a
+DataStoreService/worker/SQLite dependency or public metadata. [Design validation](PersistenceFoundation1-Validation.md)
 records upstream research and local architecture checks, not crash/durability or
 platform PASS. Current release identities and prior valid runtime evidence remain
 unchanged; 0.5.0-experimental is only a future release-planning candidate.
@@ -708,8 +708,22 @@ The [durability follow-up](PersistenceDurabilityInvestigation.md) recommends sto
 PERSIST/EXTRA after Windows NTFS and Linux ext4-container process-crash, sync-fault
 and Linux ASan/UBSan research checks. Its [D21 amendment](PersistenceD21Amendment-Proposed.md)
 was **approved on 2026-09-23**: canonical storage now selects PERSIST/EXTRA.
-Production 1A still requires its full implementation/qualification gates. These results
+That amendment alone did not close production 1A's implementation/qualification gates. Those research results
 do not qualify OS crash, physical power loss or actual Carbon acknowledgement.
+
+**Current private 1A: PASS within recorded scope.**
+[PersistenceFoundation1A.md](PersistenceFoundation1A.md) records final implementation
+`c6f894472887c2b9008d845b5d1e5dcdcf30ddcf`, Windows/Linux native and supervised-worker
+tests, exact quotas/codec, real lost-ack/no replay, fault/crash/corruption,
+ASan/UBSan, packaging/clean extraction and final-source CI. Inherited WAL,
+including page one restored by hot-journal recovery, is rejected without
+WAL/SHM creation; normal supported recovery remains intact. Hosted Windows UTF-8
+stdin preamble framing is explicitly qualified. The amended 1,280-MiB figure is
+an operational budget/qualification target/diagnostic threshold, not a hard
+physical-allocation invariant. Hard logical and SQLite page/file-length limits
+remain. No public persistence API, 1B, actual Carbon persistence integration,
+Shockbyte or power-loss qualification is implied. All version identities remain
+unchanged; preserve the historical negative evidence.
 
 Documentation/evidence-only closure needs canonical-routing, link, signature,
 decision/bounds, whitespace, scope and fixture-syntax checks, not unrelated native,
@@ -722,12 +736,14 @@ limits and corruption behavior. Persistence-1B adds non-yielding callback admiss
 namespace authority, publication/failed candidates, deadlines and stale completions.
 Persistence-1C closes Windows x64 and glibc Linux x64 Carbon integration, replacement,
 provider unload, shared-VM recovery, server restart, crash/lost-ack uncertainty,
-failure injection, physical disk/memory/queue bounds, affected native sanitizer/
+failure injection, hard logical/backend extent and memory/queue bounds plus
+qualified physical-allocation operational-budget checks, affected native sanitizer/
 allocation-fault and existing regression matrices, public metadata/docs and
 final-source CI. Process-kill tests do not prove power-loss safety on arbitrary
 hardware. Record SQLite revision, effective PRAGMAs, filesystem/VFS, worker limits,
 host versions and exact source/artifacts for each result. Shockbyte remains
-separately unqualified. Do not promote the design to implementation PASS.
+separately unqualified. Do not promote private 1A evidence to public-service or
+actual Carbon integration PASS.
 
 ## Phase 0 consistency review
 

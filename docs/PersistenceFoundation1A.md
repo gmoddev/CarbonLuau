@@ -1,6 +1,6 @@
 # Persistence Foundation 1A — backend and qualification
 
-## Current resume — amended budget and final qualification
+## Current closure — amended budget and qualified private 1A
 
 On 2026-09-23 the user approved the [physical-budget amendment](PersistencePhysicalD21Amendment-Proposed.md).
 The 1,280 MiB figure is an **operational safety budget / qualification target**,
@@ -8,7 +8,7 @@ not a hard filesystem-allocation invariant. Logical quotas and qualified SQLite
 page/file-length limits remain hard bounds. Recorded Windows/Linux adversarial
 workloads observed no budget breach; this is empirical evidence, not a theorem.
 
-**Local production qualification PASS; committed-source CI pending.** The inherited-WAL correction uses
+**PASS — private Persistence-1A within the recorded qualification scope.** The inherited-WAL correction uses
 SQLite's supported [SQLITE_OMIT_WAL](https://www.sqlite.org/compile.html#omit_wal)
 build option, required by backend startup, plus a writable-database check. SQLite
 itself rejects unsupported read versions, including a header restored by journal
@@ -119,7 +119,7 @@ Release direct-backend observations (not SLA or script throughput):
 | Exact quota fill/mutations | 16,276.3 ms | 20,035.0 ms |
 | Full verification/reopen | 1,361.5 ms | 1,610.2 ms |
 
-Final tested worker SHA-256:
+Pre-CI worker SHA-256 (before the IPC/startup diagnostic corrections below):
 
 - Windows: `5e94897569b09151c147371aa190c81bec0d6327fa136afb8dde948c5e62472e`
 - Linux: `5a27eaeb8a048fab3a40247adee7d2747c63d81f8ec25407df49ad656d5ba6fd`
@@ -176,7 +176,77 @@ Windows-job retry passed all 14 native tests, then failed the new managed worker
 fixture. Its optimized stack did not identify the exact assertion; test-only
 line/status and filesystem diagnostics were added for that separate failure.
 These failed attempts are retained, not counted as an overall pass or proof of
-a diagnosed transient cause. 1A remains open until hosted qualification closes.
+a diagnosed transient cause. They did not close 1A; the successful corrected-source
+qualification below does.
+
+#### Hosted Windows follow-up
+
+Test diagnostics (`fdb7148`, `ab4a2b1`) separated two failures. The compiler
+allocation-refusal fixture left `std::bad_alloc` unhandled, allowing Windows
+crash reporting to participate in its exit. `96410c8` makes the expected refusal
+exit explicitly and logs any unexpected status; allocation success still fails
+the unchanged WorkerFailure assertion. Five consecutive Windows and five Linux
+containment runs passed. The original failed logs did not record actual status,
+so they do not establish crash reporting as their demonstrated sole cause.
+
+The persistence failure was reproduced deterministically on dockerbox by enabling
+a UTF-8 input encoding in the test process. Framework
+[Process.Start](https://github.com/microsoft/referencesource/blob/main/System/services/monitoring/system/diagnosticts/Process.cs)
+constructs redirected stdin with the console input encoding; the StreamWriter
+can emit its UTF-8 preamble before BaseStream writes. Those three bytes were
+misread as the private binary frame length. `c6f8944` accepts one exact UTF-8
+preamble **only before the initialization frame**, with constant bounded reads
+before any frame allocation. All subsequent frames retain strict length checks;
+an actual-IPC late-preamble rejection test passes. Windows CI explicitly selects
+the reproducing UTF-8 test-process profile. Production changes no global console
+encoding, uses no reflection into Framework internals and introduces no public API.
+Other unexpected encodings/prefixes fail closed rather than being auto-detected.
+
+`89fe689` also replaces Framework
+[FileStream.FlushAsync](https://github.com/microsoft/referencesource/blob/main/mscorlib/system/io/filestream.cs)
+on the pipe with an off-owner-thread managed-buffer Flush under the same immutable
+deadline. The former calls FlushFileBuffers, which masked the early rejection with
+"pipe has been ended" in hosted logs. This is **IPC**, not SQLite durability
+flushing: database/journal synchronization is unchanged. Startup/protocol failure
+emits at most one fixed-stage/code stderr line, with no keys, values or paths.
+The diagnostic fixture captures a bounded excerpt only after child exit.
+
+Both platform worker/lost-ack/hang/parent-death/retirement/resource matrices pass
+after these corrections. Windows UTF-8 tests and the Linux non-preamble profile
+both preserve no-replay behavior and later-frame rejection. Earlier binary/bundle
+hashes above describe their explicitly pre-CI snapshots, not the corrected worker.
+
+#### Final committed-source qualification
+
+Runtime implementation and test corrections conclude at
+`c6f894472887c2b9008d845b5d1e5dcdcf30ddcf`:
+
+- [Runtime CI 35931897673](https://github.com/gmoddev/CarbonLuau/actions/runs/35931897673):
+  Windows x64, Linux x64 and sanitizer jobs all PASS, including full native tests,
+  managed supervised-worker faults, broader runtime regressions, release validation,
+  deterministic packaging, clean extracted worker and bundled-example execution.
+- [Tooling CI 35931897751](https://github.com/gmoddev/CarbonLuau/actions/runs/35931897751):
+  Windows, Linux and macOS PASS. No tooling/API additions were made.
+- Final dockerbox full native reruns: Windows 14/14 in 40.42 s; Linux
+  ASan/UBSan/leak 14/14 in 149.68 s. Earlier production backend/allocation probes
+  remain valid: the hosted follow-up changed worker transport/diagnostics, not
+  SQLite, SQL, quota, file accounting or durability behavior.
+
+Downloaded CI release-candidate artifacts identify the exact committed source
+above in provenance. SHA-256 independently read back:
+
+| Artifact | SHA-256 |
+|---|---|
+| Windows complete ZIP | `aacef74ab6e04e3d2a1ba0435ce4a8c981b8434c39d5dee7a0f0a10f742bc312` |
+| Linux complete ZIP | `31b9263d82859cc5642d59f492827984c24b19c54350cf95e91106299bcc55dd` |
+| Windows storage worker (provenance) | `9d64de49b9e7b7d07a372d0b29ba38e04000a624054029811e689b549f5421fa` |
+| Linux storage worker (provenance) | `5f5fe829921626148151dc4ebed2e3879733f3060a668a44f8f6a3cf1a68cc1b` |
+
+SQLite source ID is `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`;
+archive and C/header pins remain in `native/cmake/SQLite.cmake`. These are CI
+artifacts, not a new GitHub release/tag or Shockbyte deployment. The following
+evidence-only commit changes documentation/routing; its own run is addressable
+by that commit in Actions and is not invented inside this record.
 
 The implementation/limits map below still describes the final private substrate:
 schema/envelope 1; exact finite binary64; stable tagged namespaces; atomic per-key
@@ -193,6 +263,40 @@ owner-thread admission, runtime-authority checks and public metadata/docs. **1B
 was not started.** No new live Carbon/server, real-client, Shockbyte, OS-crash or
 physical power-loss qualification is claimed. Actual Carbon persistence integration
 remains in the later phase's scope; helper/Mono tests are not a substitute.
+
+### Closure report (current, not the historical reports below)
+
+| Requested item | Final result |
+|---|---|
+| 1. Verdict | PASS for private 1A within this record's OS/VFS/process-crash scope. |
+| 2. Starting commit | `1b160ef0d9b574c327889976f455f4f9487ea7c2`. |
+| 3. D21 adoption/push | Durability amendment already pushed at baseline; physical-budget adoption pushed in `80d364f`. |
+| 4. Implementation | `80d364fcd34299512b3cb257a9eee6974385a2d9`, with hosted qualification corrections through `c6f894472887c2b9008d845b5d1e5dcdcf30ddcf`. |
+| 5. Evidence/docs | This separate closure commit; exact SHA supplied by Git history/completion handoff. |
+| 6. Tested source | Committed-source runtime/tooling PASS at `c6f8944`; evidence-only follow-up does not modify runtime. |
+| 7. SQLite | Private static 3.53.4, exact source ID and verified archive/C/header pins above. |
+| 8. Startup | Effective PERSIST/EXTRA and all required settings read back; OMIT_WAL required; unsupported main/replayed WAL and readonly write-version cases rejected. |
+| 9. Worker | One supervised process, one outstanding operation, off-owner-thread I/O, 256-MiB OS cap, parent-death/job containment. |
+| 10–11. Namespace/isolation | Stable tagged Root or canonical PackageId; private authority/route validation, independent of provider/version/domain/VM. |
+| 12. Schema | Records/Quotas/Totals schema 1; keyed BLOB identities and bounded complete startup validation. |
+| 13–15. Codec/integrity | Bounded tagged trees; exact finite binary64 including signed zero/subnormal/extremes; CLPV 1 and identity-bound SHA-256. 9,996 finite stream cases plus boundaries passed. |
+| 16–17. Atomicity/quotas | Per-key Set/Remove and quota accounting commit together; exact 16/256-MiB and count limits, +/-1, overwrite/shrink/removal tested. |
+| 18. Storage bound | Hard database/journal byte extents; 1,280 MiB remains an operational budget, not a never-exceeded physical invariant; no measured breach. |
+| 19–20. Queue/deadline | 8/128 limits, namespace FIFO/rotating fairness, retained rate buckets, immutable monotonic five-second deadline. |
+| 21–22. Durability/faults | PERSIST/EXTRA sync trace and process-crash recovery; 49 Windows/47 Linux backend cases; short-write/flush/allocation/corruption faults. Not power-loss proof. |
+| 23. Lost acknowledgement | Actual committed write + lost reply returns Indeterminate; durable value survives; no replay. |
+| 24. Corruption | Controlled terminal failure with preservation, no silent recreation/repair or false absence. |
+| 25. Startup/shutdown | Duplicate-owner fencing, startup interruption, bounded off-thread stop/reap, parent death, strict frames and Windows UTF-8 initialization qualified. |
+| 26–28. Lifetime/publication/reentrancy | Stale VM/domain/owner completions discarded; durable state separate from callback authority; existing committed-publication guard reused; worker never enters Luau. |
+| 29. Diagnostics | Bounded counters/status plus single fixed-stage/code worker failure line; no stored keys/values in diagnostics. |
+| 30. Stress | Durable churn, 1,024 failed namespaces, 1,000 stale completions, 100 root reloads, measured 32-cycle resources; no unbounded maintenance/retry. |
+| 31. Performance | Recorded startup/keyed/near-full/quota/reopen observations, not an SLA. |
+| 32–34. Platforms/native | Windows and Linux native/managed PASS; Linux ASan/UBSan/leaks and native allocation faults PASS. |
+| 35–36. Packaging/regressions | Deterministic private worker packaging, imports/provenance and clean extraction PASS; existing runtime/addon/provider/module/scheduler/recovery/GUI/Player/tooling regressions PASS. |
+| 37. CI/docs | Final implementation-source CI green; failed attempts/corrections preserved; canonical routing, API and whitespace checks passed. |
+| 38. Identity | Package 0.4.0, API 0.4.0-experimental, ABI 1.4, provider 1.2, addon schema 1 and Luau pin unchanged. |
+| 39–40. Handoff/exclusion | Ready for separately authorized 1B as described above; no public persistence service, bindings, metadata or examples; 1B not started. |
+| 41. Git state | Main implementation pushed; this evidence-only closure follows on main. Final exact SHA/worktree state reported after commit/push. |
 
 ## Historical approved resume — physical-ceiling qualification blocked
 

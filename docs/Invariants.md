@@ -156,7 +156,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
 | D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
-| D21 — resolved Persistence Foundation 1 architecture; durability and physical-budget amendments approved; 1A final qualification in progress | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The [durability investigation](PersistenceDurabilityInvestigation.md) establishes the approved PERSIST/EXTRA implementation path; the [physical-budget adoption](PersistencePhysicalD21Amendment-Proposed.md) preserves hard logical/backend byte-extent bounds and makes 1,280 MiB an operational safety budget. Historical negative evidence is preserved. | Separately qualify 1A/1B/1C, including startup/recovery, codec, quotas, hard backend byte-extent bounds, qualified allocated-file operational-budget checks, worker containment and platform integration. WAL startup rejection fix mandatory; no production PASS or current version change |
+| D21 — resolved Persistence Foundation 1 architecture; approved durability/physical-budget amendments; private 1A PASS | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The [durability investigation](PersistenceDurabilityInvestigation.md) establishes the approved PERSIST/EXTRA implementation path; the [physical-budget adoption](PersistencePhysicalD21Amendment-Proposed.md) preserves hard logical/backend byte-extent bounds and makes 1,280 MiB an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) closes backend/codec/namespace/queue, WAL rejection and supported recovery gates within its recorded scope. 1B public facade and 1C Carbon integration remain separate, unimplemented work; no current version change |
 
 ### Canonical detail for resolved decisions
 
@@ -333,7 +333,9 @@ until implementation/public qualification.
 #### D21 — Persistence Foundation 1
 
 Persistence is the next runtime foundation; architecture is resolved and the
-partial private Persistence-1A implementation is in final qualification, not PASS.
+private Persistence-1A substrate is qualified within the scope recorded in
+[PersistenceFoundation1A.md](PersistenceFoundation1A.md). No public persistence API
+is implemented; 1B and 1C remain separate work.
 D20 remains independently HOST-PRIMITIVE-GATED / DEFERRED. The exact future
 surface is `game:GetService("DataStoreService")`, synchronous disk-free
 `GetDataStore(StoreName)`, and `DataStore:GetAsync(Key, Callback)`,
@@ -417,8 +419,8 @@ The [investigation](PersistencePhysicalAllocationInvestigation.md) observed no
 breach; that is empirical evidence, not a theorem. The WAL startup rejection fix
 is mandatory, including page-1 restoration through hot-journal recovery, before
 unsupported conversion or WAL/SHM creation. Preserve supported hot-journal
-recovery. Complete this fix and filesystem-profile qualification under resolved
-D21; do not reopen architecture investigation or begin 1B before 1A qualifies.
+recovery. [1A](PersistenceFoundation1A.md) closes this fix and filesystem-profile
+qualification under resolved D21; it does not authorize beginning 1B.
 
 One serial worker receives bounded bytes/scalars only. Per-namespace FIFO and fair
 global dispatch, reserved completion capacity, rate/count/byte/disk limits and a
