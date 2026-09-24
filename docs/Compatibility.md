@@ -92,6 +92,8 @@ No version label establishes overall PASS.
 The additive reserved completion export requires native ABI 1.5; no provider
 protocol, addon schema or Luau change is implied.
 
+Persistence Foundation 2 architecture is resolved by [D22](Invariants.md#d22--persistence-foundation-2--bounded-query-schemas-and-indexed-query) and [PersistenceFoundation2.md](PersistenceFoundation2.md). Its additive future schema/Query surface joins the same unreleased `0.5.0-experimental` scripting identity. This is an architecture assignment only: no Foundation 2 binding, generated metadata, package/tag/release bump, native ABI change or preview availability exists until the applicable implementation phases qualify. Existing Foundation 1 behavior and historical SinceApi values remain unchanged.
+
 ## Dependency and host upgrades
 
 Luau upgrades must be explicit scoped changes. Preserve its pin and MIT/Lua attribution; review relevant upstream API, sandbox, compiler, bytecode and behavior changes. Validate affected builds and runtime failure paths against the candidate pin before claiming support. Do not edit the vendor tree or update dependencies incidentally while implementing another feature. Internal compiler/VM bytecode compatibility is tied to the selected pin; external untrusted bytecode remains excluded by I7.
