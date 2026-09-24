@@ -58,8 +58,10 @@ native/
 Do not mix Windows and Linux files, and never install files from a test fixture
 package. The plugin loads one normalized, platform-specific runtime path;
 that runtime launches only its sibling compiler worker. A separate managed
-supervisor launches the private storage worker off the game thread. Persistence-1A
-adds no public Luau persistence API. Storage failure does not disable scripting.
+supervisor launches the private storage worker off the game thread. The development
+API `0.5.0-experimental` adds [DataStoreService](api/Services/DataStoreService.md);
+historical 0.4 artifacts do not include it. See the [combined qualification](PersistenceFoundation1C.md)
+for the actual platform envelope. Storage failure does not disable scripting.
 
 The private worker owns `carbon/data/CarbonLuau/persistence/store.sqlite3` and
 its retained rollback journal. Use the qualified local NTFS/ext4 storage profile;

@@ -69,6 +69,18 @@ jobs:
       - name: Linux runtime tests
         if: runner.os == 'Linux'
         run: mono dist/runtime/RuntimeTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongAbi.so" "$PWD/build/libLegacyProbe.so" "$PWD" "$PWD/build/carbonluau_compiler"
+      - name: Windows Persistence-1C combined lifecycle and scale
+        if: runner.os == 'Windows'
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          ./dist/runtime/RuntimeTests.exe --persistence1c "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_storage.exe" "$env:RUNNER_TEMP/carbonluau-persistence1c"
+          if ($LASTEXITCODE -ne 0) { throw 'Persistence-1C closure fixture failed' }
+      - name: Linux Persistence-1C combined lifecycle and scale
+        if: runner.os == 'Linux'
+        timeout-minutes: 10
+        shell: bash
+        run: mono dist/runtime/RuntimeTests.exe --persistence1c "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_storage" "$RUNNER_TEMP/carbonluau-persistence1c"
       - name: Windows loader tests
         if: runner.os == 'Windows'
         run: ./dist/tests/LoaderTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongProbe.dll" "$pwd/build/Release/MissingSymbol.dll"

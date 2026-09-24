@@ -3,10 +3,12 @@
 Current development mapping after the 2026-09-23 Persistence Foundation 1
 assignment under [D12](Invariants.md#d12--scripting-and-protocol-identity).
 Persistence-1B is **implemented and qualified within its recorded scope** in
-[the 1B record](PersistenceFoundation1B.md). Persistence-1C is **NOT STARTED**;
-combined closure remains separate. The [1B evidence](PersistenceFoundation1B-Validation.md)
-records its green implementation-source CI. Experimental development API
-availability is not release approval or an overall Foundation 1 PASS claim.
+[the 1B record](PersistenceFoundation1B.md). [Persistence-1C](PersistenceFoundation1C.md)
+owns combined subsystem readiness and final-source CI. The
+[1B evidence](PersistenceFoundation1B-Validation.md) remains historical evidence.
+Subsystem readiness is not authorization to publish package 0.5.0, create its
+tag/release, publish editor artifacts or begin a release-candidate pass. D20 Entity
+and future Query are not prerequisites or implicitly assigned to that release.
 
 | Identity | Value |
 |---|---|

@@ -1,8 +1,9 @@
 # DataStore
 
 Since API `0.5.0-experimental`. **Experimental; 1B implemented and qualified within
-[recorded scope](../../PersistenceFoundation1B.md).** 1C is NOT STARTED; combined
-closure and release approval remain separate. Available in development source
+[recorded scope](../../PersistenceFoundation1B.md).**
+[1C](../../PersistenceFoundation1C.md) owns combined qualification; package release
+approval remains separate. Available in development source
 containing the production bindings. Obtain this sealed,
 private facade from [DataStoreService](../Services/DataStoreService.md).
 No fields, constructor, Close, request handle or cancellation API is exposed.

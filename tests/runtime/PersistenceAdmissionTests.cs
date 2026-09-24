@@ -44,7 +44,7 @@ internal static partial class PersistencePublicTests
     private static byte[] Reply(Runtime.StorageQueue.Request Request, Runtime.StorageQueue.Error Error = Runtime.StorageQueue.Error.None, uint Flags = 0)
     {
         using (var Stream = new MemoryStream()) using (var Writer = new BinaryWriter(Stream)) {
-            Writer.Write(Encoding.ASCII.GetBytes("CLPS")); Writer.Write(1u); Writer.Write((uint)Error); Writer.Write(Request.Id);
+            Writer.Write(Encoding.ASCII.GetBytes("CLPS")); Writer.Write(1u); Writer.Write((uint)Error); Writer.Write(Request.WireId);
             Writer.Write(Request.Owner.Host); Writer.Write(Request.Owner.Vm); Writer.Write(Request.Owner.Domain); Writer.Write(Request.Route);
             Writer.Write(Flags); Writer.Write(0u); return Stream.ToArray();
         }
@@ -289,6 +289,8 @@ end)";
             var FirstRound = new List<string>();
             for (int Index = 0; Index < 128; ++Index) {
                 var Request = TakeRequest(F);
+                Check(Request.WireId == (ulong)Index + 1 && Runtime.StorageProcess.U64(Request.Frame, 12) == Request.WireId,
+                    "worker nonce follows fair dispatch rather than admission order");
                 if (Index < 16) FirstRound.Add(Request.Owner.Package);
                 Check(Request.Owner.Package == FirstRound[Index % 16], "fair namespace rotation before second request");
                 Runtime.StorageQueue.Complete(Request, Reply(Request), Now);

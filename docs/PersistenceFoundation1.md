@@ -1,13 +1,14 @@
 # CarbonLuau Persistence Foundation 1
 
-Status: **CANONICAL DESIGN BASELINE — PRIVATE 1A PASS; PUBLIC 1B IMPLEMENTED / QUALIFIED WITHIN RECORDED SCOPE; 1C NOT STARTED**,
+Status: **CANONICAL DESIGN BASELINE — PRIVATE 1A PASS; PUBLIC 1B QUALIFIED; COMBINED 1C CLOSURE ROUTED BELOW**,
 2026-09-23. [Private 1A closure](PersistenceFoundation1A.md) records the qualified
 startup/profile conditions of the approved physical-budget amendment. The later
 user decision assigns Persistence Foundation 1 to API `0.5.0-experimental` under
 [D12](Invariants.md#d12--scripting-and-protocol-identity), not retroactively to 0.4.
 [Persistence-1B](PersistenceFoundation1B.md) records implementation, scoped local
 qualification, implementation-source CI and remaining limits. Experimental
-development availability is not overall Foundation 1 closure or release approval.
+development availability alone is not overall Foundation 1 closure or release approval.
+The current combined status is owned by [Persistence-1C](PersistenceFoundation1C.md).
 
 [D21](Invariants.md#d21--persistence-foundation-1) owns the architecture. This
 document owns its detailed signatures, bounds, storage contract and phased gates;
@@ -611,7 +612,9 @@ available support before this slice is implemented and its applicable gates pass
 
 ### Persistence-1C — combined qualification and public closure
 
-**NOT STARTED.** This separately scoped phase is not closed by 1B's local gates.
+**Authorized combined closure:** see [Persistence-1C](PersistenceFoundation1C.md)
+for its exact current verdict and final-source evidence. It is not closed by 1B's
+local gates alone.
 
 Prove repeated replacement/provider unload/VM recovery/CarbonLuau reload/restart,
 in-flight writer fencing, lost-ack uncertainty, no replay, no quota-reset loopholes,

@@ -8,8 +8,9 @@ pinned Luau revision and the installed Rust/Carbon builds. Published v0.3.0
 artifacts remain API `0.3.0-experimental` with native ABI `1.2`.
 
 Persistence is assigned to 0.5.0-experimental. **1B is implemented and qualified
-within recorded scope; 1C is NOT STARTED.** Combined closure and final-source CI
-remain separate; experimental availability is not release approval.
+within recorded scope.** [Combined 1C qualification](../PersistenceFoundation1C.md)
+records final-source evidence and actual platform limits. Experimental availability
+or subsystem readiness is not package publication approval.
 Package 0.5.0 is intended for a future release; the independent
 development package fields remain 0.4.0, without publication authority. ABI 1.5
 is required by the additive completion ingress. [Release mapping](../Release.md)

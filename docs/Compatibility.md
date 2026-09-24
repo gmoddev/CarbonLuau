@@ -86,8 +86,9 @@ stay 0.4.0/v0.4.0, while 0.5.0 is the intended future package, not a published
 release. Existing catalog entries retain historical SinceApi values. New
 persistence metadata follows actual bindings and is Experimental after scoped
 1B qualification; preview remains unavailable. Its implementation-source CI is
-recorded in [1B validation](PersistenceFoundation1B-Validation.md). 1C is NOT STARTED;
-combined closure remains separate. No version label establishes overall PASS.
+recorded in [1B validation](PersistenceFoundation1B-Validation.md). Combined closure
+and exact Windows/Linux live limits are recorded in [1C](PersistenceFoundation1C.md).
+No version label establishes overall PASS.
 The additive reserved completion export requires native ABI 1.5; no provider
 protocol, addon schema or Luau change is implied.
 
@@ -738,9 +739,11 @@ remain. No public persistence API, 1B, actual Carbon persistence integration,
 Shockbyte or power-loss qualification is implied. Its recorded identities remain
 historical; preserve its negative evidence. The separately authorized
 [Persistence-1B](PersistenceFoundation1B.md) is implemented and qualified within
-its recorded scope, including green implementation-source CI. Persistence-1C is
-NOT STARTED: 1B qualification and experimental development availability do not
-replace the later combined closure.
+its recorded scope, including green implementation-source CI. The separately
+authorized [Persistence-1C](PersistenceFoundation1C.md) records combined closure,
+the fair-dispatch correction and newly measured Windows/Linux Carbon persistence
+and server restart. Its exact final verdict/CI gate remains authoritative; 1B
+alone does not establish combined closure.
 
 Documentation/evidence-only closure needs canonical-routing, link, signature,
 decision/bounds, whitespace, scope and fixture-syntax checks, not unrelated native,

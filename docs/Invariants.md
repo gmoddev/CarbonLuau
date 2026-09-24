@@ -156,7 +156,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
 | D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
-| D21 — resolved Persistence Foundation 1 architecture; private 1A PASS; public API assigned 0.5 | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The approved PERSIST/EXTRA and physical-budget amendments preserve hard logical/backend extent bounds; 1,280 MiB is an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) is closed within its scope. [1B](PersistenceFoundation1B.md) is implemented and qualified within recorded scope; 1C is NOT STARTED and combined closure remains separate. D12 experimental availability is not overall PASS or release approval. |
+| D21 — resolved Persistence Foundation 1 architecture; private 1A PASS; public API assigned 0.5 | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The approved PERSIST/EXTRA and physical-budget amendments preserve hard logical/backend extent bounds; 1,280 MiB is an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) and [public 1B](PersistenceFoundation1B.md) retain their scoped evidence. [1C](PersistenceFoundation1C.md) owns combined closure and the exact final verdict. D12 experimental availability is not package publication approval. |
 
 ### Canonical detail for resolved decisions
 
@@ -336,7 +336,8 @@ Persistence is the next runtime foundation; architecture is resolved and the
 private Persistence-1A substrate is qualified within the scope recorded in
 [PersistenceFoundation1A.md](PersistenceFoundation1A.md). Separately authorized
 [1B](PersistenceFoundation1B.md) is implemented and qualified within recorded
-scope; 1C is NOT STARTED and combined closure remains separate work. D12 assigns
+scope; [1C](PersistenceFoundation1C.md) owns combined closure and its exact final
+verdict without changing D21 semantics. D12 assigns
 this experimental development surface `0.5.0-experimental`, not retroactive
 0.4 availability. D20 remains independently HOST-PRIMITIVE-GATED / DEFERRED. The exact
 surface is `game:GetService("DataStoreService")`, synchronous disk-free
@@ -531,8 +532,9 @@ implemented persistence metadata can satisfy `SinceApi <= current`. Availability
 and qualification remain separate. After the recorded local 1B functional gates,
 the user authorized `Experimental` metadata instead of `WorkInProgress`; preview
 remains unavailable. 1B is implemented and qualified within its recorded scope,
-not an overall Persistence Foundation 1 PASS. 1C is NOT STARTED; combined closure,
-final-source CI and release authorization remain separate.
+not by itself an overall Persistence Foundation 1 PASS. [1C](PersistenceFoundation1C.md)
+owns combined closure and final-source CI; package publication authorization
+remains separate.
 
 Package `0.5.0` is the intended future persistence release identity. No package
 bump, tag or release is authorized by this assignment. The existing machinery

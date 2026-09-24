@@ -1,4 +1,4 @@
--- API 0.5 development example: Experimental; 1B scope only, not 1C closure or release approval.
+-- API 0.5 development example: Experimental; see PersistenceFoundation1C.md for qualification, not package publication.
 local Store = game:GetService("DataStoreService"):GetDataStore("PersistenceExamples")
 
 task.defer(function()

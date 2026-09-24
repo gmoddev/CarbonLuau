@@ -212,7 +212,7 @@ class ManagedTests
     static byte[] Reply(Queue.Request Request)
     {
         using (var Stream=new MemoryStream()) using (var Writer=new BinaryWriter(Stream)) {
-            Writer.Write(Encoding.ASCII.GetBytes("CLPS")); Writer.Write(1u); Writer.Write(0u); Writer.Write(Request.Id);
+            Writer.Write(Encoding.ASCII.GetBytes("CLPS")); Writer.Write(1u); Writer.Write(0u); Writer.Write(Request.WireId);
             Writer.Write(Request.Owner.Host); Writer.Write(Request.Owner.Vm); Writer.Write(Request.Owner.Domain); Writer.Write(Request.Route);
             Writer.Write(0u); Writer.Write(0u); return Stream.ToArray();
         }

@@ -2,7 +2,8 @@
 
 Since API `0.5.0-experimental`. **Experimental; 1B implemented and qualified within
 recorded scope.** The [1B record](../../PersistenceFoundation1B.md) owns evidence
-and limits; 1C is NOT STARTED and release approval remains separate. No persistence
+and limits; [1C](../../PersistenceFoundation1C.md) owns combined qualification.
+Package release approval remains separate. No persistence
 exists in historical 0.4 API artifacts, and preview provides no storage backend.
 
 Retrieve with `game:GetService("DataStoreService")` in the owning root/addon.

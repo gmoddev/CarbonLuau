@@ -46,7 +46,7 @@ internal static partial class PersistencePublicTests
         System.IO.Directory.CreateDirectory(Result);
         return Result;
     }
-    internal static void RunStandalone(string Library, string Worker, string FixtureDirectory)
+    internal static void RunStandalone(string Library, string Worker, string FixtureDirectory, bool Closure = false)
     {
         Library = Path.GetFullPath(Library); Worker = Path.GetFullPath(Worker);
         string Root = NewDirectory(FixtureDirectory);
@@ -59,7 +59,10 @@ internal static partial class PersistencePublicTests
             string Compiler = Path.Combine(Path.GetDirectoryName(Target), CompilerName);
             File.Copy(Path.Combine(Path.GetDirectoryName(Library), CompilerName), Compiler);
             if (Rid == "linux-x64") Check(PersistenceChmod(Compiler, 493) == 0, "staged compiler executable mode");
-            using (var Native = new Runtime.NativeRuntime(Root)) Run(Native, Worker, Root);
+            using (var Native = new Runtime.NativeRuntime(Root)) {
+                if (Closure) RunClosure(Native, Worker, Root);
+                else Run(Native, Worker, Root);
+            }
         } finally { RemoveOwnedDirectory(Root); }
     }
     [DllImport("libc", EntryPoint = "chmod", SetLastError = true)]

@@ -6,6 +6,9 @@ All notable public changes to CarbonLuau are recorded here.
 
 ### Fixed
 
+- Persistence fair cross-namespace dispatch now assigns worker nonces in dispatch
+  order, preventing legitimate round-robin work from being rejected as stale.
+  Per-namespace FIFO, quotas, deadlines and no-replay semantics are unchanged.
 - Cold module initialization now rejects committed-only Player mutations even
   inside a committed callback, including nested/public/shared module calls.
   Later committed calls to cached exports remain allowed. Player-1F-C preserves
@@ -13,6 +16,10 @@ All notable public changes to CarbonLuau are recorded here.
 
 ### Added
 
+- Experimental API `0.5.0-experimental` local DataStoreService with private
+  root/addon stores and callback-based GetAsync/SetAsync/RemoveAsync. Combined
+  qualification is recorded in [Persistence-1C](docs/PersistenceFoundation1C.md).
+  Package 0.5.0 remains a future release; no Query or UpdateAsync is implemented.
 - Official VS Code language/project tooling with generated runtime API definitions,
   manifest/package diagnostics and supervised trusted language analysis.
 - Bounded GUI preview with canonical geometry, hierarchy, inspector and resource

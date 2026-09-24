@@ -2,9 +2,10 @@
 
 API `0.5.0-experimental`: **1B implemented and qualified within recorded scope**.
 These examples target the new production bindings, not historical 0.4 artifacts
-or GUI preview. [Persistence-1B](../PersistenceFoundation1B.md) owns the evidence
-and limits. **1C is NOT STARTED**; combined closure and final-source CI remain
-separate. These are experimental development examples, not release approval.
+or GUI preview. [Persistence-1B](../PersistenceFoundation1B.md) owns public-admission
+evidence; [Persistence-1C](../PersistenceFoundation1C.md) records combined platform
+qualification and limits. These are experimental development examples, not
+package publication approval.
 
 Install one example as the root `scripts/init.luau` at a time in a disposable
 development installation with storage Ready. The Set, Remove, snapshot and error

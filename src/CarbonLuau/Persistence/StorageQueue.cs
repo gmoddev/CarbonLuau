@@ -31,7 +31,7 @@ namespace Carbon.Plugins
             internal sealed class Request
             {
                 internal Binding Owner;
-                internal ulong Id, Route, End;
+                internal ulong Id, WireId, Route, End;
                 internal Operation Op;
                 internal byte[] Frame;
                 internal byte[] Envelope;
@@ -59,7 +59,7 @@ namespace Carbon.Plugins
             private readonly Request[] Reservations=new Request[128];
             private readonly Func<ulong> Clock;
             private readonly ulong Host;
-            private ulong NextId, Updated;
+            private ulong NextId, NextWireId, Updated;
             private double Requests=256, Mutations=64;
             private int Cursor, Pending, IntakeRemaining=8;
             private Request Active;
@@ -136,7 +136,7 @@ namespace Carbon.Plugins
                 if (Requests<1 || Bucket.Requests<1 || (Mutation && (Mutations<1 || Bucket.Mutations<1))) { Count(ref RateRejected); throw new Rejection(4); }
                 var Result=new Request { Owner=Binding,Id=checked(NextId+1),Route=Route,Op=Op,End=checked(Now+5000),Reservation=Reservation };
                 using (var Buffer=new MemoryStream()) using (var Writer=new BinaryWriter(Buffer)) {
-                    Writer.Write(new byte[] {67,76,80,81}); Writer.Write(1u); Writer.Write((uint)Op); Writer.Write(Result.Id);
+                    Writer.Write(new byte[] {67,76,80,81}); Writer.Write(1u); Writer.Write((uint)Op); Writer.Write(0ul);
                     Writer.Write(Host); Writer.Write(Binding.Vm); Writer.Write(Binding.Domain); Writer.Write(Route); Writer.Write(Result.End);
                     Writer.Write(Binding.Package==null ? 0u : 1u);
                     foreach (string Value in new[] {Binding.Package??"",Store,Key}) { byte[] Bytes=StorageProcess.Utf8.GetBytes(Value); Writer.Write((uint)Bytes.Length); Writer.Write(Bytes); }
@@ -181,6 +181,13 @@ namespace Carbon.Plugins
                         if (!Ready) return null;
                         // Count retains this bucket through dispatch and delivery;
                         // only the result can change its durable-presence baseline.
+                        // Fair namespace rotation may reorder admission IDs. The
+                        // worker's strictly increasing nonce follows dispatch,
+                        // not global submission order. Each accepted request is
+                        // dispatched at most once, so NextWireId <= NextId and
+                        // admission's checked ID bound also prevents overflow.
+                        Next.WireId=++NextWireId;
+                        for (int Index=0; Index<8; ++Index) Next.Frame[12+Index]=(byte)(Next.WireId>>(Index*8));
                         Bucket.Pending.Dequeue(); Active=Next; Volatile.Write(ref Next.State,1); return Next;
                     }
                 }
@@ -248,7 +255,7 @@ namespace Carbon.Plugins
                 if (Volatile.Read(ref Request.State)!=1) throw new IOException("storage response already completed");
                 if (Now>=Request.End) throw new TimeoutException("storage completion deadline");
                 if (Reply.Length<60 || System.Text.Encoding.ASCII.GetString(Reply,0,4)!="CLPS" || StorageProcess.U32(Reply,4)!=1 ||
-                    StorageProcess.U32(Reply,8)>10 || StorageProcess.U64(Reply,12)!=Request.Id || StorageProcess.U64(Reply,20)!=Request.Owner.Host ||
+                    StorageProcess.U32(Reply,8)>10 || StorageProcess.U64(Reply,12)!=Request.WireId || StorageProcess.U64(Reply,20)!=Request.Owner.Host ||
                     StorageProcess.U64(Reply,28)!=Request.Owner.Vm || StorageProcess.U64(Reply,36)!=Request.Owner.Domain || StorageProcess.U64(Reply,44)!=Request.Route)
                     throw new IOException("storage response identity mismatch");
                 uint Flags=StorageProcess.U32(Reply,52), Found=Flags&1, Size=StorageProcess.U32(Reply,56), Code=StorageProcess.U32(Reply,8);

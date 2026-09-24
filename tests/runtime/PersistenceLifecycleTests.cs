@@ -20,7 +20,7 @@ internal static class PersistenceLifecycleTests
     private static byte[] Reply(Runtime.StorageQueue.Request Request)
     {
         using(var Buffer=new MemoryStream()) using(var Writer=new BinaryWriter(Buffer)) {
-            Writer.Write(Encoding.ASCII.GetBytes("CLPS")); Writer.Write(1u); Writer.Write(0u); Writer.Write(Request.Id);
+            Writer.Write(Encoding.ASCII.GetBytes("CLPS")); Writer.Write(1u); Writer.Write(0u); Writer.Write(Request.WireId);
             Writer.Write(Request.Owner.Host); Writer.Write(Request.Owner.Vm); Writer.Write(Request.Owner.Domain); Writer.Write(Request.Route);
             Writer.Write(0u); Writer.Write(0u); return Buffer.ToArray();
         }

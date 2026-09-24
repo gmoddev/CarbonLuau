@@ -31,6 +31,7 @@ internal static partial class PersistencePublicTests
         internal readonly StringBuilder Logs = new StringBuilder();
         internal readonly Dictionary<string,string> Modules = new Dictionary<string,string>();
         internal string Source = "return true";
+        internal double WorkerReadyObservedMilliseconds;
         private bool Disposed;
         internal Fixture(Runtime.NativeRuntime Native, string Executable, string Directory, Func<ulong> Clock = null, bool Initialize = true)
         {
@@ -39,6 +40,7 @@ internal static partial class PersistencePublicTests
             Queue = new Runtime.StorageQueue((ulong)Native.HostLifetimeId, Clock ?? (() => Runtime.StorageProcess.Now));
             Native.Storage = Queue;
             try {
+            var StartupObservation = Stopwatch.StartNew();
             if (Executable != null) {
                 Worker = new Runtime.StorageSupervisor(Queue, Executable, Directory);
                 Worker.Start();
@@ -55,6 +57,7 @@ internal static partial class PersistencePublicTests
             var End = Stopwatch.StartNew();
             while (!Queue.Ready && End.ElapsedMilliseconds < 35000) { Worker.Tick(); Thread.Sleep(5); }
             Check(Queue.Ready, "production worker ready: " + Status);
+            WorkerReadyObservedMilliseconds = StartupObservation.Elapsed.TotalMilliseconds;
             if (Initialize) Reload();
             } catch {
                 try { Dispose(); }

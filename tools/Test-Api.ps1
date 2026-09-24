@@ -153,7 +153,7 @@ $StoreMethods = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'DataStore' 
 if (($StoreMethods -join ',') -cne 'GetAsync,RemoveAsync,SetAsync') { throw 'Unexpected persistence public method' }
 foreach ($Example in @('get','set','remove','player-key','snapshot','errors')) {
     $ExampleText = Get-Content -Raw -LiteralPath (Join-Path $Root "examples/persistence/$Example/init.luau")
-    if (!$ExampleText.Contains('Experimental; 1B scope only, not 1C closure or release approval') -or !$ExampleText.Contains('pcall')) {
+    if (!$ExampleText.Contains('Experimental; see PersistenceFoundation1C.md for qualification, not package publication') -or !$ExampleText.Contains('pcall')) {
         throw "Persistence example lacks qualification/submission handling: $Example"
     }
 }

@@ -54,7 +54,8 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Canonical Persistence Foundation 1 architecture (resolved; private 1A qualified) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
 | Persistence design source evidence, consistency review and qualification limits | [PersistenceFoundation1-Validation.md](docs/PersistenceFoundation1-Validation.md) |
 | Persistence-1A private backend/codec/namespace/queue substrate PASS; WAL rejection and supported recovery qualified; no public API qualified by 1A | [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md); historical DELETE and physical-proof negative evidence preserved |
-| Persistence-1B public facade/admission implemented and qualified within recorded scope; experimental API 0.5.0-experimental; 1C NOT STARTED | [PersistenceFoundation1B.md](docs/PersistenceFoundation1B.md); D12 owns the assignment and [Release.md](docs/Release.md) the separate development package mapping. No release or overall closure is implied. |
+| Persistence-1B public facade/admission implemented and qualified within recorded scope; experimental API 0.5.0-experimental | [PersistenceFoundation1B.md](docs/PersistenceFoundation1B.md); D12 owns the assignment and [Release.md](docs/Release.md) the separate development package mapping. |
+| Persistence-1C combined lifecycle/platform/public-readiness closure | [PersistenceFoundation1C.md](docs/PersistenceFoundation1C.md); exact final status, correction, live evidence and hosted-CI gate. No package publication authority. |
 | Persistence physical-allocation investigation and adopted operational-budget amendment, qualification condition closed by 1A | [Investigation](docs/PersistencePhysicalAllocationInvestigation.md) and [adopted D21 amendment](docs/PersistencePhysicalD21Amendment-Proposed.md); 1,280 MiB is an operational safety budget/qualification target/diagnostic threshold, not a hard physical invariant |
 | Persistence durability follow-up: approved PERSIST path, platform probes and adoption record | [PersistenceDurabilityInvestigation.md](docs/PersistenceDurabilityInvestigation.md) and [approved D21 amendment](docs/PersistenceD21Amendment-Proposed.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
@@ -326,8 +327,9 @@ not another architecture investigation. Preserve historical DELETE and
 physical-allocation negative evidence. The later explicit authorization starts
 [1B](docs/PersistenceFoundation1B.md), implemented and qualified within its recorded
 scope, including [implementation-source CI](docs/PersistenceFoundation1B-Validation.md#final-implementation-source-hosted-ci).
-Persistence-1C is NOT STARTED; combined closure remains separate. The experimental
-development availability is not release approval.
+Persistence-1C combined closure and its exact current verdict are recorded in
+[PersistenceFoundation1C.md](docs/PersistenceFoundation1C.md). Experimental
+development availability is not package publication approval.
 The user assigned persistence API `0.5.0-experimental` under D12; it is not
 retroactive 0.4 availability or permission to publish. Package 0.5.0 is intended
 for a future release; [Release.md](docs/Release.md) records why the development
