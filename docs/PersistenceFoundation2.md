@@ -439,7 +439,7 @@ Fields:
 - `Index`: required public index name;
 - `Equals`: exact equality;
 - one lower bound: `GreaterThan` or `AtLeast`;
-- one upper bound: `LessThan`or `AtMost`;
+- one upper bound: `LessThan` or `AtMost`;
 - `Direction`: `"Ascending"` (default) or `"Descending"`;
 - `Limit`: integer 1..100, default 50;
 - `Cursor`: optional opaque continuation string.
@@ -468,7 +468,8 @@ This supports the Foundation 2 use cases:
 Success returns:
 
 ```luau
-{    Items = {
+{
+    Items = {
         { Key = "765611...", Value = { ... } },
         -- ...
     },
@@ -700,6 +701,7 @@ An isolated architecture prototype (not repository production code) checked the
 canonical number encoding against finite extremes, negatives, subnormals, both
 zero signs and positives. Sorting the transformed 8-byte keys matched numeric
 ordering after `-0` canonicalization.
+
 A separate in-memory SQLite 3.46.1 prototype of the proposed
 `WITHOUT ROWID` composite primary key reported `SEARCH ... USING PRIMARY KEY` for
 ascending and descending bounded range/keyset statements. This is feasibility
