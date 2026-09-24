@@ -1,6 +1,8 @@
 # Persistence Foundation 1C — combined closure
 
-Date: 2026-09-24. **Status: qualification in progress; final hosted CI pending.**
+Date: 2026-09-24. **Verdict: PASS within the qualification envelope below.**
+
+**PERSISTENCE FOUNDATION 1: QUALIFIED FOR 0.5.0-EXPERIMENTAL PUBLIC RELEASE.**
 No package release, tag, editor publication or Foundation 2 work is authorized
 by this record. The intended public identity is `0.5.0-experimental`; the
 development package remains `0.4.0`.
@@ -18,7 +20,8 @@ completion evidence. Historical negative evidence in those records is preserved.
 |---|---|
 | Starting main / fetched origin/main | `b0388a0ea59187db5f6cc86527796b771ef77c89` |
 | Qualified 1B implementation | `43f06b00328eff61c706d41f6f25628ddaa61c07` |
-| 1C correction / final tested revision | Pending the publication gate below |
+| 1C correction / qualified implementation | `c23a6172e9b4dec5524ad7fad89a8e26a98c5e48` |
+| Evidence-only follow-up / final tested revision | This closure commit; resolve with `git log -1 --format=%H -- docs/PersistenceFoundation1C.md`; final-head hosted CI is verified before task handoff |
 | Package / intended future package | `0.4.0` / `0.5.0`; neither released by 1C |
 | Scripting API | `0.5.0-experimental`; persistence SinceApi unchanged |
 | Native ABI / provider protocol / package schema | `1.5` / `1.2` / `1` |
@@ -78,7 +81,7 @@ corrected managed source and unchanged qualified native/worker binaries.
 | Deterministic bundle / clean extraction | PASS | PASS | Storage dependency/import audit, no test state, ABI 1.5 |
 | Bundled examples | 54 compile PASS | 54 compile PASS | Actual pinned compiler; executable GUI/Player fixtures also pass |
 | Metadata / generated definitions | PASS | PASS | No metadata change required by nonce correction |
-| Final-source hosted CI / docs deployment | Pending | Pending | Not substituted by the earlier 1B run |
+| Implementation-source hosted CI | PASS | PASS | Exact c23a617 runtime/packaging/sanitizer and tooling checks linked below |
 
 ### Lifecycle, completion and publication
 
@@ -230,7 +233,7 @@ with no qualification server/container left running.
 - The first Windows full runtime run failed an existing GUI-1F fresh-state
   assertion at recovery cycle 59. The identical source and unchanged budgets
   passed the complete repeat. Cause is not established; do not label this a
-  proven timing flake. Final hosted CI remains required.
+  proven timing flake. The full hosted Windows regression subsequently passed.
 - Linux private tests initially ran on the unsupported Windows bind directory;
   the worker rejected the filesystem. Running their owned fixtures on qualified
   ext4 passes. This is enforcement evidence, not a relaxed storage policy.
@@ -259,7 +262,7 @@ Clean extraction executes the storage worker and rejects unexpected native
 imports; pinned SQLite is compiled into that worker, not a host SQLite/CLI.
 Only expected deployment files are admitted; no DB/journal/probe/credential/log
 or fault fixture is packaged. Initial working-tree bundles were byte-identical
-on repeated generation; final clean-source hosted bundles remain a closing gate.
+on repeated generation; final clean-source hosted bundles also passed.
 
 Focused persistence security review found no confirmed boundary vulnerability
 in its inspected scope; this is not a whole-repository security certification.
@@ -295,26 +298,53 @@ gate. Foundation 2, a 0.5 release-candidate pass, tags/releases and editor artif
 publication have not begun. Shockbyte and arbitrary hardware power-loss behavior
 remain separately unqualified; no macOS server runtime is claimed.
 
-## Publication gate
+## Final-source hosted qualification and publication
 
-Local applicable gates above must be complete before the correction is committed.
-Final Windows/Linux/sanitizer and tooling hosted checks must then pass on the
-published correction, followed by final closure-document CI and documentation
-deployment. This section will record those exact immutable revisions/results;
-until then overall Foundation 1 release readiness remains pending.
+The implementation was committed only after applicable local gates passed, then
+pushed to `qualification/persistence-1c`, leaving main unchanged until hosted
+qualification completed. Exact revision:
+`c23a6172e9b4dec5524ad7fad89a8e26a98c5e48`.
+
+- [Windows/Linux runtime, combined 1C, packages and sanitizers — PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/35995310011).
+- [Tooling Foundations A/B, Windows/Linux/macOS editor jobs — PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/35995309951).
+- [Tooling baseline contracts — PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/35995325534).
+
+Hosted combined stress: Windows 131,869 ms / Linux 137,027 ms; exact public quota
+72,292 / 69,303 ms. All replacement/dependency/example cases and twelve reopen
+cycles passed. Native tests were 15/15 Windows and 16/16 Linux; sanitized 16/16.
+Full adapter, loader, GUI/Player/provider and public persistence regressions,
+deterministic bundles and extracted-worker checks passed without relaxing gates.
+macOS tooling results do not qualify a server runtime.
+
+Downloaded hosted provenance identifies `sourceState: committed` and exactly
+`c23a6172e9b4dec5524ad7fad89a8e26a98c5e48`, API0.5/ABI1.5/provider1.2/schema1,
+the unchanged Luau/SQLite pins and the expected compiled SQLite options.
+Windows source-package hash matches the actual live package above. Linux's
+source-package hash is
+`3f5742e9004f85b35e1b001dcbbb79a3bc5f2fc55dad52731d4abb1ee62fea92`;
+platform checkout line endings differ, and deterministic reproduction is tested
+within each platform. Linux native/compiler/storage hashes match the local inputs;
+hosted Windows toolchain outputs are independently qualified, not claimed bitwise
+equal to the local MSVC outputs.
+
+Main publication is a fast-forward followed by this evidence/navigation-only
+commit. Final-head runtime/tooling/contracts CI and the main documentation deploy
+are required to complete before the task handoff; the final report identifies
+that immutable commit and its runs. No implementation path changes in this
+follow-up. No package/tag/release/Marketplace publication is performed.
 
 ## Completion checklist
 
-The numbered checklist follows the requested 1C handoff. "PASS" below is scoped
-to the cited local/evidence matrix until the final publication gate is recorded.
+The numbered checklist follows the requested 1C handoff. PASS is scoped to the
+qualified implementation and recorded environment, never arbitrary platforms.
 
 | # | Requested item | Result |
 |---|---|---|
-| 1 | Verdict | Pending final hosted CI |
+| 1 | Verdict | PASS — qualified for 0.5.0-experimental public release within this envelope |
 | 2 | Starting commit | `b0388a0ea59187db5f6cc86527796b771ef77c89` |
-| 3 | Correction commits | Dispatch-ordered opaque nonce; revision pending publication |
-| 4 | Evidence/docs commit | Pending publication |
-| 5 | Final tested commit | Pending final-source CI |
+| 3 | Correction commits | `c23a6172e9b4dec5524ad7fad89a8e26a98c5e48`; dispatch-ordered opaque nonce |
+| 4 | Evidence/docs commit | This documentation-only follow-up; immutable SHA supplied in task handoff |
+| 5 | Final tested commit | Final closure commit, subject to the mandatory final-head verification above |
 | 6 | Public surface | DataStoreService/GetDataStore; DataStore GetAsync/SetAsync/RemoveAsync only |
 | 7 | API | 0.5.0-experimental |
 | 8 | Native ABI | 1.5, unchanged |
@@ -344,22 +374,22 @@ to the cited local/evidence matrix until the final publication gate is recorded.
 | 32 | Performance | Measurements above; includes polling, no SLA or power-loss claim |
 | 33 | API audit | Exact implemented methods and mandatory two-argument callbacks; no hidden feature |
 | 34 | Metadata/definitions | PASS authoritative generated parity and SinceApi0.5 |
-| 35 | Tooling regression | Local metadata/golden tests PASS; final hosted full tooling pending |
+| 35 | Tooling regression | Local metadata/golden and hosted Windows/Linux/macOS tooling PASS |
 | 36 | Query compatibility | PASS private versioned backend/transaction seam; no speculative public commitment |
 | 37 | Documentation | Current routing/reference/guide/installation/changelog updated; history retained |
 | 38 | Examples | Six files execute through real VM; Player listener init only; 54 bundled examples compile |
 | 39 | Windows packaging | Deterministic working-tree bundle, clean extraction/import/worker/install PASS |
 | 40 | Linux packaging | Deterministic working-tree bundle, clean extraction/import/worker/install PASS |
 | 41 | ABI1.5 | PASS native export, managed guard, real plugin and package compatibility |
-| 42 | Windows platform | Local production/live PASS; final hosted gate pending |
-| 43 | Linux platform | Local production/live PASS on qualified ext4; final hosted gate pending |
+| 42 | Windows platform | Local production/live and hosted gates PASS |
+| 43 | Linux platform | Local production/live on qualified ext4 and hosted gates PASS |
 | 44 | Sanitizers | ASan/UBSan/leak 16/16 PASS; allocation/completion faults included |
 | 45 | Broader regressions | Complete runtime PASS; first Windows GUI failure and unchanged retry preserved above |
-| 46 | Hosted CI | Pending on 1C source, never inferred from 1B |
-| 47 | Documentation deployment | Pending main publication |
-| 48 | Release readiness | Pending final publication gate; package release remains unauthorized |
+| 46 | Hosted CI | Exact 1C implementation PASS; final evidence commit rechecked before handoff |
+| 47 | Documentation deployment | Main deploy and served record verified before handoff |
+| 48 | Release readiness | Foundation 1 qualified; package publication remains unauthorized |
 | 49 | Unqualified areas | Shockbyte, arbitrary hardware/filesystem power loss, authenticated Player example event, macOS server runtime |
 | 50 | Foundation2 handoff | Bounded schema/index architecture constraints above; separate authorization required |
 | 51 | New Query/schema/index/Update API | None |
 | 52 | Package release/tag/editor publication | None |
-| 53 | Repository/worktree | Final main/origin synchronization and clean-tree check pending |
+| 53 | Repository/worktree | Main/origin synchronization, clean tracked tree and no-reply commit metadata required and checked at handoff |

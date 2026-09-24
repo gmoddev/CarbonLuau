@@ -5,6 +5,9 @@ Carbon-modded Rust servers. Published `v0.3.0` contains the first gameplay facad
 The `v0.4.0` candidate adds experimental addon composition, Player inventory
 mutation, Teleport, GUI and official VS Code language/project tooling and preview.
 Platform and client qualification limits remain in [Compatibility](Compatibility.md).
+Current development additionally implements local persistence under scripting API
+`0.5.0-experimental`; see [combined qualification](PersistenceFoundation1C.md).
+This does not add persistence to historical 0.4 artifacts or publish package 0.5.0.
 
 Start with [installation](Installation.md), then use the
 [experimental API reference](api/README.md). Read the
@@ -55,9 +58,13 @@ The current source ownership map is recorded in
 
 ## Architecture direction
 
-The next runtime foundation is [Persistence Foundation 1](PersistenceFoundation1.md)
-under [D21](Invariants.md#d21--persistence-foundation-1), currently **design only**.
-DataStoreService is not an implemented API. World/Entity's accepted future design
+Persistence Foundation 1 implements [DataStoreService](api/Services/DataStoreService.md)
+and callback-based Get/Set/Remove in private root/addon stores. Start with the
+[guide and examples](api/Persistence.md); [1C](PersistenceFoundation1C.md) records
+the combined qualification envelope. [D21](Invariants.md#d21--persistence-foundation-1)
+and the [canonical design](PersistenceFoundation1.md) remain authoritative.
+Query/schema/index APIs are deferred; no Foundation 2 implementation has begun.
+World/Entity's accepted future design
 is [host-primitive-gated/deferred](WorldEntityFoundation1.md); Entity-1A is blocked
 by the [authoritative lifetime proof gap](WorldEntityLifetimeInvestigation.md),
 not a demonstrated ordinary-gameplay pooled-reuse bug.

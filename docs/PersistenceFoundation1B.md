@@ -1,5 +1,9 @@
 # Persistence Foundation 1B — facade, admission and metadata
 
+Historical 1B record. Subsequent combined closure is recorded in
+[PersistenceFoundation1C.md](PersistenceFoundation1C.md); statements below about
+1C not having started describe the 1B baseline, not current project status.
+
 Status: **PASS — Persistence-1B within the recorded qualification scope**, 2026-09-23.
 Starting checkout: `4f665a3c4d801c951227a2557ad0019dfbdb6856`.
 [Validation](PersistenceFoundation1B-Validation.md) records the tested source,
