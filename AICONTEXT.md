@@ -325,8 +325,9 @@ supported recovery. D21 is resolved,
 not another architecture investigation. Preserve historical DELETE and
 physical-allocation negative evidence. The later explicit authorization starts
 [1B](docs/PersistenceFoundation1B.md), implemented and qualified within its recorded
-scope. Persistence-1C is NOT STARTED; combined closure and final-source CI remain
-separate. The experimental development availability is not release approval.
+scope, including [implementation-source CI](docs/PersistenceFoundation1B-Validation.md#final-implementation-source-hosted-ci).
+Persistence-1C is NOT STARTED; combined closure remains separate. The experimental
+development availability is not release approval.
 The user assigned persistence API `0.5.0-experimental` under D12; it is not
 retroactive 0.4 availability or permission to publish. Package 0.5.0 is intended
 for a future release; [Release.md](docs/Release.md) records why the development

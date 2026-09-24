@@ -1,10 +1,10 @@
 # Persistence Foundation 1B — facade, admission and metadata
 
-Status: **IMPLEMENTED / LOCAL QUALIFICATION PASS; FINAL CLOSURE PENDING**, 2026-09-23.
+Status: **PASS — Persistence-1B within the recorded qualification scope**, 2026-09-23.
 Starting checkout: `4f665a3c4d801c951227a2557ad0019dfbdb6856`.
 [Validation](PersistenceFoundation1B-Validation.md) records the tested source,
-platform results, remaining gates and explicit limits. The actual Windows server
-restart supplement passes; hosted final-source CI is not inferred from local passes.
+platform results, source-qualified hosted CI and explicit limits. The actual
+Windows server restart supplement passes. Persistence-1C remains NOT STARTED.
 
 [D21](Invariants.md#d21--persistence-foundation-1) and the
 [detailed contract](PersistenceFoundation1.md) own signatures, bounds, authority,

@@ -2,8 +2,7 @@
 
 Date: 2026-09-23. Scope: public persistence facade and asynchronous completion.
 
-**Interim verdict: PARTIAL — implementation and all recorded local gates pass;
-hosted final-source CI remains pending.**
+**Verdict: PASS — Persistence-1B within the qualification scope recorded below.**
 No release, tag, overall Persistence Foundation 1 closure or 1C work is implied.
 
 ## Provenance and identity
@@ -11,8 +10,9 @@ No release, tag, overall Persistence Foundation 1 closure or 1C work is implied.
 | Item | Value |
 |---|---|
 | Starting `main` / fetched `origin/main` | `4f665a3c4d801c951227a2557ad0019dfbdb6856` |
-| Implementation / evidence commit | Not committed yet |
-| Tested source | That baseline plus this task's uncommitted delta; final source receipt pending |
+| Implementation commit | `43f06b00328eff61c706d41f6f25628ddaa61c07` |
+| Evidence commit | This evidence-only follow-up; its immutable SHA is reported in the task completion and `git log -1 --format=%H -- docs/PersistenceFoundation1B-Validation.md` |
+| Tested source | `43f06b0`, all required hosted jobs green; subsequent documentation-only changes preserve that runtime source |
 | Package / tag identity | Development `0.4.0` / `v0.4.0`; no tag or release created |
 | Scripting API | `0.5.0-experimental`, explicit user assignment under D12 |
 | Intended future package | `0.5.0`, not bumped by this work |
@@ -74,7 +74,7 @@ workflows route these tests and the authoritative tooling generation/drift check
 | Host/LSP/preview/supervisor | PASS | PASS | Final metadata-pack rebuild and payload checks passed |
 | Actual Carbon representative reload/unload | PASS | Not measured | Windows host described below |
 | Actual server restart with root/two-addon isolation | PASS | Not measured | Actual second Rust process and fresh read-only acquisitions |
-| Hosted final-source CI | Not run | Not run | Requires published source revision |
+| Hosted final-source CI | PASS | PASS | Exact implementation commit, runtime/packaging/sanitizers/tooling |
 
 The full runtime sweep includes Foundations A–G/addons/providers, publication,
 module loader, scheduler, recovery, GUI through 3E, Player Interaction through
@@ -344,12 +344,52 @@ after first stop and before second launch was
 
 Inputs: final Windows native hash above; unchanged live CSZIP
 `38ecf047dbb3746a16cc29bd180ad6885938229bed0c78d9a9120e956dc7c91a`;
-final harness `b94876b9b27d42b500c96916b64027a581e63fdc0d0951aefd4ea680a3d2086b`.
+final harness `b94876b9b27d42b500c96916b64027a581e63fdc0d0951aefd4ea680a3d2086b`;
+fixture `591b7bcc071e4162c77e8df2d77c94c44e4e194829acbdbc29fbe3d3a5efa40b`.
 The source fixture remains outside production packages. Final native-unmapped
 observation was true; independent cleanup found zero Rust/compiler/storage
 processes, all five protected-file hashes restored, no leftover backup files and
 no RCON secret. Earlier failed attempts remain negative harness evidence.
 This is the requested bounded 1B restart check, not 1C's extended crash/soak matrix.
+
+## Final implementation-source hosted CI
+
+Commit `43f06b00328eff61c706d41f6f25628ddaa61c07` was first pushed to the
+qualification branch, leaving main unchanged until the checks passed:
+
+- [Runtime, Windows/Linux packaging and Linux sanitizers — PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/35946675217).
+- [Tooling Foundations A/B, Windows/Linux/macOS editor builds — PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/35946675185).
+- [Tooling baseline contracts — PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/35946675149).
+
+Windows hosted native tests passed 15/15 (40.58 seconds), followed by the complete
+public/runtime/adapter/loader suite, 54-example installation and extracted worker
+checks. Linux and the complete ASan/UBSan/leak suite also passed. macOS results
+are editor/tooling evidence only, not a Carbon or persistence server runtime.
+Existing workflow Node-runtime deprecation and unused GUI-field warnings were
+non-failing; unrelated workflow modernization was not included.
+
+Downloaded development artifacts were hash-checked and report `sourceState:
+committed`, exact revision 43f06b0, package 0.4/API0.5/ABI1.5, unchanged provider/
+schema/Luau and SQLite identity. They are CI artifacts, not a release or tag.
+
+| CI artifact | SHA-256 |
+|---|---|
+| Windows ZIP | `9047b695f17ad031b72a28d7f80f66f01152a35ae2e533c9f2f246cfbedef48a` |
+| Linux ZIP | `8105a71f102e49aaa6d1be9fdb2d224be07b4310db74560bf877a16d1dc2a9bb` |
+| Windows native | `4d4069c52be34b47dd9e6f2daf4b2ff130e1dd9ef31e10f72d6ff70929fa2b55` |
+| Windows compiler | `1e64c65441aa3c26a9979cf130737e24d18ebad9bc9182ebac6a8adbd81f5cd5` |
+| Windows storage | `ea5604ae51fae27f1c67b6b9926e519961968bc0557eb65df90c6d837f21d5a7` |
+
+Hosted Windows used MSVC **19.51.36257.0**, unlike the local MSVC 19.44 live
+qualification; these binary hashes are deliberately kept separate. The hosted
+Linux native/compiler/storage hashes match the final local hashes above. The
+CI Windows binary was not substituted into the earlier live receipt. Final
+documentation-only publication reuses the exact qualified implementation; no
+runtime or metadata source changed after its green CI.
+
+Final worker audit: no task runtime/compiler/storage/test process and no task
+container remained. Protected `drycreek-bot` and `directus-db` containers remained
+running. Reusable source/build/cache/artifact directories are intentionally retained.
 
 ## Tooling, packaging and future work
 
@@ -378,16 +418,16 @@ No Query, UpdateAsync, schema/index API or Persistence-1C work was implemented.
 
 ## Requested completion checklist
 
-This checklist reports the task's 52 requested fields. Pending entries are not
-PASS and must be resolved before the final closure verdict.
+This checklist reports the task's 52 requested fields. The verdict is scoped to
+1B, not overall Foundation 1 closure or unmeasured platform/client behavior.
 
 | # | Field | Result |
 |---|---|---|
-| 1 | Verdict | PARTIAL pending hosted CI; all recorded local gates PASS |
+| 1 | Verdict | PASS within recorded Persistence-1B scope |
 | 2 | Starting commit | `4f665a3c4d801c951227a2557ad0019dfbdb6856` |
-| 3 | Implementation commit | Pending |
-| 4 | Evidence/docs commit | Pending |
-| 5 | Final tested commit | Uncommitted delta; publication/CI pending |
+| 3 | Implementation commit | `43f06b00328eff61c706d41f6f25628ddaa61c07` |
+| 4 | Evidence/docs commit | This evidence-only follow-up; immutable SHA in completion report/history |
+| 5 | Final tested commit | `43f06b00328eff61c706d41f6f25628ddaa61c07`; documentation-only follow-up does not alter qualified runtime |
 | 6 | DataStoreService | `game:GetService("DataStoreService")`; `GetDataStore(Name: string) -> DataStore` |
 | 7 | DataStore | Only `GetAsync(Key, Callback)`, `SetAsync(Key, Value, Callback)`, `RemoveAsync(Key, Callback)` |
 | 8 | Callbacks | Get `(PersistedValue?, string?) -> ()`; Set/Remove `(boolean?, string?) -> ()`; mandatory |
@@ -434,4 +474,4 @@ PASS and must be resolved before the final closure verdict.
 | 49 | 1C handoff | Canonical extended crash/lifecycle/quota/scale/final platform/public-readiness work only after separate authorization |
 | 50 | Query/Update/schema/index | Not implemented |
 | 51 | Persistence-1C | Not started |
-| 52 | Branch/worktree | `main`, task changes uncommitted; origin remains starting baseline; no release/tag |
+| 52 | Branch/worktree | Qualification branch passed CI; main publication is a fast-forward plus this evidence-only follow-up; final cleanliness verified in completion report; no release/tag |

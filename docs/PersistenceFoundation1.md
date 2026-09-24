@@ -6,8 +6,8 @@ startup/profile conditions of the approved physical-budget amendment. The later
 user decision assigns Persistence Foundation 1 to API `0.5.0-experimental` under
 [D12](Invariants.md#d12--scripting-and-protocol-identity), not retroactively to 0.4.
 [Persistence-1B](PersistenceFoundation1B.md) records implementation, scoped local
-qualification and remaining limits. Experimental development availability is not
-overall closure, final-source CI or release approval.
+qualification, implementation-source CI and remaining limits. Experimental
+development availability is not overall Foundation 1 closure or release approval.
 
 [D21](Invariants.md#d21--persistence-foundation-1) owns the architecture. This
 document owns its detailed signatures, bounds, storage contract and phased gates;

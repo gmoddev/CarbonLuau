@@ -4,8 +4,9 @@ Current development mapping after the 2026-09-23 Persistence Foundation 1
 assignment under [D12](Invariants.md#d12--scripting-and-protocol-identity).
 Persistence-1B is **implemented and qualified within its recorded scope** in
 [the 1B record](PersistenceFoundation1B.md). Persistence-1C is **NOT STARTED**;
-combined closure and final-source CI remain separate. Experimental development
-API availability is not release approval or an overall PASS claim.
+combined closure remains separate. The [1B evidence](PersistenceFoundation1B-Validation.md)
+records its green implementation-source CI. Experimental development API
+availability is not release approval or an overall Foundation 1 PASS claim.
 
 | Identity | Value |
 |---|---|
