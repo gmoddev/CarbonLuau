@@ -21,9 +21,9 @@
 -- @carbonluau-api {"Owner":"Player","Name":"Position","Kind":"Property","ValueType":"Vector3","Writable":false,"Summary":"Player.Position.","Binding":"            if Key == \"Position\" then"}
 -- @carbonluau-api {"Owner":"Player","Name":"Health","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.Health.","Binding":"            if Key == \"Health\" then return tonumber(Host(23, Token, UserId)[1]) end"}
 -- @carbonluau-api {"Owner":"Player","Name":"MaxHealth","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.MaxHealth.","Binding":"            if Key == \"MaxHealth\" then return tonumber(Host(24, Token, UserId)[1]) end"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiName","Kind":"Property","ValueType":"\"CarbonLuau\"","Writable":false,"Summary":"Game.ApiName.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.4.0-experimental\", ApiStatus = \"Experimental\"}"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiVersion","Kind":"Property","ValueType":"\"0.4.0-experimental\"","Writable":false,"Summary":"Game.ApiVersion.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.4.0-experimental\", ApiStatus = \"Experimental\"}"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiStatus","Kind":"Property","ValueType":"\"Experimental\"","Writable":false,"Summary":"Game.ApiStatus.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.4.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiName","Kind":"Property","ValueType":"\"CarbonLuau\"","Writable":false,"Summary":"Game.ApiName.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.5.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiVersion","Kind":"Property","ValueType":"\"0.5.0-experimental\"","Writable":false,"Summary":"Game.ApiVersion.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.5.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiStatus","Kind":"Property","ValueType":"\"Experimental\"","Writable":false,"Summary":"Game.ApiStatus.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.5.0-experimental\", ApiStatus = \"Experimental\"}"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"X","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.X.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"Y","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Y.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"Z","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Z.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
@@ -35,7 +35,7 @@
 -- @carbonluau-api {"Owner":"CommandOptions","Name":"description","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"CommandOptions.description.","SinceApi":"0.3.0-experimental","Binding":"        if Key ~= \"permission\" and Key ~= \"description\" then Fail(\"unsupported command option\") end"}
 -- @carbonluau-api {"Owner":"Players","Name":"PlayerAdded","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is added.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
 -- @carbonluau-api {"Owner":"Players","Name":"PlayerRemoving","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is removed.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
-local Host, MakeUserdata, SharedValueEqual = ...
+local Host, MakeUserdata, SharedValueEqual, StorageService = ...
 local Callbacks = {}
 local Proxies = setmetatable({}, {__mode = "v"})
 local Records = setmetatable({}, {__mode = "k"})
@@ -588,8 +588,8 @@ function Items.Exists(Self, ShortName)
     return Host(25, String(ShortName, "item short name"))[1] == "1"
 end
 table.freeze(Items)
-local Game = {ApiName = "CarbonLuau", ApiVersion = "0.4.0-experimental", ApiStatus = "Experimental"}
--- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
+local Game = {ApiName = "CarbonLuau", ApiVersion = "0.5.0-experimental", ApiStatus = "Experimental"}
+-- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items | DataStoreService"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
 function Game.GetService(Self, Name)
     if Self ~= Game then Fail("invalid game facade") end
     String(Name, "service name")
@@ -597,7 +597,9 @@ function Game.GetService(Self, Name)
     if Name == "Commands" then return Commands end
     if Name == "Gui" then return Gui end
     if Name == "Items" then return Items end
-    Fail("unknown service (expected Players, Commands, Gui or Items)")
+-- @carbonluau-api {"Type":"DataStoreService","Kind":"Service","Summary":"Private owner-bound persistence service; preview unavailable.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"    if Name == \"DataStoreService\" then return StorageService() end"}
+    if Name == "DataStoreService" then return StorageService() end
+    Fail("unknown service (expected Players, Commands, Gui, Items or DataStoreService)")
 end
 table.freeze(Game)
 -- One host-admitted callback per scheduler work item; no dispatch fan-out in Lua.

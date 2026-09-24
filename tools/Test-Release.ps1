@@ -10,12 +10,16 @@ $Release = Get-Content -Raw -LiteralPath (Join-Path $Root 'release.json') | Conv
 if ($Release.tag -cne "v$($Release.releaseVersion)" -or $Release.packageVersion -cne $Release.releaseVersion) {
     throw 'Release tag/package identity mapping is inconsistent'
 }
+# Package, scripting API and native ABI are deliberately separate identities.
+$NativeAbi = [version]$Release.nativeAbi
+if ($NativeAbi.Major -gt 65535 -or $NativeAbi.Minor -gt 65535) { throw 'Native ABI component exceeds uint16' }
+$NativeAbiLiteral = '0x{0:x8}' -f (($NativeAbi.Major -shl 16) -bor $NativeAbi.Minor)
 $Checks = @(
     @{ Path = 'src/CarbonLuau/CarbonLuau.Main.cs'; Text = "[Info(`"CarbonLuau`", `"gmoddev`", `"$($Release.packageVersion)`")]" },
     @{ Path = 'src/CarbonLuau/CarbonLuau.Main.cs'; Text = "PackageVersion = `"$($Release.packageVersion)`"" },
     @{ Path = 'src/CarbonLuau/Facade/FacadePolicy.cs'; Text = "ApiVersion = `"$($Release.apiVersion)`"" },
     @{ Path = 'native/CMakeLists.txt'; Text = "project(CarbonLuauNative VERSION $($Release.packageVersion)" },
-    @{ Path = 'native/src/Runtime.cpp'; Text = 'carbonluau_abi_version(void) { return 0x00010004; }' },
+    @{ Path = 'native/src/Runtime.cpp'; Text = "carbonluau_abi_version(void) { return $NativeAbiLiteral; }" },
     @{ Path = 'src/CarbonLuau.Core/Addons/CoreAddonPackage.cs'; Text = "ProtocolName = `"$($Release.providerProtocolName)`", ProtocolVersion = `"$($Release.providerProtocolVersion)`"" },
     @{ Path = 'src/CarbonLuau.Core/Addons/CoreAddonPackage.cs'; Text = "Schema = $($Release.packageSchema)" },
     @{ Path = 'src/CarbonLuau/Addons/AddonPackage.cs'; Text = 'ProtocolName = global::CarbonLuau.Core.AddonPolicy.ProtocolName' },
@@ -89,6 +93,8 @@ try {
                 throw 'Release bundle contains persistence data, source, CLI or fixtures'
             }
             foreach ($ExampleEntry in @('examples/player-take-item/init.luau','examples/player-status/init.luau','examples/player-inventory/init.luau','examples/player-give-item/init.luau','examples/player-shop/init.luau','examples/gui/inventory-reward/init.luau','examples/gui/hello/init.luau','examples/gui/shared-live/init.luau',
+                    'examples/persistence/get/init.luau','examples/persistence/set/init.luau','examples/persistence/remove/init.luau',
+                    'examples/persistence/player-key/init.luau','examples/persistence/snapshot/init.luau','examples/persistence/errors/init.luau',
                     'examples/gui/per-player/init.luau','examples/gui/activated/init.luau','examples/gui/images/init.luau',
                     'examples/gui/scrolling/init.luau','examples/gui/layout-vertical/init.luau',
                     'examples/gui/layout-horizontal/init.luau','examples/gui/padding/init.luau',
@@ -105,12 +111,14 @@ try {
                     'examples/addons/guiowner/addon.json','examples/addons/guiowner/init.luau','examples/addons/guiowner/api.luau',
                     'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {
                 if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $ExampleEntry })) {
-                    throw "Release bundle is missing public GUI example: $ExampleEntry"
+                    throw "Release bundle is missing public example: $ExampleEntry"
                 }
             }
-            foreach ($DocumentEntry in @('GUI.md','GUI-REFERENCE.md','RELEASE-NOTES.md')) {
+            foreach ($DocumentEntry in @('GUI.md','GUI-REFERENCE.md','RELEASE-NOTES.md',
+                    'docs/api/Persistence.md','docs/api/Services/DataStoreService.md',
+                    'docs/api/Types/DataStore.md','docs/api/Types/PersistedValue.md')) {
                 if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $DocumentEntry })) {
-                    throw "Release bundle is missing public GUI documentation: $DocumentEntry"
+                    throw "Release bundle is missing public documentation: $DocumentEntry"
                 }
             }
             $ProvenanceEntry = $Bundle.Entries | Where-Object { $_.FullName -ceq 'PROVENANCE.json' }

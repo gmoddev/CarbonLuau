@@ -30,6 +30,16 @@ declare extern type Connection with
     function Disconnect(self): ()
 end
 
+declare extern type DataStore with
+    function GetAsync(self, Key: string, Callback: (PersistedValue?, string?) -> ()): ()
+    function RemoveAsync(self, Key: string, Callback: (boolean?, string?) -> ()): ()
+    function SetAsync(self, Key: string, Value: PersistedValue, Callback: (boolean?, string?) -> ()): ()
+end
+
+declare extern type DataStoreService with
+    function GetDataStore(self, StoreName: string): (DataStore)
+end
+
 declare extern type GuiNode with
     read ClassName: string
     function Clone(self): (GuiNode)
@@ -96,8 +106,9 @@ end
 declare extern type Game with
     read ApiName: "CarbonLuau"
     read ApiStatus: "Experimental"
-    read ApiVersion: "0.4.0-experimental"
+    read ApiVersion: "0.5.0-experimental"
     function GetService(self, Name: "Commands"): (Commands)
+    function GetService(self, Name: "DataStoreService"): (DataStoreService)
     function GetService(self, Name: "Gui"): (Gui)
     function GetService(self, Name: "Items"): (Items)
     function GetService(self, Name: "Players"): (Players)
@@ -172,6 +183,8 @@ end
 declare extern type Items with
     function Exists(self, ShortName: string): (boolean)
 end
+
+export type PersistedValue = boolean | number | string | {PersistedValue} | {[string]: PersistedValue}
 
 declare extern type Player with
     function CountItem(self, ShortName: string): (number)

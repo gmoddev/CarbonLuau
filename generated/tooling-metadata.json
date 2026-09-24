@@ -2,7 +2,7 @@
   "SchemaVersion": 1,
   "Api": {
     "Name": "CarbonLuau",
-    "Version": "0.4.0-experimental",
+    "Version": "0.5.0-experimental",
     "Status": "Experimental"
   },
   "PackageSchema": 1,

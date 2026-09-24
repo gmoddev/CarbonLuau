@@ -32,7 +32,9 @@ internal static class Program
     {
         var Release = JObject.Parse(File.ReadAllText(Path.Combine(Root, "release.json")));
         string Source = File.ReadAllText(Path.Combine(Root, "scripts", "bootstrap.luau"));
-        JObject Catalog = ApiCatalog.Build(Source, Release, File.ReadAllText(Path.Combine(Root, "native", "src", "scripts", "ModuleLoader.cpp")));
+        string Native = File.ReadAllText(Path.Combine(Root, "native", "src", "scripts", "ModuleLoader.cpp")) + "\n" +
+            File.ReadAllText(Path.Combine(Root, "native", "src", "facade", "PersistenceFacade.cpp"));
+        JObject Catalog = ApiCatalog.Build(Source, Release, Native);
         var Outputs = new SortedDictionary<string, string>(StringComparer.Ordinal) {
             ["api/carbonluau-api.json"] = Json(Catalog),
             ["generated/carbonluau.d.luau"] = ApiArtifacts.Definitions(Catalog),

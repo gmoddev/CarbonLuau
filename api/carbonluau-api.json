@@ -2,7 +2,7 @@
   "SchemaVersion": 1,
   "Api": {
     "Name": "CarbonLuau",
-    "Version": "0.4.0-experimental",
+    "Version": "0.5.0-experimental",
     "Status": "Experimental"
   },
   "Types": [
@@ -75,6 +75,30 @@
       "Summary": "A disconnectable Signal subscription.",
       "Availability": {
         "SinceApi": "0.3.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "DataStore",
+      "Name": "DataStore",
+      "Kind": "Class",
+      "Summary": "Sealed private namespace/store facade; no fields, authority transfer or automatic retry.",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "DataStoreService",
+      "Name": "DataStoreService",
+      "Kind": "Service",
+      "Summary": "Private owner-bound persistence service; preview unavailable.",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
         "Implemented": true,
         "Qualification": "Experimental"
       },
@@ -215,6 +239,20 @@
         "Qualification": "Experimental"
       },
       "Preview": "Unavailable"
+    },
+    {
+      "Id": "PersistedValue",
+      "Name": "PersistedValue",
+      "Kind": "Value",
+      "Summary": "Finite binary64, UTF-8 strings, dense arrays or string-keyed maps; no nil, metatables, cycles or host objects. D21 bounds: depth 16; 1,024 entries/table, 4,096 expanded entries; 64 KiB envelope; 16 KiB strings; 128-byte map keys. Runtime validation is authoritative.",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Alias",
+      "TypeExpression": "boolean | number | string | {PersistedValue} | {[string]: PersistedValue}"
     },
     {
       "Id": "Player",
@@ -721,6 +759,136 @@
       ]
     },
     {
+      "Id": "DataStore.GetAsync",
+      "Name": "GetAsync",
+      "OwnerId": "DataStore",
+      "Kind": "Method",
+      "Summary": "Committed-only non-yielding read submission. Later callback receives fresh value/nil, nil/nil for absence, or nil/ErrorCode. Immediate return means acceptance only; rejected calls owe no callback. D21 keys: 1..128 UTF-8 bytes; 8 pending/namespace, 128 globally; 5-second request deadline. Private owner required; retirement suppresses delivery.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Key",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Callback",
+              "Type": "(PersistedValue?, string?) -> ()",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "DataStore.RemoveAsync",
+      "Name": "RemoveAsync",
+      "OwnerId": "DataStore",
+      "Kind": "Method",
+      "Summary": "Committed-only irreversible removal. Later true/nil means removed, false/nil means absent; nil/ErrorCode means failure, possibly Indeterminate. Immediate return means acceptance only; no rollback, replay or guaranteed delivery after retirement.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Key",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Callback",
+              "Type": "(boolean?, string?) -> ()",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "DataStore.SetAsync",
+      "Name": "SetAsync",
+      "OwnerId": "DataStore",
+      "Kind": "Method",
+      "Summary": "Committed-only irreversible write; bounded snapshot before acceptance. Later true/nil follows durable commit and validated response; nil/ErrorCode is failure. Indeterminate may have committed. No rollback or automatic replay; stale callbacks are suppressed.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Key",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Value",
+              "Type": "PersistedValue",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Callback",
+              "Type": "(boolean?, string?) -> ()",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "DataStoreService.GetDataStore",
+      "Name": "GetDataStore",
+      "OwnerId": "DataStoreService",
+      "Kind": "Method",
+      "Summary": "Disk-free private store acquisition, allowed during publication; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "StoreName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "DataStore"
+          ]
+        }
+      ]
+    },
+    {
       "Id": "Frame.AnchorPoint",
       "Name": "AnchorPoint",
       "OwnerId": "Frame",
@@ -1191,7 +1359,7 @@
         "Implemented": true,
         "Qualification": "Experimental"
       },
-      "ValueType": "\"0.4.0-experimental\"",
+      "ValueType": "\"0.5.0-experimental\"",
       "Writable": false
     },
     {
@@ -1218,6 +1386,19 @@
           ],
           "Returns": [
             "Commands"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "\"DataStoreService\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "DataStoreService"
           ]
         },
         {

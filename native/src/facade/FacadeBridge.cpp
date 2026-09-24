@@ -76,7 +76,8 @@ int InstallFacade(lua_State* State)
     lua_pushcclosure(State, HostPrimitive, "host", 1);
     lua_pushcfunction(State, MakeFacadeUserdata, "private userdata");
     if (Runtime.GuiValueEqual == LUA_NOREF) lua_pushnil(State); else lua_getref(State, Runtime.GuiValueEqual);
-    lua_call(State, 3, 4);
+    InstallStorage(State, Owner);
+    lua_call(State, 4, 4);
     if (Runtime.GuiValueEqual == LUA_NOREF) Runtime.GuiValueEqual = lua_ref(State, -1);
     lua_pop(State, 1);
     Owner.GuiBindings = lua_ref(State, -1); lua_pop(State, 1);

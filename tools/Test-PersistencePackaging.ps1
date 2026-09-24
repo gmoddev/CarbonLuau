@@ -5,12 +5,10 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-# Persistence-1A is private substrate. Remove this phase gate only when 1B is authorized.
-foreach ($Relative in @('scripts/bootstrap.luau', 'src/CarbonLuau.Core/Api/ApiCatalog.cs')) {
-    if ((Get-Content -Raw -LiteralPath (Join-Path $Root $Relative)) -match '\b(DataStoreService|GetDataStore|GetAsync|SetAsync|RemoveAsync)\b') {
-        throw "Persistence-1A unexpectedly exposes public persistence metadata/bindings: $Relative"
-    }
-}
+# Persistence-1B authorizes the public facade, not public backend/storage details.
+# Reuse the authoritative surface/version/drift gate rather than the historical
+# 1A prohibition or another independently maintained public method list.
+& (Join-Path $PSScriptRoot 'Test-Api.ps1') | Out-Null
 $ArchivePath = (Resolve-Path -LiteralPath $Bundle).Path
 $TestsPath = (Resolve-Path -LiteralPath $ManagedTests).Path
 $Parent = (Resolve-Path -LiteralPath $WorkDirectory).Path
@@ -53,7 +51,7 @@ try {
         if ($WindowsHost) { & $TestsPath $Worker } else { & mono $TestsPath $Worker }
         if ($LASTEXITCODE) { throw 'Clean extracted production storage worker tests failed' }
     } finally { Pop-Location }
-    Write-Output "[CarbonLuau:PersistencePackage] PASS clean extracted worker; private API; source=$($Provenance.sourceState); worker=$($Provenance.storageSha256)"
+    Write-Output "[CarbonLuau:PersistencePackage] PASS clean extracted private worker; public surface checked separately; source=$($Provenance.sourceState); worker=$($Provenance.storageSha256)"
 } finally {
     # Only this newly allocated test directory is disposable; never live storage.
     $Resolved = [IO.Path]::GetFullPath($Work)

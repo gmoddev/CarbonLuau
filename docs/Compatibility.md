@@ -78,6 +78,18 @@ the host later exposes a bounded opaque text-preserving UI-input payload.
 
 Public behavior changes need deliberate compatibility review, documentation and behavioral tests. Prefer adapting to host changes beneath the facade. If an accepted public behavior cannot be preserved, state the break and migration decision explicitly; do not silently expose new host internals to compensate.
 
+Persistence Foundation 1 was explicitly assigned scripting API
+`0.5.0-experimental` on 2026-09-23; it is not part of historical 0.4 availability.
+[D12](Invariants.md#d12--scripting-and-protocol-identity) owns the decision and
+[Release.md](Release.md) the independent development mapping: package/tag fields
+stay 0.4.0/v0.4.0, while 0.5.0 is the intended future package, not a published
+release. Existing catalog entries retain historical SinceApi values. New
+persistence metadata follows actual bindings and is Experimental after scoped
+1B qualification; preview remains unavailable. 1C is NOT STARTED and final-source
+CI/combined closure remain separate. No version label establishes overall PASS.
+The additive reserved completion export requires native ABI 1.5; no provider
+protocol, addon schema or Luau change is implied.
+
 ## Dependency and host upgrades
 
 Luau upgrades must be explicit scoped changes. Preserve its pin and MIT/Lua attribution; review relevant upstream API, sandbox, compiler, bytecode and behavior changes. Validate affected builds and runtime failure paths against the candidate pin before claiming support. Do not edit the vendor tree or update dependencies incidentally while implementing another feature. Internal compiler/VM bytecode compatibility is tied to the selected pin; external untrusted bytecode remains excluded by I7.
@@ -696,8 +708,8 @@ Entity-1C public closure.
 foundation. Its original adoption was **design only**, not implementation of a
 DataStoreService/worker/SQLite dependency or public metadata. [Design validation](PersistenceFoundation1-Validation.md)
 records upstream research and local architecture checks, not crash/durability or
-platform PASS. Current release identities and prior valid runtime evidence remain
-unchanged; 0.5.0-experimental is only a future release-planning candidate.
+platform PASS. Original adoption changed no identities. The later D12 user
+decision assigns persistence to 0.5.0-experimental without altering prior evidence.
 
 [Persistence-1A investigation](PersistenceFoundation1A.md) records a Windows
 durability qualification blocker: effective EXTRA readback does not imply the
@@ -722,8 +734,11 @@ stdin preamble framing is explicitly qualified. The amended 1,280-MiB figure is
 an operational budget/qualification target/diagnostic threshold, not a hard
 physical-allocation invariant. Hard logical and SQLite page/file-length limits
 remain. No public persistence API, 1B, actual Carbon persistence integration,
-Shockbyte or power-loss qualification is implied. All version identities remain
-unchanged; preserve the historical negative evidence.
+Shockbyte or power-loss qualification is implied. Its recorded identities remain
+historical; preserve its negative evidence. The separately authorized
+[Persistence-1B](PersistenceFoundation1B.md) is implemented and qualified within
+its recorded scope. Persistence-1C is NOT STARTED: neither 1B's local gates nor
+experimental development availability replace combined closure or final-source CI.
 
 Documentation/evidence-only closure needs canonical-routing, link, signature,
 decision/bounds, whitespace, scope and fixture-syntax checks, not unrelated native,

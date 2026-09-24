@@ -29,9 +29,15 @@ namespace Carbon.Plugins
                 if (Native.Storage!=null) {
                     try { StorageBinding=Native.Storage.Bind((ulong)VmGenerationId,(ulong)DomainLifetimeId,PackageId); }
                     catch (InvalidOperationException) { /* persistence admission unavailable; runtime remains independent */ }
+                    catch { ulong Owned=Handle; Handle=0; Native.DomainDestroy(Vm.Handle,Owned); throw; }
                 }
             }
-            public void Facade(FacadeSession Session) { FacadeSession = Session; Native.DomainFacade(Vm.Handle, Handle, Session); }
+            public void Facade(FacadeSession Session)
+            {
+                FacadeSession = Session;
+                Session.Storage=Native.Storage; Session.StorageBinding=StorageBinding;
+                Native.DomainFacade(Vm.Handle, Handle, Session);
+            }
             internal void Addon(AddonPackageSnapshot Package, AddonDomainBinding[] Bindings)
             { if (!Alive) throw new InvalidOperationException("stale domain"); Native.DomainAddon(Vm.Handle, Handle, Package, Bindings); }
             public ExecutionResult Execute(string Chunk, string Source, int Milliseconds)

@@ -1,13 +1,22 @@
 # Scripting compatibility and limits
 
-Identity: `CarbonLuau`, API `0.4.0-experimental`, status `Experimental`.
+Development identity: `CarbonLuau`, API `0.5.0-experimental`, status `Experimental`.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
 `carbonluau.status`. This identity is distinct from package `0.4.0`, native ABI
-`1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
+`1.5`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
 pinned Luau revision and the installed Rust/Carbon builds. Published v0.3.0
 artifacts remain API `0.3.0-experimental` with native ABI `1.2`.
 
-The unreleased 0.4.0 candidate combines the additive addon, GUI Foundation 1 and
+Persistence is assigned to 0.5.0-experimental. **1B is implemented and qualified
+within recorded scope; 1C is NOT STARTED.** Combined closure and final-source CI
+remain separate; experimental availability is not release approval.
+Package 0.5.0 is intended for a future release; the independent
+development package fields remain 0.4.0, without publication authority. ABI 1.5
+is required by the additive completion ingress. [Release mapping](../Release.md)
+and [the 1B record](../PersistenceFoundation1B.md) separate identity from evidence.
+Existing APIs keep their historical introduction versions and qualification.
+
+The earlier unreleased 0.4.0 candidate combines the additive addon, GUI Foundation 1 and
 implemented GUI Foundation 2 layout/image/scrolling surfaces under this one
 experimental identity. Authenticated-client visual,
 cursor, scrolling, clipping, image-load, click-receipt and reconciliation behavior remains unqualified and is not
@@ -121,6 +130,11 @@ retrying. Neither timeout nor recovery provides rollback or exactly-once deliver
 | GUI Name / Text / aggregate screen text | 64 B / 2,048 B / 32 KiB UTF-8 |
 | GUI clone objects / depth | 128 / 16 |
 | GUI interactions per Player / per action | 20/s burst 20 / 8/s burst 8 |
+
+Persistence bounds, names, error outcomes and the qualified operational disk
+budget are owned by [Persistence Foundation 1](../PersistenceFoundation1.md#5-logical-names-and-bounds).
+The [author guide](Persistence.md) explains their use; generated type information
+does not validate finite numbers, UTF-8, table density, cycles or resource bounds.
 
 NUL is rejected in API strings; malformed UTF-8 is rejected by host transport.
 Wrong types are not implicitly coerced. Registration/input failures raise script

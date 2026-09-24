@@ -95,6 +95,7 @@
             "Supported",
             "Experimental",
             "ClientUnqualified",
+            "WorkInProgress",
             "Deferred",
             "Unavailable"
           ]
@@ -163,10 +164,23 @@
         "Representation": {
           "enum": [
             "Opaque",
-            "Record"
+            "Record",
+            "Alias"
           ]
+        },
+        "TypeExpression": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["Representation"], "properties": { "Representation": { "const": "Alias" } } },
+          "then": { "required": ["TypeExpression"], "properties": { "Kind": { "const": "Value" } }, "not": { "required": ["BaseTypeId"] } },
+          "else": { "not": { "required": ["TypeExpression"] } }
+        }
+      ]
     },
     "Parameter": {
       "type": "object",

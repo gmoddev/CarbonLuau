@@ -12,6 +12,8 @@ class ManagedTests
     static void Check(bool Good, [System.Runtime.CompilerServices.CallerLineNumber] int Line=0)
     { if (!Good) throw new InvalidOperationException("persistence assertion at source line "+Line); }
     static void Rejected(Action Action) { try { Action(); } catch (InvalidOperationException) { return; } throw new Exception("expected rejection"); }
+    static void Rejected(Action Action,uint Status)
+    { try { Action(); } catch (Queue.Rejection Error) { Check(Error.Status==Status); return; } throw new Exception("expected storage rejection"); }
     static void Invalid(Action Action) { try { Action(); } catch (ArgumentException) { return; } catch (IOException) { return; } throw new Exception("expected invalid data rejection"); }
     static void Finish(Queue Queue,ulong Now)
     {
@@ -95,7 +97,7 @@ class ManagedTests
             var Op=Mutation ? Host.StorageQueue.Operation.Remove : Host.StorageQueue.Operation.Get;
             int Burst=Mutation ? 8 : 32;
             for (int Index=0; Index<Burst; ++Index) {
-                Queue.Submit(Owner,1,1,true,Op,"Store","Key",new byte[0],1);
+                Queue.Submit(Owner,1,1,true,Op,"Store","Key",new byte[0],(ulong)Index+1);
                 FinishResult(Queue,Now,Host.StorageQueue.Error.StorageBusy);
             }
             object Baseline=NamespaceBuckets(Queue)[Owner.Namespace];
@@ -107,10 +109,10 @@ class ManagedTests
             Queue.Retire(Cleanup); ++Now; Owner=Queue.Bind(4,4,"rates");
             Check(!Object.ReferenceEquals(Baseline,NamespaceBuckets(Queue)[Owner.Namespace]));
             for (int Index=0; Index<Burst; ++Index) {
-                Queue.Submit(Owner,4,4,true,Op,"Store","Key",new byte[0],1);
+                Queue.Submit(Owner,4,4,true,Op,"Store","Key",new byte[0],(ulong)Index+1);
                 FinishResult(Queue,Now,Host.StorageQueue.Error.StorageBusy);
             }
-            Rejected(()=>Queue.Submit(Owner,4,4,true,Op,"Store","Key",new byte[0],1));
+            Rejected(()=>Queue.Submit(Owner,4,4,true,Op,"Store","Key",new byte[0],(ulong)Burst+1));
         }
         Console.WriteLine("[CarbonLuau:Persistence] Failed-namespace churn, known/uncertain data retention, unsent/read failures and failure-rate refill PASS");
     }
@@ -121,8 +123,8 @@ class ManagedTests
             Invalid(()=>Queue.Submit(Owner,1,1,true,Host.StorageQueue.Operation.Get,Name,"K",new byte[0],1));
         Queue.Submit(Owner,1,1,true,Host.StorageQueue.Operation.Get,new string('\u00e9',32),new string('\u00e9',64),new byte[0],1); Finish(Queue,Now);
         Queue=new Queue(1,()=>Now) { Ready=true }; Owner=Queue.Bind(1,1,null);
-        for (int Index=0; Index<8; ++Index) { Queue.Submit(Owner,1,1,true,Host.StorageQueue.Operation.Remove,"S","K",new byte[0],1); Finish(Queue,Now); }
-        Rejected(()=>Queue.Submit(Owner,1,1,true,Host.StorageQueue.Operation.Remove,"S","K",new byte[0],1));
+        for (int Index=0; Index<8; ++Index) { Queue.Submit(Owner,1,1,true,Host.StorageQueue.Operation.Remove,"S","K",new byte[0],(ulong)Index+1); Finish(Queue,Now); }
+        Rejected(()=>Queue.Submit(Owner,1,1,true,Host.StorageQueue.Operation.Remove,"S","K",new byte[0],9));
         Queue.Retire(Owner); Owner=Queue.Bind(2,2,null);
         Rejected(()=>Queue.Submit(Owner,2,2,true,Host.StorageQueue.Operation.Remove,"S","K",new byte[0],1));
         Now+=199; Rejected(()=>Queue.Submit(Owner,2,2,true,Host.StorageQueue.Operation.Remove,"S","K",new byte[0],1));
@@ -219,8 +221,12 @@ class ManagedTests
     {
         ulong Now=1;
         var Queue=new Queue(1,()=>Now) { Ready=true }; var Owner=Queue.Bind(2,3,null);
-        for (int Index=0; Index<8; ++Index) Queue.Submit(Owner,2,3,true,Host.StorageQueue.Operation.Get,"Store","Key",new byte[0],1);
-        Rejected(()=>Queue.Submit(Owner,2,3,true,Host.StorageQueue.Operation.Get,"Store","Key",new byte[0],1));
+        Queue.Submit(Owner,2,3,true,Host.StorageQueue.Operation.Get,"Store","Key",new byte[0],1);
+        // Test duplicate authority before capacity is full; it must reserve nothing.
+        Rejected(()=>Queue.Submit(Owner,2,3,true,Host.StorageQueue.Operation.Get,"Store","Key",new byte[0],1),5);
+        Check(Queue.PendingCount==1 && Queue.QueueRejected==0 && Queue.RateRejected==0);
+        for (int Index=1; Index<8; ++Index) Queue.Submit(Owner,2,3,true,Host.StorageQueue.Operation.Get,"Store","Key",new byte[0],(ulong)Index+1);
+        Rejected(()=>Queue.Submit(Owner,2,3,true,Host.StorageQueue.Operation.Get,"Store","Key",new byte[0],9),3);
         Check(Queue.PendingCount==8); Queue.Retire(Owner); Check(Queue.Dispatch()==null && Queue.PendingCount==0);
         Owner=Queue.Bind(2,4,null);
         Rejected(()=>Queue.Submit(Owner,2,4,false,Host.StorageQueue.Operation.Get,"Store","Key",new byte[0],1));
@@ -230,10 +236,10 @@ class ManagedTests
         Queue=new Queue(1,()=>Now) { Ready=true };
         for (uint Namespace=0; Namespace<16; ++Namespace) {
             Owner=Queue.Bind(2,Namespace+1,"addon"+Namespace);
-            for (int Index=0; Index<8; ++Index) Queue.Submit(Owner,2,Namespace+1,true,Host.StorageQueue.Operation.Get,"S","K",new byte[0],1);
+            for (int Index=0; Index<8; ++Index) Queue.Submit(Owner,2,Namespace+1,true,Host.StorageQueue.Operation.Get,"S","K",new byte[0],(ulong)Index+1);
         }
         Owner=Queue.Bind(2,99,"extra");
-        Rejected(()=>Queue.Submit(Owner,2,99,true,Host.StorageQueue.Operation.Get,"S","K",new byte[0],1));
+        Rejected(()=>Queue.Submit(Owner,2,99,true,Host.StorageQueue.Operation.Get,"S","K",new byte[0],1),3);
         for (uint Index=0; Index<128; ++Index) {
             var Request=Queue.Dispatch(); Check(Request!=null && Request.Owner.Package=="addon"+(Index%16));
             Host.StorageQueue.Complete(Request,Reply(Request),Now);
@@ -244,10 +250,10 @@ class ManagedTests
         Check(Queue.Dispatch()==null); var Last=Queue.TakeCompletion(); Check(Last!=null); Queue.Release(Last); Check(Queue.PendingCount==0);
         Queue=new Queue(1,()=>Now) { Ready=true }; Owner=Queue.Bind(2,1,null);
         for (int Index=0; Index<32; ++Index) {
-            Queue.Submit(Owner,2,1,true,Host.StorageQueue.Operation.Get,"S","K",new byte[0],1);
+            Queue.Submit(Owner,2,1,true,Host.StorageQueue.Operation.Get,"S","K",new byte[0],(ulong)Index+1);
             var Request=Queue.Dispatch(); Host.StorageQueue.Complete(Request,Reply(Request),Now); Queue.Dispatch(); Queue.Release(Queue.TakeCompletion());
         }
-        Rejected(()=>Queue.Submit(Owner,2,1,true,Host.StorageQueue.Operation.Get,"S","K",new byte[0],1));
+        Rejected(()=>Queue.Submit(Owner,2,1,true,Host.StorageQueue.Operation.Get,"S","K",new byte[0],33),4);
         Queue.Retire(Owner); Owner=Queue.Bind(2,2,null);
         Rejected(()=>Queue.Submit(Owner,2,2,true,Host.StorageQueue.Operation.Get,"S","K",new byte[0],1));
         Now+=1600;

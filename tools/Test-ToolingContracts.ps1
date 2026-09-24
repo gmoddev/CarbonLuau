@@ -1,6 +1,7 @@
 # Requires PowerShell 7. JSON Schema tests validate the contract seam, not runtime API coverage.
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
+$Release = Get-Content -Raw -LiteralPath (Join-Path $Root 'release.json') | ConvertFrom-Json
 $Schema = Join-Path $Root 'api/carbonluau-api.schema.json'
 $Availability = @{ SinceApi = 'test-only'; Implemented = $true; Qualification = 'Experimental' }
 $Catalog = @{
@@ -37,6 +38,17 @@ if (Test-Catalog $Catalog) { throw 'Unknown qualification accepted' }
 $Catalog.Members[0].Availability.Qualification = 'Experimental'
 $Catalog.Members[0].RuntimeLimit = 123
 if (Test-Catalog $Catalog) { throw 'Undeclared numeric policy accepted in catalog' }
+$Catalog.Members[0].Remove('RuntimeLimit')
+$Catalog.Types += @{ Id = 'PersistedValue'; Name = 'PersistedValue'; Kind = 'Value';
+    Summary = 'Recursive value schema fixture.'; Representation = 'Alias';
+    TypeExpression = 'boolean | number | string | {PersistedValue} | {[string]: PersistedValue}';
+    Availability = @{ SinceApi = '0.5.0-experimental'; Implemented = $true; Qualification = 'WorkInProgress' }; Preview = 'Unavailable' }
+if (!(Test-Catalog $Catalog)) { throw 'Recursive alias or work-in-progress qualification rejected' }
+$Catalog.Types[-1].Remove('TypeExpression')
+if (Test-Catalog $Catalog) { throw 'Alias without expression accepted' }
+$Catalog.Types[-1].TypeExpression = 'string'
+$Catalog.Types[-1].Representation = 'Record'
+if (Test-Catalog $Catalog) { throw 'Non-alias with expression accepted' }
 Write-Output '[CarbonLuau:ToolingContractTest] PASS API schema positive/negative fixtures; binding and generation checks run in tests/tooling'
 $PreviewSchema = Join-Path $Root 'tooling/preview-plan.schema.json'
 $Goldens = Get-Content -Raw (Join-Path $Root 'tests/tooling/PreviewGoldens.json') | ConvertFrom-Json -AsHashtable
@@ -44,7 +56,7 @@ foreach ($Golden in $Goldens) {
     $Plan = $Golden.Plan
     $Plan.SchemaVersion = 1; $Plan.ProjectRevision = 'sha256:' + ('a' * 64)
     $Plan.SemanticRevision = 'b' * 40; $Plan.ToolingBuildId = 'sha256:' + ('c' * 64)
-    $Plan.ApiVersion = '0.4.0-experimental'; $Plan.PackVersion = 'fixture'; $Plan.ProjectId = 'fixture/'; $Plan.Entry = 'init.luau'
+    $Plan.ApiVersion = $Release.apiVersion; $Plan.PackVersion = 'fixture'; $Plan.ProjectId = 'fixture/'; $Plan.Entry = 'init.luau'
     if (!(Test-Json -Json ($Plan | ConvertTo-Json -Depth 30 -Compress) -SchemaFile $PreviewSchema)) { throw "Preview schema rejected $($Golden.Name)" }
 }
 $Plan.SchemaVersion = 2

@@ -10,6 +10,7 @@ param(
     [int]$Port = 28436
 )
 $ErrorActionPreference = 'Stop'
+$Release = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot '../release.json') | ConvertFrom-Json
 $RunId = Get-Date -Format 'yyyyMMdd-HHmmss'
 New-Item -ItemType Directory -Force $ArtifactDirectory | Out-Null
 $ServerLog = Join-Path $ArtifactDirectory "foundation-e-live-$RunId.log"
@@ -115,8 +116,9 @@ try {
     $InitialConsumer = Read-ConsumerStatus
     if ($InitialConsumer.Required -ne 'Active' -or $InitialConsumer.Optional -ne 'Active') { throw 'Initial consumers are unavailable' }
     $StatusText = Send-Rcon 'carbonluau.status' 'CarbonLuau: ready'
-    foreach ($Identity in @('CarbonLuau package: 0.4.0', 'Scripting API: CarbonLuau 0.4.0-experimental', 'Native ABI: 1.4 OK',
-            'Addon protocol: CarbonLuau.Addons 1.2; package schema: 1')) {
+    foreach ($Identity in @("CarbonLuau package: $($Release.packageVersion)",
+            "Scripting API: $($Release.apiName) $($Release.apiVersion)", "Native ABI: $($Release.nativeAbi) OK",
+            "Addon protocol: $($Release.providerProtocolName) $($Release.providerProtocolVersion); package schema: $($Release.packageSchema)")) {
         if (!$StatusText.Contains($Identity)) { throw "Status omitted public identity: $Identity" }
     }
     $ServerProcess.Refresh(); $RssBeforeScale = $ServerProcess.WorkingSet64

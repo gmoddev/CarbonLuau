@@ -1,14 +1,19 @@
 # CarbonLuau Persistence Foundation 1
 
-Status: **CANONICAL DESIGN BASELINE — PERSISTENCE-1A FINAL QUALIFICATION IN PROGRESS**,
-2026-09-23. Partial private implementation exists; no Persistence-1A PASS or public
-API qualification is claimed. The approved [physical-budget amendment](PersistencePhysicalD21Amendment-Proposed.md)
-is adopted subject to its remaining startup/profile qualification conditions.
+Status: **CANONICAL DESIGN BASELINE — PRIVATE 1A PASS; PUBLIC 1B IMPLEMENTED / QUALIFIED WITHIN RECORDED SCOPE; 1C NOT STARTED**,
+2026-09-23. [Private 1A closure](PersistenceFoundation1A.md) records the qualified
+startup/profile conditions of the approved physical-budget amendment. The later
+user decision assigns Persistence Foundation 1 to API `0.5.0-experimental` under
+[D12](Invariants.md#d12--scripting-and-protocol-identity), not retroactively to 0.4.
+[Persistence-1B](PersistenceFoundation1B.md) records implementation, scoped local
+qualification and remaining limits. Experimental development availability is not
+overall closure, final-source CI or release approval.
 
 [D21](Invariants.md#d21--persistence-foundation-1) owns the architecture. This
 document owns its detailed signatures, bounds, storage contract and phased gates;
 the [validation record](PersistenceFoundation1-Validation.md) separates inspected
-source evidence from proposed policy. No example below runs on current 0.4.0.
+source evidence from proposed policy. Examples require the 0.5 development
+bindings; historical 0.4 API artifacts do not provide persistence.
 
 Persistence is the next runtime foundation; separately scoped implementation and
 final qualification proceed under resolved D21, not another architecture investigation.
@@ -33,7 +38,9 @@ DataStore:SetAsync(Key: string, Value: PersistedValue, Callback: (Saved: boolean
 DataStore:RemoveAsync(Key: string, Callback: (Removed: boolean?, ErrorCode: string?) -> ()) -> ()
 ```
 
-These signatures are design notation, not installed type definitions.
+These signatures use contract notation. Development type definitions are
+[generated from the production bindings](../generated/carbonluau.d.luau);
+their availability is not runtime qualification.
 **Async means callback-based, not yielding.** Each call validates, snapshots and
 admits bounded work, then returns no values immediately. That return means only
 request acceptance, never storage success. Callback is required; no fire-and-forget
@@ -519,7 +526,7 @@ portable hostile-code OS sandbox. No worker environment credentials or arbitrary
 inherited handles are needed. Scripts gain only the named persistence capability,
 not filesystem/network/SQL/process/reflection or player-based permissions.
 
-## 10. Design examples (future API only)
+## 10. Contract examples (0.5 development API; unqualified)
 
 Read on player admission; the ID is already a string. A retained Player may be stale
 by completion, so this example only prints its captured ordinary name.
@@ -589,6 +596,10 @@ are not implemented by that closure.
 
 ### Persistence-1B — DataStoreService and completion admission
 
+**Implemented and qualified within recorded scope:** see
+[the 1B record](PersistenceFoundation1B.md). The criteria below define that slice,
+not combined 1C closure or release approval.
+
 Add only the signatures above; no yielding support. Qualify ResourceOwner/admission
 privacy, publication/stale-facade checks, authoritative committed-only predicate,
 pre-accept snapshots, callback retention/capacity, reply validation, fair FIFO intake,
@@ -599,6 +610,8 @@ acceptance, stale domains/VMs and queue floods. Public metadata/docs cannot clai
 available support before this slice is implemented and its applicable gates pass.
 
 ### Persistence-1C — combined qualification and public closure
+
+**NOT STARTED.** This separately scoped phase is not closed by 1B's local gates.
 
 Prove repeated replacement/provider unload/VM recovery/CarbonLuau reload/restart,
 in-flight writer fencing, lost-ack uncertainty, no replay, no quota-reset loopholes,
@@ -621,11 +634,13 @@ catalog during implementation; generate public definitions/docs from it. Runtime
 validation remains authoritative. No VS Code/preview storage, mock database,
 editor filesystem access, tooling worker or extension modification in this task.
 
-Persistence naturally targets a future **0.5.0-experimental** line **instead of
-waiting for Entity**. Entity may join a later release only after its independent
-gate closes. Final assignment is deferred to implemented public qualification and
-release planning. Current package 0.4.0, API 0.4.0-experimental, ABI 1.4, provider
-1.2, addon schema 1 and Luau pin are unchanged.
+The 2026-09-23 user decision assigns Persistence Foundation 1 to
+**0.5.0-experimental**, independently of Entity. Package **0.5.0** is the intended
+future release, not an authorized package bump or publication. [D12](Invariants.md#d12--scripting-and-protocol-identity)
+and [Release.md](Release.md) own the separate development identity mapping.
+Public qualification remains mandatory. Existing APIs keep their historical
+introduction versions; persistence receives explicit SinceApi 0.5, unavailable
+preview and work-in-progress qualification until its applicable gates close.
 
 ## 12. Explicitly deferred
 
@@ -674,9 +689,10 @@ or transformation callback.
     author-managed application version fields.
 26. Security: allowlisted storage, no paths/SQL/raw objects, bounded untrusted decode.
 27. Phases: 1A substrate, 1B API/admission, 1C lifecycle/crash/quota/public closure.
-28. Tooling: existing authoritative descriptors later; none implemented now.
+28. Tooling: implementation-owned declarations under D19; no preview persistence.
 29. Deferred APIs: section 12, not implicit follow-on authorization.
-30. Version: future 0.5.0-experimental candidate; no current identity changes.
+30. Version: assigned 0.5.0-experimental by the later user decision; intended future
+    package 0.5.0, without a package bump, publication or qualification claim.
 
 No unresolved ordinary API choice remains. Implementation qualification is still
 required: stop if the selected VFS cannot meet durability, decoder/supervisor cannot

@@ -8,7 +8,7 @@
 
 using namespace CarbonLuau::Runtime;
 
-uint32_t carbonluau_abi_version(void) { return 0x00010004; }
+uint32_t carbonluau_abi_version(void) { return 0x00010005; }
 ClStatus cl_luau_revision(char* Buffer, uint32_t Capacity)
 {
     if (!Buffer || Capacity < sizeof(CARBONLUAU_REVISION)) return CL_INVALID_ARGUMENT;
@@ -319,6 +319,8 @@ ClStatus cl_vm_scheduler(ClHandle Id, ClSchedulerInfo* Info) try
         if (!Owner.Alive || !Owner.Active) continue;
         Info->Queued += Owner.Queue.size();
         if (!Owner.Queue.empty() && (!Info->NextDueNs || Owner.Queue.front().Due < Info->NextDueNs)) Info->NextDueNs = Owner.Queue.front().Due;
+        for (const auto& Work : Owner.StorageCallbacks) if (Work && Work->Ready) ++Info->Queued;
+        if (auto* Work = NextStorage(*Item); Work && (!Info->NextDueNs || Work->Due < Info->NextDueNs)) Info->NextDueNs = Work->Due;
         for (const auto& Entry : Owner.Modules) if (Entry.second.Loaded) ++Info->Modules;
     }
     return CL_OK;
@@ -334,9 +336,12 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
     Vm* Runtime = GetVm(Id);
     if (!Runtime || !Runtime->State || Runtime->ThreadId || Runtime->Admission) return CL_INVALID_ARGUMENT;
     Domain* Selected = nullptr;
-    for (const auto& Item : Runtime->Domains) if (Item && Item->Alive && Item->Active && !Item->Queue.empty()) {
-        const Callback& Candidate = Item->Queue.front();
-        if (Candidate.Due > CutoffNs || Candidate.Sequence > Sequence) continue;
+    for (const auto& Item : Runtime->Domains) if (Item && Item->Alive && Item->Active) {
+        const Callback* Candidate = Item->Queue.empty() ? nullptr : &Item->Queue.front();
+        StorageCallback* Storage = NextStorage(*Item);
+        bool TaskReady = Candidate && Candidate->Due <= CutoffNs && Candidate->Sequence <= Sequence;
+        bool StorageReady = Storage && Storage->Due <= CutoffNs && Storage->Sequence <= Sequence;
+        if (!TaskReady && !StorageReady) continue;
         bool CandidateAfterCursor = Item->Id > Runtime->SchedulerCursor;
         bool SelectedAfterCursor = Selected && Selected->Id > Runtime->SchedulerCursor;
         if (!Selected || (CandidateAfterCursor && !SelectedAfterCursor) ||
@@ -344,8 +349,21 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
     }
     if (!Selected) return CL_OK;
     Runtime->SchedulerCursor = Selected->Id;
-    std::pop_heap(Selected->Queue.begin(), Selected->Queue.end(), Later{});
-    Callback Work = std::move(Selected->Queue.back()); Selected->Queue.pop_back();
+    Callback Work{};
+    std::unique_ptr<StorageCallback> StorageWork;
+    StorageCallback* Storage = NextStorage(*Selected);
+    const Callback* Task = Selected->Queue.empty() ? nullptr : &Selected->Queue.front();
+    bool StorageFirst = Storage && Storage->Due <= CutoffNs && Storage->Sequence <= Sequence &&
+        (!Task || Task->Due > CutoffNs || Task->Sequence > Sequence || Storage->Due < Task->Due ||
+            (Storage->Due == Task->Due && Storage->Sequence < Task->Sequence));
+    if (StorageFirst) {
+        for (auto& Slot : Selected->StorageCallbacks) if (Slot.get() == Storage) { StorageWork = std::move(Slot); break; }
+        Work = Callback{Storage->Due, Storage->Sequence, Selected, Storage->Thread, Storage->Reference, 0, {}};
+        ReleaseStorage(*Runtime, *Selected, Storage->Route);
+    } else {
+        std::pop_heap(Selected->Queue.begin(), Selected->Queue.end(), Later{});
+        Work = std::move(Selected->Queue.back()); Selected->Queue.pop_back();
+    }
     *Ran = 1;
     Runtime->Thread = Work.Thread; Runtime->Reference = Work.Reference;
     Runtime->ThreadDomain = Work.Owner;
@@ -370,6 +388,10 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
     lua_callbacks(Runtime->State)->interrupt = Interrupt;
     ClStatus Status;
     try {
+        // Materialization happens inside the storage trampoline below, under
+        // this same fresh admission and deadline as the user's callback.
+        if (StorageWork && !ReleaseStorageHost(*Runtime, *Work.Owner, StorageWork->Route))
+            throw std::runtime_error("storage reservation release failed");
         int Code = lua_resume(Work.Thread, nullptr, Work.Arguments);
         lua_callbacks(Runtime->State)->interrupt = nullptr;
         Runtime->Admission = nullptr;
@@ -386,7 +408,8 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
             Status = CL_INTERNAL_ERROR;
             Diagnostic(*Runtime, *Result, "publication integrity failure; VM retired");
             Retire(*Runtime);
-        } else ReleaseThread(*Runtime, Status == CL_MEMORY_LIMIT);
+        } else if (StorageWork && Status == CL_MEMORY_LIMIT) Retire(*Runtime);
+        else ReleaseThread(*Runtime, Status == CL_MEMORY_LIMIT);
         if (!Runtime->State) Result->Flags |= 1;
     } catch (const DeadlineExceeded&) {
         Runtime->Admission = nullptr;

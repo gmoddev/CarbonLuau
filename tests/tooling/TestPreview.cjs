@@ -194,7 +194,12 @@ function FixtureSource(Operations) {
         }
         console.log('[CarbonLuau:PreviewPerformance] ' + JSON.stringify({Platform: Pack.Platform, Timings}));
         for (const [Bad, Code] of [['while true do end', 'PreviewDeadline'], ['local =', 'CompileError'], ['error("intentional")', 'RuntimeError'],
-            ['game:GetService("Players"):GetPlayers()', 'UnsupportedPreviewApi'], ['local Value = string.rep("x", 100 * 1024 * 1024)', 'PreviewMemory']]) {
+            ['game:GetService("Players"):GetPlayers()', 'UnsupportedPreviewApi'],
+            ['game:GetService("DataStoreService")', 'UnsupportedPreviewApi'],
+            ['game:GetService("DataStoreService"):GetDataStore("Preview"):GetAsync("Key", function() error("storage callback must not run") end)', 'UnsupportedPreviewApi'],
+            ['game:GetService("DataStoreService"):GetDataStore("Preview"):SetAsync("Key", true, function() error("storage callback must not run") end)', 'UnsupportedPreviewApi'],
+            ['game:GetService("DataStoreService"):GetDataStore("Preview"):RemoveAsync("Key", function() error("storage callback must not run") end)', 'UnsupportedPreviewApi'],
+            ['local Value = string.rep("x", 100 * 1024 * 1024)', 'PreviewMemory']]) {
             const Failed = await Request('preview', Params(Bad)).Promise;
             Assert.equal(Failed.Error?.Code, Code, JSON.stringify(Failed));
             const Recovery = await Request('preview', Params(Source)).Promise;

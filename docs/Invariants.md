@@ -147,7 +147,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D9 — approved shared-VM recovery | One automatic reconstruction allowance exists for the complete VM, governed by the canonical D9 detail below. | Requalify shared-VM reconstruction and operator rearm before addon public support |
 | D10 — approved admitted-operation and provisional-effect model | Admission, resource ownership, publication and deadline are orthogonal as specified in the canonical D10 detail below. | Requalify admitted-operation, cross-domain facade or provisional-effect changes |
 | D11 — resolved Phase 3 identity contract; domain binding added | Existing exact connection-token semantics remain, with host-backed facade validity now also bound to the owning domain lifetime; see D11 detail below. | Requalify host identity/adapter or domain-lifetime changes |
-| D12 — resolved addon and GUI-capable experimental identity | The additive addon, GUI Foundation 1 and implemented GUI Foundation 2 layout/image/scrolling surfaces are assigned `CarbonLuau 0.4.0-experimental`; package, API, ABI, provider protocol, schema and Luau identities remain separate. `TextBox` is not implemented. Authenticated-client GUI observations remain unqualified and non-gating. | Requalify affected public behavior and assign an explicit migration/version decision for breaks |
+| D12 — resolved experimental identities | Existing addon/GUI/Player surfaces retain their recorded introduction versions through `0.4.0-experimental`. Persistence Foundation 1 is assigned `0.5.0-experimental` by the 2026-09-23 user decision, without retroactive 0.4 availability. Package, API, ABI, provider protocol, schema and Luau identities remain separate. | Assignment is not qualification or publication; requalify affected behavior and preserve historical availability |
 | D13 — resolved inventory ownership/failure model and I12 scope; TakeItem/GiveItem implemented | Bounded mutation-free PREPARE, explicit COMMIT, physical VERIFY and pre-COMMIT false / verified true / post-COMMIT indeterminate remain unchanged. Returned resources remain under temporary responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [Reassessment](InventoryOwnershipFailureReassessment.md) retains the rationale. [M2](InventoryMutationM2Validation.md) retains G2–G5 evidence; its G1 conclusion is superseded. [Player-1F-B](PlayerInteractionFoundation1FB-Validation.md) records supported-host G1 requalification and GiveItem InventoryOnly; [Player-1F-A](PlayerInteractionFoundation1FA.md) retains qualified TakeItem. | Requalify host, bounds or adapter changes; preserve per-target limits |
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
@@ -156,7 +156,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
 | D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
-| D21 — resolved Persistence Foundation 1 architecture; approved durability/physical-budget amendments; private 1A PASS | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The [durability investigation](PersistenceDurabilityInvestigation.md) establishes the approved PERSIST/EXTRA implementation path; the [physical-budget adoption](PersistencePhysicalD21Amendment-Proposed.md) preserves hard logical/backend byte-extent bounds and makes 1,280 MiB an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) closes backend/codec/namespace/queue, WAL rejection and supported recovery gates within its recorded scope. 1B public facade and 1C Carbon integration remain separate, unimplemented work; no current version change |
+| D21 — resolved Persistence Foundation 1 architecture; private 1A PASS; public API assigned 0.5 | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The approved PERSIST/EXTRA and physical-budget amendments preserve hard logical/backend extent bounds; 1,280 MiB is an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) is closed within its scope. [1B](PersistenceFoundation1B.md) is implemented and qualified within recorded scope; 1C is NOT STARTED and combined closure remains separate. D12 experimental availability is not overall PASS or release approval. |
 
 ### Canonical detail for resolved decisions
 
@@ -334,9 +334,11 @@ until implementation/public qualification.
 
 Persistence is the next runtime foundation; architecture is resolved and the
 private Persistence-1A substrate is qualified within the scope recorded in
-[PersistenceFoundation1A.md](PersistenceFoundation1A.md). No public persistence API
-is implemented; 1B and 1C remain separate work.
-D20 remains independently HOST-PRIMITIVE-GATED / DEFERRED. The exact future
+[PersistenceFoundation1A.md](PersistenceFoundation1A.md). Separately authorized
+[1B](PersistenceFoundation1B.md) is implemented and qualified within recorded
+scope; 1C is NOT STARTED and combined closure remains separate work. D12 assigns
+this experimental development surface `0.5.0-experimental`, not retroactive
+0.4 availability. D20 remains independently HOST-PRIMITIVE-GATED / DEFERRED. The exact
 surface is `game:GetService("DataStoreService")`, synchronous disk-free
 `GetDataStore(StoreName)`, and `DataStore:GetAsync(Key, Callback)`,
 `SetAsync(Key, Value, Callback)`, `RemoveAsync(Key, Callback)`. Async means
@@ -406,10 +408,10 @@ does not claim an exact filesystem-wide or host-physical-footprint quota.
 proof gap remains recorded in [PersistenceFoundation1A.md](PersistenceFoundation1A.md).
 [PersistenceDurabilityInvestigation.md](PersistenceDurabilityInvestigation.md)
 establishes the built-in PERSIST/EXTRA path for implementation, not production
-qualification. Persistence-1A must still prove startup/recovery, codec, quotas,
-hard backend byte-extent bounds and qualified allocated-file operational-budget
-checks, worker containment, failure handling and platform integration
-before PASS. The [durability amendment](PersistenceD21Amendment-Proposed.md) was
+qualification. The subsequent [private 1A closure](PersistenceFoundation1A.md)
+records startup/recovery, codec, quotas, backend extent/allocation-budget checks,
+worker containment, failure handling and platform evidence within its stated
+scope; it is not public-service qualification. The [durability amendment](PersistenceD21Amendment-Proposed.md) was
 explicitly approved on 2026-09-23; this changes no runtime or release identity.
 The [physical-budget amendment](PersistencePhysicalD21Amendment-Proposed.md) was
 also explicitly approved and adopted on 2026-09-23, conditional on scoped final
@@ -420,7 +422,8 @@ breach; that is empirical evidence, not a theorem. The WAL startup rejection fix
 is mandatory, including page-1 restoration through hot-journal recovery, before
 unsupported conversion or WAL/SHM creation. Preserve supported hot-journal
 recovery. [1A](PersistenceFoundation1A.md) closes this fix and filesystem-profile
-qualification under resolved D21; it does not authorize beginning 1B.
+qualification under resolved D21; the later explicit 1B authorization is recorded
+in [PersistenceFoundation1B.md](PersistenceFoundation1B.md).
 
 One serial worker receives bounded bytes/scalars only. Per-namespace FIFO and fair
 global dispatch, reserved completion capacity, rate/count/byte/disk limits and a
@@ -436,11 +439,11 @@ never accumulate stuck replacement workers or call native code after unload.
 Foundation 1 excludes Update/transform, multikey transactions, key enumeration,
 queries, TTL, shared/cloud/remote stores, arbitrary files/SQL, automatic object
 persistence and Player/Entity serialization. Use existing D19 metadata ownership
-when implemented, with no tooling changes now. Persistence-1A is private backend/
+when implemented, with no editor/preview storage backend. Persistence-1A is private backend/
 codec/namespace supervision; 1B is public facade/admission; 1C is crash/lifecycle/
-quota/platform/public closure. Future 0.5.0-experimental is a release-planning
-candidate instead of waiting for Entity, not an assigned version. No production
-API, package/API/ABI/provider/schema/Luau identity changes by this adoption.
+quota/platform/public closure. The 2026-09-23 user decision assigns persistence
+to `0.5.0-experimental` under D12 independently of Entity. Original design adoption
+and private 1A changed no identity; this later assignment does not establish PASS.
 
 #### D2 — limits in addon-capable operation
 
@@ -519,6 +522,27 @@ Each host-observed connection still receives a monotonically increasing token, n
 A domain-bound facade retains bounded identity snapshots and opaque project tokens. Root/addon retirement invalidates host-backed Player/facade mutation through that domain even when the shared VM remains healthy. An ordinary retained Player/table value may keep a readable script-side snapshot, but mutation/permission operations through its retired owning facade fail closed. Complete VM retirement invalidates every domain. CarbonLuau reload destroys the VM and no new host instance accepts old host/domain/provider tokens.
 
 #### D12 — scripting and protocol identity
+
+On 2026-09-23 the user assigned Persistence Foundation 1 to scripting API
+`CarbonLuau 0.5.0-experimental`. Persistence is not retroactively available in
+`0.4.0-experimental`; existing declarations retain their explicit historical
+`SinceApi` values. The current development API identity advances to 0.5 so
+implemented persistence metadata can satisfy `SinceApi <= current`. Availability
+and qualification remain separate. After the recorded local 1B functional gates,
+the user authorized `Experimental` metadata instead of `WorkInProgress`; preview
+remains unavailable. 1B is implemented and qualified within its recorded scope,
+not an overall Persistence Foundation 1 PASS. 1C is NOT STARTED; combined closure,
+final-source CI and release authorization remain separate.
+
+Package `0.5.0` is the intended future persistence release identity. No package
+bump, tag or release is authorized by this assignment. The existing machinery
+permits API/package versions to differ, so development package/release/tag fields
+remain `0.4.0`/`v0.4.0`; [Release.md](Release.md) records the non-publishable
+development mapping. Provider protocol 1.2, addon schema 1 and the Luau pin remain
+unchanged. Native ABI changes only for an actual boundary change and is mapped
+independently, never inferred from the API version.
+
+The following records the earlier 0.4 assignment, not persistence availability.
 
 The gameplay facade introduced as `CarbonLuau 0.3.0-experimental` remains compatible. Foundation E assigns the additive addon-capable scripting identity `CarbonLuau 0.4.0-experimental`. GUI Foundation 1G keeps that unreleased identity and adds the complete D15 scripting surface without another version increment. GUI Foundation 2F keeps the same identity and adds the implemented D16 layout, typed-image and retained-scrolling subset. The identity includes package-qualified `require("@id")` and `require("@id/path")`, existing local `require("path")`, `addon.Id`/`addon.Version`, `addon:IsDependencyAvailable(id)` for a declared binding, inherently public `main`, and the domain-bound `Gui` service/value/object surface specified by D15 plus the implemented D16 subset. `TextBox` and `Submitted` are not part of the identity.
 

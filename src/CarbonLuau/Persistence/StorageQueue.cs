@@ -14,13 +14,19 @@ namespace Carbon.Plugins
             internal enum Operation : uint { Get=1, Set=2, Remove=3 }
             internal enum Error : uint { None, InvalidArgument, QuotaExceeded, StorageUnavailable, StorageBusy, StorageFull,
                 StorageCorrupt, FormatUnsupported, DeadlineExceeded, StorageError, Indeterminate }
+            internal sealed class Rejection : InvalidOperationException
+            {
+                internal readonly uint Status;
+                internal Rejection(uint Status) : base("storage submission rejected") { this.Status=Status; }
+            }
             internal sealed class Binding
             {
                 internal readonly ulong Host, Vm, Domain;
                 internal readonly string Package;
+                internal readonly string Namespace;
                 internal bool Alive=true;
-                internal Binding(ulong Host,ulong Vm,ulong Domain,string Package) { this.Host=Host; this.Vm=Vm; this.Domain=Domain; this.Package=Package; }
-                internal string Namespace { get { return Package==null ? "\0" : "\u0001"+Package; } }
+                internal Binding(ulong Host,ulong Vm,ulong Domain,string Package)
+                { this.Host=Host; this.Vm=Vm; this.Domain=Domain; this.Package=Package; Namespace=Package==null ? "\0" : "\u0001"+Package; }
             }
             internal sealed class Request
             {
@@ -31,6 +37,8 @@ namespace Carbon.Plugins
                 internal byte[] Envelope;
                 internal Error Error;
                 internal bool Found, NamespacePresent, Sent;
+                internal bool Released, HandedOff, CallbackDiscarded;
+                internal int Reservation=-1;
                 internal int State; // owner: 0 queued; supervisor: 1 in flight, 2 complete
             }
             private sealed class Bucket
@@ -44,10 +52,11 @@ namespace Carbon.Plugins
                 internal Bucket(string Namespace,ulong Now) { this.Namespace=Namespace; Updated=Now; }
             }
             private readonly int OwnerThread=Thread.CurrentThread.ManagedThreadId;
-            private readonly Dictionary<string,Bucket> Namespaces=new Dictionary<string,Bucket>(StringComparer.Ordinal);
-            private readonly List<Binding> Bindings=new List<Binding>();
-            private readonly List<Bucket> Rotation=new List<Bucket>();
+            private readonly Dictionary<string,Bucket> Namespaces=new Dictionary<string,Bucket>(256+258,StringComparer.Ordinal);
+            private readonly List<Binding> Bindings=new List<Binding>(258);
+            private readonly List<Bucket> Rotation=new List<Bucket>(256+258);
             private readonly Queue<Request> Completions=new Queue<Request>(128);
+            private readonly Request[] Reservations=new Request[128];
             private readonly Func<ulong> Clock;
             private readonly ulong Host;
             private ulong NextId, Updated;
@@ -61,6 +70,7 @@ namespace Carbon.Plugins
             private void Owner() { if (Thread.CurrentThread.ManagedThreadId!=OwnerThread) throw new InvalidOperationException("storage owner thread required"); }
             internal static void Count(ref long Value) { if (Value!=long.MaxValue) ++Value; }
             internal int PendingCount { get { Owner(); return Pending; } }
+            internal bool HasCompletions { get { Owner(); return Completions.Count!=0 && IntakeRemaining>0; } }
             internal Binding Bind(ulong Vm,ulong Domain,string Package)
             {
                 Owner(); if (Vm==0 || Domain==0 || Bindings.Count>=258) throw new InvalidOperationException("storage domain bound");
@@ -87,6 +97,8 @@ namespace Carbon.Plugins
             {
                 Owner(); if (!Bindings.Remove(Binding)) return; Binding.Alive=false;
                 --Namespaces[Binding.Namespace].Bindings;
+                foreach (Request Request in Reservations)
+                    if (Request!=null && Request.Owner==Binding && Request.HandedOff) { Release(Request); Count(ref Discarded); }
             }
             internal void RetireVm(ulong Vm)
             { Owner(); for (int Index=Bindings.Count-1; Index>=0; --Index) if (Bindings[Index].Vm==Vm) Retire(Bindings[Index]); }
@@ -102,19 +114,27 @@ namespace Carbon.Plugins
                 Owner();
                 // CommittedPublication is supplied only by the native authority
                 // boundary in 1B, using CanMutateHost; never a script argument.
-                if (!Ready || Binding==null || !Binding.Alive || Binding.Host!=Host || !Bindings.Contains(Binding) ||
+                if (!Ready) throw new Rejection(2);
+                if (Binding==null || !Binding.Alive || Binding.Host!=Host || !Bindings.Contains(Binding) ||
                     Binding.Vm!=AdmittedVm || Binding.Domain!=AdmittedDomain || !CommittedPublication || Route==0)
-                    throw new InvalidOperationException("storage authority/not-ready rejection");
+                    throw new Rejection(5);
                 if (Op<Operation.Get || Op>Operation.Remove) throw new ArgumentException("storage operation");
                 Name(Store,64); Name(Key,128);
                 if (Envelope==null || Envelope.Length>65536 || (Op==Operation.Set ? Envelope.Length<45 : Envelope.Length!=0)) throw new ArgumentException("storage envelope bound");
                 Bucket Bucket=Namespaces[Binding.Namespace]; ulong Now=Clock();
-                if (Bucket.Count>=8 || Pending>=128) { Count(ref QueueRejected); throw new InvalidOperationException("storage queue bound"); }
+                if (Bucket.Count>=8 || Pending>=128) { Count(ref QueueRejected); throw new Rejection(3); }
+                int Reservation=-1;
+                for (int Index=0; Index<Reservations.Length; ++Index) {
+                    Request Existing=Reservations[Index];
+                    if (Existing==null) { if (Reservation<0) Reservation=Index; }
+                    else if (Existing.Owner==Binding && Existing.Route==Route) throw new Rejection(5);
+                }
+                if (Reservation<0) throw new Rejection(3);
                 double Elapsed=(Now-Updated)/1000.0; Requests=Math.Min(256,Requests+Elapsed*200); Mutations=Math.Min(64,Mutations+Elapsed*50); Updated=Now;
                 Elapsed=(Now-Bucket.Updated)/1000.0; Bucket.Requests=Math.Min(32,Bucket.Requests+Elapsed*20); Bucket.Mutations=Math.Min(8,Bucket.Mutations+Elapsed*5); Bucket.Updated=Now;
                 bool Mutation=Op!=Operation.Get;
-                if (Requests<1 || Bucket.Requests<1 || (Mutation && (Mutations<1 || Bucket.Mutations<1))) { Count(ref RateRejected); throw new InvalidOperationException("storage rate bound"); }
-                var Result=new Request { Owner=Binding,Id=checked(NextId+1),Route=Route,Op=Op,End=checked(Now+5000) };
+                if (Requests<1 || Bucket.Requests<1 || (Mutation && (Mutations<1 || Bucket.Mutations<1))) { Count(ref RateRejected); throw new Rejection(4); }
+                var Result=new Request { Owner=Binding,Id=checked(NextId+1),Route=Route,Op=Op,End=checked(Now+5000),Reservation=Reservation };
                 using (var Buffer=new MemoryStream()) using (var Writer=new BinaryWriter(Buffer)) {
                     Writer.Write(new byte[] {67,76,80,81}); Writer.Write(1u); Writer.Write((uint)Op); Writer.Write(Result.Id);
                     Writer.Write(Host); Writer.Write(Binding.Vm); Writer.Write(Binding.Domain); Writer.Write(Route); Writer.Write(Result.End);
@@ -125,8 +145,11 @@ namespace Carbon.Plugins
                 if (Result.Frame.Length>StorageProcess.MaximumFrame-4) throw new ArgumentException("storage frame bound");
                 // Pre-reserve the full result capacity before acceptance.
                 Result.Envelope=new byte[65536];
+                // The namespace queue and global ledger have fixed reserved capacity.
+                // Nothing after this enqueue may allocate or fail before acceptance.
+                Bucket.Pending.Enqueue(Result); Reservations[Reservation]=Result;
                 NextId=Result.Id; --Requests; --Bucket.Requests; if (Mutation) { --Mutations; --Bucket.Mutations; }
-                ++Pending; ++Bucket.Count; Bucket.Pending.Enqueue(Result); return Result;
+                ++Pending; ++Bucket.Count; return Result;
             }
             internal Request Dispatch()
             {
@@ -148,10 +171,10 @@ namespace Carbon.Plugins
                     if (Cursor>=Rotation.Count) Cursor=0; Bucket Bucket=Rotation[Cursor++];
                     while (Bucket.Pending.Count!=0) {
                         Request Next=Bucket.Pending.Peek();
-                        if (!Next.Owner.Alive || Now>=Next.End) {
+                        if (!Next.Owner.Alive || Next.CallbackDiscarded || Now>=Next.End) {
                             if (Bookkeeping--==0) return null;
                             Bucket.Pending.Dequeue();
-                            if (!Next.Owner.Alive) { Release(Next); Count(ref Discarded); }
+                            if (!Next.Owner.Alive || Next.CallbackDiscarded) { Release(Next); Count(ref Discarded); }
                             else { Next.Error=Error.DeadlineExceeded; Next.State=2; Completions.Enqueue(Next); }
                             continue;
                         }
@@ -170,7 +193,7 @@ namespace Carbon.Plugins
                 while (Completions.Count!=0 && IntakeRemaining>0) {
                     --IntakeRemaining;
                     Request Value=Completions.Dequeue();
-                    if (!Value.Owner.Alive) { Release(Value); Count(ref Discarded); continue; }
+                    if (!Value.Owner.Alive || Value.CallbackDiscarded) { Release(Value); Count(ref Discarded); continue; }
                     if (Value.Error==Error.None) Count(ref Completed[(int)Value.Op-1]);
                     else if (Value.Error==Error.QuotaExceeded) Count(ref QuotaRejected);
                     else if (Value.Error==Error.DeadlineExceeded) Count(ref Expired);
@@ -181,8 +204,28 @@ namespace Carbon.Plugins
             }
             internal void Release(Request Request)
             {
-                Owner(); if (Request.Frame==null) return;
+                Owner(); if (Request.Released) return;
+                Request.Released=true;
+                if (Request.Reservation>=0 && Reservations[Request.Reservation]==Request) Reservations[Request.Reservation]=null;
                 --Pending; --Namespaces[Request.Owner.Namespace].Count; Request.Frame=null; Request.Envelope=null;
+            }
+            internal void Handoff(Request Request)
+            {
+                Owner(); if (Request.Released) return;
+                Request.HandedOff=true;
+                // Native now owns the result bytes. Keep only the counted route.
+                Request.Frame=null; Request.Envelope=null;
+            }
+            internal void ReleaseCallback(Binding Binding,ulong Route)
+            {
+                Owner();
+                foreach (Request Request in Reservations) if (Request!=null && Request.Owner==Binding && Request.Route==Route) {
+                    Request.CallbackDiscarded=true;
+                    if (Request.HandedOff) Release(Request);
+                    // An undispatched/in-flight record remains queue/supervisor-owned
+                    // until it is dropped/settled; never clear its worker buffers here.
+                    return;
+                }
             }
             internal void RetireAll()
             {
@@ -194,6 +237,8 @@ namespace Carbon.Plugins
                     while (Bucket.Pending.Count!=0) { Release(Bucket.Pending.Dequeue()); Count(ref Discarded); }
                 }
                 while (Completions.Count!=0) { Release(Completions.Dequeue()); Count(ref Discarded); }
+                foreach (Request Request in Reservations)
+                    if (Request!=null && Request.HandedOff) { Release(Request); Count(ref Discarded); }
                 // The sole in-flight reservation remains supervisor-owned until
                 // it publishes a terminal response or detached teardown ends.
             }

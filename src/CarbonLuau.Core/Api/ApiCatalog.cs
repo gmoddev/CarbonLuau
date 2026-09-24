@@ -10,6 +10,9 @@ namespace CarbonLuau.Core
     // Build-time export of explicit, implementation-owned declarations. Never workspace input.
     public static class ApiCatalog
     {
+        // Legacy declarations and GUI descriptors were introduced by the 0.4
+        // candidate (or their explicit earlier SinceApi), not by today's release.
+        private const string LegacyApiVersion = "0.4.0-experimental";
         public static JObject Build(string Bootstrap, JObject Release, string NativeBindings)
         {
             var Types = new SortedDictionary<string, JObject>(StringComparer.Ordinal);
@@ -37,13 +40,30 @@ namespace CarbonLuau.Core
                 string Type = (string)Declaration["Type"];
                 if (Type != null) {
                     if (Types.ContainsKey(Type)) throw new InvalidOperationException("duplicate API type: " + Type);
-                    Types.Add(Type, TypeRecord(Type, (string)Declaration["Kind"], (string)Declaration["Summary"], (string)Declaration["SinceApi"] ?? ApiVersion));
+                    Types.Add(Type, TypeRecord(Type, (string)Declaration["Kind"], (string)Declaration["Summary"], (string)Declaration["SinceApi"] ?? LegacyApiVersion));
+                    Types[Type]["Availability"]["Qualification"] = (string)Declaration["Qualification"] ?? "Experimental";
+                    Types[Type]["Preview"] = (string)Declaration["Preview"] ?? "Unavailable";
                     if (Declaration["Representation"] != null) Types[Type]["Representation"] = Declaration["Representation"].DeepClone();
+                    if (Declaration["TypeExpression"] != null) Types[Type]["TypeExpression"] = Declaration["TypeExpression"].DeepClone();
                     continue;
                 }
                 if ((string)Declaration["Owner"] == "$Gui") Templates.Add((string)Declaration["Name"], Declaration);
-                else Add(Members, MemberRecord(Declaration, ApiVersion));
+                else Add(Members, MemberRecord(Declaration, LegacyApiVersion));
             }
+            // Audit the explicit native persistence registration contract in both
+            // directions. Signatures still come only from owned annotations.
+            var StorageMethods = Members.Values.Where(Value => (string)Value["OwnerId"] == "DataStore" ||
+                (string)Value["OwnerId"] == "DataStoreService").ToArray();
+            var StorageRegistrations = new HashSet<string>(StringComparer.Ordinal);
+            const string RegistrationPattern = "lua_pushcfunction\\(State, Controlled<([A-Za-z_][A-Za-z0-9_]*)>, \"([^\"]+)\"\\); lua_setfield\\(State, -2, \"([^\"]+)\"\\);";
+            foreach (System.Text.RegularExpressions.Match Registration in System.Text.RegularExpressions.Regex.Matches(NativeBindings, RegistrationPattern)) {
+                string Name = Registration.Groups[1].Value;
+                if (Name != Registration.Groups[2].Value || Name != Registration.Groups[3].Value ||
+                    !StorageRegistrations.Add(Name) || StorageMethods.Count(Value => (string)Value["Name"] == Name) != 1)
+                    throw new InvalidOperationException("native persistence registration differs from API declaration: " + Name);
+            }
+            if (!StorageRegistrations.SetEquals(StorageMethods.Select(Value => (string)Value["Name"])))
+                throw new InvalidOperationException("native persistence API declaration lacks registration");
             // Declared public function tables must not acquire an unannotated function.
             string[] Tables = { "UDim", "UDim2", "Vector2", "Vector3", "Color3", "ImageSource", "PlayerMethods", "Players", "Commands", "GuiObjectMethods", "Gui", "Items", "Game" };
             foreach (string Line in Lines) {
@@ -58,7 +78,7 @@ namespace CarbonLuau.Core
                 .Select(Id => Gui.GuiSchema.GetMethod(Id).Name).Distinct().OrderBy(Name => Name, StringComparer.Ordinal)))
                 throw new InvalidOperationException("GUI method declarations differ from descriptor membership");
             foreach (var Class in Gui.GuiSchema.Classes) {
-                Types.Add(Class.Name, TypeRecord(Class.Name, "Class", "Retained " + Class.Name + ".", ApiVersion));
+                Types.Add(Class.Name, TypeRecord(Class.Name, "Class", "Retained " + Class.Name + ".", LegacyApiVersion));
                 if (Class.BaseClass.HasValue) Types[Class.Name]["BaseTypeId"] = Gui.GuiSchema.GetClass(Class.BaseClass.Value).Name;
                 foreach (var Use in Class.Properties) {
                     string ValueType = ValueName(Use.Descriptor.ValueKind);
@@ -66,28 +86,28 @@ namespace CarbonLuau.Core
                         ValueType = String.Join(" | ", Use.Descriptor.AllowedValues.Select(Value => "\"" + Value + "\""));
                     Add(Members, MemberRecord(new JObject { ["Owner"] = Class.Name, ["Name"] = Use.Descriptor.Name,
                         ["Kind"] = "Property", ["ValueType"] = ValueType, ["Writable"] = Use.Writable,
-                        ["Summary"] = "Retained " + Use.Descriptor.Name + ".", ["Qualification"] = "ClientUnqualified" }, ApiVersion));
+                        ["Summary"] = "Retained " + Use.Descriptor.Name + ".", ["Qualification"] = "ClientUnqualified" }, LegacyApiVersion));
                 }
                 foreach (var Id in Class.Methods) {
                     string Name = Gui.GuiSchema.GetMethod(Id).Name;
                     if (!Templates.ContainsKey(Name)) throw new InvalidOperationException("GUI method has no signature: " + Name);
                     JObject Value = (JObject)Templates[Name].DeepClone(); Value["Owner"] = Class.Name;
                     if (Name == "Clone") Value["Returns"] = new JArray(Class.Name);
-                    Add(Members, MemberRecord(Value, ApiVersion));
+                    Add(Members, MemberRecord(Value, LegacyApiVersion));
                 }
                 foreach (var Id in Class.Events) {
                     var Event = Gui.GuiSchema.GetEvent(Id);
                     Add(Members, MemberRecord(new JObject { ["Owner"] = Class.Name, ["Name"] = Event.Name,
                         ["Kind"] = "Signal", ["Args"] = new JArray { new JArray("Player", "Player") },
                         ["Returns"] = new JArray(), ["Summary"] = "Admitted activation with the exact Player connection.",
-                        ["Qualification"] = "ClientUnqualified" }, ApiVersion));
+                        ["Qualification"] = "ClientUnqualified" }, LegacyApiVersion));
                 }
             }
             foreach (var Value in Gui.GuiSchema.ValueTypes) {
-                Types.Add(Value.Name, TypeRecord(Value.Name, Value.Name == "GuiFont" ? "Enum" : "Value", "Immutable " + Value.Name + ".", ApiVersion));
+                Types.Add(Value.Name, TypeRecord(Value.Name, Value.Name == "GuiFont" ? "Enum" : "Value", "Immutable " + Value.Name + ".", LegacyApiVersion));
                 foreach (var Field in Value.Fields) Add(Members, MemberRecord(new JObject {
                     ["Owner"] = Value.Name, ["Name"] = Field.Name, ["Kind"] = "Property", ["Writable"] = false,
-                    ["ValueType"] = ValueName(Field.Kind), ["Summary"] = "Immutable " + Field.Name + "." }, ApiVersion));
+                    ["ValueType"] = ValueName(Field.Kind), ["Summary"] = "Immutable " + Field.Name + "." }, LegacyApiVersion));
                 foreach (var Constructor in Value.Constructors) {
                     JObject Member;
                     if (!Members.TryGetValue(Value.Name + "." + Constructor.Name, out Member))
@@ -124,6 +144,15 @@ namespace CarbonLuau.Core
             var Members = ((JArray)Catalog["Members"]).Cast<JObject>().ToDictionary(Value => (string)Value["Id"], StringComparer.Ordinal);
             if (Types.Count == 0 || Members.Count == 0) throw new InvalidOperationException("shipping catalog cannot be empty");
             foreach (var Type in Types.Values) {
+                bool Alias = (string)Type["Representation"] == "Alias";
+                if (Alias != (Type["TypeExpression"] != null)) throw new InvalidOperationException("invalid API alias representation");
+                if (Alias) {
+                    if ((string)Type["Kind"] != "Value" || Type["BaseTypeId"] != null ||
+                        String.IsNullOrWhiteSpace((string)Type["TypeExpression"]) ||
+                        Members.Values.Any(Member => (string)Member["OwnerId"] == (string)Type["Id"]))
+                        throw new InvalidOperationException("invalid API value alias");
+                    CheckType((string)Type["TypeExpression"], Types);
+                }
                 var Seen = new HashSet<string>(StringComparer.Ordinal); string Parent = (string)Type["BaseTypeId"];
                 while (Parent != null) {
                     if (!Types.ContainsKey(Parent) || !Seen.Add(Parent) || Parent == (string)Type["Id"]) throw new InvalidOperationException("invalid API inheritance");
@@ -148,6 +177,8 @@ namespace CarbonLuau.Core
             Version Current = Version.Parse(((string)Catalog["Api"]["Version"]).Split('-')[0]);
             foreach (var Value in Types.Values.Concat(Members.Values)) {
                 JObject Availability = (JObject)Value["Availability"];
+                if (!new[] { "Supported", "Experimental", "ClientUnqualified", "WorkInProgress", "Deferred", "Unavailable" }
+                    .Contains((string)Availability["Qualification"])) throw new InvalidOperationException("unknown API qualification");
                 if (!(bool)Availability["Implemented"] || Availability["RemovedSince"] != null ||
                     Version.Parse(((string)Availability["SinceApi"]).Split('-')[0]) > Current || String.IsNullOrWhiteSpace((string)Value["Summary"]))
                     throw new InvalidOperationException("inconsistent API availability");

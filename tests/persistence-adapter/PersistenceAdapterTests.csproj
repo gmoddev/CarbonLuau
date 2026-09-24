@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../src/CarbonLuau.Core/SharedSources.props" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/CarbonLuau/CarbonLuau.Main.cs" Link="Production/CarbonLuau.Main.cs" />
+    <Compile Include="../../src/CarbonLuau/CarbonLuau.Persistence.cs" Link="Production/CarbonLuau.Persistence.cs" />
+    <Compile Include="../../src/CarbonLuau/Runtime/*.cs" Link="Runtime/%(Filename)%(Extension)" />
+    <Compile Include="../../src/CarbonLuau/Scripts/*.cs" Link="Scripts/%(Filename)%(Extension)" />
+    <Compile Include="../../src/CarbonLuau/Facade/*.cs" Link="Facade/%(Filename)%(Extension)" />
+    <Compile Include="../../src/CarbonLuau/Addons/*.cs" Link="Addons/%(Filename)%(Extension)" />
+    <Compile Include="../../src/CarbonLuau/Gui/*.cs" Link="Gui/%(Filename)%(Extension)" />
+    <Compile Include="../../src/CarbonLuau/Persistence/*.cs" Link="Persistence/%(Filename)%(Extension)" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+</Project>

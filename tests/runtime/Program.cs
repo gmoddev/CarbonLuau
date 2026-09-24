@@ -9,6 +9,13 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length > 0 && Args[0] == "--persistence1b") {
+            try {
+                Check(Args.Length == 4, "usage: --persistence1b <native library> <storage worker> <fixture directory>");
+                PersistencePublicTests.RunStandalone(Args[1], Args[2], Args[3]);
+                return 0;
+            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:Persistence1B] FAIL: " + Error); return 1; }
+        }
         if (Args.Length == 2 && Args[0] == "--release-install") {
             try { ReleaseInstallTests.Run(Args[1]); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ReleaseInstall] FAIL: " + Error); return 1; }
@@ -144,7 +151,18 @@ internal static class Program
             using (var Native = new Runtime.NativeRuntime(Root))
             {
                 Check(Native.Revision == "c6b830185af962c82003f86784e2fe036357c830", "native Luau pin");
+                Check(Native.AbiVersion == 0x00010005, "native ABI 1.5");
                 PersistenceLifecycleTests.Run(Native);
+                // Containers may place /tmp on overlayfs while their qualified
+                // persistence volume is mounted elsewhere. This test-only root
+                // override selects fixture placement, never a backend exemption.
+                // Without it, Root follows Path.GetTempPath() (TMPDIR on Linux).
+                // The standalone --persistence1b command retains its explicit path.
+                string PersistenceFixtureRoot = Environment.GetEnvironmentVariable("CARBONLUAU_PERSISTENCE_TEST_ROOT");
+                if (String.IsNullOrWhiteSpace(PersistenceFixtureRoot)) PersistenceFixtureRoot = Root;
+                PersistencePublicTests.Run(Native,
+                    Path.Combine(Path.GetDirectoryName(Path.GetFullPath(Args[0])), Rid == "win-x64" ? "carbonluau_storage.exe" : "carbonluau_storage"),
+                    PersistenceFixtureRoot);
                 using (var OtherHostLifetime = new Runtime.NativeRuntime(Root))
                     Check(Native.HostLifetimeId > 0 && OtherHostLifetime.HostLifetimeId > Native.HostLifetimeId, "distinct CarbonLuau host lifetimes");
                 using (var Disabled = new Runtime.RuntimeHost(Native, new Runtime.RuntimeConfig { Enabled = false }))

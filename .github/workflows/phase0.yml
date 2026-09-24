@@ -42,6 +42,21 @@ jobs:
         run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
       - name: Compile .NET Framework runtime tests
         run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
+      - name: Compile Persistence-1B adapter teardown tests
+        timeout-minutes: 5
+        run: dotnet build tests/persistence-adapter/PersistenceAdapterTests.csproj -c Release -o dist/persistence-adapter -m:2
+      - name: Windows Persistence-1B adapter teardown gate
+        if: runner.os == 'Windows'
+        timeout-minutes: 3
+        shell: pwsh
+        run: |
+          ./dist/persistence-adapter/PersistenceAdapterTests.exe "$env:GITHUB_WORKSPACE/build/Release/carbonluau_native.dll" "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:RUNNER_TEMP/carbonluau-persistence-adapter"
+          if ($LASTEXITCODE -ne 0) { throw 'Persistence-1B adapter teardown gate failed' }
+      - name: Linux Persistence-1B adapter teardown gate
+        if: runner.os == 'Linux'
+        timeout-minutes: 3
+        shell: bash
+        run: mono dist/persistence-adapter/PersistenceAdapterTests.exe "$GITHUB_WORKSPACE/build/libcarbonluau_native.so" "$GITHUB_WORKSPACE/build/carbonluau_storage" "$RUNNER_TEMP/carbonluau-persistence-adapter"
       - name: Preview versus production GUI compiler (Windows)
         if: runner.os == 'Windows'
         run: ./dist/runtime/RuntimeTests.exe --preview-equivalence "$pwd"

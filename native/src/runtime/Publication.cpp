@@ -50,6 +50,7 @@ bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation)
 
 void RollbackPublication(PublicationScope& Scope)
 {
+    if (Scope.Storage) Scope.Storage->Alive = false;
     for (auto Item = Scope.Facades.rbegin(); Item != Scope.Facades.rend(); ++Item)
         ControlPublication(Scope.Runtime, **Item, 12);
     if (Scope.Runtime.State) {

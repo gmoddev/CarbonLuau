@@ -88,6 +88,17 @@ CARBONLUAU_EXPORT ClStatus cl_domain_addon(ClHandle Vm, ClHandle Domain, const c
 CARBONLUAU_EXPORT ClStatus cl_domain_public_module(ClHandle Vm, ClHandle Domain, const char* Name);
 CARBONLUAU_EXPORT ClStatus cl_domain_dependency(ClHandle Vm, ClHandle Domain, const char* PackageId,
     ClHandle TargetDomain);
+/* ABI 1.5. Private persistence completion ingress, owner thread only, no VM
+   execution/reentry. Envelope is borrowed for this call and copied on success.
+   Exact live VM generation/domain/route must match an accepted reserved slot.
+   Error is the private format error number; Found is 0/1. Length <= 65536.
+   CL_INVALID_ARGUMENT rejects stale/duplicate/malformed ingress without delivery;
+   copy allocation failure retires the VM and returns CL_MEMORY_LIMIT, no replay.
+   Host ops 31/32 exclusively use CLPB/CLPR little-endian binary frames (not the
+   ABI 1.2 string-field protocol). No existing export or POD layout changes. */
+CARBONLUAU_EXPORT ClStatus cl_domain_storage_completion(ClHandle Vm, ClHandle Domain,
+    uint64_t VmGeneration, uint64_t Route, uint32_t Error, uint32_t Found,
+    const uint8_t* Envelope, uint32_t Length);
 #ifdef __cplusplus
 }
 #endif

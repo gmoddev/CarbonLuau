@@ -43,6 +43,11 @@ namespace Carbon.Plugins
                     AdmitDomainEvent = Loader.Bind<DomainEventDelegate>("cl_domain_event");
                 }
                 if ((ulong)Session.DomainLifetimeId != Domain) throw new FacadeException("facade/domain lifetime mismatch");
+                if (Session.StorageBinding!=null && (Session.Storage!=Storage || Session.StorageBinding.Host!=(ulong)HostLifetimeId ||
+                    Session.StorageBinding.Vm!=(ulong)Session.VmGenerationId || Session.StorageBinding.Domain!=Domain))
+                    throw new FacadeException("storage facade lifetime mismatch");
+                BindStorage();
+                Session.StorageVm=Vm;
                 DomainFacadeRoots.Add(Domain, Session);
                 InsideNative = true;
                 try { Require(InstallDomainFacade(Vm, Domain, Session.Callback), "domain facade"); }
@@ -61,4 +66,3 @@ namespace Carbon.Plugins
         }
     }
 }
-

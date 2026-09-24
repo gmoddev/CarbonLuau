@@ -64,8 +64,14 @@ Authenticated real-client behavior and Shockbyte full-runtime behavior remain ou
 
 ## Contributing
 
-Next runtime design: [Persistence Foundation 1](docs/PersistenceFoundation1.md)
-(architecture only; no storage API shipped). [World/Entity Foundation 1](docs/WorldEntityFoundation1.md)
+Current runtime work: [Persistence Foundation 1B](docs/PersistenceFoundation1B.md)
+is implemented and qualified within its recorded scope, with experimental
+development API `0.5.0-experimental`; Persistence-1C is NOT STARTED and remains
+separate combined closure, not a release authorization;
+it is not part of the published 0.4 API. Its [author guide](docs/api/Persistence.md)
+and examples target the new bindings. The [canonical design](docs/PersistenceFoundation1.md)
+and qualified private 1A substrate remain distinct from 1B evidence.
+[World/Entity Foundation 1](docs/WorldEntityFoundation1.md)
 is host-primitive-gated/deferred; Entity-1A remains blocked by the
 [exact-lifetime proof gap](docs/WorldEntityLifetimeInvestigation.md).
 

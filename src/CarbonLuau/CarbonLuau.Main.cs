@@ -194,8 +194,8 @@ namespace Carbon.Plugins
                     }
                     RequestDrain();
                 } catch (Exception) {
+                    ReleaseNative();
                     PrintError("[CarbonLuau:Scheduler] Drain stopped after host-context failure; reload the plugin.");
-                    Stopping = true;
                 } finally { if (TeardownPending) ReleaseNative(); }
             });
         }

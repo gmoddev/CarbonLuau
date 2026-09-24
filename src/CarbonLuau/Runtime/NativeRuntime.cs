@@ -99,6 +99,7 @@ namespace Carbon.Plugins
                 if (Storage!=null) Storage.RetireVm(StorageVm);
                 FacadeRoots.Remove(Handle);
                 Vms.Remove(Handle);
+                if (StorageFaultedVm==Handle) StorageFaultedVm=0;
                 DestroyedVmCount++;
             }
             public VmInfo Info(ulong Handle)
@@ -106,6 +107,7 @@ namespace Carbon.Plugins
                 CheckOwner();
                 VmInfo Value;
                 Require(ReadInfo(Handle, out Value));
+                if (StorageFaultedVm==Handle) Value.Ready=0;
                 return Value;
             }
             public VmGenerationInfo GenerationInfo(ulong Handle)

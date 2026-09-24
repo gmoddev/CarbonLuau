@@ -16,7 +16,7 @@ Host = Path(os.environ.get("CARBONLUAU_TOOLING_HOST", Root / "src/CarbonLuau.Too
 Command = ["dotnet", str(Host), "--stdio"] if Host.suffix == ".dll" else [str(Host), "--stdio"]
 Platform = {"win32": "win32", "linux": "linux", "darwin": "darwin"}[sys.platform] + "-" + ("arm64" if os.uname().machine == "arm64" else "x64" if sys.platform != "win32" else "x64") if sys.platform != "win32" else "win32-x64"
 Protocol = {"Name": "CarbonLuau.Tooling", "Major": 1, "Minor": 0}
-Api = "0.4.0-experimental"
+Api = json.loads((Root / "release.json").read_text())["apiVersion"]
 Pack = json.loads((Root / "tooling/language-server.json").read_text())["PackVersion"]
 if sys.platform == "win32":
     ctypes.windll.kernel32.SetErrorMode(0x8003)

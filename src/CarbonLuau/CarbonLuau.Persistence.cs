@@ -20,12 +20,18 @@ namespace Carbon.Plugins
                 PrintWarning("[CarbonLuau:Persistence] Storage unavailable; scripting runtime remains independent.");
             }
         }
-        // No VM entry or I/O. Foundation 1A accepts no public Luau requests.
+        // Owner-thread data intake only; RequestDrain schedules later Luau entry.
         private void OnTick()
         {
-            if (Stopping || Persistence==null) return;
-            try { Persistence.Tick(); }
-            catch (Exception) { StopPersistence(); PrintWarning("[CarbonLuau:Persistence] Storage intake stopped after an internal failure."); }
+            if (Stopping || Persistence==null || Native==null || (Host!=null && Host.Busy)) return;
+            try { Native.CheckOwner(); Persistence.Tick(); Native.PumpStorage(); RequestDrain(); }
+            catch (Exception) {
+                // An unexpected owner-thread intake/scheduling failure can leave
+                // accepted native callbacks alive. Use normal host teardown;
+                // controlled worker failures remain ordinary completion results.
+                ReleaseNative();
+                PrintError("[CarbonLuau:Persistence] Scripting stopped after an internal intake failure; reload the CarbonLuau plugin.");
+            }
         }
         private void StopPersistence()
         {
