@@ -44,6 +44,18 @@
   "@carbonluau/globaltype/Connection.Disconnect": {
     "documentation": "Disconnect this subscription."
   },
+  "@carbonluau/globaltype/DataStore.GetAsync": {
+    "documentation": "Committed-only non-yielding read submission. Later callback receives fresh value/nil, nil/nil for absence, or nil/ErrorCode. Immediate return means acceptance only; rejected calls owe no callback. D21 keys: 1..128 UTF-8 bytes; 8 pending/namespace, 128 globally; 5-second request deadline. Private owner required; retirement suppresses delivery."
+  },
+  "@carbonluau/globaltype/DataStore.RemoveAsync": {
+    "documentation": "Committed-only irreversible removal. Later true/nil means removed, false/nil means absent; nil/ErrorCode means failure, possibly Indeterminate. Immediate return means acceptance only; no rollback, replay or guaranteed delivery after retirement."
+  },
+  "@carbonluau/globaltype/DataStore.SetAsync": {
+    "documentation": "Committed-only irreversible write; bounded snapshot before acceptance. Later true/nil follows durable commit and validated response; nil/ErrorCode is failure. Indeterminate may have committed. No rollback or automatic replay; stale callbacks are suppressed."
+  },
+  "@carbonluau/globaltype/DataStoreService.GetDataStore": {
+    "documentation": "Disk-free private store acquisition, allowed during publication; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied."
+  },
   "@carbonluau/globaltype/Frame.AnchorPoint": {
     "documentation": "Retained AnchorPoint."
   },

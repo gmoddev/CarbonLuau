@@ -37,6 +37,12 @@ namespace CarbonLuau.Core
             ISet<string> Written, StringBuilder Result)
         {
             if (!Written.Add(Name)) return;
+            if ((string)Types[Name]["Availability"]["Qualification"] == "WorkInProgress")
+                Result.Append("-- WORK IN PROGRESS / UNQUALIFIED; introduction version is not qualification.\n");
+            if ((string)Types[Name]["Representation"] == "Alias") {
+                Result.Append("export type ").Append(Name).Append(" = ").Append((string)Types[Name]["TypeExpression"]).Append("\n\n");
+                return;
+            }
             string Base = (string)Types[Name]["BaseTypeId"];
             if (Base != null) WriteType(Base, Types, Members, Written, Result);
             if ((string)Types[Name]["Representation"] == "Record") {

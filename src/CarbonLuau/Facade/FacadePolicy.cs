@@ -11,7 +11,7 @@ namespace Carbon.Plugins
     {
         public static class FacadePolicy
         {
-            public const string ApiName = "CarbonLuau", ApiVersion = "0.4.0-experimental";
+            public const string ApiName = "CarbonLuau", ApiVersion = "0.5.0-experimental";
             public const int Players = 1024, ListenersPerSignal = 128, Listeners = 256, Commands = 64, PendingEvents = 256;
             public const int CommandBytes = 32, PermissionBytes = 128, DescriptionBytes = 256;
             public const int MessageBytes = 1024, Arguments = 16, ArgumentBytes = 512, TotalArgumentBytes = 4096;

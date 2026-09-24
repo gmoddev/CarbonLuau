@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstdint>
 #include <cstring>
+#include <new>
 #include <string>
 #include <thread>
 #include <vector>
@@ -78,10 +79,17 @@ int main()
     std::vector<uint8_t> Response = CompilerProtocol::Response(Nonce + 1, 0, "payload");
     WriteAll(Response.data(), Response.size());
 #elif CARBONLUAU_COMPILER_FIXTURE == 8
-    std::vector<uint8_t> Memory(300u * 1024u * 1024u);
-    for (size_t Offset = 0; Offset < Memory.size(); Offset += 4096) Memory[Offset] = uint8_t(Offset);
-    std::vector<uint8_t> Response = CompilerProtocol::Response(Nonce, 0, "unexpected memory-limit escape");
-    WriteAll(Response.data(), Response.size());
+    try {
+        std::vector<uint8_t> Memory(300u * 1024u * 1024u);
+        for (size_t Offset = 0; Offset < Memory.size(); Offset += 4096) Memory[Offset] = uint8_t(Offset);
+        std::vector<uint8_t> Response = CompilerProtocol::Response(Nonce, 0, "unexpected memory-limit escape");
+        WriteAll(Response.data(), Response.size());
+    } catch (const std::bad_alloc&) {
+        // Allocation refusal is the expected OS-limit outcome. Exit explicitly
+        // instead of letting Windows crash reporting delay an uncaught exception
+        // until the independent compiler deadline fires.
+        return 42;
+    }
 #endif
     return 0;
 }

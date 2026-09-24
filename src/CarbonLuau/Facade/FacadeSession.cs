@@ -135,7 +135,7 @@ namespace Carbon.Plugins
                 }
             }
         }
-        public sealed class FacadeSession
+        public sealed partial class FacadeSession
         {
             public readonly long VmGenerationId, DomainLifetimeId;
             public long Generation { get { return DomainLifetimeId; } }
@@ -419,6 +419,7 @@ namespace Carbon.Plugins
             private uint HostCall(ulong ExpectedDomainLifetime, uint Code, IntPtr Request, uint Length, IntPtr Response, uint Capacity, out uint Written)
             {
                 Written = 0;
+                if (Code==31 || Code==32) return StorageCall(ExpectedDomainLifetime,Code,Request,Length);
                 try {
                     World.Players.CheckOwner();
                     if (Disposed || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;

@@ -27,10 +27,14 @@ namespace Carbon.Plugins
             public long Generation { get { return Current == null ? 0 : Current.DomainLifetimeId; } }
             public long VmGenerationId { get { return Current == null ? 0 : Current.VmGenerationId; } }
             public bool Ready { get { return !Disposed && !StopRequested && Vm != null && Current != null && Current.Alive && Vm.Info.Ready != 0; } }
-            public bool HasWork { get { return Ready && (Vm.Scheduler.Queued != 0 || (Facade != null && Facade.HasWork)); } }
+            private bool StorageWork { get { return Native.Storage!=null && Native.Storage.HasCompletions; } }
+            private bool NeedsRecovery { get { return !Disposed && !StopRequested && Vm!=null && Current!=null && Vm.Alive && Vm.Info.Ready==0; } }
+            public bool HasWork { get { return NeedsRecovery || (Ready && (StorageWork || Vm.Scheduler.Queued != 0 || (Facade != null && Facade.HasWork))); } }
             public bool HasReadyWork {
                 get {
+                    if (NeedsRecovery) return true;
                     if (!Ready) return false;
+                    if (StorageWork) return true;
                     if (Facade != null && Facade.HasWork) return true;
                     SchedulerInfo Info = Vm.Scheduler;
                     return Info.Queued != 0 && Info.NextDueNs <= Info.NowNs;
@@ -39,7 +43,7 @@ namespace Carbon.Plugins
             internal bool TryGetNextDue(out ulong DueNs, out double DelaySeconds)
             {
                 DueNs = 0; DelaySeconds = 0;
-                if (!Ready || (Facade != null && Facade.HasWork)) return false;
+                if (!Ready || StorageWork || (Facade != null && Facade.HasWork)) return false;
                 SchedulerInfo Info = Vm.Scheduler;
                 if (Info.Queued == 0 || Info.NextDueNs == 0 || Info.NextDueNs <= Info.NowNs) return false;
                 DueNs = Info.NextDueNs;
@@ -153,10 +157,13 @@ namespace Carbon.Plugins
             {
                 Native.CheckOwner();
                 var Results = new List<ExecutionResult>();
-                if (!Ready || Draining) return Results;
+                if (Disposed || StopRequested || Busy || Draining || Vm==null || Current==null) return Results;
                 Draining = true;
                 try {
                     var Watch = Stopwatch.StartNew();
+                    Native.PumpStorage();
+                    if (Vm.Info.Ready == 0) { var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery); return Results; }
+                    if (!Ready) return Results;
                     FlushDomainFacades(Watch);
                     if (Vm.Info.Ready == 0) { var Recovery = Recover(); if (Recovery != null) Results.Add(Recovery); return Results; }
                     SchedulerInfo Cutoff = Vm.Scheduler;

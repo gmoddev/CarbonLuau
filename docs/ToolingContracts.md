@@ -19,6 +19,14 @@ Properties carry ValueType and Writable. Every declaration has documentation,
 availability (SinceApi, optional DeprecatedSince/RemovedSince, Implemented,
 Qualification) and Preview behavior. Qualification is distinct from availability:
 an implemented client-unqualified GUI member still exists in the runtime.
+Schema 1 can represent `WorkInProgress` for implemented bindings whose applicable
+qualification is unfinished. Persistence now uses `Experimental` after scoped 1B
+qualification; 1C combined closure remains separate. This changes neither SinceApi
+ordering nor preview support. A Value with `Representation: Alias` carries a required
+`TypeExpression`, with no base type or members; the generator emits that Luau
+alias verbatim after type-reference validation. This represents the recursive
+PersistedValue contract without inventing userdata or weakening it to any.
+Runtime validation still enforces finite numbers, table shape, UTF-8 and bounds.
 
 Foundation A's catalog loader must additionally enforce uniqueness of IDs,
 OwnerId/BaseTypeId references, acyclic inheritance, valid type references, kind

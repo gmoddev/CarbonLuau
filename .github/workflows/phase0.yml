@@ -27,10 +27,36 @@ jobs:
         run: |
           ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_native.dll
           ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_compiler.exe
+          ./tools/Test-WindowsImports.ps1 -Library build/Release/carbonluau_storage.exe
+      - name: Compile private persistence transport tests
+        run: dotnet build tests/persistence/ManagedTests.csproj -c Release -o dist/persistence
+      - name: Windows private worker and lost-ack tests
+        if: runner.os == 'Windows'
+        working-directory: dist/persistence
+        run: ./ManagedTests.exe --utf8-input "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureLostAck.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureHang.exe"
+      - name: Linux private worker and lost-ack tests
+        if: runner.os == 'Linux'
+        working-directory: dist/persistence
+        run: mono ManagedTests.exe "$GITHUB_WORKSPACE/build/carbonluau_storage" "$GITHUB_WORKSPACE/build/StorageFixtureLostAck" "$GITHUB_WORKSPACE/build/StorageFixtureHang"
       - name: Compile .NET Framework loader tests
         run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
       - name: Compile .NET Framework runtime tests
         run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
+      - name: Compile Persistence-1B adapter teardown tests
+        timeout-minutes: 5
+        run: dotnet build tests/persistence-adapter/PersistenceAdapterTests.csproj -c Release -o dist/persistence-adapter -m:2
+      - name: Windows Persistence-1B adapter teardown gate
+        if: runner.os == 'Windows'
+        timeout-minutes: 3
+        shell: pwsh
+        run: |
+          ./dist/persistence-adapter/PersistenceAdapterTests.exe "$env:GITHUB_WORKSPACE/build/Release/carbonluau_native.dll" "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:RUNNER_TEMP/carbonluau-persistence-adapter"
+          if ($LASTEXITCODE -ne 0) { throw 'Persistence-1B adapter teardown gate failed' }
+      - name: Linux Persistence-1B adapter teardown gate
+        if: runner.os == 'Linux'
+        timeout-minutes: 3
+        shell: bash
+        run: mono dist/persistence-adapter/PersistenceAdapterTests.exe "$GITHUB_WORKSPACE/build/libcarbonluau_native.so" "$GITHUB_WORKSPACE/build/carbonluau_storage" "$RUNNER_TEMP/carbonluau-persistence-adapter"
       - name: Preview versus production GUI compiler (Windows)
         if: runner.os == 'Windows'
         run: ./dist/runtime/RuntimeTests.exe --preview-equivalence "$pwd"
@@ -43,6 +69,18 @@ jobs:
       - name: Linux runtime tests
         if: runner.os == 'Linux'
         run: mono dist/runtime/RuntimeTests.exe "$PWD/build/libcarbonluau_native.so" "$PWD/build/libWrongAbi.so" "$PWD/build/libLegacyProbe.so" "$PWD" "$PWD/build/carbonluau_compiler"
+      - name: Windows Persistence-1C combined lifecycle and scale
+        if: runner.os == 'Windows'
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          ./dist/runtime/RuntimeTests.exe --persistence1c "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_storage.exe" "$env:RUNNER_TEMP/carbonluau-persistence1c"
+          if ($LASTEXITCODE -ne 0) { throw 'Persistence-1C closure fixture failed' }
+      - name: Linux Persistence-1C combined lifecycle and scale
+        if: runner.os == 'Linux'
+        timeout-minutes: 10
+        shell: bash
+        run: mono dist/runtime/RuntimeTests.exe --persistence1c "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_storage" "$RUNNER_TEMP/carbonluau-persistence1c"
       - name: Windows loader tests
         if: runner.os == 'Windows'
         run: ./dist/tests/LoaderTests.exe "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/WrongProbe.dll" "$pwd/build/Release/MissingSymbol.dll"
@@ -69,6 +107,11 @@ jobs:
           if ($IsWindows) { ./dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.4.0-win-x64.zip" }
           else { mono dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.4.0-linux-x64.zip" }
           if ($LASTEXITCODE -ne 0) { throw 'Clean bundle installation failed' }
+      - name: Clean extracted private storage worker and import audit
+        shell: pwsh
+        run: |
+          $Rid = if ($IsWindows) { 'win-x64' } else { 'linux-x64' }
+          ./tools/Test-PersistencePackaging.ps1 -Bundle "dist/release/CarbonLuau-v0.4.0-$Rid.zip" -ManagedTests dist/persistence/ManagedTests.exe -WorkDirectory $env:RUNNER_TEMP
       - uses: actions/upload-artifact@v4
         with:
           name: carbonluau-${{ matrix.os }}
@@ -79,8 +122,10 @@ jobs:
             dist/examples/
             build/Release/carbonluau_native.dll
             build/Release/carbonluau_compiler.exe
+            build/Release/carbonluau_storage.exe
             build/libcarbonluau_native.so
             build/carbonluau_compiler
+            build/carbonluau_storage
       - name: Upload release candidate
         uses: actions/upload-artifact@v4
         with:

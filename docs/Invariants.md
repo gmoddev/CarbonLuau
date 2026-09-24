@@ -147,7 +147,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D9 — approved shared-VM recovery | One automatic reconstruction allowance exists for the complete VM, governed by the canonical D9 detail below. | Requalify shared-VM reconstruction and operator rearm before addon public support |
 | D10 — approved admitted-operation and provisional-effect model | Admission, resource ownership, publication and deadline are orthogonal as specified in the canonical D10 detail below. | Requalify admitted-operation, cross-domain facade or provisional-effect changes |
 | D11 — resolved Phase 3 identity contract; domain binding added | Existing exact connection-token semantics remain, with host-backed facade validity now also bound to the owning domain lifetime; see D11 detail below. | Requalify host identity/adapter or domain-lifetime changes |
-| D12 — resolved addon and GUI-capable experimental identity | The additive addon, GUI Foundation 1 and implemented GUI Foundation 2 layout/image/scrolling surfaces are assigned `CarbonLuau 0.4.0-experimental`; package, API, ABI, provider protocol, schema and Luau identities remain separate. `TextBox` is not implemented. Authenticated-client GUI observations remain unqualified and non-gating. | Requalify affected public behavior and assign an explicit migration/version decision for breaks |
+| D12 — resolved experimental identities | Existing addon/GUI/Player surfaces retain their recorded introduction versions through `0.4.0-experimental`. Persistence Foundation 1 is assigned `0.5.0-experimental` by the 2026-09-23 user decision, without retroactive 0.4 availability. Package, API, ABI, provider protocol, schema and Luau identities remain separate. | Assignment is not qualification or publication; requalify affected behavior and preserve historical availability |
 | D13 — resolved inventory ownership/failure model and I12 scope; TakeItem/GiveItem implemented | Bounded mutation-free PREPARE, explicit COMMIT, physical VERIFY and pre-COMMIT false / verified true / post-COMMIT indeterminate remain unchanged. Returned resources remain under temporary responsibility; inaccessible resources never returned by a supported failing host call remain in the host failure domain. [Reassessment](InventoryOwnershipFailureReassessment.md) retains the rationale. [M2](InventoryMutationM2Validation.md) retains G2–G5 evidence; its G1 conclusion is superseded. [Player-1F-B](PlayerInteractionFoundation1FB-Validation.md) records supported-host G1 requalification and GiveItem InventoryOnly; [Player-1F-A](PlayerInteractionFoundation1FA.md) retains qualified TakeItem. | Requalify host, bounds or adapter changes; preserve per-target limits |
 | D14 — resolved experimental addon package/dependency/provider lifecycle | Stable package identity, lifecycle states, exact dependency bindings, provider ownership, immutable snapshots and bounded parser/registry limits are specified below and qualified by Foundation E. | Requalify lifecycle, parser, limits or protocol changes before expanding support |
 | D15 - resolved GUI Foundation 1 retained presentation model; qualified for experimental public release through 1G | The retained GUI authority, ownership, presentation, interaction, publication, reconciliation, recovery and scope rules are specified below. [GuiFoundation1.md](GuiFoundation1.md) owns supporting rationale and implementation guidance; Foundations 1A through 1F record implementation/runtime evidence and [GuiFoundation1G.md](GuiFoundation1G.md) records public documentation, examples, final available qualification and the identity decision. Authenticated-client visual, cursor, click-receipt and reconciliation observations remain explicitly unqualified but no longer gate the experimental identity. | Requalify affected GUI behavior; do not claim unobserved client behavior without authenticated-client evidence |
@@ -156,6 +156,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
 | D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
+| D21 — resolved Persistence Foundation 1 architecture; private 1A PASS; public API assigned 0.5 | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The approved PERSIST/EXTRA and physical-budget amendments preserve hard logical/backend extent bounds; 1,280 MiB is an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) and [public 1B](PersistenceFoundation1B.md) retain their scoped evidence. [1C](PersistenceFoundation1C.md) owns combined closure and the exact final verdict. D12 experimental availability is not package publication approval. |
 
 ### Canonical detail for resolved decisions
 
@@ -329,6 +330,122 @@ future release-planning candidate if Entity-1 closes, but no such identity is as
 until implementation/public qualification.
 
 
+#### D21 — Persistence Foundation 1
+
+Persistence is the next runtime foundation; architecture is resolved and the
+private Persistence-1A substrate is qualified within the scope recorded in
+[PersistenceFoundation1A.md](PersistenceFoundation1A.md). Separately authorized
+[1B](PersistenceFoundation1B.md) is implemented and qualified within recorded
+scope; [1C](PersistenceFoundation1C.md) owns combined closure and its exact final
+verdict without changing D21 semantics. D12 assigns
+this experimental development surface `0.5.0-experimental`, not retroactive
+0.4 availability. D20 remains independently HOST-PRIMITIVE-GATED / DEFERRED. The exact
+surface is `game:GetService("DataStoreService")`, synchronous disk-free
+`GetDataStore(StoreName)`, and `DataStore:GetAsync(Key, Callback)`,
+`SetAsync(Key, Value, Callback)`, `RemoveAsync(Key, Callback)`. Async means
+non-yielding bounded submission and a separate later owner-thread callback,
+not a suspended Luau frame. Immediate return acknowledges acceptance only.
+[PersistenceFoundation1.md](PersistenceFoundation1.md) owns the detailed
+callback results/errors, logical names, value format, hard design limits and the
+qualified allocated-file operational safety budget.
+
+Persistent namespaces are host-selected Root or Addon/canonical stable PackageId,
+not provider/version/domain/VM identity. Data survives replacement, retirement,
+reload and restart; facade/callback authority does not. Reusing a stable package ID
+intentionally resumes its data under the installed-provider trust model. Store
+calls require current admitted domain == facade ResourceOwner. Sharing a facade
+or invoking a foreign exported closure does not transfer private namespace
+authority or switch D10's admission. No cross-addon shared store is approved.
+
+GetDataStore may participate in provisional facade publication without I/O.
+All async operations, including reads, require an existing nonprovisional admission
+and **no active publication scope**, reusing the authoritative mutation predicate.
+Writes are irreversible, never journaled as candidate publication or replayed.
+Reads are conservatively committed-only because Foundation 1 introduces no
+asynchronous initialization or yielding module model. Deferred work may submit
+only after commit; failed candidates/modules never dispatch persistence work.
+
+Values are bounded snapshots of booleans, finite binary64 numbers, UTF-8 strings,
+dense arrays and string-keyed maps. Nil means absence, not a stored value. Reject
+cycles, metatables, functions, threads, userdata and host objects. Preserve finite
+double bits without coercion; Get returns fresh ordinary values. Snapshot/decoding
+must check byte/depth/count/allocation/deadline bounds and execute no metamethods.
+Names/keys are exact validated logical identifiers, never filesystem paths.
+
+Select one private pinned SQLite database in a supervised storage helper, with
+fixed parameterized operations, rollback PERSIST journaling and EXTRA
+synchronization verified against qualified local Windows/Linux VFS/filesystem
+behavior. Each connection must configure and verify these settings before Ready.
+Commit uses SQLite's retained-journal invalidation and synchronization, not
+journal-file deletion. Do not use Carbon/Oxide direct JSON writes or its generic
+SQLite queue as evidence of this contract. One transaction mutates a key and
+durable quota accounting atomically. Success follows checked SQLite COMMIT after
+its ordered journal, database and journal-commit-marker synchronization, and a
+validated worker result; it never means queue or memory acceptance. Successfully
+acknowledged transactions survive ordinary worker/server-process crashes when
+reopening the same intact storage under the qualified filesystem/device
+assumptions. OS-crash and power-loss durability are conditional on the complete
+OS/VFS/filesystem/virtualization/device stack honoring synchronization, ordering
+and namespace recovery; do not claim tested physical power-loss survival without
+such testing. Hardware/OS dishonesty and catastrophic or external storage damage
+are not covered. Uncertain post-dispatch mutations report Indeterminate, never
+rollback/exactly-once/retry. Corruption or unsupported format fails closed and
+preserves storage, including journals, for operator recovery, never defaults or
+overwrites it. Retained journals count toward persistence resource accounting and
+must not be manually deleted or zeroed during startup or shutdown. CarbonLuau
+enforces hard logical quotas and qualified backend file-byte extent bounds. The
+1,280 MiB allocated-file budget is a filesystem-qualified operational envelope
+checked at startup, before dispatching a database operation and after its
+completion; it is not an application-enforced never-exceeded physical disk quota.
+Measurements cannot guarantee that an in-flight filesystem operation never
+temporarily exceeds that envelope. On an observed budget violation, admit no
+further work and preserve storage; a mutation whose commit outcome is uncertain
+remains Indeterminate and is never replayed. Filesystem/device metadata,
+reservations, allocation units and storage-stack overhead remain
+filesystem-dependent, not bounded by a promise about database EOF. Foundation 1
+does not claim an exact filesystem-wide or host-physical-footprint quota.
+
+**Current qualification gate:** the historical DELETE/EXTRA Windows directory-sync
+proof gap remains recorded in [PersistenceFoundation1A.md](PersistenceFoundation1A.md).
+[PersistenceDurabilityInvestigation.md](PersistenceDurabilityInvestigation.md)
+establishes the built-in PERSIST/EXTRA path for implementation, not production
+qualification. The subsequent [private 1A closure](PersistenceFoundation1A.md)
+records startup/recovery, codec, quotas, backend extent/allocation-budget checks,
+worker containment, failure handling and platform evidence within its stated
+scope; it is not public-service qualification. The [durability amendment](PersistenceD21Amendment-Proposed.md) was
+explicitly approved on 2026-09-23; this changes no runtime or release identity.
+The [physical-budget amendment](PersistencePhysicalD21Amendment-Proposed.md) was
+also explicitly approved and adopted on 2026-09-23, conditional on scoped final
+qualification. The 1,280 MiB figure is an operational safety budget,
+qualification target and diagnostic threshold, not a hard physical invariant.
+The [investigation](PersistencePhysicalAllocationInvestigation.md) observed no
+breach; that is empirical evidence, not a theorem. The WAL startup rejection fix
+is mandatory, including page-1 restoration through hot-journal recovery, before
+unsupported conversion or WAL/SHM creation. Preserve supported hot-journal
+recovery. [1A](PersistenceFoundation1A.md) closes this fix and filesystem-profile
+qualification under resolved D21; the later explicit 1B authorization is recorded
+in [PersistenceFoundation1B.md](PersistenceFoundation1B.md).
+
+One serial worker receives bounded bytes/scalars only. Per-namespace FIFO and fair
+global dispatch, reserved completion capacity, rate/count/byte/disk limits and a
+fixed request deadline bound work. Background I/O never touches Luau or host game
+objects. Owner-thread intake revalidates host/VM/domain epochs and admits completion
+later through existing fair, non-reentrant scheduling. No owner-thread file/process
+wait or blocking OS mutex. Original admitted deadlines are unchanged; the later
+callback is a new bounded admission, never a resumed timed-out operation.
+Retirement drops undispatched work/stale callbacks; a dispatched write may commit.
+Fence replacement work behind that transaction or confirmed worker death/recovery;
+never accumulate stuck replacement workers or call native code after unload.
+
+Foundation 1 excludes Update/transform, multikey transactions, key enumeration,
+queries, TTL, shared/cloud/remote stores, arbitrary files/SQL, automatic object
+persistence and Player/Entity serialization. Use existing D19 metadata ownership
+when implemented, with no editor/preview storage backend. Persistence-1A is private backend/
+codec/namespace supervision; 1B is public facade/admission; 1C is crash/lifecycle/
+quota/platform/public closure. The 2026-09-23 user decision assigns persistence
+to `0.5.0-experimental` under D12 independently of Entity. Original design adoption
+and private 1A changed no identity; this later assignment does not establish PASS.
+
 #### D2 — limits in addon-capable operation
 
 Defaults remain 64 MiB/3 ms; clamps remain 16..256 MiB and 1..100 ms. Source remains 64 KiB, loaded bytecode 1 MiB, log buffer 4 KiB, with the existing native registry bound of 32 live VMs and one host thread per VM. Compiler/bridge/managed/source-snapshot memory remains outside the VM heap cap. Foundation G adds a fixed one-second compiler wall deadline and a production 256 MiB worker-process memory limit; neither is a whole-process cap.
@@ -406,6 +523,28 @@ Each host-observed connection still receives a monotonically increasing token, n
 A domain-bound facade retains bounded identity snapshots and opaque project tokens. Root/addon retirement invalidates host-backed Player/facade mutation through that domain even when the shared VM remains healthy. An ordinary retained Player/table value may keep a readable script-side snapshot, but mutation/permission operations through its retired owning facade fail closed. Complete VM retirement invalidates every domain. CarbonLuau reload destroys the VM and no new host instance accepts old host/domain/provider tokens.
 
 #### D12 — scripting and protocol identity
+
+On 2026-09-23 the user assigned Persistence Foundation 1 to scripting API
+`CarbonLuau 0.5.0-experimental`. Persistence is not retroactively available in
+`0.4.0-experimental`; existing declarations retain their explicit historical
+`SinceApi` values. The current development API identity advances to 0.5 so
+implemented persistence metadata can satisfy `SinceApi <= current`. Availability
+and qualification remain separate. After the recorded local 1B functional gates,
+the user authorized `Experimental` metadata instead of `WorkInProgress`; preview
+remains unavailable. 1B is implemented and qualified within its recorded scope,
+not by itself an overall Persistence Foundation 1 PASS. [1C](PersistenceFoundation1C.md)
+owns combined closure and final-source CI; package publication authorization
+remains separate.
+
+Package `0.5.0` is the intended future persistence release identity. No package
+bump, tag or release is authorized by this assignment. The existing machinery
+permits API/package versions to differ, so development package/release/tag fields
+remain `0.4.0`/`v0.4.0`; [Release.md](Release.md) records the non-publishable
+development mapping. Provider protocol 1.2, addon schema 1 and the Luau pin remain
+unchanged. Native ABI changes only for an actual boundary change and is mapped
+independently, never inferred from the API version.
+
+The following records the earlier 0.4 assignment, not persistence availability.
 
 The gameplay facade introduced as `CarbonLuau 0.3.0-experimental` remains compatible. Foundation E assigns the additive addon-capable scripting identity `CarbonLuau 0.4.0-experimental`. GUI Foundation 1G keeps that unreleased identity and adds the complete D15 scripting surface without another version increment. GUI Foundation 2F keeps the same identity and adds the implemented D16 layout, typed-image and retained-scrolling subset. The identity includes package-qualified `require("@id")` and `require("@id/path")`, existing local `require("path")`, `addon.Id`/`addon.Version`, `addon:IsDependencyAvailable(id)` for a declared binding, inherently public `main`, and the domain-bound `Gui` service/value/object surface specified by D15 plus the implemented D16 subset. `TextBox` and `Submitted` are not part of the identity.
 

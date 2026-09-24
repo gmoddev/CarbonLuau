@@ -3,6 +3,7 @@
 #include "carbonluau_native.h"
 #include "lua.h"
 #include "lualib.h"
+#include "../persistence/Format.hpp"
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -33,6 +34,23 @@ struct Later {
 };
 struct StagedModule { Domain* Owner; Module* Value; int Reference; };
 struct PublicationScope;
+struct StoragePublication {
+    bool Alive = true;
+    std::shared_ptr<StoragePublication> Parent;
+};
+struct StorageName {
+    std::string Name;
+    std::shared_ptr<StoragePublication> Publication;
+};
+struct StorageCallback {
+    uint64_t Route = 0, Due = 0, Sequence = 0;
+    uint32_t Operation = 0, Error = 0;
+    bool Accepted = false, Ready = false, Found = false;
+    lua_State* Thread = nullptr;
+    int Reference = LUA_NOREF;
+    Persistence::Identity Identity;
+    Persistence::Bytes Envelope;
+};
 
 struct Domain {
     uint64_t Id = 0;
@@ -48,6 +66,10 @@ struct Domain {
     std::vector<Callback> Queue;
     std::vector<StagedModule> PendingModules;
     std::vector<Callback> PendingCallbacks;
+    // Separate intake slots: ordinary task/event queues cannot consume these.
+    std::array<uint64_t,8> StorageReservations{};
+    std::array<std::unique_ptr<StorageCallback>,8> StorageCallbacks;
+    std::vector<StorageName> StorageNames;
     ClHostCall Host = nullptr;
     uint64_t HostIdentity = 0;
     int Game = LUA_NOREF, Dispatch = LUA_NOREF, GuiBindings = LUA_NOREF;
@@ -86,6 +108,8 @@ struct Vm {
     AdmissionContext* Admission = nullptr;
     PublicationScope* Publication = nullptr;
     bool IntegrityFailed = false;
+    uint32_t StorageReserved = 0;
+    uint64_t StorageSequence = 0;
     int GuiValueEqual = LUA_NOREF;
     ~Vm();
 };
@@ -110,6 +134,7 @@ struct PublicationScope {
     std::vector<StagedModule> Modules;
     std::vector<Callback> Callbacks;
     std::vector<Domain*> Facades;
+    std::shared_ptr<StoragePublication> Storage;
     bool Complete = false;
     PublicationScope(Vm& Runtime) : Runtime(Runtime), Parent(Runtime.Publication) { Runtime.Publication = this; }
     ~PublicationScope();
@@ -120,6 +145,7 @@ struct PublicationScope {
 #ifdef CARBONLUAU_TESTING
 extern int TestAllocationFailureAfter;
 extern uint64_t TestLiveBytes;
+extern bool TestStorageCopyFailure;
 #endif
 
 struct DeadlineExceeded {};
@@ -137,6 +163,15 @@ void ReleaseDomain(Vm& Runtime, Domain& Value);
 Domain* AddDomain(Vm& Runtime, uint32_t MaxQueued);
 bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation);
 bool CanMutateHost(const Vm& Runtime);
+// Private Persistence-1A admission seam. Namespace authority follows the
+// admitted resource owner, never the provenance of a borrowed export closure.
+bool CanDispatchStorage(const Vm& Runtime, const Domain& ResourceOwner);
+bool ReserveStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId);
+bool ReleaseStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId);
+void InstallStorage(lua_State* State, Domain& Owner);
+void ClearStorage(Vm& Runtime, Domain& Owner);
+bool ReleaseStorageHost(Vm& Runtime, Domain& Owner, uint64_t Route);
+StorageCallback* NextStorage(Domain& Owner);
 void RollbackPublication(PublicationScope& Scope);
 int FindStaged(Vm& Runtime, Domain* Owner, Module* Value);
 void Interrupt(lua_State* State, int Gc);

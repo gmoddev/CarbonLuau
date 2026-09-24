@@ -42,7 +42,7 @@ internal sealed class NativePreview : IDisposable
         try {
             byte[] Bytes = new byte[41];
             if (Bind<Version>("cl_preview_bridge_version")() != 1 || Bind<Version>("cl_preview_containment")() != 1 ||
-                Bind<Version>("carbonluau_abi_version")() != 0x10004 || Bind<Revision>("cl_luau_revision")(Bytes, 41) != 0 ||
+                Bind<Version>("carbonluau_abi_version")() != 0x10005 || Bind<Revision>("cl_luau_revision")(Bytes, 41) != 0 ||
                 Encoding.ASCII.GetString(Bytes, 0, 40) != ExpectedRevision)
                 throw new ProtocolError("IncompatiblePack", "Preview bridge identity or process containment mismatch.");
             var Config = new VmConfig { MemoryLimitBytes = 64 * 1024 * 1024 };
@@ -107,7 +107,8 @@ internal sealed class NativePreview : IDisposable
                 string Message = Decode(Result.Error);
                 string Code = Status switch { 3 => "CompileError", 4 => "PreviewMemory", 5 => "PreviewDeadline", _ => "RuntimeError" };
                 if (Status != 4 && Status != 5) {
-                    if (Message.Contains("unavailable in the static GUI preview environment", StringComparison.Ordinal)) Code = "UnsupportedPreviewApi";
+                    if (Message.Contains("[Preview:UnsupportedHost]", StringComparison.Ordinal) ||
+                        Message.Contains("unavailable in the static GUI preview environment", StringComparison.Ordinal)) Code = "UnsupportedPreviewApi";
                     else if (Message.Contains("module ", StringComparison.Ordinal) || Message.Contains("package ", StringComparison.Ordinal)) Code = "ModuleError";
                     else if (Message.Contains("[Preview:Gui]", StringComparison.Ordinal)) Code = "GuiError";
                 }

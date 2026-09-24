@@ -51,6 +51,13 @@ This document owns contribution workflow and prompt construction. It applies to 
 | World/Entity Foundation 1 rationale, host evidence, phase routing and qualification gates | [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) |
 | World/Entity Foundation 1A blocked lifetime-proof investigation (not implementation) | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) |
 | Authoritative Entity lifetime investigation, negative evidence and D20 deferral | [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
+| Canonical Persistence Foundation 1 architecture (resolved; private 1A qualified) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
+| Persistence design source evidence, consistency review and qualification limits | [PersistenceFoundation1-Validation.md](docs/PersistenceFoundation1-Validation.md) |
+| Persistence-1A private backend/codec/namespace/queue substrate PASS; WAL rejection and supported recovery qualified; no public API qualified by 1A | [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md); historical DELETE and physical-proof negative evidence preserved |
+| Persistence-1B public facade/admission implemented and qualified within recorded scope; experimental API 0.5.0-experimental | [PersistenceFoundation1B.md](docs/PersistenceFoundation1B.md); D12 owns the assignment and [Release.md](docs/Release.md) the separate development package mapping. |
+| Persistence-1C combined lifecycle/platform/public-readiness closure | [PersistenceFoundation1C.md](docs/PersistenceFoundation1C.md); exact final status, correction, live evidence and hosted-CI gate. No package publication authority. |
+| Persistence physical-allocation investigation and adopted operational-budget amendment, qualification condition closed by 1A | [Investigation](docs/PersistencePhysicalAllocationInvestigation.md) and [adopted D21 amendment](docs/PersistencePhysicalD21Amendment-Proposed.md); 1,280 MiB is an operational safety budget/qualification target/diagnostic threshold, not a hard physical invariant |
+| Persistence durability follow-up: approved PERSIST path, platform probes and adoption record | [PersistenceDurabilityInvestigation.md](docs/PersistenceDurabilityInvestigation.md) and [approved D21 amendment](docs/PersistenceD21Amendment-Proposed.md) |
 | Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
 | Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
 | Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
@@ -297,6 +304,38 @@ filtering, spatial queries, lifecycle Signals, Spawn, Destroy and specialized
 entity capabilities require later explicit architecture rather than being
 implicitly authorized by D20. D20 changes no current package/API/ABI/provider/
 schema/Luau identity.
+
+Persistence Foundation 1 is the next runtime foundation under
+[D21](docs/Invariants.md#d21--persistence-foundation-1). Its
+[design](docs/PersistenceFoundation1.md) selects private root/addon namespaces,
+callback-based non-yielding storage and a bounded private SQLite worker;
+[design validation](docs/PersistenceFoundation1-Validation.md) is not runtime
+qualification. Separately scoped Persistence-1A/1B/1C work must implement and
+qualify it. The private 1A substrate is **PASS within its recorded qualification
+scope** in [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md), with no
+public persistence API. The user explicitly approved and adopted the
+[physical-budget amendment](docs/PersistencePhysicalD21Amendment-Proposed.md) on
+2026-09-23, conditional on scoped startup/profile qualification. Hard 16-MiB
+namespace / 256-MiB global logical quotas and SQLite page/file-length bounds
+remain; 1,280 MiB is an operational safety budget, qualification target and
+diagnostic threshold, not a hard physical invariant. No breach observed is
+empirical evidence, not a theorem. The WAL startup rejection fix is mandatory,
+including page-1 restoration through hot-journal recovery, before unsupported
+conversion or WAL/SHM creation; 1A implements and qualifies this while preserving
+supported recovery. D21 is resolved,
+not another architecture investigation. Preserve historical DELETE and
+physical-allocation negative evidence. The later explicit authorization starts
+[1B](docs/PersistenceFoundation1B.md), implemented and qualified within its recorded
+scope, including [implementation-source CI](docs/PersistenceFoundation1B-Validation.md#final-implementation-source-hosted-ci).
+Persistence-1C combined closure and its exact current verdict are recorded in
+[PersistenceFoundation1C.md](docs/PersistenceFoundation1C.md). Experimental
+development availability is not package publication approval.
+The user assigned persistence API `0.5.0-experimental` under D12; it is not
+retroactive 0.4 availability or permission to publish. Package 0.5.0 is intended
+for a future release; [Release.md](docs/Release.md) records why the development
+package remains 0.4.0. Original design adoption alone did not authorize these
+changes. Entity work remains gated;
+persistence does not weaken Entity identity or serialize Player/Entity facades.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
 - Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.

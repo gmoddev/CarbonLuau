@@ -5,7 +5,8 @@ using System.Globalization;
 string[] Args = Environment.GetCommandLineArgs().Skip(1).ToArray();
 string Root = Path.GetFullPath(Args.Length == 0 ? "../.." : Args[0]);
 string Bootstrap = File.ReadAllText(Path.Combine(Root, "scripts/bootstrap.luau")).Replace("\r\n", "\n");
-string Native = File.ReadAllText(Path.Combine(Root, "native/src/scripts/ModuleLoader.cpp")).Replace("\r\n", "\n");
+string Native = (File.ReadAllText(Path.Combine(Root, "native/src/scripts/ModuleLoader.cpp")) + "\n" +
+    File.ReadAllText(Path.Combine(Root, "native/src/facade/PersistenceFacade.cpp"))).Replace("\r\n", "\n");
 JObject Release = JObject.Parse(File.ReadAllText(Path.Combine(Root, "release.json")));
 JObject Catalog = ApiCatalog.Build(Bootstrap, Release, Native);
 void Check(bool Value, string Message) { if (!Value) throw new Exception(Message); }
@@ -28,6 +29,25 @@ Reject(() => ApiCatalog.Validate(Broken), "unknown inheritance accepted");
 Broken = (JObject)Catalog.DeepClone();
 ((JObject)Broken["Members"]![0]!)["ValueType"] = "UnimplementedType";
 Reject(() => ApiCatalog.Validate(Broken), "unknown type accepted");
+var PersistenceTypes = new[] { "DataStoreService", "DataStore", "PersistedValue" };
+foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catalog["Members"]!)) {
+    bool Persistence = PersistenceTypes.Contains((string?)Declaration["Id"]) || PersistenceTypes.Contains((string?)Declaration["OwnerId"]);
+    Version Since = Version.Parse(((string)Declaration["Availability"]!["SinceApi"]!).Split('-')[0]);
+    Check(Persistence ? Since == new Version(0, 5, 0) : Since <= new Version(0, 4, 0), "historical introduction version changed");
+    if (Persistence) Check((string)Declaration["Availability"]!["Qualification"]! == "Experimental" &&
+        (string)Declaration["Preview"]! == "Unavailable", "persistence qualification/preview drift");
+}
+Check(Definitions.Contains("export type PersistedValue = boolean | number | string | {PersistedValue} | {[string]: PersistedValue}"), "recursive persisted value alias missing");
+Check(Definitions.Contains("Callback: (PersistedValue?, string?) -> ()") && Definitions.Contains("Callback: (boolean?, string?) -> ()"), "persistence callback shape drift");
+Reject(() => ApiCatalog.Build(Bootstrap, Release, Native.Replace("int GetDataStore(lua_State* State)\n", "int RenamedGetDataStore(lua_State* State)\n")), "removed persistence binding accepted");
+Reject(() => ApiCatalog.Build(Bootstrap, Release, Native.Replace("lua_setfield(State, -2, \"GetAsync\");", "lua_setfield(State, -2, \"ChangedGetAsync\");")), "renamed persistence registration accepted");
+Reject(() => ApiCatalog.Build(Bootstrap, Release, Native + "\nlua_pushcfunction(State, Controlled<FutureStorage>, \"FutureStorage\"); lua_setfield(State, -2, \"FutureStorage\");\n"), "unannotated persistence registration accepted");
+Broken = (JObject)Catalog.DeepClone();
+((JArray)Broken["Types"]!).Single(Value => (string)Value["Id"]! == "PersistedValue")["TypeExpression"] = "UnimplementedType";
+Reject(() => ApiCatalog.Validate(Broken), "unknown alias type accepted");
+Broken = (JObject)Catalog.DeepClone();
+((JArray)Broken["Types"]!).Single(Value => (string)Value["Id"]! == "PersistedValue")["Availability"]!["SinceApi"] = "99.0.0-experimental";
+Reject(() => ApiCatalog.Validate(Broken), "future introduction accepted");
 foreach (string Path in new[] { "../module", "/module", "Module", "a\\b", "a//b", "a.luau" })
     Reject(() => ModulePath.Validate(Path, false), "invalid module accepted: " + Path);
 foreach (string Id in new[] { "carbonluau", "carbonluau.a", "A", "a..b", "_a", "a-" })

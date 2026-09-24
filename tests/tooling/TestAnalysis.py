@@ -12,6 +12,7 @@ import unittest
 Host = Path(os.environ["CARBONLUAU_TOOLING_HOST"])
 Protocol = {"Name": "CarbonLuau.Tooling", "Major": 1, "Minor": 0}
 Pin = json.loads((Host.parent / "language-server.json").read_text())
+Api = json.loads((Host.parent / "tooling-metadata.json").read_text())["Api"]["Version"]
 
 
 class Session:
@@ -50,7 +51,7 @@ class Session:
     def Snapshot(self, Files, Trusted=True):
         Snapshot = {"Folders": [{"Id": "0", "Files": [{"Path": Name, "Text": Text} for Name, Text in Files.items()]}]}
         Canonical = json.dumps(Snapshot, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
-        self.Revision = "sha256:" + hashlib.sha256((Canonical + "\n0.4.0-experimental\n" + Pin["PackVersion"]).encode()).hexdigest()
+        self.Revision = "sha256:" + hashlib.sha256((Canonical + "\n" + Api + "\n" + Pin["PackVersion"]).encode()).hexdigest()
         return self.Request("snapshot", {"Trusted": Trusted, "Snapshot": Snapshot})
 
     def Language(self, Path="init.luau", Operation="textDocument/diagnostic", Position=None):
@@ -85,6 +86,26 @@ class AnalysisTests(unittest.TestCase):
         self.assertIn("Result", Value, Value)
         self.assertEqual(Value["Result"]["Withheld"], ["0\0.config.luau"])
         self.assertIn("Result", self.Session.Language())
+
+    def test_persistence_recursive_value_and_callbacks(self):
+        Source = """--!strict
+local Store = game:GetService("DataStoreService"):GetDataStore("Types")
+local Value: PersistedValue = { Version = 1, Enabled = false, Nested = {"Text", 2} }
+Store:SetAsync("Key", Value, function(Saved: boolean?, ErrorCode: string?) end)
+Store:GetAsync("Key", function(Found: PersistedValue?, ErrorCode: string?) end)
+Store:RemoveAsync("Key", function(Removed: boolean?, ErrorCode: string?) end)
+return Store
+"""
+        self.assertIn("Result", self.Session.Snapshot({"init.luau": Source}))
+        Value = self.Session.Language()
+        self.assertIn("Result", Value, Value)
+        self.assertEqual(Value["Result"]["Value"]["items"], [], Value)
+        Invalid = Source.replace('local Value: PersistedValue = { Version = 1, Enabled = false, Nested = {"Text", 2} }',
+                                 'local Value: PersistedValue = function() end')
+        self.assertIn("Result", self.Session.Snapshot({"init.luau": Invalid}))
+        Value = self.Session.Language()
+        self.assertIn("Result", Value, Value)
+        self.assertTrue(Value["Result"]["Value"]["items"], Value)
 
     def test_untrusted(self):
         self.assertEqual(self.Session.Snapshot({"init.luau": "while true do end"}, False)["Error"]["Code"], "TrustRequired")

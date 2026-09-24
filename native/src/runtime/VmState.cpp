@@ -7,6 +7,7 @@ Vm::~Vm()
         lua_callbacks(State)->interrupt = nullptr;
         for (const auto& Item : Domains) if (Item) {
             Domain& Value = *Item;
+            ClearStorage(*this, Value);
             for (const auto& Work : Value.Queue) lua_unref(State, Work.Reference);
             for (const auto& Work : Value.PendingCallbacks) lua_unref(State, Work.Reference);
             for (const auto& Entry : Value.Modules) if (Entry.second.Loaded) lua_unref(State, Entry.second.Reference);
@@ -63,7 +64,11 @@ Domain* GetDomain(Vm& Runtime, ClHandle Id, bool Active)
 void ReleaseDomain(Vm& Runtime, Domain& Value)
 {
     if (!Value.Alive) return;
+    ClearStorage(Runtime, Value);
     Value.Alive = false; Value.Active = false;
+    for (auto& Reservation : Value.StorageReservations) {
+        if (Reservation) { --Runtime.StorageReserved; Reservation=0; }
+    }
     Value.Discarded += Value.Queue.size() + Value.PendingCallbacks.size();
     Runtime.RetiredDiscarded += Value.Queue.size() + Value.PendingCallbacks.size();
     if (Runtime.State) {
@@ -94,6 +99,7 @@ Domain* AddDomain(Vm& Runtime, uint32_t MaxQueued)
     Candidate->Queue.reserve(MaxQueued);
     Candidate->PendingCallbacks.reserve(MaxQueued);
     Candidate->Loading.reserve(32);
+    Candidate->StorageNames.reserve(64);
     Domain* Result = Candidate.get();
     Runtime.Domains.push_back(std::move(Candidate));
     return Result;
