@@ -1,892 +1,663 @@
-# Persistence Foundation 2 — bounded query schemas and indexed Query
+# Persistence Foundation 2 — bounded derived indexes and Query
 
-Status: **CANONICAL ARCHITECTURE — IMPLEMENTATION NOT STARTED**, 2026-09-24.
+Status: **CANONICAL ARCHITECTURE — AMENDED BEFORE IMPLEMENTATION**, 2026-09-25.
 
-Starting baseline: `034f28f81c64e0f135ec882fb05de4ef7f33fcf7`, the qualified
-Persistence Foundation 1 closure. This document is the detailed design owned by
-[D22](Invariants.md#d22--persistence-foundation-2--bounded-query-schemas-and-indexed-query).
+Foundation 1 qualified baseline: 034f28f81c64e0f135ec882fb05de4ef7f33fcf7.
+Initial D22 documentation baseline: ee208831efc5647dab553b5f9d0524e7e2e83353.
+
+This document is the detailed authority for
+[D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query).
 [D21](Invariants.md#d21--persistence-foundation-1) remains authoritative for
-durability, namespace ownership, Foundation 1 values, worker isolation, request
-publication, callback authority, quotas and the PERSIST + EXTRA storage contract.
+durability, namespaces, Foundation 1 values, the supervised persistence worker,
+publication/callback authority, primary-data quotas and PERSIST + EXTRA storage.
 
-No production schema/index/Query code, generated API metadata, preview behavior,
-package bump, tag or release is authorized by this architecture record.
+This amendment supersedes the initial D22 query-schema design before any Foundation 2
+production implementation began. There is no author-managed schema version, required
+index declaration, record migration contract or write freeze.
 
-## 1. Design objective
+## 1. Public design principle
 
-Foundation 2 adds one capability: efficient bounded queries over explicitly indexed
-record fields.
+Authors describe **what they want to query**. CarbonLuau owns the database machinery.
 
-The public design follows CarbonLuau's Roblox-like API direction: ordinary Luau
-tables, short named operations, useful defaults and familiar async callbacks.
-"Roblox-like" means easy to learn and powerful in normal gameplay code, not Roblox
-DataStore compatibility. SQLite plans, physical index generations, rebuild
-checkpoints, quota ledgers and lifecycle fencing stay below the facade.
+Internal index IDs, generations, format versions, fingerprints, rebuild checkpoints,
+quota ledgers, SQLite plans, cursor integrity and corruption repair are derived
+CarbonLuau state. They are not concepts an ordinary Luau author must manage.
 
-The target shape is intentionally small:
+The common path is intentionally Roblox-like: short, obvious Luau with progressively
+available control when an addon actually needs it.
 
-```luau
+## 2. Dead-simple path
+
+No schema or index declaration is required.
+
+~~~luau
 local DataStoreService = game:GetService("DataStoreService")
+local Players = DataStoreService:GetDataStore("Players")
 
-local Players = DataStoreService:GetDataStore("Players", {
-    Version = 1,
-    Indexes = {
-        Coins = { Type = "number" },
-        Level = { Type = "number" },
-        Faction = { Type = "string", Optional = true },
-    },
-})
+Players:SetAsync("76561198000000000", {
+    Coins = 150,
+    Level = 12,
+    Faction = "Blue",
+}, function(ok, err)
+    -- ...
+end)
 
 Players:Query({
-    Index = "Coins",
+    Field = "Coins",
     Direction = "Descending",
     Limit = 25,
-}, function(page, err)
+}, function(results, err)
     if err then
         return
     end
 
-    for _, item in page.Items do
+    for _, item in results.Items do
         print(item.Key, item.Value.Coins)
     end
 end)
-```
+~~~
 
-This example illustrates the adopted shape. Foundation 2 does not add SQL, an ORM,
-expression callbacks, promises, synchronous disk access or arbitrary scans.
+CarbonLuau prepares and maintains the bounded derived index needed for Coins.
 
-## 2. Foundation 1 compatibility audit
+The existing Foundation 1 call remains unchanged:
 
-The qualified Foundation 1 backend is a viable base.
+~~~luau
+DataStoreService:GetDataStore("Players")
+~~~
 
-At the starting revision:
+## 3. Optional index hints
 
-- the private database is versioned with `PRAGMA user_version=1`;
-- `Records` is private and keyed by `(Namespace, Store, Key)`;
-- Set/Remove already perform the primary record and quota mutation inside one
-  `BEGIN IMMEDIATE` transaction;
-- the worker is single-threaded and serialized behind the existing fair managed
-  dispatcher;
-- SQLite schema, row layout and representation are not public API;
-- values are decoded by the worker, so indexed-field extraction does not require
-  Luau entry on the worker;
-- the current transport remains hard-bounded to 68 KiB per IPC frame;
-- no public promise requires persisted values to remain opaque to CarbonLuau.
+GetDataStore gains one optional **options** table, not a schema:
 
-Foundation 2 therefore requires a private physical schema upgrade and new bounded
-wire operations, but no Foundation 1 public contract blocks indexing. Physical
-schema migration from backend format 1 is an implementation task for
-Persistence-2A and must remain transactional, crash-qualified and private.
+~~~luau
+DataStoreService:GetDataStore(Name: string, Options: DataStoreOptions?) -> DataStore
+~~~
 
-## 3. Public schema declaration
+Untyped hints:
 
-`GetDataStore` gains one additive optional argument:
-
-```luau
-DataStoreService:GetDataStore(StoreName: string, Schema: DataStoreQuerySchema?) -> DataStore
-```
-
-The original one-argument call is unchanged.
-
-A schema is an ordinary declarative Luau table snapshotted and canonicalized at
-acquisition. No constructor is required.
-
-```luau
-{
-    Version = 1,
+~~~luau
+local Players = DataStoreService:GetDataStore("Players", {
     Indexes = {
-        Coins = { Type = "number" },
-        Level = { Type = "number" },
-        Faction = { Type = "string", Optional = true },
+        "Coins",
+        "Level",
+        "Faction",
     },
-}
-```
-
-Rules:
-
-- `Version` is an integer in `1..2147483647`.
-- `Indexes` contains at most eight entries.
-- each entry name is both the top-level record field and public index name;
-- names are exact, case-sensitive UTF-8, 1..64 bytes, using the existing logical
-  name safety grammar;
-- `Type` is exactly `"number"`, `"string"` or `"boolean"`;
-- `Optional` defaults to `false`;
-- the encoded canonical descriptor is at most 4 KiB;
-- Foundation 2 paths have depth 1 only: nested paths are deferred;
-- the descriptor is data only. Functions, metatables, callbacks and executable
-  index logic are rejected.
-
-This is a **query schema**, not a general ORM schema. It validates the record shape
-needed for indexes and leaves all unlisted record fields governed by the existing
-`PersistedValue` rules.
-
-Acquisition remains synchronous and disk-free. Supplying a schema during
-provisional/cold-module execution is allowed because acquisition only snapshots
-the declaration. It does not register, rebuild or mutate durable state.
-
-Within one domain, any number of no-schema acquisitions may coexist with one
-canonical schema declaration for a store. Repeating a semantically identical
-schema succeeds regardless of Luau table insertion order. Supplying two different
-schema declarations for the same store in one domain rejects synchronously.
-
-## 4. Record enforcement
-
-A store with an active query schema is record-oriented.
-
-Every successful `SetAsync` against that durable store, including through an
-untyped facade, must store a string-keyed map. Scalar and array roots reject.
-
-For every declared index:
-
-- required field missing -> reject the entire Set;
-- optional field missing -> valid record, no entry in that index;
-- present field of the wrong type -> reject the entire Set;
-- string longer than 256 UTF-8 bytes -> reject the entire Set;
-- non-finite numbers remain impossible under Foundation 1;
-- malformed records never create a partial set of index entries.
-
-Unlisted fields remain unrestricted within Foundation 1 value/depth/count/byte
-limits. `nil` remains absence and is not an indexed value.
-
-Existing schemaless stores remain fully Foundation-1-compatible until a query
-schema is explicitly declared by code and a schema-aware operation reaches the
-worker. No store is migrated merely because Foundation 2 exists.
-
-## 5. Schema identity
-
-The durable identity is:
-
-```text
-(namespace, store, schema-version, canonical-fingerprint)
-```
-
-The fingerprint is SHA-256 over a canonical binary schema encoding containing:
-
-1. an internal schema-format tag;
-2. `Version`;
-3. index entries sorted by exact UTF-8 name bytes;
-4. for each index, name, type and Optional flag.
-
-Ordinary Luau table insertion order therefore has no effect.
-
-Schema version is authored persistence state, not addon/package version. Releasing
-addon code does not require a schema bump.
-
-Rules:
-
-- same version + same fingerprint -> match;
-- same version + different fingerprint -> `SchemaMismatch`;
-- lower declared version than active -> `SchemaMismatch`;
-- a higher version may be adopted only if every active index definition is
-  unchanged and the target is an identical schema or a strict additive superset;
-- removing an index, renaming one, changing type, changing Optional semantics or
-  otherwise reinterpreting an active index is incompatible in Foundation 2.
-
-A version-only bump with unchanged indexes is allowed. It is a cheap metadata
-transition and can also be used as an explicit retry identity after an earlier
-failed adoption once data has been repaired.
-
-## 6. Registration and adoption
-
-There is no separate public migration language and no required `AdoptSchema`
-method.
-
-The schema supplied to `GetDataStore` is a desired declaration. Durable activation
-occurs only from committed execution:
-
-### Empty schemaless store
-
-A first successful `SetAsync` through a schema-bound facade atomically installs the
-schema, record, quota changes and index entries in one transaction.
-
-A schema-bound `Query` against an actually empty schemaless store may return an
-empty page without materializing durable metadata. `GetAsync` and a missing
-`RemoveAsync` likewise remain disk-free with respect to schema state.
-
-### Existing schemaless store
-
-The first schema-aware Query/Set/Remove through a schema-bound facade atomically
-creates bounded BUILDING metadata and returns controlled `SchemaBuilding` without
-performing the requested Query/Set/Remove. The durable background rebuild then
-validates existing primary values and constructs shadow indexes in bounded
-worker-owned batches.
-
-### Additive active-schema evolution
-
-A higher compatible schema version behaves the same way. If new indexes are
-needed, the triggering schema-aware operation establishes BUILDING and returns
-`SchemaBuilding`. A version-only compatible change may publish in the initiating
-bounded transaction without a scan.
-
-These transitions are not destructive silent migrations: the declaration/version
-is explicit, only no-schema -> schema and additive evolution are admitted, and
-incompatible changes reject without modifying durable schema state.
-
-## 7. Rebuild model
-
-Rebuild is CarbonLuau-owned durable maintenance, not replay of the author's
-triggering request.
-
-Each building index uses a fresh private internal index ID. Active indexes are
-never overwritten in place.
-
-A rebuild batch is bounded by all of:
-
-- at most 32 primary records inspected;
-- at most 256 KiB of primary envelopes decoded;
-- the normal monotonic worker safety checks;
-- a fixed implementation VDBE/instruction budget established in 2A qualification.
-
-The worker scans the store by primary-key keyset position, never OFFSET. Each batch
-transaction atomically commits:
-
-- newly derived shadow index entries;
-- index logical-byte accounting;
-- last processed primary key/checkpoint;
-- record/entry counters needed to resume.
-
-Writes are frozen for the affected store while BUILDING. `GetAsync` continues from
-primary values. `Query` is unavailable. `SetAsync` and `RemoveAsync` return
-controlled `SchemaBuilding` without mutation, regardless of whether the caller
-uses a schema-bound or Foundation 1 facade.
-
-The existing worker/fair dispatcher is reused. Background maintenance receives at
-most one maintenance batch per scheduling turn and may not run back-to-back while
-foreground persistence work is ready. It owns bounded internal maintenance
-capacity rather than consuming an unbounded number of public requests.
-
-On restart, committed BUILDING state resumes from its checkpoint. No original
-author request is replayed.
-
-## 8. Rebuild completion and failure
-
-After the final batch, one transaction validates the completed build metadata and
-publishes the target schema/index mapping atomically.
-
-Until that commit, Query cannot observe the new indexes.
-
-On success:
-
-- the target schema becomes active;
-- new queries use the published internal index IDs;
-- writes resume under the new validation/index rules;
-- obsolete shadow/old derived rows may be reclaimed later in bounded maintenance;
-- stale cursors bound to a changed schema/index ID fail.
-
-On failure:
-
-- primary records are unchanged;
-- the previous active schema/index mapping remains active, if one existed;
-- an initially schemaless store remains schemaless;
-- the failed target version/fingerprint is recorded so the same declaration does
-  not repeatedly rescan unchanged data;
-- temporary build rows are reclaimed in bounded maintenance;
-- a later higher schema version may retry after the author repairs data using the
-  still-active prior schema or schemaless Foundation 1 surface.
-
-No primary data is deleted or rewritten by schema adoption.
-
-## 9. Private index representation
-
-Foundation 2 uses one generic private index-entry relation rather than creating SQL
-columns or SQL index names from script input.
-
-Conceptually:
-
-```text
-IndexEntries(
-    Namespace,
-    Store,
-    InternalIndexId,
-    SortKey,
-    RecordKey,
-    PRIMARY KEY(Namespace, Store, InternalIndexId, SortKey, RecordKey)
-) WITHOUT ROWID
-```
-
-Exact table names remain private.
-
-Schema metadata maps the public index name to a validated type/Optional descriptor
-and opaque internal index ID. A rebuild creates a fresh ID, so publication is a
-metadata swap rather than in-place exposure of partial rows.
-
-This representation gives one fixed family of prepared statements. Luau field
-names and operators are never concatenated into SQL identifiers or fragments.
-
-Query first walks the index B-tree to obtain bounded record keys, then point-reads
-the corresponding `Records` envelopes inside the same SQLite read transaction.
-It does not need a public SQL join and does not expose rowid.
-
-## 10. Canonical sortable keys
-
-Index comparison semantics do not inherit SQLite type coercion.
-
-All `SortKey` values are BLOBs with a CarbonLuau canonical encoding:
-
-### string
-
-Exact UTF-8 bytes, case-sensitive, no Unicode normalization and no locale
-collation. BLOB byte order defines equality/order.
-
-### boolean
-
-One byte: false `0x00`, true `0x01`. Boolean indexes support equality and
-unfiltered deterministic ordering; range predicates reject.
-
-### number
-
-Finite IEEE-754 binary64 only. `-0` is canonicalized to `+0` for indexing so Luau
-numeric equality and indexed equality agree. The 64-bit representation is
-transformed into an 8-byte unsigned big-endian sortable key: negative encodings
-are bitwise inverted; non-negative encodings have the sign bit flipped. This
-orders finite extremes, normals and subnormals by numeric value while avoiding
-SQLite INTEGER/REAL affinity and coercion. NaN and infinities remain invalid.
-
-Ascending string/number/boolean order uses `SortKey`, then exact record-key UTF-8
-bytes. Descending reverses both. Ordering never depends on incidental SQLite row
-order.
-
-## 11. Index quotas and write amplification
-
-Derived indexes do not consume the existing 16 MiB namespace / 256 MiB global
-**user-data** logical quota. Making author data quota change merely because an
-index is declared would make usage hard to reason about.
-
-Indexes instead have a separate hard logical pool:
-
-| Resource | Foundation 2 ceiling |
-|---|---:|
-| Indexes per store / indexed fields per record | 8 |
-| Schema canonical bytes | 4 KiB |
-| Index/field name | 64 UTF-8 bytes |
-| Path depth | 1 |
-| Indexed string value | 256 UTF-8 bytes |
-| Index entries produced by one record | 8 |
-| Schema/index metadata per namespace | 256 KiB |
-| Derived-index logical bytes per namespace | 16 MiB |
-| Derived-index logical bytes globally | 64 MiB |
-
-One index entry is charged conservatively as:
-
-```text
-96 + StoreBytes + RecordKeyBytes + SortKeyBytes
-```
-
-The fixed 96-byte charge covers namespace/internal identity and per-entry
-bookkeeping without making the public data quota depend on physical SQLite page
-geometry. Schema/build metadata is charged by canonical bytes plus fixed bounded
-record overhead and is included in the derived-index pool.
-
-Active plus BUILDING/shadow entries count simultaneously. Indexes are therefore
-not free, and a rebuild can fail with `QuotaExceeded` without altering the active
-schema or primary data.
-
-D21's 1,280 MiB allocated-file operational budget remains unchanged. The 512 MiB
-database/page limit and PERSIST journal bound remain D21 storage concerns. 2A must
-qualify the worst permitted active+building index workload against those existing
-physical limits on Windows and Linux. If the fixed Foundation 2 logical ceilings
-cannot fit the D21 physical envelope on the exact pinned backend, implementation
-must stop for architecture amendment rather than silently raising D21 limits.
-
-## 12. Atomic Set/Remove maintenance
-
-Once a schema is active, one `SetAsync` transaction performs all of:
-
-1. read/decode the current record;
-2. validate the incoming record against active indexed-field rules;
-3. compute old/new canonical index keys;
-4. update only changed index entries;
-5. update the primary record;
-6. update Foundation 1 user-data quota accounting;
-7. update derived-index quota/counter accounting;
-8. commit under the existing D21 PERSIST + EXTRA path.
-
-A successful state never exposes new primary value + old active index or old
-primary value + new active index.
-
-`RemoveAsync` reads the existing record, removes all of its active index entries,
-removes the primary value and updates both quota ledgers in the same transaction.
-Missing Remove creates nothing.
-
-The caller never supplies the old value.
-
-## 13. Public Query API
+})
+~~~
+
+Typed hints are available only when an addon wants an explicit type-specific query
+view:
+
+~~~luau
+local Players = DataStoreService:GetDataStore("Players", {
+    Indexes = {
+        Coins = "number",
+        Level = "number",
+        Faction = "string",
+    },
+})
+~~~
+
+Canonical rules:
+
+- Options is optional.
+- Indexes is optional.
+- there is **no public Version field**;
+- list form means fields with no type preference;
+- map form means field -> number, string or boolean;
+- at most eight distinct fields may be pinned for one store;
+- list and map forms may not be mixed;
+- hints are snapshotted pure data;
+- hints are optimization/control metadata, not record schemas;
+- missing fields do not invalidate SetAsync;
+- wrong-type fields do not invalidate SetAsync merely because a hint exists;
+- scalar roots, arrays and every other Foundation 1 value remain legal.
+
+Acquisition stays synchronous and disk-free. Hints captured by provisional code do not
+create durable state. Preparation begins only after the owning domain commits.
+
+Compatible hints from repeated acquisitions in one domain are combined. Conflicting
+typed hints for one field are a programming error. A committed replacement may add,
+remove or change hints without a developer-managed migration number.
+
+## 4. Query surface
 
 Foundation 2 adds:
 
-```luau
-DataStore:Query(Request: DataStoreQuery, Callback: (DataStoreQueryPage?, string?) -> ()) -> ()
-```
+~~~luau
+DataStore:Query(Request: DataStoreQuery, Callback: (DataStoreQueryResult?, string?) -> ()) -> ()
+~~~
 
-It is non-yielding submission with the same accepted/rejected and later
-owner-thread callback model as Get/Set/Remove.
+The normal ordered form is:
 
-A fresh request is:
+~~~luau
+Players:Query({
+    Field = "Coins",
+    Direction = "Descending",
+    Limit = 25,
+}, callback)
+~~~
 
-```luau
-{
-    Index = "Level",
-    AtLeast = 10,
-    AtMost = 20,
-    Direction = "Ascending",
+Direction defaults to Ascending.
+Limit defaults to 50 and is bounded to 1..100.
+Cursor is optional.
+Type is optional and normally unnecessary.
+
+## 5. Where comparisons
+
+Query also accepts a deliberately small human-readable Where surface.
+
+~~~luau
+Players:Query({
+    Where = {
+        "Level >= 10",
+        "Level <= 20",
+    },
     Limit = 50,
-    Cursor = nil,
-}
-```
+}, callback)
+~~~
 
-Fields:
+~~~luau
+Players:Query({
+    Where = {
+        'Faction == "Blue"',
+    },
+    Limit = 50,
+}, callback)
+~~~
 
-- `Index`: required public index name;
-- `Equals`: exact equality;
-- one lower bound: `GreaterThan` or `AtLeast`;
-- one upper bound: `LessThan` or `AtMost`;
-- `Direction`: `"Ascending"` (default) or `"Descending"`;
-- `Limit`: integer 1..100, default 50;
-- `Cursor`: optional opaque continuation string.
+A single clause may be written directly:
 
-Rules:
+~~~luau
+Where = "Coins > 100"
+~~~
 
-- `Equals` is mutually exclusive with lower/upper bounds;
-- at most one lower and one upper bound may be supplied;
-- lower/upper values must have the declared index type;
-- boolean indexes accept `Equals` or no predicate, not range bounds;
-- string/number indexes support equality, `<`, `<=`, `>`, `>=` and bounded ranges;
-- no predicate means bounded ordered traversal of the selected index;
-- the request contains exactly one selected index;
-- prefix, substring, regex and arbitrary expressions are deferred.
+Grammar:
 
-This supports the Foundation 2 use cases:
+~~~text
+Clause   := Field Operator Literal
+Operator := == | < | <= | > | >=
+Literal  := finite-number | quoted-UTF8-string | true | false
+~~~
 
-- leaderboard-like highest/lowest indexed numeric values;
-- `Faction == "Blue"`;
-- bounded level ranges;
-- recent-record ordering when the author explicitly stores/indexes a numeric
-  timestamp.
+Bounds and semantics:
 
-## 14. Query result
+- at most two clauses;
+- an array means logical AND;
+- all clauses name the same field;
+- equality appears alone;
+- two clauses normalize to one lower and one upper bound;
+- booleans support equality only;
+- number and string support equality/range operators;
+- Field may be omitted when Where identifies it;
+- if Field and Where are both present, they must identify the same field;
+- the right side is a literal, not another field;
+- field-to-field comparisons are deferred;
+- OR, NOT, arithmetic, calls, parentheses, regex, substring and arbitrary
+  expressions are deferred;
+- Where text is parsed by a bounded CarbonLuau parser, never evaluated as Luau;
+- raw Where text never becomes SQL.
 
-Success returns:
+Thus the intended X > Y shape is supported when Y is the literal operand. A bare
+identifier on the right is not treated as another record field.
 
-```luau
+## 6. Type semantics without a schema
+
+Query examines one top-level map field.
+
+A record participates when the root is a map, the field exists and the value has the
+scalar type selected by that query. Missing fields, scalar/array roots and non-scalar
+field values simply do not match; they remain valid stored data.
+
+Indexable scalar types are finite binary64 number, UTF-8 string and boolean.
+
+A Where literal selects its type automatically:
+
+- Coins > 100 selects number;
+- Faction == "Blue" selects string;
+- Enabled == true selects boolean.
+
+For an ordered query without Where, CarbonLuau resolves type from:
+
+1. Request.Type, if supplied;
+2. an active typed index hint;
+3. the sole scalar type represented by that field index.
+
+If multiple scalar types exist and none selects one, Query returns
+AmbiguousFieldType. The uncommon mixed-data case can specify Type explicitly.
+
+No cross-type ordering is invented.
+
+## 7. Automatic index preparation
+
+**Query never falls back to scanning primary records for matches.**
+
+When Query needs a field index that is not ready, CarbonLuau starts or joins bounded
+derived-index preparation. The same machinery serves automatic demand and optional
+Indexes hints.
+
+A store may have at most eight active or preparing field indexes total. If that bound
+is exhausted, a ninth field request fails controlledly rather than scanning.
+
+The author never calls CreateIndex, Migrate, Rebuild or Prepare.
+
+### First-query behavior
+
+A first Query may wait for preparation so the common case stays transparent.
+
+Preparation waiters:
+
+- do not consume D21's 8/namespace or 128/global dispatched request slots;
+- retain the normal host/VM/domain/callback authority;
+- are capped at 8 per namespace and 32 globally;
+- wait no more than 30 seconds;
+- consume the query rate token at admission.
+
+If the index becomes ready, the actual Query then executes under D21's ordinary
+five-second persistence request deadline and produces one normal callback.
+
+If preparation still legitimately needs work after 30 seconds, the callback returns
+IndexPreparing. The internal build may continue; a later Query reuses it.
+
+## 8. Online build: normal writes continue
+
+Preparing an index does **not** freeze GetAsync, SetAsync or RemoveAsync.
+
+A build scans authoritative primary records in bounded key order using a durable
+keyset checkpoint and a private shadow generation.
+
+While that build is active, foreground SetAsync/RemoveAsync transactions also update
+the shadow generation:
+
+- Set derives the current field entry from the new value;
+- Remove removes its building entry;
+- a write to a key already passed by the checkpoint corrects that entry;
+- a write to a future key is represented immediately and later re-derived from the
+  same current primary value;
+- deletion before scan means the later scan sees no record.
+
+The existing single worker serializes foreground transactions and build batches, so
+they never race transactionally.
+
+GetAsync, SetAsync and RemoveAsync therefore continue normally during index
+preparation. Queries using other ready indexes continue normally.
+
+One build batch inspects at most 32 records and at most 256 KiB of primary envelopes,
+uses a persistent keyset checkpoint, and is subject to a fixed qualified instruction
+budget. Background maintenance yields whenever foreground persistence work is ready.
+
+Crash/restart resumes committed build state. No author's Query is replayed.
+
+## 9. Derived state must not make primary writes fragile
+
+Primary persisted values are authoritative. Query indexes are subordinate derived
+state.
+
+Normally Set/Remove and all ready/building index changes occur in the same SQLite
+transaction. Query therefore never observes a new primary value with an old active
+index entry.
+
+However, an otherwise valid primary mutation must not fail merely because a derived
+index has exhausted its separate logical capacity or needs repair.
+
+When the primary mutation itself is still valid, the same transaction may instead:
+
+1. commit primary data and D21 quota changes;
+2. atomically withdraw the affected derived index from Query service;
+3. mark it stale/rebuild-required;
+4. reclaim/rebuild derived rows later through bounded maintenance.
+
+The observable state is never "new value + old active index". It is "new value + that
+Query index temporarily unavailable".
+
+Physical SQLite/storage failure remains governed by D21 and can still fail or make the
+primary mutation indeterminate.
+
+## 10. Private index model
+
+A generic private derived-index relation is the intended implementation direction:
+
+~~~text
+IndexEntries(
+    Namespace,
+    Store,
+    InternalFieldId,
+    InternalGeneration,
+    SortKey,
+    RecordKey,
+    PRIMARY KEY(
+        Namespace,
+        Store,
+        InternalFieldId,
+        InternalGeneration,
+        SortKey,
+        RecordKey
+    )
+) WITHOUT ROWID
+~~~
+
+Exact table/schema names are private.
+
+Author field names map to CarbonLuau-owned IDs and never become SQL identifiers.
+SortKey contains an internal type tag plus a canonical comparable representation.
+
+Number ordering uses an explicit sortable finite-binary64 encoding, with -0
+canonicalized to +0 for query equality/order. Strings use exact case-sensitive UTF-8
+bytes with no Unicode normalization or locale collation. Booleans have deterministic
+tags and support equality only.
+
+Queryable string literals are bounded to 1,024 UTF-8 bytes. CarbonLuau must never
+silently claim a complete string index while omitting a stored value that cannot be
+represented by the qualified index format; that query facet becomes unavailable
+instead.
+
+## 11. Result, work and pagination bounds
+
+A successful result is:
+
+~~~luau
 {
     Items = {
         { Key = "765611...", Value = { ... } },
-        -- ...
     },
-    NextCursor = "..." -- or nil
+    NextCursor = "...", -- or nil
 }
-```
+~~~
 
-Values are fresh decoded snapshots with the same semantics as `GetAsync`.
-SQLite row IDs/internal index IDs are never exposed.
-
-Hard page bounds:
+Values are fresh Foundation 1 snapshots.
 
 | Resource | Ceiling |
 |---|---:|
-| Requested/returned items | 100 |
+| Where clauses | 2 |
+| One Where clause | 256 UTF-8 bytes |
+| Query descriptor | 2 KiB |
+| Field name | 64 UTF-8 bytes |
+| Queryable string literal | 1,024 UTF-8 bytes |
+| Returned items | 100 |
 | Default items | 50 |
-| Encoded Query request descriptor | 2 KiB |
-| Opaque cursor | 512 bytes |
-| Encoded Query response page | 66 KiB |
-| Aggregate expanded persisted-value entries in one page | 8,192 |
-| Candidate index rows inspected | at most 101 |
-| Primary record point-lookups | at most 101 |
+| Cursor | 512 bytes |
+| Encoded response page | 66 KiB |
+| Aggregate expanded value entries | 8,192 |
+| Candidate index rows | at most 101 |
+| Primary point lookups | at most 101 |
+| SQLite VM backstop | 1,000,000 VDBE instructions |
 
-The 66 KiB page ceiling intentionally fits beneath Foundation 1's 68 KiB
-request/response IPC frame after protocol overhead, including the case where one
-returned value approaches the existing 64 KiB envelope maximum. Foundation 2 does
-not weaken the Foundation 1 frame bound.
+The worker stops before adding an item that would exceed page/decode limits and
+returns a cursor. It never returns a partial record.
 
-The worker stops before adding an item that would exceed count/byte/expanded-entry
-limits and returns `NextCursor`. Because any individual Foundation 1 value and key
-fit within the page headroom and any individual value has at most 4,096 expanded
-entries, every valid indexed record can make forward progress alone. No partial
-record is returned.
+The 66 KiB page ceiling preserves Foundation 1's 68 KiB IPC frame after protocol
+overhead.
 
-## 15. Bounded query execution
+Numeric OFFSET is not supported. Pagination uses an opaque keyset cursor bound
+internally to store authority, index generation, type, normalized predicate,
+direction and last sort/key position. Cursor internals are versioned and
+integrity-protected and expose no SQL/rowid/path.
 
-Query never scans primary records to discover matches.
+Each page is consistent at its own execution time. There is no frozen multi-page
+snapshot guarantee.
 
-For every request:
+## 12. Ordering and query-plan proof
 
-1. the public index name must resolve to an active declared index;
-2. the predicate is normalized to a fixed internal operation;
-3. fixed prepared SQL seeks the generic IndexEntries primary-key prefix;
-4. keyset bounds select at most `Limit + 1` index entries;
-5. at most 101 primary point-lookups fetch the values;
-6. all work runs in one SQLite read transaction/snapshot.
+Ordering is deterministic:
 
-Pagination and byte/node stopping are the expected continuation mechanism. A
-separate runtime SQLite VM-instruction ceiling of **1,000,000 VDBE instructions**
-per public Query is a backstop against planner/regression surprises. Exceeding it
-fails the Query with controlled `QueryWorkExceeded`; it does not return a timeout
-cursor or partial success.
+1. canonical selected field value;
+2. exact record key as tie-breaker.
 
-The existing five-second persistence request deadline remains the wall-clock upper
-bound. Deadline failure remains failure, not pagination.
+Ascending uses both ascending; Descending reverses both.
 
-Qualification on the exact pinned SQLite build must assert with
-`EXPLAIN QUERY PLAN` that every generated Query statement performs a bounded
-`SEARCH` over the intended IndexEntries primary-key prefix and does not introduce a
-full table `SCAN` or temporary ORDER BY B-tree. The runtime work ceiling is an
-additional defense, not a substitute for plan qualification.
+Every public Query must resolve to a complete active derived index and a fixed prepared
+seek/range statement. No public field name, Where fragment, operator or ordering text is
+concatenated into SQL.
 
-## 16. Pagination and cursors
+Persistence-2C qualification must run EXPLAIN QUERY PLAN against the exact bundled
+SQLite build and prove that every public query form performs bounded derived-index
+access without primary full scans or temporary arbitrary sorting.
 
-Numeric OFFSET is not supported.
+Maintenance scans used to build/rebuild an index are separate bounded CarbonLuau-owned
+work, never a Query fallback.
 
-`NextCursor` is a versioned opaque base64url token containing only bounded
-continuation metadata: process/lifetime binding, store identity digest, schema
-fingerprint, internal index ID, normalized query fingerprint and last
-`(SortKey, RecordKey)` position.
+## 13. Queue, fairness and lifecycle
 
-The token is integrity-protected with a per-process secret and validated against
-the current facade. It contains no SQL, path, rowid or user value other than the
-bounded encoded continuation position needed for keyset traversal.
-
-Consequences:
-
-- cursors do not survive server process restart or CarbonLuau host lifetime change;
-- schema publication/index rebuild invalidates affected cursors;
-- namespace/store/index/query mismatch returns controlled `InvalidCursor`;
-- malformed/oversized cursor rejects before SQLite work;
-- `Limit` may change between pages within 1..100; the selected index, predicates
-  and direction must remain identical.
-
-Cursors are position-based, not frozen snapshots.
-
-Each Query call is transactionally consistent at its own execution time. Mutations
-between pages may cause an updated record to move across the cursor position, so
-multi-page traversal may observe inserts, omissions or repeats relative to an
-imaginary frozen snapshot. Foundation 2 promises no multi-call snapshot isolation.
-
-## 17. Queue, ordering and fairness
-
-Query uses the existing Foundation 1 public request ledger:
+Ready Query work reuses D21:
 
 - 8 pending per namespace;
-- 128 pending globally;
-- same per-namespace FIFO;
-- same fair cross-namespace dispatcher;
-- same five-second request deadline;
-- same later owner-thread completion admission and stale callback discard.
+- 128 globally;
+- per-namespace FIFO;
+- fair cross-namespace dispatch;
+- five-second request deadline;
+- later owner-thread callback admission;
+- stale callback discard on retirement/replacement.
 
-Query also consumes a dedicated internal query-rate token bucket, in addition to
-ordinary request tokens:
+Query additionally consumes a rate bucket of 5/s burst 8 per namespace and 50/s burst
+64 globally.
 
-- namespace: 5/s, burst 8;
-- global: 50/s, burst 64.
+Within one namespace, an accepted Set before a ready Query resolves before that Query
+executes, preserving the existing ordering model.
 
-This protects mutations/Get from a script issuing maximum-page Queries
-continuously without creating a second ordering model.
+Worker code never enters Luau.
 
-Within one namespace, accepted FIFO remains authoritative. If Set A is accepted
-before Query B, B executes after A's resolved worker outcome and sees the
-corresponding current state when successful. Requests accepted after B do not
-overtake it within that namespace.
+## 14. Optional hints are desired state, not migrations
 
-## 18. Callback and lifecycle authority
+No author migration version exists.
 
-Query completion reuses Foundation 1 unchanged:
+After successful domain publication CarbonLuau compares current explicit Indexes hints
+with the desired pinned set.
 
-- submission requires current committed admission and no active publication scope;
-- accepted Query is non-yielding;
-- worker never enters Luau;
-- completion is later admitted on the owner thread;
-- delivery is at most once;
-- retirement/replacement/recovery may discard the callback;
-- no Query is replayed;
-- callback error does not affect storage;
-- callback timeout follows the existing VM-fatal policy.
+Adding Level means prepare Level.
+Removing Coins means it may be unpinned/retired in bounded maintenance.
+Changing Coins from number to string changes the desired type-specific view.
 
-Schema BUILDING maintenance belongs to durable CarbonLuau state. If the triggering
-callback/domain disappears after BUILDING was committed, maintenance may continue
-because this is not replay of the author's lost operation.
+No action rewrites authoritative primary values and no developer increments a version.
 
-## 19. Corruption behavior
+Automatic indexes may remain cached after explicit unpinning, but Foundation 2 does not
+silently evict a currently active index to admit a ninth field.
 
-Three cases remain distinct.
+## 15. Derived-state resource accounting
 
-### Primary/envelope or physical SQLite corruption
+Derived indexes consume real resources but their accounting is internal runtime policy,
+not an author schema model.
 
-D21 remains authoritative: fail closed, preserve storage/journal, do not default,
-delete or overwrite.
+Foundation 2 retains a separate logical derived-state pool:
 
-### Schema metadata corruption
+- 16 MiB per namespace;
+- 64 MiB globally;
+- active and preparing generations count;
+- internal index metadata counts.
 
-Fail closed. CarbonLuau cannot safely interpret index authority or validation rules
-without trustworthy schema metadata.
+D21 primary-data quotas remain unchanged. Query indexes therefore do not silently
+shrink the addon's user-data quota.
 
-### Derived-index logical corruption with intact primary storage
+D21's 1,280 MiB filesystem-qualified operational budget and 512 MiB database/page
+ceiling remain unchanged. Persistence-2A must prove the derived-state bounds fit that
+existing physical envelope on qualified Windows/Linux storage profiles or stop for an
+architecture amendment.
 
-If an index lookup produces a missing record, mismatching canonical indexed value,
-invalid accounting, or another derived-index inconsistency while SQLite/primary
-integrity remains trustworthy:
+## 16. Corruption and repair
 
-- quarantine the store's Query surface;
-- preserve primary records;
-- Get remains available;
-- Set/Remove may continue under active record-schema validation but Query stays
-  unavailable and derived indexes are treated as stale;
-- record bounded diagnostics;
-- require a bounded rebuild from primary values before Query is re-enabled.
+Primary/physical SQLite corruption remains D21 fail-closed behavior.
 
-Corruption repair is derived-state maintenance, not permission to rewrite primary
-values. Physical database corruption is never downgraded to "index-only" merely
-because the failing page was expected to hold an index.
+If CarbonLuau can independently establish that primary storage is trustworthy but a
+derived index is logically inconsistent, it may atomically quarantine that index,
+preserve normal primary operations, and rebuild the derived state online.
 
-## 20. Rebuild after derived-index quarantine
+There is no Luau RebuildIndex API.
 
-A rebuild uses fresh shadow internal index IDs, the same 32-record/256-KiB batch
-bounds and persistent keyset checkpoints as schema adoption.
+If internal authority/generation metadata itself cannot be trusted, affected Query
+state fails closed. Physical database corruption is never downgraded to "index-only"
+merely because the failing page was expected to contain derived rows.
 
-During the actual rebuild publication window, Set/Remove are frozen for the store;
-Get continues and Query remains unavailable. On complete success, one transaction
-publishes the rebuilt index mapping and queries resume. On crash, the rebuild
-resumes from committed maintenance state. No half-rebuilt index is public.
+## 17. SQL/security boundary
 
-Operator diagnostics/maintenance may request this rebuild; Foundation 2 does not
-add a Luau `RebuildIndex` method.
+Luau cannot supply SQL, table/column/index identifiers, WHERE/ORDER BY fragments,
+SQLite collations/operators, row IDs, offsets or plan hints.
 
-## 21. SQL and security boundary
+Where strings are parsed into a fixed internal predicate representation. Only canonical
+bound values reach prepared SQL parameters.
 
-Luau can never supply:
+The single supervised persistence worker remains the only database owner.
 
-- SQL text/fragments;
-- column/table/index identifiers;
-- WHERE/ORDER BY fragments;
-- SQLite operators;
-- collations;
-- raw offsets or row IDs.
+SQLite transaction atomicity, serialized writes, BLOB comparison and WITHOUT ROWID
+B-tree behavior are implementation primitives, not public semantics; the exact pinned
+SQLite 3.53.4 build still requires 2A/2C/2D qualification.
 
-All public requests map to fixed prepared statement families with bound values.
-SQLite parameters are used for all author-controlled values. Internal index IDs
-are CarbonLuau-generated integers, not raw field names.
+## 18. Diagnostics and tooling seam
 
-The worker remains the only database owner. No owner-thread DB access, no one-
-connection-per-query model and no worker Luau entry are introduced.
+Bounded operator diagnostics may expose aggregate counts/status for active/preparing/
+stale indexes, automatic versus pinned fields, build progress, waiter saturation,
+query rejections, work-limit rejections, derived bytes and rebuilds.
 
-## 22. SQLite basis
+They do not expose values, keys, Where literals, SQL, cursor payloads or unbounded
+request history.
 
-The design relies only on ordinary SQLite behavior available to the pinned
-Foundation 1 backend:
+Future API metadata must represent GetDataStore(Name, Options?), optional Indexes,
+Query, Field, Type, Where, Direction, Limit, Cursor and result/error shapes.
 
-- transactions make the primary/index/quota mutation one commit unit;
-- PERSIST journal mode changes retained-journal invalidation, not the logical
-  transaction boundary;
-- BLOB comparisons use bytewise `memcmp`;
-- `WITHOUT ROWID` uses the declared primary key as the clustered B-tree;
-- prepared statement parameters bind values without accepting SQL fragments;
-- `EXPLAIN QUERY PLAN` distinguishes bounded SEARCH from SCAN and is used only in
-  qualification tooling, not as public API.
+Persistence preview simulation remains deferred.
 
-Primary references:
+## 19. Release identity
 
-- <https://www.sqlite.org/lang_transaction.html>
-- <https://www.sqlite.org/atomiccommit.html>
-- <https://www.sqlite.org/datatype3.html>
-- <https://www.sqlite.org/withoutrowid.html>
-- <https://www.sqlite.org/eqp.html>
-- <https://www.sqlite.org/c3ref/bind_blob.html>
-- <https://www.sqlite.org/c3ref/progress_handler.html>
+Foundation 2 remains additive to the still-unpublished persistence surface and joins
+scripting API **0.5.0-experimental**.
 
-SQLite capability does not itself define CarbonLuau semantics. The generic BLOB
-sort encoding, public predicates, quotas and cursor behavior above are CarbonLuau
-contracts.
+This amendment changes no package/tag/release, native ABI by itself, provider protocol,
+addon package schema or Luau pin.
 
-## 23. Prototype evidence
+No Foundation 2 metadata/API becomes available until its implementation phases qualify.
 
-An isolated architecture prototype (not repository production code) checked the
-canonical number encoding against finite extremes, negatives, subnormals, both
-zero signs and positives. Sorting the transformed 8-byte keys matched numeric
-ordering after `-0` canonicalization.
+## 20. Implementation routing
 
-A separate in-memory SQLite 3.46.1 prototype of the proposed
-`WITHOUT ROWID` composite primary key reported `SEARCH ... USING PRIMARY KEY` for
-ascending and descending bounded range/keyset statements. This is feasibility
-evidence only. It is **not** qualification of the pinned SQLite 3.53.4 build;
-Persistence-2A/2C must rerun plan, work and crash tests against the exact bundled
-pin.
+### Persistence-2A — private derived-index substrate
 
-## 24. Tooling metadata seam
+- private backend format upgrade;
+- generic derived index storage;
+- canonical sortable values/type tags;
+- internal field/generation metadata;
+- derived-state quota ledger;
+- online shadow build + checkpoints;
+- concurrent Set/Remove dual-write;
+- atomic index withdrawal without primary-write failure;
+- crash/reopen and exact-pinned storage/planner qualification.
 
-When implementation reaches public metadata, canonical API metadata must be able
-to describe:
+### Persistence-2B — automatic demand and optional hints
 
-- optional `GetDataStore(StoreName, Schema)` schema descriptor;
-- schema/index descriptor fields and bounds;
-- `DataStore:Query`;
-- Query request fields;
-- Query page/item/cursor types and errors.
-
-The VS Code preview receives no storage simulation in Foundation 2 architecture.
-Tooling may statically validate literal descriptors later, but runtime remains the
-authority for dynamically constructed pure-data descriptors.
-
-## 25. Release identity
-
-Foundation 2 is additive to the still-unpublished persistence surface and joins
-scripting API **`0.5.0-experimental`**.
-
-Reasons:
-
-- Foundation 1 already moved the development API to 0.5;
-- package 0.5.0 has not been published;
-- the new surface is additive rather than a breaking revision of shipped 0.5
-  behavior;
-- a second unreleased API bump would add identity churn without compatibility
-  value.
-
-This architecture decision does not change the development package, tag, release,
-native ABI, provider protocol, addon schema or Luau pin. Actual Query/schema
-metadata remains unavailable until its implementation phase qualifies.
-
-## 26. Implementation routing
-
-### Persistence-2A — private schema/index substrate
-
-- backend physical schema v1 -> v2 upgrade;
-- schema/index/build metadata;
-- canonical schema/fingerprint codec;
-- canonical string/boolean/binary64 sort keys;
-- generic IndexEntries storage;
-- derived-index quota ledger;
-- atomic hidden index maintenance on internal fixtures;
-- exact-pinned planner/work/storage amplification prototypes;
-- crash/reopen tests for index maintenance and physical upgrade.
-
-No public Query/schema binding yet.
-
-### Persistence-2B — schema binding and adoption
-
-- `GetDataStore(Name, Schema?)` snapshot/freeze;
-- durable schema match/conflict state;
-- empty-store atomic activation;
-- no-schema/additive BUILDING initiation;
-- bounded resumable rebuild;
-- write freeze/Get availability;
-- failure state/retry version behavior;
-- lifecycle/restart/replacement qualification.
-
-Still no public Query completion surface until the index substrate and rebuild
-semantics pass.
+- GetDataStore(Name, Options?) publication semantics;
+- explicit hint union/conflict rules;
+- automatic field demand;
+- eight-field store ceiling;
+- bounded preparation waiters;
+- online build fairness;
+- typed/untyped field completeness;
+- replacement/reload/restart behavior.
 
 ### Persistence-2C — public Query
 
-- Query request validation/predicates;
-- fixed prepared seek statements;
-- 66 KiB bounded result page;
-- page/item decode;
-- opaque keyset cursor;
-- 1,000,000-instruction work ceiling;
-- five-second deadline and query-rate buckets;
-- exact-pinned `EXPLAIN QUERY PLAN` assertions;
-- metadata/generated definitions and author docs.
+- request validation;
+- bounded Where parser;
+- Field/Type inference;
+- fixed equality/range/top-N prepared seeks;
+- result/cursor encoding;
+- work limits;
+- exact-pinned EXPLAIN QUERY PLAN assertions;
+- metadata and author docs.
 
 ### Persistence-2D — combined closure
 
 - Windows/Linux live qualification;
-- indexed Set/Remove crash matrix;
-- rebuild restart/failure/quota/corruption matrix;
-- replacement/VM recovery/stale callback/cursor tests;
-- maximum-page/maximum-index scale and write amplification;
-- packaging/storage-allocation requalification;
-- final documentation/release-candidate audit.
+- concurrent write/build stress;
+- crash during build/publication/index maintenance;
+- lifecycle/stale waiter/cursor tests;
+- max-page/max-index/query-rate scale;
+- derived capacity/invalidation/rebuild matrix;
+- physical-allocation requalification;
+- final release-candidate audit.
 
-No phase is implemented by this architecture adoption.
+No phase is implemented by this amendment.
 
-## 27. Explicitly deferred features
+## 21. Canonical decision summary
 
-Foundation 2 does **not** include:
+| Decision | Amended result |
+|---|---|
+| Basic Query | no index declaration required |
+| Index declarations | optional prewarm/pin hints only |
+| Public schema Version | none |
+| Record schema enforcement | none |
+| Existing Foundation 1 stores | unchanged |
+| Index types | number, string, boolean |
+| Missing/wrong-type fields | do not match selected typed query; Set remains valid |
+| Derived fields per store | maximum 8 active/preparing |
+| Compound/unique indexes | deferred |
+| Key Query | deferred; GetAsync remains exact-key API |
+| Index creation | automatic bounded preparation |
+| Writes during build | continue with building-index dual-write |
+| Reads during build | Get and other ready Query continue |
+| Index evolution | compare desired hints/demand directly; no migration version |
+| Query predicates | Where with ==, <, <=, >, >= |
+| Multiple predicates | at most two AND bounds on one field |
+| Where field-to-field | deferred |
+| Ordering | canonical field value then record key |
+| Results | Items + optional NextCursor |
+| Count | default 50, max 100 |
+| Page | max 66 KiB and 8,192 expanded entries |
+| Query work | <=101 candidates/lookups + VDBE backstop |
+| Pagination | opaque keyset cursor; no OFFSET |
+| Ready request deadline | D21 five seconds |
+| Preparation wait | <=30 seconds, separately bounded |
+| Query fallback scan | forbidden |
+| Primary/index consistency | update atomically or withdraw index atomically |
+| Corrupt derived index | quarantine + bounded rebuild |
+| SQL boundary | bounded parser -> fixed predicate -> prepared bound SQL |
+| Tooling preview | deferred |
+| API identity | 0.5.0-experimental |
+| Production implementation | not started |
 
-- UpdateAsync/author-defined transactional transforms;
-- compound indexes;
-- unique indexes;
-- nested index paths;
-- key as a built-in Query index;
-- exact-key Query syntax duplicating GetAsync;
-- prefix search;
-- substring/full-text/regex/geospatial search;
-- arbitrary scans or enumeration;
+## 22. Deferred features
+
+Deferred unless separately authorized:
+
+- author-managed schema/migration versions;
+- general record schemas and required fields;
+- UpdateAsync;
+- compound/unique indexes;
+- nested field paths;
+- field-to-field comparisons;
+- OR/NOT/general expression trees;
+- prefix/substring/regex/full-text/geospatial search;
+- arbitrary scans/enumeration;
 - arbitrary SQL;
-- joins exposed to Luau;
-- cross-store or cross-namespace Query;
-- COUNT/SUM/AVG or other aggregation;
-- user-defined collations;
-- arbitrary sort expressions;
-- numeric OFFSET;
-- multi-call snapshot cursors;
-- online zero-downtime incompatible migrations;
-- index rename/type/Optional mutation/removal;
-- TTL;
-- cloud replication;
-- live subscriptions/watchers;
+- joins;
+- cross-store/cross-namespace Query;
+- aggregates;
+- arbitrary sorting/collations;
+- OFFSET;
+- frozen multi-page snapshots;
+- TTL/cloud replication/live watchers;
 - persistence preview simulation.
 
-These may be separate future decisions. SQLite support alone is not authorization.
+## 23. Stop conditions
 
-## 28. Required decision ledger
+Return for architecture amendment instead of weakening D22 if:
 
-| # | Decision | Canonical result |
-|---:|---|---|
-| 1 | API identity | Joins `0.5.0-experimental`; package remains unchanged |
-| 2 | Declaration | Optional pure-data schema on `GetDataStore` |
-| 3 | Identity/version | Explicit integer version + canonical SHA-256 fingerprint |
-| 4 | Enforcement | Record map + declared indexed-field validation; unlisted fields remain Foundation 1 values |
-| 5 | Record shape | Query-schema stores use string-keyed map roots |
-| 6 | Index types | finite number, UTF-8 string, boolean |
-| 7 | Missing fields | required missing rejects; optional missing creates no entry |
-| 8 | Maximum fields | 8 declared indexed fields |
-| 9 | Maximum indexes | 8 per store |
-| 10 | Compound indexes | deferred |
-| 11 | Unique indexes | deferred |
-| 12 | Built-in key index | deferred; GetAsync remains exact-key API |
-| 13 | Registration timing | acquisition disk-free; activation only from committed schema-aware operation |
-| 14 | Existing untyped stores | unchanged until explicit schema declaration reaches worker |
-| 15 | Adoption | bounded BUILDING state initiated by first schema-aware operation |
-| 16 | Rebuild | worker-owned keyset batches, durable checkpoints, shadow index IDs |
-| 17 | Writes during rebuild | Set/Remove rejected for the store |
-| 18 | Reads during rebuild | Get allowed; Query unavailable |
-| 19 | Evolution | identical/version-only or strict additive higher schema only |
-| 20 | Incompatible schema | reject without durable replacement |
-| 21 | Index quota | separate 16 MiB namespace / 64 MiB global derived pool |
-| 22 | Physical budget | D21 1,280 MiB operational budget unchanged; 2A must requalify |
-| 23 | Set maintenance | primary/quota/index/schema bookkeeping in one transaction |
-| 24 | Remove maintenance | primary/index/quota deletion in one transaction |
-| 25 | Query signature | `Query(Request, Callback)` |
-| 26 | Predicates | equality, lt/lte/gt/gte, bounded range, unfiltered ordered traversal |
-| 27 | Multiple predicates | at most lower+upper bounds on one selected index |
-| 28 | Ordering | selected index value then key, exact deterministic asc/desc |
-| 29 | Result | `{ Items = {{Key,Value},...}, NextCursor = ...? }` |
-| 30 | Result count | default 50, maximum 100 |
-| 31 | Result bytes | maximum 66 KiB encoded page + 8,192 aggregate value entries |
-| 32 | Work | <=101 index candidates, <=101 primary lookups, <=1,000,000 VDBE instructions |
-| 33 | Pagination | yes, opaque keyset cursor; no OFFSET |
-| 34 | Cursor | <=512 B, process/store/schema/index/query bound, integrity-protected |
-| 35 | Between pages | each call current snapshot; inserts/moves may cause omissions/repeats |
-| 36 | Deadline | existing five-second request deadline |
-| 37 | Queue/fairness | existing 8/128 FIFO/fair queue + bounded query-rate tokens |
-| 38 | Corruption | D21 for primary/physical; quarantine derived logical index corruption |
-| 39 | Corrupt-index rebuild | bounded shadow rebuild from primary; no Luau rebuild API |
-| 40 | Crash/recovery | active state atomic; BUILDING resumable; no request replay |
-| 41 | Diagnostics | bounded schema/index/build/query counters/status, no values/history |
-| 42 | SQL boundary | fixed prepared families and bound values only |
-| 43 | Tooling | metadata seam reserved; preview simulation deferred |
-| 44 | Phases | 2A substrate, 2B binding/rebuild, 2C Query, 2D closure |
-| 45 | Deferred Query features | compound/unique/nested/prefix/aggregate/scan/etc. listed above |
+- automatic Query cannot remain index-backed without scan fallback;
+- online build + concurrent writes cannot prove correct publication;
+- primary writes would have to fail solely to preserve a derived index;
+- an inconsistent index cannot be withdrawn atomically;
+- preparation waiters cannot preserve lifecycle/callback authority within bounds;
+- result memory cannot remain below transport/VM envelopes;
+- exact pinned plans cannot prove bounded index access;
+- derived-state limits cannot fit D21's physical envelope;
+- crash recovery can expose a partial index as active;
+- Where would require executing author text or arbitrary SQL generation.
 
-## 29. Architecture verdict
+## 24. Verdict
 
-The Foundation 1 seam is sufficient and the required boundedness can be expressed
-without leaking SQL or introducing a second consistency model.
+The developer-facing model is:
 
-**CANONICAL BASELINE READY.**
+1. save ordinary Foundation 1 values;
+2. ask Query what field/range/order you want;
+3. optionally hint important indexes early;
+4. CarbonLuau owns everything else.
 
-Implementation must still stop rather than claim support if exact-pinned 2A/2C
-qualification disproves the fixed plan/search assumptions, physical quotas do not
-fit D21's existing storage envelope, the 66 KiB page cannot transport every valid
-single record, or crash/rebuild tests cannot preserve active-index atomicity.
+**CANONICAL BASELINE READY — AMENDED BEFORE PERSISTENCE-2A.**
 
-No production Persistence Foundation 2 implementation began in this architecture
-task.
+No production Persistence Foundation 2 implementation began under either the initial
+D22 design or this amendment.

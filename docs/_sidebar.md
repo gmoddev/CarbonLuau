@@ -12,7 +12,7 @@
   - [Persistence 1A backend qualification](PersistenceFoundation1A.md)
   - [Persistence 1B public API qualification](PersistenceFoundation1B-Validation.md)
   - [Persistence 1C combined closure](PersistenceFoundation1C.md)
-  - [Persistence Foundation 2 architecture](PersistenceFoundation2.md)
+  - [Persistence Foundation 2 — derived indexes + Query](PersistenceFoundation2.md)
   - [Tooling Foundation A](ToolingFoundationACompletion.md)
   - [Language-analysis security](ToolingLanguageAnalysisSecurity.md)
   - [GUI Foundation 1](GuiFoundation1.md)

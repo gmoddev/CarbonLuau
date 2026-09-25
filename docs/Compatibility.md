@@ -92,7 +92,7 @@ No version label establishes overall PASS.
 The additive reserved completion export requires native ABI 1.5; no provider
 protocol, addon schema or Luau change is implied.
 
-Persistence Foundation 2 architecture is resolved by [D22](Invariants.md#d22--persistence-foundation-2--bounded-query-schemas-and-indexed-query) and [PersistenceFoundation2.md](PersistenceFoundation2.md). Its additive future schema/Query surface joins the same unreleased `0.5.0-experimental` scripting identity. This is an architecture assignment only: no Foundation 2 binding, generated metadata, package/tag/release bump, native ABI change or preview availability exists until the applicable implementation phases qualify. Existing Foundation 1 behavior and historical SinceApi values remain unchanged.
+Persistence Foundation 2 architecture is resolved by [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query) and [PersistenceFoundation2.md](PersistenceFoundation2.md). Its additive future Query surface uses CarbonLuau-owned derived indexes: no declaration is required for basic Query, optional Indexes hints only prewarm/pin derived state, and there is no author-managed schema version. It joins the same unreleased `0.5.0-experimental` scripting identity. No Foundation 2 binding, generated metadata, package/tag/release bump, native ABI change or preview availability exists until implementation qualifies.
 
 ## Dependency and host upgrades
 

@@ -157,7 +157,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
 | D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
 | D21 — resolved Persistence Foundation 1 architecture; private 1A PASS; public API assigned 0.5 | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The approved PERSIST/EXTRA and physical-budget amendments preserve hard logical/backend extent bounds; 1,280 MiB is an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) and [public 1B](PersistenceFoundation1B.md) retain their scoped evidence. [1C](PersistenceFoundation1C.md) owns combined closure and the exact final verdict. D12 experimental availability is not package publication approval. |
-| D22 — resolved Persistence Foundation 2 bounded query/index architecture; implementation NOT STARTED | Additive pure-data query schemas, bounded single-index Query, keyset cursors, separate derived-index quota and resumable shadow-index rebuilds. D21 remains durability/storage owner. [PersistenceFoundation2.md](PersistenceFoundation2.md) owns the exact public shape, bounds, evolution/rebuild and qualification gates. | Implement only through Persistence-2A–2D. No Query/schema/index API exists until its implementation phases qualify. The future surface joins unreleased `0.5.0-experimental`; this decision does not publish or bump the package. |
+| D22 — resolved Persistence Foundation 2 bounded derived-index Query architecture; implementation NOT STARTED | Basic `DataStore:Query` requires no schema/index declaration. CarbonLuau automatically owns bounded derived indexes; optional `GetDataStore(Name, { Indexes = ... })` hints only prewarm/pin fields. `Where` supports a bounded one-field comparison grammar. Online preparation keeps Get/Set/Remove available. [PersistenceFoundation2.md](PersistenceFoundation2.md) owns exact API, bounds and qualification gates. | Implement only through Persistence-2A–2D. No Foundation 2 API exists until qualification. The future surface joins unreleased `0.5.0-experimental`; package identity is unchanged. |
 
 ### Canonical detail for resolved decisions
 
@@ -447,64 +447,44 @@ quota/platform/public closure. The 2026-09-23 user decision assigns persistence
 to `0.5.0-experimental` under D12 independently of Entity. Original design adoption
 and private 1A changed no identity; this later assignment does not establish PASS.
 
-#### D22 — Persistence Foundation 2 — bounded query schemas and indexed Query
+#### D22 — Persistence Foundation 2 — bounded derived indexes and Query
 
-[PersistenceFoundation2.md](PersistenceFoundation2.md) is the detailed authority for this
-decision. D21 remains the owner of namespace identity, Foundation 1 persisted values,
-PERSIST + EXTRA durability, the single supervised persistence worker, queue/callback
-authority and the existing primary-data/storage envelope. Foundation 2 adds no second
-consistency model.
+[PersistenceFoundation2.md](PersistenceFoundation2.md) is the detailed authority.
+D21 remains owner of persistence durability, namespaces, primary values, worker
+supervision, queue/callback authority and primary-data quotas.
 
-The public direction is Roblox-like rather than SQLite-like: authors may optionally pass one
-bounded pure-data query schema to `GetDataStore(Name, Schema?)`, then call
-`DataStore:Query(Request, Callback)`. Schema descriptors are ordinary snapshotted Luau
-tables, not executable callbacks or an ORM. They declare at most eight top-level
-number/string/boolean indexes. Existing one-argument `GetDataStore` and schemaless stores
-remain valid.
+The public model is intentionally small. Existing GetDataStore(Name) remains the
+normal acquisition path and may use DataStore:Query(Request, Callback) without any
+schema or index declaration. GetDataStore(Name, Options?) is additive only for
+optional Indexes hints that prewarm/pin fields. There is no public persistence
+schema version and hints do not validate or reinterpret records.
 
-Every Query selects exactly one declared index. Equality, one lower bound plus one upper
-bound, deterministic ascending/descending ordering and bounded unfiltered top-N traversal
-are the Foundation 2 predicate model. Query never silently scans primary records. The
-private design uses a generic internal `WITHOUT ROWID` index-entry relation keyed by
-namespace/store/internal-index/sort-key/record-key, fixed prepared statement families and
-bound values. Luau never supplies SQL, table/column identifiers, SQLite operators,
-collations, row IDs or offsets.
+Query selects one top-level field. It supports deterministic ascending/descending
+ordering plus bounded Where comparisons using ==, <, <=, >, >=. Where accepts at
+most two ANDed clauses on that same field; right-hand operands are finite number,
+quoted string or boolean literals. General expressions, field-to-field comparisons,
+SQL and arbitrary scans are not part of D22.
 
-Results use fresh Foundation 1 snapshots in `{ Items = {{Key, Value}, ...}, NextCursor = ...? }`.
-Pages default to 50 and cap at 100 items, 66 KiB encoded response bytes and 8,192 aggregate
-expanded value entries. A Query inspects at most 101 candidate index rows and 101 primary
-point lookups and has a 1,000,000-VDBE-instruction backstop plus D21's existing five-second
-request deadline. Pagination is opaque keyset continuation, never numeric OFFSET. Each page
-is transactionally consistent at execution time; cursors do not promise a frozen multi-page
-snapshot.
+If Query needs an index, CarbonLuau prepares bounded derived state automatically.
+Query never falls back to a primary full-store scan. Existing records are indexed by
+resumable keyset batches. Foreground Set/Remove continue during preparation and
+dual-write the building generation through the same single worker. A derived index
+must not make an otherwise valid primary mutation fail merely to preserve query
+availability: the transaction may atomically withdraw the affected index and commit
+the authoritative primary mutation, leaving that Query view unavailable until rebuilt.
 
-Schema/index state belongs to the durable logical store rather than a transient generation.
-Schema identity is explicit authored version plus canonical SHA-256 fingerprint. Foundation
-2 permits no-schema -> schema, version-only compatible changes and strict additive higher
-schemas. Destructive/incompatible reinterpretation is rejected. Existing data is adopted by
-a worker-owned, checkpointed shadow-index BUILDING process. Get may continue during BUILDING;
-Query is unavailable and Set/Remove are frozen for that store. Active indexes are published
-only after complete success and rebuild work resumes after restart as CarbonLuau maintenance,
-not replay of the author's request.
+One store may have at most eight active/preparing field indexes. Result count/bytes,
+query work, cursors, preparation waiters, maintenance batches and index storage are
+hard-bounded as specified in the detailed design. Pagination is opaque keyset
+continuation, not OFFSET. Internal generation/fingerprint/rebuild/cursor metadata and
+SQLite representation are CarbonLuau-owned implementation state.
 
-Active Set/Remove maintain primary state, Foundation 1 quota state, active index entries and
-derived-index accounting in the same SQLite transaction. Derived indexes have a separate hard
-logical pool of 16 MiB per namespace and 64 MiB globally; active plus BUILDING entries count.
-D21's 1,280 MiB filesystem-qualified operational budget and 512 MiB database/page ceiling are
-not raised. Persistence-2A must prove the Foundation 2 ceilings fit that existing physical
-envelope or stop for an architecture amendment.
-
-Primary/schema physical corruption retains D21's fail-closed preservation rules. A
-demonstrably derived-index-only logical inconsistency may quarantine Query while preserving
-primary data, then rebuild through the same bounded shadow-index mechanism. No Luau
-`RebuildIndex` API is introduced.
-
-Foundation 2 joins the still-unpublished `0.5.0-experimental` scripting identity because it
-is additive to the unreleased persistence surface. No package/tag/release, native ABI,
-provider protocol, addon schema or Luau-pin change is authorized by D22. Implementation is
-routed through Persistence-2A private substrate, 2B schema binding/rebuild, 2C public Query,
-and 2D combined Windows/Linux lifecycle/crash/scale closure. No production Foundation 2
-implementation exists at D22 adoption.
+Foundation 2 joins the still-unpublished 0.5.0-experimental scripting identity.
+This architecture amendment changes no package/tag/release, native ABI by itself,
+provider protocol, addon schema or Luau pin. Implementation is routed through
+Persistence-2A private derived-index substrate, 2B automatic demand/options hints,
+2C public Query/Where, and 2D combined closure. No production Foundation 2
+implementation has begun.
 
 #### D2 — limits in addon-capable operation
 
@@ -596,8 +576,8 @@ not by itself an overall Persistence Foundation 1 PASS. [1C](PersistenceFoundati
 owns combined closure and final-source CI; package publication authorization
 remains separate.
 
-D22 assigns the additive bounded query-schema and `DataStore:Query` surface to the same unreleased
-`0.5.0-experimental` scripting identity. This is architecture identity only: no Foundation 2
+D22 assigns the additive derived-index `DataStore:Query` surface to the same unreleased
+`0.5.0-experimental` scripting identity. Basic Query requires no public schema/version or index declaration; optional index hints only prewarm/pin derived state. This is architecture identity only: no Foundation 2
 metadata or API availability exists until its implementation phases qualify, and D22 does not
 change the development package, tag or release.
 

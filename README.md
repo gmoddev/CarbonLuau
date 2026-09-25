@@ -71,7 +71,7 @@ not package 0.5.0 publication or retroactive 0.4 API availability. Its
 [author guide](docs/api/Persistence.md) and examples target the new bindings.
 The [canonical design](docs/PersistenceFoundation1.md), qualified private 1A
 substrate and [1B public evidence](docs/PersistenceFoundation1B-Validation.md)
-remain separate evidence owners. [Persistence Foundation 2](docs/PersistenceFoundation2.md) now resolves the bounded query-schema/index architecture under D22, but Query/schema/index implementation has not begun.
+remain separate evidence owners. [Persistence Foundation 2](docs/PersistenceFoundation2.md) now resolves the bounded derived-index Query architecture under D22: Query is declaration-free by default, optional Indexes hints only prewarm/pin derived state, and implementation has not begun.
 [World/Entity Foundation 1](docs/WorldEntityFoundation1.md)
 is host-primitive-gated/deferred; Entity-1A remains blocked by the
 [exact-lifetime proof gap](docs/WorldEntityLifetimeInvestigation.md).
