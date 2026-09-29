@@ -8,7 +8,13 @@ owns combined subsystem readiness and final-source CI. The
 [1B evidence](PersistenceFoundation1B-Validation.md) remains historical evidence.
 Subsystem readiness is not authorization to publish package 0.5.0, create its
 tag/release, publish editor artifacts or begin a release-candidate pass. D20 Entity
-and future Query are not prerequisites or implicitly assigned to that release.
+is not a persistence release prerequisite. The separately adopted
+[D22 Query design](PersistenceFoundation2.md) explicitly joins scripting API
+`0.5.0-experimental`, with structured field/value requests, automatic preparation
+and optional field hints. Its implementation/qualification remains pending and
+does not change Foundation 1's completed readiness verdict. No public schema,
+index or migration version is introduced. Package 0.5.0 publication remains a
+separate release decision.
 
 | Identity | Value |
 |---|---|

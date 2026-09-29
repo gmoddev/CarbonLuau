@@ -477,10 +477,9 @@ Foundation 2 keeps the author model small:
 12. D21 remains authoritative for persistence durability, namespace ownership, publication,
     worker ownership and callback lifetime.
 
-One store has at most eight active/preparing derived fields. First-use Query may wait on a
-separate 8-per-namespace / 32-global waiter pool for at most 30 seconds; expiry completes once
-with IndexPreparing and never replays the original Query. Ready Query execution reuses D21's
-ordinary foreground request/rate admission; Foundation 2 adds no dedicated Query token bucket.
+The detailed record owns numeric limits, preparation admission, type selection,
+cursor safety and implementation gates. Its [final correction audit](PersistenceFoundation2-Validation.md)
+separates architecture readiness from runtime qualification.
 
 Foundation 2 joins the still-unpublished 0.5.0-experimental scripting identity. This decision
 changes no package/tag/release. Implementation remains routed through Persistence-2A private
@@ -578,7 +577,10 @@ owns combined closure and final-source CI; package publication authorization
 remains separate.
 
 D22 assigns the additive derived-index `DataStore:Query` surface to the same unreleased
-`0.5.0-experimental` scripting identity. Basic Query requires no public schema/version or index declaration; optional index hints only prewarm/pin derived state. This is architecture identity only: no Foundation 2
+`0.5.0-experimental` scripting identity. Basic Query uses structured field/value
+requests and automatic preparation; optional string-list hints request early
+preparation. Authors manage no schemas, versions or migrations. This is
+architecture identity only: no Foundation 2
 metadata or API availability exists until its implementation phases qualify, and D22 does not
 change the development package, tag or release.
 

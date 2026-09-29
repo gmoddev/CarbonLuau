@@ -1,9 +1,12 @@
 # Persistence Foundation 2 — bounded derived indexes and Query
 
-Status: **CANONICAL ARCHITECTURE — FINAL CORRECTION BEFORE IMPLEMENTATION**, 2026-09-25.
+Status: **CANONICAL ARCHITECTURE — FINAL CORRECTION BEFORE IMPLEMENTATION**, 2026-09-29.
 
 Foundation 1 qualified baseline: 034f28f81c64e0f135ec882fb05de4ef7f33fcf7.
 Initial D22 documentation baseline: ee208831efc5647dab553b5f9d0524e7e2e83353.
+Reviewed/superseded correction baseline: `97bc514fb94a3739ab9fbad91c04c2d40a9c3534`.
+[Correction evidence](PersistenceFoundation2-Validation.md) records the final
+consistency review, private-bound corrections and documentation gates.
 
 This document is the detailed authority for
 [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query).
@@ -15,6 +18,9 @@ This correction supersedes both the initial D22 query-schema design and the inte
 comparison-string design before any Foundation 2 production implementation began. There is
 no author-managed schema/version, required index declaration, migration contract or write
 freeze.
+
+**All Query/options examples in this document describe the future API.** Current
+bindings and generated definitions provide Foundation 1 Get/Set/Remove only.
 
 ## 1. Public design principle
 
@@ -35,30 +41,28 @@ No schema or index declaration is required.
 local DataStoreService = game:GetService("DataStoreService")
 local Players = DataStoreService:GetDataStore("Players")
 
-Players:SetAsync("76561198000000000", {
-    Coins = 150,
-    Level = 12,
-    Faction = "Blue",
-}, function(ok, err)
-    -- ...
-end)
-
 Players:Query({
     Field = "Coins",
     Direction = "Descending",
     Limit = 25,
-}, function(results, err)
-    if err then
+}, function(Results, ErrorCode)
+    if ErrorCode then
         return
     end
 
-    for _, item in results.Items do
-        print(item.Key, item.Value.Coins)
+    for _, Item in Results.Items do
+        print(Item.Key, Item.Value.Coins)
     end
 end)
 ~~~
 
 CarbonLuau prepares and maintains the bounded derived index needed for Coins.
+The call returns immediately; results arrive through the required callback.
+If preparation cannot finish during the bounded request lifetime, the callback
+reports `IndexPreparing`. That call is finished; a later Query may benefit from
+preparation that continues in the background. Storage calls already accepted in
+the same namespace keep their normal order. To query after a write succeeds,
+submit Query from that write's success callback.
 
 The existing Foundation 1 call remains unchanged:
 
@@ -100,15 +104,27 @@ Canonical rules:
 - hints do not validate values, require fields or reinterpret records;
 - every Foundation 1 persisted value remains legal.
 
+Options is a plain table with only `Indexes`; Indexes is a dense array of distinct
+field-name strings, never a string-keyed type map. Unknown members, holes,
+duplicates, non-string entries and metatables reject synchronously. An absent or
+empty list requests no additional fields. Repeated acquisitions in one domain
+accumulate a bounded union per store; they cannot erase another acquisition's
+hints. The union and automatic demand share the eight-field ceiling.
+
 Typed index hints are deferred. Query.Type is the escape hatch for actual type ambiguity.
 
 Acquisition stays synchronous and disk-free. Hints captured by provisional code do not create
-durable state. Preparation begins only after the owning domain commits.
+durable state. Hints use existing domain/module publication staging and become
+eligible only after that publication succeeds in a committed owner domain.
+Failed candidates or cold modules discard their staged hints. A committed caller
+inside a cold/nested/public module cannot start maintenance through acquisition.
+No hint bypasses D21's current-admission/resource-owner checks.
 
 Changing hints between committed addon generations is desired-state change, not migration.
 Adding a hint requests proactive preparation/retention. Removing a hint removes that proactive
-intent and permits bounded internal reconciliation. No author version increment or migration
-call exists.
+intent; already prepared fields remain available and still count toward the
+ceiling. Foundation 2 does not remove an allocated field merely because a hint
+disappears. No author version increment, slot-management or migration call exists.
 
 
 ## 4. Query surface
@@ -122,10 +138,16 @@ DataStore:Query(
 ) -> ()
 ~~~
 
-The minimum request shape is:
+Query uses D21's current admitted owner, committed-only/no-active-publication
+check, non-yielding submission and later callback admission. A cold module may
+acquire a store and stage hints, but cannot submit Query. Foreign facades/shared
+closures do not transfer namespace authority. Failed or retired domains cannot
+dispatch new demand or receive stale completions.
+
+The request shape is:
 
 ~~~luau
-DataStoreQuery = {
+type DataStoreQuery = {
     Field: string,
     Type: ("number" | "string" | "boolean")?,
     Equals: (number | string | boolean)?,
@@ -144,24 +166,40 @@ Players:Query({
     Field = "Coins",
     Direction = "Descending",
     Limit = 25,
-}, callback)
+}, Callback)
 
 Players:Query({
     Field = "Faction",
     Equals = "Blue",
-}, callback)
+}, Callback)
 
 Players:Query({
     Field = "Level",
     Min = 10,
     Max = 20,
-}, callback)
+}, Callback)
 ~~~
 
 Direction defaults to Ascending.
 Limit defaults to 50 and is bounded to 1..100.
 Cursor is optional.
 Type is optional and normally unnecessary.
+
+Continue a page by passing its cursor with the same selection and ordering:
+
+~~~luau
+Players:Query({
+    Field = "Coins",
+    Direction = "Descending",
+    Limit = 25,
+    Cursor = Previous.NextCursor,
+}, Callback)
+~~~
+
+Only continue when `Previous.NextCursor` is non-nil. Each page sees current data;
+writes between pages may change membership or order. An invalid continuation
+reports `InvalidCursor`. The cursor is opaque and may become invalid after
+restart or replacement of CarbonLuau's query state.
 
 ## 5. Structured comparison semantics
 
@@ -178,8 +216,19 @@ Canonical rules:
 - explicit Type must agree with Equals/Min/Max values;
 - Min greater than Max is invalid under the selected number/string ordering;
 - numbers in the request must be finite;
-- strings in the request must satisfy the bounded queryable-string rule;
+- string-valued Equals/Min/Max satisfy the bounded queryable-string rule;
+  Field, enum strings and Cursor use their own bounds;
 - Cursor continues the same compatible logical query.
+
+Request must be a plain table containing only the eight listed members. Inspect
+and snapshot raw entries without invoking user code. Reject metatables, unsupported
+values, unknown members, malformed UTF-8, NUL, nonintegral/out-of-range Limit and
+oversized input before acceptance. Optional nil members are absent; `Equals = false`
+is present and selects boolean. Callback is mandatory and must be a function.
+Field is an exact 1..64-byte UTF-8 top-level map key, case-sensitive and without
+normalization; punctuation is literal and never a nested-path or SQL selector.
+The same field-name validation applies to hints. Foundation 1 map keys outside
+these Query field bounds remain legal persisted data.
 
 Foundation 2 exposes no comparison text, executable filter, query builder, SQL fragment or
 expression tree. Internal normalization into fixed CarbonLuau-owned query forms is private.
@@ -203,7 +252,20 @@ and discover represented usable scalar types:
 1. explicit Request.Type selects that type when supplied;
 2. if exactly one usable scalar type exists, use it;
 3. if more than one usable scalar type exists, fail controlledly with AmbiguousFieldType;
-4. if no queryable scalar value is represented, a healthy prepared field may return an empty page.
+4. if no scalar value is represented, a complete healthy prepared field returns an empty page.
+
+Discovery records represented scalar categories independently of derived-state
+availability. An oversized string or an unavailable representation must not
+disappear from type discovery and turn incomplete data into an empty result or
+silently choose another type. Multiple represented categories require Type;
+after selection, unavailable selected state reports QueryUnavailable. Explicit
+number/string Type with no matching values returns an empty page when that state
+is complete and healthy.
+
+Boolean selection always requires Equals. `Type = "boolean"` without Equals is
+InvalidQuery before acceptance. If an untyped ordered request discovers only
+boolean values, it completes with InvalidQuery; it never invents false/true
+ordering. For boolean equality, Direction orders matching record keys.
 
 There is no cross-type ordering.
 
@@ -221,9 +283,11 @@ Foundation 2 never turns Foundation 1 into a schema-enforced record store.
 When Query needs derived state that is not ready, CarbonLuau starts or joins bounded
 preparation. The same machinery serves automatic first-use demand and optional Indexes hints.
 
-A store may have at most eight active or preparing derived fields total. Automatic and hinted
-fields share that ceiling. Private type representations for one field do not consume additional
-public field slots.
+A store may have at most eight retained derived fields total, including active,
+preparing and unavailable fields awaiting repair. Automatic and hinted fields
+share that ceiling. Private type representations and replacement generations
+for one field do not consume additional field slots, but all their bytes count.
+No global eager indexing of arbitrary fields occurs.
 
 Foundation 2 performs no pressure-driven/LRU eviction. If the eight-field ceiling is exhausted,
 a ninth distinct field request fails controlledly rather than scanning primary data, silently
@@ -241,26 +305,45 @@ Query(...)
     -> otherwise: complete once with IndexPreparing
 ~~~
 
-Preparation waiters:
+Preparation waiters are a subset of D21's ordinary accepted-request ledger:
 
-- do not occupy D21's 8-per-namespace / 128-global dispatched persistence slots while only waiting for maintenance;
-- retain the normal host/VM/domain/callback authority;
-- are capped at 8 per namespace and 32 globally;
-- wait no more than 30 seconds from Query acceptance;
-- never cause worker Luau entry.
+- at most 8 per namespace and 32 globally, within the total 8/128 pending bounds;
+- general request tokens and the single callback/result reservation are acquired once
+  at initial acceptance; there is no mutation token or second Query rate bucket;
+- the original absolute five-second deadline covers waiting, queueing and execution;
+- the request retains its FIFO position, host/VM/domain/callback authority and reserved
+  completion capacity until delivery/discard;
+- no promotion into a second ledger, deadline reset or later synchronous rejection;
+- no worker Luau entry.
 
-The separate waiter pool is retained because preparation can legitimately outlive D21's
-five-second foreground request lifetime; holding the ordinary foreground slots while waiting
-could block unrelated persistence. The 8/32 counts and 30-second lifetime hard-bound retained
-callback authority without exposing preparation handles.
+The earlier separate 30-second waiter model is superseded: it allowed later
+same-namespace operations to overtake an accepted Query and introduced a second
+deadline. The concrete replacement above follows the qualified D21 ledger and
+limits directly. It is an additive Query state, not a change to Get/Set/Remove.
 
-If preparation becomes ready in time, the actual Query enters D21's ordinary foreground
-request ledger and executes exactly once.
+If preparation becomes ready before the original deadline, execute that Query
+once in its existing FIFO position. A cold head request holds later requests in
+that namespace under normal bounded FIFO; it does not freeze the store for the
+duration of an index build. Other namespaces continue through fair dispatch.
+When no foreground head can execute, bounded maintenance may advance preparation
+for a waiting head. Executable foreground work has priority; later same-namespace
+requests cannot overtake the waiter. Maintenance never blocks the owner thread.
 
-If preparation still legitimately needs work after 30 seconds, the callback completes once
-with IndexPreparing. The original Query is finished and is never replayed later. Already
-committed CarbonLuau-owned preparation may continue independently, and a later Query may
-benefit from it.
+If the request is still waiting for preparation at its deadline, record one
+IndexPreparing completion and release its FIFO position. If Query execution
+itself times out, use D21's DeadlineExceeded. Callback delivery uses normal later
+owner-thread admission; neither outcome promises delivery during a paused or
+retired VM. The original Query is finished and never replayed. Already-committed
+CarbonLuau-owned preparation may continue, and a later Query may benefit.
+
+Waiter saturation known at submission rejects synchronously using D21's controlled
+admission convention, with zero accepted request or callback. Retirement cancels
+waiting work and frees reservations without revoking committed maintenance intent.
+If an accepted ready Query loses its usable state before execution, it may join
+the waiting subset only within that subset's capacity and its original deadline.
+If all waiting slots are occupied, complete it once with QueryUnavailable in FIFO
+order. Never exceed the cap or turn that already accepted call into a later
+synchronous rejection.
 
 D21's at-most-once completion, stale-completion discard and VM/domain lifetime rules remain
 authoritative.
@@ -289,8 +372,25 @@ GetAsync, SetAsync and RemoveAsync therefore continue normally during index
 preparation. Queries using other ready indexes continue normally.
 
 One build batch inspects at most 32 records and at most 256 KiB of primary envelopes,
-uses a persistent keyset checkpoint, and is subject to a fixed qualified instruction
-budget. Background maintenance yields whenever foreground persistence work is ready.
+uses a persistent keyset checkpoint, and is subject to at most 1,000,000 SQLite
+VM instructions and the existing five-second worker operation backstop. Decode
+one bounded Foundation 1 value at a time; stop before advancing past an unprocessed
+record. Batch entries, completeness/type accounting and checkpoint advancement
+commit atomically. Maintenance yields between batches whenever executable
+foreground persistence work is ready, including work from other namespaces.
+
+At the end of the bounded keyset traversal, one transaction verifies the build
+identity, completeness and absence of recorded maintenance failures, then
+atomically publishes the generation and matching type metadata. No final full
+primary scan or unbounded catch-up phase is permitted. Queries cannot observe a
+partly published generation. Crash/reopen sees either the previous publication
+state or the complete new one.
+
+Before each batch, honor the earliest waiting request deadline as well as the
+operation backstop. Deadline expiry, cancellation and queued terminal outcomes
+are processed in namespace order; IndexPreparing is never scheduled ahead of an
+earlier accepted request. Waiting is not permission for a maintenance transaction
+to monopolize the worker after ready foreground work can be selected.
 
 Crash/restart resumes committed build state. No author's Query is replayed.
 
@@ -330,6 +430,14 @@ service and marking it for bounded repair/rebuild.
 
 Physical SQLite/storage failure, uncertain COMMIT outcome and primary corruption remain governed
 by D21 and may still fail or make the primary mutation Indeterminate.
+
+The same rule protects future publication: if a primary mutation commits without
+successfully maintaining a BUILDING generation, that transaction marks it
+ineligible for activation. Resume only from a provably correct checkpoint or
+restart bounded preparation; never publish a silently incomplete build. Undo
+partial derived changes and reconcile their accounting before a safe primary
+commit. A failed rollback, database-full/I/O error or uncertain transaction is
+not a merely logical derived-capacity failure; D21 decides the actual outcome.
 
 ## 10. Private index model
 
@@ -385,6 +493,15 @@ A successful result is:
 
 Values are fresh Foundation 1 snapshots.
 
+The future result contract, using the existing PersistedValue type, is:
+
+~~~luau
+type DataStoreQueryResult = {
+    Items: { { Key: string, Value: PersistedValue } },
+    NextCursor: string?,
+}
+~~~
+
 Publicly:
 
 - Limit defaults to 50;
@@ -394,12 +511,12 @@ Publicly:
 
 | Resource | Ceiling |
 |---|---:|
-| Query descriptor | 2 KiB |
+| Query descriptor | 6 KiB |
 | Field name | 64 UTF-8 bytes |
 | Queryable string scalar | 1,024 UTF-8 bytes |
 | Returned items | 100 |
 | Default items | 50 |
-| Cursor | 512 bytes |
+| Cursor | 2 KiB; generated encoding bound below |
 | Encoded response page | 66 KiB |
 | Aggregate expanded value entries | 8,192 |
 | Candidate derived rows | at most 101 |
@@ -408,8 +525,20 @@ Publicly:
 
 The worker stops before adding an item that would exceed page/decode limits and returns a
 continuation when compatible results remain. It never returns a partial record.
+Reserve result framing and continuation capacity before adding an item. A
+continuation resumes strictly after the last returned item, not an examined item
+excluded by the page bound. The one lookahead row counts toward the 101 limits.
+One maximum legal record must fit so page limits cannot cause an endless empty page.
 
 The 66 KiB page ceiling preserves Foundation 1's 68 KiB IPC frame after protocol overhead.
+It does not by itself qualify the current 64-KiB result-buffer reservation for
+Query. Persistence-2C must reserve Query-sized results while preserving D21's
+18-MiB total transport cap: 128 maximum 68-KiB request plus 66-KiB result pairs
+use 16.75 MiB before other bounded transport overhead. Account for that overhead,
+decoding scratch and native callback payloads explicitly; never allocate a page
+outside its reserved capacity. The aggregate 8,192 expanded entries includes
+result wrappers as well as values. Values retain every Foundation 1 individual
+depth/count/envelope bound and are materialized only at valid callback admission.
 
 Numeric OFFSET is not supported. Pagination uses an opaque keyset cursor. Public semantics only
 promise that the same compatible logical Query may continue with NextCursor, the cursor is
@@ -422,6 +551,45 @@ relative to an imaginary frozen snapshot.
 
 Internal cursor format versions, field IDs, generations, sort-key encoding, integrity secrets
 and other compatibility metadata remain private.
+
+### Private cursor and byte-bound reconciliation
+
+The reviewed 512-byte cursor could not carry every allowed 1,024-byte string
+boundary. Use a bounded self-contained authenticated cursor, not retained
+per-cursor server state or a later lookup of a mutable/deleted boundary record.
+Its private header is at most 64 bytes (format, field/generation identity,
+selected type and direction); add a 32-byte binding digest, a 2-byte scalar-payload
+length plus at most 1,024 bytes, a 1-byte record-key length plus at most 128 bytes,
+and a 32-byte integrity tag. Maximum raw size is 1,283 bytes; canonical base64url
+requires at most 1,712 bytes, within the 2-KiB ingress cap. Oversized/noncanonical
+encodings reject before allocation. Compression is not needed for this proof.
+The cursor's scalar payload is untagged; its type is already in the header. The
+private database SortKey type tag is reconstructed after cursor validation.
+
+Bind to the current persistent namespace, exact store/field, selected type,
+normalized Equals/Min/Max and Direction, plus the exact healthy internal
+generation. Use a private secret scoped to the loaded persistence session;
+restart/worker replacement invalidates older cursors. Verify integrity and
+authority before using a boundary. No key/value, secret, digest or generation is
+logged or exposed as a separate API member; opaque integrity protection is not
+an encryption promise. Never reconstruct or hot-retarget a stale continuation.
+
+Limit may change within 1..100 between pages. Omitted Type continues the type
+selected on the first page; adding another represented type later cannot retarget
+the cursor. An explicit Type must agree. A changed selection/direction/store or
+unusable old generation reports InvalidCursor; it cannot request a fresh first page.
+Missing/corrupt primary rows under otherwise healthy derived state follow the
+corruption rules, never silent skipping.
+
+The 6-KiB descriptor allows two 1,024-byte bounds, a 2,048-byte cursor, a 64-byte
+field and at most 512 bytes of fixed framing/type/direction/Limit data: at most
+4,672 bytes. These are private encoding allowances, not author calculations.
+A page containing one maximum 65,536-byte envelope, 128-byte key, maximum
+1,712-byte generated cursor and at most 192 bytes of result framing uses 67,568
+bytes, below 66 KiB (67,584). The 192-byte framing ceiling is mandatory, not an
+estimate; this maximum case has only 16 bytes of spare page capacity. Enforce
+the aggregate cap for all multi-item pages.
+2C must prove these encodings and their 68-KiB outer frame with boundary fixtures.
 
 
 ## 12. Ordering and query-plan proof
@@ -445,10 +613,17 @@ access without primary full scans or temporary arbitrary sorting.
 Maintenance scans used to build/rebuild/repair derived state are separate bounded,
 resumable CarbonLuau-owned work, never Query execution fallback.
 
+Type/completeness selection, cursor/generation validation, derived seeks, exact
+primary point lookups and continuation detection use one read transaction per
+Query execution. No SQLite snapshot/transaction survives the response or spans
+pages. Qualification includes equality, each inclusive range shape and top-N,
+both directions, first/continuation pages and all permitted scalar types.
+
 
 ## 13. Queue, fairness and lifecycle
 
-A ready Query reuses D21's existing foreground persistence admission:
+Every accepted Query reuses D21's existing foreground persistence admission;
+section 7's waiting subset changes neither its FIFO position nor deadline:
 
 - 8 pending per namespace;
 - 128 pending globally;
@@ -485,7 +660,8 @@ After successful domain publication CarbonLuau compares the committed string-lis
 with desired proactive preparation/retention state.
 
 Adding Level requests proactive preparation/retention for Level.
-Removing Coins removes that proactive intent and permits bounded internal reconciliation.
+Removing Coins removes that proactive intent; retained state continues to count
+under the no-eviction rule in section 3.
 
 Those changes never reinterpret or rewrite authoritative primary values. No public version
 increment or migration call exists.
@@ -504,6 +680,18 @@ Foundation 2 retains a separate logical derived-state pool:
 - 64 MiB globally;
 - active and preparing generations count;
 - internal index metadata counts.
+
+Charge the complete canonical encoded bytes of each retained derived entry and
+metadata record, including lengths/type tags, authority/field/generation IDs,
+sort and record keys, counters and checkpoints. No metadata-only allocation is
+free. Old, shadow, withdrawn and pending-cleanup state all count until deleted
+in a committed bounded cleanup transaction. Every allocation and release updates
+the separate durable accounting in the same transaction; rollback restores both.
+Checked arithmetic and startup validation are required. Private encoding widths
+are frozen/qualified in 2A; filesystem/B-tree overhead is additionally constrained
+by the unchanged database extent and operational-budget rules, not equated to
+this logical charge. Creating derived metadata never invents a primary record or
+changes Foundation 1 primary store/key/namespace quota counters.
 
 D21 primary-data quotas remain unchanged. Query indexes therefore do not silently
 shrink the addon's user-data quota.
@@ -556,10 +744,24 @@ QueryUnavailable
 InvalidCursor
 ~~~
 
-D21 persistence/backend failures remain authoritative where they already apply. Malformed
-request shape, contradictory selection and incompatible explicit types reject synchronously as
-InvalidQuery before acceptance where knowable at submission. Accepted work may later complete
-through the callback with the other Query-specific codes or an applicable D21 failure.
+D21 persistence/backend failures remain authoritative where they already apply.
+Success invokes Callback(Result, nil); an accepted failure invokes
+Callback(nil, ErrorCode). Empty results use an empty Items array and nil NextCursor.
+Malformed request shape, contradictory selection and incompatible explicit types
+reject synchronously as InvalidQuery before acceptance where knowable at submission.
+An error discovered only from stored state (including boolean-only ordered
+selection) completes through the callback once. Invalid/stale/foreign facade,
+publication, callback and general admission failures reuse D21's synchronous
+controlled convention; a rejected call owes no callback.
+
+Unavailable selected string state, an exhausted eight-field ceiling, logical
+derived capacity, untrusted derived state or a rejected private plan/work bound
+map to QueryUnavailable when known after acceptance. Preparation that is still
+eligible but unfinished at the request deadline maps to IndexPreparing. Invalid
+cursor encoding/authority/query binding maps to InvalidCursor; known malformed
+input may reject synchronously. Actual database/physical failure never gets
+relabelled as harmless preparation or absence. Operator diagnostics preserve
+the precise cause without exposing it as an author protocol.
 
 Internal build/checkpoint/plan/generation/work-limit details map to stable public outcomes and
 bounded operator diagnostics.
@@ -604,6 +806,7 @@ phase qualifies.
 - bounded resumable online preparation;
 - foreground Set/Remove maintenance of building and active state;
 - atomic withdrawal of affected active state;
+- atomic checkpoint/final publication and failure fencing for building state;
 - crash/reopen and exact-pinned storage/write-amplification qualification.
 
 No public Query binding is implemented in 2A.
@@ -614,7 +817,7 @@ No public Query binding is implemented in 2A.
 - simple string-list Indexes hints;
 - automatic field demand;
 - eight-field store ceiling;
-- bounded preparation waiters;
+- preparation waiters inside D21's existing ledger/deadline;
 - online build scheduling/fairness;
 - field type discovery/completeness;
 - replacement/reload/restart desired-state behavior.
@@ -626,10 +829,19 @@ No public Query binding is implemented in 2A.
 - AmbiguousFieldType behavior;
 - deterministic order;
 - bounded result pages;
-- opaque keyset cursor;
+- opaque authenticated keyset cursor with the byte-bound proof above;
 - exact work limits;
 - exact-pinned EXPLAIN QUERY PLAN assertions;
 - metadata/generated definitions and author docs.
+
+Qualification must exercise false equality, one/two-sided inclusive bounds,
+mixed types, empty and boolean-only fields, oversized string availability,
+changed type membership between pages, forged/cross-namespace/stale cursors,
+deleted boundary records, maximum two-string-bound descriptors, and maximum
+record-plus-continuation pages. Prove raw snapshot conversion, publication
+rejection, FIFO/deadline/rate/reservation conservation and at-most-once delivery
+for cold and ready queries. No private maintenance command counts as executing
+or replaying the user's Query; run the query statement at most once.
 
 ### Persistence-2D — combined closure
 
@@ -661,9 +873,9 @@ No phase is implemented by this correction.
 | Boolean | equality only |
 | Ordered type inference | sole usable scalar type; otherwise explicit Type or AmbiguousFieldType |
 | Missing/wrong-type fields | no match; Foundation 1 data remains legal |
-| Derived fields per store | maximum 8 active/preparing |
+| Derived fields per store | maximum 8 retained, including active/preparing/unavailable |
 | Index creation | automatic bounded preparation |
-| First-query wait | <=30 seconds; 8/ns and 32 global waiters |
+| First-query wait | 8/ns and 32 global waiting subset of D21 8/128; original five-second deadline includes wait and execution |
 | Wait timeout | one IndexPreparing callback; original Query never replayed |
 | Writes during build | continue; building state maintained transactionally |
 | ACTIVE consistency | update correctly or atomically withdraw affected derived state |
@@ -672,6 +884,7 @@ No phase is implemented by this correction.
 | Results | Items + optional NextCursor |
 | Count | default 50, max 100 |
 | Page | max 66 KiB and 8,192 expanded entries |
+| Private descriptor/cursor | 6 KiB / 2 KiB ingress; emitted cursor <=1,712 bytes |
 | Query work | <=101 candidates/lookups + <=1,000,000 VDBE instructions |
 | Ordering | selected field value then record key; descending reverses both |
 | Pagination | opaque keyset cursor; no OFFSET |

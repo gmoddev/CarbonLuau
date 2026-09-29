@@ -28,6 +28,10 @@ This is server-side Luau, not Roblox API compatibility.
 | Server-driven retained GUI with qualified Foundation 2A layout, 2B typed images and 2C scrolling source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
 | Experimental development persistence (0.5; [combined qualification](../PersistenceFoundation1C.md)) | [Guide and six examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStore](Types/DataStore.md), [PersistedValue](Types/PersistedValue.md) |
 
+The future [structured Query design](../PersistenceFoundation2.md) is canonical
+architecture only. Its field/value requests and optional field-name hints are
+not available in the current runtime or generated definitions.
+
 Players and Commands are available beginning with API `0.3.0-experimental`.
 Addon composition and GUI are available beginning with
 `0.4.0-experimental`. They are implemented but experimental; see the evidence

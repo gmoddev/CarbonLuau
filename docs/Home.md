@@ -63,7 +63,12 @@ and callback-based Get/Set/Remove in private root/addon stores. Start with the
 [guide and examples](api/Persistence.md); [1C](PersistenceFoundation1C.md) records
 the combined qualification envelope. [D21](Invariants.md#d21--persistence-foundation-1)
 and the [canonical design](PersistenceFoundation1.md) remain authoritative.
-[Persistence Foundation 2](PersistenceFoundation2.md) now resolves the future bounded derived-index Query architecture under [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query). Query requires no schema/index declaration by default; optional hints are only prewarm/control metadata. Implementation has not begun; current source remains Foundation 1 Get/Set/Remove only.
+[Persistence Foundation 2](PersistenceFoundation2.md) defines future structured
+`Query` requests using `Field`, `Equals` or inclusive `Min`/`Max` under
+[D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query).
+Preparation is automatic, with optional field-name hints. Authors manage no
+schemas, versions or migrations. The [final correction audit](PersistenceFoundation2-Validation.md)
+records design consistency; current source provides Foundation 1 Get/Set/Remove only.
 World/Entity's accepted future design
 is [host-primitive-gated/deferred](WorldEntityFoundation1.md); Entity-1A is blocked
 by the [authoritative lifetime proof gap](WorldEntityLifetimeInvestigation.md),

@@ -92,7 +92,14 @@ No version label establishes overall PASS.
 The additive reserved completion export requires native ABI 1.5; no provider
 protocol, addon schema or Luau change is implied.
 
-Persistence Foundation 2 architecture is resolved by [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query) and [PersistenceFoundation2.md](PersistenceFoundation2.md). Its additive future Query surface uses CarbonLuau-owned derived indexes: no declaration is required for basic Query, optional Indexes hints only prewarm/pin derived state, and there is no author-managed schema version. It joins the same unreleased `0.5.0-experimental` scripting identity. No Foundation 2 binding, generated metadata, package/tag/release bump, native ABI change or preview availability exists until implementation qualifies.
+Persistence Foundation 2 architecture is resolved by [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query)
+and [PersistenceFoundation2.md](PersistenceFoundation2.md). Its future Query uses
+required `Field`, structured `Equals` or inclusive `Min`/`Max`, automatic
+preparation and optional `Indexes` string-list hints. Authors manage no schemas,
+versions, migrations or index lifecycle. It joins the same unpublished
+`0.5.0-experimental` scripting identity. The [final correction audit](PersistenceFoundation2-Validation.md)
+is architecture evidence. No Foundation 2 binding, generated metadata, package
+bump or preview availability exists until implementation qualifies.
 
 ## Dependency and host upgrades
 
@@ -766,6 +773,24 @@ hardware. Record SQLite revision, effective PRAGMAs, filesystem/VFS, worker limi
 host versions and exact source/artifacts for each result. Shockbyte remains
 separately unqualified. Do not promote private 1A evidence to public-service or
 actual Carbon integration PASS.
+
+## Persistence Foundation 2 architecture gate
+
+The [D22 correction audit](PersistenceFoundation2-Validation.md) owns the
+documentation-only baseline verdict. Check D21 compatibility, the structured
+public request, optional field hints, bounded online preparation, transactional
+ACTIVE-state correctness/withdrawal, bounded results/work/cursors, and absence
+of a primary-scan fallback. Search active canonical docs, phase routing,
+decisions, examples, tooling requirements and release descriptions for superseded
+public language/schema/version contracts. Evaluate historical and unrelated
+matches rather than rewriting qualified Foundation 1 evidence.
+
+Run the existing API/link and architecture checks, Markdown syntax/navigation
+checks, release-identity inspection and a diff proving production source and
+generated bindings are untouched. Verify those checks in hosted CI and deploy
+the documentation. Unrelated runtime results do not qualify this amendment or
+the unimplemented Query feature. Persistence-2A through 2D own the implementation
+and exact SQLite/platform qualification gates in the detailed D22 record.
 
 ## Phase 0 consistency review
 

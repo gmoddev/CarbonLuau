@@ -21,7 +21,7 @@ completion evidence. Historical negative evidence in those records is preserved.
 | Starting main / fetched origin/main | `b0388a0ea59187db5f6cc86527796b771ef77c89` |
 | Qualified 1B implementation | `43f06b00328eff61c706d41f6f25628ddaa61c07` |
 | 1C correction / qualified implementation | `c23a6172e9b4dec5524ad7fad89a8e26a98c5e48` |
-| Evidence-only follow-up / final tested revision | This closure commit; resolve with `git log -1 --format=%H -- docs/PersistenceFoundation1C.md`; final-head hosted CI is verified before task handoff |
+| Evidence-only follow-up / final tested revision | `034f28f81c64e0f135ec882fb05de4ef7f33fcf7`; later routing edits do not change this historical tested revision |
 | Package / intended future package | `0.4.0` / `0.5.0`; neither released by 1C |
 | Scripting API | `0.5.0-experimental`; persistence SinceApi unchanged |
 | Native ABI / provider protocol / package schema | `1.5` / `1.2` / `1` |
@@ -272,6 +272,12 @@ counters, not a per-request history or stored keys/values/SQL. The separate nonc
 bug is a reliability defect, not a new authority grant.
 
 ## Future Query seam and exact handoff
+
+**Historical 2026-09-24 handoff, superseded for Foundation 2 public design by
+[D22](PersistenceFoundation2.md).** The schema/version wording below records the
+earlier architecture task, not an active author contract. D22 now owns structured
+Query, automatic preparation and optional field hints, with all metadata and
+evolution managed privately by CarbonLuau. Foundation 1 qualification is unchanged.
 
 Audit only: SQLite schema, row identity and representation remain private and
 versionable. Store identity can own future schema/index metadata; existing atomic

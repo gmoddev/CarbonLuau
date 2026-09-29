@@ -35,7 +35,11 @@ callbacks. A caught submission error means no acceptance and no callback owed.
 A later callback error cannot undo storage. Missing data is not a storage error:
 never replace corrupt or unavailable data with a default save.
 
-Local persistence has no shared/cloud backend, queries, key enumeration, atomic
+Current local persistence has no shared/cloud backend, queries, key enumeration, atomic
 Update/increment or multikey transactions. Generated definitions and examples do
 not supply editor storage or prove live Carbon behavior. Preview reports
 UnsupportedPreviewApi for DataStoreService; it does not simulate storage success.
+
+The accepted future [Query design](../PersistenceFoundation2.md) uses structured
+field/value requests with automatic preparation and optional field-name hints.
+It is not implemented; the examples on this page use the qualified current API.
