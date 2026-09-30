@@ -85,7 +85,7 @@ Start with [AICONTEXT.md](AICONTEXT.md), which maps each rule to its canonical d
 
 ## AI Disclaimer
 
-AI tools are used during the development of this addon. However, the project's architecture, design decisions, requirements, and overall direction are substantially human-designed and reviewed. AI is used primarily as a development and implementation aid rather than as the source of the project's design.
+AI tools are used during the development of this addon. However, the project's architecture, design decisions, requirements, and overall direction are substantially human-designed and reviewed.
 
 ## License
 
