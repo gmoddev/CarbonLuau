@@ -98,8 +98,8 @@ required `Field`, structured `Equals` or inclusive `Min`/`Max`, automatic
 preparation and optional `Indexes` string-list hints. Authors manage no schemas,
 versions, migrations or index lifecycle. It joins the same unpublished
 `0.5.0-experimental` scripting identity. The [final correction audit](PersistenceFoundation2-Validation.md)
-is architecture evidence. The 2B optional hint binding and metadata are under
-qualification; public Query has no binding or generated metadata. No package
+is architecture evidence. The 2B optional hint binding and metadata are
+[qualified](PersistenceFoundation2B.md); public Query has no binding or generated metadata. No package
 bump or preview availability is implied.
 
 ## Dependency and host upgrades
@@ -794,7 +794,7 @@ memory observations and limits are in the 2A record. Its 1-GiB database
 extent, 1,075,904,512-byte journal extent and 2,560-MiB filesystem-allocation
 operational budget are adopted private D21 limits, not a released public
 support envelope. File extents and allocated-block observations are
-different guarantees. The 2B optional hint binding is now under qualification;
+different guarantees. The 2B optional hint binding is [qualified](PersistenceFoundation2B.md);
 public Query and cursors remain unimplemented.
 
 The [D22 correction audit](PersistenceFoundation2-Validation.md) owns the

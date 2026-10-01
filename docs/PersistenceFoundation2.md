@@ -1,10 +1,10 @@
 # Persistence Foundation 2 — bounded derived indexes and Query
 
-Status: **CANONICAL ARCHITECTURE; PRIVATE 2A PASS; 2B UNDER QUALIFICATION**.
+Status: **CANONICAL ARCHITECTURE; PRIVATE 2A PASS; 2B PASS; PUBLIC QUERY UNIMPLEMENTED**.
 The 2026-09-29 final public-design correction preceded implementation.
 [2A evidence](PersistenceFoundation2A.md) records qualified private derived
-state. The 2B options/hint/demand slice is under qualification; public Query
-remains closed until a separately authorized 2C.
+state. The [2B options/hint/demand slice](PersistenceFoundation2B.md) is
+qualified; public Query remains closed until a separately authorized 2C.
 
 Foundation 1 qualified baseline: 034f28f81c64e0f135ec882fb05de4ef7f33fcf7.
 Initial D22 documentation baseline: ee208831efc5647dab553b5f9d0524e7e2e83353.
@@ -904,8 +904,9 @@ or replaying the user's Query; run the query statement at most once.
 - final API/release-readiness audit.
 
 The original documentation correction implemented no phase. Separately
-authorized [2A](PersistenceFoundation2A.md) is PASS. This 2B task implements
-optional hints and private demand/waiters; Query remains a separate 2C task.
+authorized [2A](PersistenceFoundation2A.md) is PASS. Separately authorized
+[2B](PersistenceFoundation2B.md) qualifies optional hints and private
+demand/waiters; Query remains a separate 2C task.
 
 
 ## 21. Canonical decision summary
@@ -951,7 +952,7 @@ optional hints and private demand/waiters; Query remains a separate 2C task.
 | Query fallback scan | forbidden |
 | SQL boundary | fixed prepared statement families; no author SQL/syntax fragments |
 | API identity | 0.5.0-experimental; package remains 0.4.0 |
-| Production implementation | private 2A PASS; 2B under qualification; public Query not started |
+| Production implementation | private 2A PASS; 2B PASS; public Query not started |
 
 
 ## 22. Deferred features
@@ -1038,5 +1039,6 @@ publishes authoritative-primary Ready before bounded process-local derived
 verification; unadmitted retained ACTIVE state cannot serve Query. The private
 extent, correctness, work/memory, platform, failure and hosted gates are closed
 in [PersistenceFoundation2A.md](PersistenceFoundation2A.md). Private 2A is
-PASS; public Query remains unimplemented. Persistence-2B is the next separately
-authorized phase, not work performed during 2A.
+PASS; public Query remains unimplemented. Persistence-2B was separately
+authorized and is [qualified](PersistenceFoundation2B.md), not work performed
+during 2A.

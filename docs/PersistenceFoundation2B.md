@@ -1,11 +1,21 @@
 # Persistence Foundation 2B — optional hints and private automatic demand
 
-Status: **IMPLEMENTED; FINAL PLATFORM/HOSTED QUALIFICATION PENDING.** This
+Status: **PERSISTENCE-2B PASS — READY FOR PERSISTENCE-2C.** This
 record owns the 2B implementation and evidence. [D21](Invariants.md#d21--persistence-foundation-1)
 continues to own authoritative primary storage and resource policy;
 [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query)
 and [Foundation 2](PersistenceFoundation2.md) own the future Query contract.
 [2A](PersistenceFoundation2A.md) owns the qualified private derived substrate.
+
+Implementation revisions: `2593936` (surface, private demand/waiters and tests),
+`d4dff50` (worker restart/expiry regressions), `bfe5654` (correct production
+facade-coordinator intake), and `1076706` (terminal-demand cleanup and bounded
+callback diagnostics). Final tested implementation revision: `1076706`.
+Hosted [Windows/Linux/sanitizer validation](https://github.com/gmoddev/CarbonLuau/actions/runs/36921350492)
+and [tooling Foundations A/B](https://github.com/gmoddev/CarbonLuau/actions/runs/36921350604)
+both passed on that exact revision. Earlier hosted attempts failed at the
+adapter compile seam and then at an existing Windows addon-isolation callback
+assertion; the latter was instrumented and passed on the final revision.
 
 ## Implemented boundary
 
@@ -68,10 +78,10 @@ the private DB/journal extent and operational allocation limits are unchanged.
 | Public options/publication | Native real-VM fixtures cover omitted/empty, 1/8/9, duplicate/hole, malformed text, metatables, exact punctuation, snapshot, nested/cold/provisional/failed/successful publication, root/addon isolation and no Query binding. Windows focused PASS. |
 | Private demand | Actual SQLite backend and framed worker fixtures cover duplicate demand, retained ACTIVE/BUILDING, process-local proof, eight/ninth field, type discovery, oversized strings and checkpoint-time type changes. Windows focused PASS. |
 | Managed ledger | Deterministic tests cover 8/32 waiter bounds, deadline, FIFO, other-namespace progress, ready-state loss, literal punctuation, retirement, worker-loss expiry, worker-restart reassertion, one reservation and no replay. A 1,024-field terminal-demand cycle returns private intent count to zero each time. Windows PASS. |
-| Integrated Windows | Native 21/21 and real compiler/VM → managed hint staging → production worker demand PASS. Persistence-1B real-worker regression PASS. |
-| Windows combined closure | Full real-VM/runtime regression PASS; Persistence-1C combined real-worker stress and 12 host/worker reopen cycles PASS. Final-source hosted qualification remains pending. |
-| Linux native/sanitizer/fault | Pending hosted final-source qualification; local linuxbox has no installed build toolchain. |
-| Hosted CI/documentation | Pending final-source run. |
+| Integrated Windows | Local native 21/21; real compiler/VM → managed hint staging → production worker demand; Persistence-1B real-worker regression; and full runtime regression PASS. |
+| Windows combined closure | Hosted Windows native, private worker/fault, adapter teardown, full runtime, Persistence-1C combined stress/reopen and package/clean-install gates PASS on `1076706`. |
+| Linux native/sanitizer/fault | Hosted Linux native, private worker/fault, full runtime, Persistence-1C and package/clean-install PASS. Hosted ASan/UBSan/leak/fault PASS. Local linuxbox had no installed build toolchain; no local live-Carbon claim. |
+| Hosted CI/documentation | Validation run `36921350492` and tooling run `36921350604` PASS on `1076706`. API, architecture, metadata-generation, tooling-contract and relative-link checks PASS locally. Public docs deployment follows publication to `main`; no release/tag is part of 2B. |
 
 Historical 2A storage-fit, compact-layout, split-storage, startup and D21
 capacity investigations remain intact. 2B does not reopen their settled
