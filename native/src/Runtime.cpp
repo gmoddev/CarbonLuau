@@ -281,6 +281,15 @@ ClStatus cl_domain_commit(ClHandle Id, ClHandle DomainId) try
     Owner->PendingCallbacks.clear();
     std::make_heap(Owner->Queue.begin(), Owner->Queue.end(), Later{});
     Owner->Active = true;
+    try {
+        for (const auto& Hint : Owner->StorageHints) if (!PublishStorageHint(*Runtime, *Owner, Hint)) {
+            Retire(*Runtime);
+            return CL_INTERNAL_ERROR;
+        }
+    } catch (...) {
+        Retire(*Runtime);
+        return CL_INTERNAL_ERROR;
+    }
     return CL_OK;
 } catch (...) { return CL_INTERNAL_ERROR; }
 

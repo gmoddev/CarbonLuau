@@ -192,8 +192,8 @@ int main(int Count,char** Args)
         uint64_t Last=0;
         for (;;) {
             // Foreground bytes always win between bounded maintenance turns.
-            // No demand ingress exists in 2A; this only resumes committed private
-            // preparation after reopen. A future waiter stays in the host ledger.
+            // Demand is a foreground frame. Idle turns verify retained state or
+            // advance one bounded build batch; the host owns waiter ordering.
             if(!InputReady() && Store.HasDerivedWork()){
                 // A rolled-back derived-only failure suspends background work;
                 // it must not retire a healthy authoritative primary worker.
@@ -220,14 +220,24 @@ int main(int Count,char** Args)
 #endif
             }
 #endif
-            Result Outcome=Expires<=Time ? Result{Error::DeadlineExceeded} :
-                Store.Execute(Op,Id,Envelope,Clock::now()+std::chrono::milliseconds(Expires-Time));
+            Result Outcome;
+            uint32_t Flags=0;
+            if(Op==Operation::Demand) {
+                const auto Demand=Expires<=Time ? DemandResult{Error::DeadlineExceeded,0} :
+                    !Envelope.empty() ? DemandResult{Error::InvalidArgument,0} :
+                    Store.DemandDerived(Id,Clock::now()+std::chrono::milliseconds(Expires-Time));
+                Outcome.Code=Demand.Code; Flags=Demand.Code==Error::None ? Demand.Flags : 0;
+            } else {
+                Outcome=Expires<=Time ? Result{Error::DeadlineExceeded} :
+                    Store.Execute(Op,Id,Envelope,Clock::now()+std::chrono::milliseconds(Expires-Time));
+                Flags=(Outcome.Found ? 1u : 0u) | (Outcome.NamespacePresent ? 2u : 0u);
+            }
 #if defined(CARBONLUAU_STORAGE_FIXTURE) && CARBONLUAU_STORAGE_FIXTURE == 1
             if (Op==Operation::Set && Outcome.Code==Error::None) std::_Exit(79);
 #endif
             Bytes Reply{'C','L','P','S'}; Put32(Reply,1); Put32(Reply,uint32_t(Outcome.Code)); Put64(Reply,Nonce);
             for (auto Token : Route) Put64(Reply,Token);
-            Put32(Reply,(Outcome.Found ? 1u : 0u) | (Outcome.NamespacePresent ? 2u : 0u)); Put32(Reply,uint32_t(Outcome.Envelope.size()));
+            Put32(Reply,Flags); Put32(Reply,uint32_t(Outcome.Envelope.size()));
             Reply.insert(Reply.end(),Outcome.Envelope.begin(),Outcome.Envelope.end());
             if (!WriteFrame(Reply)) return 0;
             if (!Store.Available()) return 2;

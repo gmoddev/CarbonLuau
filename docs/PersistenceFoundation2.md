@@ -1,10 +1,10 @@
 # Persistence Foundation 2 — bounded derived indexes and Query
 
-Status: **CANONICAL ARCHITECTURE; PRIVATE 2A LOCAL QUALIFICATION COMPLETE,
-HOSTED CI PENDING**.
-The 2026-09-29 final public-design correction preceded implementation; the
-current [2A working-tree evidence](PersistenceFoundation2A.md) records a
-subsequently authorized private candidate. Public Query and 2B remain closed.
+Status: **CANONICAL ARCHITECTURE; PRIVATE 2A PASS; 2B UNDER QUALIFICATION**.
+The 2026-09-29 final public-design correction preceded implementation.
+[2A evidence](PersistenceFoundation2A.md) records qualified private derived
+state. The 2B options/hint/demand slice is under qualification; public Query
+remains closed until a separately authorized 2C.
 
 Foundation 1 qualified baseline: 034f28f81c64e0f135ec882fb05de4ef7f33fcf7.
 Initial D22 documentation baseline: ee208831efc5647dab553b5f9d0524e7e2e83353.
@@ -23,8 +23,9 @@ comparison-string design before any Foundation 2 production implementation began
 no author-managed schema/version, required index declaration, migration contract or write
 freeze.
 
-**All Query/options examples in this document describe the future API.** Current
-bindings and generated definitions provide Foundation 1 Get/Set/Remove only.
+**Query examples in this document describe the future API.** Current
+development bindings and generated definitions provide Foundation 1
+Get/Set/Remove and the 2B optional `GetDataStore` hints only.
 
 ## 1. Public design principle
 
@@ -412,7 +413,7 @@ Until then Query is unavailable/preparing and never scans primary records.
 Background/lazy proof is bounded and yields to foreground persistence work.
 The proof and any admitted identity are invalidated if an intervening primary
 mutation could make the proof stale. No process-local admission survives a
-worker crash or reload. The current private 2A candidate implements one
+worker crash or reload. The qualified private 2A implementation uses one
 process-local proof for the retained graph; per-index lazy admission is not a
 current implementation claim. Primary Ready is independent of that proof.
 
@@ -902,10 +903,9 @@ or replaying the user's Query; run the query statement at most once.
 - physical-allocation requalification;
 - final API/release-readiness audit.
 
-The original documentation correction implemented no phase. The separately
-authorized private 2A candidate is now implemented in the working tree and
-under qualification; it has no public binding. This record does not declare
-2A PASS or authorize 2B.
+The original documentation correction implemented no phase. Separately
+authorized [2A](PersistenceFoundation2A.md) is PASS. This 2B task implements
+optional hints and private demand/waiters; Query remains a separate 2C task.
 
 
 ## 21. Canonical decision summary
@@ -951,7 +951,7 @@ under qualification; it has no public binding. This record does not declare
 | Query fallback scan | forbidden |
 | SQL boundary | fixed prepared statement families; no author SQL/syntax fragments |
 | API identity | 0.5.0-experimental; package remains 0.4.0 |
-| Production implementation | private 2A candidate under qualification; public Query/2B not started |
+| Production implementation | private 2A PASS; 2B under qualification; public Query not started |
 
 
 ## 22. Deferred features

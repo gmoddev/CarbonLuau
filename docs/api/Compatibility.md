@@ -17,11 +17,12 @@ is required by the additive completion ingress. [Release mapping](../Release.md)
 and [the 1B record](../PersistenceFoundation1B.md) separate identity from evidence.
 Existing APIs keep their historical introduction versions and qualification.
 
-[Persistence Foundation 2](../PersistenceFoundation2.md) is the accepted future
-Query design for the same `0.5.0-experimental` API: structured field/value
-requests, automatic preparation and optional field-name hints. It is not
-implemented or included in generated definitions yet. There is no author schema,
-version or migration requirement. Current persistence remains Get/Set/Remove.
+[Persistence Foundation 2](../PersistenceFoundation2.md) defines structured
+Query for the same `0.5.0-experimental` API. Optional field-name hints in
+`GetDataStore(Name, Options?)` are the 2B addition and appear in generated
+definitions. Query, result and cursor APIs remain unimplemented. There is no
+author schema, version or migration requirement. Current storage operations
+remain Get/Set/Remove.
 
 The earlier unreleased 0.4.0 candidate combines the additive addon, GUI Foundation 1 and
 implemented GUI Foundation 2 layout/image/scrolling surfaces under this one

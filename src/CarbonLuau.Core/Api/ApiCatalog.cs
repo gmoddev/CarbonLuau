@@ -187,6 +187,10 @@ namespace CarbonLuau.Core
         private static void CheckType(string Expression, IDictionary<string, JObject> Types)
         {
             string WithoutLiterals = System.Text.RegularExpressions.Regex.Replace(Expression, "\"[^\"]*\"", "");
+            // Record aliases use field labels (for example {Indexes: {string}?});
+            // those labels are not referenced API types.
+            WithoutLiterals = System.Text.RegularExpressions.Regex.Replace(WithoutLiterals,
+                @"(?<=\{|,)\s*[A-Za-z_][A-Za-z0-9_]*\s*:", "");
             foreach (System.Text.RegularExpressions.Match Word in System.Text.RegularExpressions.Regex.Matches(WithoutLiterals, "[A-Za-z_][A-Za-z0-9_]*"))
                 if (!Types.ContainsKey(Word.Value) && !new[] { "string", "number", "boolean", "any", "nil", "unknown", "never", "thread" }.Contains(Word.Value))
                     throw new InvalidOperationException("unknown API type: " + Word.Value);

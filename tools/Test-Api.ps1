@@ -19,7 +19,7 @@ foreach ($Service in @('Players','Commands','Gui','Items','DataStoreService')) {
     if (!$Bootstrap.Contains(('if Name == "{0}"' -f $Service))) { throw "Missing registered service: $Service" }
     if ($Service -ne 'Gui' -and !(Test-Path -LiteralPath (Join-Path $Root "docs/api/Services/$Service.md"))) { throw "Missing service reference: $Service" }
 }
-foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection','GiveItemBehavior','DataStore','PersistedValue')) {
+foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection','GiveItemBehavior','DataStore','DataStoreOptions','PersistedValue')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "docs/api/Types/$Type.md"))) { throw "Missing type reference: $Type" }
 }
 $Documents = @(Get-Item (Join-Path $Root 'README.md')) + @(Get-Item (Join-Path $Root 'CHANGELOG.md')) +
@@ -129,7 +129,7 @@ $StoreReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types
 $ServiceReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Services/DataStoreService.md')
 $Catalog = Get-Content -Raw -LiteralPath (Join-Path $Root 'api/carbonluau-api.json') | ConvertFrom-Json
 $Definitions = Get-Content -Raw -LiteralPath (Join-Path $Root 'generated/carbonluau.d.luau')
-$PersistenceTypes = @('DataStoreService','DataStore','PersistedValue')
+$PersistenceTypes = @('DataStoreService','DataStore','DataStoreOptions','PersistedValue')
 foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
     $IsPersistence = $Declaration.Id -cin $PersistenceTypes -or $Declaration.OwnerId -cin $PersistenceTypes
     if ($IsPersistence) {
@@ -146,7 +146,9 @@ foreach ($Method in @('GetDataStore','GetAsync','SetAsync','RemoveAsync')) {
         !($StoreReference + $ServiceReference).Contains(":$Method(")) { throw "Persistence binding/reference differs: $Method" }
 }
 foreach ($Signature in @('Callback: (PersistedValue?, string?) -> ()','Callback: (boolean?, string?) -> ()',
-        'export type PersistedValue = boolean | number | string | {PersistedValue} | {[string]: PersistedValue}')) {
+        'export type PersistedValue = boolean | number | string | {PersistedValue} | {[string]: PersistedValue}',
+        'export type DataStoreOptions = {Indexes: {string}?}',
+        'function GetDataStore(self, StoreName: string, Options: DataStoreOptions?): (DataStore)')) {
     if (!$Definitions.Contains($Signature)) { throw "Generated persistence type differs: $Signature" }
 }
 $StoreMethods = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'DataStore' } | ForEach-Object Name | Sort-Object)

@@ -4,8 +4,9 @@
 struct sqlite3;
 namespace CarbonLuau::Persistence {
 class Derived;
-enum class Operation : uint32_t { Get = 1, Set = 2, Remove = 3 };
+enum class Operation : uint32_t { Get = 1, Set = 2, Remove = 3, Demand = 4 };
 struct Result { Error Code = Error::None; bool Found = false; Bytes Envelope; bool NamespacePresent = false; };
+struct DemandResult { Error Code = Error::None; uint32_t Flags = 2; };
 
 // Called exclusively by the storage worker, never by a game/VM thread.
 class Backend {
@@ -15,8 +16,13 @@ public:
     Backend(const Backend&) = delete;
     Backend& operator=(const Backend&) = delete;
     Result Execute(Operation Op, const Identity& Id, const Bytes& Envelope, Deadline End);
+    // Key is the exact top-level field. Zero means verification/build pending;
+    // one means a current-process admitted ACTIVE generation; two is unavailable.
+    // Ready admits the field generation, not every scalar facet: an ACTIVE
+    // field with OversizedStrings still has an unavailable string facet.
+    DemandResult DemandDerived(const Identity& Id, Deadline End);
     bool Available() const { return Healthy; }
-    // Private worker substrate only. No protocol/Luau demand surface in 2A.
+    // Private 2A test substrate; no Luau Query surface.
     bool PrepareDerived(const Identity& StoreId, const std::string& Field, Deadline End, bool Force = false);
     bool MaintainDerived(Deadline End);
     bool HasDerivedWork();

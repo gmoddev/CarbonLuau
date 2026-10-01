@@ -26,6 +26,7 @@ internal static partial class PersistencePublicTests
         internal readonly Runtime.StorageQueue Queue;
         internal readonly Runtime.StorageSupervisor Worker;
         internal readonly Runtime.ScriptHost Host;
+        internal readonly Runtime.FacadeWorld World;
         internal readonly Runtime.AddonRegistry Addons;
         internal readonly Registrar Commands = new Registrar();
         internal readonly StringBuilder Logs = new StringBuilder();
@@ -47,7 +48,7 @@ internal static partial class PersistencePublicTests
             } else Queue.Ready = true;
             Modules.Add("state", "return {}");
             var Config = new Runtime.RuntimeConfig { MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20, MaxQueuedCallbacks = 64 };
-            var World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Commands);
+            World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Commands);
             Host = new Runtime.ScriptHost(Native, Config, () => {
                 var Snapshot = new Runtime.ScriptSnapshot { EntryName = "init.luau", EntrySource = Source };
                 foreach (var Entry in Modules) Snapshot.Modules.Add(Entry.Key, Entry.Value);
@@ -80,6 +81,7 @@ internal static partial class PersistencePublicTests
         }
         internal void Tick(bool Drain = true)
         {
+            foreach (Runtime.FacadeSession Session in World.Sessions()) Session.FlushStorageHints();
             if (Worker != null) Worker.Tick();
             else Queue.BeginTick();
             Native.PumpStorage();

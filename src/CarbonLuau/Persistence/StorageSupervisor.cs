@@ -13,6 +13,7 @@ namespace Carbon.Plugins
             private readonly Thread Thread;
             private StorageQueue.Request Slot;
             private int Stopping, Ready, Finished, Closed;
+            private int ObservedWorkerStart;
             private int Failure, Starts, Retries, Corruptions;
             private long Sent;
             internal bool IsFinished { get { return Volatile.Read(ref Finished)!=0; } }
@@ -38,7 +39,10 @@ namespace Carbon.Plugins
             internal void Tick()
             {
                 Queue.BeginTick();
-                Queue.Ready=Volatile.Read(ref Ready)!=0 && Volatile.Read(ref Stopping)==0;
+                bool Available=Volatile.Read(ref Ready)!=0 && Volatile.Read(ref Stopping)==0;
+                int Start=Volatile.Read(ref Starts);
+                if (Available && Start!=ObservedWorkerStart) { Queue.WorkerStarted(); ObservedWorkerStart=Start; }
+                Queue.Ready=Available;
                 if (Volatile.Read(ref Slot)!=null) return;
                 var Request=Queue.Dispatch();
                 if (Request!=null) {

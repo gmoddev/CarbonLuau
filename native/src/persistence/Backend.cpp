@@ -445,6 +445,56 @@ bool Backend::PrepareDerived(const Identity& Id,const std::string& Field,Deadlin
     if(!Indexes || DerivedPaused || !Indexes->VerificationComplete()) return false;
     return DerivedOperation(&Id,&Field,OperationEnd,Force);
 }
+DemandResult Backend::DemandDerived(const Identity& Id,Deadline OperationEnd)
+{
+    if(!Healthy || !Indexes)return {Error::StorageUnavailable,0};
+    // Validate the complete worker identity and the narrower literal field
+    // bound before touching SQLite. A rejected frame cannot poison the backend.
+    try {
+        Identity StoreId=Id; StoreId.Key="K";
+        Validate(StoreId); Require(ValidField(Id.Key));
+    }
+    catch(const Failure& Problem) { return {Problem.Code,0}; }
+    if(Clock::now()>=OperationEnd)return {Error::DeadlineExceeded,0};
+    if(DerivedPaused || Indexes->VerificationFailed())return {Error::None,2};
+    if(!Indexes->VerificationComplete())return {Error::None,0};
+
+    End=std::min(OperationEnd,Clock::now()+std::chrono::seconds(5));Progress(1000000);
+    bool Transaction=false,CommitStarted=false;
+    try {
+        Require(Clock::now()<End,Error::DeadlineExceeded);
+        try { CheckFiles(); }
+        catch(const Failure& Problem) { if(Problem.Code!=Error::DeadlineExceeded)Healthy=false; throw; }
+        Sql(Database,"BEGIN IMMEDIATE");Transaction=true;
+        auto View=Indexes->Inspect(Id,Id.Key);
+        uint32_t Flags=0;
+        if(View.Admitted && View.Status==Derived::State::Active)Flags=1;
+        else if(View.Status==Derived::State::Building)Flags=0;
+        else if(!Indexes->Prepare(Id,Id.Key))Flags=2;
+        // A newly allocated BUILDING generation is never reported ready. The
+        // next poll observes ACTIVE only after the maintenance COMMIT and proof.
+        Require(Clock::now()<End,Error::DeadlineExceeded);
+        STORAGE_POINT("derived-before-commit");CommitStarted=true;
+        Sql(Database,"COMMIT");Transaction=false;
+        STORAGE_POINT("derived-after-commit");CheckFiles();
+        Require(Clock::now()<End,Error::DeadlineExceeded);
+        Progress();
+        return {Error::None,Flags};
+    } catch(const Failure& Problem) {
+        sqlite3_progress_handler(Database,0,nullptr,nullptr);
+        bool RolledBack=!Transaction || sqlite3_get_autocommit(Database)!=0 ||
+            sqlite3_exec(Database,"ROLLBACK",nullptr,nullptr,nullptr)==SQLITE_OK;
+        Progress();
+        if(!CommitStarted && RolledBack)Indexes->InvalidateVerification();
+        if(CommitStarted || !RolledBack || Problem.Code==Error::StorageCorrupt ||
+            Problem.Code==Error::FormatUnsupported || Problem.Code==Error::StorageError)Healthy=false;
+        else if(Problem.Code!=Error::DeadlineExceeded)DerivedPaused=true;
+        return {CommitStarted || !RolledBack ? Error::Indeterminate : Problem.Code,0};
+    } catch(...) {
+        Indexes->InvalidateVerification();Healthy=false;
+        return {Error::StorageError,0};
+    }
+}
 bool Backend::MaintainDerived(Deadline OperationEnd)
 { return DerivedOperation(nullptr,nullptr,OperationEnd); }
 bool Backend::DerivedOperation(const Identity* Id,const std::string* Field,Deadline OperationEnd,bool Force)

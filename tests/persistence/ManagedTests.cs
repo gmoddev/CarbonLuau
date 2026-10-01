@@ -262,6 +262,106 @@ partial class ManagedTests
         Check(Queue.TakeCompletion()==null && Queue.PendingCount==0);
         Console.WriteLine("[CarbonLuau:Persistence] Queue/name/lifetime model PASS (not native publication proof)");
     }
+    static void PreparationLedgerTests()
+    {
+        ulong Now=1000;
+        var Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+        var Owner=Queue.Bind(11,12,"prepare");
+        Queue.Hint(Owner,"State","Coins"); Queue.Hint(Owner,"State","Coins");
+        Check(Queue.PendingCount==0 && Queue.WaiterCount==0);
+        var Demand=Queue.Dispatch();
+        Check(Demand!=null && Demand.InternalDemand && Demand.Op==Queue.Operation.Demand &&
+            Host.StorageProcess.U32(Demand.Frame,8)==4);
+        byte[] Ready=Reply(Demand); Host.StorageProcess.Put32(Ready,52,1);
+        Queue.Complete(Demand,Ready,Now); Check(Queue.Dispatch()==null);
+        var Await=Queue.SubmitAwait(Owner,"State","Coins",1);
+        Check(Queue.Dispatch()==null && Queue.WaiterCount==0);
+        var Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.Ready);
+        Queue.Release(Done); Check(Queue.PendingCount==0);
+
+        Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+        Owner=Queue.Bind(11,12,"prepare"); var Other=Queue.Bind(11,13,"other");
+        Await=Queue.SubmitAwait(Owner,"State","Level",1);
+        Queue.Submit(Owner,11,12,true,Queue.Operation.Get,"State","Key",new byte[0],2);
+        Queue.Submit(Other,11,13,true,Queue.Operation.Get,"State","Key",new byte[0],1);
+        var Foreign=Queue.Dispatch(); Check(Foreign!=null && Foreign.Owner==Other);
+        Queue.Complete(Foreign,Reply(Foreign),Now);
+        Demand=Queue.Dispatch(); Check(Demand!=null && Demand.InternalDemand && Queue.WaiterCount==1);
+        Done=Queue.TakeCompletion(); Check(Done==Foreign); Queue.Release(Done);
+        Queue.Complete(Demand,Reply(Demand),Now); Check(Queue.Dispatch()==null);
+        Now+=50; Demand=Queue.Dispatch(); Check(Demand!=null && Demand.InternalDemand);
+        Ready=Reply(Demand); Host.StorageProcess.Put32(Ready,52,1); Queue.Complete(Demand,Ready,Now);
+        var Later=Queue.Dispatch(); Check(Later!=null && Later.Owner==Owner && Later.Op==Queue.Operation.Get);
+        Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.Ready && Queue.WaiterCount==0);
+        Queue.Release(Done);
+        Queue.Complete(Later,Reply(Later),Now); Check(Queue.Dispatch()==null);
+        Queue.Release(Queue.TakeCompletion()); Check(Queue.PendingCount==0);
+
+        Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+        Owner=Queue.Bind(11,12,"timeout"); Await=Queue.SubmitAwait(Owner,"State","Coins",1);
+        Demand=Queue.Dispatch(); Check(Demand.InternalDemand); Queue.Complete(Demand,Reply(Demand),Now);
+        Check(Queue.Dispatch()==null); Now+=5000; Check(Queue.Dispatch()==null);
+        Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.IndexPreparing);
+        Queue.Release(Done); Check(Queue.WaiterCount==0 && Queue.PendingCount==0 && Queue.TakeCompletion()==null);
+
+        Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+        for (int Index=0; Index<32; ++Index) {
+            Owner=Queue.Bind(11,(ulong)Index+1,"w"+Index);
+            Queue.SubmitAwait(Owner,"State","Coins",1);
+        }
+        Check(Queue.WaiterCount==32 && Queue.PendingCount==32);
+        Other=Queue.Bind(11,100,"overflow");
+        Rejected(()=>Queue.SubmitAwait(Other,"State","Coins",1),3);
+        Check(Queue.WaiterCount==32 && Queue.PendingCount==32);
+          Queue.RetireAll(); Check(Queue.WaiterCount==0 && Queue.PendingCount==0);
+
+          // A field is a literal top-level key, not a D21 data key/path.
+          Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+          Owner=Queue.Bind(11,12,"literal");
+          Await=Queue.SubmitAwait(Owner,"State","a/b:c",1);
+          Demand=Queue.Dispatch();
+          Check(Demand!=null && Demand.InternalDemand && Demand.Field=="a/b:c");
+          Ready=Reply(Demand); Host.StorageProcess.Put32(Ready,52,1);
+          Queue.Complete(Demand,Ready,Now); Check(Queue.Dispatch()==null);
+          Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.Ready);
+          Queue.Release(Done);
+
+          // An accepted ready request can lose admission. It joins the same
+          // bounded waiter subset without a second reservation or deadline.
+          Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+          Owner=Queue.Bind(11,12,"lostready");
+          Await=Queue.SubmitAwait(Owner,"State","Coins",1,true);
+          ulong OriginalDeadline=Await.End;
+          Check(Queue.Dispatch()!=null && Queue.WaiterCount==1 && Await.End==OriginalDeadline);
+          Queue.RetireAll(); Check(Queue.WaiterCount==0 && Queue.PendingCount==0);
+
+          // The transition cannot exceed the 32-global waiter ceiling. A
+          // previously accepted request settles once with unavailable state.
+          Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+          for (int Index=0; Index<32; ++Index) {
+              Owner=Queue.Bind(11,(ulong)Index+1,"sat"+Index);
+              Queue.SubmitAwait(Owner,"State","Coins",1);
+          }
+          Other=Queue.Bind(11,100,"readylost");
+          Await=Queue.SubmitAwait(Other,"State","Coins",1,true);
+          Check(Queue.PendingCount==33 && Queue.WaiterCount==32);
+          Queue.Dispatch();
+          Done=Queue.TakeCompletion();
+          Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.QueryUnavailable && Queue.WaiterCount==32);
+          Queue.Release(Done);
+          Check(Queue.TakeCompletion()==null && Queue.PendingCount==32);
+          Queue.RetireAll(); Check(Queue.PendingCount==0 && Queue.WaiterCount==0);
+
+          Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+          Owner=Queue.Bind(11,12,"faira"); Other=Queue.Bind(11,13,"fairb");
+          Queue.SubmitAwait(Owner,"State","A",1); Queue.SubmitAwait(Other,"State","B",1);
+          Demand=Queue.Dispatch(); Check(Demand!=null && Demand.Field=="A");
+          Queue.Complete(Demand,Reply(Demand),Now);
+          Demand=Queue.Dispatch(); Check(Demand!=null && Demand.Field=="B");
+          Queue.Complete(Demand,Reply(Demand),Now); Queue.RetireAll();
+          Check(Queue.PendingCount==0 && Queue.WaiterCount==0);
+          Console.WriteLine("[CarbonLuau:Persistence] Private 2B demand/waiter FIFO, deadline, capacity and retirement PASS");
+    }
     static byte[] Envelope()
     {
         byte[] Value;
@@ -557,7 +657,7 @@ partial class ManagedTests
                 try { using(var Guard=new Host.StorageOwnership(Args[1])) { return 0; } } catch(IOException) { return 23; }
             }
             if (Args.Length==3 && Args[0]=="--parent") return ParentFixture(Args[1],Args[2]);
-            QueueTests(); BoundsTests(); NamespaceRetentionTests(); ProtocolTests(); OwnershipTests();
+            QueueTests(); PreparationLedgerTests(); BoundsTests(); NamespaceRetentionTests(); ProtocolTests(); OwnershipTests();
             if (Args.Length>=1) { ProcessTests(Path.GetFullPath(Args[0])); ProtocolInputTests(Path.GetFullPath(Args[0])); ShutdownTests(Path.GetFullPath(Args[0])); ParentDeathTests(Path.GetFullPath(Args[0])); DuplicateWorkerTests(Path.GetFullPath(Args[0])); PreflightDisableTests(Path.GetFullPath(Args[0])); }
             if (Args.Length>=3) { FaultTests(Path.GetFullPath(Args[1]),true); FaultTests(Path.GetFullPath(Args[2]),false); }
             if (Args.Length==4) DerivedWorkerTests(Path.GetFullPath(Args[0]),Path.GetFullPath(Args[3]));

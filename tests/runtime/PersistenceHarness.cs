@@ -78,6 +78,7 @@ internal static partial class PersistencePublicTests
             RoundTrips(Native, Worker, Path.Combine(Root, "roundtrips"));
             AttachedStorageRequiresAbi15(Native);
             DeterministicAdmission(Native);
+            HintPublicationIntegration(Native, Worker, Root);
             GlobalCapacity(Native);
             using (var F = new Fixture(Native, Worker, Path.Combine(Root, "observations"))) PerformanceObservations(F);
             using (var F = new Fixture(Native, Worker, Path.Combine(Root, "stress"))) Stress(F);

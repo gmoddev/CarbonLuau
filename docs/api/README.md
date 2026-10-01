@@ -26,11 +26,11 @@ This is server-side Luau, not Roblox API compatibility.
 | Addon manifests, dependencies and package-qualified imports | [Addon composition](Addons.md) |
 | Carbon provider registration protocol | [Addon providers](Addon-Providers.md) |
 | Server-driven retained GUI with qualified Foundation 2A layout, 2B typed images and 2C scrolling source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
-| Experimental development persistence (0.5; [combined qualification](../PersistenceFoundation1C.md)) | [Guide and six examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStore](Types/DataStore.md), [PersistedValue](Types/PersistedValue.md) |
+| Experimental development persistence (0.5; [combined qualification](../PersistenceFoundation1C.md)) | [Guide and six examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md), [PersistedValue](Types/PersistedValue.md) |
 
-The future [structured Query design](../PersistenceFoundation2.md) is canonical
-architecture only. Its field/value requests and optional field-name hints are
-not available in the current runtime or generated definitions.
+Optional `GetDataStore` field-name hints are the Persistence-2B addition. The
+future [structured Query design](../PersistenceFoundation2.md) remains
+architecture only; no public Query method or result/cursor type is implemented.
 
 Players and Commands are available beginning with API `0.3.0-experimental`.
 Addon composition and GUI are available beginning with

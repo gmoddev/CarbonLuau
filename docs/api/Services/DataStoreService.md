@@ -10,7 +10,29 @@ Retrieve with `game:GetService("DataStoreService")` in the owning root/addon.
 
 | Signature | Return | Effect |
 |---|---|---|
-| `DataStoreService:GetDataStore(StoreName: string)` | DataStore | Synchronous, disk-free facade acquisition; allowed during candidate/module publication. |
+| `DataStoreService:GetDataStore(StoreName: string, Options: DataStoreOptions?)` | DataStore | Synchronous, disk-free facade acquisition; allowed during candidate/module publication. |
+
+`Options` may be omitted or be a plain table containing only `Indexes`, an
+optional dense array of at most eight distinct strings. Each string names an
+exact, case-sensitive top-level field (1..64 UTF-8 bytes, no NUL). Punctuation
+is literal, not a path or SQL. Metatables, holes, duplicate names, unknown
+options and malformed text raise a controlled argument error. For example:
+
+```luau
+local DataStoreService = game:GetService("DataStoreService")
+local Players = DataStoreService:GetDataStore("Players", {
+    Indexes = {"Coins", "Level"},
+})
+```
+
+These are optional preparation hints, not a schema, uniqueness rule or promise
+that an index is immediately usable. Acquiring the facade does no disk I/O or
+scan. Repeated acquisitions in one committed generation accumulate the bounded
+field union; empty later hints do not erase earlier intent. Provisional and
+cold-module hints cannot start maintenance before successful publication, and
+failed publications discard their intent. Replacing a domain may reassert a
+different hint set without deleting already retained private indexes. There is
+no public `Query` method yet. See [DataStoreOptions](../Types/DataStoreOptions.md).
 
 Acquisition does not create persistent rows or confirm storage readiness. A failed
 publication stales its newly acquired facade. Repeated acquisition identifies the

@@ -42,6 +42,11 @@ struct StorageName {
     std::string Name;
     std::shared_ptr<StoragePublication> Publication;
 };
+struct StorageHint {
+    Domain* Owner = nullptr;
+    std::string Store;
+    std::vector<std::string> Fields;
+};
 struct StorageCallback {
     uint64_t Route = 0, Due = 0, Sequence = 0;
     uint32_t Operation = 0, Error = 0;
@@ -70,6 +75,7 @@ struct Domain {
     std::array<uint64_t,8> StorageReservations{};
     std::array<std::unique_ptr<StorageCallback>,8> StorageCallbacks;
     std::vector<StorageName> StorageNames;
+    std::vector<StorageHint> StorageHints;
     ClHostCall Host = nullptr;
     uint64_t HostIdentity = 0;
     int Game = LUA_NOREF, Dispatch = LUA_NOREF, GuiBindings = LUA_NOREF;
@@ -135,6 +141,7 @@ struct PublicationScope {
     std::vector<Callback> Callbacks;
     std::vector<Domain*> Facades;
     std::shared_ptr<StoragePublication> Storage;
+    std::vector<StorageHint> StorageHints;
     bool Complete = false;
     PublicationScope(Vm& Runtime) : Runtime(Runtime), Parent(Runtime.Publication) { Runtime.Publication = this; }
     ~PublicationScope();
@@ -171,6 +178,9 @@ bool ReleaseStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId);
 void InstallStorage(lua_State* State, Domain& Owner);
 void ClearStorage(Vm& Runtime, Domain& Owner);
 bool ReleaseStorageHost(Vm& Runtime, Domain& Owner, uint64_t Route);
+bool MergeStorageHint(std::vector<StorageHint>& Hints, Domain& Owner, const std::string& Store,
+    const std::vector<std::string>& Fields);
+bool PublishStorageHint(Vm& Runtime, Domain& Owner, const StorageHint& Hint);
 StorageCallback* NextStorage(Domain& Owner);
 void RollbackPublication(PublicationScope& Scope);
 int FindStaged(Vm& Runtime, Domain* Owner, Module* Value);

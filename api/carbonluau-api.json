@@ -93,6 +93,20 @@
       "Preview": "Unavailable"
     },
     {
+      "Id": "DataStoreOptions",
+      "Name": "DataStoreOptions",
+      "Kind": "Value",
+      "Summary": "Optional plain-table Indexes list of at most eight distinct exact top-level UTF-8 field names, 1..64 bytes each; hints request preparation only.",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Alias",
+      "TypeExpression": "{Indexes: {string}?}"
+    },
+    {
       "Id": "DataStoreService",
       "Name": "DataStoreService",
       "Kind": "Service",
@@ -865,7 +879,7 @@
       "Name": "GetDataStore",
       "OwnerId": "DataStoreService",
       "Kind": "Method",
-      "Summary": "Disk-free private store acquisition, allowed during publication; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied.",
+      "Summary": "Disk-free private store acquisition with optional bounded index hints; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied.",
       "Preview": "Unavailable",
       "Availability": {
         "SinceApi": "0.5.0-experimental",
@@ -879,6 +893,12 @@
               "Name": "StoreName",
               "Type": "string",
               "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Options",
+              "Type": "DataStoreOptions?",
+              "Optional": true,
               "Variadic": false
             }
           ],

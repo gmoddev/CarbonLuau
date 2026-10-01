@@ -24,7 +24,11 @@ namespace Carbon.Plugins
         private void OnTick()
         {
             if (Stopping || Persistence==null || Native==null || (Host!=null && Host.Busy)) return;
-            try { Native.CheckOwner(); Persistence.Tick(); Native.PumpStorage(); RequestDrain(); }
+            try {
+                Native.CheckOwner();
+                if (Facade!=null) foreach (FacadeSession Session in Facade.Sessions()) Session.FlushStorageHints();
+                Persistence.Tick(); Native.PumpStorage(); RequestDrain();
+            }
             catch (Exception) {
                 // An unexpected owner-thread intake/scheduling failure can leave
                 // accepted native callbacks alive. Use normal host teardown;

@@ -16,6 +16,7 @@ constexpr size_t MaximumDepth = 16;
 constexpr size_t MaximumTableEntries = 1024;
 constexpr size_t MaximumEntries = 4096;
 constexpr size_t MaximumStoreNames = 64;
+constexpr size_t MaximumHintFields = 8;
 struct StorageFacade {
     Domain* Owner;
     std::shared_ptr<StoragePublication> Publication;
@@ -62,6 +63,55 @@ std::string Text(lua_State* State, int Index, size_t Maximum, bool Name)
     std::string Value(Bytes, Length);
     P::Require(P::ValidText(Value, Maximum, Name));
     return Value;
+}
+std::vector<std::string> ReadIndexes(lua_State* State, int Index, Vm& Runtime)
+{
+    luaL_checkstack(State, 4, "DataStore options stack bound");
+    Index = lua_absindex(State, Index);
+    P::Require(lua_type(State, Index) == LUA_TTABLE);
+    if (lua_getmetatable(State, Index)) { lua_pop(State, 1); throw P::Failure(P::Error::InvalidArgument); }
+    std::array<std::string, MaximumHintFields> Ordered;
+    std::array<bool, MaximumHintFields> Present{};
+    size_t Count = 0;
+    lua_pushnil(State);
+    while (lua_next(State, Index)) {
+        Deadline(Runtime);
+        P::Require(++Count <= MaximumHintFields && lua_type(State, -2) == LUA_TNUMBER);
+        double Key = lua_tonumber(State, -2);
+        P::Require(std::isfinite(Key) && Key >= 1 && Key <= MaximumHintFields && Key == std::floor(Key));
+        size_t Position = size_t(Key - 1);
+        P::Require(!Present[Position] && lua_type(State, -1) == LUA_TSTRING);
+        Ordered[Position] = Text(State, -1, 64, false);
+        P::Require(!Ordered[Position].empty());
+        Present[Position] = true;
+        lua_pop(State, 1);
+    }
+    std::vector<std::string> Fields;
+    Fields.reserve(Count);
+    for (size_t I = 0; I < Count; ++I) {
+        P::Require(Present[I]);
+        P::Require(std::find(Fields.begin(), Fields.end(), Ordered[I]) == Fields.end());
+        Fields.push_back(std::move(Ordered[I]));
+    }
+    return Fields;
+}
+std::vector<std::string> ReadOptions(lua_State* State, Vm& Runtime)
+{
+    if (lua_gettop(State) == 2 || lua_isnil(State, 3)) return {};
+    P::Require(lua_type(State, 3) == LUA_TTABLE);
+    if (lua_getmetatable(State, 3)) { lua_pop(State, 1); throw P::Failure(P::Error::InvalidArgument); }
+    std::vector<std::string> Fields;
+    lua_pushnil(State);
+    while (lua_next(State, 3)) {
+        Deadline(Runtime);
+        size_t Length = 0;
+        P::Require(lua_type(State, -2) == LUA_TSTRING);
+        const char* Key = lua_tolstring(State, -2, &Length);
+        P::Require(Length == 7 && std::memcmp(Key, "Indexes", 7) == 0);
+        Fields = ReadIndexes(State, -1, Runtime);
+        lua_pop(State, 1);
+    }
+    return Fields;
 }
 void PushFacade(lua_State* State, Domain& Owner, const char* Type, const std::string& Store)
 {
@@ -266,18 +316,47 @@ int Submit(lua_State* State, uint32_t Operation)
         "DataStore rate exhausted", "ForeignDataStore", "DataStore admission failed"};
     luaL_error(State, "%s", Status < std::size(Rejections) ? Rejections[Status] : "DataStore host protocol failure");
 }
-// @carbonluau-api {"Owner":"DataStoreService","Name":"GetDataStore","Kind":"Method","Args":[["StoreName","string"]],"Returns":["DataStore"],"Summary":"Disk-free private store acquisition, allowed during publication; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"int GetDataStore(lua_State* State)"}
+// @carbonluau-api {"Owner":"DataStoreService","Name":"GetDataStore","Kind":"Method","Args":[["StoreName","string"],["Options","DataStoreOptions?"]],"Returns":["DataStore"],"Summary":"Disk-free private store acquisition with optional bounded index hints; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"int GetDataStore(lua_State* State)"}
+// @carbonluau-api {"Type":"DataStoreOptions","Kind":"Value","Representation":"Alias","TypeExpression":"{Indexes: {string}?}","Summary":"Optional plain-table Indexes list of at most eight distinct exact top-level UTF-8 field names, 1..64 bytes each; hints request preparation only.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable"}
 int GetDataStore(lua_State* State)
 {
     auto& Service = Facade(State, ServiceType);
-    if (lua_gettop(State) != 2) luaL_error(State, "GetDataStore expects one store name");
+    if (lua_gettop(State) < 2 || lua_gettop(State) > 3) luaL_error(State, "GetDataStore expects a store name and optional Options");
+    Vm& Runtime = RuntimeFor(State);
     std::string Name = Text(State, 2, 64, true);
+    auto Fields = ReadOptions(State, Runtime);
     auto& Names = Service.Owner->StorageNames;
     Names.erase(std::remove_if(Names.begin(), Names.end(), [](const StorageName& Item) { return !Published(Item.Publication); }), Names.end());
     bool Existing = std::any_of(Names.begin(), Names.end(), [&](const StorageName& Item) { return Item.Name == Name; });
     if (!Existing && Names.size() == MaximumStoreNames) luaL_error(State, "DataStore acquired name limit");
+    // Check the effective union before creating the returned facade or changing intent.
+    if (!Fields.empty()) {
+        std::vector<StorageHint> Effective = Service.Owner->StorageHints;
+        for (auto* Scope = Runtime.Publication; Scope; Scope = Scope->Parent)
+            for (const auto& Hint : Scope->StorageHints)
+                MergeStorageHint(Effective, *Hint.Owner, Hint.Store, Hint.Fields);
+        MergeStorageHint(Effective, *Service.Owner, Name, Fields);
+    }
     PushFacade(State, *Service.Owner, StoreType, Name);
-    if (!Existing) Names.push_back(StorageName{std::move(Name), Publication(RuntimeFor(State).Publication)});
+    if (!Existing) Names.push_back(StorageName{Name, Publication(Runtime.Publication)});
+    if (!Fields.empty()) {
+        if (Runtime.Publication) MergeStorageHint(Runtime.Publication->StorageHints, *Service.Owner, Name, Fields);
+        else {
+            // Prepare the committed union before the host accepts intent, then
+            // swap it in without a fallible allocation after acceptance.
+            std::vector<StorageHint> Candidate = Service.Owner->StorageHints;
+            if (MergeStorageHint(Candidate, *Service.Owner, Name, Fields)) {
+                const auto& Hint = *std::find_if(Candidate.begin(), Candidate.end(), [&](const StorageHint& Item) {
+                    return Item.Owner == Service.Owner && Item.Store == Name;
+                });
+                if (!PublishStorageHint(Runtime, *Service.Owner, Hint)) {
+                    if (!Existing) Names.pop_back();
+                    luaL_error(State, "DataStore hint transport rejected");
+                }
+                Service.Owner->StorageHints.swap(Candidate);
+            }
+        }
+    }
     return 1;
 }
 // @carbonluau-api {"Owner":"DataStore","Name":"GetAsync","Kind":"Method","Args":[["Key","string"],["Callback","(PersistedValue?, string?) -> ()"]],"Returns":[],"Summary":"Committed-only non-yielding read submission. Later callback receives fresh value/nil, nil/nil for absence, or nil/ErrorCode. Immediate return means acceptance only; rejected calls owe no callback. D21 keys: 1..128 UTF-8 bytes; 8 pending/namespace, 128 globally; 5-second request deadline. Private owner required; retirement suppresses delivery.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"int GetAsync(lua_State* State)"}
@@ -333,6 +412,50 @@ bool ReleaseStorageHost(Vm& Runtime, Domain& Owner, uint64_t Route)
     return Owner.Host(Owner.HostIdentity, 32, Frame.data(), uint32_t(Frame.size()), Owner.HostBuffer->data(),
         uint32_t(Owner.HostBuffer->size()), &Written) == 0 && Written == 0;
 }
+
+bool MergeStorageHint(std::vector<StorageHint>& Hints, Domain& Owner, const std::string& Store,
+    const std::vector<std::string>& Fields)
+{
+    if (Fields.empty()) return false;
+    auto Found = std::find_if(Hints.begin(), Hints.end(), [&](const StorageHint& Item) {
+        return Item.Owner == &Owner && Item.Store == Store;
+    });
+    if (Found == Hints.end()) {
+        P::Require(std::count_if(Hints.begin(), Hints.end(), [&](const StorageHint& Item) {
+            return Item.Owner == &Owner;
+        }) < MaximumStoreNames);
+        Hints.push_back(StorageHint{&Owner, Store, Fields});
+        return true;
+    }
+    bool Changed = false;
+    for (const auto& Field : Fields) if (std::find(Found->Fields.begin(), Found->Fields.end(), Field) == Found->Fields.end()) {
+        P::Require(Found->Fields.size() < MaximumHintFields);
+        Found->Fields.push_back(Field);
+        Changed = true;
+    }
+    return Changed;
+}
+
+bool PublishStorageHint(Vm& Runtime, Domain& Owner, const StorageHint& Hint)
+{
+    if (!Owner.Alive || !Owner.Active || !Owner.Host || !Owner.HostBuffer ||
+        Runtime.Owner != std::this_thread::get_id() || GetDomain(Runtime, Owner.Id, true) != &Owner ||
+        Hint.Owner != &Owner || !P::ValidText(Hint.Store, 64, true) ||
+        Hint.Fields.empty() || Hint.Fields.size() > MaximumHintFields) return false;
+    P::Bytes Frame{'C','L','P','H'};
+    Frame.reserve(32 + Hint.Store.size() + Hint.Fields.size() * 68);
+    P::Put32(Frame, 1);
+    P::Put64(Frame, Runtime.GenerationId); P::Put64(Frame, Owner.Id);
+    P::Put32(Frame, uint32_t(Hint.Store.size())); P::Put32(Frame, uint32_t(Hint.Fields.size()));
+    Frame.insert(Frame.end(), Hint.Store.begin(), Hint.Store.end());
+    for (const auto& Field : Hint.Fields) {
+        if (Field.empty() || Field.size() > 64 || !P::ValidText(Field, 64)) return false;
+        P::Put32(Frame, uint32_t(Field.size())); Frame.insert(Frame.end(), Field.begin(), Field.end());
+    }
+    uint32_t Written = 0;
+    return Owner.Host(Owner.HostIdentity, 33, reinterpret_cast<const char*>(Frame.data()), uint32_t(Frame.size()),
+        Owner.HostBuffer->data(), uint32_t(Owner.HostBuffer->size()), &Written) == 0 && Written == 0;
+}
 void ClearStorage(Vm& Runtime, Domain& Owner)
 {
     for (auto& Slot : Owner.StorageCallbacks) if (Slot) {
@@ -342,6 +465,7 @@ void ClearStorage(Vm& Runtime, Domain& Owner)
         ++Runtime.RetiredDiscarded; ++Owner.Discarded;
     }
     Owner.StorageNames.clear();
+    Owner.StorageHints.clear();
 }
 StorageCallback* NextStorage(Domain& Owner)
 {

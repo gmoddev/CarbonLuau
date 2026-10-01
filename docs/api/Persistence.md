@@ -23,11 +23,13 @@ not a currency ledger, automatic player save system or migration framework.
 | [Snapshot](../../examples/persistence/snapshot/init.luau) | Mutating the submitted table cannot change the snapshot; editing a Get result does not save. |
 | [Errors](../../examples/persistence/errors/init.luau) | Synchronous rejected request versus later operational/indeterminate outcome; no automatic retry or default overwrite. |
 
-Read [DataStoreService](Services/DataStoreService.md), [DataStore](Types/DataStore.md)
+Read [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md)
 and [PersistedValue](Types/PersistedValue.md) for signatures and behavior. The
 [canonical contract](../PersistenceFoundation1.md) owns detailed limits and
-durability assumptions. Its 1,280-MiB allocated-file figure is an operational
-safety budget/qualification target, not a hard never-exceeded physical disk quota.
+durability assumptions. The qualified private 2A backend has a 2,560-MiB
+filesystem-allocation operational budget, not a never-exceeded physical disk
+quota. Logical quota is an admission ceiling, not a promise that every mutation
+below it will fit within the independent file-extent limits.
 
 Initialization may acquire a store, but all async calls, including reads, require
 committed execution with no active publication. Examples use deferred or event
@@ -41,5 +43,6 @@ not supply editor storage or prove live Carbon behavior. Preview reports
 UnsupportedPreviewApi for DataStoreService; it does not simulate storage success.
 
 The accepted future [Query design](../PersistenceFoundation2.md) uses structured
-field/value requests with automatic preparation and optional field-name hints.
-It is not implemented; the examples on this page use the qualified current API.
+field/value requests with automatic preparation. `GetDataStore` accepts optional
+field-name preparation hints; Query itself is not implemented. The examples on
+this page use Get, Set and Remove only.

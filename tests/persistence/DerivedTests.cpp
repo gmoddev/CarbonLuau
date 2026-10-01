@@ -987,6 +987,202 @@ void PausedVerificationAndRetry(const std::filesystem::path& Parent)
     CheckProjection(Folder, Id);
 }
 
+void AutomaticDemand(const std::filesystem::path& Parent)
+{
+    const auto Folder=Fixture(Parent,"automatic-demand");
+    Identity Id{false,"","Store","/literal.field"};
+    {
+        Backend Store(Folder,Until());
+        const auto Expired=Store.DemandDerived(Id,Clock::now()-std::chrono::milliseconds(1));
+        Check(Expired.Code==Error::DeadlineExceeded && Expired.Flags==0,
+            "expired demand reports D21 deadline");
+        auto Demand=Store.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::None && Demand.Flags==0,"first demand prepares");
+        {
+            Connection Db(Folder);
+            Check(Scalar(Db,"SELECT count(*) FROM DerivedGenerations")==1,"first generation allocated");
+        }
+        for(unsigned Poll=0;Poll<3;++Poll) {
+            Demand=Store.DemandDerived(Id,Until());
+            Check(Demand.Code==Error::None && Demand.Flags==0,"poll joins BUILDING");
+        }
+        {
+            Connection Db(Folder);
+            Check(Scalar(Db,"SELECT count(*) FROM DerivedGenerations")==1,"poll does not duplicate build");
+        }
+        Drain(Store);
+        Demand=Store.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::None && Demand.Flags==1,"complete ACTIVE admitted");
+        Id.Key="";
+        Demand=Store.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::InvalidArgument && Demand.Flags==0,"empty field rejected");
+        Id.Key=std::string(65,'x');
+        Demand=Store.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::InvalidArgument && Demand.Flags==0,"oversized field rejected");
+        Id.Key=std::string("\xc0\xaf",2);
+        Demand=Store.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::InvalidArgument && Demand.Flags==0,"invalid UTF-8 rejected");
+        Check(Store.Available(),"bad demand does not retire primary");
+        for(unsigned Field=1;Field<8;++Field) {
+            Id.Key="Field"+std::to_string(Field);
+            Demand=Store.DemandDerived(Id,Until());
+            Check(Demand.Code==Error::None && Demand.Flags==0,"eight-field demand admitted");
+        }
+        Id.Key="Ninth";
+        Demand=Store.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::None && Demand.Flags==2,"ninth field unavailable");
+        Check(Store.Execute(Operation::Get,Identity{false,"","Store","Key"},{},Until()).Code==Error::None,
+            "primary Get survives ceiling");
+    }
+    Id.Key="/literal.field";
+    {
+        Backend Reopened(Folder,Until());
+        auto Demand=Reopened.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::None && Demand.Flags==0,"reopen does not admit unverified ACTIVE");
+        Check(!Reopened.MaintainDerived(Clock::now()-std::chrono::milliseconds(1)),"pause verifier");
+        Demand=Reopened.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::None && Demand.Flags==2,"paused derived state unavailable");
+        Check(Reopened.Available(),"derived pause preserves primary backend");
+    }
+    {
+        Backend Reopened(Folder,Until());
+        auto Demand=Reopened.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::None && Demand.Flags==0,"fresh process proof pending");
+        Verify(Reopened);
+        Demand=Reopened.DemandDerived(Id,Until());
+        Check(Demand.Code==Error::None && Demand.Flags==1,"verified retained ACTIVE admitted");
+    }
+
+    const auto Shared=Fixture(Parent,"hint-demand-shared");
+    {
+        Backend Store(Shared,Until());
+        Identity SharedId{false,"","Store","Coins"};
+        Check(Store.PrepareDerived(SharedId,"Coins",Until()),"proactive preparation accepted");
+        auto Joined=Store.DemandDerived(SharedId,Until());
+        Check(Joined.Code==Error::None && Joined.Flags==0,"automatic demand joins hinted BUILDING");
+        Check(Store.PrepareDerived(SharedId,"Coins",Until()),"duplicate hint joins BUILDING");
+        {
+            Connection Db(Shared);
+            Check(Scalar(Db,"SELECT count(*) FROM DerivedGenerations")==1,
+                "hint and demand share one generation");
+        }
+        Drain(Store);
+        Joined=Store.DemandDerived(SharedId,Until());
+        Check(Joined.Code==Error::None && Joined.Flags==1,"shared build becomes admitted ACTIVE");
+    }
+}
+
+void DemandDiscovery(const std::filesystem::path& Parent)
+{
+    const auto Folder=Fixture(Parent,"demand-discovery");
+    const Identity StoreId{false,"","Store",""};
+    const std::string Field="/literal.field";
+    auto WithField=[&](const Value& Scalar) {
+        Value Result; Result.Map.emplace_back(Field,std::make_shared<Value>(Scalar)); return Result;
+    };
+    auto Present=[](const Inspection& State,const std::string& KeyName) {
+        return std::any_of(State.Entries.begin(),State.Entries.end(),[&](const OrderedEntry& Entry) {
+            return Entry.second==KeyName;
+        });
+    };
+    Backend Store(Folder,Until());
+    Set(Store,Key(StoreId,"K000"),WithField(Numeric(0)));
+    Set(Store,Key(StoreId,"K001"),WithField(Text(std::string(1024,'a'))));
+    Set(Store,Key(StoreId,"K002"),WithField(Flag(true)));
+    Set(Store,Key(StoreId,"K003"),WithField(Text(std::string(1025,'b'))));
+    Set(Store,Key(StoreId,"K004"),Value{}); // missing field
+    Value Array; Array.Type=Kind::Array; Array.Array.push_back(std::make_shared<Value>(Numeric(1)));
+    Set(Store,Key(StoreId,"K005"),WithField(Array));
+    Set(Store,Key(StoreId,"K006"),Numeric(6)); // non-map root
+    Set(Store,Key(StoreId,"K007"),WithField(Value{})); // non-scalar map field
+    for(unsigned Index=8;Index<40;++Index)
+        Set(Store,Key(StoreId,RecordKey(Index)),WithField(Numeric(Index)));
+
+    Identity DemandId=StoreId; DemandId.Key=Field;
+    auto Demand=Store.DemandDerived(DemandId,Until());
+    Check(Demand.Code==Error::None && Demand.Flags==0,"discovery starts bounded build");
+    const auto Started=Inspect(Folder,StoreId,Field);
+    Check(Started.View.Status==Derived::State::Building && Started.View.Members==0,
+        "unstarted field is not complete");
+    Check(Store.MaintainDerived(Until()),"first discovery batch");
+    const auto Partial=Inspect(Folder,StoreId,Field);
+    Check(Partial.View.Status==Derived::State::Building && Partial.Checkpoint=="K031" &&
+        Partial.View.Members==28 && Partial.View.Numbers==25 && Partial.View.Strings==2 &&
+        Partial.View.Booleans==1 && Partial.View.OversizedStrings==1 &&
+        Present(Partial,"K001") && !Present(Partial,"K003"),
+        "partial type discovery retains represented oversized string");
+    Demand=Store.DemandDerived(DemandId,Until());
+    Check(Demand.Code==Error::None && Demand.Flags==0 &&
+        Inspect(Folder,StoreId,Field).View.Generation==Started.View.Generation,
+        "poll joins same incomplete generation");
+
+    Set(Store,Key(StoreId,"K000"),WithField(Text("changed"))); // scanned number -> string
+    Set(Store,Key(StoreId,"K001"),WithField(Flag(false))); // scanned string -> boolean
+    Set(Store,Key(StoreId,"K002"),WithField(Numeric(-2))); // scanned boolean -> number
+    Set(Store,Key(StoreId,"K035"),WithField(Text(std::string(1025,'c')))); // future number -> oversized
+    Set(Store,Key(StoreId,"K036"),WithField(Text(std::string(1024,'d')))); // future number -> usable
+    Set(Store,Key(StoreId,"K037"),WithField(Value{})); // future number -> non-scalar
+    Set(Store,Key(StoreId,"K038"),Numeric(38)); // future number -> non-map root
+    Set(Store,Key(StoreId,"K039"),WithField(Flag(true))); // future number -> boolean
+    Demand=Store.DemandDerived(DemandId,Until());
+    Check(Demand.Code==Error::None && Demand.Flags==0 &&
+        Inspect(Folder,StoreId,Field).View.Generation==Started.View.Generation,
+        "type changes do not duplicate or prematurely admit build");
+    Drain(Store);
+    Demand=Store.DemandDerived(DemandId,Until());
+    Check(Demand.Code==Error::None && Demand.Flags==1,"mixed field ACTIVE after complete build");
+    auto Complete=Inspect(Folder,StoreId,Field);
+    Check(Complete.View.Generation==Started.View.Generation &&
+        Complete.View.Status==Derived::State::Active && Complete.View.Members==34 &&
+        Complete.View.Numbers==28 && Complete.View.Strings==4 && Complete.View.Booleans==2 &&
+        Complete.View.OversizedStrings==2 && Complete.Entries.size()==32,
+        "complete discovery counts all represented scalar categories");
+    for(const auto& KeyName : {"K004","K005","K006","K007","K037","K038","K003","K035"})
+        Check(!Present(Complete,KeyName),"missing/non-scalar/oversized has no sortable entry");
+    Check(Present(Complete,"K036") && Present(Complete,"K000") && Present(Complete,"K001") &&
+        Present(Complete,"K002") && Present(Complete,"K039"),
+        "1024-byte and type-changed values have entries");
+    // Inspect uses a separate, unadmitted diagnostic engine. The successful
+    // Demand above proves this exact generation is admitted in Store.
+    Complete.View.Admitted=true;
+    Check(Complete.View.Queryable(Kind::Number) && Complete.View.Queryable(Kind::Boolean) &&
+        !Complete.View.Queryable(Kind::String),
+        "generic ready never claims complete oversized string facet");
+
+    Set(Store,Key(StoreId,"K003"),WithField(Text("bounded")));
+    Set(Store,Key(StoreId,"K035"),WithField(Text(std::string(1024,'e'))));
+    Demand=Store.DemandDerived(DemandId,Until());
+    Check(Demand.Code==Error::None && Demand.Flags==1,"ACTIVE maintained after string repair");
+    Complete=Inspect(Folder,StoreId,Field); Complete.View.Admitted=true;
+    Check(Complete.View.Strings==4 && Complete.View.OversizedStrings==0 &&
+        Complete.View.Queryable(Kind::String) && Present(Complete,"K035"),
+        "string facet available only after last oversized value removed");
+
+    Value Categories;
+    Categories.Map.emplace_back("NumberOnly",std::make_shared<Value>(Numeric(1)));
+    Categories.Map.emplace_back("StringOnly",std::make_shared<Value>(Text("one")));
+    Categories.Map.emplace_back("BooleanOnly",std::make_shared<Value>(Flag(true)));
+    Categories.Map.emplace_back("EmptyOnly",std::make_shared<Value>(Array));
+    Set(Store,Key(StoreId,"K040"),Categories);
+    Set(Store,Key(StoreId,"K041"),Value{});
+    struct CategoryCase { const char* Name; int64_t Numbers,Strings,Booleans; };
+    for(const CategoryCase Case : {CategoryCase{"NumberOnly",1,0,0},
+            CategoryCase{"StringOnly",0,1,0},CategoryCase{"BooleanOnly",0,0,1},
+            CategoryCase{"EmptyOnly",0,0,0}}) {
+        DemandId.Key=Case.Name;
+        Demand=Store.DemandDerived(DemandId,Until());
+        Check(Demand.Code==Error::None && Demand.Flags==0,"category preparation starts");
+        Drain(Store);
+        Demand=Store.DemandDerived(DemandId,Until());
+        Check(Demand.Code==Error::None && Demand.Flags==1,"category field ACTIVE");
+        const auto State=Inspect(Folder,StoreId,Case.Name);
+        Check(State.View.Status==Derived::State::Active && State.View.Numbers==Case.Numbers &&
+            State.View.Strings==Case.Strings && State.View.Booleans==Case.Booleans &&
+            State.View.Members==Case.Numbers+Case.Strings+Case.Booleans,
+            "single-category or empty discovery is exact");
+    }
+}
+
 // Qualification-only cardinality probe. Seed structurally valid private
 // metadata directly so a large retained history can be tested without tens
 // of thousands of durability-round-trip calls. This is not an author API or
@@ -1351,6 +1547,11 @@ int main(int Count, char** Arguments)
         const auto Root = std::filesystem::absolute(std::filesystem::current_path() /
             ("derived-" + std::to_string(Clock::now().time_since_epoch().count())));
         Check(std::filesystem::create_directory(Root), "fresh derived fixture root");
+        if (Count == 2 && std::string(Arguments[1]) == "--demand-focused") {
+            AutomaticDemand(Root); DemandDiscovery(Root);
+            std::puts("[CarbonLuau:Persistence] Automatic demand backend tests PASS");
+            return 0;
+        }
         if (Count == 2 && std::string(Arguments[1]) == "--memory-near-envelope") {
             NearEnvelopeMemory(Root); return 0;
         }
@@ -1386,7 +1587,8 @@ int main(int Count, char** Arguments)
             return 0;
         }
         Check(Count == 1, "derived test arguments");
-        Fresh(Root); Upgrade(Root); FieldLimit(Root); Online(Root); IsolationAndSplit(Root); ByteBatch(Root);
+        Fresh(Root); Upgrade(Root); FieldLimit(Root); AutomaticDemand(Root); DemandDiscovery(Root);
+        Online(Root); IsolationAndSplit(Root); ByteBatch(Root);
         RealNamespaceQuota(Root); RealGlobalQuota(Root);
         Replacement(Root); LogicalCorruption(Root); LogicalCorruption(Root, true);
         BoundedStartupQuarantine(Root); InvalidDerivedStructure(Root); EmptyPrimaryQuarantine(Root);

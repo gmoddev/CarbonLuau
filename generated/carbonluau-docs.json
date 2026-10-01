@@ -54,7 +54,7 @@
     "documentation": "Committed-only irreversible write; bounded snapshot before acceptance. Later true/nil follows durable commit and validated response; nil/ErrorCode is failure. Indeterminate may have committed. No rollback or automatic replay; stale callbacks are suppressed."
   },
   "@carbonluau/globaltype/DataStoreService.GetDataStore": {
-    "documentation": "Disk-free private store acquisition, allowed during publication; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied."
+    "documentation": "Disk-free private store acquisition with optional bounded index hints; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied."
   },
   "@carbonluau/globaltype/Frame.AnchorPoint": {
     "documentation": "Retained AnchorPoint."

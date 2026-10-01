@@ -51,6 +51,7 @@ bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation)
 void RollbackPublication(PublicationScope& Scope)
 {
     if (Scope.Storage) Scope.Storage->Alive = false;
+    Scope.StorageHints.clear();
     for (auto Item = Scope.Facades.rbegin(); Item != Scope.Facades.rend(); ++Item)
         ControlPublication(Scope.Runtime, **Item, 12);
     if (Scope.Runtime.State) {
@@ -79,6 +80,8 @@ void PublicationScope::Commit()
         }
         Parent->Modules.insert(Parent->Modules.end(), std::make_move_iterator(Modules.begin()), std::make_move_iterator(Modules.end()));
         Parent->Callbacks.insert(Parent->Callbacks.end(), std::make_move_iterator(Callbacks.begin()), std::make_move_iterator(Callbacks.end()));
+        for (const auto& Hint : StorageHints)
+            MergeStorageHint(Parent->StorageHints, *Hint.Owner, Hint.Store, Hint.Fields);
     } else {
         for (auto Item = Facades.rbegin(); Item != Facades.rend(); ++Item)
             if (!ControlPublication(Runtime, **Item, 11)) { RollbackPublication(*this); Complete = true; return; }
@@ -97,6 +100,15 @@ void PublicationScope::Commit()
         }
     }
     Modules.clear(); Callbacks.clear(); Facades.clear(); Complete = true;
+    if (!Parent) for (const auto& Hint : StorageHints) if (Hint.Owner->Alive && !Runtime.IntegrityFailed) {
+        bool Changed = MergeStorageHint(Hint.Owner->StorageHints, *Hint.Owner, Hint.Store, Hint.Fields);
+        if (Changed && Hint.Owner->Active) {
+            const auto& Union = *std::find_if(Hint.Owner->StorageHints.begin(), Hint.Owner->StorageHints.end(),
+                [&](const StorageHint& Item) { return Item.Store == Hint.Store; });
+            if (!PublishStorageHint(Runtime, *Hint.Owner, Union)) Runtime.IntegrityFailed = true;
+        }
+    }
+    StorageHints.clear();
 }
 
 int FindStaged(Vm& Runtime, Domain* Owner, Module* Value)

@@ -36,8 +36,10 @@ declare extern type DataStore with
     function SetAsync(self, Key: string, Value: PersistedValue, Callback: (boolean?, string?) -> ()): ()
 end
 
+export type DataStoreOptions = {Indexes: {string}?}
+
 declare extern type DataStoreService with
-    function GetDataStore(self, StoreName: string): (DataStore)
+    function GetDataStore(self, StoreName: string, Options: DataStoreOptions?): (DataStore)
 end
 
 declare extern type GuiNode with
