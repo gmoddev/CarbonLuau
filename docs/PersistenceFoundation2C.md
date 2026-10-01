@@ -1,7 +1,6 @@
 # Persistence Foundation 2C — public structured Query
 
-Status: **implementation and local Windows/Linux qualification passed; hosted
-final-source CI pending**. This record owns
+Status: **PERSISTENCE-2C PASS — READY FOR PERSISTENCE-2D**. This record owns
 the 2C public Query boundary and its evidence. [D21](Invariants.md#d21--persistence-foundation-1)
 still owns authoritative primary values, durability, quotas, the worker and
 callback authority. [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query)
@@ -12,9 +11,9 @@ not this task.
 
 Starting revision: `0bf0918e96b5943085895ec35a29ab08a3e88ae1`.
 Implementation revision: `d9d1197657b8a1f33f6bddd87522d2cfc3882410`.
-The final tested revision is this implementation revision unless a correction
-changes production source. Hosted validation is recorded below; no package
-release or tag belongs to 2C.
+The final tested production source is this implementation revision; later
+evidence-only commits do not change production code. Hosted validation is
+recorded below; no package release or tag belongs to 2C.
 
 ## Implemented boundary
 
@@ -88,12 +87,18 @@ diagnostic rather than simulating persistence.
 | Linux real VM | Full Foundation 1B regression and focused public Query test with five runnable examples PASS against the pinned native VM and production worker. |
 | Managed queue | Query original FIFO reservation, deadline, ready dispatch, unavailable cleanup and retirement PASS; 1,000 pre-existing VM-retirement cycles PASS. |
 | Metadata/tooling/package | Generated metadata drift, API, architecture, tooling contracts and deterministic release-content checks PASS locally. |
-| Hosted final-source CI | Implementation revision triggered Windows, Linux, sanitizer, tooling and documentation workflows; final results pending. |
+| Hosted Windows/Linux/sanitizer | [Validation at the evidence baseline](https://github.com/gmoddev/CarbonLuau/actions/runs/36936621021): Windows x64, Linux x64, ASan/UBSan/leak, runtime/lifecycle, deterministic package and clean-install jobs all PASS. The tested production source is `d9d1197`. |
+| Hosted tooling | [Foundation A/B tooling](https://github.com/gmoddev/CarbonLuau/actions/runs/36936620989): Windows, Linux and macOS jobs PASS. [Baseline tooling](https://github.com/gmoddev/CarbonLuau/actions/runs/36936305914) PASS on the unchanged production-source commit. |
+| Documentation deployment | [GitHub Pages](https://github.com/gmoddev/CarbonLuau/actions/runs/36936620957) deployed the evidence baseline successfully. |
 
 The test workspaces are task-owned (`D:\Sandbox\Codex\Workspaces\CarbonLuauPersistence2C`
 on dockerbox and `/root/codex/carbonluau-2c` on BigKVM). No live Carbon/Rust
 server or authenticated client evidence is claimed by these fixtures. Prior
 2A/2B live/platform evidence remains separate and is not rewritten.
+The first implementation push omitted this new evidence file while an active
+compatibility page linked to it; hosted API link checking caught that
+documentation-only defect. The evidence baseline added the file, and its
+Windows/Linux/macOS tooling workflow passed. No runtime correction resulted.
 
 ## Handoff
 
