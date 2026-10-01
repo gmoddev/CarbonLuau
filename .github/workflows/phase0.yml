@@ -33,11 +33,11 @@ jobs:
       - name: Windows private worker and lost-ack tests
         if: runner.os == 'Windows'
         working-directory: dist/persistence
-        run: ./ManagedTests.exe --utf8-input "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureLostAck.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureHang.exe"
+        run: ./ManagedTests.exe --utf8-input "$env:GITHUB_WORKSPACE/build/Release/carbonluau_storage.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureLostAck.exe" "$env:GITHUB_WORKSPACE/build/Release/StorageFixtureHang.exe" "$env:GITHUB_WORKSPACE/build/Release/DerivedWorkerFixture.exe"
       - name: Linux private worker and lost-ack tests
         if: runner.os == 'Linux'
         working-directory: dist/persistence
-        run: mono ManagedTests.exe "$GITHUB_WORKSPACE/build/carbonluau_storage" "$GITHUB_WORKSPACE/build/StorageFixtureLostAck" "$GITHUB_WORKSPACE/build/StorageFixtureHang"
+        run: mono ManagedTests.exe "$GITHUB_WORKSPACE/build/carbonluau_storage" "$GITHUB_WORKSPACE/build/StorageFixtureLostAck" "$GITHUB_WORKSPACE/build/StorageFixtureHang" "$GITHUB_WORKSPACE/build/DerivedWorkerFixture"
       - name: Compile .NET Framework loader tests
         run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
       - name: Compile .NET Framework runtime tests

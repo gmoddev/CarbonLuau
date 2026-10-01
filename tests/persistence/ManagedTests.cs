@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Host=Carbon.Plugins.CarbonLuau;
 using Queue=Carbon.Plugins.CarbonLuau.StorageQueue;
-class ManagedTests
+partial class ManagedTests
 {
     static void Check(bool Good, [System.Runtime.CompilerServices.CallerLineNumber] int Line=0)
     { if (!Good) throw new InvalidOperationException("persistence assertion at source line "+Line); }
@@ -453,7 +453,7 @@ class ManagedTests
             // No request is active, but SQLite legitimately keeps its writable
             // handle open. The test reader must share that handle on Windows.
             using(var Input=new FileStream(Database,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete)) {
-                Check(Input.Length<=65536);
+                Check(Input.Length<=1024*1024); // bounded whole DB fixture, not one value
                 using(var Copy=new MemoryStream()) { Input.CopyTo(Copy); Before=Copy.ToArray(); }
             }
             byte[] Marker=Encoding.ASCII.GetBytes("preserve-preflight-fixture");
@@ -523,7 +523,22 @@ class ManagedTests
                 Parent.Kill(); Check(Parent.WaitForExit(5000));
                 ulong End=Host.StorageProcess.Now+5000;
                 while(!Worker.HasExited && Host.StorageProcess.Now<End) Thread.Sleep(5);
-                Check(Worker.HasExited);
+                bool Dead=Worker.HasExited;
+                if(!Dead && Environment.OSVersion.Platform!=PlatformID.Win32NT) {
+                    // A container PID 1 that does not reap orphaned children
+                    // leaves a dead worker as /proc State: Z. HasExited may
+                    // remain false for that zombie; the ownership reacquire
+                    // below still proves the writer lock was released.
+                    string StatusPath="/proc/"+Id+"/status";
+                    if(File.Exists(StatusPath))
+                        foreach(string StatusLine in File.ReadLines(StatusPath)) {
+                            if(!StatusLine.StartsWith("State:")) continue;
+                            Dead=StatusLine.IndexOf("Z (zombie)",StringComparison.Ordinal)>=0;
+                            break;
+                        }
+                    if(Dead) Console.WriteLine("[CarbonLuau:Persistence] Worker is dead/unreaped by container init");
+                }
+                Check(Dead);
             }
         }
         // Reopening the exact directory proves the dead worker released writer ownership.
@@ -544,7 +559,8 @@ class ManagedTests
             if (Args.Length==3 && Args[0]=="--parent") return ParentFixture(Args[1],Args[2]);
             QueueTests(); BoundsTests(); NamespaceRetentionTests(); ProtocolTests(); OwnershipTests();
             if (Args.Length>=1) { ProcessTests(Path.GetFullPath(Args[0])); ProtocolInputTests(Path.GetFullPath(Args[0])); ShutdownTests(Path.GetFullPath(Args[0])); ParentDeathTests(Path.GetFullPath(Args[0])); DuplicateWorkerTests(Path.GetFullPath(Args[0])); PreflightDisableTests(Path.GetFullPath(Args[0])); }
-            if (Args.Length==3) { FaultTests(Path.GetFullPath(Args[1]),true); FaultTests(Path.GetFullPath(Args[2]),false); }
+            if (Args.Length>=3) { FaultTests(Path.GetFullPath(Args[1]),true); FaultTests(Path.GetFullPath(Args[2]),false); }
+            if (Args.Length==4) DerivedWorkerTests(Path.GetFullPath(Args[0]),Path.GetFullPath(Args[3]));
             return 0;
         }
         catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:Persistence] Test failure: "+Error); return 1; }

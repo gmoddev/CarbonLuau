@@ -1,7 +1,9 @@
 #include "Backend.hpp"
+#include "Derived.hpp"
 #include "sqlite3.h"
 #include <algorithm>
 #include <array>
+#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <map>
@@ -14,6 +16,10 @@
 #endif
 
 namespace CarbonLuau::Persistence {
+#ifdef CARBONLUAU_PERSISTENCE_BUDGET_TESTING
+uint32_t TestInstructionThreshold(uint32_t Requested);
+void TestStatementInstructions(sqlite3_stmt* Statement) noexcept;
+#endif
 #ifdef CARBONLUAU_PERSISTENCE_TESTING
 void TestCheckpoint(const char* Stage);
 #define STORAGE_POINT(Stage) TestCheckpoint(Stage)
@@ -21,8 +27,12 @@ void TestCheckpoint(const char* Stage);
 #define STORAGE_POINT(Stage) ((void)0)
 #endif
 namespace {
-constexpr uint64_t DatabaseBytes = 512ull * 1024 * 1024;
-constexpr uint64_t JournalBytes = 131072ull * (4096 + 8) + 65536;
+// Persistence-2A private capacity candidate. Page/file extents are hard;
+// filesystem allocated blocks remain an operational, measured budget.
+constexpr uint32_t DatabasePages = 262144;
+constexpr uint64_t DatabaseBytes = uint64_t(DatabasePages) * 4096;
+constexpr uint64_t JournalBytes = uint64_t(DatabasePages) * (4096 + 8) + 65536;
+constexpr uint64_t OperationalBytes = 2560ull * 1024 * 1024;
 constexpr uint64_t NamespaceBytes = 16ull * 1024 * 1024;
 constexpr uint64_t GlobalBytes = 256ull * 1024 * 1024;
 constexpr const char* Schema[] = {
@@ -110,7 +120,40 @@ Backend::Backend(const std::filesystem::path& Path, Deadline StartupEnd) : Direc
     try { Open(); Healthy = true; }
     catch (...) { if (Database) sqlite3_close(Database); Database = nullptr; throw; }
 }
-Backend::~Backend() { if (Database) sqlite3_close(Database); }
+Backend::~Backend() { Indexes.reset(); if (Database) sqlite3_close(Database); }
+#ifdef CARBONLUAU_PERSISTENCE_TESTING
+uint32_t Backend::TestCapAtCurrentPages()
+{
+    Require(Healthy,Error::StorageUnavailable);
+    const auto Pages=Scalar(Database,"PRAGMA page_count");
+    Require(Pages>0 && Pages<=DatabasePages,Error::StorageError);
+    const auto Command="PRAGMA max_page_count="+std::to_string(Pages);
+    Require(Scalar(Database,Command.c_str())==Pages,Error::StorageError);
+    return uint32_t(Pages);
+}
+#endif
+void Backend::Progress(uint32_t Instructions)
+{
+    // The pinned fixed-program certificate bounds unchecked progress-callback
+    // spans and the outer rollback. Reserve their cost before the hard ceiling.
+    // See DerivedBudgetTests; this is not a bound for arbitrary caller SQL.
+    InstructionBudget=Instructions ? Instructions-65536 : 0;
+#ifdef CARBONLUAU_PERSISTENCE_BUDGET_TESTING
+    if(Instructions)InstructionBudget=TestInstructionThreshold(InstructionBudget);
+#endif
+    // SQLite's progress interval belongs to each prepared VM; many short
+    // statements can each finish below a coarse interval. Count every VDBE
+    // instruction for the aggregate maintenance budget, not 1,000 per callback.
+    sqlite3_progress_handler(Database,Instructions?1:1000,[](void* Context) {
+        auto* Self=static_cast<Backend*>(Context);
+        if(Clock::now()>=Self->End)return 1;
+        if(Self->InstructionBudget){
+            if(Self->InstructionBudget<=1)return 1;
+            --Self->InstructionBudget;
+        }
+        return 0;
+    },this);
+}
 void Backend::CheckFiles()
 {
     Require(Directory.is_absolute() && std::filesystem::is_directory(Directory), Error::StorageUnavailable);
@@ -131,9 +174,9 @@ void Backend::CheckFiles()
         // allocation guarantee. EOF/page limits are separate hard bounds.
         Require(Allocation <= (Name=="store.sqlite3" ? DatabaseBytes+64ull*1024*1024 :
             Name=="store.sqlite3-journal" ? JournalBytes+64ull*1024*1024 : 65536),Error::StorageFull);
-        Require(Allocation<=1280ull*1024*1024-Total,Error::StorageFull); Total+=Allocation;
+        Require(Allocation<=OperationalBytes-Total,Error::StorageFull); Total+=Allocation;
     }
-    Require(Total <= 1280ull * 1024 * 1024, Error::StorageFull);
+    Require(Total <= OperationalBytes, Error::StorageFull);
     // Recovery may raise SQLite's page limit from the first journal header.
     // Reject an out-of-contract original size before SQLite can extend the DB.
     const auto Journal = Directory / "store.sqlite3-journal";
@@ -143,7 +186,7 @@ void Backend::CheckFiles()
         const uint8_t Magic[] = {0xd9,0xd5,0x05,0xf9,0x20,0xa1,0x63,0xd7};
         if (!std::memcmp(Header.data(), Magic, 8)) {
             const auto Sector = Big32(Header.data()+20);
-            Require(Big32(Header.data()+16) <= 131072 && Big32(Header.data()+24) == 4096 &&
+            Require(Big32(Header.data()+16) <= DatabasePages && Big32(Header.data()+24) == 4096 &&
                 Sector >= 512 && Sector <= 65536 && !(Sector & (Sector-1)), Error::StorageCorrupt);
         }
         // This single-database workload never writes a super-journal pointer.
@@ -165,6 +208,15 @@ void Backend::CheckFiles()
 }
 void Backend::Open()
 {
+#ifdef CARBONLUAU_PERSISTENCE_TIMING_TESTING
+    auto PhaseStart=Clock::now();
+    auto MarkPhase=[&](const char* Name) {
+        const auto Now=Clock::now();
+        std::fprintf(stderr,"[CarbonLuau:Persistence] startup-phase=%s elapsed_ms=%lld\n",Name,
+            static_cast<long long>(std::chrono::duration_cast<std::chrono::milliseconds>(Now-PhaseStart).count()));
+        PhaseStart=Now;
+    };
+#endif
     CheckFiles(); const auto Path = Directory / "store.sqlite3";
     const bool New = !std::filesystem::exists(Path);
     Require(New || std::filesystem::file_size(Path) >= 100, Error::StorageCorrupt);
@@ -172,7 +224,12 @@ void Backend::Open()
         std::string(sqlite3_sourceid())=="2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc" && !sqlite3_compileoption_used("NO_SYNC") &&
         !sqlite3_compileoption_used("DISABLE_DIRSYNC") && sqlite3_compileoption_used("OMIT_WAL"), Error::FormatUnsupported);
     SqlCheck(sqlite3_open_v2(Path.u8string().c_str(), &Database, SQLITE_OPEN_READWRITE | (New ? SQLITE_OPEN_CREATE : 0) | SQLITE_OPEN_NOFOLLOW, nullptr));
-    sqlite3_progress_handler(Database, 1000, [](void* Context) { return Clock::now() >= *static_cast<Deadline*>(Context) ? 1 : 0; }, &End);
+#ifdef CARBONLUAU_PERSISTENCE_BUDGET_TESTING
+    sqlite3_trace_v2(Database,SQLITE_TRACE_PROFILE,[](unsigned,void*,void* Statement,void*)->int {
+        TestStatementInstructions(static_cast<sqlite3_stmt*>(Statement));return 0;
+    },nullptr);
+#endif
+    Progress();
     sqlite3_limit(Database, SQLITE_LIMIT_LENGTH, 70*1024);
     sqlite3_limit(Database, SQLITE_LIMIT_SQL_LENGTH, 4096);
     sqlite3_limit(Database, SQLITE_LIMIT_COLUMN, 16);
@@ -189,12 +246,37 @@ void Backend::Open()
         Scalar(Database,"PRAGMA auto_vacuum") == 0 &&
         Scalar(Database,"PRAGMA cache_spill") == 0 && Scalar(Database,"PRAGMA journal_size_limit") == -1 &&
         Scalar(Database,"PRAGMA mmap_size") == 0 && Scalar(Database,"PRAGMA temp_store") == 2 &&
-        Scalar(Database,"PRAGMA max_page_count=131072") == 131072, Error::StorageUnavailable);
+        Scalar(Database,"PRAGMA max_page_count=262144") == DatabasePages, Error::StorageUnavailable);
     // OMIT_WAL rejects WAL read formats inside SQLite, including page 1 restored
     // by hot-journal recovery. A newer write-only format can instead become
     // read-only: never publish a Ready backend for that case either.
     Require(sqlite3_db_readonly(Database, "main") == 0, Error::FormatUnsupported);
-    CheckSchema(New); CheckRecords(); CheckFiles();
+    CheckSchema(New);
+#ifdef CARBONLUAU_PERSISTENCE_TIMING_TESTING
+    MarkPhase("sqlite-schema-integrity");
+#endif
+    Indexes=std::make_unique<Derived>(Database,End);
+    if(LegacySchema)STORAGE_POINT("derived-upgrade-before-begin");
+    Sql(Database,"BEGIN IMMEDIATE");
+    try{
+        // Ready depends on authoritative D21 state. Retained derived data is
+        // process-locally unadmitted until separate bounded verification.
+        CheckRecords();
+#ifdef CARBONLUAU_PERSISTENCE_TIMING_TESTING
+        MarkPhase("primary-record-proof");
+#endif
+        if(LegacySchema){
+            Indexes->Create(); STORAGE_POINT("derived-upgrade-after-tables");
+            Sql(Database,"PRAGMA user_version=2");
+        }
+        if(LegacySchema)STORAGE_POINT("derived-upgrade-before-commit");
+        Sql(Database,"COMMIT");
+        if(LegacySchema)STORAGE_POINT("derived-upgrade-after-commit");
+    }catch(...){sqlite3_progress_handler(Database,0,nullptr,nullptr);sqlite3_exec(Database,"ROLLBACK",nullptr,nullptr,nullptr);throw;}
+    CheckFiles();
+#ifdef CARBONLUAU_PERSISTENCE_TIMING_TESTING
+    MarkPhase("primary-ready-final-check");
+#endif
 }
 void Backend::CheckSchema(bool New)
 {
@@ -207,11 +289,19 @@ void Backend::CheckSchema(bool New)
         Sql(Database, "INSERT INTO Totals VALUES(1,0,0,0); PRAGMA application_id=1129074756; PRAGMA user_version=1; COMMIT");
         STORAGE_POINT("schema-after-commit");
     }
-    Require(Scalar(Database,"PRAGMA application_id") == 1129074756 && Scalar(Database,"PRAGMA user_version") == 1, Error::FormatUnsupported);
+    const auto Version=Scalar(Database,"PRAGMA user_version");
+    Require(Scalar(Database,"PRAGMA application_id") == 1129074756 && (Version==1 || Version==2), Error::FormatUnsupported);
+    LegacySchema=Version==1;
     Require(ScalarText(Database,"PRAGMA integrity_check") == "ok", Error::StorageCorrupt);
-    Statement Query(Database,"SELECT sql FROM sqlite_schema ORDER BY name");
-    for (unsigned Index : {1u,0u,2u}) Require(Query.Next() && Query.Data(0,1024,true) == Schema[Index], Error::StorageCorrupt);
-    Require(!Query.Next(), Error::StorageCorrupt);
+    std::multiset<std::string> Expected;
+    for(const auto* Text:Schema)Expected.insert(Text);
+    if(!LegacySchema)for(const auto& Text:Derived::Schema())Expected.insert(Text);
+    Statement Query(Database,"SELECT sql FROM sqlite_schema WHERE sql IS NOT NULL");
+    while(Query.Next()){
+        const auto Text=Query.Data(0,4096,true);const auto It=Expected.find(Text);
+        Require(It!=Expected.end(),Error::StorageCorrupt);Expected.erase(It);
+    }
+    Require(Expected.empty(),Error::StorageCorrupt);
 }
 void Backend::CheckRecords()
 {
@@ -222,7 +312,7 @@ void Backend::CheckRecords()
         Require(++Keys <= 100000, Error::StorageCorrupt);
         const auto Ns = Rows.Data(0,66); const auto Store = Rows.Data(1,64); const auto Key = Rows.Data(2,128);
         auto Id = RecordIdentity(Ns,Store,Key); const auto Blob = Rows.Data(3,MaximumEnvelope);
-        Decode(Id, CarbonLuau::Persistence::Bytes(Blob.begin(),Blob.end()),End);
+        ValidateEnvelope(Id, CarbonLuau::Persistence::Bytes(Blob.begin(),Blob.end()),End);
         int64_t Charge = int64_t(Store.size()+Key.size()+Blob.size()); Require(Rows.Number(4) == Charge, Error::StorageCorrupt);
         auto& Count = CountsByNamespace[Ns]; Count.Bytes += Charge; ++Count.Keys;
         if (Ns != PreviousNamespace || Store != PreviousStore) ++Count.Stores;
@@ -242,15 +332,16 @@ void Backend::CheckRecords()
 }
 Result Backend::Execute(Operation Op, const Identity& Id, const Bytes& Envelope, Deadline RequestEnd)
 {
-    if (!Healthy) return {Error::StorageUnavailable}; End = RequestEnd;
+    if (!Healthy) return {Error::StorageUnavailable}; End = RequestEnd; Progress();
     bool Transaction = false, CommitStarted = false;
     try {
         Require(Clock::now() < End, Error::DeadlineExceeded); Validate(Id);
         Require(Op == Operation::Get || Op == Operation::Set || Op == Operation::Remove);
+        std::shared_ptr<Value> NewValue;
         if (Op == Operation::Set) {
             // A malformed incoming frame is not evidence that durable storage is
             // corrupt. Reject it before BEGIN without disabling healthy data.
-            try { Decode(Id,Envelope,End); }
+            try { NewValue=Decode(Id,Envelope,End); }
             catch (const Failure& Problem) {
                 return {Problem.Code==Error::DeadlineExceeded ? Problem.Code : Error::InvalidArgument};
             }
@@ -266,12 +357,14 @@ Result Backend::Execute(Operation Op, const Identity& Id, const Bytes& Envelope,
         STORAGE_POINT("before-transaction");
         Sql(Database,Op == Operation::Get ? "BEGIN" : "BEGIN IMMEDIATE"); Transaction = true;
         STORAGE_POINT("after-begin");
-        Bytes Old; int64_t OldCharge = 0; bool Found;
+        Bytes Old; std::shared_ptr<Value> OldValue; int64_t OldCharge = 0; bool Found;
         {
             Statement Query(Database,"SELECT Envelope,Charge FROM Records WHERE Namespace=?1 AND Store=?2 AND Key=?3"); BindKey(Query,Id);
             Found = Query.Next();
             if (Found) { auto Blob=Query.Data(0,MaximumEnvelope); Old.assign(Blob.begin(),Blob.end()); OldCharge=Query.Number(1);
-                Require(OldCharge == int64_t(Id.Store.size()+Id.Key.size()+Old.size()),Error::StorageCorrupt); Decode(Id,Old,End); }
+                Require(OldCharge == int64_t(Id.Store.size()+Id.Key.size()+Old.size()),Error::StorageCorrupt);
+                if (Op==Operation::Get) ValidateEnvelope(Id,Old,End);
+                else OldValue=Decode(Id,Old,End); }
         }
         if (Op == Operation::Get) { bool Present=NamespaceCounts(Database,Namespace(Id)).Keys>0; Sql(Database,"COMMIT"); Transaction=false;
             try { CheckFiles(); } catch (...) { Healthy=false; return {Error::StorageUnavailable}; }
@@ -308,6 +401,15 @@ Result Backend::Execute(Operation Op, const Identity& Id, const Bytes& Envelope,
             Update.Integer(1,Delta); Update.Integer(2,KeyDelta); Update.Integer(3,NamespaceDelta); Require(!Update.Next(),Error::StorageError);
         }
         STORAGE_POINT("after-quota");
+        if (Indexes->VerificationComplete()) {
+            Indexes->Mutate(Id,OldValue.get(),NewValue.get());
+        } else {
+            // While retained derived state is unproved, no generation is
+            // admitted for Query. Invalidate any in-progress proof before
+            // committing a primary mutation; the later proof must compare
+            // against the new authoritative snapshot.
+            Indexes->InvalidateVerification();
+        }
         Require(Clock::now() < End,Error::DeadlineExceeded); CommitStarted=true;
         STORAGE_POINT("before-commit");
         Sql(Database,"COMMIT"); Transaction=false;
@@ -317,10 +419,64 @@ Result Backend::Execute(Operation Op, const Identity& Id, const Bytes& Envelope,
     } catch (const Failure& Problem) {
         bool RolledBack = !Transaction;
         if (Transaction) { sqlite3_progress_handler(Database,0,nullptr,nullptr); RolledBack=sqlite3_get_autocommit(Database)!=0 || sqlite3_exec(Database,"ROLLBACK",nullptr,nullptr,nullptr)==SQLITE_OK;
-            sqlite3_progress_handler(Database,1000,[](void* Context) { return Clock::now()>=*static_cast<Deadline*>(Context) ? 1 : 0; },&End); }
+            Progress(); }
         if (CommitStarted || !RolledBack) { Healthy=false; return {Op==Operation::Get ? Error::StorageError : Error::Indeterminate}; }
         if (Problem.Code==Error::StorageCorrupt || Problem.Code==Error::FormatUnsupported || Problem.Code==Error::StorageError) Healthy=false;
         return {Problem.Code};
     } catch (...) { Healthy=false; return {Op==Operation::Get ? Error::StorageError : Error::Indeterminate}; }
+}
+bool Backend::HasDerivedWork()
+{
+    if(!Healthy || DerivedPaused)return false;
+    End=Clock::now()+std::chrono::seconds(5);Progress(1000000);
+    try{
+        Sql(Database,"BEGIN");
+        const bool Work=!Indexes->VerificationFailed() &&
+            (!Indexes->VerificationComplete() || Indexes->HasWork());
+        Sql(Database,"COMMIT"); Progress(); return Work;
+    }catch(...){
+        sqlite3_progress_handler(Database,0,nullptr,nullptr);
+        sqlite3_exec(Database,"ROLLBACK",nullptr,nullptr,nullptr);
+        Healthy=false;return false;
+    }
+}
+bool Backend::PrepareDerived(const Identity& Id,const std::string& Field,Deadline OperationEnd,bool Force)
+{
+    if(!Indexes || DerivedPaused || !Indexes->VerificationComplete()) return false;
+    return DerivedOperation(&Id,&Field,OperationEnd,Force);
+}
+bool Backend::MaintainDerived(Deadline OperationEnd)
+{ return DerivedOperation(nullptr,nullptr,OperationEnd); }
+bool Backend::DerivedOperation(const Identity* Id,const std::string* Field,Deadline OperationEnd,bool Force)
+{
+    if(!Healthy || DerivedPaused)return false;
+    End=std::min(OperationEnd,Clock::now()+std::chrono::seconds(5));Progress(1000000);
+    bool Transaction=false,CommitStarted=false;
+    try{
+        Require(Clock::now()<End,Error::DeadlineExceeded);
+        try{CheckFiles();}catch(const Failure& Problem){if(Problem.Code!=Error::DeadlineExceeded)Healthy=false;throw;}
+        Sql(Database,"BEGIN IMMEDIATE");Transaction=true;
+        bool Accepted=true;
+        if(Id)Accepted=Indexes->Prepare(*Id,*Field,Force);
+        else if(!Indexes->VerificationComplete()) {
+            // A derived-only mismatch closes Query admission for this worker
+            // lifetime, but must not disable authoritative D21 operations.
+            // VerificationFailed also stops the idle maintenance loop.
+            Indexes->VerifyStep();
+        }
+        else Indexes->Maintain();
+        Require(Clock::now()<End,Error::DeadlineExceeded);
+        STORAGE_POINT("derived-before-commit");CommitStarted=true;
+        Sql(Database,"COMMIT");Transaction=false;
+        STORAGE_POINT("derived-after-commit");CheckFiles();Progress();return Accepted;
+    }catch(const Failure& Problem){
+        sqlite3_progress_handler(Database,0,nullptr,nullptr);
+        bool RolledBack=!Transaction || sqlite3_get_autocommit(Database)!=0 || sqlite3_exec(Database,"ROLLBACK",nullptr,nullptr,nullptr)==SQLITE_OK;
+        Progress();
+        if(!CommitStarted && RolledBack && Indexes) Indexes->InvalidateVerification();
+        if(CommitStarted || !RolledBack || Problem.Code==Error::StorageCorrupt || Problem.Code==Error::FormatUnsupported || Problem.Code==Error::StorageError)Healthy=false;
+        else DerivedPaused=true;
+        return false;
+    }catch(...){if(Indexes)Indexes->InvalidateVerification();Healthy=false;return false;}
 }
 }

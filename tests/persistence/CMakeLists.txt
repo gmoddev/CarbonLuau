@@ -102,3 +102,8 @@ foreach(Fixture LostAck Hang)
 endforeach()
 target_compile_definitions(StorageFixtureLostAck PRIVATE CARBONLUAU_STORAGE_FIXTURE=1)
 target_compile_definitions(StorageFixtureHang PRIVATE CARBONLUAU_STORAGE_FIXTURE=2)
+# The standalone historical fixtures track the current backend implementation;
+# their journal-mode comparison targets above remain independent research.
+foreach(Target PersistenceBackendTests PersistenceBackendCrashTests PersistenceQuotaTests carbonluau_storage StorageFixtureLostAck StorageFixtureHang)
+    target_sources(${Target} PRIVATE ../../native/src/persistence/Derived.cpp ../../native/src/persistence/Sortable.cpp)
+endforeach()

@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ManagedTests.cs" />
+    <Compile Include="DerivedWorkerTests.cs" />
     <!-- Private 1A substrate only; 1B host partials belong to runtime/adapter tests. -->
     <Compile Include="../../src/CarbonLuau/Persistence/*.cs"
              Exclude="../../src/CarbonLuau/Persistence/NativeStorage.cs;../../src/CarbonLuau/Persistence/StorageFacade.cs" />

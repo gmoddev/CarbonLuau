@@ -1,4 +1,5 @@
 #include "Backend.hpp"
+#include "sqlite3.h"
 #include <algorithm>
 #include <cerrno>
 #include <cstdio>
@@ -17,6 +18,7 @@
 #include <sys/prctl.h>
 #include <sys/resource.h>
 #include <sys/vfs.h>
+#include <poll.h>
 #include <unistd.h>
 #define _read read
 #define _write write
@@ -26,6 +28,20 @@ using namespace CarbonLuau::Persistence;
 namespace {
 bool ReadAll(uint8_t* Data, size_t Size)
 { while (Size) { int Count=int(_read(0,Data,unsigned(std::min<size_t>(Size,16384)))); if (Count<=0) return false; Data+=Count; Size-=size_t(Count); } return true; }
+bool InputReady()
+{
+#ifdef _WIN32
+    DWORD BytesAvailable=0;
+    // A closed pipe is ready for ReadFrame to observe EOF. No owner/VM thread
+    // waits here: this is the already supervised storage process.
+    return !PeekNamedPipe(GetStdHandle(STD_INPUT_HANDLE),nullptr,0,nullptr,&BytesAvailable,nullptr) || BytesAvailable!=0;
+#else
+    pollfd Input{0,POLLIN,0};
+    int Result=poll(&Input,1,0);
+    if(Result<0 && errno!=EINTR)throw Failure(Error::StorageError);
+    return Result>0;
+#endif
+}
 bool WriteAll(const uint8_t* Data, size_t Size)
 { while (Size) { int Count=int(_write(1,Data,unsigned(std::min<size_t>(Size,16384)))); if (Count<=0) return false; Data+=Count; Size-=size_t(Count); } return true; }
 bool ReadFrame(Bytes& Frame, bool Initial=false)
@@ -141,6 +157,16 @@ void VerifyContainment()
         Error::StorageUnavailable);
 #endif
 }
+void LimitSqliteHeap()
+{
+    // The worker owns SQLite exclusively. Configure accounting before its
+    // first initialization so memory journals, savepoint bitvecs, pager cache,
+    // statements and schema storage all share one hard allocation backstop.
+    constexpr sqlite3_int64 Limit=128ll*1024*1024;
+    Require(sqlite3_config(SQLITE_CONFIG_MEMSTATUS,1)==SQLITE_OK,Error::StorageUnavailable);
+    Require(sqlite3_hard_heap_limit64(Limit)>=0 &&
+        sqlite3_hard_heap_limit64(-1)==Limit,Error::StorageUnavailable);
+}
 }
 int main(int Count,char** Args)
 {
@@ -148,7 +174,7 @@ int main(int Count,char** Args)
     try {
         Require(Count==2); unsigned Parent=unsigned(std::stoul(Args[1])); Contain(Parent);
         Stage="initial-frame"; Bytes Frame; Require(ReadFrame(Frame,true));
-        Stage="containment"; VerifyContainment();
+        Stage="containment"; VerifyContainment(); LimitSqliteHeap();
         Stage="initialization";
         Reader Init{Frame}; Require(!std::memcmp(Init.Take(4),"CLPI",4) && Init.U32()==1);
         const auto Directory=Init.String(32768); Require(ValidText(Directory,32768) && Init.Position==Frame.size());
@@ -164,7 +190,18 @@ int main(int Count,char** Args)
         Bytes Ready{'C','L','P','R'}; Put32(Ready,1); Put32(Ready,0); Require(WriteFrame(Ready));
         Stage="protocol";
         uint64_t Last=0;
-        while (ReadFrame(Frame)) {
+        for (;;) {
+            // Foreground bytes always win between bounded maintenance turns.
+            // No demand ingress exists in 2A; this only resumes committed private
+            // preparation after reopen. A future waiter stays in the host ledger.
+            if(!InputReady() && Store.HasDerivedWork()){
+                // A rolled-back derived-only failure suspends background work;
+                // it must not retire a healthy authoritative primary worker.
+                if(!Store.MaintainDerived(Clock::now()+std::chrono::seconds(5)) && !Store.Available())return 2;
+                continue;
+            }
+            if(!Store.Available())return 2;
+            if(!ReadFrame(Frame))break;
             Reader Input{Frame}; Require(!std::memcmp(Input.Take(4),"CLPQ",4) && Input.U32()==1);
             Operation Op=Operation(Input.U32()); uint64_t Nonce=Input.U64(); Require(Nonce>Last); Last=Nonce;
             std::array<uint64_t,4> Route{}; for (auto& Token : Route) { Token=Input.U64(); Require(Token!=0); }

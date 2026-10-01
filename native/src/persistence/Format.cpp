@@ -127,24 +127,46 @@ struct Decoder {
         const auto* Data = Take(Length); std::string Result(reinterpret_cast<const char*>(Data), Length);
         Require(ValidText(Result, Maximum), Error::StorageCorrupt); return Result;
     }
+    template<bool Materialize>
     std::shared_ptr<Value> Read(unsigned Depth)
     {
-        auto Item = std::make_shared<Value>(); Item->Type = Kind(*Take(1));
-        switch (Item->Type) {
-        case Kind::Boolean: { auto Flag = *Take(1); Require(Flag <= 1, Error::StorageCorrupt); Item->Boolean = Flag != 0; break; }
-        case Kind::Number: { uint64_t Bits = Read64(Take(8)); std::memcpy(&Item->Number, &Bits, 8); Require(std::isfinite(Item->Number), Error::StorageCorrupt); break; }
-        case Kind::String: Item->String = String(16384); break;
+        const auto Type = Kind(*Take(1));
+        std::shared_ptr<Value> Item;
+        if constexpr (Materialize) { Item = std::make_shared<Value>(); Item->Type = Type; }
+        switch (Type) {
+        case Kind::Boolean: {
+            auto Flag = *Take(1); Require(Flag <= 1, Error::StorageCorrupt);
+            if constexpr (Materialize) Item->Boolean = Flag != 0;
+            break;
+        }
+        case Kind::Number: {
+            uint64_t Bits = Read64(Take(8)); double Number;
+            std::memcpy(&Number, &Bits, 8); Require(std::isfinite(Number), Error::StorageCorrupt);
+            if constexpr (Materialize) Item->Number = Number;
+            break;
+        }
+        case Kind::String: {
+            auto Text = String(16384);
+            if constexpr (Materialize) Item->String = std::move(Text);
+            break;
+        }
         case Kind::Array: case Kind::Map: {
             uint32_t Count = Read32(Take(4));
-            Require(Depth < 16 && Count <= 1024 && Count <= 4096 - Entries && (Item->Type != Kind::Array || Count), Error::StorageCorrupt);
+            Require(Depth < 16 && Count <= 1024 && Count <= 4096 - Entries && (Type != Kind::Array || Count), Error::StorageCorrupt);
             Entries += Count;
             // Do not reserve from an untrusted count before validating child bytes.
+            std::string PreviousKey;
             for (uint32_t I = 0; I < Count; ++I) {
-                if (Item->Type == Kind::Array) Item->Array.push_back(Read(Depth + 1));
+                if (Type == Kind::Array) {
+                    auto Child = Read<Materialize>(Depth + 1);
+                    if constexpr (Materialize) Item->Array.push_back(std::move(Child));
+                }
                 else {
                     auto Key = String(128);
-                    Require(I == 0 || Less(Item->Map.back().first, Key), Error::StorageCorrupt);
-                    Item->Map.emplace_back(std::move(Key), Read(Depth + 1));
+                    Require(I == 0 || Less(PreviousKey, Key), Error::StorageCorrupt);
+                    PreviousKey = Key;
+                    auto Child = Read<Materialize>(Depth + 1);
+                    if constexpr (Materialize) Item->Map.emplace_back(std::move(Key), std::move(Child));
                 }
             }
             break;
@@ -191,7 +213,8 @@ Bytes Encode(const Identity& Id, const Value& Item, Deadline End)
     Envelope.insert(Envelope.end(), Hash.begin(), Hash.end());
     Require(Clock::now() < End, Error::DeadlineExceeded); return Envelope;
 }
-std::shared_ptr<Value> Decode(const Identity& Id, const Bytes& Envelope, Deadline End)
+namespace {
+Decoder OpenDecoder(const Identity& Id, const Bytes& Envelope, Deadline End)
 {
     Validate(Id);
     Require(Envelope.size() >= 45 && Envelope.size() <= MaximumEnvelope && !std::memcmp(Envelope.data(), "CLPV", 4), Error::StorageCorrupt);
@@ -199,7 +222,17 @@ std::shared_ptr<Value> Decode(const Identity& Id, const Bytes& Envelope, Deadlin
     Require(Read32(Envelope.data()+8) == Envelope.size()-44, Error::StorageCorrupt);
     const auto Hash = Digest(Bound(Id, Envelope, Envelope.size()-32));
     Require(std::equal(Hash.begin(), Hash.end(), Envelope.end()-32), Error::StorageCorrupt);
-    Decoder Reader{Envelope, 12, Envelope.size()-32, End}; auto Result = Reader.Read(0);
+    return Decoder{Envelope, 12, Envelope.size()-32, End};
+}
+}
+std::shared_ptr<Value> Decode(const Identity& Id, const Bytes& Envelope, Deadline End)
+{
+    auto Reader = OpenDecoder(Id, Envelope, End); auto Result = Reader.Read<true>(0);
     Require(Reader.Offset == Reader.Limit, Error::StorageCorrupt); return Result;
+}
+void ValidateEnvelope(const Identity& Id, const Bytes& Envelope, Deadline End)
+{
+    auto Reader = OpenDecoder(Id, Envelope, End); Reader.Read<false>(0);
+    Require(Reader.Offset == Reader.Limit, Error::StorageCorrupt);
 }
 }
