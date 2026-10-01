@@ -107,6 +107,34 @@
       "TypeExpression": "{Indexes: {string}?}"
     },
     {
+      "Id": "DataStoreQuery",
+      "Name": "DataStoreQuery",
+      "Kind": "Value",
+      "Summary": "Plain eight-member structured request; Field is an exact top-level key. Equals excludes Min/Max. Limit defaults to 50 and is bounded to 1..100.",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Alias",
+      "TypeExpression": "{Field: string, Type: (\"number\" | \"string\" | \"boolean\")?, Equals: (number | string | boolean)?, Min: (number | string)?, Max: (number | string)?, Direction: (\"Ascending\" | \"Descending\")?, Limit: number?, Cursor: string?}"
+    },
+    {
+      "Id": "DataStoreQueryResult",
+      "Name": "DataStoreQueryResult",
+      "Kind": "Value",
+      "Summary": "Fresh bounded page of authoritative persisted value snapshots with an optional opaque continuation cursor.",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Alias",
+      "TypeExpression": "{Items: {{Key: string, Value: PersistedValue}}, NextCursor: string?}"
+    },
+    {
       "Id": "DataStoreService",
       "Name": "DataStoreService",
       "Kind": "Service",
@@ -796,6 +824,38 @@
             {
               "Name": "Callback",
               "Type": "(PersistedValue?, string?) -> ()",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "DataStore.Query",
+      "Name": "Query",
+      "OwnerId": "DataStore",
+      "Kind": "Method",
+      "Summary": "Committed-only bounded structured Query submission. Required Field; optional Type, Equals, inclusive Min/Max, Direction, Limit and Cursor. Immediate return means admission only; later callback receives Items/NextCursor or a controlled error. No primary scan, replay or stale callback delivery.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Request",
+              "Type": "DataStoreQuery",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Callback",
+              "Type": "(DataStoreQueryResult?, string?) -> ()",
               "Optional": false,
               "Variadic": false
             }

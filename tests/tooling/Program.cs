@@ -29,7 +29,7 @@ Reject(() => ApiCatalog.Validate(Broken), "unknown inheritance accepted");
 Broken = (JObject)Catalog.DeepClone();
 ((JObject)Broken["Members"]![0]!)["ValueType"] = "UnimplementedType";
 Reject(() => ApiCatalog.Validate(Broken), "unknown type accepted");
-var PersistenceTypes = new[] { "DataStoreService", "DataStore", "DataStoreOptions", "PersistedValue" };
+var PersistenceTypes = new[] { "DataStoreService", "DataStore", "DataStoreOptions", "DataStoreQuery", "DataStoreQueryResult", "PersistedValue" };
 foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catalog["Members"]!)) {
     bool Persistence = PersistenceTypes.Contains((string?)Declaration["Id"]) || PersistenceTypes.Contains((string?)Declaration["OwnerId"]);
     Version Since = Version.Parse(((string)Declaration["Availability"]!["SinceApi"]!).Split('-')[0]);
@@ -41,6 +41,10 @@ Check(Definitions.Contains("export type PersistedValue = boolean | number | stri
 Check(Definitions.Contains("export type DataStoreOptions = {Indexes: {string}?}") &&
     Definitions.Contains("function GetDataStore(self, StoreName: string, Options: DataStoreOptions?): (DataStore)"),
     "bounded optional index hints missing");
+Check(Definitions.Contains("export type DataStoreQuery = {Field: string, Type: (\"number\" | \"string\" | \"boolean\")?") &&
+    Definitions.Contains("export type DataStoreQueryResult = {Items: {{Key: string, Value: PersistedValue}}, NextCursor: string?}") &&
+    Definitions.Contains("function Query(self, Request: DataStoreQuery, Callback: (DataStoreQueryResult?, string?) -> ()): ()"),
+    "structured Query definition missing");
 Check(Definitions.Contains("Callback: (PersistedValue?, string?) -> ()") && Definitions.Contains("Callback: (boolean?, string?) -> ()"), "persistence callback shape drift");
 Reject(() => ApiCatalog.Build(Bootstrap, Release, Native.Replace("int GetDataStore(lua_State* State)\n", "int RenamedGetDataStore(lua_State* State)\n")), "removed persistence binding accepted");
 Reject(() => ApiCatalog.Build(Bootstrap, Release, Native.Replace("lua_setfield(State, -2, \"GetAsync\");", "lua_setfield(State, -2, \"ChangedGetAsync\");")), "renamed persistence registration accepted");

@@ -82,9 +82,11 @@ namespace Carbon.Plugins
                     uint Tag=StorageProcess.U32(Bytes,36), PackageSize=StorageProcess.U32(Bytes,40),
                         StoreSize=StorageProcess.U32(Bytes,44), KeySize=StorageProcess.U32(Bytes,48),
                         EnvelopeSize=StorageProcess.U32(Bytes,52), Operation=StorageProcess.U32(Bytes,8);
-                    if (PackageSize>65 || StoreSize==0 || StoreSize>64 || KeySize==0 || KeySize>128 || EnvelopeSize>65536 ||
-                        56UL+PackageSize+StoreSize+KeySize+EnvelopeSize!=Length || Operation<1 || Operation>3 ||
-                        (Operation==2 ? EnvelopeSize<45 : EnvelopeSize!=0)) return 1;
+                    if (PackageSize>65 || StoreSize==0 || StoreSize>64 || KeySize==0 ||
+                        KeySize>(Operation==6 ? 64u : 128u) || EnvelopeSize>(Operation==6 ? 6144u : 65536u) ||
+                        56UL+PackageSize+StoreSize+KeySize+EnvelopeSize!=Length ||
+                        (Operation<1 || (Operation>3 && Operation!=6)) ||
+                        (Operation==2 ? EnvelopeSize<45 : Operation==6 ? EnvelopeSize<40 : EnvelopeSize!=0)) return 1;
                     if (Tag!=(Binding.Package==null ? 0u : 1u)) return 5;
                     int Offset=56;
                     string Package=StorageProcess.Utf8.GetString(Bytes,Offset,(int)PackageSize); Offset+=(int)PackageSize;
@@ -92,7 +94,8 @@ namespace Carbon.Plugins
                     string Store=StorageProcess.Utf8.GetString(Bytes,Offset,(int)StoreSize); Offset+=(int)StoreSize;
                     string Key=StorageProcess.Utf8.GetString(Bytes,Offset,(int)KeySize); Offset+=(int)KeySize;
                     var Envelope=new byte[EnvelopeSize]; Buffer.BlockCopy(Bytes,Offset,Envelope,0,(int)EnvelopeSize);
-                    Storage.Submit(Binding,Binding.Vm,Binding.Domain,true,(StorageQueue.Operation)Operation,Store,Key,Envelope,Token);
+                    if (Operation==6) Storage.SubmitQuery(Binding,Binding.Vm,Binding.Domain,true,Store,Key,Envelope,Token);
+                    else Storage.Submit(Binding,Binding.Vm,Binding.Domain,true,(StorageQueue.Operation)Operation,Store,Key,Envelope,Token);
                     // Successful acceptance must not allocate or marshal a response.
                     LastStorageRoute=Token; return 0;
                 } catch (StorageQueue.Rejection Error) { return Error.Status; }

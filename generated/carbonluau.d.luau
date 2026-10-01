@@ -32,11 +32,16 @@ end
 
 declare extern type DataStore with
     function GetAsync(self, Key: string, Callback: (PersistedValue?, string?) -> ()): ()
+    function Query(self, Request: DataStoreQuery, Callback: (DataStoreQueryResult?, string?) -> ()): ()
     function RemoveAsync(self, Key: string, Callback: (boolean?, string?) -> ()): ()
     function SetAsync(self, Key: string, Value: PersistedValue, Callback: (boolean?, string?) -> ()): ()
 end
 
 export type DataStoreOptions = {Indexes: {string}?}
+
+export type DataStoreQuery = {Field: string, Type: ("number" | "string" | "boolean")?, Equals: (number | string | boolean)?, Min: (number | string)?, Max: (number | string)?, Direction: ("Ascending" | "Descending")?, Limit: number?, Cursor: string?}
+
+export type DataStoreQueryResult = {Items: {{Key: string, Value: PersistedValue}}, NextCursor: string?}
 
 declare extern type DataStoreService with
     function GetDataStore(self, StoreName: string, Options: DataStoreOptions?): (DataStore)

@@ -794,8 +794,9 @@ memory observations and limits are in the 2A record. Its 1-GiB database
 extent, 1,075,904,512-byte journal extent and 2,560-MiB filesystem-allocation
 operational budget are adopted private D21 limits, not a released public
 support envelope. File extents and allocated-block observations are
-different guarantees. The 2B optional hint binding is [qualified](PersistenceFoundation2B.md);
-public Query and cursors remain unimplemented.
+different guarantees. The 2B optional hint binding is [qualified](PersistenceFoundation2B.md).
+Public Query and authenticated keyset cursors are implemented under
+[2C](PersistenceFoundation2C.md); combined Foundation 2 closure remains 2D.
 
 The [D22 correction audit](PersistenceFoundation2-Validation.md) owns the
 documentation-only baseline verdict. Check D21 compatibility, the structured

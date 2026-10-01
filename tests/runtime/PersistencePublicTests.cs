@@ -150,7 +150,8 @@ internal static partial class PersistencePublicTests
 local D=game:GetService('DataStoreService')
 assert(type(D.GetDataStore)=='function')
 local S=D:GetDataStore('Players')
-for _,Name in {'Path','SQL','NamespaceId','Query','UpdateAsync','Name','Close'} do
+ assert(type(S.Query)=='function')
+ for _,Name in {'Path','SQL','NamespaceId','UpdateAsync','Name','Close'} do
  local OK,V=pcall(function() return S[Name] end); assert(not OK or V==nil)
 end
 assert(game.ApiVersion=='0.5.0-experimental')

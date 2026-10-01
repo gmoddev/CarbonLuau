@@ -20,9 +20,10 @@ Existing APIs keep their historical introduction versions and qualification.
 [Persistence Foundation 2](../PersistenceFoundation2.md) defines structured
 Query for the same `0.5.0-experimental` API. Optional field-name hints in
 `GetDataStore(Name, Options?)` are the 2B addition and appear in generated
-definitions. Query, result and cursor APIs remain unimplemented. There is no
-author schema, version or migration requirement. Current storage operations
-remain Get/Set/Remove.
+definitions. [2C](../PersistenceFoundation2C.md) adds bounded structured
+`DataStore:Query`, result pages and opaque authenticated cursors. There is no
+author schema, version or migration requirement. Get/Set/Remove retain their
+Foundation 1 contracts; combined Foundation 2 closure remains 2D.
 
 The earlier unreleased 0.4.0 candidate combines the additive addon, GUI Foundation 1 and
 implemented GUI Foundation 2 layout/image/scrolling surfaces under this one

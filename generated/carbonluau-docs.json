@@ -47,6 +47,9 @@
   "@carbonluau/globaltype/DataStore.GetAsync": {
     "documentation": "Committed-only non-yielding read submission. Later callback receives fresh value/nil, nil/nil for absence, or nil/ErrorCode. Immediate return means acceptance only; rejected calls owe no callback. D21 keys: 1..128 UTF-8 bytes; 8 pending/namespace, 128 globally; 5-second request deadline. Private owner required; retirement suppresses delivery."
   },
+  "@carbonluau/globaltype/DataStore.Query": {
+    "documentation": "Committed-only bounded structured Query submission. Required Field; optional Type, Equals, inclusive Min/Max, Direction, Limit and Cursor. Immediate return means admission only; later callback receives Items/NextCursor or a controlled error. No primary scan, replay or stale callback delivery."
+  },
   "@carbonluau/globaltype/DataStore.RemoveAsync": {
     "documentation": "Committed-only irreversible removal. Later true/nil means removed, false/nil means absent; nil/ErrorCode means failure, possibly Indeterminate. Immediate return means acceptance only; no rollback, replay or guaranteed delivery after retirement."
   },

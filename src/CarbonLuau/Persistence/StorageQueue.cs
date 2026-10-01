@@ -11,11 +11,12 @@ namespace Carbon.Plugins
         // API, callback invocation, disk access, wait, or process launch lives here.
         internal sealed class StorageQueue
         {
-            internal enum Operation : uint { Get=1, Set=2, Remove=3, Demand=4, Await=5 }
+            internal enum Operation : uint { Get=1, Set=2, Remove=3, Demand=4, Await=5, Query=6 }
             internal enum Preparation { Unknown, Preparing, Ready, Unavailable }
             internal enum AwaitOutcome { None, Ready, IndexPreparing, QueryUnavailable }
             internal enum Error : uint { None, InvalidArgument, QuotaExceeded, StorageUnavailable, StorageBusy, StorageFull,
-                StorageCorrupt, FormatUnsupported, DeadlineExceeded, StorageError, Indeterminate }
+                StorageCorrupt, FormatUnsupported, DeadlineExceeded, StorageError, Indeterminate,
+                InvalidQuery, AmbiguousFieldType, IndexPreparing, QueryUnavailable, InvalidCursor }
             internal sealed class Rejection : InvalidOperationException
             {
                 internal readonly uint Status;
@@ -85,6 +86,7 @@ namespace Carbon.Plugins
             private Request Active;
             internal long QueueRejected, RateRejected, Expired, Discarded, QuotaRejected, BackendFailures;
             internal readonly long[] Completed=new long[3];
+            internal long QueryCompleted;
             internal bool Ready;
             internal StorageQueue(ulong Host,Func<ulong> Clock) { if (Host==0 || Clock==null) throw new ArgumentException(); this.Host=Host; this.Clock=Clock; Updated=Clock(); }
             private void Owner() { if (Thread.CurrentThread.ManagedThreadId!=OwnerThread) throw new InvalidOperationException("storage owner thread required"); }
@@ -135,7 +137,7 @@ namespace Carbon.Plugins
             }
             internal static void ValidateField(string Value)
             {
-                if (String.IsNullOrEmpty(Value) || Value.IndexOf('\0')>=0) throw new ArgumentException("derived field invalid");
+                if (String.IsNullOrEmpty(Value) || Value.Length>64 || Value.IndexOf('\0')>=0) throw new ArgumentException("derived field invalid");
                 byte[] Bytes=StorageProcess.Utf8.GetBytes(Value);
                 if (Bytes.Length>64) throw new ArgumentException("derived field bound");
             }
@@ -193,9 +195,12 @@ namespace Carbon.Plugins
                 if (Binding==null || !Binding.Alive || Binding.Host!=Host || !Bindings.Contains(Binding) ||
                     Binding.Vm!=AdmittedVm || Binding.Domain!=AdmittedDomain || !CommittedPublication || Route==0)
                     throw new Rejection(5);
-                if (Op<Operation.Get || Op>Operation.Remove) throw new ArgumentException("storage operation");
-                Name(Store,64); Name(Key,128);
-                if (Envelope==null || Envelope.Length>65536 || (Op==Operation.Set ? Envelope.Length<45 : Envelope.Length!=0)) throw new ArgumentException("storage envelope bound");
+                if (Op<Operation.Get || (Op>Operation.Remove && Op!=Operation.Query)) throw new ArgumentException("storage operation");
+                Name(Store,64);
+                if (Op==Operation.Query) ValidateField(Key); else Name(Key,128);
+                if (Envelope==null || Envelope.Length>(Op==Operation.Query ? 6144 : 65536) ||
+                    (Op==Operation.Set ? Envelope.Length<45 : Op==Operation.Query ? Envelope.Length<40 : Envelope.Length!=0))
+                    throw new ArgumentException("storage envelope bound");
                 Bucket Bucket=Namespaces[Binding.Namespace]; ulong Now=Clock();
                 if (Bucket.Count>=8 || Pending>=128) { Count(ref QueueRejected); throw new Rejection(3); }
                 int Reservation=-1;
@@ -207,9 +212,10 @@ namespace Carbon.Plugins
                 if (Reservation<0) throw new Rejection(3);
                 double Elapsed=(Now-Updated)/1000.0; Requests=Math.Min(256,Requests+Elapsed*200); Mutations=Math.Min(64,Mutations+Elapsed*50); Updated=Now;
                 Elapsed=(Now-Bucket.Updated)/1000.0; Bucket.Requests=Math.Min(32,Bucket.Requests+Elapsed*20); Bucket.Mutations=Math.Min(8,Bucket.Mutations+Elapsed*5); Bucket.Updated=Now;
-                bool Mutation=Op!=Operation.Get;
+                bool Mutation=Op==Operation.Set || Op==Operation.Remove;
                 if (Requests<1 || Bucket.Requests<1 || (Mutation && (Mutations<1 || Bucket.Mutations<1))) { Count(ref RateRejected); throw new Rejection(4); }
-                var Result=new Request { Owner=Binding,Id=checked(NextId+1),Route=Route,Op=Op,End=checked(Now+5000),Reservation=Reservation };
+                var Result=new Request { Owner=Binding,Id=checked(NextId+1),Route=Route,Op=Op,End=checked(Now+5000),Reservation=Reservation,
+                    Store=Op==Operation.Query ? Store : null,Field=Op==Operation.Query ? Key : null };
                 using (var Buffer=new MemoryStream()) using (var Writer=new BinaryWriter(Buffer)) {
                     Writer.Write(new byte[] {67,76,80,81}); Writer.Write(1u); Writer.Write((uint)Op); Writer.Write(0ul);
                     Writer.Write(Host); Writer.Write(Binding.Vm); Writer.Write(Binding.Domain); Writer.Write(Route); Writer.Write(Result.End);
@@ -219,7 +225,7 @@ namespace Carbon.Plugins
                 }
                 if (Result.Frame.Length>StorageProcess.MaximumFrame-4) throw new ArgumentException("storage frame bound");
                 // Pre-reserve the full result capacity before acceptance.
-                Result.Envelope=new byte[65536];
+                Result.Envelope=new byte[Op==Operation.Query ? 67584 : 65536];
                 // The namespace queue and global ledger have fixed reserved capacity.
                 // Nothing after this enqueue may allocate or fail before acceptance.
                 Bucket.Pending.Enqueue(Result); Reservations[Reservation]=Result;
@@ -249,6 +255,32 @@ namespace Carbon.Plugins
                     Result.Op=Operation.Await; Result.Store=Store; Result.Field=Field; Result.Waiting=!AssumedReady;
                     Result.Preparation=AssumedReady ? Preparation.Ready : Preparation.Unknown;
                     Result.Frame=null;
+                    ++Intent.Users;
+                    if (Result.Waiting) { ++Bucket.Waiters; ++Waiters; }
+                    return Result;
+                } catch { if (Created) Demands.Remove(Key); throw; }
+            }
+            // Query retains its original D21 reservation, rate token, deadline
+            // and namespace FIFO position throughout private preparation.
+            internal Request SubmitQuery(Binding Binding,ulong Vm,ulong Domain,bool CommittedPublication,
+                string Store,string Field,byte[] Descriptor,ulong Route)
+            {
+                Owner(); if (Binding==null || !Binding.Alive || Binding.Host!=Host || !Bindings.Contains(Binding) ||
+                    Binding.Vm!=Vm || Binding.Domain!=Domain || !CommittedPublication || Route==0) throw new Rejection(5);
+                Name(Store,64); ValidateField(Field);
+                Bucket Bucket=Namespaces[Binding.Namespace];
+                string Key=DemandKey(Binding,Store,Field); DemandIntent Intent;
+                bool Created=!Demands.TryGetValue(Key,out Intent);
+                bool ReadyNow=!Created && Intent.State==Preparation.Ready;
+                if (!ReadyNow && (Waiters>=32 || Bucket.Waiters>=8)) { Count(ref QueueRejected); throw new Rejection(3); }
+                if (Created) {
+                    if (Demands.Count>=132096) throw new Rejection(3);
+                    Intent=new DemandIntent {Owner=Binding,Store=Store,Field=Field};
+                    Demands.Add(Key,Intent);
+                }
+                try {
+                    Request Result=Submit(Binding,Vm,Domain,CommittedPublication,Operation.Query,Store,Field,Descriptor,Route);
+                    Result.Waiting=!ReadyNow;
                     ++Intent.Users;
                     if (Result.Waiting) { ++Bucket.Waiters; ++Waiters; }
                     return Result;
@@ -329,26 +361,41 @@ namespace Carbon.Plugins
                         Request Next=Bucket.Pending.Peek();
                         if (!Next.Owner.Alive || Next.CallbackDiscarded || Now>=Next.End) {
                             if (Bookkeeping--==0) return null;
+                            bool WasWaiting=Next.Waiting;
                             Bucket.Pending.Dequeue();
                             EndWaiting(Next,Bucket);
                             if (!Next.Owner.Alive || Next.CallbackDiscarded) { Release(Next); Count(ref Discarded); }
                             else { if (Next.Op==Operation.Await) Next.AwaitResult=AwaitOutcome.IndexPreparing;
-                                else Next.Error=Error.DeadlineExceeded; Next.State=2; Completions.Enqueue(Next); }
+                                else Next.Error=Next.Op==Operation.Query && WasWaiting ? Error.IndexPreparing : Error.DeadlineExceeded;
+                                Next.State=2; Completions.Enqueue(Next); }
                             continue;
                         }
                         if (!Ready) return null;
-                        if (Next.Op==Operation.Await) {
+                        if (Next.Op==Operation.Await || Next.Op==Operation.Query) {
                             DemandIntent Intent;
                             Preparation State=Demands.TryGetValue(DemandKey(Next.Owner,Next.Store,Next.Field),out Intent)
                                 ? Intent.State : Preparation.Unavailable;
-                            if (State==Preparation.Ready) { FinishAwait(Next,Bucket,AwaitOutcome.Ready); continue; }
-                            if (State==Preparation.Unavailable) { FinishAwait(Next,Bucket,AwaitOutcome.QueryUnavailable); continue; }
-                            if (!Next.Waiting) {
-                                if (Waiters>=32 || Bucket.Waiters>=8) { FinishAwait(Next,Bucket,AwaitOutcome.QueryUnavailable); continue; }
-                                Next.Waiting=true; ++Waiters; ++Bucket.Waiters;
+                            if (State==Preparation.Ready) {
+                                if (Next.Op==Operation.Await) { FinishAwait(Next,Bucket,AwaitOutcome.Ready); continue; }
+                                EndWaiting(Next,Bucket);
+                            } else if (State==Preparation.Unavailable) {
+                                if (Next.Op==Operation.Await) FinishAwait(Next,Bucket,AwaitOutcome.QueryUnavailable);
+                                else { EndWaiting(Next,Bucket); Bucket.Pending.Dequeue(); Next.Error=Error.QueryUnavailable;
+                                    Next.State=2; Completions.Enqueue(Next); }
+                                continue;
+                            } else {
+                                if (!Next.Waiting) {
+                                    if (Waiters>=32 || Bucket.Waiters>=8) {
+                                        if (Next.Op==Operation.Await) FinishAwait(Next,Bucket,AwaitOutcome.QueryUnavailable);
+                                        else { Bucket.Pending.Dequeue(); Next.Error=Error.QueryUnavailable;
+                                            Next.State=2; Completions.Enqueue(Next); }
+                                        continue;
+                                    }
+                                    Next.Waiting=true; ++Waiters; ++Bucket.Waiters;
+                                }
+                                if (WaitingDemand==null && Intent!=null && Intent.Due<=Now) WaitingDemand=Intent;
+                                break; // preserve this namespace's FIFO head
                             }
-                            if (WaitingDemand==null && Intent!=null && Intent.Due<=Now) WaitingDemand=Intent;
-                            break; // preserve this namespace's FIFO head
                         }
                         // Count retains this bucket through dispatch and delivery;
                         // only the result can change its durable-presence baseline.
@@ -377,7 +424,10 @@ namespace Carbon.Plugins
                     Request Value=Completions.Dequeue();
                     if (!Value.Owner.Alive || Value.CallbackDiscarded) { Release(Value); Count(ref Discarded); continue; }
                     if (Value.Op==Operation.Await) return Value;
-                    if (Value.Error==Error.None) Count(ref Completed[(int)Value.Op-1]);
+                    if (Value.Error==Error.None) {
+                        if (Value.Op==Operation.Query) Count(ref QueryCompleted);
+                        else Count(ref Completed[(int)Value.Op-1]);
+                    }
                     else if (Value.Error==Error.QuotaExceeded) Count(ref QuotaRejected);
                     else if (Value.Error==Error.DeadlineExceeded) Count(ref Expired);
                     else Count(ref BackendFailures);
@@ -389,7 +439,7 @@ namespace Carbon.Plugins
             {
                 Owner(); if (Request.Released) return;
                 Request.Released=true;
-                if (Request.Op==Operation.Await) {
+                if (Request.Op==Operation.Await || Request.Op==Operation.Query) {
                     DemandIntent Intent;
                     string Key=DemandKey(Request.Owner,Request.Store,Request.Field);
                     if (Demands.TryGetValue(Key,out Intent) && Intent.Owner==Request.Owner && Intent.Users>0) {
@@ -443,19 +493,24 @@ namespace Carbon.Plugins
                 if (Volatile.Read(ref Request.State)!=1) throw new IOException("storage response already completed");
                 if (Now>=Request.End) throw new TimeoutException("storage completion deadline");
                 if (Reply.Length<60 || System.Text.Encoding.ASCII.GetString(Reply,0,4)!="CLPS" || StorageProcess.U32(Reply,4)!=1 ||
-                    StorageProcess.U32(Reply,8)>10 || StorageProcess.U64(Reply,12)!=Request.WireId || StorageProcess.U64(Reply,20)!=Request.Owner.Host ||
+                    StorageProcess.U32(Reply,8)>15 || StorageProcess.U64(Reply,12)!=Request.WireId || StorageProcess.U64(Reply,20)!=Request.Owner.Host ||
                     StorageProcess.U64(Reply,28)!=Request.Owner.Vm || StorageProcess.U64(Reply,36)!=Request.Owner.Domain || StorageProcess.U64(Reply,44)!=Request.Route)
                     throw new IOException("storage response identity mismatch");
                 uint Flags=StorageProcess.U32(Reply,52), Found=Flags&1, Size=StorageProcess.U32(Reply,56), Code=StorageProcess.U32(Reply,8);
                 if (Request.InternalDemand) {
-                    if (Request.Op!=Operation.Demand || Reply.Length!=60 || Size!=0 || (Code==0 ? Flags>2 : Flags!=0))
+                    if (Request.Op!=Operation.Demand || Code>10 || Reply.Length!=60 || Size!=0 ||
+                        (Code==0 ? Flags>2 : Flags!=0))
                         throw new IOException("storage demand response shape mismatch");
                     Request.Preparation=Code==0 ? (Flags==1 ? Preparation.Ready : Flags==2 ? Preparation.Unavailable : Preparation.Preparing)
                         : Preparation.Unavailable;
                     Request.Error=(Error)Code; Volatile.Write(ref Request.State,2); return;
                 }
-                if (Flags>3 || Size>65536 || Reply.Length!=60+Size || (Code!=0 && (Flags!=0 || Size!=0)) ||
-                    (Request.Op!=Operation.Get && Size!=0) || (Code==0 && Request.Op==Operation.Set && Flags!=3) ||
+                if (Code>15 || (Code>10 && Request.Op!=Operation.Query) || Flags>3 ||
+                    Size>(Request.Op==Operation.Query ? 67584 : 65536) || Reply.Length!=60+Size ||
+                    (Code!=0 && (Flags!=0 || Size!=0)) ||
+                    (Request.Op!=Operation.Get && Request.Op!=Operation.Query && Size!=0) ||
+                    (Code==0 && Request.Op==Operation.Query && (Flags!=0 || Size<16)) ||
+                    (Code==0 && Request.Op==Operation.Set && Flags!=3) ||
                     (Request.Op==Operation.Get && Code==0 && (((Found==0)!=(Size==0)) || (Found!=0 && ((Flags&2)==0 || Size<45)))))
                     throw new IOException("storage response shape mismatch");
                 Buffer.BlockCopy(Reply,60,Request.Envelope,0,(int)Size);
@@ -463,7 +518,7 @@ namespace Carbon.Plugins
                 Volatile.Write(ref Request.State,2);
             }
             internal static void Fail(Request Request)
-            { Request.Error=Request.Op==Operation.Get || !Request.Sent ? Error.StorageUnavailable : Error.Indeterminate; Volatile.Write(ref Request.State,2); }
+            { Request.Error=Request.Op==Operation.Get || Request.Op==Operation.Query || !Request.Sent ? Error.StorageUnavailable : Error.Indeterminate; Volatile.Write(ref Request.State,2); }
         }
     }
 }

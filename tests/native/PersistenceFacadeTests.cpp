@@ -50,7 +50,11 @@ uint32_t Host(uint64_t DomainId, uint32_t Operation, const char* Bytes, uint32_t
         }
         size_t Size = P::Read32(Frame + 52); Check(Size == Length - Offset, "exact envelope length");
         Value.Envelope.assign(Frame + Offset, Frame + Length);
-        P::Validate(Value.Identity);
+        if (Value.Operation==6) {
+            P::Identity StoreIdentity=Value.Identity; StoreIdentity.Key="K"; P::Validate(StoreIdentity);
+            Check(!Value.Identity.Key.empty() && Value.Identity.Key.size()<=64 &&
+                P::ValidText(Value.Identity.Key,64),"Query field permits literal punctuation");
+        } else P::Validate(Value.Identity);
         Check(Value.Identity.Package == GetDomain(*GetVm(CurrentVm), DomainId)->PackageId, "host selected namespace");
         Check(GetVm(CurrentVm)->Admission && GetVm(CurrentVm)->Admission->Owner->Id == DomainId && CanMutateHost(*GetVm(CurrentVm)), "committed exact owner at host");
         if (Reject) return Reject;
@@ -228,7 +232,7 @@ void RejectValuesAndBounds()
         assert(not pcall(function() Store:SetAsync('Key',1,true) end))
         assert(not pcall(function() Store:SetAsync('Key',1,function() end,1) end))
         assert(not pcall(function() Store.Name='x' end))
-        assert(Store.Name==nil and Store.Path==nil and Store.Close==nil and Store.Query==nil)
+        assert(Store.Name==nil and Store.Path==nil and Store.Close==nil and type(Store.Query)=='function')
         assert(not pcall(function() Store.GetAsync({},'Key',function() end) end))
     )");
     Check(Requests.empty() && GetVm(F.Vm)->StorageReserved == 0, "invalid input rejects before acceptance");
@@ -259,7 +263,7 @@ void OptionsAndHintWire()
         local Options={Indexes={'One'}}
         local Store=Service:GetDataStore('Hints',Options)
         Options.Indexes[1]='Changed'
-        assert(Store.Query==nil)
+        assert(type(Store.Query)=='function')
     )");
     Check(HintIntents.size() == 1 && HintIntents[0].Store == "Hints" &&
         HintIntents[0].Fields == std::vector<std::string>{"One"}, "hint snapshot and no empty intent");
@@ -616,6 +620,90 @@ void SubmissionAllocationFaults()
         Failures,Successes,LastPoint);
     Check(Failures>0 && Successes>0,"allocation sweep reaches failures and successful submission");
 }
+void QueryWireAndResults()
+{
+    Fixture F;
+    F.Run(Prefix + R"(
+        local Request={Field='Coins',Min=10,Max=20,Direction='Descending',Limit=1}
+        Store:Query(Request,function(Result,ErrorCode)
+            assert(ErrorCode==nil and #Result.Items==1 and Result.Items[1].Key=='Player')
+            assert(Result.Items[1].Value.Coins==15 and Result.NextCursor=='Ab-_')
+            Result.Items[1].Value.Coins=999
+            State.QueryDone=true
+        end)
+        Request.Field='Changed'; Request.Min=999
+    )");
+    Check(Requests.size()==1 && Requests[0].Operation==6 && Requests[0].Identity.Key=="Coins", "Query accepted exact field snapshot");
+    const auto& Descriptor=Requests[0].Envelope;
+    Check(Descriptor.size()==56 && !std::memcmp(Descriptor.data(),"CLQD",4) &&
+        P::Read32(Descriptor.data()+4)==1 && P::Read32(Descriptor.data()+8)==6 &&
+        P::Read32(Descriptor.data()+12)==2 && P::Read32(Descriptor.data()+16)==1 &&
+        P::Read32(Descriptor.data()+20)==1 && P::Read32(Descriptor.data()+24)==0 &&
+        P::Read32(Descriptor.data()+28)==8, "Query structured CLQD bounds and type absence");
+    P::Identity ItemId=Requests[0].Identity; ItemId.Key="Player";
+    auto Coins=std::make_shared<P::Value>(); Coins->Type=P::Kind::Number; Coins->Number=15;
+    P::Value Record; Record.Type=P::Kind::Map; Record.Map.emplace_back("Coins",Coins);
+    auto Value=P::Encode(ItemId,Record,P::Clock::now()+std::chrono::seconds(1));
+    P::Bytes Page{'C','L','Q','R'};
+    P::Put32(Page,1); P::Put32(Page,1); P::Put32(Page,4);
+    Page.insert(Page.end(),{'A','b','-','_'});
+    P::Put32(Page,6); Page.insert(Page.end(),{'P','l','a','y','e','r'});
+    P::Put32(Page,uint32_t(Value.size())); Page.insert(Page.end(),Value.begin(),Value.end());
+    Check(F.Complete(0,0,false,Page)==CL_OK,"Query result accepted through existing completion ABI");
+    F.Drain(1); F.Run("assert(require('state').QueryDone)");
+    F.Run(Prefix + R"(
+        Store:Query({Field='Coins',Equals=false},function(Result,ErrorCode)
+            assert(Result==nil and ErrorCode=='QueryUnavailable'); State.QueryFailure=true
+        end)
+    )");
+    Check(Requests.size()==2 && P::Read32(Requests[1].Envelope.data()+8)==1 &&
+        P::Read32(Requests[1].Envelope.data()+24)==1 && Requests[1].Envelope[28]==0,
+        "false equality is present in CLQD");
+    Check(F.Complete(1,14)==CL_OK,"Query-specific completion error accepted"); F.Drain(1);
+    F.Run("assert(require('state').QueryFailure)");
+    for (uint32_t Code : {11u,12u,13u,15u}) {
+        static constexpr const char* Names[] = {"InvalidQuery","AmbiguousFieldType","IndexPreparing","QueryUnavailable","InvalidCursor"};
+        std::string Source=Prefix+"Store:Query({Field='Coins'},function(Result,ErrorCode) assert(Result==nil and ErrorCode=='"+
+            Names[Code-11]+"') end)";
+        F.Run(Source);
+        Check(F.Complete(Requests.size()-1,Code)==CL_OK,"Query-specific error code admitted"); F.Drain(1);
+    }
+    Check(Released.size()==Requests.size() && GetVm(F.Vm)->StorageReserved==0,"Query callbacks and reservations released once");
+}
+void QueryRejectsMalformed()
+{
+    Fixture F;
+    F.Run(Prefix + R"(
+        local function Bad(Request)
+            local Good,ErrorCode=pcall(function() Store:Query(Request,function() error('rejected') end) end)
+            assert(not Good and string.find(ErrorCode,'InvalidQuery',1,true))
+        end
+        Bad({}); Bad({Field=''}); Bad({Field='Coins',Other=1}); Bad({Field='Coins',Limit=0})
+        Bad({Field='Coins',Limit=1.5}); Bad({Field='Coins',Limit=101})
+        Bad({Field='Coins',Equals=1,Min=0}); Bad({Field='Coins',Min=2,Max=1})
+        Bad({Field='Coins',Type='boolean'}); Bad({Field='Coins',Type='string',Equals=1})
+        Bad({Field='Coins',Equals=0/0}); Bad({Field='Coins',Equals=math.huge})
+        Bad({Field='Coins',Equals=string.rep('x',1025)})
+        Bad({Field='Coins',Cursor=string.rep('x',2049)})
+        Bad({Field='Coins',Cursor='!'}); Bad({Field='Coins',Direction='Up'})
+        Bad(setmetatable({Field='Coins'},{__index=function() error('metamethod') end}))
+        Bad({Field='Coins',Min=false}); Bad({Field='Coins',Max='z',Min=1})
+        assert(not pcall(function() Store:Query({Field='Coins'},nil) end))
+    )");
+    Check(Requests.empty() && GetVm(F.Vm)->StorageReserved==0,"malformed Query rejects before admission");
+    F.Run(Prefix + R"(
+        Store:Query({Field='literal/path:name',Equals=''},function(Result,ErrorCode)
+            assert(Result~=nil and ErrorCode==nil and #Result.Items==0 and Result.NextCursor==nil)
+            require('state').PunctuationDone=true
+        end)
+    )");
+    Check(Requests.size()==1 && Requests[0].Operation==6 && Requests[0].Identity.Key=="literal/path:name" &&
+        P::Read32(Requests[0].Envelope.data()+8)==1 && P::Read32(Requests[0].Envelope.data()+12)==3,
+        "literal punctuation and empty-string equality are legal");
+    P::Bytes Empty{'C','L','Q','R'}; P::Put32(Empty,1); P::Put32(Empty,0); P::Put32(Empty,0);
+    Check(F.Complete(0,0,false,Empty)==CL_OK,"empty Query page accepted"); F.Drain(1);
+    F.Run("assert(require('state').PunctuationDone)");
+}
 }
 int main(int Count,char** Args)
 {
@@ -624,5 +712,6 @@ int main(int Count,char** Args)
     ValuesAndResults(); RejectValuesAndBounds(); OptionsAndHintWire(); HintPublication(); HintActivationFailure();
     PublicationAndPrivacy(); SchedulingAndRaces(); FairDomains(); FailuresAndDeadlines();
     CorruptionAndFreshBudget(); CompletionCollection(); SubmissionAllocationFaults();
+    QueryWireAndResults(); QueryRejectsMalformed();
     ResetCompilerForTesting(); std::puts("[CarbonLuau:PersistenceTest] Public native conversion/publication/completion fixtures PASS");
 }

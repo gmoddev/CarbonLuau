@@ -37,7 +37,8 @@ namespace Carbon.Plugins
                             Session.Storage!=Storage || Session.StorageBinding!=Request.Owner ||
                             (ulong)Session.VmGenerationId!=Request.Owner.Vm || !Vms.Contains(Session.StorageVm)) continue;
                         if (Info(Session.StorageVm).Ready==0) { Storage.RetireVm(Request.Owner.Vm); return; }
-                        uint Length=Request.Error==StorageQueue.Error.None && Request.Op==StorageQueue.Operation.Get && Request.Found
+                        uint Length=Request.Error==StorageQueue.Error.None &&
+                            ((Request.Op==StorageQueue.Operation.Get && Request.Found) || Request.Op==StorageQueue.Operation.Query)
                             ? (uint)Request.Envelope.Length : 0;
                         RuntimeStatus Status;
                         InsideNative=true;

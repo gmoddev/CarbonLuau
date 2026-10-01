@@ -1,10 +1,11 @@
 # Persistence Foundation 2 — bounded derived indexes and Query
 
-Status: **CANONICAL ARCHITECTURE; PRIVATE 2A PASS; 2B PASS; PUBLIC QUERY UNIMPLEMENTED**.
+Status: **CANONICAL ARCHITECTURE; PRIVATE 2A PASS; 2B PASS; PUBLIC 2C IMPLEMENTED; 2D NOT STARTED**.
 The 2026-09-29 final public-design correction preceded implementation.
 [2A evidence](PersistenceFoundation2A.md) records qualified private derived
 state. The [2B options/hint/demand slice](PersistenceFoundation2B.md) is
-qualified; public Query remains closed until a separately authorized 2C.
+qualified; [2C](PersistenceFoundation2C.md) records the separately authorized
+public Query implementation and its qualification. Combined closure remains 2D.
 
 Foundation 1 qualified baseline: 034f28f81c64e0f135ec882fb05de4ef7f33fcf7.
 Initial D22 documentation baseline: ee208831efc5647dab553b5f9d0524e7e2e83353.
@@ -23,9 +24,9 @@ comparison-string design before any Foundation 2 production implementation began
 no author-managed schema/version, required index declaration, migration contract or write
 freeze.
 
-**Query examples in this document describe the future API.** Current
+The Query examples below describe the implemented 2C API. Current
 development bindings and generated definitions provide Foundation 1
-Get/Set/Remove and the 2B optional `GetDataStore` hints only.
+Get/Set/Remove, 2B optional `GetDataStore` hints, and 2C `Query`.
 
 ## 1. Public design principle
 
@@ -1039,6 +1040,7 @@ publishes authoritative-primary Ready before bounded process-local derived
 verification; unadmitted retained ACTIVE state cannot serve Query. The private
 extent, correctness, work/memory, platform, failure and hosted gates are closed
 in [PersistenceFoundation2A.md](PersistenceFoundation2A.md). Private 2A is
-PASS; public Query remains unimplemented. Persistence-2B was separately
-authorized and is [qualified](PersistenceFoundation2B.md), not work performed
-during 2A.
+PASS; Persistence-2B was separately authorized and is
+[qualified](PersistenceFoundation2B.md), not work performed during 2A.
+Public Query implementation and its distinct evidence are in
+[PersistenceFoundation2C.md](PersistenceFoundation2C.md).

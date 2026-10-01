@@ -23,7 +23,8 @@ namespace Carbon.Plugins
             internal string Status { get { return "[CarbonLuau:Persistence] ready="+(Volatile.Read(ref Ready)!=0)+
                 "; pending="+Queue.PendingCount+"; starts="+WorkerStarts+"; retries="+Volatile.Read(ref Retries)+
                 "; sent="+RequestsSent+"; completed_get="+Queue.Completed[0]+"; completed_set="+Queue.Completed[1]+
-                "; completed_remove="+Queue.Completed[2]+"; queue_rejected="+Queue.QueueRejected+"; rate_rejected="+Queue.RateRejected+
+                "; completed_remove="+Queue.Completed[2]+"; completed_query="+Queue.QueryCompleted+
+                "; queue_rejected="+Queue.QueueRejected+"; rate_rejected="+Queue.RateRejected+
                 "; quota_rejected="+Queue.QuotaRejected+"; expired="+Queue.Expired+"; backend_failures="+Queue.BackendFailures+
                 "; corruptions="+Volatile.Read(ref Corruptions)+"; discarded="+Queue.Discarded+"; failure="+LastFailure; } }
             internal StorageSupervisor(StorageQueue Queue,string Executable,string Directory)

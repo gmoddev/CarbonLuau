@@ -691,7 +691,7 @@ partial class ManagedTests
                 try { using(var Guard=new Host.StorageOwnership(Args[1])) { return 0; } } catch(IOException) { return 23; }
             }
             if (Args.Length==3 && Args[0]=="--parent") return ParentFixture(Args[1],Args[2]);
-            QueueTests(); PreparationLedgerTests(); BoundsTests(); NamespaceRetentionTests(); ProtocolTests(); OwnershipTests();
+            QueueTests(); PreparationLedgerTests(); QueryQueueTests(); BoundsTests(); NamespaceRetentionTests(); ProtocolTests(); OwnershipTests();
             if (Args.Length>=1) { ProcessTests(Path.GetFullPath(Args[0])); ProtocolInputTests(Path.GetFullPath(Args[0])); ShutdownTests(Path.GetFullPath(Args[0])); ParentDeathTests(Path.GetFullPath(Args[0])); DuplicateWorkerTests(Path.GetFullPath(Args[0])); PreflightDisableTests(Path.GetFullPath(Args[0])); }
             if (Args.Length>=3) { FaultTests(Path.GetFullPath(Args[1]),true); FaultTests(Path.GetFullPath(Args[2]),false); }
             if (Args.Length==4) DerivedWorkerTests(Path.GetFullPath(Args[0]),Path.GetFullPath(Args[3]));

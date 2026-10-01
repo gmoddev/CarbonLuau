@@ -1,5 +1,6 @@
 #include "Backend.hpp"
 #include "Derived.hpp"
+#include "Query.hpp"
 #include "sqlite3.h"
 #include <algorithm>
 #include <array>
@@ -12,6 +13,8 @@
 #define NOMINMAX
 #include <windows.h>
 #else
+#include <cerrno>
+#include <sys/random.h>
 #include <sys/stat.h>
 #endif
 
@@ -27,6 +30,23 @@ void TestCheckpoint(const char* Stage);
 #define STORAGE_POINT(Stage) ((void)0)
 #endif
 namespace {
+void FillSecret(std::array<uint8_t,32>& Secret) {
+#ifdef _WIN32
+    HMODULE Library=LoadLibraryW(L"advapi32.dll");
+    Require(Library!=nullptr,Error::StorageUnavailable);
+    using RandomFunction=BOOLEAN (WINAPI*)(void*,ULONG);
+    auto Random=reinterpret_cast<RandomFunction>(GetProcAddress(Library,"SystemFunction036"));
+    bool Good=Random && Random(Secret.data(),ULONG(Secret.size()))!=0;
+    FreeLibrary(Library);Require(Good,Error::StorageUnavailable);
+#else
+    size_t Position=0;
+    while(Position<Secret.size()){
+        ssize_t Count=getrandom(Secret.data()+Position,Secret.size()-Position,0);
+        if(Count<0 && errno==EINTR)continue;
+        Require(Count>0,Error::StorageUnavailable);Position+=size_t(Count);
+    }
+#endif
+}
 // Persistence-2A private capacity candidate. Page/file extents are hard;
 // filesystem allocated blocks remain an operational, measured budget.
 constexpr uint32_t DatabasePages = 262144;
@@ -117,10 +137,10 @@ uint64_t Allocated(const std::filesystem::path& Path)
 
 Backend::Backend(const std::filesystem::path& Path, Deadline StartupEnd) : Directory(Path), End(StartupEnd)
 {
-    try { Open(); Healthy = true; }
+    try { FillSecret(QuerySecret); Open(); Healthy = true; }
     catch (...) { if (Database) sqlite3_close(Database); Database = nullptr; throw; }
 }
-Backend::~Backend() { Indexes.reset(); if (Database) sqlite3_close(Database); }
+Backend::~Backend() { Indexes.reset(); if (Database) sqlite3_close(Database); QuerySecret.fill(0); }
 #ifdef CARBONLUAU_PERSISTENCE_TESTING
 uint32_t Backend::TestCapAtCurrentPages()
 {
@@ -130,6 +150,31 @@ uint32_t Backend::TestCapAtCurrentPages()
     const auto Command="PRAGMA max_page_count="+std::to_string(Pages);
     Require(Scalar(Database,Command.c_str())==Pages,Error::StorageError);
     return uint32_t(Pages);
+}
+void Backend::TestInjectEmptyPrefixes(const Identity& Id,uint32_t Count)
+{
+    Require(Healthy && Count<=105,Error::InvalidArgument);
+    End=Clock::now()+std::chrono::seconds(5);Progress(1000000);
+    Sql(Database,"BEGIN IMMEDIATE");
+    try {
+        auto View=Indexes->Inspect(Id,Id.Key);
+        Require(View.Admitted && View.Status==Derived::State::Active,Error::InvalidArgument);
+        Statement Insert(Database,"INSERT INTO DerivedPrefixes(Id,Generation,Prefix,Refs,Charge) VALUES(?1,?2,?3,1,38)");
+        for(uint32_t Index=0;Index<Count;++Index) {
+            std::string Prefix(1,char(uint8_t(Kind::Number)));Prefix.push_back(char(Index+1));
+            Insert.Integer(1,100000+Index);Insert.Integer(2,View.Generation);Insert.Blob(3,Prefix);
+            Require(!Insert.Next(),Error::StorageError);
+            sqlite3_reset(Insert.Handle);sqlite3_clear_bindings(Insert.Handle);
+        }
+        Sql(Database,"COMMIT");Progress();
+    } catch(...) {sqlite3_progress_handler(Database,0,nullptr,nullptr);sqlite3_exec(Database,"ROLLBACK",nullptr,nullptr,nullptr);Progress();throw;}
+}
+void Backend::TestRemoveEmptyPrefixes()
+{
+    Require(Healthy,Error::StorageUnavailable);End=Clock::now()+std::chrono::seconds(5);Progress();
+    Sql(Database,"BEGIN IMMEDIATE");
+    try {Sql(Database,"DELETE FROM DerivedPrefixes WHERE Id>=100000 AND Id<100105");Sql(Database,"COMMIT");}
+    catch(...) {sqlite3_progress_handler(Database,0,nullptr,nullptr);sqlite3_exec(Database,"ROLLBACK",nullptr,nullptr,nullptr);Progress();throw;}
 }
 #endif
 void Backend::Progress(uint32_t Instructions)
@@ -493,6 +538,153 @@ DemandResult Backend::DemandDerived(const Identity& Id,Deadline OperationEnd)
     } catch(...) {
         Indexes->InvalidateVerification();Healthy=false;
         return {Error::StorageError,0};
+    }
+}
+Result Backend::QueryDerived(const Identity& Id,const Bytes& Descriptor,Deadline OperationEnd)
+{
+    if(!Healthy || !Indexes)return {Error::StorageUnavailable};
+    QueryWire::Request Request;
+    try {
+        Identity StoreId=Id;StoreId.Key="K";Validate(StoreId);
+        QueryWire::Check(ValidField(Id.Key));
+        Request=QueryWire::Parse(Descriptor);
+    } catch(const Failure& Problem) {
+        return {Problem.Code==Error::DeadlineExceeded ? Problem.Code : QueryWire::InvalidQuery};
+    }
+    End=OperationEnd;Progress(1000000);
+    bool Transaction=false;
+    try {
+        Require(Clock::now()<End,Error::DeadlineExceeded);
+        try {CheckFiles();}catch(const Failure& Problem){if(Problem.Code!=Error::DeadlineExceeded)Healthy=false;throw;}
+        Sql(Database,"BEGIN");Transaction=true;
+        auto View=Indexes->Inspect(Id,Id.Key);
+        if(!View.Admitted || View.Status!=Derived::State::Active){
+            if(Request.Flags&8)throw Failure(QueryWire::InvalidCursor);
+            throw Failure(View.Status==Derived::State::Building ? QueryWire::IndexPreparing : QueryWire::QueryUnavailable);
+        }
+        QueryWire::Boundary Boundary;
+        if(Request.Flags&8) {
+            Boundary=QueryWire::ReadCursor(QuerySecret,Id,Request,Request.Cursor);
+            QueryWire::Check(Boundary.Generation==uint64_t(View.Generation),QueryWire::InvalidCursor);
+        }
+        Kind Type=Request.ExplicitType?Request.Type:Kind::Map;
+        if(Request.Flags&8)Type=Boundary.Type;
+        else if(!Request.ExplicitType) {
+            unsigned Categories=unsigned(View.Booleans>0)+unsigned(View.Numbers>0)+unsigned(View.Strings>0);
+            if(Categories>1)throw Failure(QueryWire::AmbiguousFieldType);
+            if(Categories==1)Type=View.Booleans?Kind::Boolean:View.Numbers?Kind::Number:Kind::String;
+            else Type=Kind::Number; // Empty complete field: no representation is selected publicly.
+        }
+        if(Type==Kind::Boolean && !(Request.Flags&1))throw Failure(QueryWire::InvalidQuery);
+        if(!View.Queryable(Type))throw Failure(QueryWire::QueryUnavailable);
+        if((Request.Flags&8) && Request.ExplicitType)QueryWire::Check(Request.Type==Type,QueryWire::InvalidCursor);
+
+        std::string Low(1,char(uint8_t(Type)));
+        std::string High(1,char(uint8_t(Type)));High.append(511,char(0xff));
+        bool HighInclusive=false;
+        if(Request.Flags&1){Low=Request.Equals;High=Request.Equals;HighInclusive=true;}
+        else {
+            if(Request.Flags&2)Low=Request.Min;
+            if(Request.Flags&4){High=Request.Max;HighInclusive=true;}
+        }
+        auto LowerPrefix=Low.substr(0,512), UpperPrefix=High.substr(0,512);
+        if(Request.Flags&8){
+            auto CursorPrefix=Boundary.Scalar.substr(0,512);
+            if(Request.Descending)UpperPrefix=std::min(UpperPrefix,CursorPrefix);
+            else LowerPrefix=std::max(LowerPrefix,CursorPrefix);
+        }
+        const char* PrefixSql=Request.Descending ? QueryWire::PrefixDescending : QueryWire::PrefixAscending;
+        Statement Prefixes(Database,PrefixSql);Prefixes.Integer(1,View.Generation);Prefixes.Blob(2,LowerPrefix);Prefixes.Blob(3,UpperPrefix);
+        Bytes Page{'C','L','Q','R'};Put32(Page,1);Put32(Page,0);Put32(Page,0);
+        uint32_t Count=0,Candidates=0,PrefixRows=0,Expanded=0;bool More=false;
+        std::string LastScalar,LastKey;
+        while(Prefixes.Next()) {
+            // Every interior prefix in the selected range has at least one
+            // retained entry. Only the two predicate endpoints and a cursor
+            // endpoint can be empty after suffix/keyset filtering. Never
+            // accept SQL LIMIT truncation as proof that a page is complete.
+            Require(++PrefixRows<=104,QueryWire::QueryUnavailable);
+            int64_t PrefixId=Prefixes.Number(0);std::string Prefix=Prefixes.Data(1,512);
+            Require(!Prefix.empty() && Prefix[0]==char(uint8_t(Type)),Error::StorageCorrupt);
+            std::string SuffixLow, SuffixHigh(513,char(0xff));
+            if(Prefix==LowerPrefix && Low.size()>Prefix.size())SuffixLow=Low.substr(Prefix.size());
+            if(HighInclusive && Prefix==UpperPrefix)SuffixHigh=High.substr(Prefix.size());
+            if(SuffixLow>SuffixHigh)continue;
+            std::string SeekSuffix=Request.Descending?std::string(513,char(0xff)):std::string();
+            std::string SeekKey=Request.Descending?std::string(129,char(0xff)):std::string();
+            if((Request.Flags&8) && Prefix==Boundary.Scalar.substr(0,512)){
+                SeekSuffix=Boundary.Scalar.substr(Prefix.size());SeekKey=Boundary.Key;
+            }
+            const char* EntriesSql=Request.Descending ? QueryWire::EntryDescending : QueryWire::EntryAscending;
+            Statement Entries(Database,EntriesSql);Entries.Integer(1,PrefixId);Entries.Blob(2,SuffixLow);Entries.Blob(3,SuffixHigh);
+            Entries.Blob(4,SeekSuffix);Entries.Blob(5,SeekKey);
+            while(Entries.Next()) {
+                Require(++Candidates<=101,QueryWire::QueryUnavailable);
+                int64_t EntryId=Entries.Number(0);auto Suffix=Entries.Data(1,513),Key=Entries.Data(2,128);
+                Require(ValidText(Key,128,true),Error::StorageCorrupt);
+                auto Scalar=Prefix+Suffix;
+                // The prefix bound can include a trailing shared prefix whose
+                // suffix lies beyond Max; never admit that row.
+                if(Scalar<Low || (HighInclusive && Scalar>High) ||
+                    ((Request.Flags&8) && (Request.Descending ?
+                        std::pair{Scalar,Key}>=std::pair{Boundary.Scalar,Boundary.Key} :
+                        std::pair{Scalar,Key}<=std::pair{Boundary.Scalar,Boundary.Key})))continue;
+                if(Count>=Request.Limit){More=true;break;}
+                Statement Member(Database,QueryWire::MemberPoint);
+                Member.Integer(1,View.Generation);Member.Blob(2,Key);
+                Require(Member.Next() && Member.Number(0)==int64_t(Type) && Member.Number(1)==EntryId && !Member.Next(),Error::StorageCorrupt);
+                Identity RecordId=Id;RecordId.Key=Key;
+                Statement Primary(Database,QueryWire::PrimaryPoint);BindKey(Primary,RecordId);
+                Require(Primary.Next(),Error::StorageCorrupt);auto Blob=Primary.Data(0,MaximumEnvelope);
+                Bytes Envelope(Blob.begin(),Blob.end());Require(!Primary.Next(),Error::StorageCorrupt);
+                auto Root=Decode(RecordId,Envelope,End);auto Extracted=ExtractScalar(*Root,Id.Key);
+                Require(Extracted.Represented && Extracted.Usable && Extracted.Type==Type &&
+                    std::string(Extracted.SortKey.begin(),Extracted.SortKey.end())==Scalar,Error::StorageCorrupt);
+                // Each item contributes at most 4,096 expanded entries under
+                // the qualified F1 codec. Count the actual graph, not bytes.
+                auto EntriesIn=[](const Value& Value,auto&& Self)->uint32_t {
+                    uint32_t Total=Value.Type==Kind::Array?uint32_t(Value.Array.size()):
+                        Value.Type==Kind::Map?uint32_t(Value.Map.size()):0;
+                    if(Value.Type==Kind::Array)for(const auto& Child:Value.Array)Total+=Self(*Child,Self);
+                    if(Value.Type==Kind::Map)for(const auto& Child:Value.Map)Total+=Self(*Child.second,Self);
+                    return Total;
+                };
+                uint32_t ItemEntries=EntriesIn(*Root,EntriesIn);
+                size_t ItemBytes=4+Key.size()+4+Envelope.size();
+                // Reserve a maximal cursor even before knowing whether a
+                // lookahead exists. One maximum legal item always fits.
+                if(Expanded+ItemEntries+3>8192 || Page.size()+ItemBytes+4+QueryWire::MaximumCursorOutput>QueryWire::MaximumPage){
+                    Require(Count>0,Error::StorageError);More=true;break;
+                }
+                Expanded+=ItemEntries+3;QueryWire::Append(Page,Key);QueryWire::Append(Page,Blob);
+                LastScalar=std::move(Scalar);LastKey=std::move(Key);++Count;
+            }
+            if(More || Candidates>=101)break;
+        }
+        // If examined rows were filtered at the hard ceiling, the worker
+        // cannot prove completion without violating the 101-row bound.
+        if(Candidates>=101 && !More)throw Failure(QueryWire::QueryUnavailable);
+        std::string Cursor=More?QueryWire::MakeCursor(QuerySecret,Id,Request,Type,uint64_t(View.Generation),LastScalar,LastKey):"";
+        // CLQR + version + count + cursor length + cursor + complete items.
+        Bytes Output{'C','L','Q','R'};Put32(Output,1);Put32(Output,Count);QueryWire::Append(Output,Cursor);
+        Output.insert(Output.end(),Page.begin()+16,Page.end());
+        Require(Output.size()<=QueryWire::MaximumPage,Error::StorageError);
+        Sql(Database,"COMMIT");Transaction=false;
+        try {CheckFiles();} catch(const Failure& Problem) {
+            if(Problem.Code!=Error::DeadlineExceeded)Healthy=false;
+            throw;
+        }
+        Progress();
+        return {Error::None,false,std::move(Output),false};
+    } catch(const Failure& Problem) {
+        sqlite3_progress_handler(Database,0,nullptr,nullptr);
+        bool RolledBack=!Transaction || sqlite3_get_autocommit(Database)!=0 || sqlite3_exec(Database,"ROLLBACK",nullptr,nullptr,nullptr)==SQLITE_OK;
+        Progress();
+        if(!RolledBack || Problem.Code==Error::StorageCorrupt || Problem.Code==Error::FormatUnsupported || Problem.Code==Error::StorageError)Healthy=false;
+        return {RolledBack?Problem.Code:Error::StorageError};
+    } catch(...) {
+        sqlite3_progress_handler(Database,0,nullptr,nullptr);if(Transaction)sqlite3_exec(Database,"ROLLBACK",nullptr,nullptr,nullptr);
+        Healthy=false;return {Error::StorageError};
     }
 }
 bool Backend::MaintainDerived(Deadline OperationEnd)

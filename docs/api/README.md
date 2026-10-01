@@ -26,11 +26,12 @@ This is server-side Luau, not Roblox API compatibility.
 | Addon manifests, dependencies and package-qualified imports | [Addon composition](Addons.md) |
 | Carbon provider registration protocol | [Addon providers](Addon-Providers.md) |
 | Server-driven retained GUI with qualified Foundation 2A layout, 2B typed images and 2C scrolling source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
-| Experimental development persistence (0.5; [combined qualification](../PersistenceFoundation1C.md)) | [Guide and six examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md), [PersistedValue](Types/PersistedValue.md) |
+| Experimental development persistence (0.5; [Foundation 1 qualification](../PersistenceFoundation1C.md)) | [Guide and examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md), [DataStoreQuery](Types/DataStoreQuery.md), [DataStoreQueryResult](Types/DataStoreQueryResult.md), [PersistedValue](Types/PersistedValue.md) |
 
-Optional `GetDataStore` field-name hints are the Persistence-2B addition. The
-future [structured Query design](../PersistenceFoundation2.md) remains
-architecture only; no public Query method or result/cursor type is implemented.
+Optional `GetDataStore` field-name hints are the Persistence-2B addition.
+`DataStore:Query` adds structured equality, inclusive range and ordered top-N
+requests with bounded, opaque keyset pagination. See the
+[Foundation 2 contract](../PersistenceFoundation2.md) for its limits.
 
 Players and Commands are available beginning with API `0.3.0-experimental`.
 Addon composition and GUI are available beginning with

@@ -46,7 +46,7 @@ internal static partial class PersistencePublicTests
         System.IO.Directory.CreateDirectory(Result);
         return Result;
     }
-    internal static void RunStandalone(string Library, string Worker, string FixtureDirectory, bool Closure = false)
+    internal static void RunStandalone(string Library, string Worker, string FixtureDirectory, bool Closure = false, bool QueryOnly = false)
     {
         Library = Path.GetFullPath(Library); Worker = Path.GetFullPath(Worker);
         string Root = NewDirectory(FixtureDirectory);
@@ -61,6 +61,7 @@ internal static partial class PersistencePublicTests
             if (Rid == "linux-x64") Check(PersistenceChmod(Compiler, 493) == 0, "staged compiler executable mode");
             using (var Native = new Runtime.NativeRuntime(Root)) {
                 if (Closure) RunClosure(Native, Worker, Root);
+                else if (QueryOnly) QueryPublicVm(Native, Worker, Root);
                 else Run(Native, Worker, Root);
             }
         } finally { RemoveOwnedDirectory(Root); }
@@ -79,6 +80,7 @@ internal static partial class PersistencePublicTests
             AttachedStorageRequiresAbi15(Native);
             DeterministicAdmission(Native);
             HintPublicationIntegration(Native, Worker, Root);
+            QueryPublicVm(Native, Worker, Root);
             GlobalCapacity(Native);
             using (var F = new Fixture(Native, Worker, Path.Combine(Root, "observations"))) PerformanceObservations(F);
             using (var F = new Fixture(Native, Worker, Path.Combine(Root, "stress"))) Stress(F);

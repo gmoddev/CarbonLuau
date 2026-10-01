@@ -208,7 +208,7 @@ int main(int Count,char** Args)
             uint64_t Expires=Input.U64(); uint64_t Time=Now(); Require(Expires<=Time+5000);
             uint32_t Tag=Input.U32(); Require(Tag<=1);
             Identity Id{Tag!=0,Input.String(65),Input.String(64),Input.String(128)};
-            uint32_t Length=Input.U32(); Require(Length<=MaximumEnvelope); const auto* Start=Input.Take(Length);
+            uint32_t Length=Input.U32(); Require(Length<=(Op==Operation::Query ? 6144u : MaximumEnvelope)); const auto* Start=Input.Take(Length);
             Bytes Envelope(Start,Start+Length); Require(Input.Position==Frame.size());
 #if defined(CARBONLUAU_STORAGE_FIXTURE) && CARBONLUAU_STORAGE_FIXTURE == 2
             // Test executable only: exercise immutable transport deadline/reaping.
@@ -227,6 +227,10 @@ int main(int Count,char** Args)
                     !Envelope.empty() ? DemandResult{Error::InvalidArgument,0} :
                     Store.DemandDerived(Id,Clock::now()+std::chrono::milliseconds(Expires-Time));
                 Outcome.Code=Demand.Code; Flags=Demand.Code==Error::None ? Demand.Flags : 0;
+            } else if(Op==Operation::Query) {
+                Outcome=Expires<=Time ? Result{Error::DeadlineExceeded} :
+                    Store.QueryDerived(Id,Envelope,Clock::now()+std::chrono::milliseconds(Expires-Time));
+                Flags=0;
             } else {
                 Outcome=Expires<=Time ? Result{Error::DeadlineExceeded} :
                     Store.Execute(Op,Id,Envelope,Clock::now()+std::chrono::milliseconds(Expires-Time));
@@ -239,6 +243,7 @@ int main(int Count,char** Args)
             for (auto Token : Route) Put64(Reply,Token);
             Put32(Reply,Flags); Put32(Reply,uint32_t(Outcome.Envelope.size()));
             Reply.insert(Reply.end(),Outcome.Envelope.begin(),Outcome.Envelope.end());
+            Require(Reply.size()<=MaximumFrame-4,Error::StorageError);
             if (!WriteFrame(Reply)) return 0;
             if (!Store.Available()) return 2;
         }
