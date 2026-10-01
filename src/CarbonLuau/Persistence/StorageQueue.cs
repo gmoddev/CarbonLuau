@@ -72,6 +72,7 @@ namespace Carbon.Plugins
                 internal ulong Due;
                 internal int AttemptedEpoch;
                 internal bool Proactive;
+                internal int Users;
             }
             private readonly Dictionary<string,DemandIntent> Demands=new Dictionary<string,DemandIntent>(StringComparer.Ordinal);
             private readonly Queue<string> ProactiveDemandKeys=new Queue<string>();
@@ -90,6 +91,7 @@ namespace Carbon.Plugins
             internal static void Count(ref long Value) { if (Value!=long.MaxValue) ++Value; }
             internal int PendingCount { get { Owner(); return Pending; } }
             internal int WaiterCount { get { Owner(); return Waiters; } }
+            internal int DemandCount { get { Owner(); return Demands.Count; } }
             internal bool HasCompletions { get { Owner(); return Completions.Count!=0 && IntakeRemaining>0; } }
             internal Binding Bind(ulong Vm,ulong Domain,string Package)
             {
@@ -247,6 +249,7 @@ namespace Carbon.Plugins
                     Result.Op=Operation.Await; Result.Store=Store; Result.Field=Field; Result.Waiting=!AssumedReady;
                     Result.Preparation=AssumedReady ? Preparation.Ready : Preparation.Unknown;
                     Result.Frame=null;
+                    ++Intent.Users;
                     if (Result.Waiting) { ++Bucket.Waiters; ++Waiters; }
                     return Result;
                 } catch { if (Created) Demands.Remove(Key); throw; }
@@ -386,6 +389,14 @@ namespace Carbon.Plugins
             {
                 Owner(); if (Request.Released) return;
                 Request.Released=true;
+                if (Request.Op==Operation.Await) {
+                    DemandIntent Intent;
+                    string Key=DemandKey(Request.Owner,Request.Store,Request.Field);
+                    if (Demands.TryGetValue(Key,out Intent) && Intent.Owner==Request.Owner && Intent.Users>0) {
+                        --Intent.Users;
+                        if (Intent.Users==0 && !Intent.Proactive) Demands.Remove(Key);
+                    }
+                }
                 if (Request.Reservation>=0 && Reservations[Request.Reservation]==Request) Reservations[Request.Reservation]=null;
                 --Pending; --Namespaces[Request.Owner.Namespace].Count; Request.Frame=null; Request.Envelope=null;
             }

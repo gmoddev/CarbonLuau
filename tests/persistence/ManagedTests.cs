@@ -277,7 +277,7 @@ partial class ManagedTests
         var Await=Queue.SubmitAwait(Owner,"State","Coins",1);
         Check(Queue.Dispatch()==null && Queue.WaiterCount==0);
         var Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.Ready);
-        Queue.Release(Done); Check(Queue.PendingCount==0);
+        Queue.Release(Done); Check(Queue.PendingCount==0 && Queue.DemandCount==1);
 
         // A restarted worker must reassert desired hint intent and obtain a
         // fresh process-local admission, without accepting a second Luau hint.
@@ -287,7 +287,7 @@ partial class ManagedTests
         Ready=Reply(Demand); Host.StorageProcess.Put32(Ready,52,1);
         Queue.Complete(Demand,Ready,Now); Check(Queue.Dispatch()==null);
         Queue.Retire(Owner);
-        Check(Queue.Dispatch()==null && Queue.PendingCount==0 && Queue.WaiterCount==0);
+        Check(Queue.Dispatch()==null && Queue.PendingCount==0 && Queue.WaiterCount==0 && Queue.DemandCount==0);
 
         Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
         Owner=Queue.Bind(11,12,"prepare"); var Other=Queue.Bind(11,13,"other");
@@ -303,7 +303,7 @@ partial class ManagedTests
         Ready=Reply(Demand); Host.StorageProcess.Put32(Ready,52,1); Queue.Complete(Demand,Ready,Now);
         var Later=Queue.Dispatch(); Check(Later!=null && Later.Owner==Owner && Later.Op==Queue.Operation.Get);
         Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.Ready && Queue.WaiterCount==0);
-        Queue.Release(Done);
+        Queue.Release(Done); Check(Queue.DemandCount==0);
         Queue.Complete(Later,Reply(Later),Now); Check(Queue.Dispatch()==null);
         Queue.Release(Queue.TakeCompletion()); Check(Queue.PendingCount==0);
 
@@ -312,7 +312,7 @@ partial class ManagedTests
         Demand=Queue.Dispatch(); Check(Demand.InternalDemand); Queue.Complete(Demand,Reply(Demand),Now);
         Check(Queue.Dispatch()==null); Now+=5000; Check(Queue.Dispatch()==null);
         Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.IndexPreparing);
-        Queue.Release(Done); Check(Queue.WaiterCount==0 && Queue.PendingCount==0 && Queue.TakeCompletion()==null);
+        Queue.Release(Done); Check(Queue.WaiterCount==0 && Queue.PendingCount==0 && Queue.DemandCount==0 && Queue.TakeCompletion()==null);
 
         // Worker unavailability does not create a second deadline or waiter
         // queue. The original accepted request expires once and releases it.
@@ -322,7 +322,21 @@ partial class ManagedTests
         Check(Queue.Dispatch()==null && Queue.WaiterCount==1);
         Now+=5000; Check(Queue.Dispatch()==null);
         Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.IndexPreparing);
-        Queue.Release(Done); Check(Queue.WaiterCount==0 && Queue.PendingCount==0);
+        Queue.Release(Done); Check(Queue.WaiterCount==0 && Queue.PendingCount==0 && Queue.DemandCount==0);
+
+        // Repeated unavailable, never-hinted exact fields must not retain a
+        // second unbounded intent ledger after their D21 request is released.
+        Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+        Owner=Queue.Bind(11,12,"transient");
+        for (int Index=0; Index<1024; ++Index) {
+            Now+=1000; Await=Queue.SubmitAwait(Owner,"State","Field"+Index,1);
+            Demand=Queue.Dispatch(); Check(Demand!=null && Demand.InternalDemand);
+            byte[] Unavailable=Reply(Demand); Host.StorageProcess.Put32(Unavailable,52,2);
+            Queue.Complete(Demand,Unavailable,Now); Check(Queue.Dispatch()==null);
+            Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.QueryUnavailable);
+            Queue.Release(Done);
+            Check(Queue.PendingCount==0 && Queue.WaiterCount==0 && Queue.DemandCount==0);
+        }
 
         Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
         for (int Index=0; Index<32; ++Index) {

@@ -285,7 +285,7 @@ assert(Flood==64)
             CrossDomain(F);
             var Provider = new object();
             foreach (string Id in new[] {"persist.a","persist.b", new string('a',32) + "." + new string('b',32)}) {
-                string Init = "local S=game:GetService('DataStoreService'):GetDataStore('State'); task.defer(function() S:SetAsync('x',addon.Id,function(V,E) assert(V and not E); S:GetAsync('x',function(R,E2) assert(R==addon.Id and not E2); print('isolation-'..addon.Id) end) end) end)";
+                string Init = "local S=game:GetService('DataStoreService'):GetDataStore('State'); task.defer(function() S:SetAsync('x',addon.Id,function(V,E) assert(V and not E,'addon Set '..tostring(V)..'/'..tostring(E)); S:GetAsync('x',function(R,E2) assert(R==addon.Id and not E2,'addon Get '..tostring(R)..'/'..tostring(E2)); print('isolation-'..addon.Id) end) end) end)";
                 var Result = F.Addons.RegisterSource(Provider, Id, "1.0.0", Encoding.UTF8.GetBytes(Init));
                 Check(Result[0] == "OK" && F.Addons.ProcessOne(), "addon activation");
             }
