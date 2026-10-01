@@ -27,6 +27,8 @@ supervised worker. Repeated acquisitions preserve a bounded union; an empty
 later hint does not erase earlier intent. Successful replacement reasserts its
 new desired hints; removed hints do not delete already retained fields. A
 failed replacement does not change the active generation's desired intent.
+Worker restart reasserts live desired hints and requires fresh process-local
+admission; an old worker result is not carried forward as Query authority.
 
 One private CLPQ operation, `Demand=4`, identifies the exact
 namespace/store/field. It joins retained ACTIVE/BUILDING state or starts the
@@ -47,6 +49,9 @@ joins waiters only if capacity remains, otherwise settles once with a private
 `QueryUnavailable` equivalent. No accepted request is replayed or
 re-reserved. Retirement discards callback authority without undoing committed
 preparation. There is no public waiter or Query callback in 2B.
+The private poll is paced and bounded; an unavailable worker cannot extend the
+accepted request's deadline. Proactive intent is not retried in a tight loop
+within one worker lifetime.
 
 The 2A eight-retained-field/store ceiling includes hinted and automatic
 fields together. A ninth field is unavailable without eviction or primary
@@ -60,7 +65,7 @@ the private DB/journal extent and operational allocation limits are unchanged.
 |---|---|
 | Public options/publication | Native real-VM fixtures cover omitted/empty, 1/8/9, duplicate/hole, malformed text, metatables, exact punctuation, snapshot, nested/cold/provisional/failed/successful publication, root/addon isolation and no Query binding. Windows focused PASS. |
 | Private demand | Actual SQLite backend and framed worker fixtures cover duplicate demand, retained ACTIVE/BUILDING, process-local proof, eight/ninth field, type discovery, oversized strings and checkpoint-time type changes. Windows focused PASS. |
-| Managed ledger | Deterministic tests cover 8/32 waiter bounds, deadline, FIFO, other-namespace progress, ready-state loss, literal punctuation, retirement, one reservation and no replay. Windows PASS. |
+| Managed ledger | Deterministic tests cover 8/32 waiter bounds, deadline, FIFO, other-namespace progress, ready-state loss, literal punctuation, retirement, worker-loss expiry, worker-restart reassertion, one reservation and no replay. Windows PASS. |
 | Integrated Windows | Native 21/21 and real compiler/VM → managed hint staging → production worker demand PASS. Persistence-1B real-worker regression PASS. |
 | Windows combined closure | Full real-VM/runtime regression PASS; Persistence-1C combined real-worker stress and 12 host/worker reopen cycles PASS. Final-source hosted qualification remains pending. |
 | Linux native/sanitizer/fault | Pending hosted final-source qualification; local linuxbox has no installed build toolchain. |

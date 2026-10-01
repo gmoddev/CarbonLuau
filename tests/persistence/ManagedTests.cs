@@ -279,6 +279,16 @@ partial class ManagedTests
         var Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.Ready);
         Queue.Release(Done); Check(Queue.PendingCount==0);
 
+        // A restarted worker must reassert desired hint intent and obtain a
+        // fresh process-local admission, without accepting a second Luau hint.
+        Queue.WorkerStarted();
+        Demand=Queue.Dispatch();
+        Check(Demand!=null && Demand.InternalDemand && Demand.Field=="Coins");
+        Ready=Reply(Demand); Host.StorageProcess.Put32(Ready,52,1);
+        Queue.Complete(Demand,Ready,Now); Check(Queue.Dispatch()==null);
+        Queue.Retire(Owner);
+        Check(Queue.Dispatch()==null && Queue.PendingCount==0 && Queue.WaiterCount==0);
+
         Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
         Owner=Queue.Bind(11,12,"prepare"); var Other=Queue.Bind(11,13,"other");
         Await=Queue.SubmitAwait(Owner,"State","Level",1);
@@ -303,6 +313,16 @@ partial class ManagedTests
         Check(Queue.Dispatch()==null); Now+=5000; Check(Queue.Dispatch()==null);
         Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.IndexPreparing);
         Queue.Release(Done); Check(Queue.WaiterCount==0 && Queue.PendingCount==0 && Queue.TakeCompletion()==null);
+
+        // Worker unavailability does not create a second deadline or waiter
+        // queue. The original accepted request expires once and releases it.
+        Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
+        Owner=Queue.Bind(11,12,"failedworker"); Await=Queue.SubmitAwait(Owner,"State","Coins",1);
+        Queue.Ready=false;
+        Check(Queue.Dispatch()==null && Queue.WaiterCount==1);
+        Now+=5000; Check(Queue.Dispatch()==null);
+        Done=Queue.TakeCompletion(); Check(Done==Await && Done.AwaitResult==Queue.AwaitOutcome.IndexPreparing);
+        Queue.Release(Done); Check(Queue.WaiterCount==0 && Queue.PendingCount==0);
 
         Queue=new Queue(7,()=>Now) {Ready=true}; Queue.WorkerStarted();
         for (int Index=0; Index<32; ++Index) {
