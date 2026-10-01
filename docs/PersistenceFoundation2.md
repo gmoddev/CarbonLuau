@@ -1029,15 +1029,14 @@ No production Persistence Foundation 2 implementation began under the initial
 D22 adoption or either documentation correction. Private implementation began
 only under separately authorized Persistence-2A work.
 
-The separately authorized [Persistence-2A attempt](PersistenceFoundation2A.md)
+The separately authorized [Persistence-2A work](PersistenceFoundation2A.md)
 failed the former universal physical-fit gate. That negative result remains
 historical evidence, but the 2026-09-30 approved D21 capacity correction removes
 the implication that unused logical quota guarantees physical admission.
-The resumed one-database, Foundation 1 primary representation candidate now
+The resumed one-database, Foundation 1 primary representation implementation now
 publishes authoritative-primary Ready before bounded process-local derived
-verification; unadmitted retained ACTIVE state cannot serve Query. Its local
-Windows/Linux checks and remaining gates are recorded in
-[PersistenceFoundation2A.md](PersistenceFoundation2A.md). The private extent,
-correctness, work/memory, platform and failure gates passed locally on final
-source; hosted final-head validation and publication remain pending. Do not
-begin 2B before the separate 2A closure verdict.
+verification; unadmitted retained ACTIVE state cannot serve Query. The private
+extent, correctness, work/memory, platform, failure and hosted gates are closed
+in [PersistenceFoundation2A.md](PersistenceFoundation2A.md). Private 2A is
+PASS; public Query remains unimplemented. Persistence-2B is the next separately
+authorized phase, not work performed during 2A.

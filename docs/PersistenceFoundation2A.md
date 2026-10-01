@@ -1,6 +1,18 @@
 # Persistence Foundation 2A — private derived-index substrate
 
-## Local final-source qualification — 2026-10-01 (hosted CI pending)
+## Final private-substrate closure — 2026-10-01
+
+**PERSISTENCE-2A PASS — READY FOR PERSISTENCE-2B.** This qualifies the private
+derived-index substrate, not a public Query API, a package release or any 2B
+implementation. The implementation commit is `6330574`; the locally qualified
+implementation and policy/evidence source is `c6c300b`. [Hosted validation
+run 36839009473](https://github.com/gmoddev/CarbonLuau/actions/runs/36839009473)
+passed Windows, Linux and sanitizer jobs at that exact revision, including
+clean bundle installation and private-worker packaging. [Documentation
+deployment 36839009399](https://github.com/gmoddev/CarbonLuau/actions/runs/36839009399)
+passed and the published 2A Markdown returned HTTP 200 with this record's
+title. Final closure wording is a docs-only follow-up to the tested source;
+runtime/ABI/API files are unchanged.
 
 The private one-database implementation separates **D21 authoritative-primary
 Ready** from **derived admission**. `Backend::Open` completes SQLite recovery,
@@ -34,8 +46,7 @@ gated by completed current-process verification. No author Query, hints,
 cursors or Persistence-2B binding is implemented.
 
 This change removes the historical global-derived-before-Ready failure mode
-documented below; it does **not** erase those failed fixtures or by itself
-establish final 2A PASS. The strict
+documented below; it does not erase those failed fixtures. The strict
 100,000-record / 245,200,000-primary-byte / 746,496-retained-generation
 fixture reached primary Ready in **7,884 ms on final-source Windows** and
 **10,701 ms on Linux** (the latter predates only dead-code cleanup), against
@@ -86,13 +97,9 @@ time application savepoint remains necessary for atomic derived withdrawal;
 its pager/subjournal allocations share the same SQLite hard cap, and injected
 rollback/release failures are covered by the crash fixture.
 
-**Pending before PASS:** commit qualified source/evidence, obtain hosted
-final-head Windows/Linux/sanitizer and clean-package CI, verify documentation
-deployment and the published remote state. No hosted-CI result, package
-release or 2B authorization is claimed by this local continuation. The dated
-PARTIAL/BLOCKED results below are
-historical evidence from earlier candidate designs, not a second current
-readiness contract.
+**No 2A qualification gate remains open.** The dated PARTIAL/BLOCKED results
+below are historical evidence from earlier candidate designs, not a second
+current readiness contract.
 
 **2026-10-01 startup-readiness continuation — still PARTIAL.** A new
 test-only exact-format fixture isolates the authoritative primary proof. With

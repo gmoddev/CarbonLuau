@@ -777,8 +777,9 @@ actual Carbon integration PASS.
 ## Persistence Foundation 2 architecture gate
 
 The separately authorized private [Persistence-2A substrate](PersistenceFoundation2A.md)
-has passed local final-source qualification; hosted final-head CI and publication
-remain pending. A valid primary corpus exhausted the Foundation 1
+is PASS after final-source Windows/Linux/sanitizer qualification and
+[hosted validation](https://github.com/gmoddev/CarbonLuau/actions/runs/36839009473).
+A valid primary corpus exhausted the Foundation 1
 512-MiB database ceiling during derived preparation before reaching the derived
 logical limit. The 2026-09-30 D21 correction permits controlled physical
 StorageFull beneath an unused logical quota and resumes one-database 2A work;
@@ -792,8 +793,8 @@ memory observations and limits are in the 2A record. Its 1-GiB database
 extent, 1,075,904,512-byte journal extent and 2,560-MiB filesystem-allocation
 operational budget are adopted private D21 limits, not a released public
 support envelope. File extents and allocated-block observations are
-different guarantees. No public Query/hints/cursors are implemented; do not
-begin 2B.
+different guarantees. No public Query/hints/cursors are implemented;
+Persistence-2B remains separate future work.
 
 The [D22 correction audit](PersistenceFoundation2-Validation.md) owns the
 documentation-only baseline verdict. Check D21 compatibility, the structured
