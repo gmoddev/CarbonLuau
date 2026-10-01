@@ -26,7 +26,7 @@ namespace Carbon.Plugins
             if (Stopping || Persistence==null || Native==null || (Host!=null && Host.Busy)) return;
             try {
                 Native.CheckOwner();
-                if (Facade!=null) foreach (FacadeSession Session in Facade.Sessions()) Session.FlushStorageHints();
+                if (Gameplay!=null) foreach (FacadeSession Session in Gameplay.Sessions()) Session.FlushStorageHints();
                 Persistence.Tick(); Native.PumpStorage(); RequestDrain();
             }
             catch (Exception) {
