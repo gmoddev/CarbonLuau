@@ -776,6 +776,25 @@ actual Carbon integration PASS.
 
 ## Persistence Foundation 2 architecture gate
 
+The separately authorized private [Persistence-2A substrate](PersistenceFoundation2A.md)
+has passed local final-source qualification; hosted final-head CI and publication
+remain pending. A valid primary corpus exhausted the Foundation 1
+512-MiB database ceiling during derived preparation before reaching the derived
+logical limit. The 2026-09-30 D21 correction permits controlled physical
+StorageFull beneath an unused logical quota and resumes one-database 2A work;
+the old universal-fit proof is no longer an acceptance gate. Historical
+negative evidence remains intact. The current private candidate preserves
+Foundation 1 primary records, publishes primary Ready before bounded
+process-local derived verification, and does not admit retained ACTIVE state
+from durable metadata alone. Windows/Linux native, managed-worker and Linux
+ASan/UBSan/leak matrices pass on final source; the exact fixtures, timings,
+memory observations and limits are in the 2A record. Its 1-GiB database
+extent, 1,075,904,512-byte journal extent and 2,560-MiB filesystem-allocation
+operational budget are adopted private D21 limits, not a released public
+support envelope. File extents and allocated-block observations are
+different guarantees. No public Query/hints/cursors are implemented; do not
+begin 2B.
+
 The [D22 correction audit](PersistenceFoundation2-Validation.md) owns the
 documentation-only baseline verdict. Check D21 compatibility, the structured
 public request, optional field hints, bounded online preparation, transactional

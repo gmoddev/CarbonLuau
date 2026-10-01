@@ -1,6 +1,10 @@
 # Persistence Foundation 2 — bounded derived indexes and Query
 
-Status: **CANONICAL ARCHITECTURE — FINAL CORRECTION BEFORE IMPLEMENTATION**, 2026-09-29.
+Status: **CANONICAL ARCHITECTURE; PRIVATE 2A LOCAL QUALIFICATION COMPLETE,
+HOSTED CI PENDING**.
+The 2026-09-29 final public-design correction preceded implementation; the
+current [2A working-tree evidence](PersistenceFoundation2A.md) records a
+subsequently authorized private candidate. Public Query and 2B remain closed.
 
 Foundation 1 qualified baseline: 034f28f81c64e0f135ec882fb05de4ef7f33fcf7.
 Initial D22 documentation baseline: ee208831efc5647dab553b5f9d0524e7e2e83353.
@@ -393,6 +397,24 @@ earlier accepted request. Waiting is not permission for a maintenance transactio
 to monopolize the worker after ready foreground work can be selected.
 
 Crash/restart resumes committed build state. No author's Query is replayed.
+Resume is gated by current-process derived verification. A persisted BUILDING
+checkpoint is not permission to publish or maintain an unverified generation.
+If verification finds that intervening authoritative primary state makes the
+retained build incomplete, withdraw it and restart bounded preparation instead
+of publishing its old checkpoint.
+
+Foundation 1 primary Ready requires its D21 recovery, integrity, schema,
+envelope and quota checks, not the entire retained derived proof. Every worker
+start clears process-local derived admission. A retained generation is usable
+only when its durable state is ACTIVE **and** its exact generation has passed
+current-process authority, accounting and primary-representation verification.
+Until then Query is unavailable/preparing and never scans primary records.
+Background/lazy proof is bounded and yields to foreground persistence work.
+The proof and any admitted identity are invalidated if an intervening primary
+mutation could make the proof stale. No process-local admission survives a
+worker crash or reload. The current private 2A candidate implements one
+process-local proof for the retained graph; per-index lazy admission is not a
+current implementation claim. Primary Ready is independent of that proof.
 
 
 ## 9. Derived state must not make primary writes fragile
@@ -402,7 +424,7 @@ Primary persisted values are authoritative. Query indexes are subordinate derive
 Normally Set/Remove and all active/building derived changes occur in the same SQLite
 transaction.
 
-For a successful primary Set/Remove affecting ACTIVE derived state, the committed transaction
+For a successful primary Set/Remove affecting admitted ACTIVE derived state, the committed transaction
 must end as either:
 
 ~~~text
@@ -412,14 +434,21 @@ new primary state + corresponding correct ACTIVE derived state
 or:
 
 ~~~text
-new primary state + affected derived state atomically not ACTIVE
+new primary state + affected derived state atomically not Query-admitted
 ~~~
 
 never:
 
 ~~~text
-new primary state + stale ACTIVE derived state
+new primary state + stale Query-admitted ACTIVE derived state
 ~~~
+
+During post-restart verification, a successful Set/Remove may invalidate the
+process-local admission fence before committing the primary write and defer
+derived maintenance. Persisted ACTIVE/BUILDING rows behind that fence are not
+Query-usable or publishable; they must be reverified against the new primary
+snapshot or withdrawn before admission. This does not replay the primary
+mutation, and durable ACTIVE metadata alone never bypasses the fence.
 
 An otherwise valid primary mutation must not fail merely because subordinate derived state has
 exhausted its separate logical capacity, become unmaintainable or needs repair.
@@ -696,10 +725,30 @@ changes Foundation 1 primary store/key/namespace quota counters.
 D21 primary-data quotas remain unchanged. Query indexes therefore do not silently
 shrink the addon's user-data quota.
 
-D21's 1,280 MiB filesystem-qualified operational budget and 512 MiB database/page
-ceiling remain unchanged. Persistence-2A must prove the derived-state bounds fit that
-existing physical envelope on qualified Windows/Linux storage profiles or stop for an
-architecture amendment.
+The 16-MiB namespace and 64-MiB global derived logical limits are hard
+admission ceilings, not physical-space reservations. Neither unused primary
+nor unused derived logical quota guarantees that every otherwise-valid mutation
+can be admitted under the independent database and journal file-byte limits.
+If physical capacity is definitely exhausted before COMMIT, the mutation fails
+with a controlled D21 capacity result and no primary change. Uncertain outcomes
+after COMMIT begins retain D21 Indeterminate/no-replay semantics. No successful
+operation may leave an affected ACTIVE index stale. A derived *logical* capacity
+or independently classified representation mismatch may withdraw the affected
+index atomically as specified in section 9; SQLite FULL, I/O, corruption and
+uncertain COMMIT are not reclassified as disposable-index failures.
+
+The qualified Foundation 1 baseline is a 512-MiB database EOF and its bounded
+retained journal, with 1,280 MiB as a qualified operational allocation budget,
+not an instantaneous allocated-block guarantee. Persistence-2A adopts a
+1-GiB database EOF, a 1,075,904,512-byte retained-journal EOF and a 2,560-MiB
+filesystem-allocation operational budget for the combined one-database layout
+under D21. Final hosted qualification is recorded in the [2A evidence](PersistenceFoundation2A.md).
+It must enforce the chosen byte/
+page extents and bounded work/memory, but need not prove that every logical
+state below both quotas is physically realizable under every fragmentation or
+journal history. File growth is not preallocation; physical exhaustion must
+fail safely. The numerical amendment is adopted with the separate private 2A
+implementation, not by the earlier architecture correction alone.
 
 ## 16. Corruption and repair
 
@@ -853,7 +902,10 @@ or replaying the user's Query; run the query statement at most once.
 - physical-allocation requalification;
 - final API/release-readiness audit.
 
-No phase is implemented by this correction.
+The original documentation correction implemented no phase. The separately
+authorized private 2A candidate is now implemented in the working tree and
+under qualification; it has no public binding. This record does not declare
+2A PASS or authorize 2B.
 
 
 ## 21. Canonical decision summary
@@ -899,7 +951,7 @@ No phase is implemented by this correction.
 | Query fallback scan | forbidden |
 | SQL boundary | fixed prepared statement families; no author SQL/syntax fragments |
 | API identity | 0.5.0-experimental; package remains 0.4.0 |
-| Production implementation | not started |
+| Production implementation | private 2A candidate under qualification; public Query/2B not started |
 
 
 ## 22. Deferred features
@@ -973,5 +1025,19 @@ The developer-facing model is:
 
 **CANONICAL BASELINE READY — FINAL CORRECTION BEFORE PERSISTENCE-2A.**
 
-No production Persistence Foundation 2 implementation began under the initial D22 adoption or
-either documentation correction.
+No production Persistence Foundation 2 implementation began under the initial
+D22 adoption or either documentation correction. Private implementation began
+only under separately authorized Persistence-2A work.
+
+The separately authorized [Persistence-2A attempt](PersistenceFoundation2A.md)
+failed the former universal physical-fit gate. That negative result remains
+historical evidence, but the 2026-09-30 approved D21 capacity correction removes
+the implication that unused logical quota guarantees physical admission.
+The resumed one-database, Foundation 1 primary representation candidate now
+publishes authoritative-primary Ready before bounded process-local derived
+verification; unadmitted retained ACTIVE state cannot serve Query. Its local
+Windows/Linux checks and remaining gates are recorded in
+[PersistenceFoundation2A.md](PersistenceFoundation2A.md). The private extent,
+correctness, work/memory, platform and failure gates passed locally on final
+source; hosted final-head validation and publication remain pending. Do not
+begin 2B before the separate 2A closure verdict.

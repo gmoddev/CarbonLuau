@@ -157,7 +157,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
 | D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
 | D21 — resolved Persistence Foundation 1 architecture; private 1A PASS; public API assigned 0.5 | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The approved PERSIST/EXTRA and physical-budget amendments preserve hard logical/backend extent bounds; 1,280 MiB is an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) and [public 1B](PersistenceFoundation1B.md) retain their scoped evidence. [1C](PersistenceFoundation1C.md) owns combined closure and the exact final verdict. D12 experimental availability is not package publication approval. |
-| D22 — resolved Persistence Foundation 2 bounded derived-index Query architecture; implementation NOT STARTED | DataStore:Query uses required Field plus structured Equals/Min/Max/order with automatic CarbonLuau-owned derived indexes. Authors manage no schema, version, migration or index lifecycle; optional Indexes string-list hints only request proactive preparation/retention. Online bounded preparation keeps ordinary persistence available. [PersistenceFoundation2.md](PersistenceFoundation2.md) owns exact API, bounds and qualification gates. | Implement only through Persistence-2A–2D. No Foundation 2 API exists until qualification. The future surface joins unreleased `0.5.0-experimental`; package identity is unchanged. |
+| D22 — resolved Persistence Foundation 2 bounded derived-index Query architecture; private 2A locally qualified, hosted closure pending | DataStore:Query uses required Field plus structured Equals/Min/Max/order with automatic CarbonLuau-owned derived indexes. Authors manage no schema, version, migration or index lifecycle; optional Indexes string-list hints only request proactive preparation/retention. Online bounded preparation keeps ordinary persistence available. [PersistenceFoundation2.md](PersistenceFoundation2.md) owns exact API, bounds and qualification gates. | Implement only through Persistence-2A–2D. No Foundation 2 public API exists yet. The future surface joins unreleased `0.5.0-experimental`; package identity is unchanged. |
 
 ### Canonical detail for resolved decisions
 
@@ -377,6 +377,12 @@ Select one private pinned SQLite database in a supervised storage helper, with
 fixed parameterized operations, rollback PERSIST journaling and EXTRA
 synchronization verified against qualified local Windows/Linux VFS/filesystem
 behavior. Each connection must configure and verify these settings before Ready.
+For the additive Foundation 2 private derived substrate, primary Ready still
+requires the D21 SQLite/file/profile/schema/integrity, primary-envelope and
+quota proofs. Full derived graph, representation and cleanup work is separate:
+unverified derived generations are unavailable for Query and cannot defer
+otherwise healthy Foundation 1 readiness. Physical database corruption or a
+failed authoritative-primary proof remains D21-wide and fails closed.
 Commit uses SQLite's retained-journal invalidation and synchronization, not
 journal-file deletion. Do not use Carbon/Oxide direct JSON writes or its generic
 SQLite queue as evidence of this contract. One transaction mutates a key and
@@ -394,8 +400,23 @@ rollback/exactly-once/retry. Corruption or unsupported format fails closed and
 preserves storage, including journals, for operator recovery, never defaults or
 overwrites it. Retained journals count toward persistence resource accounting and
 must not be manually deleted or zeroed during startup or shutdown. CarbonLuau
-enforces hard logical quotas and qualified backend file-byte extent bounds. The
-1,280 MiB allocated-file budget is a filesystem-qualified operational envelope
+enforces hard logical quotas and qualified backend file-byte extent bounds.
+Logical quota is an author-visible admission ceiling, not a reservation of
+database or journal space: unused logical quota does not guarantee that an
+otherwise valid mutation is physically admissible. CarbonLuau must not
+knowingly exceed its canonical database/page or retained-journal byte extents
+to satisfy unused logical quota. A proven pre-COMMIT extent/capacity failure
+is a controlled StorageFull with no mutation; an uncertain outcome after COMMIT
+begins remains Indeterminate and is never replayed. The physical ceilings are
+independent private resource limits, not a reduction of the 16-MiB namespace
+or 256-MiB global logical quotas. Qualified Foundation 1's 512-MiB database,
+corresponding journal limit and 1,280-MiB operational budget remain its
+historical baseline. The additive private Foundation 2A substrate uses a
+262,144-page/1,073,741,824-byte database EOF ceiling, a
+1,075,904,512-byte retained-journal EOF ceiling and a 2,560-MiB
+filesystem-allocation operational budget. These larger private limits do not
+change the Foundation 1 public API or logical quotas. The allocated-file budget
+is a filesystem-qualified operational envelope
 checked at startup, before dispatching a database operation and after its
 completion; it is not an application-enforced never-exceeded physical disk quota.
 Measurements cannot guarantee that an in-flight filesystem operation never
@@ -469,13 +490,30 @@ Foundation 2 keeps the author model small:
    D21 permits.
 8. Foreground writes maintain building and active derived state through the single serialized
    worker.
-9. After a successful Set/Remove, affected ACTIVE derived state is transactionally correct or
-   atomically withdrawn; stale ACTIVE state is forbidden.
+9. An ACTIVE generation is usable only when its durable ACTIVE state and exact
+   current-process verification/admission both hold. Worker restart clears all
+   derived admission. After a successful Set/Remove, affected *admitted* ACTIVE
+   state is transactionally correct or made unavailable before commit; durable
+   ACTIVE metadata alone never authorizes Query. An unverified generation may
+   retain its durable row while unavailable and must be reverified against the
+   current authoritative primary state or withdrawn before readmission.
+   A recoverably failed bounded proof turn suspends derived admission and
+   background maintenance for that worker lifetime; it does not restart an
+   otherwise healthy authoritative primary worker. Restart begins a fresh
+   proof, never a reused process-local admission.
 10. Query result size and execution work are hard-bounded.
 11. Pagination uses opaque bounded keyset cursors; each call sees its own current snapshot, not
     a frozen multi-page snapshot.
 12. D21 remains authoritative for persistence durability, namespace ownership, publication,
     worker ownership and callback lifetime.
+
+The separate derived logical pool also provides a maximum, not a promise that
+every state below it fits the private SQLite file extents. Controlled physical
+capacity rejection does not authorize a stale ACTIVE index, a false primary
+success, or silent Query fallback to primary scanning. The previous universal
+logical-to-physical fit implication is superseded; the detailed Foundation 2
+record owns the corrected admission and withdrawal rules. Candidate B/C split
+investigations remain historical evidence, not the active implementation route.
 
 The detailed record owns numeric limits, preparation admission, type selection,
 cursor safety and implementation gates. Its [final correction audit](PersistenceFoundation2-Validation.md)
@@ -484,7 +522,9 @@ separates architecture readiness from runtime qualification.
 Foundation 2 joins the still-unpublished 0.5.0-experimental scripting identity. This decision
 changes no package/tag/release. Implementation remains routed through Persistence-2A private
 derived substrate, 2B automatic demand/hints, 2C structured Query and 2D combined closure.
-No production Foundation 2 implementation has begun.
+Private Persistence-2A derived storage and process-local admission are implemented
+under [2A qualification](PersistenceFoundation2A.md); public Query remains
+unimplemented. Persistence-2B through 2D have not begun.
 
 #### D2 — limits in addon-capable operation
 
