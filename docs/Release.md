@@ -1,27 +1,18 @@
 # Release identity and reproducibility
 
-Current development mapping after the 2026-09-23 Persistence Foundation 1
-assignment under [D12](Invariants.md#d12--scripting-and-protocol-identity).
-Persistence-1B is **implemented and qualified within its recorded scope** in
-[the 1B record](PersistenceFoundation1B.md). [Persistence-1C](PersistenceFoundation1C.md)
-owns combined subsystem readiness and final-source CI. The
-[1B evidence](PersistenceFoundation1B-Validation.md) remains historical evidence.
-Subsystem readiness is not authorization to publish package 0.5.0, create its
-tag/release, publish editor artifacts or begin a release-candidate pass. D20 Entity
-is not a persistence release prerequisite. The separately adopted
-[D22 Query design](PersistenceFoundation2.md) explicitly joins scripting API
-`0.5.0-experimental`, with structured field/value requests, automatic preparation
-and optional field hints. The [2B hint surface](PersistenceFoundation2B.md) is qualified;
-[2C](PersistenceFoundation2C.md) implements public Query without changing
-Foundation 1's completed readiness verdict. No public schema,
-index or migration version is introduced. Package 0.5.0 publication remains a
-separate release decision.
+The v0.5.0 experimental mapping follows [D12](Invariants.md#d12--scripting-and-protocol-identity),
+qualified [Persistence Foundation 1C](PersistenceFoundation1C.md) and
+[Persistence Foundation 2D](PersistenceFoundation2D.md). The 2D source/CI gate
+closed before the separate v0.5.0 release gate. D20 Entity is not a persistence
+release prerequisite. The [D22 Query contract](PersistenceFoundation2.md)
+joins scripting API `0.5.0-experimental` with structured field/value requests,
+automatic preparation and optional field hints. No public schema, index or
+migration version was introduced. The [0.5.0 release notes](releases/0.5.0.md)
+own the experimental author-facing summary.
 
 | Identity | Value |
 |---|---|
-| Retained development release/tag fields | `0.4.0` / `v0.4.0` (not publication authority) |
-| Carbon development package | `0.4.0` (unchanged) |
-| Intended future persistence package | `0.5.0` (not bumped or released) |
+| Package / tag | `0.5.0` / `v0.5.0` |
 | Current scripting API | `CarbonLuau 0.5.0-experimental` |
 | API status | `Experimental` |
 | Native ABI | `1.5` (additive reserved persistence-completion export) |
@@ -38,12 +29,9 @@ is the machine-readable owner of the mapping, and CI checks it against source an
 documentation.
 
 `tools/Test-Release.ps1` requires releaseVersion/packageVersion/tag to agree but
-does not require them to equal the scripting API version. No development package
-move is therefore needed: package/release/tag remain 0.4.0/v0.4.0 while the API
-advances to 0.5.0-experimental. Any resulting 0.4-named development bundle carries
-the exact API and ABI in provenance; it must not be published as a persistence
-release. The intended future package 0.5.0 requires a separate qualified release
-manifest move and explicit publication authorization. The ABI 1.5 change is
+does not require them to equal the scripting API version. The v0.5.0 release
+manifest and exact-source artifacts carry API `0.5.0-experimental` and ABI `1.5`
+in provenance. The ABI 1.5 change was
 independently required by the new `cl_domain_storage_completion` ingress; it is
 not inferred from the API version. Provider 1.2, addon schema 1 and Luau are unchanged.
 
@@ -83,17 +71,19 @@ The command creates a platform archive, provenance JSON and SHA-256 checksum in
 target from a clean checkout, creates the archive twice and rejects a packaging
 hash mismatch before uploading the release-candidate artifacts.
 
-The archive contains only the production `.cszip`, the matching native runtime and compiler worker,
+The archive contains only the production `.cszip`, the matching native runtime,
+compiler worker and private storage worker,
 examples, installation/release notes, license/attribution and generated
 provenance. It never contains live qualification fixtures or both platform
 binaries.
 
-No tag or GitHub Release is created by these scripts or workflows. Publishing
-any tag or GitHub Release remains a separate, explicitly authorized action.
+No tag or GitHub Release is created by these scripts or workflows. The v0.5.0
+tag and GitHub prerelease are a separate, explicitly authorized publication
+step after the exact-release-commit gate.
 
 ## Matching editor artifacts
 
-The extension's `tooling-source.json` pins the exact runtime candidate. Its
+The extension's `tooling-source.json` pins the exact v0.4.0 runtime candidate. Its
 `tools/Package.py` creates platform VSIX files from the canonical pack, records
 both commits and payload identities, normalizes ZIP metadata, and checks repeated
 packaging for identical hashes. Extension version `0.0.1` and tooling pack
@@ -102,6 +92,7 @@ development scripting API `0.5.0-experimental` and protocol
 `CarbonLuau.Tooling/1.0`; none changes the runtime ABI or package schema.
 Windows/Linux x64 VSIX artifacts require clean installed-extension E2E; macOS
 arm64 artifacts remain explicitly static-only. Hashes establish integrity, not
-publisher signing or OS sandboxing. Candidate artifacts are local/CI evidence,
-not a Marketplace, Open VSX or GitHub Release publication. Earlier packs are not
-silently qualified for the new API; rebuild and qualify an exact compatible pack.
+publisher signing or OS sandboxing. The v0.4.0 VSIX bits are not qualified for
+the v0.5.0 persistence/Query API and are not attached to this runtime release.
+No Marketplace or Open VSX publication is authorized by this task; a matching
+extension requires its own source pin, rebuild and qualification.

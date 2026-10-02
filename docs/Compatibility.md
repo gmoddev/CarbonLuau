@@ -9,8 +9,8 @@ This document owns compatibility promises, version identities and evidence requi
 | Operating system | Windows and glibc-based Linux are the v0.1 targets. Worker Windows and Ubuntu 24.04 Docker passed Phase 0; this does not qualify every Windows release/Linux distribution or define a minimum glibc version. |
 | Architecture | x64 process and native binaries only. ARM64, x86, macOS and other targets are unqualified and rejected by Phase 0. |
 | Managed runtime | Keep deployed code compatible with the proven .NET Framework/Mono-style Carbon runtime. The `net48` loader test passed on Windows and Mono 6.8. A .NET SDK used for tooling is not the server runtime. |
-| Carbon | CarbonPlugin and source `.cszip` are the integration/package model. Worker evidence is Carbon 2.0.259.0; no unrestricted future Carbon-version guarantee. |
-| Rust server | Worker evidence is Rust 2633 / Steam build 25230300. New server builds need affected compatibility checks, not assumptions based on the same game name. |
+| Carbon | CarbonPlugin and source `.cszip` are the integration/package model. Earlier worker evidence is Carbon 2.0.259.0; Persistence-2D live Linux used Carbon 2.0.261.0 and Windows used the recorded current archive. No unrestricted future Carbon-version guarantee. |
+| Rust server | The loader baseline used Rust 2633 / Steam build 25230300; Persistence-2D live qualification used build 25653776. New server builds need affected compatibility checks, not assumptions based on the same game name. |
 | Luau | Vendored commit is recorded in [LUAU_REVISION.txt](../native/third_party/LUAU_REVISION.txt). Phase 1 links compiler/VM; its platform and containment evidence is separate in [Phase1-Validation.md](Phase1-Validation.md). |
 | Hosting provider | The user's Shockbyte Linux server passed only the historical Phase 0 load/probe/unload/reload gate based on user-provided logs. Phase 1-5 full-runtime behavior remains unqualified there. By user decision on 2026-09-15, Shockbyte full-runtime qualification is deferred and is not a Phase 5/v0.1 gate; this is not a support claim, and requalification is required before advertising Shockbyte as qualified or supported. Other servers/plans and provider policy changes remain unqualified. |
 
@@ -81,14 +81,13 @@ Public behavior changes need deliberate compatibility review, documentation and 
 Persistence Foundation 1 was explicitly assigned scripting API
 `0.5.0-experimental` on 2026-09-23; it is not part of historical 0.4 availability.
 [D12](Invariants.md#d12--scripting-and-protocol-identity) owns the decision and
-[Release.md](Release.md) the independent development mapping: package/tag fields
-stay 0.4.0/v0.4.0, while 0.5.0 is the intended future package, not a published
-release. Existing catalog entries retain historical SinceApi values. New
-persistence metadata follows actual bindings and is Experimental after scoped
-1B qualification; preview remains unavailable. Its implementation-source CI is
-recorded in [1B validation](PersistenceFoundation1B-Validation.md). Combined closure
-and exact Windows/Linux live limits are recorded in [1C](PersistenceFoundation1C.md).
-No version label establishes overall PASS.
+[Release.md](Release.md) the independent v0.5.0 package/tag mapping. Existing
+catalog entries retain historical SinceApi values. Persistence metadata follows
+actual bindings and is Experimental; preview remains unavailable. Foundation 1
+implementation evidence remains in [1B validation](PersistenceFoundation1B-Validation.md),
+with combined closure and Windows/Linux live limits in [1C](PersistenceFoundation1C.md).
+The v0.5.0 prerelease qualification is recorded separately and does not imply
+stable production readiness.
 The additive reserved completion export requires native ABI 1.5; no provider
 protocol, addon schema or Luau change is implied.
 
@@ -96,13 +95,13 @@ Persistence Foundation 2 architecture is resolved by [D22](Invariants.md#d22--pe
 and [PersistenceFoundation2.md](PersistenceFoundation2.md). Its implemented Query uses
 required `Field`, structured `Equals` or inclusive `Min`/`Max`, automatic
 preparation and optional `Indexes` string-list hints. Authors manage no schemas,
-versions, migrations or index lifecycle. It joins the same unpublished
+versions, migrations or index lifecycle. It joins the same published experimental
 `0.5.0-experimental` scripting identity. The [final correction audit](PersistenceFoundation2-Validation.md)
 is architecture evidence. The 2B optional hint binding and metadata are
 [qualified](PersistenceFoundation2B.md); public Query bindings and generated
 metadata are [qualified by 2C](PersistenceFoundation2C.md). Combined closure is
-recorded separately in [2D](PersistenceFoundation2D.md). No package bump or
-preview availability is implied by the earlier phase records.
+recorded separately as PASS in [2D](PersistenceFoundation2D.md). The v0.5.0
+package release remains experimental and does not add preview storage behavior.
 
 ## Dependency and host upgrades
 

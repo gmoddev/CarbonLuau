@@ -1,4 +1,4 @@
--- API 0.5 development example: highest values first, with record-key tie breaking.
+-- v0.5 experimental example: highest values first, with record-key tie breaking.
 local Store = game:GetService("DataStoreService"):GetDataStore("QueryExamples")
 
 task.defer(function()

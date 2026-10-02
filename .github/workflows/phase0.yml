@@ -104,14 +104,14 @@ jobs:
       - name: Clean installation from release bundle and bundled examples
         shell: pwsh
         run: |
-          if ($IsWindows) { ./dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.4.0-win-x64.zip" }
-          else { mono dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.4.0-linux-x64.zip" }
+          if ($IsWindows) { ./dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.5.0-win-x64.zip" }
+          else { mono dist/runtime/RuntimeTests.exe --release-install "$pwd/dist/release/CarbonLuau-v0.5.0-linux-x64.zip" }
           if ($LASTEXITCODE -ne 0) { throw 'Clean bundle installation failed' }
       - name: Clean extracted private storage worker and import audit
         shell: pwsh
         run: |
           $Rid = if ($IsWindows) { 'win-x64' } else { 'linux-x64' }
-          ./tools/Test-PersistencePackaging.ps1 -Bundle "dist/release/CarbonLuau-v0.4.0-$Rid.zip" -ManagedTests dist/persistence/ManagedTests.exe -WorkDirectory $env:RUNNER_TEMP
+          ./tools/Test-PersistencePackaging.ps1 -Bundle "dist/release/CarbonLuau-v0.5.0-$Rid.zip" -ManagedTests dist/persistence/ManagedTests.exe -WorkDirectory $env:RUNNER_TEMP
       - uses: actions/upload-artifact@v4
         with:
           name: carbonluau-${{ matrix.os }}
@@ -129,7 +129,7 @@ jobs:
       - name: Upload release candidate
         uses: actions/upload-artifact@v4
         with:
-          name: release-v0.4.0-${{ matrix.os }}
+          name: release-v0.5.0-${{ matrix.os }}
           if-no-files-found: error
           path: dist/release/
   sanitizers:

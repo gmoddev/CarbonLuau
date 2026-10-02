@@ -2,9 +2,9 @@
 
 Since API `0.5.0-experimental`. **Experimental; Foundation 1 is qualified within
 [recorded scope](../../PersistenceFoundation1C.md), and Query is the 2C addition.**
-[2C](../../PersistenceFoundation2C.md) owns Query qualification; package release
-approval remains separate. Available in development source
-containing the production bindings. Obtain this sealed,
+[2C](../../PersistenceFoundation2C.md) owns Query-specific qualification and
+[2D](../../PersistenceFoundation2D.md) owns combined release readiness. Available
+in the experimental v0.5.0 package. Obtain this sealed,
 private facade from [DataStoreService](../Services/DataStoreService.md).
 No fields, constructor, Close, request handle or cancellation API is exposed.
 

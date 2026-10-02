@@ -1,4 +1,4 @@
--- API 0.5 development example: exact scalar equality. The first query may report IndexPreparing.
+-- v0.5 experimental example: exact scalar equality. The first query may report IndexPreparing.
 local Store = game:GetService("DataStoreService"):GetDataStore("QueryExamples")
 
 task.defer(function()

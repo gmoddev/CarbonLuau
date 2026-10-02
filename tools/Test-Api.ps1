@@ -7,7 +7,7 @@ $Version = $Release.apiVersion
 $GuiGuide = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui.md')
 $GuiReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui-Reference.md')
 $GuiDescriptors = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau.Core/Gui/SharedGuiDescriptors.cs')
-$ReleaseNotes = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/releases/0.4.0.md')
+$ReleaseNotes = Get-Content -Raw -LiteralPath (Join-Path $Root "docs/releases/$($Release.releaseVersion).md")
 $Player1C = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1C.md')
 $Player1D = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1D.md')
 $Player1FA = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1FA.md')
@@ -165,7 +165,7 @@ foreach ($Example in @('query-equals','query-range','query-top','query-pages','q
 }
 foreach ($Example in @('get','set','remove','player-key','snapshot','errors')) {
     $ExampleText = Get-Content -Raw -LiteralPath (Join-Path $Root "examples/persistence/$Example/init.luau")
-    if (!$ExampleText.Contains('Experimental; see PersistenceFoundation1C.md for qualification, not package publication') -or !$ExampleText.Contains('pcall')) {
+    if (!$ExampleText.Contains('v0.5 experimental example; see PersistenceFoundation1C.md for qualification and release limits') -or !$ExampleText.Contains('pcall')) {
         throw "Persistence example lacks qualification/submission handling: $Example"
     }
 }

@@ -1,4 +1,4 @@
--- API 0.5 development example: bounded keyset pagination, at most three pages here.
+-- v0.5 experimental example: bounded keyset pagination, at most three pages here.
 local Store = game:GetService("DataStoreService"):GetDataStore("QueryExamples")
 
 local function ReadPage(Cursor, Page)

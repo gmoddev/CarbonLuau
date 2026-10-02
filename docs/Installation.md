@@ -12,20 +12,21 @@ glibc Linux x64. ARM, x86, macOS and non-glibc Linux are not qualified.
 - File and console/RCON access sufficient to install a Carbon plugin and run
   administrator commands.
 
-Current Player/GUI host qualification used Carbon `2.0.259` and Rust Steam build
-`25353106`; the earlier loader baseline used Rust `2633` / build `25230300`.
+Player/GUI host qualification used Carbon `2.0.259` and Rust Steam build
+`25353106`; Persistence-2D live qualification used Rust build `25653776` and
+Carbon `2.0.261.0` on Linux, with a matched current Carbon archive on Windows.
+The earlier loader baseline used Rust `2633` / build `25230300`.
 Other versions are not automatically supported; review the
 [compatibility policy](https://gmoddev.github.io/CarbonLuau/#/Compatibility)
 before deploying.
 
 ## Production layout
 
-For the separate developer extension, install the matching platform VSIX using
-VS Code's **Extensions: Install from VSIX**. See the
-[official tooling setup](https://github.com/gmoddev/carbonluau-vscode#install).
-The extension contains its tooling pack; no Carbon installation or source checkout
-is required. Windows/Linux x64 support trusted language analysis and GUI preview;
-macOS arm64 is static-only. Restricted Mode retains static project diagnostics.
+The separately published v0.4.0 developer extension is pinned to the older
+runtime/API and is not a qualified matching v0.5.0 artifact. Do not install it
+as though it provides the complete persistence/Query definitions. See the
+[official tooling project](https://github.com/gmoddev/carbonluau-vscode) for
+future compatible pack qualification; editor preview does not simulate storage.
 
 Install only the native runtime, compiler worker and private storage worker matching the server platform:
 
@@ -58,9 +59,10 @@ native/
 Do not mix Windows and Linux files, and never install files from a test fixture
 package. The plugin loads one normalized, platform-specific runtime path;
 that runtime launches only its sibling compiler worker. A separate managed
-supervisor launches the private storage worker off the game thread. The development
-API `0.5.0-experimental` adds [DataStoreService](api/Services/DataStoreService.md);
-historical 0.4 artifacts do not include it. See the [combined qualification](PersistenceFoundation1C.md)
+supervisor launches the private storage worker off the game thread. The
+`0.5.0-experimental` API adds [DataStoreService](api/Services/DataStoreService.md)
+and [structured Query](api/Types/DataStoreQuery.md); historical 0.4 artifacts
+do not include them. See [combined Foundation 2 qualification](PersistenceFoundation2D.md)
 for the actual platform envelope. Storage failure does not disable scripting.
 
 The private worker owns `carbon/data/CarbonLuau/persistence/store.sqlite3` and
@@ -71,10 +73,14 @@ worker is running, enable WAL, or delete/zero the journal. Unsupported WAL forma
 are rejected; CarbonLuau does not silently convert them. Preserve failed storage
 for offline operator recovery rather than deleting it to make startup succeed.
 
-Logical quotas (16 MiB/namespace, 256 MiB/global) and SQLite page/file-length
-limits are hard bounds. The 1,280 MiB allocated-file figure is an operational
-budget/qualification target, **not** a strict physical allocation guarantee.
-See [Persistence-1A evidence and limits](https://github.com/gmoddev/CarbonLuau/blob/main/docs/PersistenceFoundation1A.md).
+Logical quotas (16 MiB/namespace, 256 MiB/global) are hard author-visible
+admission ceilings, not a promise that every below-quota mutation fits on disk.
+The one-database 1-GiB extent and 1,075,904,512-byte journal extent are separate
+hard CarbonLuau-controlled file-byte limits. The 2,560-MiB allocated-file
+figure is an operational budget/qualification target, **not** a strict
+filesystem allocated-block guarantee. Files are not preallocated to ceilings.
+See [D21](Invariants.md#d21--persistence-foundation-1) and
+[Persistence-2A qualification](PersistenceFoundation2A.md).
 
 ## Install and start
 
