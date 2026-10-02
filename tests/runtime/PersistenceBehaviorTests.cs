@@ -222,7 +222,10 @@ local function Next()
 end
 task.defer(Next)";
         Check(F.Addons.RegisterSource(Provider, "quota", "1.0.0", Encoding.UTF8.GetBytes(Source))[0] == "OK" && F.Addons.ProcessOne(), "quota fixture active");
-        F.Until("quota-filled", 30000);
+        // This fixture performs 64 separate durable PERSIST+EXTRA commits with
+        // a 220-ms script pace. A busy Windows CI host can exceed 30 seconds
+        // overall even while every individual request meets D21's deadline.
+        F.Until("quota-filled", 60000);
         Check(F.Addons.UnloadProvider(Provider) == 1, "quota domain retired");
         Source = @"
 local D=game:GetService('DataStoreService'); local New=D:GetDataStore('New')
