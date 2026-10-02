@@ -1,8 +1,10 @@
 #include "Backend.hpp"
 #include "Query.hpp"
 #include "sqlite3.h"
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <map>
 
 using namespace CarbonLuau::Persistence;
 namespace CarbonLuau::Persistence { void TestCheckpoint(const char*) {} }
@@ -68,6 +70,80 @@ Page ParsePage(const Bytes& Data){
         Check(Length>=45 && Length<=65536 && Length<=Data.size()-Position,"envelope bytes");Position+=Length;
     }
     Check(Position==Data.size(),"trailing page data");return Result;
+}
+void CombinedWorkload(){
+    FixtureGuard Fixture;
+    Backend Store(Fixture.Folder,Until());
+    Identity Root{false,"","Combined",""};
+    Identity Addon{true,"combined.addon","Combined",""};
+    std::map<std::string,double> RootValues,AddonValues;
+    auto Set=[&](Identity Id,std::map<std::string,double>& Values,const std::string& Key,double Score){
+        Id.Key=Key;
+        Check(Store.Execute(Operation::Set,Id,Encode(Id,Record(Score),Until()),Until()).Code==Error::None,
+            "combined Set");
+        Values[Key]=Score;
+    };
+    auto Verify=[&](Identity Id,const std::map<std::string,double>& Values){
+        Id.Key="Score";
+        std::vector<std::pair<double,std::string>> Ordered;
+        for(const auto& Entry:Values)Ordered.emplace_back(Entry.second,Entry.first);
+        std::sort(Ordered.begin(),Ordered.end());
+        std::vector<std::string> Actual;
+        std::string Cursor;
+        for(unsigned Pages=0;Pages<16;++Pages){
+            auto Result=Store.QueryDerived(Id,Descriptor(Cursor.empty()?0:8,2,0,17,{},{},{},Cursor),Until());
+            Check(Result.Code==Error::None,"combined Query");
+            auto PageResult=ParsePage(Result.Envelope);
+            Actual.insert(Actual.end(),PageResult.Keys.begin(),PageResult.Keys.end());
+            Cursor=PageResult.Cursor;
+            if(Cursor.empty())break;
+            Check(Pages<15,"bounded combined pagination");
+        }
+        Check(Actual.size()==Ordered.size(),"combined page count");
+        for(size_t Index=0;Index<Ordered.size();++Index)
+            Check(Actual[Index]==Ordered[Index].second,"combined indexed order and current primary state");
+    };
+    for(unsigned Index=0;Index<120;++Index){
+        auto Key="K"+std::to_string(1000+Index);
+        Set(Root,RootValues,Key,double(Index%11));
+        Set(Addon,AddonValues,Key,double((Index*3)%13));
+    }
+    Root.Key="Score";Addon.Key="Score";
+    Check(Store.PrepareDerived(Root,"Score",Until()),"combined root prepare");
+    Check(Store.PrepareDerived(Addon,"Score",Until()),"combined addon prepare");
+    for(unsigned Step=0;Step<1024 && Store.HasDerivedWork();++Step)
+        Check(Store.MaintainDerived(Until()),"combined initial maintenance");
+    Check(!Store.HasDerivedWork(),"combined initial convergence");
+    Verify(Root,RootValues);Verify(Addon,AddonValues);
+    auto OldPage=Store.QueryDerived(Root,Descriptor(0,2,0,17),Until());
+    Check(OldPage.Code==Error::None,"combined old generation page");
+    auto OldCursor=ParsePage(OldPage.Envelope).Cursor;
+    Check(!OldCursor.empty(),"combined old cursor");
+    Check(Store.PrepareDerived(Root,"Score",Until(),true),"combined simultaneous ACTIVE/BUILDING");
+    for(unsigned Step=0;Step<180;++Step){
+        auto Key="K"+std::to_string(1000+(Step%120));
+        auto& Id=Step%2==0?Root:Addon;
+        auto& Values=Step%2==0?RootValues:AddonValues;
+        if(Step%9==0){
+            Id.Key=Key;
+            Check(Store.Execute(Operation::Remove,Id,{},Until()).Code==Error::None,"combined Remove");
+            Values.erase(Key);
+        }else Set(Id,Values,Key,double((Step*7)%19));
+        Id.Key=Key;
+        auto Read=Store.Execute(Operation::Get,Id,{},Until());
+        Check(Read.Code==Error::None && Read.Found==(Values.count(Key)!=0),"combined Get");
+        if(Step%3==0 && Store.HasDerivedWork())
+            Check(Store.MaintainDerived(Until()),"combined foreground/build progress");
+        if(Step%30==0){Verify(Root,RootValues);Verify(Addon,AddonValues);}
+    }
+    for(unsigned Step=0;Step<1024 && Store.HasDerivedWork();++Step)
+        Check(Store.MaintainDerived(Until()),"combined final maintenance");
+    Check(!Store.HasDerivedWork(),"combined final convergence");
+    Verify(Root,RootValues);Verify(Addon,AddonValues);
+    Root.Key="Score";
+    Check(Store.QueryDerived(Root,Descriptor(8,2,0,17,{},{},{},OldCursor),Until()).Code==
+        QueryWire::InvalidCursor,"combined retired generation cursor");
+    std::printf("[CarbonLuau:Persistence] Combined root/addon build/write/read/remove/pagination workload PASS (240 initial, 180 mutations)\n");
 }
 }
 int main(){
@@ -273,6 +349,7 @@ int main(){
             Check(Reopened.QueryDerived(Id,Descriptor(8,2,0,2,{},{},{},PreviousSessionCursor),Until()).Code==
                 QueryWire::InvalidCursor,"session secret invalidates old cursor");
         }
+        CombinedWorkload();
         std::printf("[CarbonLuau:Persistence] Query worker tests PASS\n");return 0;
     }catch(const std::exception& Problem){std::fprintf(stderr,"[CarbonLuau:Persistence] Query worker tests failed: %s\n",Problem.what());return 1;}
 }

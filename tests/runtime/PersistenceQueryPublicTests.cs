@@ -64,6 +64,44 @@ end)");
                 F.DrainChecked();
             }
         }
-        Console.WriteLine("[CarbonLuau:Persistence2C] real VM/public facade -> worker Query, preparation, cursor, ambiguity, publication and five examples PASS");
+        using (var F = new Fixture(Native, Worker, Path.Combine(Parent, "query-combined"))) {
+            F.Execute(@"
+local Q=game:GetService('DataStoreService'):GetDataStore('QueryCombined')
+local function Step(I)
+    if I<=20 then
+        Q:SetAsync('K'..tostring(I),{Score=I},function(Ok,ErrorCode)
+            assert(Ok==true and ErrorCode==nil)
+            task.delay(0.3,function() Step(I+1) end)
+        end)
+        return
+    end
+    Q:Query({Field='Score',Type='number',Limit=5},function(First,FirstError)
+        assert(FirstError==nil and #First.Items==5 and First.Items[1].Key=='K1' and First.Items[5].Key=='K5')
+        assert(type(First.NextCursor)=='string')
+        Q:RemoveAsync('K8',function(Removed,RemoveError)
+            assert(Removed==true and RemoveError==nil)
+            Q:SetAsync('K12',{Score=-1},function(Updated,UpdateError)
+                assert(Updated==true and UpdateError==nil)
+                Q:GetAsync('K12',function(Value,GetError)
+                    assert(GetError==nil and Value.Score==-1)
+                    Q:Query({Field='Score',Type='number',Limit=20,Cursor=First.NextCursor},function(Next,NextError)
+                        assert(NextError==nil and #Next.Items==13 and Next.Items[1].Key=='K6' and Next.Items[13].Key=='K20')
+                        for _,Item in Next.Items do
+                            assert(Item.Key~='K8' and Item.Key~='K12')
+                        end
+                        print('QUERY_COMBINED_DONE')
+                    end)
+                end)
+            end)
+        end)
+    end)
+end
+Step(1)
+");
+            F.Until("QUERY_COMBINED_DONE");
+            Check(F.Queue.PendingCount == 0 && F.Queue.WaiterCount == 0,
+                "combined public Query/write/read/remove leaves no reservations");
+        }
+        Console.WriteLine("[CarbonLuau:Persistence2D] real VM/public facade -> worker Query, preparation, pagination-under-writes, callback chains and five examples PASS");
     }
 }
