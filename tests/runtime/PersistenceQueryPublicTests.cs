@@ -125,7 +125,10 @@ local function Step(I)
 end
 Step(1)
 ");
-            F.Until("QUERY_COMBINED_DONE");
+            // Twenty separately committed writes are intentionally paced at
+            // 300 ms before Query starts. Busy hosted Windows machines can
+            // take longer overall without any individual D21 request timing out.
+            F.Until("QUERY_COMBINED_DONE", 45000);
             Check(F.Queue.PendingCount == 0 && F.Queue.WaiterCount == 0,
                 "combined public Query/write/read/remove leaves no reservations");
         }
