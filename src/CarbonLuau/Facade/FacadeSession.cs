@@ -146,13 +146,27 @@ namespace Carbon.Plugins
             {
                 public readonly SortedDictionary<ulong, string> Listeners;
                 public readonly SortedDictionary<string, ScriptCommand> Commands;
-                public PublicationCheckpoint(SortedDictionary<ulong, string> Listeners, SortedDictionary<string, ScriptCommand> Commands)
+                public readonly PublicationWitness Witness;
+                public PublicationCheckpoint(SortedDictionary<ulong, string> Listeners, SortedDictionary<string, ScriptCommand> Commands,
+                    PublicationWitness Witness)
                 {
                     this.Listeners = new SortedDictionary<ulong, string>(Listeners);
                     this.Commands = new SortedDictionary<string, ScriptCommand>(Commands, StringComparer.Ordinal);
+                    this.Witness = Witness;
                 }
             }
+            internal sealed class PublicationWitness
+            {
+                internal readonly FacadeSession Owner;
+                internal readonly ulong Token;
+                internal readonly PublicationWitness Parent;
+                internal bool Retired;
+                internal PublicationWitness(FacadeSession Owner, ulong Token, PublicationWitness Parent)
+                { this.Owner = Owner; this.Token = Token; this.Parent = Parent; }
+            }
             private readonly Stack<PublicationCheckpoint> Publications = new Stack<PublicationCheckpoint>();
+            private readonly PublicationWitness RootPublication;
+            private ulong NextPublicationToken = 1;
             private readonly FacadeWorld World;
             internal readonly GuiRetainedRegistry Gui;
             private readonly int Capacity;
@@ -169,7 +183,22 @@ namespace Carbon.Plugins
             public FacadeSession(FacadeWorld World, long VmGenerationId, long DomainLifetimeId, int Capacity)
             { this.World = World; this.VmGenerationId = VmGenerationId; this.DomainLifetimeId = DomainLifetimeId;
                 this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents);
+                RootPublication = new PublicationWitness(this, 1, null);
                 Gui = new GuiRetainedRegistry(World.Gui, checked((ulong)VmGenerationId), checked((ulong)DomainLifetimeId)); Callback = HostCall; }
+            internal PublicationWitness CapturePublicationWitness()
+            {
+                World.Players.CheckOwner();
+                if (Disposed) throw new FacadeException("stale facade publication");
+                return Publications.Count == 0 ? RootPublication : Publications.Peek().Witness;
+            }
+            internal bool IsPublicationWitnessCurrent(PublicationWitness Witness)
+            {
+                World.Players.CheckOwner();
+                if (Disposed || Witness == null || !ReferenceEquals(Witness.Owner, this)) return false;
+                for (PublicationWitness Current = Witness; Current != null; Current = Current.Parent)
+                    if (Current.Retired) return false;
+                return true;
+            }
             private string Id()
             {
                 if (NextRegistration == ulong.MaxValue) throw new FacadeException("registration identity exhausted");
@@ -242,7 +271,11 @@ namespace Carbon.Plugins
                     if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
                 }
             }
-            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); ClearStorageHints(); Gui.Dispose(); }
+            public void Clear() {
+                RootPublication.Retired = true;
+                foreach (PublicationCheckpoint Checkpoint in Publications) Checkpoint.Witness.Retired = true;
+                Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); ClearStorageHints(); Gui.Dispose();
+            }
             private bool Gate(string[] Fields)
             {
                 if (!Active || !World.IsActive(this) || Disposed || Fields.Length < 5) return false;
@@ -278,7 +311,10 @@ namespace Carbon.Plugins
                 }
                 if (Code == 10) {
                     if (Fields.Length != 0) throw new FacadeException("invalid publication begin");
-                    PublicationCheckpoint Checkpoint = new PublicationCheckpoint(Listeners, Commands);
+                    if (NextPublicationToken == ulong.MaxValue) throw new FacadeException("publication lifetime exhausted");
+                    PublicationWitness Parent = Publications.Count == 0 ? RootPublication : Publications.Peek().Witness;
+                    PublicationWitness Witness = new PublicationWitness(this, ++NextPublicationToken, Parent);
+                    PublicationCheckpoint Checkpoint = new PublicationCheckpoint(Listeners, Commands, Witness);
                     Gui.BeginPublication();
                     try { Publications.Push(Checkpoint); }
                     catch { Gui.RollbackPublication(); throw; }
@@ -286,12 +322,16 @@ namespace Carbon.Plugins
                 }
                 if (Code == 11) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication commit");
-                    Gui.CommitPublication(); Publications.Pop(); return new string[0];
+                    try { Gui.CommitPublication(); }
+                    catch { Publications.Peek().Witness.Retired = true; throw; }
+                    Publications.Pop(); return new string[0];
                 }
                 if (Code == 12) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication rollback");
+                    PublicationCheckpoint Checkpoint = Publications.Peek();
+                    Checkpoint.Witness.Retired = true;
                     Gui.RollbackPublication();
-                    PublicationCheckpoint Checkpoint = Publications.Pop();
+                    Publications.Pop();
                     Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
                     Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
                     return new string[0];

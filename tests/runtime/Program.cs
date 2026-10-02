@@ -28,6 +28,10 @@ internal static class Program
             try { GuiFoundation1ATests.Run(Args.Length > 1 ? Args[1] : null); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
+        if (Args.Length == 1 && Args[0] == "--entity-publication") {
+            try { EntityPublicationWitnessTests.Run(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:EntityPublication] FAIL: " + Error); return 1; }
+        }
         if (Args.Length >= 1 && Args[0] == "--gui1b-only") {
             try { GuiFoundation1BTests.RunModel(); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
@@ -132,6 +136,7 @@ internal static class Program
             GuiFoundation3CTests.RunModel();
             GuiFoundation3DTests.RunModel();
             GuiFoundation3ETests.RunModel();
+            EntityPublicationWitnessTests.Run();
             PlayerInteractionFoundation1CTests.RunModel();
             PlayerInteractionFoundation1DTests.RunModel();
             PlayerInteractionFoundation1FATests.RunModel();

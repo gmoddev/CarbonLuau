@@ -17,6 +17,8 @@ namespace Carbon.Plugins
         private long ErrorWindow;
         private int ErrorCount;
         private string UnavailableReason = "not initialized";
+        // Test-package-only hook; erased by C# when no private Entity fixture is included.
+        partial void RunEntityPrivateFixtures();
 
         protected override void LoadDefaultConfig() { Config.WriteObject(new RuntimeConfig(), true); }
 
@@ -24,6 +26,7 @@ namespace Carbon.Plugins
         {
             if (Attempted) return;
             Attempted = true;
+            InitializeEntityObserver();
             try
             {
                 Settings = Config.ReadObject<RuntimeConfig>();
@@ -62,7 +65,9 @@ namespace Carbon.Plugins
         {
             if (Initialized) return;
             Initialized = true;
+            QualifyEntityStartup();
             Loaded();
+            RunEntityPrivateFixtures();
             if (Host == null) return;
             try
             {
@@ -125,7 +130,7 @@ namespace Carbon.Plugins
             finally { if (TeardownPending) ReleaseNative(); }
         }
 
-        private void Unload() { ReleaseNative(); }
+        private void Unload() { StopEntityObserver(); ReleaseNative(); }
 
         private void ReleaseNative()
         {

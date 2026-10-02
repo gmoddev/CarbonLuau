@@ -42,6 +42,8 @@ jobs:
         run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
       - name: Compile .NET Framework runtime tests
         run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
+      - name: Private Entity lifetime model
+        run: dotnet run --project tests/entity-lifetime-model/EntityLifetimeModelTests.csproj -c Release
       - name: Compile Persistence-1B adapter teardown tests
         timeout-minutes: 5
         run: dotnet build tests/persistence-adapter/PersistenceAdapterTests.csproj -c Release -o dist/persistence-adapter -m:2
