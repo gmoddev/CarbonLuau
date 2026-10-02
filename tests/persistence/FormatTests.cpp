@@ -16,6 +16,15 @@ Bytes Wrapped(const Identity& Id,const Bytes& Payload)
     for (const auto& Text : {Id.Package,Id.Store,Id.Key}) { Put32(Bound,uint32_t(Text.size())); Bound.insert(Bound.end(),Text.begin(),Text.end()); }
     Bound.insert(Bound.end(),Envelope.begin(),Envelope.end()); auto Hash=Digest(Bound); Envelope.insert(Envelope.end(),Hash.begin(),Hash.end()); return Envelope;
 }
+void SameValidation(const Identity& Id, const Bytes& Envelope, Deadline Until)
+{
+    uint32_t DecodeResult=0, ValidateResult=0;
+    try { Decode(Id,Envelope,Until); }
+    catch (const Failure& Problem) { DecodeResult=uint32_t(Problem.Code)+1; }
+    try { ValidateEnvelope(Id,Envelope,Until); }
+    catch (const Failure& Problem) { ValidateResult=uint32_t(Problem.Code)+1; }
+    Require(DecodeResult==ValidateResult);
+}
 void Run()
 {
     Require(Hex(Digest({})) == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
@@ -32,7 +41,8 @@ void Run()
     }
     Item.Type = Kind::Boolean; Item.Boolean = false;
     auto Envelope = Encode(Id, Item, End()); Require(!Decode(Id, Envelope, End())->Boolean);
-    auto Other = Id; Other.Key = "key"; Reject([&] { Decode(Other, Envelope, End()); }, Error::StorageCorrupt);
+    auto Other = Id; Other.Key = "key"; SameValidation(Other,Envelope,End());
+    Reject([&] { Decode(Other, Envelope, End()); }, Error::StorageCorrupt);
     Envelope.back() ^= 1; Reject([&] { Decode(Id, Envelope, End()); }, Error::StorageCorrupt);
     Envelope = Encode(Id, Item, End()); Envelope[4] = 2; Reject([&] { Decode(Id, Envelope, End()); }, Error::FormatUnsupported);
     Envelope = Encode(Id, Item, End()); Envelope.push_back(0); Reject([&] { Decode(Id, Envelope, End()); }, Error::StorageCorrupt);
@@ -48,11 +58,13 @@ void Run()
     Item = {}; Item.Map = {{"z", Shared},{"a",Shared}};
     auto Copy = Decode(Id, Encode(Id, Item, End()), End());
     Require(Copy->Map[0].first == "a" && Copy->Map[0].second != Copy->Map[1].second);
+    ValidateEnvelope(Id, Encode(Id, Item, End()), End());
     Item.Map.push_back({"a", Shared}); Reject([&] { Encode(Id, Item, End()); });
     auto Cycle = std::make_shared<Value>(); Cycle->Map.push_back({"self", Cycle});
     Reject([&] { Encode(Id, *Cycle, End()); }); Cycle->Map.clear();
     Item = {}; Item.Type = Kind::Array; Reject([&] { Encode(Id, Item, End()); });
     Item.Array.assign(1024, Shared); Require(Decode(Id, Encode(Id, Item, End()), End())->Array.size() == 1024);
+    ValidateEnvelope(Id, Encode(Id, Item, End()), End());
     Item.Array.push_back(Shared); Reject([&] { Encode(Id, Item, End()); });
     auto Nested = std::make_shared<Value>(); auto Root = Nested;
     for (unsigned I=1; I<16; ++I) { auto Child = std::make_shared<Value>(); Nested->Map.emplace_back("x",Child); Nested=Child; }
@@ -66,7 +78,7 @@ void Run()
     Item.Array.back()->String.push_back('x'); Reject([&] { Encode(Id, Item, End()); });
     Item={}; Item.Type=Kind::Array;
     for (unsigned I=0; I<4; ++I) { auto Part=std::make_shared<Value>(); Part->Type=Kind::Array; Part->Array.assign(1023,Shared); Item.Array.push_back(Part); }
-    Encode(Id,Item,End()); // four outer entries + 4092 leaves = 4096
+    ValidateEnvelope(Id,Encode(Id,Item,End()),End()); // four outer entries + 4092 leaves = 4096
     Item.Array.back()->Array.push_back(Shared); Reject([&] { Encode(Id,Item,End()); });
     Require(Hex(Digest(Bytes(56,'a'))) == "b35439a4ac6f0948b6d6f9e3c6af0f5f590ce20f1bde7090ef7970686ec6738a");
     Require(Hex(Digest(Bytes(64,'a'))) == "ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb");
@@ -82,14 +94,27 @@ void Run()
     for (const Bytes Payload : {Bytes{0},Bytes{1,2},Bytes{3,255,255,255,255},Bytes{4,0,0,0,0},Bytes{5,1,0,0,0},Bytes{99}})
         Reject([&] { Decode(Id,Wrapped(Id,Payload),End()); },Error::StorageCorrupt);
     for (uint64_t Bits : {0x7ff0000000000000ull,0xfff0000000000000ull,0x7ff8000000000001ull}) {
-        Bytes Payload{2}; Put64(Payload,Bits); Reject([&] { Decode(Id,Wrapped(Id,Payload),End()); },Error::StorageCorrupt);
+        Bytes Payload{2}; Put64(Payload,Bits); auto Invalid=Wrapped(Id,Payload);
+        SameValidation(Id,Invalid,End()); Reject([&] { Decode(Id,Invalid,End()); },Error::StorageCorrupt);
     }
+    Bytes BadMap{5}; Put32(BadMap,2);
+    for (char Key : {'z','a'}) { Put32(BadMap,1); BadMap.push_back(uint8_t(Key)); BadMap.push_back(1); BadMap.push_back(0); }
+    Bytes DuplicateMap=BadMap; DuplicateMap[9]='a';
+    Bytes TooDeep;
+    for (unsigned I=0;I<17;++I) { TooDeep.push_back(5); Put32(TooDeep,1); Put32(TooDeep,1); TooDeep.push_back('a'); }
+    TooDeep.push_back(1); TooDeep.push_back(0);
+    Bytes TooMany{4}; Put32(TooMany,1025);
+    for (const Bytes& Payload : {Bytes{4,1,0,0,0,99},Bytes{3,2,0,0,0,0xc0,0x80},
+        BadMap,DuplicateMap,TooDeep,TooMany}) {
+        auto Invalid=Wrapped(Id,Payload); SameValidation(Id,Invalid,End());
+        Reject([&] { Decode(Id,Invalid,End()); },Error::StorageCorrupt);
+    }
+    Envelope=Encode(Id,Item,End()); SameValidation(Id,Envelope,Clock::now());
     // Exercise the parser past its checksum, with bounded deterministic noise.
     for (unsigned I=0; I<10000; ++I) {
         Bytes Payload(I%257);
         for (auto& Byte : Payload) { Random^=Random<<13; Random^=Random>>7; Random^=Random<<17; Byte=uint8_t(Random); }
-        try { Decode(Id,Wrapped(Id,Payload),End()); }
-        catch (const Failure& Problem) { Require(Problem.Code==Error::StorageCorrupt); }
+        SameValidation(Id,Wrapped(Id,Payload),End());
     }
 }
 }

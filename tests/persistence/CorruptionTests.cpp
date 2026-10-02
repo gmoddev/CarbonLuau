@@ -7,7 +7,10 @@ namespace {
 Deadline End() { return Clock::now()+std::chrono::seconds(5); }
 Bytes Read(const std::filesystem::path& Path)
 {
-    Require(std::filesystem::file_size(Path)<=MaximumFrame);
+    // This is a whole fixture database, not a worker protocol frame. The fixed
+    // derived schema adds pages even with no indexes populated. Keep fixture
+    // comparison bounded independently of unchanged request/frame limits.
+    Require(std::filesystem::file_size(Path)<=1024*1024);
     std::ifstream Input(Path,std::ios::binary); return Bytes(std::istreambuf_iterator<char>(Input),{});
 }
 void Write(const std::filesystem::path& Path,const Bytes& Data)
@@ -46,7 +49,7 @@ int main()
             for (const auto& File : std::filesystem::directory_iterator(Base)) std::filesystem::copy_file(File.path(),Path/File.path().filename());
             return Path;
         };
-        auto Path=Copy("schema-version"); Edit(Path,"PRAGMA user_version=2"); Reject(Path,Error::FormatUnsupported);
+        auto Path=Copy("schema-version"); Edit(Path,"PRAGMA user_version=999"); Reject(Path,Error::FormatUnsupported);
         Path=Copy("application-id"); Edit(Path,"PRAGMA application_id=0"); Reject(Path,Error::FormatUnsupported);
         Path=Copy("page-size"); Edit(Path,"PRAGMA page_size=8192; VACUUM"); Reject(Path,Error::StorageUnavailable);
         Path=Copy("auto-vacuum"); Edit(Path,"PRAGMA auto_vacuum=FULL; VACUUM"); Reject(Path,Error::StorageUnavailable);
@@ -58,17 +61,17 @@ int main()
         Path=Copy("unexpected"); Write(Path/"unexpected",Bytes{'x'}); Reject(Path,Error::StorageUnavailable);
         const Bytes Magic{0xd9,0xd5,0x05,0xf9,0x20,0xa1,0x63,0xd7};
         Path=Copy("hot-original-size"); Data.assign(512,0); std::copy(Magic.begin(),Magic.end(),Data.begin());
-        Big32(Data,16,131073); Big32(Data,20,512); Big32(Data,24,4096); Write(Path/"store.sqlite3-journal",Data); Reject(Path,Error::StorageCorrupt);
+        Big32(Data,16,262145); Big32(Data,20,512); Big32(Data,24,4096); Write(Path/"store.sqlite3-journal",Data); Reject(Path,Error::StorageCorrupt);
         Path=Copy("super-journal"); Data.assign(512,0); auto Protected=Root/"must-remain"; Write(Protected,Bytes{'s','a','f','e'});
         std::string Name=Protected.u8string(); Data.insert(Data.end(),Name.begin(),Name.end());
         size_t Footer=Data.size(); Data.resize(Footer+16); Big32(Data,Footer,uint32_t(Name.size()));
         uint32_t Sum=0; for (char Byte : Name) Sum+=int8_t(Byte); Big32(Data,Footer+4,Sum);
         std::copy(Magic.begin(),Magic.end(),Data.begin()+Footer+8); Write(Path/"store.sqlite3-journal",Data);
         Reject(Path,Error::StorageCorrupt); Require(Read(Protected)==Bytes({'s','a','f','e'}));
-        Path=Copy("physical-db-size"); std::filesystem::resize_file(Path/"store.sqlite3",512ull*1024*1024+1); Reject(Path,Error::StorageFull,false);
-        Require(std::filesystem::file_size(Path/"store.sqlite3")==512ull*1024*1024+1);
+        Path=Copy("physical-db-size"); std::filesystem::resize_file(Path/"store.sqlite3",1024ull*1024*1024+1); Reject(Path,Error::StorageFull,false);
+        Require(std::filesystem::file_size(Path/"store.sqlite3")==1024ull*1024*1024+1);
         Path=Copy("physical-journal-size");
-        constexpr uint64_t ExcessJournal=131072ull*(4096+8)+65536+1;
+        constexpr uint64_t ExcessJournal=262144ull*(4096+8)+65536+1;
         std::filesystem::resize_file(Path/"store.sqlite3-journal",ExcessJournal);
         Reject(Path,Error::StorageFull,false);
         Require(std::filesystem::file_size(Path/"store.sqlite3-journal")==ExcessJournal);

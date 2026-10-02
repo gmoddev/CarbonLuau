@@ -21,7 +21,10 @@
 //   production sets no chunk size. 65272-65278 enforces normal page growth cap.
 //
 // Scope caveats: normal no-auto-vacuum workload, no external DB editing,
-// verified stock VFS, fixed SQL/no application savepoints/ATTACH. Existing files'
+// verified stock VFS, original F1 fixed SQL/no application savepoints/ATTACH.
+// 2A additionally measures its nested savepoint/release/rollback-to paths below;
+// that new observation must not be presented as part of the historical proof.
+// Existing files'
 // auto_vacuum setting is inherited from their headers (75956-75957), not fixed by
 // page_size or schema validation. Do not generalize this proof to changed
 // settings: page movement's fault path can clear pInJournal (66946-66960).
@@ -39,15 +42,27 @@
 #include <sys/statvfs.h>
 #endif
 namespace P = CarbonLuau::Persistence;
+namespace { bool InjectDerivedCapacity=false; }
+namespace CarbonLuau::Persistence {
+void TestCheckpoint(const char* Stage)
+{
+    if(InjectDerivedCapacity && std::strcmp(Stage,"derived-capacity-after-change")==0){
+        InjectDerivedCapacity=false;throw Failure(Error::QuotaExceeded);
+    }
+}
+}
 namespace {
-constexpr uint64_t DatabaseLimit = 131072ull * 4096;
-constexpr uint64_t JournalLimit = 131072ull * (4096 + 8) + 65536;
-constexpr uint64_t OperationalBudget = 1280ull * 1024 * 1024;
+constexpr uint64_t DatabaseLimit = 262144ull * 4096;
+constexpr uint64_t JournalLimit = 262144ull * (4096 + 8) + 65536;
+constexpr uint64_t OperationalBudget = 2560ull * 1024 * 1024;
 std::filesystem::path ActiveDirectory;
 sqlite3_io_methods PhysicalMethods{};
 uint64_t PeakDatabaseExtent = 0, PeakJournalExtent = 0, PeakAllocation = 0;
 uint64_t Writes = 0, Checks = 0, OtherOpens = 0;
 bool ObservationFailed = false;
+enum class JournalFault { None, Write, Sync };
+JournalFault ArmedFault = JournalFault::None;
+bool JournalFaultHit = false;
 
 uint64_t Allocation(const std::filesystem::path& Path)
 {
@@ -87,6 +102,10 @@ void Observe() noexcept
 int PhysicalWrite(sqlite3_file* Handle, const void* Data, int Count, sqlite3_int64 Offset)
 {
     auto* Item = Cast(Handle);
+    if (Item->Kind[0] == 'J' && ArmedFault == JournalFault::Write) {
+        ArmedFault = JournalFault::None; JournalFaultHit = true;
+        return SQLITE_IOERR_WRITE;
+    }
     if (Count < 0 || Offset < 0 || uint64_t(Offset) > UINT64_MAX - uint64_t(Count)) ObservationFailed = true;
     else {
         const auto Extent = uint64_t(Offset) + uint64_t(Count);
@@ -104,7 +123,13 @@ int PhysicalWrite(sqlite3_file* Handle, const void* Data, int Count, sqlite3_int
 int PhysicalTruncate(sqlite3_file* Handle, sqlite3_int64 Count)
 { const int Result = Truncate(Handle, Count); Observe(); return Result; }
 int PhysicalSync(sqlite3_file* Handle, int Flags)
-{ const int Result = Sync(Handle, Flags); Observe(); return Result; }
+{
+    if (Cast(Handle)->Kind[0] == 'J' && ArmedFault == JournalFault::Sync) {
+        ArmedFault = JournalFault::None; JournalFaultHit = true;
+        return SQLITE_IOERR_FSYNC;
+    }
+    const int Result = Sync(Handle, Flags); Observe(); return Result;
+}
 int PhysicalOpen(sqlite3_vfs* Vfs, const char* Name, sqlite3_file* Handle, int Flags, int* Actual)
 {
     const int Result = Open(Vfs, Name, Handle, Flags, Actual);
@@ -149,7 +174,7 @@ void RecoveryPageBounds(bool SecondHeader)
     P::Bytes Journal(RecordOffset + 4096 + 8, 0);
     Header(Journal, 0, SecondHeader ? 0 : 1, uint32_t(Before / 4096));
     if (SecondHeader) Header(Journal, 512, 1, 0xffffffffu);
-    PutBig32(Journal, RecordOffset, 131073);
+    PutBig32(Journal, RecordOffset, 262145);
     {
         std::ofstream File(ActiveDirectory / "store.sqlite3-journal", std::ios::binary | std::ios::trunc);
         File.write(reinterpret_cast<const char*>(Journal.data()), std::streamsize(Journal.size()));
@@ -158,6 +183,91 @@ void RecoveryPageBounds(bool SecondHeader)
     { P::Backend Store(ActiveDirectory, Until()); Good(Store.Execute(P::Operation::Get, Key(0), {}, Until())); }
     Check(std::filesystem::file_size(DatabasePath) == Before, "recovery grew database from ignored page/header");
     Check(!ObservationFailed, "recovery physical trace");
+}
+void VerifyDerived(P::Backend& Store)
+{
+    for (unsigned Step = 0; Step < 4096; ++Step) {
+        if (!Store.HasDerivedWork()) { Check(Store.Available(), "physical verification health"); return; }
+        Check(Store.MaintainDerived(Until()) && Store.Available(), "physical derived verification step");
+    }
+    throw std::runtime_error("physical derived verification did not converge");
+}
+void DerivedSavepoints()
+{
+    const auto BeforeWrites=Writes;
+    auto Id=P::Identity{false,"","Derived","Key"};
+    auto Payload=[&](unsigned Number){
+        P::Value Root;
+        auto Text=std::make_shared<P::Value>();Text->Type=P::Kind::String;Text->String=std::to_string(Number)+std::string(1000,'x');
+        auto Numeric=std::make_shared<P::Value>();Numeric->Type=P::Kind::Number;Numeric->Number=Number;
+        Root.Map.emplace_back("Field",Text);Root.Map.emplace_back("Number",Numeric);
+        return P::Encode(Id,Root,Until());
+    };
+    for(unsigned Round=0;Round<3;++Round){
+        P::Backend Store(ActiveDirectory,P::Clock::now()+std::chrono::seconds(30));
+        if(!Round)for(unsigned I=0;I<70;++I){Id.Key="K"+std::to_string(I);Good(Store.Execute(P::Operation::Set,Id,Payload(I),Until()));}
+        VerifyDerived(Store);
+        Check(Store.PrepareDerived(Id,"Field",Until(),true) && Store.PrepareDerived(Id,"Number",Until(),true),"physical derived preparation");
+        unsigned Batches=0;
+        while(Store.HasDerivedWork()){
+            Check(++Batches<100 && Store.MaintainDerived(Until()),"bounded physical maintenance");
+            Id.Key="K0";Good(Store.Execute(P::Operation::Set,Id,Payload(100+Round+Batches),Until()));
+            Id.Key="K1";Good(Store.Execute(P::Operation::Remove,Id,{},Until()));
+        }
+        // Real partial derived edits then a test-only logical quota event:
+        // rollback-to/release/withdraw while the primary mutation commits.
+        Id.Key="K0";InjectDerivedCapacity=true;
+        Good(Store.Execute(P::Operation::Set,Id,Payload(500+Round),Until()));
+        Check(!InjectDerivedCapacity,"partial-edit withdrawal exercised");
+        while(Store.HasDerivedWork())Check(++Batches<100 && Store.MaintainDerived(Until()),"physical cleanup converges");
+        Observe();Check(Store.Available() && !ObservationFailed,"derived savepoint physical profile");
+    }
+    std::cout<<"[CarbonLuau:Persistence] Derived savepoint/overlap/rebuild/rollback-to/withdraw/cleanup observed writes="<<Writes-BeforeWrites<<" PASS\n";
+}
+void JournalFaults()
+{
+    for (const auto Fault : {JournalFault::Write, JournalFault::Sync}) {
+        const auto Id = P::Identity{false, "", "PhysicalFault", Fault == JournalFault::Write ? "Write" : "Sync"};
+        auto Value = [](unsigned Number) {
+            P::Value Result;
+            auto Field = std::make_shared<P::Value>();
+            Field->Type = P::Kind::Number; Field->Number = Number;
+            Result.Map.emplace_back("Field", Field);
+            return Result;
+        };
+        const auto Before = P::Encode(Id, Value(7), Until());
+        const auto After = P::Encode(Id, Value(8), Until());
+        {
+            P::Backend Store(ActiveDirectory, P::Clock::now() + std::chrono::seconds(30));
+            Good(Store.Execute(P::Operation::Set, Id, Before, Until()));
+            VerifyDerived(Store);
+            Check(Store.PrepareDerived(Id, "Field", Until()), "journal fault ACTIVE preparation");
+            unsigned Batches = 0;
+            while (Store.HasDerivedWork())
+                Check(++Batches < 100 && Store.MaintainDerived(Until()), "journal fault ACTIVE build");
+            JournalFaultHit = false; ArmedFault = Fault;
+            const auto Mutation = Store.Execute(P::Operation::Set, Id, After, Until());
+            ArmedFault = JournalFault::None;
+            std::cout << "[CarbonLuau:Persistence] Journal fault kind=" << int(Fault)
+                << " hit=" << JournalFaultHit << " result=" << unsigned(Mutation.Code)
+                << " available=" << Store.Available() << '\n';
+            Check(JournalFaultHit && !Store.Available() &&
+                Mutation.Code == (Fault == JournalFault::Write ? P::Error::StorageError : P::Error::Indeterminate),
+                "journal I/O fault cannot acknowledge mutation or remain available");
+        }
+        {
+            P::Backend Store(ActiveDirectory, P::Clock::now() + std::chrono::seconds(30));
+            const auto First = Store.Execute(P::Operation::Get, Id, {}, Until());
+            const auto Second = Store.Execute(P::Operation::Get, Id, {}, Until());
+            Check(Store.Available() && First.Code == P::Error::None && First.Found &&
+                First.Envelope == Second.Envelope &&
+                (Fault == JournalFault::Write ? First.Envelope == Before :
+                    First.Envelope == Before || First.Envelope == After),
+                "journal fault recovery has one coherent primary state without test-side replay");
+        }
+        Check(!ObservationFailed, "journal fault physical trace violation");
+    }
+    std::cout << "[CarbonLuau:Persistence] Journal write/sync fault recovery PASS; VFS-injected, not device failure\n";
 }
 }
 int main()
@@ -191,7 +301,7 @@ int main()
             }
             Observe(); Check(!ObservationFailed, "round physical envelope");
         }
-        RecoveryPageBounds(false); RecoveryPageBounds(true);
+        DerivedSavepoints();JournalFaults();RecoveryPageBounds(false); RecoveryPageBounds(true);
         Check(OtherOpens == 0 && Writes > 0 && Checks > 0 && PeakJournalExtent > 0, "observed fixed-file workload");
         std::cout << "[CarbonLuau:Persistence] Physical fixture PASS writes=" << Writes << " checks=" << Checks
             << " db-extent=" << PeakDatabaseExtent << " journal-extent=" << PeakJournalExtent

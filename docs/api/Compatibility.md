@@ -17,6 +17,15 @@ is required by the additive completion ingress. [Release mapping](../Release.md)
 and [the 1B record](../PersistenceFoundation1B.md) separate identity from evidence.
 Existing APIs keep their historical introduction versions and qualification.
 
+[Persistence Foundation 2](../PersistenceFoundation2.md) defines structured
+Query for the same `0.5.0-experimental` API. Optional field-name hints in
+`GetDataStore(Name, Options?)` are the 2B addition and appear in generated
+definitions. [2C](../PersistenceFoundation2C.md) adds bounded structured
+`DataStore:Query`, result pages and opaque authenticated cursors. There is no
+author schema, version or migration requirement. Get/Set/Remove retain their
+Foundation 1 contracts; [combined Foundation 2 qualification](../PersistenceFoundation2D.md)
+is recorded separately.
+
 The earlier unreleased 0.4.0 candidate combines the additive addon, GUI Foundation 1 and
 implemented GUI Foundation 2 layout/image/scrolling surfaces under this one
 experimental identity. Authenticated-client visual,

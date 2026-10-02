@@ -13,6 +13,7 @@ namespace Carbon.Plugins
             private readonly Thread Thread;
             private StorageQueue.Request Slot;
             private int Stopping, Ready, Finished, Closed;
+            private int ObservedWorkerStart;
             private int Failure, Starts, Retries, Corruptions;
             private long Sent;
             internal bool IsFinished { get { return Volatile.Read(ref Finished)!=0; } }
@@ -22,7 +23,8 @@ namespace Carbon.Plugins
             internal string Status { get { return "[CarbonLuau:Persistence] ready="+(Volatile.Read(ref Ready)!=0)+
                 "; pending="+Queue.PendingCount+"; starts="+WorkerStarts+"; retries="+Volatile.Read(ref Retries)+
                 "; sent="+RequestsSent+"; completed_get="+Queue.Completed[0]+"; completed_set="+Queue.Completed[1]+
-                "; completed_remove="+Queue.Completed[2]+"; queue_rejected="+Queue.QueueRejected+"; rate_rejected="+Queue.RateRejected+
+                "; completed_remove="+Queue.Completed[2]+"; completed_query="+Queue.QueryCompleted+
+                "; queue_rejected="+Queue.QueueRejected+"; rate_rejected="+Queue.RateRejected+
                 "; quota_rejected="+Queue.QuotaRejected+"; expired="+Queue.Expired+"; backend_failures="+Queue.BackendFailures+
                 "; corruptions="+Volatile.Read(ref Corruptions)+"; discarded="+Queue.Discarded+"; failure="+LastFailure; } }
             internal StorageSupervisor(StorageQueue Queue,string Executable,string Directory)
@@ -38,7 +40,10 @@ namespace Carbon.Plugins
             internal void Tick()
             {
                 Queue.BeginTick();
-                Queue.Ready=Volatile.Read(ref Ready)!=0 && Volatile.Read(ref Stopping)==0;
+                bool Available=Volatile.Read(ref Ready)!=0 && Volatile.Read(ref Stopping)==0;
+                int Start=Volatile.Read(ref Starts);
+                if (Available && Start!=ObservedWorkerStart) { Queue.WorkerStarted(); ObservedWorkerStart=Start; }
+                Queue.Ready=Available;
                 if (Volatile.Read(ref Slot)!=null) return;
                 var Request=Queue.Dispatch();
                 if (Request!=null) {

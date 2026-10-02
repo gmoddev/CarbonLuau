@@ -209,6 +209,14 @@ public release, never silently broaden them.
 | Persistence allocated-file operational budget | 1,280 MiB, observed at startup/pre-operation/post-operation on a qualified local filesystem; includes all CarbonLuau-owned persistence files and retained journals. Not a never-exceeded in-flight physical disk quota; section 6 defines measurement scope and backend extent limits. |
 | Diagnostic retention | at most 8 MiB total, rotating; no stored values |
 
+These are the qualified Foundation 1 backend limits. The 2026-09-30 D21
+capacity correction does not lower any logical quota: remaining logical quota
+does not guarantee physical admission under the independent file extents.
+Persistence-2A separately adopts a larger private one-database envelope under
+[D21](Invariants.md#d21--persistence-foundation-1). The Foundation 1 figures
+above remain the historical 1A/1C qualification baseline; see the
+[2A record](PersistenceFoundation2A.md) for its separate local and hosted gates.
+
 Logical bytes charge each row its store-name + key + full value-envelope bytes;
 repeated store names count repeatedly. Namespace ID overhead and indexes are covered
 by count/backend byte-extent limits and section 6 allocation accounting. Updates

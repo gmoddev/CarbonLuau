@@ -27,15 +27,17 @@ param(
     [ValidateRange(1024,65532)][int]$Port = 28536,
     [switch]$ArtifactReadyApproved,
     [switch]$ControlledFixturePlanApproved,
-    [switch]$NamespaceRestartSupplement
+    [switch]$NamespaceRestartSupplement,
+    [switch]$Query2DSupplement
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 function Assert-SandboxPath([string]$Path) {
     $Full = [IO.Path]::GetFullPath($Path).TrimEnd('\')
-    if (!$Full.StartsWith('C:\Sandbox\Codex\', [StringComparison]::OrdinalIgnoreCase)) {
-        throw '[CarbonLuau:Persistence1BWorker] All run paths must be below C:\Sandbox\Codex'
+    if (!$Full.StartsWith('C:\Sandbox\Codex\', [StringComparison]::OrdinalIgnoreCase) -and
+        !$Full.StartsWith('D:\Sandbox\Codex\', [StringComparison]::OrdinalIgnoreCase)) {
+        throw '[CarbonLuau:Persistence1BWorker] All run paths must be below C:\Sandbox\Codex or D:\Sandbox\Codex'
     }
     $Cursor = $Full
     while ($Cursor) {
@@ -227,6 +229,54 @@ Value.Owner = 'Changed'; Value.Values[2] = -1; Returned = true
     [IO.File]::WriteAllText((Join-Path $Server 'carbon\data\CarbonLuau\scripts\init.luau'), $Source, (New-Object Text.UTF8Encoding($false)))
 }
 
+function Set-Query2DScript {
+    $Source = @'
+local S = game:GetService('DataStoreService'):GetDataStore('Persistence1BLive', { Indexes = { 'Coins' } })
+task.defer(function()
+    S:SetAsync('QueryA', { Coins = 10 }, function(SavedA, ErrorA)
+        assert(SavedA == true and ErrorA == nil, '[CarbonLuau:Persistence2DLive] FAIL first set')
+        task.delay(0.35, function()
+            S:SetAsync('QueryB', { Coins = 20 }, function(SavedB, ErrorB)
+                assert(SavedB == true and ErrorB == nil, '[CarbonLuau:Persistence2DLive] FAIL second set')
+                S:Query({ Field = 'Coins', Min = 10, Max = 40, Limit = 1 }, function(First, FirstError)
+                    assert(FirstError == nil and First and #First.Items == 1 and
+                        First.Items[1].Key == 'QueryA' and First.NextCursor,
+                        '[CarbonLuau:Persistence2DLive] FAIL first query page')
+                    task.delay(0.35, function()
+                        S:SetAsync('QueryB', { Coins = 30 }, function(Updated, UpdateError)
+                            assert(Updated == true and UpdateError == nil,
+                                '[CarbonLuau:Persistence2DLive] FAIL update between pages')
+                            S:Query({ Field = 'Coins', Min = 10, Max = 40, Limit = 1,
+                                Cursor = First.NextCursor }, function(Second, SecondError)
+                                assert(SecondError == nil and Second and #Second.Items == 1 and
+                                    Second.Items[1].Key == 'QueryB' and Second.Items[1].Value.Coins == 30,
+                                    '[CarbonLuau:Persistence2DLive] FAIL current-snapshot continuation')
+                                S:Query({ Field = 'Coins', Equals = 30 }, function(Equal, EqualError)
+                                    assert(EqualError == nil and Equal and #Equal.Items == 1 and
+                                        Equal.Items[1].Key == 'QueryB',
+                                        '[CarbonLuau:Persistence2DLive] FAIL equality')
+                                    S:Query({ Field = 'Coins', Type = 'number', Direction = 'Descending' },
+                                        function(Ordered, OrderError)
+                                            assert(OrderError == nil and Ordered and #Ordered.Items == 2 and
+                                                Ordered.Items[1].Key == 'QueryB' and Ordered.Items[2].Key == 'QueryA',
+                                                '[CarbonLuau:Persistence2DLive] FAIL descending order')
+                                            print('[CarbonLuau:Persistence2DLive] PASS Query2D')
+                                        end)
+                                end)
+                            end)
+                        end)
+                    end)
+                end)
+            end)
+        end)
+    end)
+end)
+return true
+'@
+    [IO.File]::WriteAllText((Join-Path $Server 'carbon\data\CarbonLuau\scripts\init.luau'), $Source,
+        (New-Object Text.UTF8Encoding($false)))
+}
+
 function Wait-WorkersStopped {
     $Watch = [Diagnostics.Stopwatch]::StartNew()
     do {
@@ -300,8 +350,10 @@ try {
     $Manifest = Join-Path $Server 'steamapps\appmanifest_258550.acf'
     $BuildId = 'unknown'
     if ((Test-Path -LiteralPath $Manifest) -and ((Get-Content -LiteralPath $Manifest -Raw) -match '"buildid"\s+"(\d+)"')) { $BuildId = $Matches[1] }
+    $RunScope = if ($Query2DSupplement) { 'representative 1B plus live 2D Query supplement' }
+        else { 'representative 1B only' }
     [pscustomobject]@{RustSteamBuildId=$BuildId; Server=$Server; RuntimeVersionEvidence='server.log';
-        ClientQualification='not performed'; Scope='representative 1B only'} |
+        ClientQualification='not performed'; Scope=$RunScope} |
         ConvertTo-Json | Set-Content -LiteralPath (Join-Path $RunDirectory 'environment.json')
     foreach ($Value in $Targets) {
         $Value.Target = Assert-SandboxPath $Value.Target
@@ -341,6 +393,15 @@ try {
     Set-RootScript 'RootSeed'
     if (!(Send-Rcon 'carbonluau.reload').Contains('reload OK')) { throw '[CarbonLuau:Persistence1BWorker] Root seed reload failed' }
     Wait-Log $Offset '[CarbonLuau:Persistence1BLive] PASS RootSeed'
+    if ($Query2DSupplement) {
+        $Phase = 'Query2D'
+        $Offset = (Read-ServerLog).Length
+        Set-Query2DScript
+        if (!(Send-Rcon 'carbonluau.reload').Contains('reload OK')) {
+            throw '[CarbonLuau:Persistence2DLive] Query reload failed'
+        }
+        Wait-Log $Offset '[CarbonLuau:Persistence2DLive] PASS Query2D' 120
+    }
     if ($NamespaceRestartSupplement) {
         $Phase = 'SeedAddonPair'
         $Offset = (Read-ServerLog).Length
@@ -583,4 +644,4 @@ try {
 }
 if ($RunFailure) { throw $RunFailure }
 if (!$Restored) { throw '[CarbonLuau:Persistence1BWorker] Restoration was not confirmed' }
-Write-Output "[CarbonLuau:Persistence1BWorker] REPRESENTATIVE LIVE PASS; legacy trees restored; evidence=$RunDirectory; no authenticated-client/1C claim"
+Write-Output "[CarbonLuau:Persistence1BWorker] REPRESENTATIVE LIVE PASS; 2D Query supplement=$Query2DSupplement; legacy trees restored; evidence=$RunDirectory; no authenticated-client claim"

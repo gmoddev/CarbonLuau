@@ -26,6 +26,7 @@ internal static partial class PersistencePublicTests
         internal readonly Runtime.StorageQueue Queue;
         internal readonly Runtime.StorageSupervisor Worker;
         internal readonly Runtime.ScriptHost Host;
+        internal readonly Runtime.FacadeWorld World;
         internal readonly Runtime.AddonRegistry Addons;
         internal readonly Registrar Commands = new Registrar();
         internal readonly StringBuilder Logs = new StringBuilder();
@@ -47,7 +48,7 @@ internal static partial class PersistencePublicTests
             } else Queue.Ready = true;
             Modules.Add("state", "return {}");
             var Config = new Runtime.RuntimeConfig { MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20, MaxQueuedCallbacks = 64 };
-            var World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Commands);
+            World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Commands);
             Host = new Runtime.ScriptHost(Native, Config, () => {
                 var Snapshot = new Runtime.ScriptSnapshot { EntryName = "init.luau", EntrySource = Source };
                 foreach (var Entry in Modules) Snapshot.Modules.Add(Entry.Key, Entry.Value);
@@ -80,6 +81,7 @@ internal static partial class PersistencePublicTests
         }
         internal void Tick(bool Drain = true)
         {
+            foreach (Runtime.FacadeSession Session in World.Sessions()) Session.FlushStorageHints();
             if (Worker != null) Worker.Tick();
             else Queue.BeginTick();
             Native.PumpStorage();
@@ -148,7 +150,8 @@ internal static partial class PersistencePublicTests
 local D=game:GetService('DataStoreService')
 assert(type(D.GetDataStore)=='function')
 local S=D:GetDataStore('Players')
-for _,Name in {'Path','SQL','NamespaceId','Query','UpdateAsync','Name','Close'} do
+ assert(type(S.Query)=='function')
+ for _,Name in {'Path','SQL','NamespaceId','UpdateAsync','Name','Close'} do
  local OK,V=pcall(function() return S[Name] end); assert(not OK or V==nil)
 end
 assert(game.ApiVersion=='0.5.0-experimental')
@@ -283,7 +286,7 @@ assert(Flood==64)
             CrossDomain(F);
             var Provider = new object();
             foreach (string Id in new[] {"persist.a","persist.b", new string('a',32) + "." + new string('b',32)}) {
-                string Init = "local S=game:GetService('DataStoreService'):GetDataStore('State'); task.defer(function() S:SetAsync('x',addon.Id,function(V,E) assert(V and not E); S:GetAsync('x',function(R,E2) assert(R==addon.Id and not E2); print('isolation-'..addon.Id) end) end) end)";
+                string Init = "local S=game:GetService('DataStoreService'):GetDataStore('State'); task.defer(function() S:SetAsync('x',addon.Id,function(V,E) assert(V and not E,'addon Set '..tostring(V)..'/'..tostring(E)); S:GetAsync('x',function(R,E2) assert(R==addon.Id and not E2,'addon Get '..tostring(R)..'/'..tostring(E2)); print('isolation-'..addon.Id) end) end) end)";
                 var Result = F.Addons.RegisterSource(Provider, Id, "1.0.0", Encoding.UTF8.GetBytes(Init));
                 Check(Result[0] == "OK" && F.Addons.ProcessOne(), "addon activation");
             }

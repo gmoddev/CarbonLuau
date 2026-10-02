@@ -1,7 +1,8 @@
-"""Disposable dockerbox Linux Carbon persistence qualification, not a client test.
+"""Disposable Linux Carbon persistence qualification, not a client test.
 
-Run only with the dedicated /data/1c-server ext4 installation and /src, /build,
-/artifacts task-owned mounts. No public ports, host policy changes or DB repair.
+Run only with a dedicated task-owned server and /src, /build, /artifacts mounts.
+The optional 2D mode adds live Query checks without changing historical 1C mode.
+No public ports, host policy changes or DB repair.
 """
 import hashlib
 import json
@@ -13,11 +14,13 @@ import time
 import uuid
 import websocket
 
-Root = Path('/data/1c-server')
+Extended2D = os.environ.get('CARBONLUAU_PERSISTENCE_2D') == '1'
+Root = Path(os.environ.get('CARBONLUAU_LIVE_ROOT', '/data/1c-server'))
 Source = Path('/src')
-Build = Path('/build/production-linux')
-Run = Path('/artifacts') / ('linux-live-' + time.strftime('%Y%m%d-%H%M%S'))
+Build = Path(os.environ.get('CARBONLUAU_LIVE_BUILD', '/build/production-linux'))
+Run = Path('/artifacts') / (('linux-live-2d-' if Extended2D else 'linux-live-') + time.strftime('%Y%m%d-%H%M%S'))
 Run.mkdir(parents=True, exist_ok=False)
+Port = int(os.environ.get('CARBONLUAU_LIVE_PORT', '28545'))
 Data = Root / 'carbon/data/CarbonLuau'
 Native = Data / 'native/linux-x64'
 Scripts = Data / 'scripts'
@@ -45,7 +48,8 @@ def WaitLog(Offset, Marker, Seconds=60):
     End = time.monotonic() + Seconds
     while time.monotonic() < End:
         Text = ReadLog()[Offset:]
-        if 'Persistence1BLive] FAIL' in Text or 'Persistence1CLive] FAIL' in Text:
+        if ('Persistence1BLive] FAIL' in Text or 'Persistence1CLive] FAIL' in Text
+                or 'Persistence2DLive] FAIL' in Text):
             raise RuntimeError('live script assertion failed')
         if Marker in Text:
             return
@@ -58,7 +62,8 @@ def WaitLog(Offset, Marker, Seconds=60):
 def Send(Command):
     global Identifier
     Identifier += 1
-    Socket.send(json.dumps({'Identifier': Identifier, 'Message': Command, 'Name': 'Persistence1C'}))
+    Socket.send(json.dumps({'Identifier': Identifier, 'Message': Command,
+                            'Name': 'Persistence2D' if Extended2D else 'Persistence1C'}))
     End = time.monotonic() + 15
     while time.monotonic() < End:
         Reply = json.loads(Socket.recv())
@@ -87,14 +92,15 @@ def Start(Index):
     # belongs to Rust rather than carbon.sh's waiting bash parent.
     Args = ['bash', '-c', 'source ./carbon/tools/environment.sh; exec ./RustDedicated "$@"',
             'CarbonLuauPersistence1C', '-batchmode', '-nographics', '-logfile', str(Log),
-            '+server.ip', '127.0.0.1', '+server.port', '28545', '+server.queryport', '28547',
-            '+server.identity', 'carbonluau-persistence1c', '+server.hostname', 'CarbonLuauPersistence1C',
+            '+server.ip', '127.0.0.1', '+server.port', str(Port), '+server.queryport', str(Port + 2),
+            '+server.identity', 'carbonluau-persistence2d' if Extended2D else 'carbonluau-persistence1c',
+            '+server.hostname', 'CarbonLuauPersistence2D' if Extended2D else 'CarbonLuauPersistence1C',
             '+server.worldsize', '1000', '+server.seed', '24682', '+server.maxplayers', '1',
-            '+server.saveinterval', '600', '+rcon.ip', '127.0.0.1', '+rcon.port', '28546',
+            '+server.saveinterval', '600', '+rcon.ip', '127.0.0.1', '+rcon.port', str(Port + 1),
             '+rcon.web', '1', '+rcon.password', Secret]
     Server = subprocess.Popen(Args, cwd=Root, stdout=Output, stderr=subprocess.STDOUT, start_new_session=True)
     WaitLog(0, 'Server startup complete', 600)
-    Socket = websocket.create_connection('ws://127.0.0.1:28546/' + Secret, timeout=15)
+    Socket = websocket.create_connection('ws://127.0.0.1:' + str(Port + 1) + '/' + Secret, timeout=15)
     Ready()
 
 
@@ -166,15 +172,19 @@ try:
         shutil.copy2(Build / Name, Native / Name)
         (Native / Name).chmod(0o755)
         Inputs[Name] = Hash(Native / Name)
-    Package = Path('/artifacts/live-package/CarbonLuau.cszip')
+    Package = Path(os.environ.get('CARBONLUAU_LIVE_PACKAGE', '/artifacts/live-package/CarbonLuau.cszip'))
     shutil.copy2(Package, Plugins / 'CarbonLuau.cszip')
     Fixture = Source / 'tests/live/CarbonLuau.Persistence1BFixture.cs'
     shutil.copy2(Fixture, Plugins / 'CarbonLuauPersistence1BFixture.cs')
     Inputs['package'] = Hash(Package)
     Inputs['fixture'] = Hash(Fixture)
     Inputs['harness'] = Hash(Path(__file__))
+    Inputs['rustDedicated'] = Hash(Root / 'RustDedicated')
+    Inputs['rustManaged'] = Hash(Root / 'RustDedicated_Data/Managed/Assembly-CSharp.dll')
     (Run / 'inputs.json').write_text(json.dumps(Inputs, indent=2))
-    shutil.copy2(Root / 'steamapps/appmanifest_258550.acf', Run / 'rust-manifest.acf')
+    Manifest = Root / 'steamapps/appmanifest_258550.acf'
+    if Manifest.is_file():
+        shutil.copy2(Manifest, Run / 'rust-manifest.acf')
     (Scripts / 'init.luau').write_text('return true')
     Stage = 'first-start'
     Start(1)
@@ -201,6 +211,27 @@ V.Owner='changed after submission'
 """, 'PASS RootSeed')
     Stage = 'addon-seed'
     Pair(True)
+    if Extended2D:
+        Stage = 'query-seed'
+        RootScript("""
+S:SetAsync('Q1',{Coins=5},function(OK,E)
+ assert(OK==true and E==nil,'[CarbonLuau:Persistence2DLive] FAIL Q1 Set')
+ S:SetAsync('Q2',{Coins=20},function(OK2,E2)
+  assert(OK2==true and E2==nil,'[CarbonLuau:Persistence2DLive] FAIL Q2 Set')
+  S:Query({Field='Coins',Type='number',Limit=2},function(First,QE)
+   assert(QE==nil and #First.Items==2 and First.Items[1].Key=='Q1' and First.Items[2].Key=='Retained','[CarbonLuau:Persistence2DLive] FAIL first page')
+   assert(type(First.NextCursor)=='string','[CarbonLuau:Persistence2DLive] FAIL cursor')
+   S:Query({Field='Coins',Type='number',Limit=2,Cursor=First.NextCursor},function(Second,CE)
+    assert(CE==nil and #Second.Items==1 and Second.Items[1].Key=='Q2','[CarbonLuau:Persistence2DLive] FAIL next page')
+    S:Query({Field='Coins',Min=10,Max=20,Direction='Descending'},function(Range,RE)
+     assert(RE==nil and #Range.Items==2 and Range.Items[1].Key=='Q2' and Range.Items[2].Key=='Retained','[CarbonLuau:Persistence2DLive] FAIL range')
+     print('[CarbonLuau:Persistence2DLive] PASS QuerySeed')
+    end)
+   end)
+  end)
+ end)
+end)
+""", 'PASS QuerySeed')
     Stage = 'host-unload'
     Unload()
     (Scripts / 'init.luau').write_text('return true')
@@ -223,8 +254,19 @@ V.Owner='changed after submission'
     assert 'sent=0;' in Idle
     RootScript(Read, 'PASS RootRead')
     Pair(False)
+    if Extended2D:
+        Stage = 'query-restart'
+        RootScript("""
+S:Query({Field='Coins',Type='number',Limit=3},function(R,E)
+ assert(E==nil and #R.Items==3 and R.Items[1].Key=='Q1' and R.Items[2].Key=='Retained' and R.Items[3].Key=='Q2','[CarbonLuau:Persistence2DLive] FAIL restart Query')
+ print('[CarbonLuau:Persistence2DLive] PASS QueryRestart')
+end)
+""", 'PASS QueryRestart')
     Status = Send('carbonluau.status')
-    assert 'sent=3;' in Status and 'completed_get=3;' in Status and 'completed_set=0;' in Status
+    if not Extended2D:
+        assert 'sent=3;' in Status and 'completed_get=3;' in Status and 'completed_set=0;' in Status
+    else:
+        assert 'completed_get=3;' in Status and 'completed_set=0;' in Status
     assert 'pending=0;' in Status and 'failure=None' in Status
     (Run / 'restart-status.txt').write_text(Status)
     Stage = 'final-unload'
@@ -233,8 +275,11 @@ V.Owner='changed after submission'
     (Run / 'receipt.json').write_text(json.dumps({'verdict': 'PASS', 'exits': Exits,
         'databaseAfterFirstStop': Before, 'restartReadCount': 3, 'restartMutationCount': 0,
         'noAuthenticatedClient': True, 'powerLossClaim': False,
+        'query2D': Extended2D,
         'allocatedBytesAfterStop': sum(P.stat().st_blocks * 512 for P in (Data / 'persistence').iterdir())}, indent=2))
-    print('[CarbonLuau:Persistence1C] Linux live root/addon Set/Get/Remove, host reload, actual server restart and teardown PASS', flush=True)
+    print('[CarbonLuau:Persistence2D]' if Extended2D else '[CarbonLuau:Persistence1C]',
+          'Linux live root/addon Set/Get/Remove, Query' if Extended2D else 'Linux live root/addon Set/Get/Remove,',
+          'host reload, actual server restart and teardown PASS', flush=True)
 except Exception as Error:
     Failure = {'stage': Stage, 'errorType': type(Error).__name__}
     (Run / 'failure.json').write_text(json.dumps(Failure))

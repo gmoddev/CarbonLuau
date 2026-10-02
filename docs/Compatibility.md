@@ -92,6 +92,18 @@ No version label establishes overall PASS.
 The additive reserved completion export requires native ABI 1.5; no provider
 protocol, addon schema or Luau change is implied.
 
+Persistence Foundation 2 architecture is resolved by [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query)
+and [PersistenceFoundation2.md](PersistenceFoundation2.md). Its implemented Query uses
+required `Field`, structured `Equals` or inclusive `Min`/`Max`, automatic
+preparation and optional `Indexes` string-list hints. Authors manage no schemas,
+versions, migrations or index lifecycle. It joins the same unpublished
+`0.5.0-experimental` scripting identity. The [final correction audit](PersistenceFoundation2-Validation.md)
+is architecture evidence. The 2B optional hint binding and metadata are
+[qualified](PersistenceFoundation2B.md); public Query bindings and generated
+metadata are [qualified by 2C](PersistenceFoundation2C.md). Combined closure is
+recorded separately in [2D](PersistenceFoundation2D.md). No package bump or
+preview availability is implied by the earlier phase records.
+
 ## Dependency and host upgrades
 
 Luau upgrades must be explicit scoped changes. Preserve its pin and MIT/Lua attribution; review relevant upstream API, sandbox, compiler, bytecode and behavior changes. Validate affected builds and runtime failure paths against the candidate pin before claiming support. Do not edit the vendor tree or update dependencies incidentally while implementing another feature. Internal compiler/VM bytecode compatibility is tied to the selected pin; external untrusted bytecode remains excluded by I7.
@@ -764,6 +776,46 @@ hardware. Record SQLite revision, effective PRAGMAs, filesystem/VFS, worker limi
 host versions and exact source/artifacts for each result. Shockbyte remains
 separately unqualified. Do not promote private 1A evidence to public-service or
 actual Carbon integration PASS.
+
+## Persistence Foundation 2 architecture gate
+
+The separately authorized private [Persistence-2A substrate](PersistenceFoundation2A.md)
+is PASS after final-source Windows/Linux/sanitizer qualification and
+[hosted validation](https://github.com/gmoddev/CarbonLuau/actions/runs/36839009473).
+A valid primary corpus exhausted the Foundation 1
+512-MiB database ceiling during derived preparation before reaching the derived
+logical limit. The 2026-09-30 D21 correction permits controlled physical
+StorageFull beneath an unused logical quota and resumes one-database 2A work;
+the old universal-fit proof is no longer an acceptance gate. Historical
+negative evidence remains intact. The current private candidate preserves
+Foundation 1 primary records, publishes primary Ready before bounded
+process-local derived verification, and does not admit retained ACTIVE state
+from durable metadata alone. Windows/Linux native, managed-worker and Linux
+ASan/UBSan/leak matrices pass on final source; the exact fixtures, timings,
+memory observations and limits are in the 2A record. Its 1-GiB database
+extent, 1,075,904,512-byte journal extent and 2,560-MiB filesystem-allocation
+operational budget are adopted private D21 limits, not a released public
+support envelope. File extents and allocated-block observations are
+different guarantees. The 2B optional hint binding is [qualified](PersistenceFoundation2B.md).
+Public Query and authenticated keyset cursors are implemented under
+[2C](PersistenceFoundation2C.md); the [combined 2D record](PersistenceFoundation2D.md)
+owns final crash/lifecycle, concurrent, platform and live qualification.
+
+The [D22 correction audit](PersistenceFoundation2-Validation.md) owns the
+documentation-only baseline verdict. Check D21 compatibility, the structured
+public request, optional field hints, bounded online preparation, transactional
+ACTIVE-state correctness/withdrawal, bounded results/work/cursors, and absence
+of a primary-scan fallback. Search active canonical docs, phase routing,
+decisions, examples, tooling requirements and release descriptions for superseded
+public language/schema/version contracts. Evaluate historical and unrelated
+matches rather than rewriting qualified Foundation 1 evidence.
+
+Run the existing API/link and architecture checks, Markdown syntax/navigation
+checks, release-identity inspection and a diff proving production source and
+generated bindings are untouched. Verify those checks in hosted CI and deploy
+the documentation. Unrelated runtime results did not qualify that historical
+design amendment or the then-unimplemented Query feature. Persistence-2A through 2D own the implementation
+and exact SQLite/platform qualification gates in the detailed D22 record.
 
 ## Phase 0 consistency review
 

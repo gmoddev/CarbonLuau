@@ -17,11 +17,18 @@ struct Request {
     P::Identity Identity;
     P::Bytes Envelope;
 };
+struct HintIntent {
+    uint64_t VmGeneration, Domain;
+    std::string Store;
+    std::vector<std::string> Fields;
+};
 std::vector<Request> Requests;
+std::vector<HintIntent> HintIntents;
 std::set<std::pair<uint64_t,uint64_t>> Released;
 ClHandle CurrentVm = 0;
 uint64_t CurrentGeneration = 0;
 uint32_t Reject = 0;
+uint32_t RejectHint = 0;
 bool Reenter = false;
 bool ExpireSubmission = false;
 bool ExpireCompletion = false;
@@ -43,7 +50,11 @@ uint32_t Host(uint64_t DomainId, uint32_t Operation, const char* Bytes, uint32_t
         }
         size_t Size = P::Read32(Frame + 52); Check(Size == Length - Offset, "exact envelope length");
         Value.Envelope.assign(Frame + Offset, Frame + Length);
-        P::Validate(Value.Identity);
+        if (Value.Operation==6) {
+            P::Identity StoreIdentity=Value.Identity; StoreIdentity.Key="K"; P::Validate(StoreIdentity);
+            Check(!Value.Identity.Key.empty() && Value.Identity.Key.size()<=64 &&
+                P::ValidText(Value.Identity.Key,64),"Query field permits literal punctuation");
+        } else P::Validate(Value.Identity);
         Check(Value.Identity.Package == GetDomain(*GetVm(CurrentVm), DomainId)->PackageId, "host selected namespace");
         Check(GetVm(CurrentVm)->Admission && GetVm(CurrentVm)->Admission->Owner->Id == DomainId && CanMutateHost(*GetVm(CurrentVm)), "committed exact owner at host");
         if (Reject) return Reject;
@@ -63,13 +74,41 @@ uint32_t Host(uint64_t DomainId, uint32_t Operation, const char* Bytes, uint32_t
                 P::Clock::now() < Runtime->Deadline, "fresh callback admission precedes release/materialization");
             if (ExpireCompletion) Runtime->Deadline = P::Clock::now() - std::chrono::seconds(1);
         }
+    } else if (Operation == 33) {
+        Check(Length >= 37 && Length <= 32 + 64 + 8 * 68 && !std::memcmp(Frame, "CLPH", 4) &&
+            P::Read32(Frame + 4) == 1, "bounded CLPH header");
+        HintIntent Hint{P::Read64(Frame + 8), P::Read64(Frame + 16)};
+        size_t StoreLength = P::Read32(Frame + 24);
+        size_t Count = P::Read32(Frame + 28);
+        Check(Hint.VmGeneration == CurrentGeneration && Hint.Domain == DomainId &&
+            StoreLength >= 1 && StoreLength <= 64 && Count >= 1 && Count <= 8 &&
+            StoreLength <= Length - 32, "CLPH exact lifetime and lengths");
+        size_t Offset = 32;
+        Hint.Store.assign(Bytes + Offset, StoreLength); Offset += StoreLength;
+        Check(P::ValidText(Hint.Store, 64, true), "CLPH store text");
+        for (size_t I = 0; I < Count; ++I) {
+            Check(Length - Offset >= 4, "CLPH field length present");
+            size_t FieldLength = P::Read32(Frame + Offset); Offset += 4;
+            Check(FieldLength >= 1 && FieldLength <= 64 && FieldLength <= Length - Offset, "CLPH field bound");
+            Hint.Fields.emplace_back(Bytes + Offset, FieldLength); Offset += FieldLength;
+            Check(P::ValidText(Hint.Fields.back(), 64) &&
+                std::find(Hint.Fields.begin(), Hint.Fields.end() - 1, Hint.Fields.back()) == Hint.Fields.end() - 1,
+                "CLPH exact distinct field");
+        }
+        Check(Offset == Length, "CLPH exact frame length");
+        auto* Runtime = GetVm(CurrentVm);
+        Check(Runtime && GetDomain(*Runtime, DomainId, true) &&
+            (!Runtime->Publication || Runtime->Publication->Complete), "CLPH only after publication and activation");
+        if (RejectHint) return RejectHint;
+        HintIntents.push_back(std::move(Hint));
     }
     return 0;
 }
 struct Fixture {
     ClHandle Vm = 0, Root = 0;
     explicit Fixture(bool PublicationTests = false) {
-        Requests.clear(); Released.clear(); Reject = 0; Reenter = false; ExpireSubmission = false; ExpireCompletion = false;
+        Requests.clear(); HintIntents.clear(); Released.clear(); Reject = 0; RejectHint = 0;
+        Reenter = false; ExpireSubmission = false; ExpireCompletion = false;
         ClVmConfig Config{16 * MiB};
         Check(cl_vm_create(&Config, &Vm) == CL_OK && cl_vm_scripts(Vm, 8) == CL_OK, "create fixture");
         CurrentVm = Vm; CurrentGeneration=GetVm(Vm)->GenerationId;
@@ -81,6 +120,11 @@ struct Fixture {
             Module(Root,"child",R"(local State=require('state'); State.Child=game:GetService('DataStoreService'):GetDataStore('Child'); return State.Child)");
             Module(Root,"outer",R"(require('child'); error('failed outer'))");
             Module(Root,"cold",R"(local Store=game:GetService('DataStoreService'):GetDataStore('Cold'); assert(not pcall(function() Store:GetAsync('Key',function() end) end)); return Store)");
+            Module(Root,"hintfailed",R"(game:GetService('DataStoreService'):GetDataStore('HintFailed',{Indexes={'Lost'}}); error('failed hint module'))");
+            Module(Root,"hintchild",R"(game:GetService('DataStoreService'):GetDataStore('Nested',{Indexes={'Child'}}); return true)");
+            Module(Root,"hintouter",R"(require('hintchild'); error('failed outer hint module'))");
+            Module(Root,"hintgood",R"(require('hintchild'); game:GetService('DataStoreService'):GetDataStore('Nested',{Indexes={'Parent'}}); return true)");
+            Module(Root,"hintcold",R"(game:GetService('DataStoreService'):GetDataStore('ColdHint',{Indexes={'Ready'}}); return true)");
         }
         Run(Root, "require('state')"); Check(cl_domain_commit(Vm, Root) == CL_OK, "commit fixture root");
     }
@@ -188,7 +232,7 @@ void RejectValuesAndBounds()
         assert(not pcall(function() Store:SetAsync('Key',1,true) end))
         assert(not pcall(function() Store:SetAsync('Key',1,function() end,1) end))
         assert(not pcall(function() Store.Name='x' end))
-        assert(Store.Name==nil and Store.Path==nil and Store.Close==nil and Store.Query==nil)
+        assert(Store.Name==nil and Store.Path==nil and Store.Close==nil and type(Store.Query)=='function')
         assert(not pcall(function() Store.GetAsync({},'Key',function() end) end))
     )");
     Check(Requests.empty() && GetVm(F.Vm)->StorageReserved == 0, "invalid input rejects before acceptance");
@@ -206,6 +250,110 @@ void RejectValuesAndBounds()
     F.Drain(6);
     F.Run(Prefix + "for I=1,62 do Service:GetDataStore('Store'..I) end; Service:GetDataStore('Store1'); assert(not pcall(function() Service:GetDataStore('Overflow') end))");
     Check(GetDomain(*GetVm(F.Vm), F.Root)->StorageNames.size() == 64, "64 distinct acquired names per domain");
+}
+void OptionsAndHintWire()
+{
+    Fixture F;
+    F.Run(R"(
+        local Service=game:GetService('DataStoreService')
+        Service:GetDataStore('Empty')
+        Service:GetDataStore('Empty',nil)
+        Service:GetDataStore('Empty',{})
+        Service:GetDataStore('Empty',{Indexes={}})
+        local Options={Indexes={'One'}}
+        local Store=Service:GetDataStore('Hints',Options)
+        Options.Indexes[1]='Changed'
+        assert(type(Store.Query)=='function')
+    )");
+    Check(HintIntents.size() == 1 && HintIntents[0].Store == "Hints" &&
+        HintIntents[0].Fields == std::vector<std::string>{"One"}, "hint snapshot and no empty intent");
+    F.Run(R"(
+        local Service=game:GetService('DataStoreService')
+        Service:GetDataStore('Hints',{Indexes={'One','Two'}})
+        Service:GetDataStore('Hints',{Indexes={'Two'}})
+        Service:GetDataStore('Eight',{Indexes={'1','2','3','4','5','6','7','8'}})
+        assert(not pcall(function() Service:GetDataStore('Eight',{Indexes={'9'}}) end))
+        assert(not pcall(function() Service:GetDataStore('Hints',{Indexes={'Two','One','Three','Four','Five','Six','Seven','Eight','Nine'}}) end))
+    )");
+    Check(HintIntents.size() == 3 && HintIntents[1].Fields == std::vector<std::string>({"One","Two"}) &&
+        HintIntents[2].Fields.size() == 8, "bounded union and duplicate idempotence");
+    size_t Names = GetDomain(*GetVm(F.Vm), F.Root)->StorageNames.size();
+    F.Run(R"(
+        local Service=game:GetService('DataStoreService')
+        local function Bad(Options)
+            assert(not pcall(function() Service:GetDataStore('Invalid',Options) end))
+        end
+        Bad(1); Bad(false); Bad('text'); Bad({Other={}}); Bad({[1]=true})
+        local Called=false
+        Bad(setmetatable({Indexes={'A'}},{__index=function() Called=true end}))
+        Bad({Indexes=setmetatable({'A'},{__len=function() error('metamethod') end})})
+        assert(not Called)
+        Bad({Indexes='A'}); Bad({Indexes={false}}); Bad({Indexes={[1]='A',[3]='C'}})
+        Bad({Indexes={['1']='A'}}); Bad({Indexes={[0]='A'}}); Bad({Indexes={[1.5]='A'}})
+        Bad({Indexes={A='A'}}); Bad({Indexes={'A','A'}})
+        Bad({Indexes={'1','2','3','4','5','6','7','8','9'}})
+        Bad({Indexes={''}}); Bad({Indexes={string.char(0)}})
+        Bad({Indexes={string.char(255)}}); Bad({Indexes={string.char(0xc0,0x80)}})
+        Bad({Indexes={string.rep('x',65)}})
+        assert(not pcall(function() Service:GetDataStore('Invalid',{},true) end))
+        Service:GetDataStore('Literal',{Indexes={'.','a/b:',string.char(0xc3,0xa9),string.rep('x',64)}})
+    )");
+    Check(HintIntents.size() == 4 && HintIntents.back().Fields.size() == 4 &&
+        HintIntents.back().Fields[2] == "\xC3\xA9" && GetDomain(*GetVm(F.Vm), F.Root)->StorageNames.size() == Names + 1,
+        "raw options validation and literal UTF-8 fields");
+    RejectHint = 6;
+    F.Run("local S=game:GetService('DataStoreService'); assert(not pcall(function() S:GetDataStore('Rejected',{Indexes={'X'}}) end))");
+    Check(GetDomain(*GetVm(F.Vm), F.Root)->StorageNames.size() == Names + 1 && HintIntents.size() == 4,
+        "rejected direct intent leaves no acquired name or union");
+    RejectHint = 0;
+    F.Run("game:GetService('DataStoreService'):GetDataStore('Rejected',{Indexes={'X'}})");
+    Check(HintIntents.size() == 5 && HintIntents.back().Store == "Rejected", "retry after host rejection");
+}
+void HintPublication()
+{
+    Fixture F(true);
+    F.Run(R"(
+        assert(not pcall(require,'hintfailed'))
+        assert(not pcall(require,'hintouter'))
+    )");
+    Check(HintIntents.empty(), "failed nested hints discarded");
+    F.Run("assert(require('hintgood'))");
+    Check(HintIntents.size() == 1 && HintIntents[0].Store == "Nested" &&
+        HintIntents[0].Fields == std::vector<std::string>({"Child","Parent"}),
+        "nested hints publish once after successful top scope");
+    F.Run("assert(require('hintcold'))");
+    Check(HintIntents.size() == 2 && HintIntents[1].Store == "ColdHint", "cold module publishes after completion");
+    ClHandle Addon = F.Domain("hints.addon");
+    F.Run(Addon,"local O={Indexes={'Addon'}}; game:GetService('DataStoreService'):GetDataStore('Shared',O); O.Indexes[1]='Changed'");
+    F.Run(Addon,R"(
+        local Service=game:GetService('DataStoreService')
+        Service:GetDataStore('Pending',{Indexes={'A','B','C','D','E','F','G'}})
+        Service:GetDataStore('Pending',{Indexes={'G','H'}})
+        assert(not pcall(function() Service:GetDataStore('Pending',{Indexes={'I'}}) end))
+    )");
+    Check(HintIntents.size() == 2 && !GetDomain(*GetVm(F.Vm), Addon)->Active,
+        "provisional acquisition has no host intent");
+    Check(cl_domain_commit(F.Vm,Addon) == CL_OK, "activate hinted addon");
+    Check(HintIntents.size() == 4 && HintIntents[2].Domain == Addon &&
+        HintIntents[2].Fields == std::vector<std::string>{"Addon"} &&
+        HintIntents[3].Fields.size() == 8, "activation publishes bounded addon unions");
+    F.Run("game:GetService('DataStoreService'):GetDataStore('Shared',{Indexes={'Root'}})");
+    Check(HintIntents.size() == 5 && HintIntents.back().Domain == F.Root &&
+        HintIntents.back().Fields == std::vector<std::string>{"Root"}, "root and addon intent isolated");
+    ClHandle Failed = F.Domain("hints.failed");
+    F.Run(Failed,"game:GetService('DataStoreService'):GetDataStore('Never',{Indexes={'Lost'}}); error('candidate')",CL_RUNTIME_ERROR);
+    Check(cl_domain_destroy(F.Vm,Failed) == CL_OK && HintIntents.size() == 5,
+        "failed provisional candidate never publishes");
+}
+void HintActivationFailure()
+{
+    Fixture F;
+    ClHandle Candidate = F.Domain("hints.rejected");
+    F.Run(Candidate,"game:GetService('DataStoreService'):GetDataStore('RejectAtActivation',{Indexes={'Field'}})");
+    Check(HintIntents.empty(), "candidate hint held before activation");
+    RejectHint = 6;
+    Check(cl_domain_commit(F.Vm,Candidate) == CL_INTERNAL_ERROR && HintIntents.empty(),
+        "failed activation does not report hint accepted");
 }
 void PublicationAndPrivacy()
 {
@@ -472,12 +620,98 @@ void SubmissionAllocationFaults()
         Failures,Successes,LastPoint);
     Check(Failures>0 && Successes>0,"allocation sweep reaches failures and successful submission");
 }
+void QueryWireAndResults()
+{
+    Fixture F;
+    F.Run(Prefix + R"(
+        local Request={Field='Coins',Min=10,Max=20,Direction='Descending',Limit=1}
+        Store:Query(Request,function(Result,ErrorCode)
+            assert(ErrorCode==nil and #Result.Items==1 and Result.Items[1].Key=='Player')
+            assert(Result.Items[1].Value.Coins==15 and Result.NextCursor=='Ab-_')
+            Result.Items[1].Value.Coins=999
+            State.QueryDone=true
+        end)
+        Request.Field='Changed'; Request.Min=999
+    )");
+    Check(Requests.size()==1 && Requests[0].Operation==6 && Requests[0].Identity.Key=="Coins", "Query accepted exact field snapshot");
+    const auto& Descriptor=Requests[0].Envelope;
+    Check(Descriptor.size()==56 && !std::memcmp(Descriptor.data(),"CLQD",4) &&
+        P::Read32(Descriptor.data()+4)==1 && P::Read32(Descriptor.data()+8)==6 &&
+        P::Read32(Descriptor.data()+12)==2 && P::Read32(Descriptor.data()+16)==1 &&
+        P::Read32(Descriptor.data()+20)==1 && P::Read32(Descriptor.data()+24)==0 &&
+        P::Read32(Descriptor.data()+28)==8, "Query structured CLQD bounds and type absence");
+    P::Identity ItemId=Requests[0].Identity; ItemId.Key="Player";
+    auto Coins=std::make_shared<P::Value>(); Coins->Type=P::Kind::Number; Coins->Number=15;
+    P::Value Record; Record.Type=P::Kind::Map; Record.Map.emplace_back("Coins",Coins);
+    auto Value=P::Encode(ItemId,Record,P::Clock::now()+std::chrono::seconds(1));
+    P::Bytes Page{'C','L','Q','R'};
+    P::Put32(Page,1); P::Put32(Page,1); P::Put32(Page,4);
+    Page.insert(Page.end(),{'A','b','-','_'});
+    P::Put32(Page,6); Page.insert(Page.end(),{'P','l','a','y','e','r'});
+    P::Put32(Page,uint32_t(Value.size())); Page.insert(Page.end(),Value.begin(),Value.end());
+    Check(F.Complete(0,0,false,Page)==CL_OK,"Query result accepted through existing completion ABI");
+    F.Drain(1); F.Run("assert(require('state').QueryDone)");
+    F.Run(Prefix + R"(
+        Store:Query({Field='Coins',Equals=false},function(Result,ErrorCode)
+            assert(Result==nil and ErrorCode=='QueryUnavailable'); State.QueryFailure=true
+        end)
+    )");
+    Check(Requests.size()==2 && P::Read32(Requests[1].Envelope.data()+8)==1 &&
+        P::Read32(Requests[1].Envelope.data()+24)==1 && Requests[1].Envelope[28]==0,
+        "false equality is present in CLQD");
+    Check(F.Complete(1,14)==CL_OK,"Query-specific completion error accepted"); F.Drain(1);
+    F.Run("assert(require('state').QueryFailure)");
+    for (uint32_t Code : {11u,12u,13u,15u}) {
+        static constexpr const char* Names[] = {"InvalidQuery","AmbiguousFieldType","IndexPreparing","QueryUnavailable","InvalidCursor"};
+        std::string Source=Prefix+"Store:Query({Field='Coins'},function(Result,ErrorCode) assert(Result==nil and ErrorCode=='"+
+            Names[Code-11]+"') end)";
+        F.Run(Source);
+        Check(F.Complete(Requests.size()-1,Code)==CL_OK,"Query-specific error code admitted"); F.Drain(1);
+    }
+    Check(Released.size()==Requests.size() && GetVm(F.Vm)->StorageReserved==0,"Query callbacks and reservations released once");
+}
+void QueryRejectsMalformed()
+{
+    Fixture F;
+    F.Run(Prefix + R"(
+        local function Bad(Request)
+            local Good,ErrorCode=pcall(function() Store:Query(Request,function() error('rejected') end) end)
+            assert(not Good and string.find(ErrorCode,'InvalidQuery',1,true))
+        end
+        Bad({}); Bad({Field=''}); Bad({Field='Coins',Other=1}); Bad({Field='Coins',Limit=0})
+        Bad({Field='Coins',Limit=1.5}); Bad({Field='Coins',Limit=101})
+        Bad({Field='Coins',Equals=1,Min=0}); Bad({Field='Coins',Min=2,Max=1})
+        Bad({Field='Coins',Type='boolean'}); Bad({Field='Coins',Type='string',Equals=1})
+        Bad({Field='Coins',Equals=0/0}); Bad({Field='Coins',Equals=math.huge})
+        Bad({Field='Coins',Equals=string.rep('x',1025)})
+        Bad({Field='Coins',Cursor=string.rep('x',2049)})
+        Bad({Field='Coins',Cursor='!'}); Bad({Field='Coins',Direction='Up'})
+        Bad(setmetatable({Field='Coins'},{__index=function() error('metamethod') end}))
+        Bad({Field='Coins',Min=false}); Bad({Field='Coins',Max='z',Min=1})
+        assert(not pcall(function() Store:Query({Field='Coins'},nil) end))
+    )");
+    Check(Requests.empty() && GetVm(F.Vm)->StorageReserved==0,"malformed Query rejects before admission");
+    F.Run(Prefix + R"(
+        Store:Query({Field='literal/path:name',Equals=''},function(Result,ErrorCode)
+            assert(Result~=nil and ErrorCode==nil and #Result.Items==0 and Result.NextCursor==nil)
+            require('state').PunctuationDone=true
+        end)
+    )");
+    Check(Requests.size()==1 && Requests[0].Operation==6 && Requests[0].Identity.Key=="literal/path:name" &&
+        P::Read32(Requests[0].Envelope.data()+8)==1 && P::Read32(Requests[0].Envelope.data()+12)==3,
+        "literal punctuation and empty-string equality are legal");
+    P::Bytes Empty{'C','L','Q','R'}; P::Put32(Empty,1); P::Put32(Empty,0); P::Put32(Empty,0);
+    Check(F.Complete(0,0,false,Empty)==CL_OK,"empty Query page accepted"); F.Drain(1);
+    F.Run("assert(require('state').PunctuationDone)");
+}
 }
 int main(int Count,char** Args)
 {
     Check(Count==2,"compiler worker argument"); SetCompilerExecutableForTesting(Args[1]);
     Check(carbonluau_abi_version()==0x00010005,"ABI1.5 required for new completion ingress");
-    ValuesAndResults(); RejectValuesAndBounds(); PublicationAndPrivacy(); SchedulingAndRaces(); FairDomains(); FailuresAndDeadlines();
+    ValuesAndResults(); RejectValuesAndBounds(); OptionsAndHintWire(); HintPublication(); HintActivationFailure();
+    PublicationAndPrivacy(); SchedulingAndRaces(); FairDomains(); FailuresAndDeadlines();
     CorruptionAndFreshBudget(); CompletionCollection(); SubmissionAllocationFaults();
+    QueryWireAndResults(); QueryRejectsMalformed();
     ResetCompilerForTesting(); std::puts("[CarbonLuau:PersistenceTest] Public native conversion/publication/completion fixtures PASS");
 }

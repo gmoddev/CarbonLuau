@@ -51,6 +51,7 @@ void Validate(const Identity& Identity);
 std::array<uint8_t, 32> Digest(const Bytes& Data);
 Bytes Encode(const Identity& Identity, const Value& Value, Deadline End);
 std::shared_ptr<Value> Decode(const Identity& Identity, const Bytes& Envelope, Deadline End);
+void ValidateEnvelope(const Identity& Identity, const Bytes& Envelope, Deadline End);
 
 inline void Put32(Bytes& Output, uint32_t Value)
 { for (unsigned Shift = 0; Shift < 32; Shift += 8) Output.push_back(uint8_t(Value >> Shift)); }

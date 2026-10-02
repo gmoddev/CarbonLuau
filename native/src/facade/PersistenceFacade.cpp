@@ -16,6 +16,10 @@ constexpr size_t MaximumDepth = 16;
 constexpr size_t MaximumTableEntries = 1024;
 constexpr size_t MaximumEntries = 4096;
 constexpr size_t MaximumStoreNames = 64;
+constexpr size_t MaximumHintFields = 8;
+constexpr size_t MaximumQueryDescriptor = 6144;
+constexpr size_t MaximumQueryResult = 67584;
+struct InvalidQuery {};
 struct StorageFacade {
     Domain* Owner;
     std::shared_ptr<StoragePublication> Publication;
@@ -63,6 +67,55 @@ std::string Text(lua_State* State, int Index, size_t Maximum, bool Name)
     P::Require(P::ValidText(Value, Maximum, Name));
     return Value;
 }
+std::vector<std::string> ReadIndexes(lua_State* State, int Index, Vm& Runtime)
+{
+    luaL_checkstack(State, 4, "DataStore options stack bound");
+    Index = lua_absindex(State, Index);
+    P::Require(lua_type(State, Index) == LUA_TTABLE);
+    if (lua_getmetatable(State, Index)) { lua_pop(State, 1); throw P::Failure(P::Error::InvalidArgument); }
+    std::array<std::string, MaximumHintFields> Ordered;
+    std::array<bool, MaximumHintFields> Present{};
+    size_t Count = 0;
+    lua_pushnil(State);
+    while (lua_next(State, Index)) {
+        Deadline(Runtime);
+        P::Require(++Count <= MaximumHintFields && lua_type(State, -2) == LUA_TNUMBER);
+        double Key = lua_tonumber(State, -2);
+        P::Require(std::isfinite(Key) && Key >= 1 && Key <= MaximumHintFields && Key == std::floor(Key));
+        size_t Position = size_t(Key - 1);
+        P::Require(!Present[Position] && lua_type(State, -1) == LUA_TSTRING);
+        Ordered[Position] = Text(State, -1, 64, false);
+        P::Require(!Ordered[Position].empty());
+        Present[Position] = true;
+        lua_pop(State, 1);
+    }
+    std::vector<std::string> Fields;
+    Fields.reserve(Count);
+    for (size_t I = 0; I < Count; ++I) {
+        P::Require(Present[I]);
+        P::Require(std::find(Fields.begin(), Fields.end(), Ordered[I]) == Fields.end());
+        Fields.push_back(std::move(Ordered[I]));
+    }
+    return Fields;
+}
+std::vector<std::string> ReadOptions(lua_State* State, Vm& Runtime)
+{
+    if (lua_gettop(State) == 2 || lua_isnil(State, 3)) return {};
+    P::Require(lua_type(State, 3) == LUA_TTABLE);
+    if (lua_getmetatable(State, 3)) { lua_pop(State, 1); throw P::Failure(P::Error::InvalidArgument); }
+    std::vector<std::string> Fields;
+    lua_pushnil(State);
+    while (lua_next(State, 3)) {
+        Deadline(Runtime);
+        size_t Length = 0;
+        P::Require(lua_type(State, -2) == LUA_TSTRING);
+        const char* Key = lua_tolstring(State, -2, &Length);
+        P::Require(Length == 7 && std::memcmp(Key, "Indexes", 7) == 0);
+        Fields = ReadIndexes(State, -1, Runtime);
+        lua_pop(State, 1);
+    }
+    return Fields;
+}
 void PushFacade(lua_State* State, Domain& Owner, const char* Type, const std::string& Store)
 {
     auto Scope = Publication(RuntimeFor(State).Publication);
@@ -78,6 +131,7 @@ void PushFacade(lua_State* State, Domain& Owner, const char* Type, const std::st
 template<int (*Body)(lua_State*)> int Controlled(lua_State* State)
 {
     try { return Body(State); }
+    catch (const InvalidQuery&) { luaL_error(State, "InvalidQuery"); }
     catch (const P::Failure& Failure) {
         if (Failure.Code == P::Error::DeadlineExceeded) throw DeadlineExceeded{};
         luaL_error(State, "DataStore invalid argument or value bound");
@@ -85,6 +139,138 @@ template<int (*Body)(lua_State*)> int Controlled(lua_State* State)
         RuntimeFor(State).AllocationFailed = true;
         luaL_error(State, "DataStore allocation failure");
     }
+}
+
+struct QueryPart {
+    uint32_t Type = 0;
+    P::Bytes Data;
+    bool Present = false;
+};
+std::string QueryText(lua_State* State, int Index, size_t Maximum, bool Nonempty = false)
+{
+    if (lua_type(State, Index) != LUA_TSTRING) throw InvalidQuery{};
+    size_t Length = 0; const char* Bytes = lua_tolstring(State, Index, &Length);
+    if (Length > Maximum || (Nonempty && !Length)) throw InvalidQuery{};
+    std::string Result(Bytes, Length);
+    if (!P::ValidText(Result, Maximum)) throw InvalidQuery{};
+    return Result;
+}
+QueryPart QueryScalar(lua_State* State, int Index, bool Ordered)
+{
+    QueryPart Part;
+    Part.Present = true;
+    switch (lua_type(State, Index)) {
+    case LUA_TBOOLEAN:
+        if (Ordered) throw InvalidQuery{};
+        Part.Type = 1; Part.Data.push_back(lua_toboolean(State, Index) ? 1 : 0); break;
+    case LUA_TNUMBER: {
+        double Number = lua_tonumber(State, Index);
+        if (!std::isfinite(Number)) throw InvalidQuery{};
+        Part.Type = 2;
+        uint64_t Bits = 0; std::memcpy(&Bits, &Number, sizeof(Bits));
+        for (unsigned Shift = 0; Shift < 64; Shift += 8) Part.Data.push_back(uint8_t(Bits >> Shift));
+        break;
+    }
+    case LUA_TSTRING: {
+        Part.Type = 3;
+        auto Value = QueryText(State, Index, 1024);
+        Part.Data.assign(Value.begin(), Value.end());
+        break;
+    }
+    default: throw InvalidQuery{};
+    }
+    return Part;
+}
+bool QueryLess(const P::Bytes& Left, const P::Bytes& Right, uint32_t Type)
+{
+    if (Type == 3) return std::lexicographical_compare(Left.begin(), Left.end(), Right.begin(), Right.end());
+    double A = 0, B = 0;
+    uint64_t ABits = P::Read64(Left.data()), BBits = P::Read64(Right.data());
+    std::memcpy(&A, &ABits, 8); std::memcpy(&B, &BBits, 8);
+    return A < B;
+}
+struct QueryRequest { std::string Field; P::Bytes Descriptor; };
+QueryRequest ReadQuery(lua_State* State, Vm& Runtime)
+{
+    if (lua_type(State, 2) != LUA_TTABLE) throw InvalidQuery{};
+    if (lua_getmetatable(State, 2)) { lua_pop(State, 1); throw InvalidQuery{}; }
+    luaL_checkstack(State, 4, "Query descriptor stack bound");
+    std::array<bool, 8> Seen{};
+    QueryPart Equals, Min, Max;
+    std::string Field, Cursor;
+    uint32_t Type = 0, Direction = 0, Limit = 50;
+    size_t SnapshotBytes = 24;
+    lua_pushnil(State);
+    while (lua_next(State, 2)) {
+        Deadline(Runtime);
+        size_t KeyLength = 0;
+        if (lua_type(State, -2) != LUA_TSTRING) throw InvalidQuery{};
+        const char* Key = lua_tolstring(State, -2, &KeyLength);
+        static constexpr const char* Names[] = {"Field", "Type", "Equals", "Min", "Max", "Direction", "Limit", "Cursor"};
+        size_t Member = 0;
+        while (Member < std::size(Names) && (KeyLength != std::strlen(Names[Member]) ||
+            std::memcmp(Key, Names[Member], KeyLength))) ++Member;
+        if (Member == std::size(Names) || Seen[Member]) throw InvalidQuery{};
+        Seen[Member] = true;
+        if (lua_isnil(State, -1)) { lua_pop(State, 1); continue; }
+        switch (Member) {
+        case 0: Field = QueryText(State, -1, 64, true); SnapshotBytes += Field.size(); break;
+        case 1: {
+            auto Name = QueryText(State, -1, 7);
+            if (Name == "boolean") Type = 1;
+            else if (Name == "number") Type = 2;
+            else if (Name == "string") Type = 3;
+            else throw InvalidQuery{};
+            SnapshotBytes += Name.size(); break;
+        }
+        case 2: Equals = QueryScalar(State, -1, false); SnapshotBytes += Equals.Data.size() + 4; break;
+        case 3: Min = QueryScalar(State, -1, true); SnapshotBytes += Min.Data.size() + 4; break;
+        case 4: Max = QueryScalar(State, -1, true); SnapshotBytes += Max.Data.size() + 4; break;
+        case 5: {
+            auto Name = QueryText(State, -1, 10);
+            if (Name == "Ascending") Direction = 0;
+            else if (Name == "Descending") Direction = 1;
+            else throw InvalidQuery{};
+            SnapshotBytes += Name.size(); break;
+        }
+        case 6: {
+            if (lua_type(State, -1) != LUA_TNUMBER) throw InvalidQuery{};
+            double Number = lua_tonumber(State, -1);
+            if (!std::isfinite(Number) || Number < 1 || Number > 100 || Number != std::floor(Number)) throw InvalidQuery{};
+            Limit = uint32_t(Number); break;
+        }
+        case 7: {
+            Cursor = QueryText(State, -1, 2048, true);
+            for (unsigned char Character : Cursor)
+                if (!((Character >= 'A' && Character <= 'Z') || (Character >= 'a' && Character <= 'z') ||
+                    (Character >= '0' && Character <= '9') || Character == '-' || Character == '_')) throw InvalidQuery{};
+            if (Cursor.size() % 4 == 1) throw InvalidQuery{};
+            SnapshotBytes += Cursor.size() + 4; break;
+        }
+        }
+        if (SnapshotBytes > MaximumQueryDescriptor) throw InvalidQuery{};
+        lua_pop(State, 1);
+    }
+    if (Field.empty() || (Equals.Present && (Min.Present || Max.Present)) ||
+        (Min.Present && Max.Present && Min.Type != Max.Type)) throw InvalidQuery{};
+    uint32_t Selected = Equals.Present ? Equals.Type : Min.Present ? Min.Type : Max.Present ? Max.Type : 0;
+    if ((Type && Selected && Type != Selected) || (Type == 1 && !Equals.Present)) throw InvalidQuery{};
+    if (Min.Present && Max.Present && QueryLess(Max.Data, Min.Data, Min.Type)) throw InvalidQuery{};
+    QueryRequest Request; Request.Field = std::move(Field);
+    uint32_t Flags = (Equals.Present ? 1u : 0u) | (Min.Present ? 2u : 0u) |
+        (Max.Present ? 4u : 0u) | (!Cursor.empty() ? 8u : 0u);
+    auto& Out = Request.Descriptor;
+    Out = {'C','L','Q','D'};
+    // The private wire carries the predicate's selected type even when the
+    // public Type member was omitted; ordered unfiltered requests remain 0.
+    P::Put32(Out, 1); P::Put32(Out, Flags); P::Put32(Out, Type ? Type : Selected);
+    P::Put32(Out, Direction); P::Put32(Out, Limit);
+    for (const QueryPart* Part : {&Equals, &Min, &Max}) {
+        P::Put32(Out, uint32_t(Part->Data.size())); Out.insert(Out.end(), Part->Data.begin(), Part->Data.end());
+    }
+    P::Put32(Out, uint32_t(Cursor.size())); Out.insert(Out.end(), Cursor.begin(), Cursor.end());
+    if (Out.size() > MaximumQueryDescriptor) throw InvalidQuery{};
+    return Request;
 }
 
 struct Snapshot {
@@ -172,8 +358,60 @@ void PushValue(lua_State* State, const P::Value& Value)
 const char* ErrorName(uint32_t Code)
 {
     static const char* Names[] = {"", "InvalidArgument", "QuotaExceeded", "StorageUnavailable", "StorageBusy",
-        "StorageFull", "StorageCorrupt", "FormatUnsupported", "DeadlineExceeded", "StorageError", "Indeterminate"};
+        "StorageFull", "StorageCorrupt", "FormatUnsupported", "DeadlineExceeded", "StorageError", "Indeterminate",
+        "InvalidQuery", "AmbiguousFieldType", "IndexPreparing", "QueryUnavailable", "InvalidCursor"};
     return Code < std::size(Names) ? Names[Code] : "StorageError";
+}
+struct QueryItem { std::string Key; std::shared_ptr<P::Value> Value; };
+struct QueryPage { std::vector<QueryItem> Items; std::string Cursor; };
+uint32_t QueryEntries(const P::Value& Value)
+{
+    uint32_t Count = uint32_t(Value.Array.size() + Value.Map.size());
+    for (const auto& Child : Value.Array) Count += QueryEntries(*Child);
+    for (const auto& Child : Value.Map) Count += QueryEntries(*Child.second);
+    return Count;
+}
+QueryPage DecodeQuery(const StorageCallback& Work, Vm& Runtime)
+{
+    const auto& Data = Work.Envelope;
+    if (Data.size() < 16 || Data.size() > MaximumQueryResult || std::memcmp(Data.data(), "CLQR", 4) ||
+        P::Read32(Data.data() + 4) != 1) throw P::Failure(P::Error::StorageCorrupt);
+    size_t Offset = 8;
+    auto ReadLength = [&]() -> uint32_t {
+        Deadline(Runtime);
+        if (Data.size() - Offset < 4) throw P::Failure(P::Error::StorageCorrupt);
+        uint32_t Value = P::Read32(Data.data() + Offset); Offset += 4; return Value;
+    };
+    uint32_t Count = ReadLength();
+    if (Count > 100) throw P::Failure(P::Error::StorageCorrupt);
+    QueryPage Result; Result.Items.reserve(Count);
+    uint32_t CursorLength = ReadLength();
+    if (CursorLength > 1712 || CursorLength > Data.size() - Offset) throw P::Failure(P::Error::StorageCorrupt);
+    Result.Cursor.assign(reinterpret_cast<const char*>(Data.data() + Offset), CursorLength); Offset += CursorLength;
+    for (unsigned char Character : Result.Cursor)
+        if (!((Character >= 'A' && Character <= 'Z') || (Character >= 'a' && Character <= 'z') ||
+            (Character >= '0' && Character <= '9') || Character == '-' || Character == '_')) throw P::Failure(P::Error::StorageCorrupt);
+    uint32_t Entries = 0;
+    for (uint32_t Index = 0; Index < Count; ++Index) {
+        uint32_t KeyLength = ReadLength();
+        if (!KeyLength || KeyLength > 128 || KeyLength > Data.size() - Offset) throw P::Failure(P::Error::StorageCorrupt);
+        std::string Key(reinterpret_cast<const char*>(Data.data() + Offset), KeyLength); Offset += KeyLength;
+        if (!P::ValidText(Key, 128, true)) throw P::Failure(P::Error::StorageCorrupt);
+        uint32_t EnvelopeLength = ReadLength();
+        if (EnvelopeLength < 45 || EnvelopeLength > P::MaximumEnvelope || EnvelopeLength > Data.size() - Offset)
+            throw P::Failure(P::Error::StorageCorrupt);
+        P::Identity Identity = Work.Identity; Identity.Key = Key;
+        P::Bytes Envelope(Data.begin() + Offset, Data.begin() + Offset + EnvelopeLength); Offset += EnvelopeLength;
+        auto Value = P::Decode(Identity, Envelope, Runtime.Deadline);
+        // Count the page array slot and the Key/Value wrapper as well as the
+        // decoded Foundation 1 graph. The worker uses the same page budget.
+        uint32_t ItemEntries = 3 + QueryEntries(*Value);
+        if (ItemEntries > 8192 - Entries) throw P::Failure(P::Error::StorageCorrupt);
+        Entries += ItemEntries;
+        Result.Items.push_back(QueryItem{std::move(Key), std::move(Value)});
+    }
+    if (Offset != Data.size() || (Count == 0 && CursorLength)) throw P::Failure(P::Error::StorageCorrupt);
+    return Result;
 }
 int CompleteCallback(lua_State* State)
 {
@@ -182,6 +420,7 @@ int CompleteCallback(lua_State* State)
     Deadline(Runtime);
     uint32_t Error = Work.Error;
     std::shared_ptr<P::Value> Value;
+    QueryPage Page;
     if (!Error && Work.Operation == 1 && Work.Found) {
         try { Value = P::Decode(Work.Identity, Work.Envelope, Runtime.Deadline); }
         catch (const P::Failure& Failure) {
@@ -189,9 +428,28 @@ int CompleteCallback(lua_State* State)
             Error = uint32_t(Failure.Code == P::Error::FormatUnsupported ? P::Error::FormatUnsupported : P::Error::StorageCorrupt);
         }
     }
+    if (!Error && Work.Operation == 6) {
+        try { Page = DecodeQuery(Work, Runtime); }
+        catch (const P::Failure& Failure) {
+            if (Failure.Code == P::Error::DeadlineExceeded) throw DeadlineExceeded{};
+            Error = uint32_t(P::Error::StorageCorrupt);
+        }
+    }
     lua_pushvalue(State, lua_upvalueindex(1));
     if (Error || (Work.Operation == 1 && !Work.Found)) lua_pushnil(State);
     else if (Work.Operation == 1) PushValue(State, *Value);
+    else if (Work.Operation == 6) {
+        lua_createtable(State, 0, 2);
+        lua_createtable(State, int(Page.Items.size()), 0);
+        for (size_t Index = 0; Index < Page.Items.size(); ++Index) {
+            lua_createtable(State, 0, 2);
+            lua_pushlstring(State, Page.Items[Index].Key.data(), Page.Items[Index].Key.size()); lua_setfield(State, -2, "Key");
+            PushValue(State, *Page.Items[Index].Value); lua_setfield(State, -2, "Value");
+            lua_rawseti(State, -2, int(Index + 1));
+        }
+        lua_setfield(State, -2, "Items");
+        if (!Page.Cursor.empty()) { lua_pushlstring(State, Page.Cursor.data(), Page.Cursor.size()); lua_setfield(State, -2, "NextCursor"); }
+    }
     else lua_pushboolean(State, Work.Operation == 2 || Work.Found);
     if (Error) lua_pushstring(State, ErrorName(Error)); else lua_pushnil(State);
     Deadline(Runtime);
@@ -217,12 +475,15 @@ int Submit(lua_State* State, uint32_t Operation)
     int CallbackIndex = Operation == 2 ? 4 : 3;
     if (lua_gettop(State) != CallbackIndex || lua_type(State, CallbackIndex) != LUA_TFUNCTION)
         luaL_error(State, "DataStore callback function required");
-    P::Identity Identity{!Owner.PackageId.empty(), Owner.PackageId, Store.Store, Text(State, 2, 128, true)};
+    QueryRequest Query;
+    if (Operation == 6) Query = ReadQuery(State, Runtime);
+    P::Identity Identity{!Owner.PackageId.empty(), Owner.PackageId, Store.Store,
+        Operation == 6 ? Query.Field : Text(State, 2, 128, true)};
     P::Bytes Envelope;
     if (Operation == 2) {
         Snapshot Reader{Runtime}; auto Value = Reader.Read(State, 3);
         Envelope = P::Encode(Identity, *Value, Runtime.Deadline);
-    }
+    } else if (Operation == 6) Envelope = std::move(Query.Descriptor);
     Deadline(Runtime);
     if (Runtime.StorageSequence == UINT64_MAX) luaL_error(State, "DataStore route exhausted");
     uint64_t Route = ++Runtime.StorageSequence;
@@ -266,18 +527,47 @@ int Submit(lua_State* State, uint32_t Operation)
         "DataStore rate exhausted", "ForeignDataStore", "DataStore admission failed"};
     luaL_error(State, "%s", Status < std::size(Rejections) ? Rejections[Status] : "DataStore host protocol failure");
 }
-// @carbonluau-api {"Owner":"DataStoreService","Name":"GetDataStore","Kind":"Method","Args":[["StoreName","string"]],"Returns":["DataStore"],"Summary":"Disk-free private store acquisition, allowed during publication; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"int GetDataStore(lua_State* State)"}
+// @carbonluau-api {"Owner":"DataStoreService","Name":"GetDataStore","Kind":"Method","Args":[["StoreName","string"],["Options","DataStoreOptions?"]],"Returns":["DataStore"],"Summary":"Disk-free private store acquisition with optional bounded index hints; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"int GetDataStore(lua_State* State)"}
+// @carbonluau-api {"Type":"DataStoreOptions","Kind":"Value","Representation":"Alias","TypeExpression":"{Indexes: {string}?}","Summary":"Optional plain-table Indexes list of at most eight distinct exact top-level UTF-8 field names, 1..64 bytes each; hints request preparation only.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable"}
 int GetDataStore(lua_State* State)
 {
     auto& Service = Facade(State, ServiceType);
-    if (lua_gettop(State) != 2) luaL_error(State, "GetDataStore expects one store name");
+    if (lua_gettop(State) < 2 || lua_gettop(State) > 3) luaL_error(State, "GetDataStore expects a store name and optional Options");
+    Vm& Runtime = RuntimeFor(State);
     std::string Name = Text(State, 2, 64, true);
+    auto Fields = ReadOptions(State, Runtime);
     auto& Names = Service.Owner->StorageNames;
     Names.erase(std::remove_if(Names.begin(), Names.end(), [](const StorageName& Item) { return !Published(Item.Publication); }), Names.end());
     bool Existing = std::any_of(Names.begin(), Names.end(), [&](const StorageName& Item) { return Item.Name == Name; });
     if (!Existing && Names.size() == MaximumStoreNames) luaL_error(State, "DataStore acquired name limit");
+    // Check the effective union before creating the returned facade or changing intent.
+    if (!Fields.empty()) {
+        std::vector<StorageHint> Effective = Service.Owner->StorageHints;
+        for (auto* Scope = Runtime.Publication; Scope; Scope = Scope->Parent)
+            for (const auto& Hint : Scope->StorageHints)
+                MergeStorageHint(Effective, *Hint.Owner, Hint.Store, Hint.Fields);
+        MergeStorageHint(Effective, *Service.Owner, Name, Fields);
+    }
     PushFacade(State, *Service.Owner, StoreType, Name);
-    if (!Existing) Names.push_back(StorageName{std::move(Name), Publication(RuntimeFor(State).Publication)});
+    if (!Existing) Names.push_back(StorageName{Name, Publication(Runtime.Publication)});
+    if (!Fields.empty()) {
+        if (Runtime.Publication) MergeStorageHint(Runtime.Publication->StorageHints, *Service.Owner, Name, Fields);
+        else {
+            // Prepare the committed union before the host accepts intent, then
+            // swap it in without a fallible allocation after acceptance.
+            std::vector<StorageHint> Candidate = Service.Owner->StorageHints;
+            if (MergeStorageHint(Candidate, *Service.Owner, Name, Fields)) {
+                const auto& Hint = *std::find_if(Candidate.begin(), Candidate.end(), [&](const StorageHint& Item) {
+                    return Item.Owner == Service.Owner && Item.Store == Name;
+                });
+                if (!PublishStorageHint(Runtime, *Service.Owner, Hint)) {
+                    if (!Existing) Names.pop_back();
+                    luaL_error(State, "DataStore hint transport rejected");
+                }
+                Service.Owner->StorageHints.swap(Candidate);
+            }
+        }
+    }
     return 1;
 }
 // @carbonluau-api {"Owner":"DataStore","Name":"GetAsync","Kind":"Method","Args":[["Key","string"],["Callback","(PersistedValue?, string?) -> ()"]],"Returns":[],"Summary":"Committed-only non-yielding read submission. Later callback receives fresh value/nil, nil/nil for absence, or nil/ErrorCode. Immediate return means acceptance only; rejected calls owe no callback. D21 keys: 1..128 UTF-8 bytes; 8 pending/namespace, 128 globally; 5-second request deadline. Private owner required; retirement suppresses delivery.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"int GetAsync(lua_State* State)"}
@@ -289,6 +579,11 @@ int SetAsync(lua_State* State)
 // @carbonluau-api {"Owner":"DataStore","Name":"RemoveAsync","Kind":"Method","Args":[["Key","string"],["Callback","(boolean?, string?) -> ()"]],"Returns":[],"Summary":"Committed-only irreversible removal. Later true/nil means removed, false/nil means absent; nil/ErrorCode means failure, possibly Indeterminate. Immediate return means acceptance only; no rollback, replay or guaranteed delivery after retirement.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"int RemoveAsync(lua_State* State)"}
 int RemoveAsync(lua_State* State)
 { return Submit(State, 3); }
+// @carbonluau-api {"Owner":"DataStore","Name":"Query","Kind":"Method","Args":[["Request","DataStoreQuery"],["Callback","(DataStoreQueryResult?, string?) -> ()"]],"Returns":[],"Summary":"Committed-only bounded structured Query submission. Required Field; optional Type, Equals, inclusive Min/Max, Direction, Limit and Cursor. Immediate return means admission only; later callback receives Items/NextCursor or a controlled error. No primary scan, replay or stale callback delivery.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"int Query(lua_State* State)"}
+// @carbonluau-api {"Type":"DataStoreQuery","Kind":"Value","Representation":"Alias","TypeExpression":"{Field: string, Type: (\"number\" | \"string\" | \"boolean\")?, Equals: (number | string | boolean)?, Min: (number | string)?, Max: (number | string)?, Direction: (\"Ascending\" | \"Descending\")?, Limit: number?, Cursor: string?}","Summary":"Plain eight-member structured request; Field is an exact top-level key. Equals excludes Min/Max. Limit defaults to 50 and is bounded to 1..100.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable"}
+// @carbonluau-api {"Type":"DataStoreQueryResult","Kind":"Value","Representation":"Alias","TypeExpression":"{Items: {{Key: string, Value: PersistedValue}}, NextCursor: string?}","Summary":"Fresh bounded page of authoritative persisted value snapshots with an optional opaque continuation cursor.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable"}
+int Query(lua_State* State)
+{ return Submit(State, 6); }
 int ReadOnly(lua_State* State) { luaL_error(State, "DataStore facades are immutable"); }
 int GetService(lua_State* State)
 {
@@ -310,6 +605,7 @@ void Metatable(lua_State* State, const char* Name, bool Service)
             lua_pushcfunction(State, Controlled<GetAsync>, "GetAsync"); lua_setfield(State, -2, "GetAsync");
             lua_pushcfunction(State, Controlled<SetAsync>, "SetAsync"); lua_setfield(State, -2, "SetAsync");
             lua_pushcfunction(State, Controlled<RemoveAsync>, "RemoveAsync"); lua_setfield(State, -2, "RemoveAsync");
+            lua_pushcfunction(State, Controlled<Query>, "Query"); lua_setfield(State, -2, "Query");
         }
         lua_setreadonly(State, -1, 1); lua_setfield(State, -2, "__index"); lua_setreadonly(State, -1, 1);
     }
@@ -333,6 +629,50 @@ bool ReleaseStorageHost(Vm& Runtime, Domain& Owner, uint64_t Route)
     return Owner.Host(Owner.HostIdentity, 32, Frame.data(), uint32_t(Frame.size()), Owner.HostBuffer->data(),
         uint32_t(Owner.HostBuffer->size()), &Written) == 0 && Written == 0;
 }
+
+bool MergeStorageHint(std::vector<StorageHint>& Hints, Domain& Owner, const std::string& Store,
+    const std::vector<std::string>& Fields)
+{
+    if (Fields.empty()) return false;
+    auto Found = std::find_if(Hints.begin(), Hints.end(), [&](const StorageHint& Item) {
+        return Item.Owner == &Owner && Item.Store == Store;
+    });
+    if (Found == Hints.end()) {
+        P::Require(std::count_if(Hints.begin(), Hints.end(), [&](const StorageHint& Item) {
+            return Item.Owner == &Owner;
+        }) < MaximumStoreNames);
+        Hints.push_back(StorageHint{&Owner, Store, Fields});
+        return true;
+    }
+    bool Changed = false;
+    for (const auto& Field : Fields) if (std::find(Found->Fields.begin(), Found->Fields.end(), Field) == Found->Fields.end()) {
+        P::Require(Found->Fields.size() < MaximumHintFields);
+        Found->Fields.push_back(Field);
+        Changed = true;
+    }
+    return Changed;
+}
+
+bool PublishStorageHint(Vm& Runtime, Domain& Owner, const StorageHint& Hint)
+{
+    if (!Owner.Alive || !Owner.Active || !Owner.Host || !Owner.HostBuffer ||
+        Runtime.Owner != std::this_thread::get_id() || GetDomain(Runtime, Owner.Id, true) != &Owner ||
+        Hint.Owner != &Owner || !P::ValidText(Hint.Store, 64, true) ||
+        Hint.Fields.empty() || Hint.Fields.size() > MaximumHintFields) return false;
+    P::Bytes Frame{'C','L','P','H'};
+    Frame.reserve(32 + Hint.Store.size() + Hint.Fields.size() * 68);
+    P::Put32(Frame, 1);
+    P::Put64(Frame, Runtime.GenerationId); P::Put64(Frame, Owner.Id);
+    P::Put32(Frame, uint32_t(Hint.Store.size())); P::Put32(Frame, uint32_t(Hint.Fields.size()));
+    Frame.insert(Frame.end(), Hint.Store.begin(), Hint.Store.end());
+    for (const auto& Field : Hint.Fields) {
+        if (Field.empty() || Field.size() > 64 || !P::ValidText(Field, 64)) return false;
+        P::Put32(Frame, uint32_t(Field.size())); Frame.insert(Frame.end(), Field.begin(), Field.end());
+    }
+    uint32_t Written = 0;
+    return Owner.Host(Owner.HostIdentity, 33, reinterpret_cast<const char*>(Frame.data()), uint32_t(Frame.size()),
+        Owner.HostBuffer->data(), uint32_t(Owner.HostBuffer->size()), &Written) == 0 && Written == 0;
+}
 void ClearStorage(Vm& Runtime, Domain& Owner)
 {
     for (auto& Slot : Owner.StorageCallbacks) if (Slot) {
@@ -342,6 +682,7 @@ void ClearStorage(Vm& Runtime, Domain& Owner)
         ++Runtime.RetiredDiscarded; ++Owner.Discarded;
     }
     Owner.StorageNames.clear();
+    Owner.StorageHints.clear();
 }
 StorageCallback* NextStorage(Domain& Owner)
 {
@@ -360,14 +701,16 @@ ClStatus cl_domain_storage_completion(ClHandle Id, ClHandle DomainId, uint64_t V
     if (!Runtime || !Runtime->State || Runtime->Admission || Runtime->ThreadId || Runtime->GenerationId != VmGeneration)
         return CL_INVALID_ARGUMENT;
     Domain* Owner = GetDomain(*Runtime, DomainId, true);
-    if (!Owner || !Route || Found > 1 || Error > 10 || Error == 1 || Length > CarbonLuau::Persistence::MaximumEnvelope || (Length && !Envelope))
+    if (!Owner || !Route || Found > 1 || Error > 15 || Error == 1 || Length > 67584 || (Length && !Envelope))
         return CL_INVALID_ARGUMENT;
     StorageCallback* Slot = nullptr;
     for (auto& Item : Owner->StorageCallbacks) if (Item && Item->Route == Route) Slot = Item.get();
     if (!Slot || !Slot->Accepted || Slot->Ready || Runtime->Sequence == UINT64_MAX) return CL_INVALID_ARGUMENT;
-    if ((Error && (Found || Length)) || (Slot->Operation != 1 && Length) ||
+    if ((Error && (Found || Length)) || (Slot->Operation != 1 && Slot->Operation != 6 && Length) ||
         (!Error && Slot->Operation == 2 && !Found) ||
-        (!Error && Slot->Operation == 1 && ((Found != 0) != (Length != 0) || (Found && Length < 45)))) return CL_INVALID_ARGUMENT;
+        (!Error && Slot->Operation == 1 && ((Found != 0) != (Length != 0) || (Found && Length < 45))) ||
+        (!Error && Slot->Operation == 6 && (Found || Length < 16)) ||
+        (Slot->Operation != 6 && (Error > 10 || Length > CarbonLuau::Persistence::MaximumEnvelope))) return CL_INVALID_ARGUMENT;
     try {
 #ifdef CARBONLUAU_TESTING
         if (TestStorageCopyFailure) throw std::bad_alloc();

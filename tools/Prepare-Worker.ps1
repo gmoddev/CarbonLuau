@@ -1,8 +1,10 @@
+param(
+    [string]$Root = 'C:\Sandbox\Codex',
+    [string]$Server = (Join-Path $Root 'Builds\CarbonLuau\server-win')
+)
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$Root = 'C:\Sandbox\Codex'
 $Cache = Join-Path $Root 'Cache\CarbonLuau'
-$Server = Join-Path $Root 'Builds\CarbonLuau\server-win'
 New-Item -ItemType Directory -Force $Cache,$Server | Out-Null
 if (!(Test-Path "$Cache\steamcmd\steamcmd.exe")) {
     Invoke-WebRequest https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip -OutFile "$Cache\steamcmd.zip" -UseBasicParsing

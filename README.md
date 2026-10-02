@@ -1,8 +1,8 @@
 # CarbonLuau
 
-One of the first public luau runtimes in Rust
+Among the first public Luau runtimes built specifically for Rust server modding
 
-CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers, with a Roblox/Luau-familiar scripting model, addons, Player gameplay APIs and retained GUI.
+CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers through a Roblox-familiar programming model, with gameplay APIs, composable addons, persistent data, retained GUI, and dedicated development tooling.
 
 The latest published release is [v0.4.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.4.0). The `0.4.0` release is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
 
@@ -71,7 +71,12 @@ not package 0.5.0 publication or retroactive 0.4 API availability. Its
 [author guide](docs/api/Persistence.md) and examples target the new bindings.
 The [canonical design](docs/PersistenceFoundation1.md), qualified private 1A
 substrate and [1B public evidence](docs/PersistenceFoundation1B-Validation.md)
-remain separate evidence owners. Query and Foundation 2 have not begun.
+remain separate evidence owners. [Persistence Foundation 2](docs/PersistenceFoundation2.md)
+defines future structured `Query` requests using `Field`, `Equals` or inclusive
+`Min`/`Max`. Preparation is automatic; optional `Indexes = { "Coins", "Level" }`
+hints request early preparation. Authors manage no schemas, versions or migrations.
+The [canonical correction audit](docs/PersistenceFoundation2-Validation.md) is
+documentation evidence; implementation has not begun.
 [World/Entity Foundation 1](docs/WorldEntityFoundation1.md)
 is host-primitive-gated/deferred; Entity-1A remains blocked by the
 [exact-lifetime proof gap](docs/WorldEntityLifetimeInvestigation.md).
@@ -80,7 +85,7 @@ Start with [AICONTEXT.md](AICONTEXT.md), which maps each rule to its canonical d
 
 ## AI Disclaimer
 
-AI tools are used during the development of this addon. However, the project's architecture, design decisions, requirements, and overall direction are substantially human-designed and reviewed. AI is used primarily as a development and implementation aid rather than as the source of the project's design.
+AI tools are used during the development of this addon. However, the project's architecture, design decisions, requirements, and overall direction are substantially human-designed and reviewed.
 
 ## License
 

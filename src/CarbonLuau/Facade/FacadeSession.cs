@@ -242,7 +242,7 @@ namespace Carbon.Plugins
                     if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
                 }
             }
-            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); Gui.Dispose(); }
+            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); ClearStorageHints(); Gui.Dispose(); }
             private bool Gate(string[] Fields)
             {
                 if (!Active || !World.IsActive(this) || Disposed || Fields.Length < 5) return false;
@@ -419,7 +419,7 @@ namespace Carbon.Plugins
             private uint HostCall(ulong ExpectedDomainLifetime, uint Code, IntPtr Request, uint Length, IntPtr Response, uint Capacity, out uint Written)
             {
                 Written = 0;
-                if (Code==31 || Code==32) return StorageCall(ExpectedDomainLifetime,Code,Request,Length);
+                if (Code==31 || Code==32 || Code==33) return StorageCall(ExpectedDomainLifetime,Code,Request,Length);
                 try {
                     World.Players.CheckOwner();
                     if (Disposed || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;
