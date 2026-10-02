@@ -8,6 +8,13 @@ $GuiGuide = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui.md')
 $GuiReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Gui-Reference.md')
 $GuiDescriptors = Get-Content -Raw -LiteralPath (Join-Path $Root 'src/CarbonLuau.Core/Gui/SharedGuiDescriptors.cs')
 $ReleaseNotes = Get-Content -Raw -LiteralPath (Join-Path $Root "docs/releases/$($Release.releaseVersion).md")
+$Sidebar = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/_sidebar.md')
+$HomeDocument = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/Home.md')
+if (!$Sidebar.Contains("releases/$($Release.releaseVersion).md") -or
+    !$HomeDocument.Contains("v$($Release.releaseVersion)")) { throw 'Current release is missing from hosted documentation navigation' }
+foreach ($QueryDocument in @('DataStoreOptions','DataStoreQuery','DataStoreQueryResult')) {
+    if (!$Sidebar.Contains("api/Types/$QueryDocument.md")) { throw "Query reference missing from hosted documentation navigation: $QueryDocument" }
+}
 $Player1C = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1C.md')
 $Player1D = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1D.md')
 $Player1FA = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1FA.md')
