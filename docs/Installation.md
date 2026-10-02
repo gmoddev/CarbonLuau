@@ -119,6 +119,22 @@ Package authors can start from the bundled `examples/addons/economy` and
 [provider protocol](api/Addon-Providers.md). CarbonLuau unload invalidates every
 provider token; a provider that remains loaded must register again after reload.
 
+## Private Entity lifetime observer
+
+The package contains a private Entity-lifetime observer, but **no public
+`Workspace` or `Entity` scripting API** yet. On the exact qualified Rust/Carbon
+target, CarbonLuau must be present in Carbon's initial plugin batch before world
+restoration. First installing CarbonLuau into an already-running server cannot
+establish the Entity history; the server log reports the observer unavailable
+and a server restart is required. A full CarbonLuau plugin unload/reload in the
+same running process also creates an observation gap and requires restart for
+Entity qualification. Ordinary Luau VM/domain reload does not require a server
+restart while the plugin observer remains continuously installed. Unsupported
+host or patch drift fails closed without disabling unrelated Luau functionality.
+See [Entity-1A qualification](WorldEntityFoundation1A-Validation.md) for exact
+binary pins and evidence. No security policy change or manual patch installation
+is required.
+
 ## GUI scripts
 
 The v0.4.0 candidate includes the experimental server-driven GUI surface. A

@@ -49,8 +49,9 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Player Interaction Foundation 1F-C combined closure and cold-module mutation correction | [PlayerInteractionFoundation1FC.md](docs/PlayerInteractionFoundation1FC.md) |
 | Canonical World/Entity Foundation 1 semantics | [D20 in Invariants.md](docs/Invariants.md#d20--worldentity-foundation-1) |
 | World/Entity Foundation 1 rationale, host evidence, phase routing and qualification gates | [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) |
-| World/Entity Foundation 1A blocked lifetime-proof investigation (not implementation) | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) |
-| Authoritative Entity lifetime investigation, negative evidence and D20 deferral | [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
+| Entity-1A qualified private startup-observed Spawn-epoch substrate, exact target and Entity-1B handoff | [WorldEntityFoundation1A-Validation.md](docs/WorldEntityFoundation1A-Validation.md) |
+| Historical blocked Entity lifetime investigation and negative evidence | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) and [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
+| Historical Spawn-prefix and base-completion counterexamples; startup observer investigation | [WorldEntitySpawnEpochProbe.md](docs/WorldEntitySpawnEpochProbe.md), [WorldEntityCompletionFenceInvestigation.md](docs/WorldEntityCompletionFenceInvestigation.md) and [WorldEntityStartupObserverInvestigation.md](docs/WorldEntityStartupObserverInvestigation.md) |
 | Canonical Persistence Foundation 1 architecture (resolved; private 1A qualified) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
 | Persistence design source evidence, consistency review and qualification limits | [PersistenceFoundation1-Validation.md](docs/PersistenceFoundation1-Validation.md) |
 | Persistence-1A private backend/codec/namespace/queue substrate PASS; WAL rejection and supported recovery qualified; no public API qualified by 1A | [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md); historical DELETE and physical-proof negative evidence preserved |
@@ -296,18 +297,20 @@ World/Entity Foundation 1 architecture is canonically owned by D20 in
 [Invariants.md](docs/Invariants.md#d20--worldentity-foundation-1).
 [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) is the supporting
 host-evidence, rationale, exact-lifetime, phase-routing and qualification record.
-D20 is **HOST-PRIMITIVE-GATED / DEFERRED**: accepted future architecture, with
-Entity-1A **BLOCKED** until a supported authoritative incarnation/retirement
-mechanism closes the exact-lifetime proof. Preserve the negative evidence and
-its correction: actual pooled BaseEntity reuse was not demonstrated on the tested
-prefab. No production `Workspace` or `Entity` API may proceed while gated.
-After that gate closes, Entity-1A is the internal exact-lifetime/publication
-substrate; Entity-1B is the keyed read-only `Workspace:GetEntityById` plus
+D20's **private Entity-1A lifetime gate is closed** only for the exact
+Windows/Linux host targets and initial-startup deployment recorded in
+[Entity-1A validation](docs/WorldEntityFoundation1A-Validation.md). The
+qualified Carbon AutoPatch observer must precede world restoration; first-time
+hotload or full plugin unload/reload cannot requalify in the same server process
+and requires restart. Preserve the older negative evidence: actual pooled
+BaseEntity reuse was not demonstrated on the tested prefab. No public
+`Workspace` or `Entity` API has been implemented. Entity-1B may separately
+implement keyed read-only `Workspace:GetEntityById` plus
 `Entity.Id`, `Entity.Prefab` and `Entity.Position` exact-host qualification;
 Entity-1C is lifecycle/scale/public closure. Whole-world enumeration, prefab
 filtering, spatial queries, lifecycle Signals, Spawn, Destroy and specialized
 entity capabilities require later explicit architecture rather than being
-implicitly authorized by D20. D20 changes no current package/API/ABI/provider/
+implicitly authorized by D20. Entity-1A changes no current package/API/ABI/provider/
 schema/Luau identity.
 
 Persistence Foundation 1 is the next runtime foundation under

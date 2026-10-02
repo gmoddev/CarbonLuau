@@ -1,6 +1,12 @@
 # CarbonLuau World/Entity Foundation 1
 
-Status: **HOST-PRIMITIVE-GATED / DEFERRED — accepted future architecture; Entity-1A BLOCKED**
+Status: **Entity-1A private lifetime substrate qualified on pinned hosts; public World/Entity deferred**
+
+The original 2026-09-23 gate below is historical. The later
+[Entity-1A qualification](WorldEntityFoundation1A-Validation.md) and amended
+[D20](Invariants.md#d20--worldentity-foundation-1) close the private
+exact-lifetime gate through continuous startup observation and full-Spawn
+completion fencing. They do not implement a public `Workspace`/`Entity` API.
 
 Closure adopted 2026-09-23: [D20](Invariants.md#d20--worldentity-foundation-1)
 requires a supported authoritative incarnation/retirement primitive before any
@@ -807,9 +813,12 @@ inheritance or generic `CallMethod`.**
 
 ## 20. Implementation routing
 
-Architecture adoption alone authorizes no production API. Entity-1A is BLOCKED;
-Entity-1B/1C are deferred until D20's host-primitive gate closes. Persistence
-Foundation 1 is the next design track, not a workaround for Entity identity.
+Architecture adoption alone authorizes no production API. The private Entity-1A
+gate has since closed only within the pinned host/deployment envelope in
+[its validation](WorldEntityFoundation1A-Validation.md). Entity-1B remains the
+separately scoped read-only lookup/public-facade phase; Entity-1C remains public
+lifecycle/scale closure. The original conditional phase description below is
+retained as historical design, not an instruction to reimplement Entity-1A.
 
 ### Entity-1A — exact identity/lifetime substrate
 
