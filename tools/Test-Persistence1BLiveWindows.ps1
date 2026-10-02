@@ -350,8 +350,10 @@ try {
     $Manifest = Join-Path $Server 'steamapps\appmanifest_258550.acf'
     $BuildId = 'unknown'
     if ((Test-Path -LiteralPath $Manifest) -and ((Get-Content -LiteralPath $Manifest -Raw) -match '"buildid"\s+"(\d+)"')) { $BuildId = $Matches[1] }
+    $RunScope = if ($Query2DSupplement) { 'representative 1B plus live 2D Query supplement' }
+        else { 'representative 1B only' }
     [pscustomobject]@{RustSteamBuildId=$BuildId; Server=$Server; RuntimeVersionEvidence='server.log';
-        ClientQualification='not performed'; Scope='representative 1B only'} |
+        ClientQualification='not performed'; Scope=$RunScope} |
         ConvertTo-Json | Set-Content -LiteralPath (Join-Path $RunDirectory 'environment.json')
     foreach ($Value in $Targets) {
         $Value.Target = Assert-SandboxPath $Value.Target
@@ -642,4 +644,4 @@ try {
 }
 if ($RunFailure) { throw $RunFailure }
 if (!$Restored) { throw '[CarbonLuau:Persistence1BWorker] Restoration was not confirmed' }
-Write-Output "[CarbonLuau:Persistence1BWorker] REPRESENTATIVE LIVE PASS; legacy trees restored; evidence=$RunDirectory; no authenticated-client/1C claim"
+Write-Output "[CarbonLuau:Persistence1BWorker] REPRESENTATIVE LIVE PASS; 2D Query supplement=$Query2DSupplement; legacy trees restored; evidence=$RunDirectory; no authenticated-client claim"

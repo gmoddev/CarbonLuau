@@ -1,6 +1,6 @@
 # Persistence Foundation 2 — bounded derived indexes and Query
 
-Status: **CANONICAL ARCHITECTURE; PRIVATE 2A PASS; 2B PASS; PUBLIC 2C IMPLEMENTED; 2D NOT STARTED**.
+Status: **CANONICAL ARCHITECTURE; PRIVATE 2A PASS; 2B PASS; PUBLIC 2C PASS; 2D COMBINED QUALIFICATION IN PROGRESS**.
 The 2026-09-29 final public-design correction preceded implementation.
 [2A evidence](PersistenceFoundation2A.md) records qualified private derived
 state. The [2B options/hint/demand slice](PersistenceFoundation2B.md) is
@@ -896,6 +896,9 @@ or replaying the user's Query; run the query statement at most once.
 
 ### Persistence-2D — combined closure
 
+[The combined qualification record](PersistenceFoundation2D.md) owns the
+measured results and final disposition for this phase.
+
 - Windows/Linux live qualification;
 - concurrent build/write stress;
 - crash during build/publication/active maintenance;
@@ -953,7 +956,7 @@ demand/waiters; Query remains a separate 2C task.
 | Query fallback scan | forbidden |
 | SQL boundary | fixed prepared statement families; no author SQL/syntax fragments |
 | API identity | 0.5.0-experimental; package remains 0.4.0 |
-| Production implementation | private 2A PASS; 2B PASS; public Query not started |
+| Production implementation | private 2A PASS; 2B PASS; public 2C Query PASS; combined 2D qualification in progress |
 
 
 ## 22. Deferred features

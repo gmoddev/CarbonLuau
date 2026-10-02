@@ -93,14 +93,16 @@ The additive reserved completion export requires native ABI 1.5; no provider
 protocol, addon schema or Luau change is implied.
 
 Persistence Foundation 2 architecture is resolved by [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query)
-and [PersistenceFoundation2.md](PersistenceFoundation2.md). Its future Query uses
+and [PersistenceFoundation2.md](PersistenceFoundation2.md). Its implemented Query uses
 required `Field`, structured `Equals` or inclusive `Min`/`Max`, automatic
 preparation and optional `Indexes` string-list hints. Authors manage no schemas,
 versions, migrations or index lifecycle. It joins the same unpublished
 `0.5.0-experimental` scripting identity. The [final correction audit](PersistenceFoundation2-Validation.md)
 is architecture evidence. The 2B optional hint binding and metadata are
-[qualified](PersistenceFoundation2B.md); public Query has no binding or generated metadata. No package
-bump or preview availability is implied.
+[qualified](PersistenceFoundation2B.md); public Query bindings and generated
+metadata are [qualified by 2C](PersistenceFoundation2C.md). Combined closure is
+recorded separately in [2D](PersistenceFoundation2D.md). No package bump or
+preview availability is implied by the earlier phase records.
 
 ## Dependency and host upgrades
 
@@ -796,7 +798,8 @@ operational budget are adopted private D21 limits, not a released public
 support envelope. File extents and allocated-block observations are
 different guarantees. The 2B optional hint binding is [qualified](PersistenceFoundation2B.md).
 Public Query and authenticated keyset cursors are implemented under
-[2C](PersistenceFoundation2C.md); combined Foundation 2 closure remains 2D.
+[2C](PersistenceFoundation2C.md); the [combined 2D record](PersistenceFoundation2D.md)
+owns final crash/lifecycle, concurrent, platform and live qualification.
 
 The [D22 correction audit](PersistenceFoundation2-Validation.md) owns the
 documentation-only baseline verdict. Check D21 compatibility, the structured
@@ -810,8 +813,8 @@ matches rather than rewriting qualified Foundation 1 evidence.
 Run the existing API/link and architecture checks, Markdown syntax/navigation
 checks, release-identity inspection and a diff proving production source and
 generated bindings are untouched. Verify those checks in hosted CI and deploy
-the documentation. Unrelated runtime results do not qualify this amendment or
-the unimplemented Query feature. Persistence-2A through 2D own the implementation
+the documentation. Unrelated runtime results did not qualify that historical
+design amendment or the then-unimplemented Query feature. Persistence-2A through 2D own the implementation
 and exact SQLite/platform qualification gates in the detailed D22 record.
 
 ## Phase 0 consistency review

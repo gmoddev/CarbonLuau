@@ -63,6 +63,24 @@ end)");
                     () => F.Tick(), "public Query example completion: " + Example);
                 F.DrainChecked();
             }
+            // Complete the real worker request without draining the Luau
+            // callback, then retire its root domain. A queued result belongs
+            // to the old domain and must not enter its replacement.
+            long CompletedBeforeRetirement = F.Queue.QueryCompleted;
+            F.Execute(Store + @"
+S:Query({Field='Score',Equals=1},function()
+    print('STALE_QUERY_CALLBACK')
+end)");
+            Check(F.Queue.PendingCount == 1, "accepted Query retains one original reservation");
+            WaitFor(() => F.Queue.QueryCompleted > CompletedBeforeRetirement, () => F.Tick(false),
+                "worker Query result reached owner admission before replacement");
+            Check(F.Queue.PendingCount == 1, "callback reservation remains until delivery or retirement");
+            F.Source = "return true";
+            F.Reload();
+            F.DrainChecked();
+            for (int Index = 0; Index < 4; ++Index) F.Tick();
+            Check(!F.Logs.ToString().Contains("STALE_QUERY_CALLBACK") && F.Queue.WaiterCount == 0,
+                "retired Query callback must not enter replacement domain");
         }
         using (var F = new Fixture(Native, Worker, Path.Combine(Parent, "query-combined"))) {
             F.Execute(@"
@@ -102,6 +120,6 @@ Step(1)
             Check(F.Queue.PendingCount == 0 && F.Queue.WaiterCount == 0,
                 "combined public Query/write/read/remove leaves no reservations");
         }
-        Console.WriteLine("[CarbonLuau:Persistence2D] real VM/public facade -> worker Query, preparation, pagination-under-writes, callback chains and five examples PASS");
+        Console.WriteLine("[CarbonLuau:Persistence2D] real VM/public facade -> worker Query, preparation, pagination-under-writes, queued-result retirement, callback chains and five examples PASS");
     }
 }
