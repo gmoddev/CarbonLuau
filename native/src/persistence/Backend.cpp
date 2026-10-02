@@ -557,6 +557,7 @@ Result Backend::QueryDerived(const Identity& Id,const Bytes& Descriptor,Deadline
         Require(Clock::now()<End,Error::DeadlineExceeded);
         try {CheckFiles();}catch(const Failure& Problem){if(Problem.Code!=Error::DeadlineExceeded)Healthy=false;throw;}
         Sql(Database,"BEGIN");Transaction=true;
+        STORAGE_POINT("query-after-begin");
         auto View=Indexes->Inspect(Id,Id.Key);
         if(!View.Admitted || View.Status!=Derived::State::Active){
             if(Request.Flags&8)throw Failure(QueryWire::InvalidCursor);
@@ -658,6 +659,7 @@ Result Backend::QueryDerived(const Identity& Id,const Bytes& Descriptor,Deadline
                 }
                 Expanded+=ItemEntries+3;QueryWire::Append(Page,Key);QueryWire::Append(Page,Blob);
                 LastScalar=std::move(Scalar);LastKey=std::move(Key);++Count;
+                if(Count==1)STORAGE_POINT("query-after-first-item");
             }
             if(More || Candidates>=101)break;
         }
@@ -669,7 +671,9 @@ Result Backend::QueryDerived(const Identity& Id,const Bytes& Descriptor,Deadline
         Bytes Output{'C','L','Q','R'};Put32(Output,1);Put32(Output,Count);QueryWire::Append(Output,Cursor);
         Output.insert(Output.end(),Page.begin()+16,Page.end());
         Require(Output.size()<=QueryWire::MaximumPage,Error::StorageError);
+        STORAGE_POINT("query-before-commit");
         Sql(Database,"COMMIT");Transaction=false;
+        STORAGE_POINT("query-after-commit");
         try {CheckFiles();} catch(const Failure& Problem) {
             if(Problem.Code!=Error::DeadlineExceeded)Healthy=false;
             throw;

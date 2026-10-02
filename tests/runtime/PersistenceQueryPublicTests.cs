@@ -68,13 +68,22 @@ end)");
             // to the old domain and must not enter its replacement.
             long CompletedBeforeRetirement = F.Queue.QueryCompleted;
             F.Execute(Store + @"
-S:Query({Field='Score',Equals=1},function()
+S:Query({Field='Score',Equals=1,Limit=1},function()
     print('STALE_QUERY_CALLBACK')
 end)");
             Check(F.Queue.PendingCount == 1, "accepted Query retains one original reservation");
-            WaitFor(() => F.Queue.QueryCompleted > CompletedBeforeRetirement, () => F.Tick(false),
-                "worker Query result reached owner admission before replacement");
-            Check(F.Queue.PendingCount == 1, "callback reservation remains until delivery or retirement");
+            var QueuedRequest = OnlyRequest(F);
+            WaitFor(() => System.Threading.Volatile.Read(ref QueuedRequest.State) == 2,
+                () => F.Worker.Tick(), "worker completed Query before owner callback admission");
+            var QueuedPage = QueuedRequest.Envelope;
+            Check(QueuedPage != null && QueuedPage.Length >= 16 &&
+                BitConverter.ToUInt32(QueuedPage, 12) > 0,
+                "worker created a cursor before undelivered callback retirement");
+            WaitFor(() => F.Queue.QueryCompleted > CompletedBeforeRetirement,
+                () => F.Tick(false), "completed Query handed off before Luau callback drain");
+            Check(QueuedRequest.HandedOff &&
+                F.Queue.PendingCount == 1 && QueuedRequest.Envelope == null,
+                "owner handed off cursor page and released managed bytes before Luau callback");
             F.Source = "return true";
             F.Reload();
             F.DrainChecked();

@@ -3,6 +3,7 @@
 #define main DerivedFunctionalMain
 #include "DerivedTests.cpp"
 #undef main
+#include "Query.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <thread>
@@ -91,6 +92,13 @@ void TestCheckpoint(const char* Stage)
 }
 namespace {
 const Identity CrashId{false, "", "Store", "Key"};
+Bytes QueryDescriptor()
+{
+    Bytes Request{'C','L','Q','D'};
+    Put32(Request,1);Put32(Request,0);Put32(Request,2);Put32(Request,0);Put32(Request,10);
+    for(int Field=0;Field<4;++Field)QueryWire::Append(Request,std::string());
+    return Request;
+}
 void VerifyCrash(Backend& Store)
 {
     for (unsigned Step = 0; Step < 4096; ++Step) {
@@ -123,7 +131,12 @@ int CrashChild(const std::filesystem::path& Folder, const std::string& Stage, co
         } else VerifyCrash(Store);
         CrashAt = Stage;
         CapacityArmed = Mode == "capacity-set";
-        if (Mode == "prepare") Check(Store.PrepareDerived(CrashId, "Field", Until()), "child preparation");
+        if (Mode == "query") {
+            Identity QueryId=CrashId;QueryId.Key="Field";
+            Check(Store.QueryDerived(QueryId,QueryDescriptor(),Until()).Code==Error::None,
+                "query child reached normal completion without crash checkpoint");
+        }
+        else if (Mode == "prepare") Check(Store.PrepareDerived(CrashId, "Field", Until()), "child preparation");
         else if (Mode == "maintain" || Mode == "cleanup") Check(Store.MaintainDerived(Until()), "child maintenance");
         else if (Mode == "remove")
             Check(Store.Execute(Operation::Remove, CrashId, {}, Until()).Code == Error::None, "child removal");
@@ -397,6 +410,35 @@ void DerivedCrashes(const std::filesystem::path& Parent, const std::filesystem::
         CheckProjection(Folder, CrashId);
     }
 }
+void QueryCrashes(const std::filesystem::path& Parent, const std::filesystem::path& Exe)
+{
+    for(const char* Stage : {"query-after-begin","query-after-first-item",
+        "query-before-commit","query-after-commit"}) {
+        const auto Folder=Fixture(Parent,Stage);
+        {
+            Backend Store(Folder,Until());Set(Store,CrashId,Record(Numeric(7)));
+            Check(Store.PrepareDerived(CrashId,"Field",Until()),"query crash preparation");
+            Drain(Store);
+            Identity QueryId=CrashId;QueryId.Key="Field";
+            Check(Store.QueryDerived(QueryId,QueryDescriptor(),Until()).Code==Error::None,
+                "query crash fixture ready");
+        }
+        Check(Spawn(Exe,{"derived-child",Folder.string(),Stage,"query"})==77,
+            "query crash checkpoint reached");
+        {
+            Backend Store(Folder,Until());
+            const auto Read=Store.Execute(Operation::Get,CrashId,{},Until());
+            Check(Store.Available() && Read.Code==Error::None && Read.Found &&
+                Read.Envelope==Encode(CrashId,Record(Numeric(7)),Until()),
+                "query crash preserves authoritative primary");
+            VerifyCrash(Store);
+            Identity QueryId=CrashId;QueryId.Key="Field";
+            Check(Store.QueryDerived(QueryId,QueryDescriptor(),Until()).Code==Error::None,
+                "query crash restart readmitted correct derived state");
+        }
+        CheckProjection(Folder,CrashId);
+    }
+}
 
 void ProgressCrashes(const std::filesystem::path& Parent, const std::filesystem::path& Exe)
 {
@@ -529,6 +571,7 @@ int main(int Count, char** Arguments)
             return 0;
         }
         UpgradeCrashes(Root, Exe); TransactionCrashes(Root, Exe); DerivedCrashes(Root, Exe);
+        QueryCrashes(Root,Exe);
         ProgressCrashes(Root, Exe); CleanupCrashes(Root, Exe); QuarantineBatchCrash(Root, Exe);
         SavepointFailures(Root); RealPageFull(Root); CommittedAcknowledgementLost(Root);
         CapacityWithdrawal(Root, false); CapacityWithdrawal(Root, true);

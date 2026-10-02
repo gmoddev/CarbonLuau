@@ -30,8 +30,11 @@ real-worker Query reaches owner-thread completion admission while Luau callback
 drain is withheld; root replacement then discards the old callback, without
 entering the new domain or retaining its reservation.
 
-The already qualified private 2A crash fixture is rerun as part of the final
-native matrix. It injects process termination around derived preparation,
+The private crash fixture is rerun as part of the final native matrix. It
+additionally kills a real process at four Query checkpoints: after the read
+transaction begins, after its first result, before COMMIT, and after COMMIT.
+Restart preserves authoritative primary data and correct-or-withdrawn derived
+admission. The fixture also injects process termination around derived preparation,
 checkpoint, final publication, savepoint/release, rollback/withdrawal,
 COMMIT, and cleanup, including nonfinal build progress. After restart it
 compares authoritative primary state with old/new transaction outcomes and
@@ -54,9 +57,9 @@ schema, or SQL authority was introduced by 2D.
 
 | Gate | Observation |
 |---|---|
-| Windows x64 native | 22/22 CTest PASS, including combined Query, derived crash/fault/budget/plan, Foundation 1 quota/corruption/physical and native teardown. |
-| Linux x64 native | 23/23 CTest PASS on qualified ext4, same paths plus Linux-specific coverage. |
-| Linux ASan/UBSan/leak | 23/23 CTest PASS with leak detection enabled; no sanitizer suppression added. |
+| Windows x64 native | 22/22 CTest PASS before the four additional Query crash checkpoints; focused updated crash fixture PASS. Final full rerun pending. |
+| Linux x64 native | 23/23 CTest PASS on qualified ext4 before the four additional Query crash checkpoints; focused updated crash fixture PASS. Final full rerun pending. |
+| Linux ASan/UBSan/leak | 23/23 CTest PASS with leak detection enabled before the new checkpoints; focused updated crash fixture PASS under ASan. Final full rerun pending. |
 | Windows and Linux managed worker | PASS: real supervised SQLite worker, D21 queue/replay/rate/lifecycle, 2B demand/waiter/retirement, 8 builds/512 records, and 1,000 stale-completion cycles. |
 | Windows and Linux real compiler/VM | Focused 2C/2D public Query and Foundation 1C combined stress PASS. The latter runs 2,200 Sets, 4,400 Gets, 2,200 Removes, root plus ten addons and twelve complete host/worker reopen cycles. |
 | Full runtime regressions | PASS on both platforms, including addon/provider, GUI, Player, module/publication, scheduler/recovery and persistence fixtures. |
@@ -69,7 +72,7 @@ Windows uses a fresh isolated Rust server on dockerbox under the approved
 `D:\Sandbox\Codex\Workspaces\CarbonLuauPersistence2D` tree: Rust Steam build
 `25653776`, current production Carbon Windows archive SHA-256
 `cb39462628b80a0e430ae5130eb45755eb303ffac4f8344ca2e955de3ac623ba`.
-Receipt `persistence1b-20261001-200049-c96b6e56` records actual plugin load,
+Receipt `persistence1b-20261001-200848-fcd59f5c` records actual plugin load,
 root/addon Get/Set/Remove, Query hint/automatic readiness, equality, inclusive
 range, descending order and continuation after a Set, plus plugin unload/reload,
 native unmap, stopped worker/compiler and restored isolated installation.
