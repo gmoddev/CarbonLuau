@@ -4,13 +4,13 @@ Among the first public Luau runtimes built specifically for Rust server modding
 
 CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers through a Roblox-familiar programming model, with gameplay APIs, composable addons, persistent data, retained GUI, and dedicated development tooling.
 
-The latest published release is [v0.4.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.4.0). The `0.4.0` release is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
+The latest published release is [v0.5.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.5.0). The `0.5.0` release is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
 
 ## Install and write a script
 
-CarbonLuau targets Windows x64 and glibc Linux x64 servers running Carbon. Current host evidence uses Carbon 2.0.259 and Rust build 25353106. See [compatibility](docs/Compatibility.md) for the exact platform and feature qualification limits.
+CarbonLuau targets Windows x64 and glibc Linux x64 servers running Carbon. Persistence-2D live host evidence uses Rust build `25653776` and Carbon `2.0.261.0` on Linux; earlier gameplay/GUI evidence uses other recorded builds. See [compatibility](docs/Compatibility.md) for exact platform and feature limits.
 
-Use the release archive matching the server OS. Install `CarbonLuau.cszip` in `carbon/plugins` and both matching native files, the runtime DLL or SO and its compiler worker, in `carbon/data/CarbonLuau/native/win-x64` or `native/linux-x64`. On Linux, run `chmod 0755 carbon/data/CarbonLuau/native/linux-x64/carbonluau_compiler` after extraction. Put your entrypoint at `carbon/data/CarbonLuau/scripts/init.luau` and create its `modules` directory, even when empty. Do not mix platform binaries or overwrite existing scripts.
+Use the release archive matching the server OS. Install `CarbonLuau.cszip` in `carbon/plugins` and all three matching native files—the runtime DLL or SO, compiler worker and storage worker—in `carbon/data/CarbonLuau/native/win-x64` or `native/linux-x64`. On Linux, make both workers executable after extraction. Put your entrypoint at `carbon/data/CarbonLuau/scripts/init.luau` and create its `modules` directory, even when empty. Do not mix platform binaries or overwrite existing scripts.
 
 ```lua
 local Players = game:GetService("Players")
@@ -27,7 +27,7 @@ For clean-checkout builds, checksums, and provenance, see the [release reproduci
 
 ## What is included
 
-The `CarbonLuau 0.4.0-experimental` API provides controlled modules/tasks, Player events, permission-protected commands, live position/health reads, inventory checks, verified GiveItem/TakeItem and Teleport. Execution uses bounded logging, memory and deadlines. Provider-owned addon packages share one VM with exact dependency lifetimes and explicit public modules imported through `require("@id[/path]")`.
+The `CarbonLuau 0.5.0-experimental` API retains controlled modules/tasks, Player events, permission-protected commands, live position/health reads, inventory checks, verified GiveItem/TakeItem and Teleport. It adds private local durable stores with callback-based Get/Set/Remove and bounded structured Query. Execution uses bounded logging, memory and deadlines. Provider-owned addon packages share one VM with exact dependency lifetimes and explicit public modules imported through `require("@id[/path]")`.
 
 Addon packages are registered by a loaded Carbon provider plugin. CarbonLuau does not scan an addon directory or download packages. See [addon composition](docs/api/Addons.md), the [provider protocol](docs/api/Addon-Providers.md), and the [Foundation E qualification record](docs/FoundationE.md).
 
@@ -43,8 +43,9 @@ cursor, click-receipt and reconciliation behavior remains unqualified.
 syntax, API reference and project diagnostics, plus trusted language analysis
 and GUI preview on Windows/Linux x64. The preview includes hierarchy, properties,
 viewport controls and resource usage; geometry comes from the runtime's shared
-implementation. Install a matching platform VSIX without a source checkout.
-macOS remains static-only. Preview uses offline image/font approximations and
+implementation. The v0.4.0 VSIX is pinned to the older runtime/API and is not
+a qualified matching v0.5.0 artifact; a compatible editor pack requires separate
+qualification. macOS remains static-only. Preview uses offline image/font approximations and
 does not simulate gameplay or connect to a server.
 
 ## Limits
@@ -64,19 +65,14 @@ Authenticated real-client behavior and Shockbyte full-runtime behavior remain ou
 
 ## Contributing
 
-Current runtime foundation: [Persistence Foundation 1C](docs/PersistenceFoundation1C.md)
-records combined lifecycle, durability and Windows/Linux qualification for
-experimental scripting API `0.5.0-experimental`. This is subsystem readiness,
-not package 0.5.0 publication or retroactive 0.4 API availability. Its
-[author guide](docs/api/Persistence.md) and examples target the new bindings.
-The [canonical design](docs/PersistenceFoundation1.md), qualified private 1A
-substrate and [1B public evidence](docs/PersistenceFoundation1B-Validation.md)
-remain separate evidence owners. [Persistence Foundation 2](docs/PersistenceFoundation2.md)
-defines future structured `Query` requests using `Field`, `Equals` or inclusive
-`Min`/`Max`. Preparation is automatic; optional `Indexes = { "Coins", "Level" }`
-hints request early preparation. Authors manage no schemas, versions or migrations.
-The [canonical correction audit](docs/PersistenceFoundation2-Validation.md) is
-documentation evidence; implementation has not begun.
+Current persistence foundation: [Foundation 1C](docs/PersistenceFoundation1C.md)
+records combined local durability and asynchronous API qualification; [Foundation
+2D](docs/PersistenceFoundation2D.md) closes derived-index and public Query
+qualification. Structured Query uses `Field`, `Equals` or inclusive `Min`/`Max`.
+Preparation is automatic; optional `Indexes = { "Coins", "Level" }` hints ask
+for early preparation. Authors manage no schemas, versions or migrations. See
+the [author guide](docs/api/Persistence.md), [0.5.0 release notes](docs/releases/0.5.0.md),
+and [canonical design](docs/PersistenceFoundation2.md).
 [World/Entity Foundation 1](docs/WorldEntityFoundation1.md)
 is host-primitive-gated/deferred; Entity-1A remains blocked by the
 [exact-lifetime proof gap](docs/WorldEntityLifetimeInvestigation.md).

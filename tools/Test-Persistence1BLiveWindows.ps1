@@ -68,8 +68,8 @@ foreach ($InputPath in @($Package,$NativeLibrary,$CompilerWorker,$StorageWorker,
     }
 }
 $Release = Get-Content -LiteralPath $ReleaseMetadata -Raw | ConvertFrom-Json
-if ($Release.packageVersion -ne '0.4.0' -or $Release.apiVersion -ne '0.5.0-experimental' -or $Release.nativeAbi -ne '1.5') {
-    throw '[CarbonLuau:Persistence1BWorker] Expected development identity: package 0.4.0, API 0.5.0-experimental, ABI 1.5'
+if ($Release.packageVersion -ne '0.5.0' -or $Release.apiVersion -ne '0.5.0-experimental' -or $Release.nativeAbi -ne '1.5') {
+    throw '[CarbonLuau:Persistence1BWorker] Expected release identity: package 0.5.0, API 0.5.0-experimental, ABI 1.5'
 }
 $ExpectedIdentities = @(
     "CarbonLuau package: $($Release.packageVersion)",

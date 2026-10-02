@@ -1,4 +1,4 @@
--- API 0.5 development example: inclusive numeric range.
+-- v0.5 experimental example: inclusive numeric range.
 local Store = game:GetService("DataStoreService"):GetDataStore("QueryExamples")
 
 task.defer(function()

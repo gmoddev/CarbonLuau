@@ -2,11 +2,11 @@ using System;
 
 namespace Carbon.Plugins
 {
-    [Info("CarbonLuau", "gmoddev", "0.4.0")]
+    [Info("CarbonLuau", "gmoddev", "0.5.0")]
     [Description("Experimental bounded Luau runtime with addon composition")]
     public partial class CarbonLuau : CarbonPlugin
     {
-        private const string PackageVersion = "0.4.0";
+        private const string PackageVersion = "0.5.0";
         private NativeRuntime Native;
         private ScriptHost Host;
         private RuntimeConfig Settings;

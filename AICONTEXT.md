@@ -333,13 +333,13 @@ physical-allocation negative evidence. The later explicit authorization starts
 [1B](docs/PersistenceFoundation1B.md), implemented and qualified within its recorded
 scope, including [implementation-source CI](docs/PersistenceFoundation1B-Validation.md#final-implementation-source-hosted-ci).
 Persistence-1C combined closure and its exact current verdict are recorded in
-[PersistenceFoundation1C.md](docs/PersistenceFoundation1C.md). Experimental
-development availability is not package publication approval.
-The user assigned persistence API `0.5.0-experimental` under D12; it is not
-retroactive 0.4 availability or permission to publish. Package 0.5.0 is intended
-for a future release; [Release.md](docs/Release.md) records why the development
-package remains 0.4.0. Original design adoption alone did not authorize these
-changes. Entity work remains gated;
+[PersistenceFoundation1C.md](docs/PersistenceFoundation1C.md). The user assigned
+persistence API `0.5.0-experimental` under D12; it is not retroactive 0.4
+availability. [Persistence-2D](docs/PersistenceFoundation2D.md) records the
+separate combined PASS and [Release.md](docs/Release.md) owns the v0.5.0
+experimental package mapping. Original design adoption alone did not authorize
+publication; the release gate was separately authorized and qualified. Entity
+work remains gated;
 persistence does not weaken Entity identity or serialize Player/Entity facades.
 
 - Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.

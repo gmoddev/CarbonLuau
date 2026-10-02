@@ -1,4 +1,4 @@
--- API 0.5 development example: select a type explicitly when a field has mixed scalar types.
+-- v0.5 experimental example: select a type explicitly when a field has mixed scalar types.
 local Store = game:GetService("DataStoreService"):GetDataStore("QueryExamples")
 
 task.defer(function()

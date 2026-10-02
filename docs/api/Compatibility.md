@@ -1,19 +1,17 @@
 # Scripting compatibility and limits
 
-Development identity: `CarbonLuau`, API `0.5.0-experimental`, status `Experimental`.
+Published v0.5.0 identity: `CarbonLuau`, API `0.5.0-experimental`, status `Experimental`.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
-`carbonluau.status`. This identity is distinct from package `0.4.0`, native ABI
+`carbonluau.status`. This identity is distinct from package `0.5.0`, native ABI
 `1.5`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
 pinned Luau revision and the installed Rust/Carbon builds. Published v0.3.0
 artifacts remain API `0.3.0-experimental` with native ABI `1.2`.
 
-Persistence is assigned to 0.5.0-experimental. **1B is implemented and qualified
-within recorded scope.** [Combined 1C qualification](../PersistenceFoundation1C.md)
-records final-source evidence and actual platform limits. Experimental availability
-or subsystem readiness is not package publication approval.
-Package 0.5.0 is intended for a future release; the independent
-development package fields remain 0.4.0, without publication authority. ABI 1.5
-is required by the additive completion ingress. [Release mapping](../Release.md)
+Persistence is assigned to 0.5.0-experimental and packaged in the v0.5.0
+experimental prerelease. [Combined 1C qualification](../PersistenceFoundation1C.md)
+records Foundation 1 evidence and platform limits; [combined 2D qualification](../PersistenceFoundation2D.md)
+records Query and derived-index closure. ABI 1.5 is required by the additive
+completion ingress. [Release mapping](../Release.md)
 and [the 1B record](../PersistenceFoundation1B.md) separate identity from evidence.
 Existing APIs keep their historical introduction versions and qualification.
 
@@ -26,7 +24,7 @@ author schema, version or migration requirement. Get/Set/Remove retain their
 Foundation 1 contracts; [combined Foundation 2 qualification](../PersistenceFoundation2D.md)
 is recorded separately.
 
-The earlier unreleased 0.4.0 candidate combines the additive addon, GUI Foundation 1 and
+The earlier published 0.4.0 release combines the additive addon, GUI Foundation 1 and
 implemented GUI Foundation 2 layout/image/scrolling surfaces under this one
 experimental identity. Authenticated-client visual,
 cursor, scrolling, clipping, image-load, click-receipt and reconciliation behavior remains unqualified and is not

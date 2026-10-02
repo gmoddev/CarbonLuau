@@ -116,7 +116,9 @@ try {
             }
             foreach ($DocumentEntry in @('GUI.md','GUI-REFERENCE.md','RELEASE-NOTES.md',
                     'docs/api/Persistence.md','docs/api/Services/DataStoreService.md',
-                    'docs/api/Types/DataStore.md','docs/api/Types/PersistedValue.md')) {
+                    'docs/api/Types/DataStore.md','docs/api/Types/DataStoreOptions.md',
+                    'docs/api/Types/DataStoreQuery.md','docs/api/Types/DataStoreQueryResult.md',
+                    'docs/api/Types/PersistedValue.md')) {
                 if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $DocumentEntry })) {
                     throw "Release bundle is missing public documentation: $DocumentEntry"
                 }

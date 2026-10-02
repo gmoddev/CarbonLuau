@@ -1,4 +1,4 @@
--- API 0.5 development example: Experimental; see PersistenceFoundation1C.md for qualification, not package publication.
+-- v0.5 experimental example; see PersistenceFoundation1C.md for qualification and release limits.
 local Store = game:GetService("DataStoreService"):GetDataStore("PersistenceExamples")
 
 local function Submit(Action)

@@ -4,11 +4,34 @@ All notable public changes to CarbonLuau are recorded here.
 
 ## Unreleased
 
+No changes recorded after v0.5.0.
+
+## 0.5.0 — Experimental
+
+### Added
+
+- Local `DataStoreService` with private root/addon namespaces, bounded value
+  snapshots and asynchronous `GetAsync`, `SetAsync`, and `RemoveAsync` callbacks.
+- Bounded structured `DataStore:Query` with equality or inclusive ranges,
+  deterministic ordering, current-page keyset cursors, automatic index
+  preparation, and optional `Indexes = { "Coins", "Level" }` hints. No public
+  schema, SQL, primary-scan fallback, or author-managed index lifecycle.
+
 ### Fixed
 
-- Persistence fair cross-namespace dispatch now assigns worker nonces in dispatch
+- Persistence fair cross-namespace dispatch assigns worker nonces in dispatch
   order, preventing legitimate round-robin work from being rejected as stale.
   Per-namespace FIFO, quotas, deadlines and no-replay semantics are unchanged.
+
+The release uses scripting API `0.5.0-experimental`, native ABI `1.5`, and the
+unchanged provider protocol `1.2` and addon package schema `1`. Foundation 1
+and 2 qualification and the experimental limits are recorded in
+[the release notes](docs/releases/0.5.0.md).
+
+## 0.4.0 — Experimental
+
+### Fixed
+
 - Cold module initialization now rejects committed-only Player mutations even
   inside a committed callback, including nested/public/shared module calls.
   Later committed calls to cached exports remain allowed. Player-1F-C preserves
@@ -16,10 +39,6 @@ All notable public changes to CarbonLuau are recorded here.
 
 ### Added
 
-- Experimental API `0.5.0-experimental` local DataStoreService with private
-  root/addon stores and callback-based GetAsync/SetAsync/RemoveAsync. Combined
-  qualification is recorded in [Persistence-1C](docs/PersistenceFoundation1C.md).
-  Package 0.5.0 remains a future release; no Query or UpdateAsync is implemented.
 - Official VS Code language/project tooling with generated runtime API definitions,
   manifest/package diagnostics and supervised trusted language analysis.
 - Bounded GUI preview with canonical geometry, hierarchy, inspector and resource

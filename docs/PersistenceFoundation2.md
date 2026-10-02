@@ -956,7 +956,7 @@ demand/waiters; Query remains a separate 2C task.
 | Corruption | D21 for primary/physical; derived-only logical state may be withdrawn/rebuilt |
 | Query fallback scan | forbidden |
 | SQL boundary | fixed prepared statement families; no author SQL/syntax fragments |
-| API identity | 0.5.0-experimental; package remains 0.4.0 |
+| API identity | 0.5.0-experimental; released experimentally in package 0.5.0 after the separate 2D/release gates |
 | Production implementation | private 2A PASS; 2B PASS; public 2C Query PASS; [combined 2D qualification](PersistenceFoundation2D.md) PASS |
 
 

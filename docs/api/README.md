@@ -1,10 +1,9 @@
 # CarbonLuau scripting API
 
-The current development scripting identity is **experimental** `CarbonLuau
-0.5.0-experimental`. Persistence-1B is **implemented and qualified within recorded
-scope**; see [persistence](Persistence.md) and its [1B record](../PersistenceFoundation1B.md).
-[1C](../PersistenceFoundation1C.md) records combined closure and final-source CI;
-package publication approval remains separate.
+The published v0.5.0 scripting identity is **experimental** `CarbonLuau
+0.5.0-experimental`. [Persistence Foundation 1C](../PersistenceFoundation1C.md)
+and [Foundation 2D](../PersistenceFoundation2D.md) record combined qualification;
+see [persistence](Persistence.md) for the author surface.
 The earlier gameplay/addon/GUI/Player surfaces retain their introduction versions
 through 0.4.0-experimental. Their recorded Windows/Linux, sanitizer and Carbon
 evidence, including [Foundation E](../FoundationE.md), does not qualify persistence.
@@ -26,7 +25,7 @@ This is server-side Luau, not Roblox API compatibility.
 | Addon manifests, dependencies and package-qualified imports | [Addon composition](Addons.md) |
 | Carbon provider registration protocol | [Addon providers](Addon-Providers.md) |
 | Server-driven retained GUI with qualified Foundation 2A layout, 2B typed images and 2C scrolling source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
-| Experimental development persistence (0.5; [Foundation 1 qualification](../PersistenceFoundation1C.md)) | [Guide and examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md), [DataStoreQuery](Types/DataStoreQuery.md), [DataStoreQueryResult](Types/DataStoreQueryResult.md), [PersistedValue](Types/PersistedValue.md) |
+| Experimental v0.5 persistence ([combined qualification](../PersistenceFoundation2D.md)) | [Guide and examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md), [DataStoreQuery](Types/DataStoreQuery.md), [DataStoreQueryResult](Types/DataStoreQueryResult.md), [PersistedValue](Types/PersistedValue.md) |
 
 Optional `GetDataStore` field-name hints are the Persistence-2B addition.
 `DataStore:Query` adds structured equality, inclusive range and ordered top-N

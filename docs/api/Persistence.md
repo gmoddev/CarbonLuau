@@ -1,11 +1,11 @@
 # Persistence examples and author guide
 
-API `0.5.0-experimental`: Foundation 1 is qualified and the structured 2C Query
-surface is implemented in development source. These examples target production
-bindings, not historical 0.4 artifacts or GUI preview. [Persistence-1C](../PersistenceFoundation1C.md)
+API `0.5.0-experimental`: Foundation 1 and structured Query are qualified in
+the experimental v0.5.0 package. These examples target production bindings,
+not historical 0.4 artifacts or GUI preview. [Persistence-1C](../PersistenceFoundation1C.md)
 records Foundation 1 combined qualification; [2C](../PersistenceFoundation2C.md)
-owns Query-specific evidence. These are experimental development examples, not
-package publication approval.
+owns Query-specific evidence; [2D](../PersistenceFoundation2D.md) closes the
+combined release-readiness gate. These remain experimental examples.
 
 Install one example as the root `scripts/init.luau` at a time in a disposable
 development installation with storage Ready. The Set, Remove, snapshot and error
