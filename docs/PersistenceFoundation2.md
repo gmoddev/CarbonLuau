@@ -1,11 +1,12 @@
 # Persistence Foundation 2 — bounded derived indexes and Query
 
-Status: **CANONICAL ARCHITECTURE; PRIVATE 2A PASS; 2B PASS; PUBLIC 2C PASS; 2D COMBINED QUALIFICATION IN PROGRESS**.
+Status: **CANONICAL ARCHITECTURE; PRIVATE 2A PASS; 2B PASS; PUBLIC 2C PASS; 2D PASS — FOUNDATION 2 QUALIFIED**.
 The 2026-09-29 final public-design correction preceded implementation.
 [2A evidence](PersistenceFoundation2A.md) records qualified private derived
 state. The [2B options/hint/demand slice](PersistenceFoundation2B.md) is
 qualified; [2C](PersistenceFoundation2C.md) records the separately authorized
-public Query implementation and its qualification. Combined closure remains 2D.
+public Query implementation and its qualification. [2D](PersistenceFoundation2D.md)
+records the passing combined closure.
 
 Foundation 1 qualified baseline: 034f28f81c64e0f135ec882fb05de4ef7f33fcf7.
 Initial D22 documentation baseline: ee208831efc5647dab553b5f9d0524e7e2e83353.
@@ -956,7 +957,7 @@ demand/waiters; Query remains a separate 2C task.
 | Query fallback scan | forbidden |
 | SQL boundary | fixed prepared statement families; no author SQL/syntax fragments |
 | API identity | 0.5.0-experimental; package remains 0.4.0 |
-| Production implementation | private 2A PASS; 2B PASS; public 2C Query PASS; combined 2D qualification in progress |
+| Production implementation | private 2A PASS; 2B PASS; public 2C Query PASS; [combined 2D qualification](PersistenceFoundation2D.md) PASS |
 
 
 ## 22. Deferred features

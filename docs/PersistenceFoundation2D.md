@@ -1,6 +1,6 @@
 # Persistence Foundation 2D — combined qualification
 
-Status: **final-source hosted gate pending**. This is the combined closure
+Status: **PERSISTENCE-2D PASS — FOUNDATION 2 QUALIFIED**. This is the combined closure
 record for the already implemented [2A](PersistenceFoundation2A.md),
 [2B](PersistenceFoundation2B.md), and [2C](PersistenceFoundation2C.md) work.
 [D21](Invariants.md#d21--persistence-foundation-1) continues to own primary
@@ -11,8 +11,11 @@ contract. This record does not amend either decision.
 
 Starting `origin/main`: `4f644599ec4177025601b01130e0cd05f92e78ca`.
 Combined regression/harness commit: `a2668f7` (no production runtime change).
-The qualified 2C implementation remains `d9d1197`; the 2A/2B implementation
-and hosted baselines remain in their respective records. No 0.5.0 package,
+Queued-result/crash-test correction and final tested 2D source: `c4c8663967dc33cf70bc432ecfe9b1be7030ef5f`.
+The qualified 2A implementation is `6330574` with `c6c300b` policy/evidence
+source; 2B's final tested implementation is `1076706`; the qualified 2C
+implementation is `d9d1197`. Their hosted baselines remain in their respective
+records. No 0.5.0 package,
 tag, or GitHub release was created by the combined-test commit.
 
 ## Combined workload and failure boundaries
@@ -57,9 +60,9 @@ schema, or SQL authority was introduced by 2D.
 
 | Gate | Observation |
 |---|---|
-| Windows x64 native | 22/22 CTest PASS before the four additional Query crash checkpoints; focused updated crash fixture PASS. Final full rerun pending. |
-| Linux x64 native | 23/23 CTest PASS on qualified ext4 before the four additional Query crash checkpoints; focused updated crash fixture PASS. Final full rerun pending. |
-| Linux ASan/UBSan/leak | 23/23 CTest PASS with leak detection enabled before the new checkpoints; focused updated crash fixture PASS under ASan. Final full rerun pending. |
+| Windows x64 native | Final 22/22 CTest PASS, including four Query read-transaction process-kill/restart checkpoints, derived crash/fault/budget/plan, Foundation 1 quota/corruption/physical and native teardown. |
+| Linux x64 native | Final 23/23 CTest PASS on qualified ext4 with the pinned SQLite certificate source mounted, including the four new Query crash checkpoints. An earlier test-container invocation omitted that certificate-source mount and failed only its source-availability assertion; the corrected full rerun passed. |
+| Linux ASan/UBSan/leak | Final hosted ASan/UBSan/leak matrix PASS on `c4c8663`, including the updated Query crash fixture. No sanitizer suppression added. |
 | Windows and Linux managed worker | PASS: real supervised SQLite worker, D21 queue/replay/rate/lifecycle, 2B demand/waiter/retirement, 8 builds/512 records, and 1,000 stale-completion cycles. |
 | Windows and Linux real compiler/VM | Focused 2C/2D public Query and Foundation 1C combined stress PASS. The latter runs 2,200 Sets, 4,400 Gets, 2,200 Removes, root plus ten addons and twelve complete host/worker reopen cycles. |
 | Full runtime regressions | PASS on both platforms, including addon/provider, GUI, Player, module/publication, scheduler/recovery and persistence fixtures. |
@@ -109,8 +112,13 @@ Shockbyte/full-provider qualification remain separate recorded limits.
 
 ## Hosted and release gate
 
-The combined-test commit requires exact-source hosted Windows/Linux/native,
-runtime, sanitizer, tooling/API, deterministic package and clean-install PASS.
-Only after that gate and final documentation audit may this record change to
-**PERSISTENCE-2D PASS — FOUNDATION 2 QUALIFIED**. Release version, artifacts,
-tag, and GitHub prerelease require a subsequent exact-release-commit gate.
+[Final-source validation](https://github.com/gmoddev/CarbonLuau/actions/runs/36945899630)
+passed Windows x64, Linux x64, native, runtime, sanitizer/fault, deterministic
+package and clean-install jobs on `c4c8663`. [Tooling/API checks](https://github.com/gmoddev/CarbonLuau/actions/runs/36945899631)
+passed Windows, Linux and macOS tooling jobs; [documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/36945899575)
+passed. Local final-source Windows 22/22 and Linux 23/23 native matrices, live
+Windows/Linux Carbon receipts above, and the unchanged qualified 2A/2B/2C
+records complete the combined Foundation 2 gate. This is subsystem
+qualification, not a released package or stable production-readiness claim.
+Release version, exact artifacts, tag and GitHub prerelease require a separate
+exact-release-commit gate.
