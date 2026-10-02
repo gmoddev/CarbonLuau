@@ -1,13 +1,13 @@
 # CarbonLuau documentation
 
 CarbonLuau embeds a pinned Luau VM for bounded, server-side scripting on
-Carbon-modded Rust servers. Published `v0.3.0` contains the first gameplay facade.
-The `v0.4.0` candidate adds experimental addon composition, Player inventory
-mutation, Teleport, GUI and official VS Code language/project tooling and preview.
-Platform and client qualification limits remain in [Compatibility](Compatibility.md).
-Current development additionally implements local persistence under scripting API
-`0.5.0-experimental`; see [combined qualification](PersistenceFoundation1C.md).
-This does not add persistence to historical 0.4 artifacts or publish package 0.5.0.
+Carbon-modded Rust servers. Published `v0.3.0` contains the first gameplay facade;
+`v0.4.0` adds experimental addons, Player inventory mutation, Teleport, GUI and
+the older pinned VS Code tooling pack. The experimental `v0.5.0` package adds
+local persistence and structured Query under scripting API
+`0.5.0-experimental`. See [release notes](releases/0.5.0.md) and
+[combined Foundation 2 qualification](PersistenceFoundation2D.md).
+Platform and client limits remain in [Compatibility](Compatibility.md).
 
 Start with [installation](Installation.md), then use the
 [experimental API reference](api/README.md). Read the
@@ -46,12 +46,15 @@ receipt by an authenticated client was not tested and is not claimed.
 - ScreenGui, Frame, text/image controls and immutable layout, color and typed image values.
 - Deterministic UIListLayout/UIPadding and retained ScrollingFrame configuration.
 - Explicit per-Player Show/Hide and secure button Activated callbacks.
+- Private local durable DataStores with asynchronous Get/Set/Remove and bounded,
+  index-backed structured Query.
 
 InventoryOnly GiveItem and verified TakeItem are implemented; raw inventory objects, arbitrary Rust hooks, filesystem/network access,
 Roblox replication and `task.wait` are not included. See the [0.3.0 release notes](releases/0.3.0.md)
-for the published baseline and the [0.4.0 release notes](releases/0.4.0.md)
-plus [Foundation E qualification](FoundationE.md) and
-[GUI Foundation 1G](GuiFoundation1G.md) for the candidate envelope.
+for the initial baseline, the [0.4.0 release notes](releases/0.4.0.md) for
+addons/GUI, and the [0.5.0 release notes](releases/0.5.0.md) for persistence.
+[Foundation E](FoundationE.md) and [GUI Foundation 1G](GuiFoundation1G.md)
+retain their distinct qualification evidence.
 The current source ownership map is recorded in
 [Foundation F](FoundationF.md), and compiler containment is recorded in
 [Foundation G](FoundationG.md).
@@ -63,12 +66,13 @@ and callback-based Get/Set/Remove in private root/addon stores. Start with the
 [guide and examples](api/Persistence.md); [1C](PersistenceFoundation1C.md) records
 the combined qualification envelope. [D21](Invariants.md#d21--persistence-foundation-1)
 and the [canonical design](PersistenceFoundation1.md) remain authoritative.
-[Persistence Foundation 2](PersistenceFoundation2.md) defines future structured
+[Persistence Foundation 2](PersistenceFoundation2.md) implements structured
 `Query` requests using `Field`, `Equals` or inclusive `Min`/`Max` under
 [D22](Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query).
 Preparation is automatic, with optional field-name hints. Authors manage no
-schemas, versions or migrations. The [final correction audit](PersistenceFoundation2-Validation.md)
-records design consistency; current source provides Foundation 1 Get/Set/Remove only.
+schemas, versions or migrations. [2D](PersistenceFoundation2D.md) records
+combined Query and derived-index qualification; the
+[final correction audit](PersistenceFoundation2-Validation.md) preserves design history.
 World/Entity's accepted future design
 is [host-primitive-gated/deferred](WorldEntityFoundation1.md); Entity-1A is blocked
 by the [authoritative lifetime proof gap](WorldEntityLifetimeInvestigation.md),
