@@ -17,11 +17,15 @@ CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
 Check(JToken.DeepEquals(Catalog, ApiCatalog.Build(Bootstrap, Release, Native)), "catalog repeat/culture determinism");
 Check(Definitions == ApiArtifacts.Definitions(ApiCatalog.Build(Bootstrap, Release, Native)), "definition repeat determinism");
 Check(Definitions.Contains("GiveItem") && Definitions.Contains("GiveItemBehavior") && Definitions.Contains("InventoryOnly") && !Definitions.Contains("TextBox") && Definitions.Contains("TakeItem"), "current implemented inventory API exposure");
+Check(!Definitions.Contains("Workspace") && !Catalog.ToString().Contains("Workspace"),
+    "Entity-1B runtime-only binding leaked into public metadata");
 Check((string)Catalog["Api"]!["Version"]! == (string)Release["apiVersion"]!, "API identity");
 Reject(() => ApiCatalog.Build(Bootstrap + "\nfunction PlayerMethods.Future(Player) end\n", Release, Native), "unannotated binding accepted");
 Reject(() => ApiCatalog.Build(Bootstrap.Replace("\nfunction PlayerMethods.Teleport(Player, Position)\n", "\nfunction PlayerMethods.Teleport(Player, Target)\n"), Release, Native), "changed signature accepted");
 Reject(() => ApiCatalog.Build(Bootstrap.Replace("    PermanentMarker = Font(\"PermanentMarker\"),", ""), Release, Native), "removed singleton accepted");
 Reject(() => ApiCatalog.Build(Bootstrap.Replace("    if Name == \"Items\" then return Items end\n", ""), Release, Native), "removed service accepted");
+Reject(() => ApiCatalog.Build(Bootstrap.Replace("    if Name == \"Workspace\" then return Workspace end\n", ""), Release, Native), "removed internal service accepted");
+Reject(() => ApiCatalog.Build(Bootstrap.Replace("-- @carbonluau-internal-binding ", "-- @removed-internal-binding "), Release, Native), "unannotated internal service accepted");
 Reject(() => ApiCatalog.Build(Bootstrap, Release, Native.Replace("        lua_setfield(State, -2, \"IsDependencyAvailable\");", "")), "removed native binding accepted");
 var Broken = (JObject)Catalog.DeepClone();
 ((JObject)Broken["Types"]![0]!)["BaseTypeId"] = "Missing";

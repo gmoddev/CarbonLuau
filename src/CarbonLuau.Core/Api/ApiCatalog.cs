@@ -21,8 +21,17 @@ namespace CarbonLuau.Core
             string ApiVersion = (string)Release["apiVersion"];
             var Lines = (Bootstrap + "\n" + NativeBindings.Replace("// @carbonluau-api ", "-- @carbonluau-api ")).Replace("\r\n", "\n").Split('\n');
             const string Marker = "-- @carbonluau-api ";
+            const string InternalMarker = "-- @carbonluau-internal-binding ";
             var Bindings = new HashSet<string>(StringComparer.Ordinal);
             foreach (string Line in Lines) {
+                if (Line.StartsWith(InternalMarker, StringComparison.Ordinal)) {
+                    JObject Internal = JObject.Parse(Line.Substring(InternalMarker.Length));
+                    string InternalBinding = (string)Internal["Binding"];
+                    if (Internal.Count != 1 || String.IsNullOrEmpty(InternalBinding) ||
+                        !Lines.Contains(InternalBinding) || !Bindings.Add(InternalBinding))
+                        throw new InvalidOperationException("internal runtime binding differs from declaration");
+                    continue;
+                }
                 if (!Line.StartsWith(Marker, StringComparison.Ordinal)) continue;
                 JObject Declaration = JObject.Parse(Line.Substring(Marker.Length));
                 string Binding = (string)Declaration["Binding"];

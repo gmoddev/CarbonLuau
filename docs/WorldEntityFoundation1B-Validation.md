@@ -14,7 +14,11 @@ The only new Luau runtime surface is `game:GetService("Workspace")`,
 identity plus lifetime token, not wrapper, domain or network ID, and requires no
 host call. No `IsValid`, enumeration, query, lifecycle Signal, Spawn, Destroy,
 position write, host object or reflection path was added. No API metadata or
-author-facing release documentation was generated in 1B.
+author-facing release documentation was generated in 1B. Tooling's binding
+drift audit recognizes one explicit *internal-only* Workspace service binding;
+it contributes no catalog member or generated `.d.luau` type. Removal of that
+binding or marker is a tested build failure, while Entity-1C retains the public
+metadata/identity decision.
 
 `Workspace` is domain-bound and may be acquired before Entity baseline readiness.
 Lookup then fails controlledly until the 1A observer has a qualified continuous

@@ -643,6 +643,7 @@ function Game.GetService(Self, Name)
     if Name == "Commands" then return Commands end
     if Name == "Gui" then return Gui end
     if Name == "Items" then return Items end
+-- @carbonluau-internal-binding {"Binding":"    if Name == \"Workspace\" then return Workspace end"}
     if Name == "Workspace" then return Workspace end
 -- @carbonluau-api {"Type":"DataStoreService","Kind":"Service","Summary":"Private owner-bound persistence service; preview unavailable.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"    if Name == \"DataStoreService\" then return StorageService() end"}
     if Name == "DataStoreService" then return StorageService() end
