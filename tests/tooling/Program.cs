@@ -17,15 +17,19 @@ CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
 Check(JToken.DeepEquals(Catalog, ApiCatalog.Build(Bootstrap, Release, Native)), "catalog repeat/culture determinism");
 Check(Definitions == ApiArtifacts.Definitions(ApiCatalog.Build(Bootstrap, Release, Native)), "definition repeat determinism");
 Check(Definitions.Contains("GiveItem") && Definitions.Contains("GiveItemBehavior") && Definitions.Contains("InventoryOnly") && !Definitions.Contains("TextBox") && Definitions.Contains("TakeItem"), "current implemented inventory API exposure");
-Check(!Definitions.Contains("Workspace") && !Catalog.ToString().Contains("Workspace"),
-    "Entity-1B runtime-only binding leaked into public metadata");
+Check(Definitions.Contains("declare extern type Entity") && Definitions.Contains("declare extern type Workspace") &&
+    Definitions.Contains("function GetEntityById(self, Id: string): (Entity?)") &&
+    Definitions.Contains("read Id: string") && Definitions.Contains("read Prefab: string") &&
+    Definitions.Contains("read Position: Vector3") && !Definitions.Contains("IsValid"),
+    "Entity-1C public definition differs from the read-only runtime");
 Check((string)Catalog["Api"]!["Version"]! == (string)Release["apiVersion"]!, "API identity");
 Reject(() => ApiCatalog.Build(Bootstrap + "\nfunction PlayerMethods.Future(Player) end\n", Release, Native), "unannotated binding accepted");
 Reject(() => ApiCatalog.Build(Bootstrap.Replace("\nfunction PlayerMethods.Teleport(Player, Position)\n", "\nfunction PlayerMethods.Teleport(Player, Target)\n"), Release, Native), "changed signature accepted");
+Reject(() => ApiCatalog.Build(Bootstrap.Replace("\nfunction Workspace.GetEntityById(Self, Id)\n", "\nfunction Workspace.GetEntityById(Self, Key)\n"), Release, Native), "changed Entity lookup signature accepted");
 Reject(() => ApiCatalog.Build(Bootstrap.Replace("    PermanentMarker = Font(\"PermanentMarker\"),", ""), Release, Native), "removed singleton accepted");
 Reject(() => ApiCatalog.Build(Bootstrap.Replace("    if Name == \"Items\" then return Items end\n", ""), Release, Native), "removed service accepted");
-Reject(() => ApiCatalog.Build(Bootstrap.Replace("    if Name == \"Workspace\" then return Workspace end\n", ""), Release, Native), "removed internal service accepted");
-Reject(() => ApiCatalog.Build(Bootstrap.Replace("-- @carbonluau-internal-binding ", "-- @removed-internal-binding "), Release, Native), "unannotated internal service accepted");
+Reject(() => ApiCatalog.Build(Bootstrap.Replace("    if Name == \"Workspace\" then return Workspace end\n", ""), Release, Native), "removed Workspace service accepted");
+Reject(() => ApiCatalog.Build(Bootstrap.Replace("-- @carbonluau-api {\"Type\":\"Workspace\"", "-- @removed-api {\"Type\":\"Workspace\""), Release, Native), "unannotated Workspace service accepted");
 Reject(() => ApiCatalog.Build(Bootstrap, Release, Native.Replace("        lua_setfield(State, -2, \"IsDependencyAvailable\");", "")), "removed native binding accepted");
 var Broken = (JObject)Catalog.DeepClone();
 ((JObject)Broken["Types"]![0]!)["BaseTypeId"] = "Missing";
@@ -34,10 +38,12 @@ Broken = (JObject)Catalog.DeepClone();
 ((JObject)Broken["Members"]![0]!)["ValueType"] = "UnimplementedType";
 Reject(() => ApiCatalog.Validate(Broken), "unknown type accepted");
 var PersistenceTypes = new[] { "DataStoreService", "DataStore", "DataStoreOptions", "DataStoreQuery", "DataStoreQueryResult", "PersistedValue" };
+var EntityTypes = new[] { "Workspace", "Entity" };
 foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catalog["Members"]!)) {
     bool Persistence = PersistenceTypes.Contains((string?)Declaration["Id"]) || PersistenceTypes.Contains((string?)Declaration["OwnerId"]);
+    bool Entity = EntityTypes.Contains((string?)Declaration["Id"]) || EntityTypes.Contains((string?)Declaration["OwnerId"]);
     Version Since = Version.Parse(((string)Declaration["Availability"]!["SinceApi"]!).Split('-')[0]);
-    Check(Persistence ? Since == new Version(0, 5, 0) : Since <= new Version(0, 4, 0), "historical introduction version changed");
+    Check(Entity ? Since == new Version(0, 6, 0) : Persistence ? Since == new Version(0, 5, 0) : Since <= new Version(0, 4, 0), "historical introduction version changed");
     if (Persistence) Check((string)Declaration["Availability"]!["Qualification"]! == "Experimental" &&
         (string)Declaration["Preview"]! == "Unavailable", "persistence qualification/preview drift");
 }

@@ -154,7 +154,7 @@ local S=D:GetDataStore('Players')
  for _,Name in {'Path','SQL','NamespaceId','UpdateAsync','Name','Close'} do
  local OK,V=pcall(function() return S[Name] end); assert(not OK or V==nil)
 end
-assert(game.ApiVersion=='0.5.0-experimental')
+assert(game.ApiVersion=='0.6.0-experimental')
 local function Bad(F) assert(not pcall(F)) end
 Bad(function() D:GetDataStore('Players','spoofed-namespace') end)
 Bad(function() D.NamespaceId='spoofed-namespace' end)

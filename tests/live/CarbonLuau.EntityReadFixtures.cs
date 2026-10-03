@@ -36,6 +36,7 @@ namespace Carbon.Plugins
                     ReferenceEquals(BaseNetworkable.serverEntities.Find(Value.net.ID), Value));
             RequireEntityRead(Existing != null, "no pre-existing keyed BaseEntity");
             var Samples = new Dictionary<string, BaseEntity>(StringComparer.Ordinal);
+            var ScaleIds = new List<string>();
             int Inspected = 0, MaximumPrefabBytes = 0;
             foreach (BaseEntity Candidate in BaseNetworkable.serverEntities.OfType<BaseEntity>()) {
                 if (Candidate == null || Candidate.IsDestroyed || Candidate.net == null ||
@@ -48,6 +49,8 @@ namespace Carbon.Plugins
                 RequireEntityRead(Bytes <= 512 && Prefab.IndexOf('\0') < 0,
                     "qualified keyed population exceeds canonical Prefab bound");
                 ++Inspected;
+                if (ScaleIds.Count < 128)
+                    ScaleIds.Add(Candidate.net.ID.Value.ToString(CultureInfo.InvariantCulture));
                 string Kind = Candidate is BasePlayer ? "player" :
                     Prefab.Contains("/building core/") ? "building" :
                     Prefab.Contains("/deployable/") ? "deployable" :
@@ -100,6 +103,17 @@ namespace Carbon.Plugins
             RequireEntityRead(Result.Status == RuntimeStatus.OK && Result.HasNumber &&
                 Math.Abs(Result.Number - Existing.transform.position.x) <= 0.0001,
                 "world X position mismatch");
+            RequireEntityRead(ScaleIds.Count == 128, "fewer than 128 qualified keyed entities for scale fixture");
+            var ScaleWatch = Stopwatch.StartNew();
+            foreach (string Id in ScaleIds) {
+                Result = Host.Execute("entity1c.keyed-scale", "local E=game:GetService('Workspace'):GetEntityById('" +
+                    Id + "'); assert(E~=nil and E.Id=='" + Id + "')");
+                RequireEntityRead(Result.Status == RuntimeStatus.OK,
+                    "keyed-scale lookup failed for a qualified entity: " + Result.Error);
+            }
+            ScaleWatch.Stop();
+            Puts("[CarbonLuau:EntityReadFixture] keyed-scale distinct=128 totalWall=" +
+                ScaleWatch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) + " ms");
 
             BaseEntity Parent = GameManager.server.CreateEntity(EntityReadFixturePrefab, new Vector3(100, 100, 100));
             BaseEntity Child = GameManager.server.CreateEntity(EntityReadFixturePrefab, new Vector3(110, 105, 107));

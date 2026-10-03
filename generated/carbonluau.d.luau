@@ -47,6 +47,12 @@ declare extern type DataStoreService with
     function GetDataStore(self, StoreName: string, Options: DataStoreOptions?): (DataStore)
 end
 
+declare extern type Entity with
+    read Id: string
+    read Position: Vector3
+    read Prefab: string
+end
+
 declare extern type GuiNode with
     read ClassName: string
     function Clone(self): (GuiNode)
@@ -113,12 +119,13 @@ end
 declare extern type Game with
     read ApiName: "CarbonLuau"
     read ApiStatus: "Experimental"
-    read ApiVersion: "0.5.0-experimental"
+    read ApiVersion: "0.6.0-experimental"
     function GetService(self, Name: "Commands"): (Commands)
     function GetService(self, Name: "DataStoreService"): (DataStoreService)
     function GetService(self, Name: "Gui"): (Gui)
     function GetService(self, Name: "Items"): (Items)
     function GetService(self, Name: "Players"): (Players)
+    function GetService(self, Name: "Workspace"): (Workspace)
 end
 
 declare extern type GiveItemBehavior with
@@ -409,6 +416,10 @@ declare extern type Vector3 with
     __mul: ((Left: Vector3, Right: number) -> (Vector3)) & ((Left: number, Right: Vector3) -> (Vector3))
     __sub: ((Left: Vector3, Right: Vector3) -> (Vector3))
     __unm: ((Operand: Vector3) -> (Vector3))
+end
+
+declare extern type Workspace with
+    function GetEntityById(self, Id: string): (Entity?)
 end
 
 declare Color3: {

@@ -4,7 +4,14 @@ All notable public changes to CarbonLuau are recorded here.
 
 ## Unreleased
 
-No changes recorded after v0.5.0.
+### Added in development (scripting API `0.6.0-experimental`)
+
+- Exact keyed, read-only `Workspace:GetEntityById` and `Entity.Id`, `Prefab`,
+  `Position` on the pinned Rust/Carbon host targets. Entity equality follows
+  exact lifetime, not network ID. Initial installation or full plugin reload
+  after world startup requires a server restart before lookup.
+
+The latest published package remains v0.5.0; no v0.6.0 release or tag exists.
 
 ## 0.5.0 — Experimental
 

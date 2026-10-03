@@ -21,9 +21,9 @@
 -- @carbonluau-api {"Owner":"Player","Name":"Position","Kind":"Property","ValueType":"Vector3","Writable":false,"Summary":"Player.Position.","Binding":"            if Key == \"Position\" then"}
 -- @carbonluau-api {"Owner":"Player","Name":"Health","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.Health.","Binding":"            if Key == \"Health\" then return tonumber(Host(23, Token, UserId)[1]) end"}
 -- @carbonluau-api {"Owner":"Player","Name":"MaxHealth","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.MaxHealth.","Binding":"            if Key == \"MaxHealth\" then return tonumber(Host(24, Token, UserId)[1]) end"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiName","Kind":"Property","ValueType":"\"CarbonLuau\"","Writable":false,"Summary":"Game.ApiName.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.5.0-experimental\", ApiStatus = \"Experimental\"}"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiVersion","Kind":"Property","ValueType":"\"0.5.0-experimental\"","Writable":false,"Summary":"Game.ApiVersion.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.5.0-experimental\", ApiStatus = \"Experimental\"}"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiStatus","Kind":"Property","ValueType":"\"Experimental\"","Writable":false,"Summary":"Game.ApiStatus.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.5.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiName","Kind":"Property","ValueType":"\"CarbonLuau\"","Writable":false,"Summary":"Game.ApiName.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiVersion","Kind":"Property","ValueType":"\"0.6.0-experimental\"","Writable":false,"Summary":"Game.ApiVersion.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiStatus","Kind":"Property","ValueType":"\"Experimental\"","Writable":false,"Summary":"Game.ApiStatus.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.0-experimental\", ApiStatus = \"Experimental\"}"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"X","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.X.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"Y","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Y.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"Z","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Z.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
@@ -597,8 +597,11 @@ function Items.Exists(Self, ShortName)
     return Host(25, String(ShortName, "item short name"))[1] == "1"
 end
 table.freeze(Items)
--- Entity-1B runtime binding. Public API metadata and release assignment remain
--- with Entity-1C; no world enumeration or mutation surface is installed here.
+-- Read-only World/Entity Foundation 1. The host retains exact-lifetime authority.
+-- @carbonluau-api {"Type":"Entity","Kind":"Class","Summary":"Read-only facade for one exact live Rust entity lifetime.","SinceApi":"0.6.0-experimental"}
+-- @carbonluau-api {"Owner":"Entity","Name":"Id","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Canonical current-world network ID; not a durable identity.","SinceApi":"0.6.0-experimental","Binding":"    if Key == \"Id\" or Key == \"Prefab\" then"}
+-- @carbonluau-api {"Owner":"Entity","Name":"Prefab","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Full canonical prefab name for this exact live entity.","SinceApi":"0.6.0-experimental","Binding":"    if Key == \"Id\" or Key == \"Prefab\" then"}
+-- @carbonluau-api {"Owner":"Entity","Name":"Position","Kind":"Property","ValueType":"Vector3","Writable":false,"Summary":"Fresh world-space root position of this exact live entity.","SinceApi":"0.6.0-experimental","Binding":"    if Key == \"Position\" then"}
 local EntityRecords = setmetatable({}, {__mode = "k"})
 local EntityMeta = {}
 EntityMeta.__tostring = function() return "Entity" end
@@ -620,6 +623,7 @@ end
 EntityMeta.__metatable = "CarbonLuau.Entity"
 table.freeze(EntityMeta)
 local Workspace = {}
+-- @carbonluau-api {"Owner":"Workspace","Name":"GetEntityById","Kind":"Method","Args":[["Id","string"]],"Returns":["Entity?"],"Summary":"Find one live entity by canonical decimal network ID, or nil if absent.","SinceApi":"0.6.0-experimental","Binding":"function Workspace.GetEntityById(Self, Id)"}
 function Workspace.GetEntityById(Self, Id)
     if Self ~= Workspace then Fail("invalid Workspace service") end
     String(Id, "entity ID")
@@ -634,8 +638,8 @@ function Workspace.GetEntityById(Self, Id)
     return Entity
 end
 table.freeze(Workspace)
-local Game = {ApiName = "CarbonLuau", ApiVersion = "0.5.0-experimental", ApiStatus = "Experimental"}
--- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items | DataStoreService"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
+local Game = {ApiName = "CarbonLuau", ApiVersion = "0.6.0-experimental", ApiStatus = "Experimental"}
+-- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items | Workspace | DataStoreService"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
 function Game.GetService(Self, Name)
     if Self ~= Game then Fail("invalid game facade") end
     String(Name, "service name")
@@ -643,7 +647,7 @@ function Game.GetService(Self, Name)
     if Name == "Commands" then return Commands end
     if Name == "Gui" then return Gui end
     if Name == "Items" then return Items end
--- @carbonluau-internal-binding {"Binding":"    if Name == \"Workspace\" then return Workspace end"}
+-- @carbonluau-api {"Type":"Workspace","Kind":"Service","Summary":"Exact keyed lookup of currently admitted Rust world entities.","SinceApi":"0.6.0-experimental","Binding":"    if Name == \"Workspace\" then return Workspace end"}
     if Name == "Workspace" then return Workspace end
 -- @carbonluau-api {"Type":"DataStoreService","Kind":"Service","Summary":"Private owner-bound persistence service; preview unavailable.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"    if Name == \"DataStoreService\" then return StorageService() end"}
     if Name == "DataStoreService" then return StorageService() end

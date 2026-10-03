@@ -34,7 +34,7 @@ internal static partial class PersistencePublicTests
             F.Reload();
             Check(F.Host.Ready && F.Commands.Publications == 1 && Native.LiveVmCount == 1 && Roots.Count == 1,
                 "restored ABI 1.5 can publish a fresh facade");
-            F.Execute("assert(game.ApiVersion=='0.5.0-experimental'); game:GetService('DataStoreService'):GetDataStore('Restored')");
+            F.Execute("assert(game.ApiVersion=='0.6.0-experimental'); game:GetService('DataStoreService'):GetDataStore('Restored')");
         }
         Check(Native.AbiVersion == Original && Native.Storage == null && Native.LiveVmCount == 0 && Roots.Count == 0,
             "ABI guard fixture restores version and releases all resources");

@@ -5,6 +5,7 @@ param(
     [string]$StorageWorker
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'ZipCentralDirectory.ps1')
 $Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $Release = Get-Content -Raw -LiteralPath (Join-Path $Root 'release.json') | ConvertFrom-Json
 if ($Release.tag -cne "v$($Release.releaseVersion)" -or $Release.packageVersion -cne $Release.releaseVersion) {
@@ -77,9 +78,15 @@ try {
                 if ($Required -cnotin $Bundle.Entries.FullName) { throw "Missing deployed file: $Required" }
             }
             if ($Rid -eq 'linux-x64') {
+                $Central = @(Get-ZipCentralEntries ([IO.File]::ReadAllBytes((Join-Path $FirstRelease $Name))))
                 foreach ($Worker in @($ExpectedCompiler, $ExpectedStorage)) {
                     $Entry = $Bundle.GetEntry("carbon/data/CarbonLuau/native/$Rid/$Worker")
                     if ((($Entry.ExternalAttributes -shr 16) -band 511) -ne 493) { throw "Worker lacks archive mode 0755: $Worker" }
+                    $Identity = "carbon/data/CarbonLuau/native/$Rid/$Worker"
+                    $CentralEntry = @($Central | Where-Object { $_.Name -ceq $Identity })
+                    if ($CentralEntry.Count -ne 1 -or $CentralEntry[0].CreatorSystem -ne 3) {
+                        throw "Worker lacks Unix ZIP creator metadata: $Worker"
+                    }
                 }
             }
             $WorkerEntry = "carbon/data/CarbonLuau/native/$Rid/$ExpectedCompiler"
@@ -109,7 +116,9 @@ try {
                     'examples/gui/foundation3-combined/init.luau',
                     'examples/gui/shared-rich/init.luau','examples/gui/per-player-rich/init.luau',
                     'examples/addons/guiowner/addon.json','examples/addons/guiowner/init.luau','examples/addons/guiowner/api.luau',
-                    'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau')) {
+                    'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau',
+                    'examples/world/exact-lookup/init.luau','examples/world/equality/init.luau','examples/world/string-id/init.luau',
+                    'docs/api/Services/Workspace.md','docs/api/Types/Entity.md','docs/api/World-Examples.md')) {
                 if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $ExampleEntry })) {
                     throw "Release bundle is missing public example: $ExampleEntry"
                 }

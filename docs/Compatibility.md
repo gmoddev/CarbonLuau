@@ -687,7 +687,10 @@ build `25653776`, protocol `2634.289.1`, Linux Carbon `2.0.261.0` at
 binary/hook pins. Changed host builds, patches or hook-component variants are
 requalification-gated. [Entity-1B validation](WorldEntityFoundation1B-Validation.md)
 qualifies the exact keyed, read-only `Workspace`/`Entity` runtime on these hosts.
-This is not yet a metadata-backed or release-assigned public API.
+Entity-1C assigns public metadata to development scripting API
+`0.6.0-experimental`; package v0.5.0 remains the latest published package and
+does not contain Workspace/Entity. [Entity-1C](WorldEntityFoundation1C.md)
+owns combined lifecycle, scale, tooling and public-closure evidence.
 
 The initial Carbon plugin batch installs the exact-qualified observer before
 restoration. First install into a running server, or full plugin unload/reload
@@ -702,7 +705,8 @@ Entity-1B implements `game:GetService("Workspace")`,
 `Entity.Id`, `Entity.Prefab` and `Entity.Position` under the exact
 target's keyed registry lookup, exact BaseEntity lifetime validation,
 prefab capture/bounds and root world-space Transform reads. Combined
-cross-domain/provider/reload scale and public metadata/docs are Entity-1C gates.
+cross-domain/provider/reload scale and public metadata/docs are Entity-1C
+qualification gates, not 1B evidence.
 The earlier build `25353106` / Carbon `2.0.259` was historical Player/inventory
 evidence, not the current Entity-1A host target.
 
@@ -713,10 +717,10 @@ Future collection/event APIs require explicit inspected-work/result/queue bounds
 Future Spawn/Destroy/Position mutations require their own exact-host evidence and
 Player-1F-C's corrected committed-only mutation predicate.
 
-D20's Entity-1A/1B qualification changes no package version, scripting API identity,
-native ABI, provider protocol, package schema or Luau revision. The published
-0.5.0 line is unchanged. The existing `0.5.0-experimental` API identity does
-not imply Entity support; Entity has no public release assignment.
+D20's Entity-1A/1B qualification did not change identities. Entity-1C assigns
+the development scripting API `0.6.0-experimental` without changing published
+package `0.5.0`, native ABI `1.5`, provider protocol `1.2`, package schema `1`
+or the Luau pin. The published `0.5.0-experimental` API does not include Entity.
 
 ## Persistence Foundation 1 qualification
 

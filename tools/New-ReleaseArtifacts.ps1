@@ -6,6 +6,7 @@ param(
     [string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist\release')
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'ZipCentralDirectory.ps1')
 $Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $NativePath = (Resolve-Path -LiteralPath $NativeLibrary).Path
 $CompilerPath = (Resolve-Path -LiteralPath $CompilerWorker).Path
@@ -146,6 +147,9 @@ try {
                 @{ Source = (Join-Path $Root 'docs/api/Types/DataStoreQuery.md'); Name = 'docs/api/Types/DataStoreQuery.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Types/DataStoreQueryResult.md'); Name = 'docs/api/Types/DataStoreQueryResult.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Types/PersistedValue.md'); Name = 'docs/api/Types/PersistedValue.md' },
+                @{ Source = (Join-Path $Root 'docs/api/Services/Workspace.md'); Name = 'docs/api/Services/Workspace.md' },
+                @{ Source = (Join-Path $Root 'docs/api/Types/Entity.md'); Name = 'docs/api/Types/Entity.md' },
+                @{ Source = (Join-Path $Root 'docs/api/World-Examples.md'); Name = 'docs/api/World-Examples.md' },
                 @{ Source = (Join-Path $Root 'LICENSE'); Name = 'LICENSE' },
                 @{ Source = (Join-Path $Root 'THIRD_PARTY_NOTICES.md'); Name = 'THIRD_PARTY_NOTICES.md' },
                 @{ Source = (Join-Path $Root 'native/third_party/luau/LICENSE.txt'); Name = 'LUAU-LICENSE.txt' },
@@ -165,6 +169,29 @@ try {
             }
         } finally { $Archive.Dispose() }
     } finally { $Stream.Dispose() }
+
+    if ($Rid -eq 'linux-x64') {
+        # ZipArchive on Windows writes DOS-origin entries even when Unix 0755
+        # ExternalAttributes are set. Linux unzip then drops the execute bits.
+        # Set only the two worker entries' central-directory creator OS to Unix.
+        $Bytes = [IO.File]::ReadAllBytes($ArchivePath)
+        $Workers = @(
+            "carbon/data/CarbonLuau/native/$Rid/$ExpectedCompilerName",
+            "carbon/data/CarbonLuau/native/$Rid/$ExpectedStorageName"
+        )
+        $Seen = @{}
+        foreach ($Entry in (Get-ZipCentralEntries $Bytes)) {
+            if ($Entry.Name -cnotin $Workers) { continue }
+            if ($Seen.ContainsKey($Entry.Name) -or
+                (($Entry.ExternalAttributes -shr 16) -band 511) -ne 493) {
+                throw "Invalid executable worker archive metadata: $($Entry.Name)"
+            }
+            $Bytes[$Entry.Offset + 5] = 3 # ZIP creator system: Unix.
+            $Seen[$Entry.Name] = $true
+        }
+        if ($Seen.Count -ne $Workers.Count) { throw 'Release ZIP lacks an executable Linux worker' }
+        [IO.File]::WriteAllBytes($ArchivePath, $Bytes)
+    }
 
     $PublishedProvenance = Join-Path $ResolvedOutput "CarbonLuau-v$($Release.releaseVersion)-$Rid.provenance.json"
     Copy-Item -LiteralPath $ProvenancePath -Destination $PublishedProvenance -Force

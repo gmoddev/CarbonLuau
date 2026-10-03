@@ -2,7 +2,7 @@
   "SchemaVersion": 1,
   "Api": {
     "Name": "CarbonLuau",
-    "Version": "0.5.0-experimental",
+    "Version": "0.6.0-experimental",
     "Status": "Experimental"
   },
   "Types": [
@@ -141,6 +141,18 @@
       "Summary": "Private owner-bound persistence service; preview unavailable.",
       "Availability": {
         "SinceApi": "0.5.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Entity",
+      "Name": "Entity",
+      "Kind": "Class",
+      "Summary": "Read-only facade for one exact live Rust entity lifetime.",
+      "Availability": {
+        "SinceApi": "0.6.0-experimental",
         "Implemented": true,
         "Qualification": "Experimental"
       },
@@ -478,6 +490,18 @@
       "Summary": "Immutable finite spatial vector.",
       "Availability": {
         "SinceApi": "0.4.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable"
+    },
+    {
+      "Id": "Workspace",
+      "Name": "Workspace",
+      "Kind": "Service",
+      "Summary": "Exact keyed lookup of currently admitted Rust world entities.",
+      "Availability": {
+        "SinceApi": "0.6.0-experimental",
         "Implemented": true,
         "Qualification": "Experimental"
       },
@@ -969,6 +993,51 @@
       ]
     },
     {
+      "Id": "Entity.Id",
+      "Name": "Id",
+      "OwnerId": "Entity",
+      "Kind": "Property",
+      "Summary": "Canonical current-world network ID; not a durable identity.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "Entity.Position",
+      "Name": "Position",
+      "OwnerId": "Entity",
+      "Kind": "Property",
+      "Summary": "Fresh world-space root position of this exact live entity.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Vector3",
+      "Writable": false
+    },
+    {
+      "Id": "Entity.Prefab",
+      "Name": "Prefab",
+      "OwnerId": "Entity",
+      "Kind": "Property",
+      "Summary": "Full canonical prefab name for this exact live entity.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
       "Id": "Frame.AnchorPoint",
       "Name": "AnchorPoint",
       "OwnerId": "Frame",
@@ -1439,7 +1508,7 @@
         "Implemented": true,
         "Qualification": "Experimental"
       },
-      "ValueType": "\"0.5.0-experimental\"",
+      "ValueType": "\"0.6.0-experimental\"",
       "Writable": false
     },
     {
@@ -1518,6 +1587,19 @@
           ],
           "Returns": [
             "Players"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "\"Workspace\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Workspace"
           ]
         }
       ]
@@ -7758,6 +7840,34 @@
           ],
           "Returns": [
             "Vector3"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "Workspace.GetEntityById",
+      "Name": "GetEntityById",
+      "OwnerId": "Workspace",
+      "Kind": "Method",
+      "Summary": "Find one live entity by canonical decimal network ID, or nil if absent.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Id",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Entity?"
           ]
         }
       ]

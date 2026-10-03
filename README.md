@@ -29,6 +29,10 @@ For clean-checkout builds, checksums, and provenance, see the [release reproduci
 
 The `CarbonLuau 0.5.0-experimental` API retains controlled modules/tasks, Player events, permission-protected commands, live position/health reads, inventory checks, verified GiveItem/TakeItem and Teleport. It adds private local durable stores with callback-based Get/Set/Remove and bounded structured Query. Execution uses bounded logging, memory and deadlines. Provider-owned addon packages share one VM with exact dependency lifetimes and explicit public modules imported through `require("@id[/path]")`.
 
+Development source now assigns exact keyed read-only `Workspace`/`Entity` lookup
+to scripting API `0.6.0-experimental`, on the [pinned host envelope](docs/api/Services/Workspace.md).
+The latest published package remains 0.5.0 and does not contain that API.
+
 Addon packages are registered by a loaded Carbon provider plugin. CarbonLuau does not scan an addon directory or download packages. See [addon composition](docs/api/Addons.md), the [provider protocol](docs/api/Addon-Providers.md), and the [Foundation E qualification record](docs/FoundationE.md).
 
 The GUI surface offers ScreenGui, Frame, TextLabel, TextButton, ImageLabel,
@@ -73,9 +77,10 @@ Preparation is automatic; optional `Indexes = { "Coins", "Level" }` hints ask
 for early preparation. Authors manage no schemas, versions or migrations. See
 the [author guide](docs/api/Persistence.md), [0.5.0 release notes](docs/releases/0.5.0.md),
 and [canonical design](docs/PersistenceFoundation2.md).
-[World/Entity Foundation 1](docs/WorldEntityFoundation1.md)
-is host-primitive-gated/deferred; Entity-1A remains blocked by the
-[exact-lifetime proof gap](docs/WorldEntityLifetimeInvestigation.md).
+[World/Entity Foundation 1](docs/WorldEntityFoundation1.md) has a qualified
+private exact-lifetime substrate and read-only runtime on the pinned hosts.
+Historical [negative lifetime evidence](docs/WorldEntityLifetimeInvestigation.md)
+remains preserved; development public docs start at [Workspace](docs/api/Services/Workspace.md).
 
 Start with [AICONTEXT.md](AICONTEXT.md), which maps each rule to its canonical document. [Invariants](docs/Invariants.md) owns architecture, security, and lifecycle requirements. [Compatibility](docs/Compatibility.md) owns support and validation policy. Historical phase contracts and qualification records remain in `docs/` for traceability.
 

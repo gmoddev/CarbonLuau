@@ -15,6 +15,9 @@ if (!$Sidebar.Contains("releases/$($Release.releaseVersion).md") -or
 foreach ($QueryDocument in @('DataStoreOptions','DataStoreQuery','DataStoreQueryResult')) {
     if (!$Sidebar.Contains("api/Types/$QueryDocument.md")) { throw "Query reference missing from hosted documentation navigation: $QueryDocument" }
 }
+foreach ($WorldDocument in @('api/Services/Workspace.md','api/Types/Entity.md','api/World-Examples.md')) {
+    if (!$Sidebar.Contains($WorldDocument)) { throw "World reference missing from hosted documentation navigation: $WorldDocument" }
+}
 $Player1C = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1C.md')
 $Player1D = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1D.md')
 $Player1FA = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/PlayerInteractionFoundation1FA.md')
@@ -22,11 +25,11 @@ foreach ($Text in @($Bootstrap,$Managed,(Get-Content -Raw -LiteralPath (Join-Pat
     (Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Compatibility.md')))) {
     if (!$Text.Contains($Version)) { throw 'API version differs between runtime and documentation' }
 }
-foreach ($Service in @('Players','Commands','Gui','Items','DataStoreService')) {
+foreach ($Service in @('Players','Commands','Gui','Items','Workspace','DataStoreService')) {
     if (!$Bootstrap.Contains(('if Name == "{0}"' -f $Service))) { throw "Missing registered service: $Service" }
     if ($Service -ne 'Gui' -and !(Test-Path -LiteralPath (Join-Path $Root "docs/api/Services/$Service.md"))) { throw "Missing service reference: $Service" }
 }
-foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection','GiveItemBehavior',
+foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection','GiveItemBehavior','Entity',
         'DataStore','DataStoreOptions','DataStoreQuery','DataStoreQueryResult','PersistedValue')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "docs/api/Types/$Type.md"))) { throw "Missing type reference: $Type" }
 }
@@ -138,12 +141,18 @@ $ServiceReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Ser
 $Catalog = Get-Content -Raw -LiteralPath (Join-Path $Root 'api/carbonluau-api.json') | ConvertFrom-Json
 $Definitions = Get-Content -Raw -LiteralPath (Join-Path $Root 'generated/carbonluau.d.luau')
 $PersistenceTypes = @('DataStoreService','DataStore','DataStoreOptions','DataStoreQuery','DataStoreQueryResult','PersistedValue')
+$EntityTypes = @('Workspace','Entity')
 foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
     $IsPersistence = $Declaration.Id -cin $PersistenceTypes -or $Declaration.OwnerId -cin $PersistenceTypes
     if ($IsPersistence) {
         if ($Declaration.Availability.SinceApi -cne '0.5.0-experimental' -or
             $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
             throw "Persistence availability/qualification differs: $($Declaration.Id)"
+        }
+    } elseif ($Declaration.Id -cin $EntityTypes -or $Declaration.OwnerId -cin $EntityTypes) {
+        if ($Declaration.Availability.SinceApi -cne '0.6.0-experimental' -or
+            $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
+            throw "Entity availability/qualification differs: $($Declaration.Id)"
         }
     } elseif ([version]($Declaration.Availability.SinceApi -split '-')[0] -gt [version]'0.4.0') {
         throw "Historical introduction version advanced: $($Declaration.Id)"
@@ -169,6 +178,30 @@ foreach ($Example in @('query-equals','query-range','query-top','query-pages','q
     if (!$ExampleText.Contains('Store:Query(') -or !$ExampleText.Contains('ErrorCode')) {
         throw "Query example lacks public API/error handling: $Example"
     }
+}
+foreach ($Example in @('exact-lookup','equality','string-id')) {
+    $ExamplePath = Join-Path $Root "examples/world/$Example/init.luau"
+    if (!(Test-Path -LiteralPath $ExamplePath)) { throw "Missing runnable world example: $Example" }
+    $ExampleText = Get-Content -Raw -LiteralPath $ExamplePath
+    if (!$ExampleText.Contains('GetEntityById(') -or $ExampleText -match ':Spawn\(|:Destroy\(|:IsValid\(') {
+        throw "World example differs from read-only surface: $Example"
+    }
+}
+$EntityMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Entity' } | ForEach-Object Name | Sort-Object)
+if (($EntityMembers -join ',') -cne 'Id,Position,Prefab') { throw 'Unexpected Entity public member' }
+$WorkspaceMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Workspace' } | ForEach-Object Name)
+if (($WorkspaceMembers -join ',') -cne 'GetEntityById' -or
+    !$Definitions.Contains('function GetEntityById(self, Id: string): (Entity?)') -or
+    !$Definitions.Contains('function GetService(self, Name: "Workspace"): (Workspace)')) {
+    throw 'Workspace runtime/catalog/definition drift'
+}
+$WorkspaceReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Services/Workspace.md')
+$EntityReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/Entity.md')
+foreach ($Name in @('GetEntityById','first','restart')) {
+    if (!$WorkspaceReference.Contains($Name)) { throw "Workspace reference omits $Name" }
+}
+foreach ($Name in @('Entity.Id','Entity.Prefab','Entity.Position','stale','compare equal')) {
+    if (!$EntityReference.Contains($Name)) { throw "Entity reference omits $Name" }
 }
 foreach ($Example in @('get','set','remove','player-key','snapshot','errors')) {
     $ExampleText = Get-Content -Raw -LiteralPath (Join-Path $Root "examples/persistence/$Example/init.luau")

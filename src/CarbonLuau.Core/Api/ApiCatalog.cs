@@ -21,17 +21,8 @@ namespace CarbonLuau.Core
             string ApiVersion = (string)Release["apiVersion"];
             var Lines = (Bootstrap + "\n" + NativeBindings.Replace("// @carbonluau-api ", "-- @carbonluau-api ")).Replace("\r\n", "\n").Split('\n');
             const string Marker = "-- @carbonluau-api ";
-            const string InternalMarker = "-- @carbonluau-internal-binding ";
             var Bindings = new HashSet<string>(StringComparer.Ordinal);
             foreach (string Line in Lines) {
-                if (Line.StartsWith(InternalMarker, StringComparison.Ordinal)) {
-                    JObject Internal = JObject.Parse(Line.Substring(InternalMarker.Length));
-                    string InternalBinding = (string)Internal["Binding"];
-                    if (Internal.Count != 1 || String.IsNullOrEmpty(InternalBinding) ||
-                        !Lines.Contains(InternalBinding) || !Bindings.Add(InternalBinding))
-                        throw new InvalidOperationException("internal runtime binding differs from declaration");
-                    continue;
-                }
                 if (!Line.StartsWith(Marker, StringComparison.Ordinal)) continue;
                 JObject Declaration = JObject.Parse(Line.Substring(Marker.Length));
                 string Binding = (string)Declaration["Binding"];
@@ -74,7 +65,7 @@ namespace CarbonLuau.Core
             if (!StorageRegistrations.SetEquals(StorageMethods.Select(Value => (string)Value["Name"])))
                 throw new InvalidOperationException("native persistence API declaration lacks registration");
             // Declared public function tables must not acquire an unannotated function.
-            string[] Tables = { "UDim", "UDim2", "Vector2", "Vector3", "Color3", "ImageSource", "PlayerMethods", "Players", "Commands", "GuiObjectMethods", "Gui", "Items", "Game" };
+            string[] Tables = { "UDim", "UDim2", "Vector2", "Vector3", "Color3", "ImageSource", "PlayerMethods", "Players", "Commands", "GuiObjectMethods", "Gui", "Items", "Workspace", "Game" };
             foreach (string Line in Lines) {
                 if (Tables.Any(Table => Line.StartsWith("function " + Table + ".", StringComparison.Ordinal)) && !Bindings.Contains(Line))
                     throw new InvalidOperationException("runtime function lacks API declaration: " + Line);

@@ -1,7 +1,9 @@
 # CarbonLuau scripting API
 
-The published v0.5.0 scripting identity is **experimental** `CarbonLuau
-0.5.0-experimental`. [Persistence Foundation 1C](../PersistenceFoundation1C.md)
+The latest published package is v0.5.0 with experimental scripting API
+`0.5.0-experimental`. The development scripting API is `0.6.0-experimental`;
+Workspace/Entity is assigned there and is **not in published v0.5.0**.
+[Persistence Foundation 1C](../PersistenceFoundation1C.md)
 and [Foundation 2D](../PersistenceFoundation2D.md) record combined qualification;
 see [persistence](Persistence.md) for the author surface.
 The earlier gameplay/addon/GUI/Player surfaces retain their introduction versions
@@ -17,6 +19,7 @@ This is server-side Luau, not Roblox API compatibility.
 | Player identity, live position/health observation, messaging and permission query | [Player](Types/Player.md) |
 | Rust item identity, bounded physical inventory observation and verified TakeItem/GiveItem | [Items](Services/Items.md), [Player](Types/Player.md), [GiveItemBehavior](Types/GiveItemBehavior.md) |
 | Immutable world-coordinate values | [Vector3](Types/Vector3.md) |
+| Development read-only exact world lookup | [Workspace](Services/Workspace.md), [Entity](Types/Entity.md), [examples](World-Examples.md) |
 | Command payload | [CommandContext](Types/CommandContext.md) |
 | Event subscription | [Signal](Types/Signal.md), [Connection](Types/Connection.md) |
 | Versions and limits | [Compatibility](Compatibility.md) |
@@ -68,7 +71,7 @@ Player-1F-A adds committed-only verified `Player:TakeItem`; Player-1F-B adds
 [Player-1F-A](../PlayerInteractionFoundation1FA.md) and
 [Player-1F-B](../PlayerInteractionFoundation1FB-Validation.md) and
 [Player-1F-C combined closure](../PlayerInteractionFoundation1FC.md) qualification records. Not implemented in
-the current scripting surface: raw inventory objects, entities, health mutation,
+the current scripting surface: raw inventory objects, world enumeration or mutation, health mutation,
 moderation/admin mutation, networking, HTTP, filesystem APIs,
 arbitrary hooks/console execution, reflection, Roblox hierarchy/replication and
 `task.wait`. Historical Phase 4 was deferred; the implemented Player-1C/1F

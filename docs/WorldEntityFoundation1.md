@@ -1,14 +1,15 @@
 # CarbonLuau World/Entity Foundation 1
 
-Status: **Entity-1A private lifetime and Entity-1B read-only runtime qualified on pinned hosts; public release closure deferred**
+Status: **Entity-1A private lifetime and Entity-1B read-only runtime qualified on pinned hosts; [Entity-1C](WorldEntityFoundation1C.md) records the public Foundation 1 closure.**
 
 The original 2026-09-23 gate below is historical. The later
 [Entity-1A qualification](WorldEntityFoundation1A-Validation.md) and amended
 [D20](Invariants.md#d20--worldentity-foundation-1) close the private
 exact-lifetime gate through continuous startup observation and full-Spawn
 completion fencing. The later [Entity-1B validation](WorldEntityFoundation1B-Validation.md)
-records the exact keyed `Workspace`/`Entity` read-only runtime binding; canonical
-public metadata, docs and release identity remain Entity-1C work.
+records the exact keyed `Workspace`/`Entity` read-only runtime binding. Entity-1C
+owns the combined lifecycle, public metadata/docs and `0.6.0-experimental`
+development scripting API assignment; it does not publish package `0.6.0`.
 
 Closure adopted 2026-09-23: [D20](Invariants.md#d20--worldentity-foundation-1)
 requires a supported authoritative incarnation/retirement primitive before any
@@ -819,7 +820,7 @@ Architecture adoption alone authorizes no production API. The private Entity-1A
 gate has since closed only within the pinned host/deployment envelope in
 [its validation](WorldEntityFoundation1A-Validation.md). The separately scoped
 [Entity-1B runtime](WorldEntityFoundation1B-Validation.md) is qualified on that
-host envelope; Entity-1C remains combined/public
+host envelope; [Entity-1C](WorldEntityFoundation1C.md) is the combined/public
 lifecycle/scale closure. The original conditional phase description below is
 retained as historical design, not an instruction to reimplement Entity-1A.
 
@@ -884,8 +885,9 @@ Close:
 - public docs/examples;
 - compatibility and release planning.
 
-Only Entity-1C may assign the implemented surface to a future package/scripting
-identity.
+Entity-1C assigns the implemented surface to development scripting API
+`0.6.0-experimental`; a future package/release identity remains separately
+authorized.
 
 ### Later foundations
 
@@ -901,9 +903,9 @@ D20 adoption changes **no** package version, scripting API identity, native ABI,
 provider protocol, package schema or Luau pin. It does not retroactively add
 Workspace/Entity to `0.4.0-experimental`.
 
-If Entity-1A through 1C later complete as an additive release, `0.5.0-experimental`
-is the natural release-planning candidate, but D20 intentionally leaves that identity
-unassigned until implementation/public-closure evidence exists.
+The historical 0.5 candidate above was superseded when package v0.5.0 shipped
+without Entity. Entity-1C assigns the implemented read-only surface to
+development API `0.6.0-experimental`; package v0.6.0 is not released or tagged.
 
 ## 22. Explicitly deferred
 

@@ -59,6 +59,15 @@
   "@carbonluau/globaltype/DataStoreService.GetDataStore": {
     "documentation": "Disk-free private store acquisition with optional bounded index hints; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied."
   },
+  "@carbonluau/globaltype/Entity.Id": {
+    "documentation": "Canonical current-world network ID; not a durable identity."
+  },
+  "@carbonluau/globaltype/Entity.Position": {
+    "documentation": "Fresh world-space root position of this exact live entity."
+  },
+  "@carbonluau/globaltype/Entity.Prefab": {
+    "documentation": "Full canonical prefab name for this exact live entity."
+  },
   "@carbonluau/globaltype/Frame.AnchorPoint": {
     "documentation": "Retained AnchorPoint."
   },
@@ -877,5 +886,8 @@
   },
   "@carbonluau/global/Vector3.new": {
     "documentation": "Vector3.new."
+  },
+  "@carbonluau/globaltype/Workspace.GetEntityById": {
+    "documentation": "Find one live entity by canonical decimal network ID, or nil if absent."
   }
 }

@@ -51,6 +51,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | World/Entity Foundation 1 rationale, host evidence, phase routing and qualification gates | [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) |
 | Entity-1A qualified private startup-observed Spawn-epoch substrate, exact target and Entity-1B handoff | [WorldEntityFoundation1A-Validation.md](docs/WorldEntityFoundation1A-Validation.md) |
 | Entity-1B exact keyed read-only Workspace/Entity runtime qualification and Entity-1C handoff | [WorldEntityFoundation1B-Validation.md](docs/WorldEntityFoundation1B-Validation.md) |
+| Entity-1C combined lifecycle, scale, public API metadata, tooling, compatibility, and Foundation 1 closure | [WorldEntityFoundation1C.md](docs/WorldEntityFoundation1C.md) |
 | Historical blocked Entity lifetime investigation and negative evidence | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) and [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
 | Historical Spawn-prefix and base-completion counterexamples; startup observer investigation | [WorldEntitySpawnEpochProbe.md](docs/WorldEntitySpawnEpochProbe.md), [WorldEntityCompletionFenceInvestigation.md](docs/WorldEntityCompletionFenceInvestigation.md) and [WorldEntityStartupObserverInvestigation.md](docs/WorldEntityStartupObserverInvestigation.md) |
 | Canonical Persistence Foundation 1 architecture (resolved; private 1A qualified) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
@@ -308,12 +309,15 @@ BaseEntity reuse was not demonstrated on the tested prefab. No public
 `Workspace` or `Entity` API was part of Entity-1A. [Entity-1B validation](docs/WorldEntityFoundation1B-Validation.md)
 records the implemented exact keyed, read-only `Workspace:GetEntityById` plus
 `Entity.Id`, `Entity.Prefab` and `Entity.Position` runtime on those hosts. It is
-not yet assigned to a scripting API identity or published in canonical API
-metadata/docs; Entity-1C owns combined lifecycle/scale/public closure. Whole-world enumeration, prefab
+assigned to the development scripting API `0.6.0-experimental` by Entity-1C,
+with canonical metadata, definitions, and public documentation routed through
+[Entity-1C](docs/WorldEntityFoundation1C.md). Package `0.5.0` remains the last
+published release; no Entity release/tag follows from that API assignment.
+Whole-world enumeration, prefab
 filtering, spatial queries, lifecycle Signals, Spawn, Destroy and specialized
 entity capabilities require later explicit architecture rather than being
-implicitly authorized by D20. Entity-1A changes no current package/API/ABI/provider/
-schema/Luau identity.
+implicitly authorized by D20. Entity-1A/1B made no package/ABI/provider/schema/
+Luau identity change; the 1C API assignment is separate.
 
 Persistence Foundation 1 is the next runtime foundation under
 [D21](docs/Invariants.md#d21--persistence-foundation-1). Its

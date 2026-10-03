@@ -8,6 +8,9 @@ local persistence and structured Query under scripting API
 `0.5.0-experimental`. See [release notes](releases/0.5.0.md) and
 [combined Foundation 2 qualification](PersistenceFoundation2D.md).
 Platform and client limits remain in [Compatibility](Compatibility.md).
+Development scripting API `0.6.0-experimental` adds read-only
+[Workspace/Entity](api/Services/Workspace.md) on an exact pinned host envelope;
+the published package remains v0.5.0.
 
 Start with [installation](Installation.md), then use the
 [experimental API reference](api/README.md). Read the
@@ -73,10 +76,10 @@ Preparation is automatic, with optional field-name hints. Authors manage no
 schemas, versions or migrations. [2D](PersistenceFoundation2D.md) records
 combined Query and derived-index qualification; the
 [final correction audit](PersistenceFoundation2-Validation.md) preserves design history.
-World/Entity's accepted future design
-is [host-primitive-gated/deferred](WorldEntityFoundation1.md); Entity-1A is blocked
-by the [authoritative lifetime proof gap](WorldEntityLifetimeInvestigation.md),
-not a demonstrated ordinary-gameplay pooled-reuse bug.
+[World/Entity Foundation 1](WorldEntityFoundation1.md) has a qualified
+private lifetime substrate and read-only keyed runtime on pinned Windows/Linux
+hosts. Earlier [negative lifetime evidence](WorldEntityLifetimeInvestigation.md)
+remains historical; full plugin reload requires restart before Entity lookup.
 
 [Invariants](Invariants.md) owns canonical runtime policy. The approved GUI
 Foundation 1 contract is decision

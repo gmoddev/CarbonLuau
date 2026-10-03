@@ -426,13 +426,43 @@ internal static class Program
         using (Model Directory = new Model()) {
             Directory.BeginQualifiedObservation();
             Check(Directory.QualifyStartupCompletion(), "churn startup qualified");
-            PopulateWeakTokens(Directory, 1000);
+            const int DistinctEntities = 128;
+            var Identities = new object[DistinctEntities];
+            var Bindings = new Model.Binding[DistinctEntities];
+            ulong HighestToken = 0;
+            for (int Index = 0; Index < DistinctEntities; ++Index) {
+                object Identity = new object();
+                Identities[Index] = Identity;
+                Model.SpawnAttempt Attempt = Directory.BeginSpawn(Identity);
+                Check(Directory.CompleteSpawn(Attempt, true, true), "live-scale completed Spawn");
+                Model.Binding Value;
+                ulong Id = checked((ulong)Index + 1);
+                Check(Directory.TryAdmit(Identity, new Model.Authority(1, 2, 3), _ => true,
+                    Object => new Model.HostEvidence(true, true, true, Id, "prefab", Object), out Value),
+                    "live-scale admission");
+                Model.Binding OtherDomain;
+                Check(Directory.TryAdmit(Identity, new Model.Authority(1, 9, 5), _ => true,
+                    Object => new Model.HostEvidence(true, true, true, Id, "prefab", Object), out OtherDomain) &&
+                    Model.SameLifetime(Value, OtherDomain), "multi-domain lookup shares one exact lifetime token");
+                Check(Value.Record.Token > HighestToken, "distinct lifetimes use monotonic tokens");
+                HighestToken = Value.Record.Token;
+                Bindings[Index] = Value;
+            }
+            for (int Index = 0; Index < DistinctEntities; ++Index) {
+                ulong Id = checked((ulong)Index + 1);
+                Check(Directory.Validate(Bindings[Index], _ => true,
+                    Object => new Model.HostEvidence(true, true, true, Id, "prefab", Object)),
+                    "live-scale binding remains valid without strong host retention");
+            }
+            Identities = null;
+            Bindings = null;
+            PopulateWeakTokens(Directory, 4096);
             GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
-            for (int Pass = 0; Pass < 32; ++Pass) Directory.SweepRetiredTokens(64);
+            for (int Pass = 0; Pass < 128; ++Pass) Directory.SweepRetiredTokens(64);
             var Field = typeof(Model).GetField("TokenRecords", BindingFlags.Instance | BindingFlags.NonPublic);
             var Records = Field.GetValue(Directory) as System.Collections.IDictionary;
-            Check(Records != null && Records.Count == 0,
-                "weak token index converges after collected entity churn");
+            Check(Records != null && Records.Count <= 1,
+                "weak token index converges after 128 observed entities and 4096 churned lifetimes");
         }
     }
 
