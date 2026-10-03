@@ -15,9 +15,12 @@ param(
     [string]$LinuxBootstrapAssembly,
     [string]$RustGlobalAssembly,
     [string]$HarmonyAssembly,
+    [string]$WindowsFacepunchSystemAssembly,
+    [string]$LinuxFacepunchSystemAssembly,
     [switch]$SpawnEpochProof,
     [switch]$CompletionResearch,
-    [switch]$StartupObserverProof
+    [switch]$StartupObserverProof,
+    [switch]$EntityReadProof
 )
 
 $ErrorActionPreference = 'Stop'
@@ -105,6 +108,48 @@ try {
         Assert-Evidence ($Left.Attributes -eq $Right.Attributes) "Windows/Linux visibility: $Spec"
     }
     Assert-Order (Get-Method $Linux 'BaseNetworkable/EntityRealm|Find|1') @('::TryGetValue(')
+    if ($EntityReadProof) {
+        if (!$HarmonyAssembly) { throw '[CarbonLuau:EntityEvidence] Read proof requires the pinned Harmony assembly' }
+        if (!$WindowsFacepunchSystemAssembly -or !$LinuxFacepunchSystemAssembly)
+            { throw '[CarbonLuau:EntityEvidence] Read proof requires both pinned Facepunch.System assemblies' }
+        Assert-Evidence (((Get-FileHash -LiteralPath $WindowsFacepunchSystemAssembly -Algorithm SHA256).Hash) -eq
+            '452A1F0646EF6656951601C8B7BF4A351E6B2B31962B47E8DEFD8ACF7F144A1F') `
+            'pinned Windows keyed dictionary assembly'
+        Assert-Evidence (((Get-FileHash -LiteralPath $LinuxFacepunchSystemAssembly -Algorithm SHA256).Hash) -eq
+            'CF42F5749758AC553102684FB7657A4F5F039E2D5F574A83567B9B9059CF5695') `
+            'pinned Linux keyed dictionary assembly'
+        $WindowsSystem = Read-Assembly $WindowsFacepunchSystemAssembly
+        $LinuxSystem = Read-Assembly $LinuxFacepunchSystemAssembly
+        $ListDictionarySpec = 'ListDictionary`2|TryGetValue|2'
+        $WindowsLookup = Get-Method $WindowsSystem $ListDictionarySpec
+        $LinuxLookup = Get-Method $LinuxSystem $ListDictionarySpec
+        Assert-Evidence ((Get-Body $WindowsLookup) -ceq (Get-Body $LinuxLookup)) `
+            'Windows/Linux keyed dictionary IL equivalent'
+        Assert-Order $WindowsLookup @('Dictionary`2<TKey,System.Int32>::TryGetValue(',
+            'BufferList`1<TVal>::get_Item(System.Int32)')
+        $FindBody = Get-Body (Get-Method $Windows 'BaseNetworkable/EntityRealm|Find|1')
+        Assert-Evidence ($FindBody.Contains('ListDictionary`2<NetworkableId,BaseNetworkable>::TryGetValue(')) `
+            'EntityRealm.Find reaches the pinned keyed dictionary'
+        $HarmonyState = $Harmony.MainModule.GetType('HarmonyLib.HarmonySharedState')
+        $StateField = @($HarmonyState.Fields | Where-Object Name -eq 'state')
+        Assert-Evidence ($StateField.Count -eq 1 -and $StateField[0].FieldType.FullName -eq
+            'System.Collections.Generic.Dictionary`2<System.Reflection.MethodBase,System.Byte[]>') `
+            'pinned Harmony state maps method to serialized byte-array record'
+        Assert-Order (Get-Method $Harmony 'HarmonyLib.HarmonySharedState|UpdatePatchInfo|3') @(
+            'PatchInfoSerialization::Serialize(',
+            'Dictionary`2<System.Reflection.MethodBase,System.Byte[]>::set_Item(')
+        Assert-Order (Get-Method $Harmony 'HarmonyLib.PatchInfoSerialization|Serialize|1') @(
+            'System.IO.MemoryStream::.ctor()', 'System.IO.MemoryStream::ToArray()')
+        $StateWrites = @((Get-Types $Harmony.MainModule.Types) | ForEach-Object {
+            $_.Methods | Where-Object HasBody | ForEach-Object {
+                $_.Body.Instructions | Where-Object {
+                    $_.OpCode.Name -eq 'stsfld' -and $_.Operand.FullName -eq $StateField[0].FullName
+                }
+            }
+        })
+        Assert-Evidence ($StateWrites.Count -eq 1) 'Harmony shared dictionary is initialized once, not replaced'
+        Write-Host '[CarbonLuau:EntityEvidence] Entity-1B keyed lookup chain matches pinned Windows/Linux hosts; admission and live runtime remain separate gates.'
+    }
     Assert-Order (Get-Method $Linux 'BaseNetworkable|TerminateOnServer|0') @('::UnregisterID(', '::DestroyNetworkable(')
     Assert-Order (Get-Method $Linux 'BaseNetworkable|EntityDestroy|0') @('::ResetState()', '::Retire(')
     Assert-Order (Get-Method $Linux 'BaseNetworkable|SpawnShared|0') @('ldc.i4.0', '::set_IsDestroyed(', '::Register(')

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -55,6 +56,12 @@ namespace Carbon.Plugins
         private static bool EntityTargetInventoryFailed;
         private static string EntityTopologyFailure;
         private EntityLifetimeModel EntityLifetimes;
+        // Harmony 2.4.2's pinned shared state replaces each serialized patch
+        // record on update. Startup validates the full topology; an operation
+        // compares these exact record objects under Harmony's own dictionary lock.
+        private IDictionary EntityReadPatchState;
+        private FieldInfo EntityReadPatchStateField;
+        private Dictionary<MethodBase, byte[]> EntityReadPatchStamps;
         private readonly ConditionalWeakTable<BaseNetworkable, EntitySpawnChain> EntitySpawnChains =
             new ConditionalWeakTable<BaseNetworkable, EntitySpawnChain>();
         private int EntityOwnerThread;
@@ -355,6 +362,56 @@ namespace Carbon.Plugins
             catch (Exception) { EntityTopologyFailure = "patch inspection exception"; return false; }
         }
 
+        private bool CaptureEntityReadPatchStamps()
+        {
+            try {
+                Type SharedState = typeof(Harmony).Assembly.GetType("HarmonyLib.HarmonySharedState", false);
+                FieldInfo Field = SharedState == null ? null : SharedState.GetField("state",
+                    BindingFlags.Static | BindingFlags.NonPublic);
+                IDictionary State = Field == null ? null : Field.GetValue(null) as IDictionary;
+                if (State == null || EntitySpawnTargets == null) return false;
+                var Stamps = new Dictionary<MethodBase, byte[]>();
+                lock (State) {
+                    foreach (MethodBase Target in EntitySpawnTargets) {
+                        byte[] Stamp = State[Target] as byte[];
+                        if (Stamp == null || Stamp.Length == 0) return false;
+                        Stamps.Add(Target, Stamp);
+                    }
+                }
+                EntityReadPatchStateField = Field;
+                EntityReadPatchState = State;
+                EntityReadPatchStamps = Stamps;
+                return true;
+            }
+            catch (Exception) { return false; }
+        }
+
+        private bool EntityReadPatchPathCurrent(BaseEntity Entity)
+        {
+            if (Entity == null || EntityReadPatchState == null || EntityReadPatchStateField == null ||
+                EntityReadPatchStamps == null || EntitySpawnTargets == null) return false;
+            Type RuntimeType = Entity.GetType();
+            if (RuntimeType.Assembly != typeof(BaseEntity).Assembly) return false;
+            MethodInfo Effective = RuntimeType.GetMethod(nameof(BaseNetworkable.Spawn),
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null, Type.EmptyTypes, null);
+            bool EffectiveCovered = false;
+            int PathCount = 0;
+            IDictionary State = EntityReadPatchState;
+            lock (State) {
+                if (!ReferenceEquals(EntityReadPatchStateField.GetValue(null), State)) return false;
+                foreach (MethodBase Target in EntitySpawnTargets) {
+                    if (!Target.DeclaringType.IsAssignableFrom(RuntimeType)) continue;
+                    PathCount++;
+                    if (SameEntityMethod(Target, Effective)) EffectiveCovered = true;
+                    byte[] Expected;
+                    if (!EntityReadPatchStamps.TryGetValue(Target, out Expected) ||
+                        !ReferenceEquals(State[Target], Expected)) return false;
+                }
+            }
+            return EffectiveCovered && PathCount >= 2;
+        }
+
         private void BreakEntityObserver(string Reason)
         {
             EntityObserverBroken = true;
@@ -394,13 +451,18 @@ namespace Carbon.Plugins
                     return;
                 }
                 int Reconciled;
+                BaseEntity ReadWarmupCandidate;
                 if (!VerifyAllEntityPatches() ||
-                    !ReconcileEntityStartupRegistry(out Reconciled) ||
+                    !ReconcileEntityStartupRegistry(out Reconciled, out ReadWarmupCandidate) ||
+                    !CaptureEntityReadPatchStamps() ||
                     !EntityLifetimes.QualifyStartupCompletion()) {
                     BreakEntityObserver("startup completion, registry, or patch topology not qualified: " + EntityTopologyFailure);
                     return;
                 }
                 EntityStartupQualified = true;
+                if (ReadWarmupCandidate != null && Native != null && Gameplay != null)
+                    WarmEntityReadPath(ReadWarmupCandidate);
+                if (EntityObserverBroken) return;
                 Puts("[CarbonLuau:EntityLifetime] Private startup observer qualified for pinned host; keyed completions=" + Reconciled);
             }
             catch (Exception) { BreakEntityObserver("startup qualification failed"); }
@@ -409,10 +471,11 @@ namespace Carbon.Plugins
         // A bounded one-time check at the world-load boundary, never a per-Spawn
         // or World-enumeration scan. An unobserved current keyed entity poisons
         // the entire startup window rather than becoming an implicit baseline.
-        private bool ReconcileEntityStartupRegistry(out int Reconciled)
+        private bool ReconcileEntityStartupRegistry(out int Reconciled, out BaseEntity ReadWarmupCandidate)
         {
             const int RegistryLimit = 262144;
             Reconciled = 0;
+            ReadWarmupCandidate = null;
             if (Thread.CurrentThread.ManagedThreadId != EntityOwnerThread ||
                 BaseNetworkable.serverEntities == null ||
                 BaseNetworkable.serverEntities.Count > RegistryLimit)
@@ -431,6 +494,15 @@ namespace Carbon.Plugins
                     Chain.Methods.Count != 0 || Chain.Attempt != null || Chain.Poisoned ||
                     !EntityLifetimes.HasCompletedObservation(Entity))
                     return RejectEntityTopology(null, "current keyed entity lacks full observed completion");
+                if (ReadWarmupCandidate == null && !Entity.IsDestroyed &&
+                    !String.IsNullOrEmpty(Entity.PrefabName) &&
+                    Entity.PrefabName.IndexOf('\0') < 0) {
+                    try {
+                        if (new System.Text.UTF8Encoding(false, true).GetByteCount(Entity.PrefabName) <= 512)
+                            ReadWarmupCandidate = Entity;
+                    }
+                    catch (System.Text.EncoderFallbackException) { }
+                }
             }
             if (Enumerated != BaseNetworkable.serverEntities.Count)
                 return RejectEntityTopology(null, "startup registry changed during reconciliation");
@@ -448,13 +520,20 @@ namespace Carbon.Plugins
         // Private admission seam for Entity-1B. No Luau object or service is published here.
         private bool TryAdmitEntity(BaseEntity Entity, EntityLifetimeModel.Authority Authority,
             Func<EntityLifetimeModel.Authority, bool> IsCurrent, out EntityLifetimeModel.Binding Binding)
+        { return TryAdmitEntity(Entity, Authority, IsCurrent, ReadEntityEvidence, false, out Binding); }
+
+        private bool TryAdmitEntity(BaseEntity Entity, EntityLifetimeModel.Authority Authority,
+            Func<EntityLifetimeModel.Authority, bool> IsCurrent,
+            Func<object, EntityLifetimeModel.HostEvidence> ReadEvidence,
+            bool PatchTopologyChecked,
+            out EntityLifetimeModel.Binding Binding)
         {
             Binding = null;
             if (Thread.CurrentThread.ManagedThreadId != EntityOwnerThread) return false;
             try {
                 if (EntityObserverBroken || !EntityStartupQualified) return false;
-                if (!VerifyAllEntityPatches()) { BreakEntityObserver("admission patch topology changed"); return false; }
-                return EntityLifetimes.TryAdmit(Entity, Authority, IsCurrent, ReadEntityEvidence, out Binding);
+                if (!PatchTopologyChecked && !VerifyAllEntityPatches()) { BreakEntityObserver("admission patch topology changed"); return false; }
+                return EntityLifetimes.TryAdmit(Entity, Authority, IsCurrent, ReadEvidence, out Binding);
             }
             catch (Exception) { BreakEntityObserver("entity admission check failed"); return false; }
         }
@@ -497,19 +576,24 @@ namespace Carbon.Plugins
         }
 
         private bool TryAdmitEntity(BaseEntity Entity, FacadeSession Session, out EntityFacadeBinding Result)
+        { return TryAdmitEntity(Entity, Session, ReadEntityEvidence, false, out Result); }
+
+        private bool TryAdmitEntity(BaseEntity Entity, FacadeSession Session,
+            Func<object, EntityLifetimeModel.HostEvidence> ReadEvidence,
+            bool PatchTopologyChecked, out EntityFacadeBinding Result)
         {
             Result = null;
             if (Session == null || Session.Disposed || Session.VmGenerationId <= 0 ||
                 Session.DomainLifetimeId <= 0 || Thread.CurrentThread.ManagedThreadId != EntityOwnerThread)
                 return false;
             try {
-                FacadeSession.PublicationWitness Publication = Session.CapturePublicationWitness();
+                FacadeSession.PublicationWitness Publication = Session.CaptureEntityWitness();
                 var Authority = new EntityLifetimeModel.Authority(checked((ulong)Session.VmGenerationId),
                     checked((ulong)Session.DomainLifetimeId), Publication.Token);
                 Func<EntityLifetimeModel.Authority, bool> IsCurrent = Value =>
                     EntityFacadeCurrent(Value, Session, Publication);
                 EntityLifetimeModel.Binding Lifetime;
-                if (!TryAdmitEntity(Entity, Authority, IsCurrent, out Lifetime)) return false;
+                if (!TryAdmitEntity(Entity, Authority, IsCurrent, ReadEvidence, PatchTopologyChecked, out Lifetime)) return false;
                 Result = new EntityFacadeBinding(Lifetime, Session, Publication);
                 return true;
             }

@@ -18,6 +18,7 @@ Vm::~Vm()
         }
         Domains.clear();
         if (GuiValueEqual != LUA_NOREF) lua_unref(State, GuiValueEqual);
+        if (EntityIdentities != LUA_NOREF) lua_unref(State, EntityIdentities);
         if (Reference != LUA_NOREF) lua_unref(State, Reference);
         lua_close(State);
     }

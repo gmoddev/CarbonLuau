@@ -35,7 +35,10 @@
 -- @carbonluau-api {"Owner":"CommandOptions","Name":"description","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"CommandOptions.description.","SinceApi":"0.3.0-experimental","Binding":"        if Key ~= \"permission\" and Key ~= \"description\" then Fail(\"unsupported command option\") end"}
 -- @carbonluau-api {"Owner":"Players","Name":"PlayerAdded","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is added.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
 -- @carbonluau-api {"Owner":"Players","Name":"PlayerRemoving","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is removed.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
-local Host, MakeUserdata, SharedValueEqual, StorageService = ...
+local Host, MakeUserdata, SharedValueEqual, StorageService, EntityIdentityRecords = ...
+if EntityIdentityRecords == nil then
+    EntityIdentityRecords = setmetatable({}, {__mode = "k"})
+end
 local Callbacks = {}
 local Proxies = setmetatable({}, {__mode = "v"})
 local Records = setmetatable({}, {__mode = "k"})
@@ -75,6 +78,12 @@ if SharedValueEqual == nil then
         end
         if string.sub(Kind, 1, 8) == "GuiFont." then return true end
         if Kind == "GiveItemBehavior.InventoryOnly" then return true end
+        if Kind == "Entity" then
+            local LeftIdentity = EntityIdentityRecords[Left]
+            local RightIdentity = EntityIdentityRecords[Right]
+            return LeftIdentity ~= nil and RightIdentity ~= nil and
+                LeftIdentity.Host == RightIdentity.Host and LeftIdentity.Token == RightIdentity.Token
+        end
         return false
     end
 end
@@ -588,6 +597,43 @@ function Items.Exists(Self, ShortName)
     return Host(25, String(ShortName, "item short name"))[1] == "1"
 end
 table.freeze(Items)
+-- Entity-1B runtime binding. Public API metadata and release assignment remain
+-- with Entity-1C; no world enumeration or mutation surface is installed here.
+local EntityRecords = setmetatable({}, {__mode = "k"})
+local EntityMeta = {}
+EntityMeta.__tostring = function() return "Entity" end
+EntityMeta.__eq = SharedValueEqual
+EntityMeta.__newindex = function() Fail("Entity fields are read-only") end
+EntityMeta.__index = function(Self, Key)
+    local RecordValue = EntityRecords[Self]
+    if RecordValue == nil then Fail("invalid Entity") end
+    if Key == "Id" or Key == "Prefab" then
+        return Host(35, RecordValue.Token, RecordValue.Publication, Key)[1]
+    end
+    if Key == "Position" then
+        local Position = Host(35, RecordValue.Token, RecordValue.Publication, Key)
+        if #Position ~= 3 then Fail("invalid Entity position response") end
+        return Vector3.new(tonumber(Position[1]), tonumber(Position[2]), tonumber(Position[3]))
+    end
+    Fail("unknown Entity field")
+end
+EntityMeta.__metatable = "CarbonLuau.Entity"
+table.freeze(EntityMeta)
+local Workspace = {}
+function Workspace.GetEntityById(Self, Id)
+    if Self ~= Workspace then Fail("invalid Workspace service") end
+    String(Id, "entity ID")
+    if #Id < 1 or #Id > 20 or string.sub(Id, 1, 1) == "0" or
+        string.find(Id, "[^0-9]") ~= nil then Fail("invalid canonical entity ID") end
+    local Fields = Host(34, Id)
+    if #Fields == 0 then return nil end
+    if #Fields ~= 4 then Fail("invalid Entity lookup response") end
+    local Entity = MakeUserdata(EntityMeta)
+    EntityRecords[Entity] = {Token = Fields[2], Publication = Fields[4]}
+    EntityIdentityRecords[Entity] = {Host = Fields[1], Token = Fields[2]}
+    return Entity
+end
+table.freeze(Workspace)
 local Game = {ApiName = "CarbonLuau", ApiVersion = "0.5.0-experimental", ApiStatus = "Experimental"}
 -- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items | DataStoreService"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
 function Game.GetService(Self, Name)
@@ -597,9 +643,10 @@ function Game.GetService(Self, Name)
     if Name == "Commands" then return Commands end
     if Name == "Gui" then return Gui end
     if Name == "Items" then return Items end
+    if Name == "Workspace" then return Workspace end
 -- @carbonluau-api {"Type":"DataStoreService","Kind":"Service","Summary":"Private owner-bound persistence service; preview unavailable.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"    if Name == \"DataStoreService\" then return StorageService() end"}
     if Name == "DataStoreService" then return StorageService() end
-    Fail("unknown service (expected Players, Commands, Gui, Items or DataStoreService)")
+    Fail("unknown service (expected Players, Commands, Gui, Items, Workspace or DataStoreService)")
 end
 table.freeze(Game)
 -- One host-admitted callback per scheduler work item; no dispatch fan-out in Lua.
@@ -613,4 +660,4 @@ local function Dispatch(Fields)
         Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))
     else Callback(Player) end
 end
-return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Vector3 = Vector3, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont, GiveItemBehavior = GiveItemBehavior}), SharedValueEqual
+return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Vector3 = Vector3, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont, GiveItemBehavior = GiveItemBehavior}), SharedValueEqual, EntityIdentityRecords

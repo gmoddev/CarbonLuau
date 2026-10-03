@@ -117,6 +117,7 @@ struct Vm {
     uint32_t StorageReserved = 0;
     uint64_t StorageSequence = 0;
     int GuiValueEqual = LUA_NOREF;
+    int EntityIdentities = LUA_NOREF;
     ~Vm();
 };
 

@@ -68,6 +68,15 @@ internal static class Program
             Model.Binding Same = F.Admit();
             Check(ReferenceEquals(Good.Record, Same.Record), "one record for same object/epoch");
             Check(Model.SameLifetime(Good, Same), "same host lifetime across bindings");
+            var OtherAuthority = new Model.Authority(1, 9, 5);
+            Func<Model.Authority, bool> OtherCurrent = Value =>
+                Value.VmGeneration == 1 && Value.DomainLifetime == 9 && Value.PublicationLifetime == 5;
+            Model.Binding OtherDomain;
+            Check(F.Directory.TryAdmit(F.Entity, OtherAuthority, OtherCurrent, F.Read, out OtherDomain),
+                "same lifetime admitted in another domain");
+            Check(Model.SameLifetime(Good, OtherDomain) &&
+                F.Directory.Validate(OtherDomain, OtherCurrent, F.Read),
+                "cross-domain equality uses host/token, not domain");
             Check(F.Directory.Validate(Good, F.Current, F.Read), "current record valid");
             F.Occupant = null;
             F.Occupant = F.Entity;
@@ -365,6 +374,68 @@ internal static class Program
         Fixture.Item2.Dispose();
     }
 
+    private static void TestOpaqueTokenBinding()
+    {
+        using (Fixture F = new Fixture())
+        {
+            Model.Binding First = F.CompleteAndAdmit();
+            Model.Binding ByToken;
+            Check(F.Directory.TryBindToken(First.Record.Token, F.Authority, F.Current, F.Read, out ByToken),
+                "token binds existing exact lifetime");
+            Check(Model.SameLifetime(First, ByToken), "token binding does not create a new lifetime");
+            Check(!F.Directory.TryBindToken(0, F.Authority, F.Current, F.Read, out ByToken),
+                "zero token rejected");
+            Check(!F.Directory.TryBindToken(First.Record.Token + 1, F.Authority, F.Current, F.Read, out ByToken),
+                "unknown token rejected");
+            F.Occupant = null;
+            Check(!F.Directory.TryBindToken(First.Record.Token, F.Authority, F.Current, F.Read, out ByToken),
+                "observed registry loss stales token");
+            F.Occupant = F.Entity;
+            Check(!F.Directory.TryBindToken(First.Record.Token, F.Authority, F.Current, F.Read, out ByToken),
+                "stale token cannot revive after registry return");
+            Model.Binding Next = F.CompleteAndAdmit();
+            Check(Next.Record.Token != First.Record.Token, "new epoch has new token");
+            Check(!F.Directory.TryBindToken(First.Record.Token, F.Authority, F.Current, F.Read, out ByToken),
+                "new epoch cannot retarget old token");
+            Check(F.Directory.TryBindToken(Next.Record.Token, F.Authority, F.Current, F.Read, out ByToken),
+                "new epoch token binds its own record");
+            F.AuthorityActive = false;
+            Check(!F.Directory.TryBindToken(Next.Record.Token, F.Authority, F.Current, F.Read, out ByToken),
+                "retired authority cannot bind token");
+            F.Directory.SweepRetiredTokens(64);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void PopulateWeakTokens(Model Directory, int Count)
+    {
+        for (int Index = 0; Index < Count; ++Index) {
+            object Entity = new object();
+            Model.SpawnAttempt Attempt = Directory.BeginSpawn(Entity);
+            Check(Attempt != null && Directory.CompleteSpawn(Attempt, true, true),
+                "churn Spawn completion");
+            Model.Binding Binding;
+            Check(Directory.TryAdmit(Entity, new Model.Authority(1, 2, 3), _ => true,
+                Identity => new Model.HostEvidence(true, true, true, checked((ulong)Index + 1),
+                    "prefab", Identity), out Binding), "churn admission");
+        }
+    }
+
+    private static void TestWeakTokenConvergence()
+    {
+        using (Model Directory = new Model()) {
+            Directory.BeginQualifiedObservation();
+            Check(Directory.QualifyStartupCompletion(), "churn startup qualified");
+            PopulateWeakTokens(Directory, 1000);
+            GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+            for (int Pass = 0; Pass < 32; ++Pass) Directory.SweepRetiredTokens(64);
+            var Field = typeof(Model).GetField("TokenRecords", BindingFlags.Instance | BindingFlags.NonPublic);
+            var Records = Field.GetValue(Directory) as System.Collections.IDictionary;
+            Check(Records != null && Records.Count == 0,
+                "weak token index converges after collected entity churn");
+        }
+    }
+
     private static int Main()
     {
         try
@@ -375,6 +446,8 @@ internal static class Program
             TestBoundsAndOwnership();
             TestReentrantEvidence();
             TestWeakIdentity();
+            TestOpaqueTokenBinding();
+            TestWeakTokenConvergence();
             Console.WriteLine("[CarbonLuau:EntityLifetimeModel] PASS (" + Checks + " checks)");
             return 0;
         }

@@ -9,6 +9,10 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length == 3 && Args[0] == "--entity1b") {
+            try { EntityReadRuntimeTests.Run(Args[1], Args[2]); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:EntityRead] FAIL: " + Error); return 1; }
+        }
         if (Args.Length > 0 && (Args[0] == "--persistence1b" || Args[0] == "--persistence1c" || Args[0] == "--persistence2c")) {
             try {
                 Check(Args.Length == 4, "usage: --persistence1b|--persistence1c|--persistence2c <native library> <storage worker> <fixture directory> (from repository root)");

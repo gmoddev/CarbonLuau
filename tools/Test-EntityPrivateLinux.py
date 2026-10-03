@@ -9,6 +9,7 @@ import time
 
 Parser = argparse.ArgumentParser()
 Parser.add_argument("--work", required=True)
+Parser.add_argument("--read-fixture", action="store_true")
 Args = Parser.parse_args()
 Work = pathlib.Path(Args.work).resolve()
 Root = Work / "server-linux"
@@ -18,6 +19,7 @@ if not Package.is_file():
 Evidence = Work / "evidence" / ("entity-private-" + time.strftime("%Y%m%d-%H%M%S"))
 Evidence.mkdir(parents=True, exist_ok=False)
 Log = Evidence / "server.log"
+Fixture = "EntityReadFixture" if Args.read_fixture else "EntityPrivateFixture"
 
 with (Evidence / "console.log").open("w") as Console:
     Server = subprocess.Popen(
@@ -31,7 +33,7 @@ with (Evidence / "console.log").open("w") as Console:
         Deadline = time.monotonic() + 900
         while time.monotonic() < Deadline:
             Content = Log.read_text(errors="replace") if Log.exists() else ""
-            if "[CarbonLuau:EntityPrivateFixture] PASS" in Content:
+            if "[CarbonLuau:" + Fixture + "] PASS" in Content:
                 if "[CarbonLuau:EntityLifetime] Private startup observer qualified" not in Content:
                     raise RuntimeError("Fixture passed without qualified startup observer")
                 print("\n".join(Line for Line in Content.splitlines()
@@ -39,13 +41,13 @@ with (Evidence / "console.log").open("w") as Console:
                       flush=True)
                 break
             if ("Failed compiling" in Content or "Failed to compile" in Content or
-                    "[CarbonLuau:EntityPrivateFixture] FAIL" in Content):
+                    "[CarbonLuau:" + Fixture + "] FAIL" in Content):
                 raise RuntimeError("Compilation/private fixture failure; log=" + str(Log))
             if Server.poll() is not None:
                 raise RuntimeError("Server exited: " + str(Server.returncode))
             time.sleep(1)
         else:
-            raise RuntimeError("Private fixture timeout; log=" + str(Log))
+            raise RuntimeError(Fixture + " timeout; log=" + str(Log))
     finally:
         if Server.poll() is None:
             os.killpg(Server.pid, signal.SIGTERM)

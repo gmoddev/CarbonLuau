@@ -19,6 +19,7 @@ namespace Carbon.Plugins
         private string UnavailableReason = "not initialized";
         // Test-package-only hook; erased by C# when no private Entity fixture is included.
         partial void RunEntityPrivateFixtures();
+        partial void RunEntityReadFixtures();
 
         protected override void LoadDefaultConfig() { Config.WriteObject(new RuntimeConfig(), true); }
 
@@ -68,6 +69,7 @@ namespace Carbon.Plugins
             QualifyEntityStartup();
             Loaded();
             RunEntityPrivateFixtures();
+            RunEntityReadFixtures();
             if (Host == null) return;
             try
             {

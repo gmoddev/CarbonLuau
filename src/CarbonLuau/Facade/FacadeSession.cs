@@ -17,6 +17,7 @@ namespace Carbon.Plugins
             internal readonly PlayerTakeItemOperation TakeItems = new PlayerTakeItemOperation();
             internal readonly PlayerGiveItemOperation GiveItems;
             internal readonly GuiRetainedWorld Gui;
+            internal IEntityFacadeHost Entities;
             public FacadeSession Active { get; private set; }
             private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
             private long GuiFlushCursor;
@@ -165,6 +166,7 @@ namespace Carbon.Plugins
                 { this.Owner = Owner; this.Token = Token; this.Parent = Parent; }
             }
             private readonly Stack<PublicationCheckpoint> Publications = new Stack<PublicationCheckpoint>();
+            private readonly Dictionary<ulong, PublicationWitness> EntityWitnesses = new Dictionary<ulong, PublicationWitness>();
             private readonly PublicationWitness RootPublication;
             private ulong NextPublicationToken = 1;
             private readonly FacadeWorld World;
@@ -190,6 +192,26 @@ namespace Carbon.Plugins
                 World.Players.CheckOwner();
                 if (Disposed) throw new FacadeException("stale facade publication");
                 return Publications.Count == 0 ? RootPublication : Publications.Peek().Witness;
+            }
+            internal PublicationWitness CaptureEntityWitness()
+            {
+                PublicationWitness Witness = CapturePublicationWitness();
+                EntityWitnesses[Witness.Token] = Witness;
+                return Witness;
+            }
+            internal PublicationWitness FindEntityWitness(ulong Token)
+            {
+                World.Players.CheckOwner();
+                PublicationWitness Witness;
+                return EntityWitnesses.TryGetValue(Token, out Witness) &&
+                    IsPublicationWitnessCurrent(Witness) ? Witness : null;
+            }
+            private void PruneEntityWitnesses()
+            {
+                var Retired = new List<ulong>();
+                foreach (var Entry in EntityWitnesses)
+                    if (!IsPublicationWitnessCurrent(Entry.Value)) Retired.Add(Entry.Key);
+                foreach (ulong Token in Retired) EntityWitnesses.Remove(Token);
             }
             internal bool IsPublicationWitnessCurrent(PublicationWitness Witness)
             {
@@ -274,7 +296,8 @@ namespace Carbon.Plugins
             public void Clear() {
                 RootPublication.Retired = true;
                 foreach (PublicationCheckpoint Checkpoint in Publications) Checkpoint.Witness.Retired = true;
-                Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); ClearStorageHints(); Gui.Dispose();
+                Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear();
+                EntityWitnesses.Clear(); ClearStorageHints(); Gui.Dispose();
             }
             private bool Gate(string[] Fields)
             {
@@ -332,6 +355,7 @@ namespace Carbon.Plugins
                     Checkpoint.Witness.Retired = true;
                     Gui.RollbackPublication();
                     Publications.Pop();
+                    PruneEntityWitnesses();
                     Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
                     Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
                     return new string[0];
@@ -339,6 +363,16 @@ namespace Carbon.Plugins
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
                 if (Code == 20) return Gui.Query(Fields);
                 if (Code == 21) return Gui.Mutate(Fields, Id);
+                if (Code == 34) {
+                    if (Fields.Length != 1) throw new FacadeException("invalid Entity lookup arguments");
+                    if (World.Entities == null) throw new FacadeException("Entity world is unavailable");
+                    return World.Entities.Lookup(this, Fields[0]);
+                }
+                if (Code == 35) {
+                    if (Fields.Length != 3) throw new FacadeException("invalid Entity read arguments");
+                    if (World.Entities == null) throw new FacadeException("Entity world is unavailable");
+                    return World.Entities.Read(this, Fields[0], Fields[1], Fields[2]);
+                }
                 int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 :
                     Code == 25 ? 1 : Code == 26 ? 3 : (Code == 27 || Code == 29) ? 4 : (Code == 28 || Code == 30) ? 5 :
                     (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;

@@ -23,7 +23,8 @@ int HostPrimitive(lua_State* State)
     if (!Owner.Host || !Owner.HostBuffer) luaL_error(State, "host unavailable for domain");
     if (lua_type(State, 1) != LUA_TNUMBER) luaL_error(State, "invalid host operation");
     double Value = lua_tonumber(State, 1);
-    if (Value < 1 || Value > 30 || Value != std::floor(Value)) luaL_error(State, "invalid host operation");
+    if (Value < 1 || Value > 35 || Value == 31 || Value == 32 || Value == 33 ||
+        Value != std::floor(Value)) luaL_error(State, "invalid host operation");
     uint32_t Operation = uint32_t(Value);
     if ((Operation == 4 || Operation == 28 || Operation == 29 || Operation == 30) && !CanMutateHost(Runtime)) {
         if ((Operation == 29 || Operation == 30) && Owner.Rejected != UINT64_MAX) ++Owner.Rejected;
@@ -34,7 +35,7 @@ int HostPrimitive(lua_State* State)
                 : Operation == 29 ? "TakeItem requires a committed domain; use task.defer for startup mutation"
                 : "GiveItem requires a committed domain; use task.defer for startup mutation");
     }
-    if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8 || Operation == 21) && !Runtime.Publication->Uses(&Owner)) {
+    if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8 || Operation == 21 || Operation == 34) && !Runtime.Publication->Uses(&Owner)) {
         if (!ControlPublication(Runtime, Owner, 10)) luaL_error(State, "host publication setup failed");
         Runtime.Publication->Facades.push_back(&Owner);
     }
@@ -77,7 +78,10 @@ int InstallFacade(lua_State* State)
     lua_pushcfunction(State, MakeFacadeUserdata, "private userdata");
     if (Runtime.GuiValueEqual == LUA_NOREF) lua_pushnil(State); else lua_getref(State, Runtime.GuiValueEqual);
     InstallStorage(State, Owner);
-    lua_call(State, 4, 4);
+    if (Runtime.EntityIdentities == LUA_NOREF) lua_pushnil(State); else lua_getref(State, Runtime.EntityIdentities);
+    lua_call(State, 5, 5);
+    if (Runtime.EntityIdentities == LUA_NOREF) Runtime.EntityIdentities = lua_ref(State, -1);
+    lua_pop(State, 1);
     if (Runtime.GuiValueEqual == LUA_NOREF) Runtime.GuiValueEqual = lua_ref(State, -1);
     lua_pop(State, 1);
     Owner.GuiBindings = lua_ref(State, -1); lua_pop(State, 1);

@@ -1,6 +1,6 @@
 # Private Entity-1A observer qualification on the task-owned disposable copy.
 # Never attach to or stop a pre-existing RustDedicated process.
-param([switch]$DemandHooks, [switch]$Hotload, [switch]$PrivateFixture)
+param([switch]$DemandHooks, [switch]$Hotload, [switch]$PrivateFixture, [switch]$ReadFixture)
 $ErrorActionPreference = 'Stop'
 $Work = 'D:\Sandbox\Codex\Entity1AStartup'
 $ServerRoot = Join-Path $Work 'server'
@@ -47,6 +47,9 @@ try {
             if ($PrivateFixture -and $Content -match '\[CarbonLuau:EntityPrivateFixture\] FAIL') {
                 throw "[CarbonLuau:EntityAdapter] Private fixture failed; log=$Log"
             }
+            if ($ReadFixture -and $Content -match '\[CarbonLuau:EntityReadFixture\] FAIL') {
+                throw "[CarbonLuau:EntityAdapter] Read fixture failed; log=$Log"
+            }
             if ($Hotload -and $PackageHotloaded -and
                 $Content -match '\[CarbonLuau:EntityLifetime\] Observer unavailable' -and
                 $Content -match 'Loaded plugin CarbonLuau v') {
@@ -58,6 +61,7 @@ try {
             if ($Content -match '\[CarbonLuau:EntityLifetime\] Private startup observer qualified for pinned host' -and
                 $Content -match 'Server startup complete' -and
                 (!$PrivateFixture -or $Content -match '\[CarbonLuau:EntityPrivateFixture\] PASS') -and
+                (!$ReadFixture -or $Content -match '\[CarbonLuau:EntityReadFixture\] PASS') -and
                 (!$DemandHooks -or $Content -match '\[CarbonLuau:EntityHookDemand\] READY')) {
                 $Content -split "`n" | Where-Object { $_ -match 'EntityLifetime|EntityHookDemand|EntityPrivateFixture|Server startup complete' } |
                     Select-Object -Last 20

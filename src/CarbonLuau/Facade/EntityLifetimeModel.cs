@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -96,6 +97,10 @@ namespace Carbon.Plugins
 
         private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
         private readonly ConditionalWeakTable<object, ObjectState> States = new ConditionalWeakTable<object, ObjectState>();
+        // Tokens are lookup handles, not owners. The CWT remains the sole owner of
+        // current per-object state; an incremental sweep removes dead/retired keys.
+        private readonly Dictionary<ulong, WeakReference> TokenRecords = new Dictionary<ulong, WeakReference>();
+        private readonly Queue<ulong> TokenSweep = new Queue<ulong>();
         private readonly int OwnerThread = Thread.CurrentThread.ManagedThreadId;
         private ulong NextToken, ObservationGeneration = 1;
         private bool ObserverContinuous, StartupCompletionQualified, StartupWindowOpen = true, Exhausted, Disposed;
@@ -104,6 +109,45 @@ namespace Carbon.Plugins
         {
             if (Thread.CurrentThread.ManagedThreadId != OwnerThread)
                 throw new InvalidOperationException("entity lifetime owner-thread required");
+        }
+
+        private void SweepTokens(int Maximum)
+        {
+            int Count = Math.Min(Maximum, TokenSweep.Count);
+            for (int Index = 0; Index < Count; ++Index)
+            {
+                ulong Token = TokenSweep.Dequeue();
+                WeakReference Reference;
+                if (!TokenRecords.TryGetValue(Token, out Reference)) continue;
+                LifetimeRecord Record = Reference.Target as LifetimeRecord;
+                if (Record == null || Record.Retired || Record.Target == null) TokenRecords.Remove(Token);
+                else TokenSweep.Enqueue(Token);
+            }
+        }
+
+        internal void SweepRetiredTokens(int Maximum)
+        {
+            CheckOwner();
+            if (Maximum < 0 || Maximum > 64) throw new ArgumentOutOfRangeException("Maximum");
+            SweepTokens(Maximum);
+        }
+
+        internal bool TryBindToken(ulong Token, Authority Authority,
+            Func<Authority, bool> IsCurrent, Func<object, HostEvidence> ReadEvidence,
+            out Binding Result)
+        {
+            CheckOwner();
+            Result = null;
+            if (Token == 0 || Disposed || !CurrentAuthority(Authority, IsCurrent)) return false;
+            SweepTokens(4);
+            WeakReference Reference;
+            if (!TokenRecords.TryGetValue(Token, out Reference)) return false;
+            LifetimeRecord Record = Reference.Target as LifetimeRecord;
+            if (Record == null || Record.Retired || Record.Token != Token) return false;
+            var Candidate = new Binding(this, Record, Authority);
+            if (!Validate(Candidate, IsCurrent, ReadEvidence)) return false;
+            Result = Candidate;
+            return true;
         }
 
         // This is a claim supplied by a separately qualified observer adapter;
@@ -227,6 +271,7 @@ namespace Carbon.Plugins
         {
             CheckOwner();
             Result = null;
+            SweepTokens(4);
             if (Identity == null || ReadEvidence == null || !ObserverContinuous ||
                 !StartupCompletionQualified || Disposed || Exhausted ||
                 !CurrentAuthority(Authority, IsCurrent)) return false;
@@ -262,6 +307,8 @@ namespace Carbon.Plugins
             {
                 if (NextToken == ulong.MaxValue) { Exhausted = true; State.State = SpawnState.Failed; return false; }
                 State.Current = new LifetimeRecord(Identity, ++NextToken, State, Evidence);
+                TokenRecords.Add(State.Current.Token, new WeakReference(State.Current));
+                TokenSweep.Enqueue(State.Current.Token);
             }
             if (State.Current.Retired) return false;
             Result = new Binding(this, State.Current, Authority);
@@ -313,6 +360,8 @@ namespace Carbon.Plugins
             if (Disposed) return;
             Disposed = true;
             BreakObserverContinuity();
+            TokenRecords.Clear();
+            TokenSweep.Clear();
         }
     }
 }
