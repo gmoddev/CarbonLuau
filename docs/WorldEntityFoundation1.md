@@ -1,12 +1,14 @@
 # CarbonLuau World/Entity Foundation 1
 
-Status: **Entity-1A private lifetime substrate qualified on pinned hosts; public World/Entity deferred**
+Status: **Entity-1A private lifetime and Entity-1B read-only runtime qualified on pinned hosts; public release closure deferred**
 
 The original 2026-09-23 gate below is historical. The later
 [Entity-1A qualification](WorldEntityFoundation1A-Validation.md) and amended
 [D20](Invariants.md#d20--worldentity-foundation-1) close the private
 exact-lifetime gate through continuous startup observation and full-Spawn
-completion fencing. They do not implement a public `Workspace`/`Entity` API.
+completion fencing. The later [Entity-1B validation](WorldEntityFoundation1B-Validation.md)
+records the exact keyed `Workspace`/`Entity` read-only runtime binding; canonical
+public metadata, docs and release identity remain Entity-1C work.
 
 Closure adopted 2026-09-23: [D20](Invariants.md#d20--worldentity-foundation-1)
 requires a supported authoritative incarnation/retirement primitive before any
@@ -815,8 +817,9 @@ inheritance or generic `CallMethod`.**
 
 Architecture adoption alone authorizes no production API. The private Entity-1A
 gate has since closed only within the pinned host/deployment envelope in
-[its validation](WorldEntityFoundation1A-Validation.md). Entity-1B remains the
-separately scoped read-only lookup/public-facade phase; Entity-1C remains public
+[its validation](WorldEntityFoundation1A-Validation.md). The separately scoped
+[Entity-1B runtime](WorldEntityFoundation1B-Validation.md) is qualified on that
+host envelope; Entity-1C remains combined/public
 lifecycle/scale closure. The original conditional phase description below is
 retained as historical design, not an instruction to reimplement Entity-1A.
 

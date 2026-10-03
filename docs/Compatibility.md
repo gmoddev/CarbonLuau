@@ -676,7 +676,7 @@ Later Player phases require their own
 applicable Windows/Linux/native/live/sanitizer qualification.
 
 
-## World/Entity Foundation 1 private lifetime qualification
+## World/Entity Foundation 1 read-only runtime qualification
 
 [D20](Invariants.md#d20--worldentity-foundation-1) retains the future read-safe
 world/entity contract. [WorldEntityFoundation1.md](WorldEntityFoundation1.md)
@@ -685,7 +685,9 @@ qualifies a **private** startup-observed, full-Spawn lifetime substrate on Rust
 build `25653776`, protocol `2634.289.1`, Linux Carbon `2.0.261.0` at
 `c74c4ca`, and Windows Carbon `2.0.262.0` at `8a81d70` with the recorded
 binary/hook pins. Changed host builds, patches or hook-component variants are
-requalification-gated. No production Luau `Workspace` or `Entity` API exists.
+requalification-gated. [Entity-1B validation](WorldEntityFoundation1B-Validation.md)
+qualifies the exact keyed, read-only `Workspace`/`Entity` runtime on these hosts.
+This is not yet a metadata-backed or release-assigned public API.
 
 The initial Carbon plugin batch installs the exact-qualified observer before
 restoration. First install into a running server, or full plugin unload/reload
@@ -695,11 +697,12 @@ while old facade authority stales. Old snapshot-only and prefix-only failures
 remain documented in the [historical investigation](WorldEntityLifetimeInvestigation.md),
 [failed-Spawn probe](WorldEntitySpawnEpochProbe.md) and
 [base-completion follow-up](WorldEntityCompletionFenceInvestigation.md).
-Entity-1B may separately expose `game:GetService("Workspace")`,
+Entity-1B implements `game:GetService("Workspace")`,
 `Workspace:GetEntityById(Id: string) -> Entity?`, and read-only
-`Entity.Id`, `Entity.Prefab` and `Entity.Position` only after the exact
-target proves keyed registry lookup, exact BaseEntity lifetime validation,
-prefab capture/bounds, root world-space Transform reads and lifecycle behavior.
+`Entity.Id`, `Entity.Prefab` and `Entity.Position` under the exact
+target's keyed registry lookup, exact BaseEntity lifetime validation,
+prefab capture/bounds and root world-space Transform reads. Combined
+cross-domain/provider/reload scale and public metadata/docs are Entity-1C gates.
 The earlier build `25353106` / Carbon `2.0.259` was historical Player/inventory
 evidence, not the current Entity-1A host target.
 
@@ -710,7 +713,7 @@ Future collection/event APIs require explicit inspected-work/result/queue bounds
 Future Spawn/Destroy/Position mutations require their own exact-host evidence and
 Player-1F-C's corrected committed-only mutation predicate.
 
-D20's private Entity-1A qualification changes no package version, scripting API identity,
+D20's Entity-1A/1B qualification changes no package version, scripting API identity,
 native ABI, provider protocol, package schema or Luau revision. The published
 0.5.0 line is unchanged. The existing `0.5.0-experimental` API identity does
 not imply Entity support; Entity has no public release assignment.

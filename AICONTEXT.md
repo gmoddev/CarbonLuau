@@ -50,6 +50,7 @@ This document owns contribution workflow and prompt construction. It applies to 
 | Canonical World/Entity Foundation 1 semantics | [D20 in Invariants.md](docs/Invariants.md#d20--worldentity-foundation-1) |
 | World/Entity Foundation 1 rationale, host evidence, phase routing and qualification gates | [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) |
 | Entity-1A qualified private startup-observed Spawn-epoch substrate, exact target and Entity-1B handoff | [WorldEntityFoundation1A-Validation.md](docs/WorldEntityFoundation1A-Validation.md) |
+| Entity-1B exact keyed read-only Workspace/Entity runtime qualification and Entity-1C handoff | [WorldEntityFoundation1B-Validation.md](docs/WorldEntityFoundation1B-Validation.md) |
 | Historical blocked Entity lifetime investigation and negative evidence | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) and [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
 | Historical Spawn-prefix and base-completion counterexamples; startup observer investigation | [WorldEntitySpawnEpochProbe.md](docs/WorldEntitySpawnEpochProbe.md), [WorldEntityCompletionFenceInvestigation.md](docs/WorldEntityCompletionFenceInvestigation.md) and [WorldEntityStartupObserverInvestigation.md](docs/WorldEntityStartupObserverInvestigation.md) |
 | Canonical Persistence Foundation 1 architecture (resolved; private 1A qualified) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
@@ -304,10 +305,11 @@ qualified Carbon AutoPatch observer must precede world restoration; first-time
 hotload or full plugin unload/reload cannot requalify in the same server process
 and requires restart. Preserve the older negative evidence: actual pooled
 BaseEntity reuse was not demonstrated on the tested prefab. No public
-`Workspace` or `Entity` API has been implemented. Entity-1B may separately
-implement keyed read-only `Workspace:GetEntityById` plus
-`Entity.Id`, `Entity.Prefab` and `Entity.Position` exact-host qualification;
-Entity-1C is lifecycle/scale/public closure. Whole-world enumeration, prefab
+`Workspace` or `Entity` API was part of Entity-1A. [Entity-1B validation](docs/WorldEntityFoundation1B-Validation.md)
+records the implemented exact keyed, read-only `Workspace:GetEntityById` plus
+`Entity.Id`, `Entity.Prefab` and `Entity.Position` runtime on those hosts. It is
+not yet assigned to a scripting API identity or published in canonical API
+metadata/docs; Entity-1C owns combined lifecycle/scale/public closure. Whole-world enumeration, prefab
 filtering, spatial queries, lifecycle Signals, Spawn, Destroy and specialized
 entity capabilities require later explicit architecture rather than being
 implicitly authorized by D20. Entity-1A changes no current package/API/ABI/provider/
