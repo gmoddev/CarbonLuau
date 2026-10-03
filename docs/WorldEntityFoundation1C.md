@@ -1,8 +1,10 @@
 # Entity-1C — combined public World/Entity Foundation 1 closure
 
-Status: **final-source hosted qualification pending**. Entity-1A and Entity-1B
-are PASS. This record does not create a package release or tag. Starting source:
-`cee1df0583ab92b139a84bff37df76a0f51c3803` on `origin/main`.
+Status: **ENTITY-1C PASS — WORLD/ENTITY FOUNDATION 1 PUBLICLY QUALIFIED**
+for the exact host envelope below. Entity-1A and Entity-1B are PASS. This
+record does not create a package release or tag. Starting source:
+`cee1df0583ab92b139a84bff37df76a0f51c3803` on `origin/main`;
+implementation/qualification source: `69049c739cce8984e375bd582968de45f4786705`.
 
 ## Qualified inputs and exact host envelope
 
@@ -141,8 +143,8 @@ simulation was introduced.
 - API metadata generation, generated drift, tooling tests, architecture check,
   API navigation/link check and release-content policy check: PASS locally.
 - Native code beyond the embedded API-version/bootstrap text is unchanged;
-  sanitizer results validate the existing native substrate, not managed Entity
-  lifetime logic. Final hosted sanitizer status remains to be recorded.
+  hosted sanitizers passed against the implementation source. They validate
+  the existing native substrate, not managed Entity lifetime logic.
 - Windows and Linux dry-run release bundles were byte-for-byte deterministic
   across two builds per platform. Windows clean extraction contained the
   expected 65-source production package, docs and examples. Linux clean
@@ -151,8 +153,13 @@ simulation was introduced.
   packaging correction now marks only the compiler/storage worker entries as
   Unix-origin; a fresh Linux extraction verified both remain executable and
   contains the expected public docs/examples. Neither bundle was published.
-- Hosted final-head CI and served-docs verification remain to be recorded
-  before a Foundation 1 PASS verdict.
+- Hosted [CarbonLuau validation](https://github.com/gmoddev/CarbonLuau/actions/runs/37093495173)
+  passed on Windows, Linux and sanitizers against implementation revision
+  `69049c739cce8984e375bd582968de45f4786705`. Hosted
+  [Tooling Foundations A and B](https://github.com/gmoddev/CarbonLuau/actions/runs/37093495190)
+  and [tooling baseline contracts](https://github.com/gmoddev/CarbonLuau/actions/runs/37093495246)
+  also passed. Final evidence-only commit CI and served-docs deployment are
+  checked separately after publication; they do not change the runtime proof.
 
 No `IsValid`, enumeration, prefab/spatial query, Signals, Spawn, Destroy,
 Position write, raw host object or other later World/Entity foundation was
