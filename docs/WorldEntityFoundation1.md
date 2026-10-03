@@ -1016,10 +1016,15 @@ Later Spawn/Destroy work stops rather than ships if exact-build callback/resourc
 verification behavior cannot distinguish safe pre-COMMIT rejection from
 post-COMMIT uncertainty.
 
-## 25. Validation required before public implementation
+## 25. Validation requirements and qualification routing
 
-Architecture adoption is documentation/policy work only. It does not claim that the
-runtime currently contains Workspace or Entity.
+At architecture adoption, this document was policy only and did not claim a
+Workspace or Entity runtime. The implemented, exact-host-qualified Foundation 1
+surface and its remaining limits are recorded in
+[Entity-1A](WorldEntityFoundation1A-Validation.md),
+[Entity-1B](WorldEntityFoundation1B-Validation.md), and the
+[Entity-1C public closure](WorldEntityFoundation1C.md). Those records, not this
+original architecture plan, establish current implementation status.
 
 Entity-1 implementation must add target-specific fixtures rather than relying only on
 ecosystem convention:
@@ -1040,4 +1045,5 @@ ecosystem convention:
 Current upstream sources are architecture evidence. Exact-build implementation claims
 must be recorded separately in Entity-1A/1B/1C qualification documents.
 
-No production Workspace/Entity code is authorized or implemented by this document.
+This document does not authorize later World/Entity query, event, or mutation
+surfaces beyond the qualified Foundation 1 runtime.
