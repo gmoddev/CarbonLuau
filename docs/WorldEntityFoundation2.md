@@ -1,7 +1,9 @@
 # World/Entity Foundation 2 — bounded asynchronous complete discovery research
 
-**Active disposition: private asynchronous traversal implemented;
-[Foundation 2A](WorldEntityFoundation2A.md) owns final qualification.**
+**FOUNDATION 2 ASYNC TRAVERSAL QUALIFIED — PUBLIC DISCOVERY MAY BEGIN.**
+[Foundation 2A](WorldEntityFoundation2A.md) owns private implementation,
+exact-host/resource policy and final qualification. No public discovery binding
+is implemented by this closure.
 
 The paragraphs below preserve the pre-implementation gate history. Their open
 catalog/position/policy conclusions are superseded by Foundation 2A's supported

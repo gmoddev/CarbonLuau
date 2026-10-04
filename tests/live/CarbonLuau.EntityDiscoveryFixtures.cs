@@ -74,6 +74,16 @@ namespace Carbon.Plugins
                 EntityLifetimes.CatalogReady && Gameplay != null && Gameplay.Active != null,
                 "qualified traversal/root unavailable");
             BaseEntity Box = DiscoveryBox(new Vector3(0, 5000, 0));
+            object SavedPrefab = EntityDiscoveryCachedPrefab.GetValue(Box);
+            try {
+                EntityDiscoveryCachedPrefab.SetValue(Box, null); // Task-owned fixture only.
+                EntityLifetimeModel.HostEvidence Cold = ReadDiscoveryEntityEvidence(Box);
+                DiscoveryCheck(Cold.Prefab == DiscoveryFixturePrefab && ReferenceEquals(Cold.RegistryOccupant, Box) &&
+                    EntityDiscoveryCachedPrefab.GetValue(Box) == null,
+                    "cold manifest evidence invoked a caching host getter or lost exact prefab");
+                Puts("[CarbonLuau:DiscoveryFixture] COLD_PREFAB_PASS bounded manifest lookup; host cache unchanged");
+            }
+            finally { EntityDiscoveryCachedPrefab.SetValue(Box, SavedPrefab); }
             CheckDiscoveryPosition(Box);
             GameObject Parent = new GameObject("CarbonLuauDiscoveryOwnedParent");
             DiscoveryFixtureObjects.Add(Parent);

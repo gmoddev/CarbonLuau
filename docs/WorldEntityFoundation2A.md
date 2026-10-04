@@ -1,9 +1,10 @@
 # World/Entity Foundation 2A — private bounded asynchronous traversal
 
+**FOUNDATION 2 ASYNC TRAVERSAL QUALIFIED — PUBLIC DISCOVERY MAY BEGIN**
+
 Starting revision: `f36ff7c83a9e273816f7b726fe3062618b430539`, with the
 intentionally uncommitted Foundation 2 research preserved. Qualification date:
-2026-10-04. This record owns private implementation and final-source receipts;
-hosted CI disposition is appended after the implementation revision is tested.
+2026-10-04. This record owns private implementation and final-source receipts.
 
 ## Scope and consistency
 
@@ -177,12 +178,12 @@ Harmony `2.4.2.0`; Unity `6000.3.15x1-13 (a91cf34396ee)`.
 | CoreModule | `93b0e7e8e1b9a82f34d09740c45be2cbd7c13a82683a192af2858831b63ce45a` | `ada97d7037c7c928d8d432f734115d82a3d805a2da628f481901da5d165795e2` |
 
 Both final live packages SHA-256:
-`d69354cbd6e850d9742c7daae66a921c630ba1e7677e7640e0a5ef820c75a201`.
+`0975ab146b89e4d98321a04a5b28c14ea2fe717e96f17a362f74f64c214d0152`.
 
-Windows receipt: `D:\Sandbox\Codex\Entity1AStartup\evidence\discovery-20261004-052804\server.log`,
-SHA-256 `811023ede6d9fac93e531b32f047a58411fc6f265700c7756caf527f95eb6f16`.
-Linux receipt: `/root/codex/world-movement-20261003/evidence/discovery-20261004-052757/server.log`,
-SHA-256 `c4b0294c3ad6e4658ed86bf28f2b060c88410237558ce0b8b83b8dec23ec1dca`.
+Windows receipt: `D:\Sandbox\Codex\Entity1AStartup\evidence\discovery-20261004-053852\server.log`,
+SHA-256 `c08c38f07e76ae4e1eb4b58f6ae2d3c2161433b7982f541e8146db5090036b8d`.
+Linux receipt: `/root/codex/world-movement-20261003/evidence/discovery-20261004-053900/server.log`,
+SHA-256 `24662f68924de9826a35c5aa58d411ac7235f00f98e96384457011ce554fc5e8`.
 
 Both pass: catalog membership before proxy creation; root and non-Entity rotated/
 scaled ancestry; depth 65 accept/66 reject; no-wait borrow while a deliberately
@@ -191,11 +192,14 @@ birth excluded; nested request includes current membership; moved-out candidate
 excluded at encounter; root replacement discards old completion; new authority
 reacquires; killed lifetime invalid; bounded cleanup and graceful unload. Shared
 F1 token count remains four (fixture-created proxies only), with no scan growth.
+Explicit cold-prefab fixture clears only its owned box cache, obtains exact
+manifest/keyed evidence without populating the cache, then restores it. This
+adds branch evidence without a production change relative to `527f3fb`.
 
-Windows: catalog 1,018, first query 1,020 raw slots/two results, 188.610 ms elapsed,
-6.241 ms maximum measured turn; 1,024 depth-65 samples 16.838 ms.
-Linux: catalog 1,003, first query 1,005 raw slots/two results, 189.163 ms elapsed,
-8.978 ms maximum turn; depth-65 samples 14.470 ms.
+Windows: catalog 1,019, first query 1,021 raw slots/two results, 189.866 ms elapsed,
+5.511 ms maximum measured turn; 1,024 depth-65 samples 16.921 ms.
+Linux: catalog 1,004, first query 1,006 raw slots/two results, 177.546 ms elapsed,
+7.471 ms maximum turn; depth-65 samples 15.829 ms.
 These are disposable-server measurements, not authenticated-client claims.
 Both use localhost-only ports 28335/28337. Processes exited; prior package restored.
 Windows additionally restored task config and prior hooks after temporarily using
@@ -243,8 +247,38 @@ and both live runs pass. Cold prefab field resolution initially failed against
 Carbon's publicized image; fail-closed receipts `discovery-20261004-052350`,
 `-052358` and `-052606` remain. Visibility-compatible exact-field resolution was
 corrected, not treated as a reason to weaken host identity or skip candidates.
+Independent review of the final direct observer, post-position/result validation
+and capped cold manifest path at `527f3fb` found no further concrete regression.
 
 ## History, identities and handoff
+
+### Final-source hosted closure
+
+Implementation/tested production revision:
+`527f3fbcd486a549be7ba89ed7f839b1eee55185`.
+The evidence revision carrying this final section changes only this record,
+closure routing and the isolated cold-prefab live fixture; production code is
+identical. Both final live receipts above execute that exact production source.
+
+- [CarbonLuau validation](https://github.com/gmoddev/CarbonLuau/actions/runs/37192588981)
+  **PASS**: Windows x64 and Ubuntu 24.04 native/runtime/worker/import/export,
+  lifetime/discovery/composition models, adapter teardown, combined persistence
+  scale, deterministic package and clean extraction/install gates; ASan, UBSan,
+  leak detection and lifecycle/fault fixtures also **PASS**.
+- [Tooling Foundations A/B](https://github.com/gmoddev/CarbonLuau/actions/runs/37192589138)
+  **PASS**, including metadata/definitions/preview drift regressions.
+- [Documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/37192589129)
+  **PASS**. Final evidence publication uses the same normal Pages workflow.
+
+Local architecture/API/release/tooling/package and 35-check exact-host structural
+audits pass. Final review reports no unresolved safety/resource finding. Test
+servers/processes and fixture listeners exited; packages/task config/hooks were
+restored. Reusable task evidence/build caches are retained. The tracked worktree
+is committed; unrelated pre-existing `derived-369547800317500/` research databases
+and `.codexlock` remain untracked and untouched. No credentials, binaries, test
+database or journals enter these commits. Git author/committer use GitHub no-reply.
+No mandatory private-substrate gate remains open. Public completion/proxy
+conversion/metadata remains separately scoped, not silently qualified here.
 
 [Foundation 2](WorldEntityFoundation2.md) routes all retained negative evidence:
 movement/history publisher completeness, unsafe host enumerator, guarded getter,
