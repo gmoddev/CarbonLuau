@@ -70,6 +70,7 @@ namespace Carbon.Plugins
             Loaded();
             RunEntityPrivateFixtures();
             RunEntityReadFixtures();
+            RunEntityDiscoveryFixtures();
             if (Host == null) return;
             try
             {
@@ -137,6 +138,7 @@ namespace Carbon.Plugins
         private void ReleaseNative()
         {
             Stopping = true;
+            StopEntityDiscovery();
             StopPersistence();
             DrainWakeDueNs = 0; DrainWakeToken++;
             if ((Host != null && Host.Busy) || RegisteringPermissions) {

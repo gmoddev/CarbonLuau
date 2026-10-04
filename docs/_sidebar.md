@@ -9,6 +9,8 @@
   - [World/Entity Foundation 1](WorldEntityFoundation1.md)
   - [Entity 1A private lifetime qualification](WorldEntityFoundation1A-Validation.md)
   - [Entity 1B keyed runtime qualification](WorldEntityFoundation1B-Validation.md)
+  - [Foundation 2A private async traversal](WorldEntityFoundation2A.md)
+  - [Foundation 2 discovery research history](WorldEntityFoundation2.md)
   - [Entity lifetime blocker evidence](WorldEntityLifetimeInvestigation.md)
   - [Persistence Foundation 1 architecture](PersistenceFoundation1.md)
   - [Persistence architecture validation](PersistenceFoundation1-Validation.md)

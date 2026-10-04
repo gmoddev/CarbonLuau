@@ -710,9 +710,38 @@ qualification gates, not 1B evidence.
 The earlier build `25353106` / Carbon `2.0.259` was historical Player/inventory
 evidence, not the current Entity-1A host target.
 
+Private Foundation 2A's subsequent implementation/qualification is routed through
+[WorldEntityFoundation2A.md](WorldEntityFoundation2A.md). It closes catalog
+activation and capped no-wait current-position observation on exact pinned
+Windows/Linux hosts, using supported owner-thread structural-storage affinity.
+It does not claim universal external-writer serialization, an atomic pose/world
+snapshot, or a new engine storage lease. The following research-status paragraphs
+record the earlier gates, superseded only within Foundation 2A's measured scope.
+No public discovery method or Luau completion binding is implemented.
+
 Foundation 1 intentionally has no collection query, radius query, lifecycle
 Signal, Spawn or Destroy compatibility promise. A result limit does not authorize
-an O(all server entities) scan, and D20 establishes no CarbonLuau world index.
+an unbounded synchronous O(all server entities) scan, and D20 establishes no
+CarbonLuau world index. The [Foundation 2 async-traversal research](WorldEntityAsyncTraversalInvestigation.md)
+permits future complete traversal spread across hard-bounded turns, with separate
+memory/result/total-work/deadline limits and explicit mutation/encounter semantics.
+Its [selected lifetime catalog](WorldEntityCatalogInvestigation.md) now has
+opt-in direct completed-Spawn/retirement model integration with Windows/Linux
+tests. Production activation/live reconciliation and bounded current-position
+acquisition remain unqualified; the
+[native ordering investigation](WorldEntityPositionOrderingInvestigation.md)
+records fixed fast paths without claiming a serialized read interval. The
+[position-alternatives continuation](WorldEntityPositionAlternativesInvestigation.md)
+adds cache/batch review and Windows/Linux phase observations without qualifying
+a universal snapshot phase or bounded Transform-job admission/read primitive.
+Pending work must not be hidden through candidate deferral/partial success. No
+async discovery API is implemented or added to a compatibility identity.
+The later [observation-boundary continuation](WorldEntityObservationBoundaryInvestigation.md)
+adopts I12's practical separation of hard lifetime/memory/resource safety,
+CarbonLuau-owned ordering and trusted external observation races. It adds new
+Windows/Linux read-only access-wrapper mapping, not a qualified position producer
+or traversal. A capped no-wait copy remains gated on its structural-storage borrow;
+universal external-writer freshness serialization is not the new gate.
 Future collection/event APIs require explicit inspected-work/result/queue bounds.
 Future Spawn/Destroy/Position mutations require their own exact-host evidence and
 Player-1F-C's corrected committed-only mutation predicate.

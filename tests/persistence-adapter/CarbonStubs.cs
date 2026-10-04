@@ -82,6 +82,9 @@ namespace Carbon.Plugins
         private void InitializeEntityObserver() { }
         private void QualifyEntityStartup() { }
         private void StopEntityObserver() { }
+        private void StopEntityDiscovery() { }
+        private void SweepIdleEntityDiscovery() { }
+        partial void RunEntityDiscoveryFixtures();
 
         internal void TestInitialize(string DataDirectory)
         {

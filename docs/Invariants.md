@@ -100,7 +100,7 @@ qualified supported Rust/Carbon host behavior, normal documented callback
 outcomes, and host uncertainty covered by existing failure semantics.
 
 **External interference** occurs when another trusted in-process component
-synchronously mutates host state relevant to an admitted CarbonLuau operation
+mutates host state relevant to an admitted CarbonLuau operation
 in a way that invalidates the operation's qualified premises. Examples include
 changes to Item.amount, effective stack limits, target slot/container contents,
 Item parent/state, inventory contents or operation-relevant world state during
@@ -129,6 +129,27 @@ where appropriate, never claim rollback, never conceal prohibited effects, and
 retain bounded diagnostics where useful. No new outcome, recovery or replay
 mechanism is introduced. I1/I3/I4/I8/I9/I10 and D7/D10/D11 retain ownership,
 non-reentrancy, publication, exact-Player lifetime and failure authority.
+
+For host observations, distinguish three guarantees. **Safety and lifetime**
+remain mandatory: exact admission/revalidation, no stale-reference retargeting,
+no use-after-free or raw-host escape, and bounded CarbonLuau work/allocation.
+**CarbonLuau-owned ordering** follows I4's serialized owner-thread operations
+and their existing publication/admission rules; an async traversal's turns and
+CarbonLuau-originated effects must have a defined order, not race each other.
+**External observation** is not transactionally isolated: Rust, Unity, Carbon,
+Oxide, physics/jobs and other trusted in-process writers may race an observation,
+including between traversal turns. Discovery need not freeze the world or prove
+universal writer serialization to observe a candidate.
+
+This observational boundary is not a native-memory access permission. A reader
+still needs a qualified storage-lifetime/access premise and a hard work bound;
+checking after an unsafe read cannot repair an earlier invalid dereference, and
+a deadline cannot interrupt an unbounded native wait already entered. Ordinary
+qualified host behavior remains CarbonLuau's responsibility. An operation's
+position-observation semantics must be explicit; this boundary does not silently
+substitute local coordinates, arbitrarily old caches, an incomplete candidate
+set, or failed lifetime validation. It creates no new inventory outcome or replay
+rule and does not weaken Entity-1A's completed-Spawn/continuity gates.
 
 ## Decision register
 
@@ -306,7 +327,50 @@ state and never replays effects.
 Foundation 1 adopts no whole-world enumeration, prefab-filter query, spatial/radius
 query, lifecycle Signal or synthetic startup event. Rust worlds can contain hundreds
 of thousands of entities; a returned-result cap does not make an O(all entities)
-scan bounded. D20 creates no CarbonLuau world index. Current spawn/kill/load hook
+scan bounded. The Foundation 2 async-traversal pivot explicitly permits a future
+complete traversal with total O(world population) work only if it has hard
+per-owner-thread-turn and aggregate work, retained-state, result, total-inspection
+and absolute-deadline bounds. No unbounded synchronous O(all-world) discovery is
+permitted. Mutation/continuation completeness and encounter-time versus snapshot
+semantics must be explicit; a successful subset cannot masquerade as complete
+discovery. Under I12, external in-process mutation may race candidate observations;
+no atomic world snapshot or universal external-writer serialization is required.
+CarbonLuau-owned operations remain ordered on the owner thread. Exact Entity-1A
+admission, storage/memory safety and hard read/work bounds remain mandatory.
+The private [Foundation 2A substrate](WorldEntityFoundation2A.md) now implements
+fixed-slot completed-Spawn membership and watermarked asynchronous traversal.
+It is not a spatial index or mutable registry iterator. Later births are excluded,
+holes/reused slots count as work, and all results are exact lifetime-revalidated
+before successful delivery. Catalog/observer loss, unsafe read, excess depth/work/
+results or expiry fails the whole query, never a truncated successful subset.
+
+The hash-pinned current-position adapter copies at most 65 local TRS/parent
+records and performs at most 64 compositions, without entering Unity, waiting/
+helping jobs, calling user code or retaining pointers. Its storage premise is
+supported Unity owner-thread topology/reclamation: an uninterrupted owner-thread
+borrow cannot interleave with supported structural mutation. Supported Transform
+jobs can race scalar values; copied positions are encounter observations, not
+atomic poses. Exception catching or post-checking does not create a storage lease.
+Unsupported off-thread structural mutation is not made supported by I12.
+
+`EntityDiscoveryPolicy` centralizes 262,144 slots, eight requests/two per domain,
+1,024 shared scan/delivery units and raw slots per Update, 256 results, two
+deliveries, 120-second absolute deadline and bounded maintenance. A fixed private
+Update receiver avoids Carbon's shared growing next-frame enqueue. Expiry is
+checked before work/delivery when host service resumes; this is not a wall-clock
+callback SLA under host starvation. No public discovery binding/identity exists;
+the next phase must qualify fresh bounded Luau completion admission with exact
+host/session/domain/VM/publication authority immediately before entry.
+
+The [observation-boundary continuation](WorldEntityObservationBoundaryInvestigation.md),
+[traversal investigation](WorldEntityAsyncTraversalInvestigation.md),
+[catalog proof](WorldEntityCatalogInvestigation.md),
+[native ordering](WorldEntityPositionOrderingInvestigation.md) and
+[position alternatives](WorldEntityPositionAlternativesInvestigation.md) preserve
+all earlier open gates/negative findings in their original historical scope.
+Foundation 2A does not revive the rejected movement-index, mutable registry cursor,
+guarded waiting getter or universal snapshot-phase mechanisms.
+`GetEntityById` remains exact keyed lookup and must never scan. Current spawn/kill/load hook
 ordering is also not adopted as a simple symmetric EntityAdded/EntityRemoving
 contract. Any future collection/event surface requires explicit inspected-work,
 returned-result/queue and lifecycle-ordering bounds.

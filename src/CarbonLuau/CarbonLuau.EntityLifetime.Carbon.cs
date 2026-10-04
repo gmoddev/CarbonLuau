@@ -87,7 +87,7 @@ namespace Carbon.Plugins
         {
             try {
                 EntityOwnerThread = Thread.CurrentThread.ManagedThreadId;
-                EntityLifetimes = new EntityLifetimeModel();
+                EntityLifetimes = new EntityLifetimeModel(EntityDiscoveryPolicy.CatalogSlots);
                 if (AppDomain.CurrentDomain.GetData(EntityProcessObserverKey) != null) {
                     BreakEntityObserver("same-process observer reload or gap; server restart required");
                     return;
@@ -460,6 +460,7 @@ namespace Carbon.Plugins
                     return;
                 }
                 EntityStartupQualified = true;
+                InitializeEntityDiscovery();
                 if (ReadWarmupCandidate != null && Native != null && Gameplay != null)
                     WarmEntityReadPath(ReadWarmupCandidate);
                 if (EntityObserverBroken) return;
@@ -494,6 +495,9 @@ namespace Carbon.Plugins
                     Chain.Methods.Count != 0 || Chain.Attempt != null || Chain.Poisoned ||
                     !EntityLifetimes.HasCompletedObservation(Entity))
                     return RejectEntityTopology(null, "current keyed entity lacks full observed completion");
+                // Membership comes from full Spawn completion, not proxy/token
+                // acquisition. Missing enrollment closes discovery only.
+                if (!EntityLifetimes.HasCatalogObservation(Entity)) EntityLifetimes.InvalidateCatalog();
                 if (ReadWarmupCandidate == null && !Entity.IsDestroyed &&
                     !String.IsNullOrEmpty(Entity.PrefabName) &&
                     Entity.PrefabName.IndexOf('\0') < 0) {
@@ -511,6 +515,7 @@ namespace Carbon.Plugins
 
         private void StopEntityObserver()
         {
+            StopEntityDiscovery();
             BreakEntityObserver("plugin unload or observer gap");
             if (ReferenceEquals(ActiveEntityObserver, this)) ActiveEntityObserver = null;
             if (EntityLifetimes != null && Thread.CurrentThread.ManagedThreadId == EntityOwnerThread)

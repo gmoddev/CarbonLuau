@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Model = Carbon.Plugins.EntityLifetimeModel;
 
-internal static class Program
+internal static partial class Program
 {
     private static int Checks;
     private static void Check(bool Condition, string Label)
@@ -15,7 +15,7 @@ internal static class Program
 
     private sealed class Fixture : IDisposable
     {
-        internal readonly Model Directory = new Model();
+        internal readonly Model Directory;
         internal readonly object Entity = new object();
         internal object Occupant;
         internal ulong Id = 41;
@@ -23,8 +23,9 @@ internal static class Program
         internal bool Alive = true, FullySpawned = true, NetworkPresent = true, AuthorityActive = true;
         internal readonly Model.Authority Authority = new Model.Authority(1, 2, 3);
 
-        internal Fixture(bool StartupComplete = true)
+        internal Fixture(bool StartupComplete = true, int CatalogCapacity = 0)
         {
+            Directory = new Model(CatalogCapacity);
             Occupant = Entity;
             Directory.BeginQualifiedObservation();
             if (StartupComplete) Check(Directory.QualifyStartupCompletion(), "startup completion qualified");
@@ -297,6 +298,40 @@ internal static class Program
         Check(Rejected, Label);
     }
 
+    private static void TestPrefabValidationBounds()
+    {
+        string[] Prefabs = {
+            new string('a', 512),
+            new string('\u00e9', 256),
+            new string('\u00e9', 255) + "aa",
+            String.Concat(System.Linq.Enumerable.Repeat("\ud83d\ude00", 128)),
+            new string('a', 513),
+            new string('\u00e9', 257),
+            new string('a', 511) + "\u00e9",
+            "\ud800", "\udc00", "\ud800a", "\udc00\ud800",
+            new string('a', 511) + "\ud800",
+            new string('a', 8192) + "\0\ud800"
+        };
+        for (int Index = 0; Index < Prefabs.Length; ++Index)
+        using (Fixture F = new Fixture(true, 1))
+        {
+            F.Prefab = Prefabs[Index];
+            Model.SpawnAttempt Attempt = F.Begin();
+            Check(F.Directory.CompleteSpawn(Attempt, true, true), "prefab bounds do not change full Spawn verdict");
+            bool Expected = Index < 4;
+            bool Admitted = F.Directory.TryAdmit(F.Entity, F.Authority, F.Current, F.Read, out Model.Binding Value);
+            Check(Admitted == Expected && F.Directory.CatalogSlotCount == (Expected ? 1 : 0),
+                "exact UTF-8 ceiling and strict surrogate rejection case " + Index);
+            if (Expected)
+            {
+                Check(F.Directory.Validate(Value, F.Current, F.Read), "valid boundary prefab remains admissible");
+                F.Prefab = new string('a', 8192);
+                Check(!F.Directory.Validate(Value, F.Current, F.Read) && F.Directory.CatalogSlotCount == 0,
+                    "oversized validation evidence retires exact record and membership");
+            }
+        }
+    }
+
     private static void TestReentrantEvidence()
     {
         using (Fixture F = new Fixture())
@@ -478,6 +513,8 @@ internal static class Program
             TestWeakIdentity();
             TestOpaqueTokenBinding();
             TestWeakTokenConvergence();
+            TestMembershipCatalog();
+            TestPrefabValidationBounds();
             Console.WriteLine("[CarbonLuau:EntityLifetimeModel] PASS (" + Checks + " checks)");
             return 0;
         }

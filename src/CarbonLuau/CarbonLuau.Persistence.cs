@@ -23,9 +23,11 @@ namespace Carbon.Plugins
         // Owner-thread data intake only; RequestDrain schedules later Luau entry.
         private void OnTick()
         {
-            if (Stopping || Persistence==null || Native==null || (Host!=null && Host.Busy)) return;
+            if (Stopping || Native==null || (Host!=null && Host.Busy)) return;
             try {
                 Native.CheckOwner();
+                SweepIdleEntityDiscovery();
+                if (Persistence==null) return;
                 if (Gameplay!=null) foreach (FacadeSession Session in Gameplay.Sessions()) Session.FlushStorageHints();
                 Persistence.Tick(); Native.PumpStorage(); RequestDrain();
             }

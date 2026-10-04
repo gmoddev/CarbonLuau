@@ -45,11 +45,62 @@ namespace Carbon.Plugins
 
         internal sealed class ObjectState
         {
+            // Candidates can retain this state after its weak table key dies.
+            // Neither this state nor its attempt/record may strongly own a host.
             internal ulong Epoch, ObservationGeneration;
             internal SpawnState State;
             internal bool Poisoned;
             internal SpawnAttempt Attempt;
             internal LifetimeRecord Current;
+            internal int CatalogSlot = -1;
+            internal ulong CatalogBirth;
+        }
+
+        // This is completed-epoch membership only, never host admission or caller
+        // authority. A new activation allocates a new immutable weak holder so
+        // queued candidates cannot follow a reused slot to its new occupant.
+        internal sealed class MembershipCandidate
+        {
+            private readonly WeakReference Identity;
+            internal readonly EntityLifetimeModel Owner;
+            internal readonly ObjectState State;
+            internal readonly int Slot;
+            internal readonly ulong Epoch, ObservationGeneration, Birth;
+            internal bool EvidenceCaptured;
+            internal ulong CapturedId;
+            internal string CapturedPrefab;
+            internal MembershipCandidate(EntityLifetimeModel Owner, object Identity,
+                ObjectState State, int Slot, ulong Birth)
+            {
+                this.Owner = Owner;
+                this.State = State;
+                this.Identity = new WeakReference(Identity);
+                this.Slot = Slot;
+                this.Birth = Birth;
+                Epoch = State.Epoch;
+                ObservationGeneration = State.ObservationGeneration;
+            }
+            internal object Target { get { return Identity.Target; } }
+        }
+
+        internal sealed class MembershipCursor
+        {
+            internal readonly EntityLifetimeModel Owner;
+            internal readonly int End;
+            internal readonly ulong UpperBirth, ObservationGeneration;
+            internal int Position;
+            internal bool Invalid;
+            internal MembershipCursor(EntityLifetimeModel Owner, int End, ulong UpperBirth,
+                ulong ObservationGeneration)
+            {
+                this.Owner = Owner;
+                this.End = End;
+                this.UpperBirth = UpperBirth;
+                this.ObservationGeneration = ObservationGeneration;
+            }
+            // Completion describes cursor progress. The caller must also check
+            // IsCatalogScanCurrent before admission, including an empty result.
+            internal bool Complete { get { return !Invalid && Position == End; } }
         }
 
         internal sealed class SpawnAttempt
@@ -97,13 +148,273 @@ namespace Carbon.Plugins
 
         private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);
         private readonly ConditionalWeakTable<object, ObjectState> States = new ConditionalWeakTable<object, ObjectState>();
-        // Tokens are lookup handles, not owners. The CWT remains the sole owner of
-        // current per-object state; an incremental sweep removes dead/retired keys.
+        // Tokens are lookup handles, not owners. The CWT supplies canonical state.
+        // Optional/queued candidates retain one fixed-size ObjectState and its
+        // current record/attempt metadata, all with weak host identity. There is
+        // no epoch-history chain and none of this metadata strongly owns a host.
+        // Live-key states are never removed/replaced: direct candidate validation
+        // depends on that invariant. A token sweep removes dead/retired token keys.
         private readonly Dictionary<ulong, WeakReference> TokenRecords = new Dictionary<ulong, WeakReference>();
         private readonly Queue<ulong> TokenSweep = new Queue<ulong>();
         private readonly int OwnerThread = Thread.CurrentThread.ManagedThreadId;
         private ulong NextToken, ObservationGeneration = 1;
         private bool ObserverContinuous, StartupCompletionQualified, StartupWindowOpen = true, Exhausted, Disposed;
+        private readonly int CatalogCapacity;
+        private MembershipCandidate[] CatalogSlots;
+        private int[] CatalogFree;
+        private int CatalogFreeCount, CatalogExtent, CatalogSweepPosition;
+        private ulong CatalogSequence;
+        private bool CatalogIncomplete;
+
+        // Opt-in at model creation only. F1-only callers need no catalog;
+        // the production discovery adapter selects its shared private policy.
+        internal EntityLifetimeModel() : this(0) { }
+
+        internal EntityLifetimeModel(int CatalogCapacity)
+        {
+            if (CatalogCapacity < 0) throw new ArgumentOutOfRangeException("CatalogCapacity");
+            this.CatalogCapacity = CatalogCapacity;
+            if (CatalogCapacity == 0) return;
+            try
+            {
+                var Slots = new MembershipCandidate[CatalogCapacity];
+                var Free = new int[CatalogCapacity];
+                for (int Index = 0; Index < CatalogCapacity; ++Index) Free[Index] = CatalogCapacity - Index - 1;
+                CatalogSlots = Slots;
+                CatalogFree = Free;
+                CatalogFreeCount = CatalogCapacity;
+            }
+            catch (Exception) { CatalogIncomplete = true; }
+        }
+
+        internal bool CatalogComplete
+        {
+            get { CheckOwner(); return CatalogCapacity != 0 && !CatalogIncomplete; }
+        }
+
+        internal bool CatalogReady
+        {
+            get { CheckOwner(); return CatalogComplete && ObserverContinuous && StartupCompletionQualified && !Disposed && !Exhausted; }
+        }
+
+        internal int CatalogSlotCount
+        {
+            get { CheckOwner(); return CatalogSlots == null ? 0 : CatalogCapacity - CatalogFreeCount; }
+        }
+
+        // Loss is sticky and discovery-only. Neither free capacity nor another
+        // startup marker repairs an enrollment loss within this model instance.
+        internal void InvalidateCatalog()
+        {
+            CheckOwner();
+            if (CatalogCapacity != 0) CatalogIncomplete = true;
+        }
+
+        private bool CatalogObservation(MembershipCandidate Candidate)
+        {
+            if (Candidate == null || !ReferenceEquals(Candidate.Owner, this) ||
+                !ObserverContinuous || Disposed || Exhausted ||
+                Candidate.ObservationGeneration != ObservationGeneration) return false;
+            object Identity = Candidate.Target;
+            ObjectState State = Candidate.State;
+            return Identity != null &&
+                State.Epoch == Candidate.Epoch && State.ObservationGeneration == Candidate.ObservationGeneration &&
+                State.State == SpawnState.Completed && !State.Poisoned &&
+                (State.Current == null || !State.Current.Retired) &&
+                State.CatalogSlot == Candidate.Slot && State.CatalogBirth == Candidate.Birth &&
+                ReferenceEquals(CatalogSlots[Candidate.Slot], Candidate);
+        }
+
+        // Reconciliation can verify enrollment before discovery readiness opens.
+        // This never reads host flags/registry occupancy or creates a token.
+        internal bool HasCatalogObservation(object Identity)
+        {
+            CheckOwner();
+            ObjectState State;
+            if (!CatalogComplete || Identity == null || !States.TryGetValue(Identity, out State) ||
+                State.CatalogSlot < 0 || State.CatalogSlot >= CatalogCapacity) return false;
+            try
+            {
+                MembershipCandidate Candidate = CatalogSlots[State.CatalogSlot];
+                return Candidate != null && ReferenceEquals(Candidate.State, State) &&
+                    ReferenceEquals(Candidate.Target, Identity) && CatalogObservation(Candidate);
+            }
+            catch (Exception) { InvalidateCatalog(); return false; }
+        }
+
+        internal bool IsCatalogCandidateCurrent(MembershipCandidate Candidate)
+        {
+            CheckOwner();
+            if (!CatalogReady) return false;
+            try { return CatalogObservation(Candidate); }
+            catch (Exception) { InvalidateCatalog(); return false; }
+        }
+
+        // Discovery is not proxy acquisition. Direct canonical state avoids CWT
+        // probes and shared token-table growth/resizing inside a scan quantum.
+        internal bool TryObserveCatalog(MembershipCandidate Candidate, Authority Authority,
+            Func<Authority, bool> IsCurrent, Func<object, HostEvidence> ReadEvidence,
+            out HostEvidence Evidence)
+        {
+            CheckOwner();
+            Evidence = default(HostEvidence);
+            if (ReadEvidence == null || !CurrentAuthority(Authority, IsCurrent) ||
+                !IsCatalogCandidateCurrent(Candidate)) return false;
+            object Identity = Candidate.Target;
+            if (Identity == null) return false;
+            ObjectState State = Candidate.State;
+            bool Read = false;
+            try { Evidence = ReadEvidence(Identity); Read = true; }
+            catch (Exception) { }
+            if (!CurrentAuthority(Authority, IsCurrent) || !IsCatalogCandidateCurrent(Candidate)) return false;
+            if (!Read || !ValidEvidence(Identity, Evidence) ||
+                (State.Current != null && !SameEvidence(State.Current, Identity, Evidence)) ||
+                (Candidate.EvidenceCaptured && (Candidate.CapturedId != Evidence.NetworkId ||
+                    !String.Equals(Candidate.CapturedPrefab, Evidence.Prefab, StringComparison.Ordinal)))) {
+                State.State = SpawnState.Failed;
+                if (State.Current != null) State.Current.Retired = true;
+                RemoveCatalogObservation(State);
+                Evidence = default(HostEvidence);
+                return false;
+            }
+            if (!Candidate.EvidenceCaptured) {
+                Candidate.CapturedId = Evidence.NetworkId;
+                Candidate.CapturedPrefab = Evidence.Prefab;
+                Candidate.EvidenceCaptured = true;
+            }
+            return true;
+        }
+
+        internal bool BeginCatalogScan(out MembershipCursor Cursor)
+        {
+            CheckOwner();
+            Cursor = null;
+            if (!CatalogReady) return false;
+            try { Cursor = new MembershipCursor(this, CatalogExtent, CatalogSequence, ObservationGeneration); return true; }
+            catch (Exception) { InvalidateCatalog(); return false; }
+        }
+
+        internal bool IsCatalogScanCurrent(MembershipCursor Cursor)
+        {
+            CheckOwner();
+            return Cursor != null && ReferenceEquals(Cursor.Owner, this) && !Cursor.Invalid &&
+                CatalogReady && Cursor.ObservationGeneration == ObservationGeneration;
+        }
+
+        // Maximum counts RAW slots, including holes, stale entries and births
+        // above the acceptance watermark. Scratch belongs to the caller; no
+        // callback, host access, world walk or per-step allocation occurs here.
+        internal int InspectCatalog(MembershipCursor Cursor, int Maximum,
+            MembershipCandidate[] Candidates, out int Written)
+        {
+            CheckOwner();
+            Written = 0;
+            if (Cursor == null || !ReferenceEquals(Cursor.Owner, this)) throw new ArgumentException("foreign catalog cursor", "Cursor");
+            if (Maximum < 0) throw new ArgumentOutOfRangeException("Maximum");
+            int Count = Math.Min(Maximum, Cursor.End - Cursor.Position);
+            if (Candidates == null || Candidates.Length < Count) throw new ArgumentException("catalog scratch too small", "Candidates");
+            if (!IsCatalogScanCurrent(Cursor)) { Cursor.Invalid = true; return 0; }
+            int Inspected = 0;
+            try
+            {
+                for (; Inspected < Count;)
+                {
+                    MembershipCandidate Candidate = CatalogSlots[Cursor.Position++];
+                    Inspected++;
+                    if (Candidate != null && Candidate.Birth <= Cursor.UpperBirth && CatalogObservation(Candidate))
+                        Candidates[Written++] = Candidate;
+                }
+            }
+            catch (Exception) { InvalidateCatalog(); Cursor.Invalid = true; Written = 0; }
+            return Inspected;
+        }
+
+        private void ReleaseCatalogSlot(MembershipCandidate Candidate)
+        {
+            if (!ReferenceEquals(CatalogSlots[Candidate.Slot], Candidate) ||
+                CatalogFreeCount < 0 || CatalogFreeCount >= CatalogCapacity)
+            { InvalidateCatalog(); return; }
+            ObjectState State = Candidate.State;
+            if (State.CatalogSlot == Candidate.Slot && State.CatalogBirth == Candidate.Birth &&
+                State.Epoch == Candidate.Epoch && State.ObservationGeneration == Candidate.ObservationGeneration)
+            { State.CatalogSlot = -1; State.CatalogBirth = 0; }
+            CatalogSlots[Candidate.Slot] = null;
+            CatalogFree[CatalogFreeCount++] = Candidate.Slot;
+        }
+
+        private void RemoveCatalogObservation(ObjectState State)
+        {
+            if (CatalogSlots == null || State.CatalogSlot < 0) return;
+            try
+            {
+                MembershipCandidate Candidate = CatalogSlots[State.CatalogSlot];
+                if (Candidate == null || !ReferenceEquals(Candidate.State, State) || Candidate.Birth != State.CatalogBirth ||
+                    Candidate.Epoch != State.Epoch || Candidate.ObservationGeneration != State.ObservationGeneration)
+                { InvalidateCatalog(); return; }
+                ReleaseCatalogSlot(Candidate);
+            }
+            catch (Exception) { InvalidateCatalog(); }
+        }
+
+        private void EnrollCatalog(object Identity, ObjectState State)
+        {
+            if (!CatalogComplete) return;
+            try
+            {
+                if (State.CatalogSlot >= 0) { if (!HasCatalogObservation(Identity)) InvalidateCatalog(); return; }
+                if (CatalogFreeCount <= 0 || CatalogFreeCount > CatalogCapacity || CatalogSequence == ulong.MaxValue)
+                { InvalidateCatalog(); return; }
+                int Slot = CatalogFree[CatalogFreeCount - 1];
+                if (CatalogSlots[Slot] != null) { InvalidateCatalog(); return; }
+                ulong Birth = CatalogSequence + 1;
+                var Candidate = new MembershipCandidate(this, Identity, State, Slot, Birth);
+                CatalogFreeCount--;
+                CatalogSequence = Birth;
+                CatalogSlots[Slot] = Candidate;
+                State.CatalogSlot = Slot;
+                State.CatalogBirth = Birth;
+                CatalogExtent = Math.Max(CatalogExtent, Slot + 1);
+            }
+            catch (Exception) { InvalidateCatalog(); }
+        }
+
+        // No host-read callback: only weak identity, epoch/state and known sticky
+        // record retirement. Temporary unadmitted host ineligibility is retained.
+        internal int SweepCatalog(int Maximum)
+        {
+            CheckOwner();
+            if (Maximum < 0) throw new ArgumentOutOfRangeException("Maximum");
+            if (CatalogSlots == null) return 0;
+            int Count = Math.Min(Maximum, CatalogExtent);
+            int Inspected = 0;
+            try
+            {
+                for (; Inspected < Count; ++Inspected)
+                {
+                    int Slot = CatalogSweepPosition;
+                    CatalogSweepPosition = Slot + 1 == CatalogExtent ? 0 : Slot + 1;
+                    MembershipCandidate Candidate = CatalogSlots[Slot];
+                    if (Candidate != null && !CatalogObservation(Candidate)) ReleaseCatalogSlot(Candidate);
+                }
+            }
+            catch (Exception) { InvalidateCatalog(); return Inspected + 1; }
+            return Inspected;
+        }
+
+        private void RetireRecord(LifetimeRecord Record)
+        {
+            Record.Retired = true;
+            if (CatalogSlots == null) return;
+            object Identity = Record.Target;
+            ObjectState State;
+            // An old validation can throw AFTER reentrant successful Spawn. Its
+            // retirement must never release the new epoch's membership link.
+            if (Identity != null && States.TryGetValue(Identity, out State) &&
+                ReferenceEquals(State.Current, Record) && State.Epoch == Record.Epoch &&
+                State.ObservationGeneration == Record.ObservationGeneration)
+                RemoveCatalogObservation(State);
+            // Keep State.Current as the sticky tombstone until BeginSpawn.
+        }
 
         private void CheckOwner()
         {
@@ -190,6 +501,7 @@ namespace Carbon.Plugins
             ObserverContinuous = false;
             StartupCompletionQualified = false;
             StartupWindowOpen = false;
+            InvalidateCatalog();
             if (ObservationGeneration == ulong.MaxValue) Exhausted = true;
             else ObservationGeneration++;
             // No table walk: old records carry the previous generation and fail
@@ -204,7 +516,8 @@ namespace Carbon.Plugins
             CheckOwner();
             if (Identity == null) return null;
             ObjectState State = States.GetValue(Identity, Key => new ObjectState());
-            if (State.Current != null) State.Current.Retired = true;
+            if (State.Current != null) RetireRecord(State.Current);
+            RemoveCatalogObservation(State);
             State.Current = null;
             if (State.State == SpawnState.Pending && State.ObservationGeneration == ObservationGeneration)
                 State.Poisoned = true;
@@ -235,6 +548,7 @@ namespace Carbon.Plugins
             State.Attempt = null;
             State.State = ObserverContinuous && !Exhausted && !State.Poisoned &&
                 FullCallReturnedNormally && OriginalRan ? SpawnState.Completed : SpawnState.Failed;
+            if (State.State == SpawnState.Completed) EnrollCatalog(Identity, State);
             return State.State == SpawnState.Completed;
         }
 
@@ -242,7 +556,10 @@ namespace Carbon.Plugins
         {
             if (!Evidence.Alive || !Evidence.FullySpawned || !Evidence.HasNetworkObject ||
                 Evidence.NetworkId == 0 || !ReferenceEquals(Identity, Evidence.RegistryOccupant) ||
-                String.IsNullOrEmpty(Evidence.Prefab) || Evidence.Prefab.IndexOf('\0') >= 0) return false;
+                String.IsNullOrEmpty(Evidence.Prefab) || Evidence.Prefab.Length > 512 ||
+                Evidence.Prefab.IndexOf('\0') >= 0) return false;
+            // Every valid <=512-byte UTF-8 string has <=512 UTF-16 code units.
+            // Reject larger host strings before either linear string traversal.
             try { return StrictUtf8.GetByteCount(Evidence.Prefab) <= 512; }
             catch (EncoderFallbackException) { return false; }
         }
@@ -288,7 +605,11 @@ namespace Carbon.Plugins
             {
                 if (State.Epoch == ExpectedEpoch && State.State == ExpectedState &&
                     ReferenceEquals(State.Current, ExpectedRecord))
-                { State.State = SpawnState.Failed; if (State.Current != null) State.Current.Retired = true; }
+                {
+                    State.State = SpawnState.Failed;
+                    if (State.Current != null) RetireRecord(State.Current);
+                    RemoveCatalogObservation(State);
+                }
                 return false;
             }
             bool Authorized = CurrentAuthority(Authority, IsCurrent);
@@ -299,13 +620,15 @@ namespace Carbon.Plugins
             if (!ValidEvidence(Identity, Evidence) ||
                 (State.Current != null && !SameEvidence(State.Current, Identity, Evidence)))
             {
-                if (State.Current != null) State.Current.Retired = true;
+                if (State.Current != null) RetireRecord(State.Current);
                 State.State = SpawnState.Failed;
+                RemoveCatalogObservation(State);
                 return false;
             }
             if (State.Current == null)
             {
-                if (NextToken == ulong.MaxValue) { Exhausted = true; State.State = SpawnState.Failed; return false; }
+                if (NextToken == ulong.MaxValue)
+                { Exhausted = true; State.State = SpawnState.Failed; RemoveCatalogObservation(State); return false; }
                 State.Current = new LifetimeRecord(Identity, ++NextToken, State, Evidence);
                 TokenRecords.Add(State.Current.Token, new WeakReference(State.Current));
                 TokenSweep.Enqueue(State.Current.Token);
@@ -323,7 +646,7 @@ namespace Carbon.Plugins
             LifetimeRecord Record = Value.Record;
             if (Disposed || !ObserverContinuous || !StartupCompletionQualified || Record.Retired ||
                 Record.ObservationGeneration != ObservationGeneration)
-            { Record.Retired = true; Value.Retired = true; return false; }
+            { RetireRecord(Record); Value.Retired = true; return false; }
             if (!CurrentAuthority(Value.Authority, IsCurrent))
             { Value.Retired = true; return false; }
             object Identity = Record.Target;
@@ -332,11 +655,11 @@ namespace Carbon.Plugins
                 !ReferenceEquals(State.Current, Record) || State.Epoch != Record.Epoch ||
                 State.ObservationGeneration != Record.ObservationGeneration ||
                 State.State != SpawnState.Completed || ReadEvidence == null)
-            { Record.Retired = true; Value.Retired = true; return false; }
+            { RetireRecord(Record); Value.Retired = true; return false; }
             ulong ExpectedEpoch = State.Epoch;
             HostEvidence Evidence;
             try { Evidence = ReadEvidence(Identity); }
-            catch (Exception) { Record.Retired = true; Value.Retired = true; return false; }
+            catch (Exception) { RetireRecord(Record); Value.Retired = true; return false; }
             bool Authorized = CurrentAuthority(Value.Authority, IsCurrent);
             if (!Authorized || Value.Retired || Disposed || !ObserverContinuous || !StartupCompletionQualified ||
                 State.Epoch != ExpectedEpoch ||
@@ -344,7 +667,7 @@ namespace Carbon.Plugins
                 !ReferenceEquals(State.Current, Record) || Record.Retired)
             { Value.Retired = true; return false; }
             if (!SameEvidence(Record, Identity, Evidence))
-            { Record.Retired = true; Value.Retired = true; return false; }
+            { RetireRecord(Record); Value.Retired = true; return false; }
             return true;
         }
 
@@ -362,6 +685,11 @@ namespace Carbon.Plugins
             BreakObserverContinuity();
             TokenRecords.Clear();
             TokenSweep.Clear();
+            // Detach bounded pools in constant work even when an old binding,
+            // candidate or cursor still holds this disposed model as its owner.
+            CatalogSlots = null;
+            CatalogFree = null;
+            CatalogFreeCount = CatalogExtent = CatalogSweepPosition = 0;
         }
     }
 }

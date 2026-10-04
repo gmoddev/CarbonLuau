@@ -44,6 +44,10 @@ jobs:
         run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
       - name: Private Entity lifetime model
         run: dotnet run --project tests/entity-lifetime-model/EntityLifetimeModelTests.csproj -c Release
+      - name: Private Entity discovery scheduler model
+        run: dotnet run --project tests/entity-discovery-model/EntityDiscoveryModelTests.csproj -c Release
+      - name: Bounded Entity position composition
+        run: dotnet run --project tests/entity-position-model/EntityPositionModelTests.csproj -c Release
       - name: Compile Persistence-1B adapter teardown tests
         timeout-minutes: 5
         run: dotnet build tests/persistence-adapter/PersistenceAdapterTests.csproj -c Release -o dist/persistence-adapter -m:2
