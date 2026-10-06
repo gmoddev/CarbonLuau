@@ -4,6 +4,9 @@
 [Foundation 2A](WorldEntityFoundation2A.md) owns private implementation,
 exact-host/resource policy and final qualification. No public discovery binding
 is implemented by this closure.
+The separately qualified [Discovery-2B](WorldEntityFoundation2B.md) now owns the
+public bounded callback API and fresh admission/proxy conversion evidence.
+Combined Foundation 2 final/public-release-readiness closure remains separately scoped.
 
 The paragraphs below preserve the pre-implementation gate history. Their open
 catalog/position/policy conclusions are superseded by Foundation 2A's supported

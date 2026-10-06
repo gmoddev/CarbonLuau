@@ -1,7 +1,7 @@
 # EntityDiscoveryOptions
 
 Discovery-2B development contract for scripting API `0.6.0-experimental`;
-not included in published package `0.5.0`. Public qualification is pending in
+not included in published package `0.5.0`. Public qualification is recorded in
 [Foundation 2B](../../WorldEntityFoundation2B.md).
 
 This plain-table alias is the optional last argument to

@@ -36,7 +36,7 @@ completion is a fresh bounded owner-thread admission with every result validated
 Success includes an empty array; whole-query failure supplies nil array and a
 controlled error; retirement silently discards completion. Encounter positions
 and accepted birth watermark do not form an atomic world snapshot. See the
-[discovery guide](Discovery.md) and [pending public qualification](../WorldEntityFoundation2B.md).
+[discovery guide](Discovery.md) and [public qualification](../WorldEntityFoundation2B.md).
 The [private 2A record](../WorldEntityFoundation2A.md) owns the additional pinned
 Unity images; its evidence does not qualify public callback admission. The same
 startup/restart requirements apply. Package `0.5.0`, ABI `1.5`, provider protocol,
@@ -131,7 +131,7 @@ retrying. Neither timeout nor recovery provides rollback or exactly-once deliver
 | Connected-player population / snapshot | 1024; larger host population fails closed |
 | Entity ID / Prefab snapshot | Canonical 1–20 digit nonzero UInt64 string / 512 UTF-8 bytes, no NUL |
 | Workspace lookup | One keyed registry lookup plus constant validation; no world scan or index |
-| Discovery-2B contract: catalog / total raw slots per request | 262,144; public qualification pending |
+| Discovery-2B: catalog / total raw slots per request | 262,144; qualified on the exact pinned Windows/Linux hosts |
 | Discovery-2B contract: pending requests global / domain lifetime | 8 / 2, including completed-undelivered work |
 | Discovery-2B contract: shared scan/delivery units / raw slots per frame | 1,024 / 1,024 across all queries |
 | Discovery-2B contract: result Limit / absolute deadline | Integer 1..256, default 256 / 120 seconds including completion queue |

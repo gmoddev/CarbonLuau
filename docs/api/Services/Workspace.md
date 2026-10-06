@@ -8,7 +8,7 @@ qualified Rust/Carbon targets only. The latest published package remains
 | Method | Result | Behavior |
 |---|---|---|
 | `Workspace:GetEntityById(Id: string)` | `Entity?` | One keyed lookup of a currently admitted Rust `BaseEntity`; `nil` if a valid ID is absent. |
-| `Workspace:GetEntitiesInRadiusAsync(Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?)` | `()` | Non-yielding committed-only submission; later callback with the whole result array or a controlled error. Public qualification is pending in [Discovery-2B](../../WorldEntityFoundation2B.md). |
+| `Workspace:GetEntitiesInRadiusAsync(Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?)` | `()` | Non-yielding committed-only submission; later callback with the whole result array or a controlled error. Qualified by [Discovery-2B](../../WorldEntityFoundation2B.md). |
 
 ## GetEntityById
 

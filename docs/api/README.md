@@ -35,7 +35,7 @@ Discovery-2B adds the selected development contract for
 See the [discovery guide](Discovery.md),
 [EntityDiscoveryOptions](Types/EntityDiscoveryOptions.md) and
 [runnable example](../../examples/world/discovery/init.luau). Public completion
-qualification is pending in the [2B record](../WorldEntityFoundation2B.md).
+qualification is PASS in the [2B record](../WorldEntityFoundation2B.md).
 This surface targets development API `0.6.0-experimental` and is not included
 in published package `0.5.0`.
 

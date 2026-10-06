@@ -1,8 +1,10 @@
 # World/Entity Foundation 2B — public bounded discovery qualification
 
-Status: implementation and local Windows/Linux public gates PASS; final hosted checks pending.
+**DISCOVERY-2B PASS — PUBLIC BOUNDED DISCOVERY QUALIFIED**
 Starting checkout: `d48bbdb7747cadfdb8db9c4dcc88cb11ea0b384a`.
-Qualification date: 2026-10-06. Final hosted receipts follow implementation publication.
+Qualification date: 2026-10-06. Implementation/final tested production revision:
+`79f0ddb38b8414007761a74bd7472525c9824516`. The final evidence/routing update is
+documentation-only; production source and the final live artifacts are unchanged.
 
 ## Authority and scope
 
@@ -220,7 +222,7 @@ artifacts also run on linuxbox. Docker Desktop was unavailable and not restarted
 Linux uses existing cached builder images in isolated two-CPU task containers
 under `/root/codex/discovery2b-20261006`. No host install/policy change, new
 public port or unrelated container mutation. Native/sanitizer and final hosted
-receipts follow implementation publication.
+receipts are recorded below.
 
 Windows and Linux each pass six affected native suites, plus the managed real-VM
 `--discovery2b` test; Linux ELF unloadability also passes. Linux ASan/UBSan/leak
@@ -229,8 +231,39 @@ faults, expiry/notification races, callback error/yield/timeout, failed release,
 retirement and no replay. Linux receipts:
 `/root/codex/discovery2b-20261006/logs/release.log`, `sanitize.log`,
 `final-models.log`, `discovery-public-mono.log`. Temporary containers exited;
-298 MiB of task-owned caches/evidence retained. Final hosted full regressions
-remain the last gate, not substituted by these targeted runs.
+298 MiB of task-owned caches/evidence retained. Hosted full regressions below
+close the final gate; targeted runs did not substitute for them.
+
+### Final-source hosted qualification
+
+All workflows below tested production revision `79f0ddb38b8414007761a74bd7472525c9824516`:
+
+- [CarbonLuau validation](https://github.com/gmoddev/CarbonLuau/actions/runs/37442978871)
+  **PASS**: Windows x64 / Ubuntu 24.04 native/runtime, public discovery, lifetime
+  and scheduler models, publication/modules, addons/providers, recovery, GUI,
+  Player/inventory, persistence worker and combined lifecycle/scale, loader,
+  deterministic packaging, clean extraction/install and examples. Full ASan,
+  UBSan, leak detection and native lifecycle/allocation-fault fixtures **PASS**.
+- [Tooling Foundations A/B](https://github.com/gmoddev/CarbonLuau/actions/runs/37442978992)
+  **PASS**, including metadata, definitions, drift, preview and affected native
+  tooling checks on Windows/Linux/macOS. macOS tooling is not server support.
+- [Tooling baseline contracts](https://github.com/gmoddev/CarbonLuau/actions/runs/37442979050)
+  **PASS**.
+- [Documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/37442978861)
+  **PASS**; evidence publication follows the same normal Pages workflow.
+
+No mandatory Discovery-2B gate remains open. Tests/receipt limits remain explicit:
+controlled-host stress is not live position evidence; clock/ID injection is not
+natural pooling; no atomic world snapshot, arbitrary hostile native mutation
+protection or authenticated-client observation is claimed. Initial startup and
+exact-host requalification requirements remain. No separately scoped final
+Foundation 2 release-readiness closure was performed.
+
+Repository: `main` published with GitHub no-reply author/committer metadata;
+tracked worktree clean at handoff. `.codexlock` and pre-existing
+`derived-369547800317500/` research databases/journals remain untracked, preserved
+and excluded. No credentials, server binaries, fixture DB or storage content
+enters the commits. Test servers/containers exited; prior installed files restored.
 
 ## Identities and handoff
 
