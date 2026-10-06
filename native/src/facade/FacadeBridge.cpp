@@ -79,7 +79,8 @@ int InstallFacade(lua_State* State)
     if (Runtime.GuiValueEqual == LUA_NOREF) lua_pushnil(State); else lua_getref(State, Runtime.GuiValueEqual);
     InstallStorage(State, Owner);
     if (Runtime.EntityIdentities == LUA_NOREF) lua_pushnil(State); else lua_getref(State, Runtime.EntityIdentities);
-    lua_call(State, 5, 5);
+    InstallDiscovery(State, Owner);
+    lua_call(State, 6, 5);
     if (Runtime.EntityIdentities == LUA_NOREF) Runtime.EntityIdentities = lua_ref(State, -1);
     lua_pop(State, 1);
     if (Runtime.GuiValueEqual == LUA_NOREF) Runtime.GuiValueEqual = lua_ref(State, -1);
@@ -151,6 +152,9 @@ ClStatus cl_domain_event(ClHandle Id, ClHandle DomainId, const char* Payload, ui
     Vm* Runtime = GetVm(Id);
     Domain* Owner = Runtime ? GetDomain(*Runtime, DomainId, true) : nullptr;
     if (!Runtime || !Runtime->State || !Owner || !Owner->Host || Runtime->ThreadId || Runtime->Admission) return CL_INVALID_ARGUMENT;
+    // This reserved tag is never an ordinary script Signal/event dispatch.
+    if (Length >= 9 && !std::memcmp(Payload, "discovery", 9))
+        return ReadyDiscovery(*Runtime, *Owner, Payload, Length);
     if (Owner->Queue.size() >= Owner->MaxQueued || Runtime->Sequence == UINT64_MAX) { ++Owner->Rejected; return CL_INVALID_ARGUMENT; }
     EventInput Input{Runtime, Owner, Payload, Length};
     if (lua_cpcall(Runtime->State, EnqueueEvent, &Input) != LUA_OK) { Retire(*Runtime); return CL_MEMORY_LIMIT; }

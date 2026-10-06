@@ -177,6 +177,11 @@ namespace Carbon.Plugins
             if (CatalogCapacity == 0) return;
             try
             {
+                // Public discovery converts at most 256 matches at admission,
+                // never every inspected candidate. Pre-size token storage cold:
+                // no population-sized dictionary/queue resize in that callback.
+                TokenRecords = new Dictionary<ulong, WeakReference>(CatalogCapacity);
+                TokenSweep = new Queue<ulong>(CatalogCapacity);
                 var Slots = new MembershipCandidate[CatalogCapacity];
                 var Free = new int[CatalogCapacity];
                 for (int Index = 0; Index < CatalogCapacity; ++Index) Free[Index] = CatalogCapacity - Index - 1;
@@ -634,6 +639,38 @@ namespace Carbon.Plugins
                 TokenSweep.Enqueue(State.Current.Token);
             }
             if (State.Current.Retired) return false;
+            Result = new Binding(this, State.Current, Authority);
+            return true;
+        }
+
+        // Exact direct catalog -> public lifetime conversion. No registry
+        // enumerator, CWT probe or key-based replacement lookup is involved.
+        // Existing tokens retain F1 identity; new tokens have fixed-capacity
+        // storage and four bounded weak-token maintenance opportunities.
+        internal bool TryAdmitCatalog(MembershipCandidate Candidate, Authority Authority,
+            Func<Authority, bool> IsCurrent, Func<object, HostEvidence> ReadEvidence,
+            out Binding Result)
+        {
+            CheckOwner(); Result = null;
+            SweepTokens(4);
+            HostEvidence Evidence;
+            if (!TryObserveCatalog(Candidate, Authority, IsCurrent, ReadEvidence, out Evidence)) return false;
+            ObjectState State = Candidate.State;
+            object Identity = Candidate.Target;
+            if (Identity == null || !IsCatalogCandidateCurrent(Candidate)) return false;
+            if (State.Current == null) {
+                if (NextToken == ulong.MaxValue || TokenRecords.Count >= CatalogCapacity || TokenSweep.Count >= CatalogCapacity) return false;
+                var Record = new LifetimeRecord(Identity, ++NextToken, State, Evidence);
+                TokenRecords.Add(Record.Token, new WeakReference(Record));
+                TokenSweep.Enqueue(Record.Token);
+                State.Current = Record;
+            }
+            if (State.Current.Retired || State.Current.Epoch != Candidate.Epoch ||
+                !SameEvidence(State.Current, Identity, Evidence) || !CurrentAuthority(Authority, IsCurrent)) return false;
+            // Even a qualification delegate that changes lifecycle during its
+            // final authority check cannot publish the just-retired candidate.
+            if (!IsCatalogCandidateCurrent(Candidate) || State.Current == null || State.Current.Retired ||
+                State.Current.Epoch != Candidate.Epoch) return false;
             Result = new Binding(this, State.Current, Authority);
             return true;
         }

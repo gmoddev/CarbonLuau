@@ -48,6 +48,12 @@ jobs:
         run: dotnet run --project tests/entity-discovery-model/EntityDiscoveryModelTests.csproj -c Release
       - name: Bounded Entity position composition
         run: dotnet run --project tests/entity-position-model/EntityPositionModelTests.csproj -c Release
+      - name: Public bounded discovery bindings (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --discovery2b "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Public bounded discovery bindings (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --discovery2b "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
       - name: Compile Persistence-1B adapter teardown tests
         timeout-minutes: 5
         run: dotnet build tests/persistence-adapter/PersistenceAdapterTests.csproj -c Release -o dist/persistence-adapter -m:2

@@ -35,7 +35,7 @@
 -- @carbonluau-api {"Owner":"CommandOptions","Name":"description","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"CommandOptions.description.","SinceApi":"0.3.0-experimental","Binding":"        if Key ~= \"permission\" and Key ~= \"description\" then Fail(\"unsupported command option\") end"}
 -- @carbonluau-api {"Owner":"Players","Name":"PlayerAdded","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is added.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
 -- @carbonluau-api {"Owner":"Players","Name":"PlayerRemoving","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is removed.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
-local Host, MakeUserdata, SharedValueEqual, StorageService, EntityIdentityRecords = ...
+local Host, MakeUserdata, SharedValueEqual, StorageService, EntityIdentityRecords, SubmitDiscovery = ...
 if EntityIdentityRecords == nil then
     EntityIdentityRecords = setmetatable({}, {__mode = "k"})
 end
@@ -623,6 +623,12 @@ end
 EntityMeta.__metatable = "CarbonLuau.Entity"
 table.freeze(EntityMeta)
 local Workspace = {}
+local function GetEntity(Fields, Offset)
+    local Entity = MakeUserdata(EntityMeta)
+    EntityRecords[Entity] = {Token = Fields[Offset + 1], Publication = Fields[Offset + 3]}
+    EntityIdentityRecords[Entity] = {Host = Fields[Offset], Token = Fields[Offset + 1]}
+    return Entity
+end
 -- @carbonluau-api {"Owner":"Workspace","Name":"GetEntityById","Kind":"Method","Args":[["Id","string"]],"Returns":["Entity?"],"Summary":"Find one live entity by canonical decimal network ID, or nil if absent.","SinceApi":"0.6.0-experimental","Binding":"function Workspace.GetEntityById(Self, Id)"}
 function Workspace.GetEntityById(Self, Id)
     if Self ~= Workspace then Fail("invalid Workspace service") end
@@ -632,10 +638,23 @@ function Workspace.GetEntityById(Self, Id)
     local Fields = Host(34, Id)
     if #Fields == 0 then return nil end
     if #Fields ~= 4 then Fail("invalid Entity lookup response") end
-    local Entity = MakeUserdata(EntityMeta)
-    EntityRecords[Entity] = {Token = Fields[2], Publication = Fields[4]}
-    EntityIdentityRecords[Entity] = {Host = Fields[1], Token = Fields[2]}
-    return Entity
+    return GetEntity(Fields, 1)
+end
+-- @carbonluau-api {"Type":"EntityDiscoveryOptions","Kind":"Value","Representation":"Alias","TypeExpression":"{Prefab: string?, Limit: number?}","Summary":"Plain options table; exact nonempty UTF-8 prefab up to 512 bytes without NUL; Limit defaults to 256 and is an integer in 1..256.","SinceApi":"0.6.0-experimental","Qualification":"Experimental","Preview":"Unavailable"}
+-- @carbonluau-api {"Owner":"Workspace","Name":"GetEntitiesInRadiusAsync","Kind":"Method","Args":[["Position","Vector3"],["Radius","number"],["Callback","({Entity}?, string?) -> ()"],["Options","EntityDiscoveryOptions?"]],"Returns":[],"Summary":"Committed-owner non-yielding bounded radius discovery; finite nonnegative radius. Results are encounter observations with exact lifetime validation at callback admission; failures return nil/ErrorCode. Two requests/domain, eight globally, 256 results and 120-second absolute deadline including queued completion. Later births excluded; retirement suppresses callbacks; no replay.","SinceApi":"0.6.0-experimental","Qualification":"Experimental","Preview":"Unavailable","RejectExtraArguments":true,"Binding":"function Workspace.GetEntitiesInRadiusAsync(Self, Position, Radius, Callback, Options, ...)"}
+function Workspace.GetEntitiesInRadiusAsync(Self, Position, Radius, Callback, Options, ...)
+    if Self ~= Workspace then Fail("invalid Workspace service") end
+    if select("#", ...) ~= 0 then Fail("unexpected discovery arguments") end
+    -- Values constructed by any domain share the sealed project-owned Vector3
+    -- descriptor. IsVector3 rejects tables without invoking their metamethods.
+    local X, Y, Z = Vector3Components(Position)
+    if type(Callback) ~= "function" then Fail("discovery callback function required") end
+    SubmitDiscovery(X, Y, Z, Radius, function(Fields)
+        if Fields[1] ~= "" then Callback(nil, Fields[1]); return end
+        local Entities = {}
+        for Offset = 2, #Fields, 4 do Entities[#Entities + 1] = GetEntity(Fields, Offset) end
+        Callback(Entities, nil)
+    end, Options)
 end
 table.freeze(Workspace)
 local Game = {ApiName = "CarbonLuau", ApiVersion = "0.6.0-experimental", ApiStatus = "Experimental"}

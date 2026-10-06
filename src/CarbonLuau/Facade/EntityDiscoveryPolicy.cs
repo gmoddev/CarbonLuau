@@ -1,6 +1,6 @@
 namespace Carbon.Plugins
 {
-    // Private shared resource policy. No release/public discovery API is assigned.
+    // Shared traversal/public-discovery resource policy; no package release.
     internal static class EntityDiscoveryPolicy
     {
         internal const int CatalogSlots = 262144; // Existing qualified startup registry cap.

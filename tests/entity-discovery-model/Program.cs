@@ -668,6 +668,7 @@ internal static partial class Program
             TestCatalogEvidenceAndForgery();
             TestDirectCatalogObserver();
             TestSilentUnload();
+            TestPublicConversion();
             Console.WriteLine("[CarbonLuau:EntityDiscoveryModel] PASS Checks=" + Checks);
             return 0;
         }

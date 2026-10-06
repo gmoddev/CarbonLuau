@@ -38,7 +38,7 @@ Broken = (JObject)Catalog.DeepClone();
 ((JObject)Broken["Members"]![0]!)["ValueType"] = "UnimplementedType";
 Reject(() => ApiCatalog.Validate(Broken), "unknown type accepted");
 var PersistenceTypes = new[] { "DataStoreService", "DataStore", "DataStoreOptions", "DataStoreQuery", "DataStoreQueryResult", "PersistedValue" };
-var EntityTypes = new[] { "Workspace", "Entity" };
+var EntityTypes = new[] { "Workspace", "Entity", "EntityDiscoveryOptions" };
 foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catalog["Members"]!)) {
     bool Persistence = PersistenceTypes.Contains((string?)Declaration["Id"]) || PersistenceTypes.Contains((string?)Declaration["OwnerId"]);
     bool Entity = EntityTypes.Contains((string?)Declaration["Id"]) || EntityTypes.Contains((string?)Declaration["OwnerId"]);
@@ -56,6 +56,13 @@ Check(Definitions.Contains("export type DataStoreQuery = {Field: string, Type: (
     Definitions.Contains("function Query(self, Request: DataStoreQuery, Callback: (DataStoreQueryResult?, string?) -> ()): ()"),
     "structured Query definition missing");
 Check(Definitions.Contains("Callback: (PersistedValue?, string?) -> ()") && Definitions.Contains("Callback: (boolean?, string?) -> ()"), "persistence callback shape drift");
+Check(Definitions.Contains("export type EntityDiscoveryOptions = {Prefab: string?, Limit: number?}") &&
+    Definitions.Contains("function GetEntitiesInRadiusAsync(self, Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?): ()"),
+    "Discovery-2B signature/options/callback drift");
+Reject(() => ApiCatalog.Build(Bootstrap.Replace("function Workspace.GetEntitiesInRadiusAsync(Self, Position, Radius, Callback, Options, ...)",
+    "function Workspace.GetEntitiesInRadiusAsync(Self, Position, Radius, Callback, Options)"), Release, Native), "missing surplus-argument guard accepted");
+Reject(() => ApiCatalog.Build(Bootstrap.Replace("function Workspace.GetEntitiesInRadiusAsync(Self, Position, Radius, Callback, Options, ...)",
+    "function Workspace.GetEntitiesInRadiusAsync(Self, Position, Radius, Options, Callback, ...)"), Release, Native), "discovery argument order drift accepted");
 Reject(() => ApiCatalog.Build(Bootstrap, Release, Native.Replace("int GetDataStore(lua_State* State)\n", "int RenamedGetDataStore(lua_State* State)\n")), "removed persistence binding accepted");
 Reject(() => ApiCatalog.Build(Bootstrap, Release, Native.Replace("lua_setfield(State, -2, \"GetAsync\");", "lua_setfield(State, -2, \"ChangedGetAsync\");")), "renamed persistence registration accepted");
 Reject(() => ApiCatalog.Build(Bootstrap, Release, Native + "\nlua_pushcfunction(State, Controlled<FutureStorage>, \"FutureStorage\"); lua_setfield(State, -2, \"FutureStorage\");\n"), "unannotated persistence registration accepted");

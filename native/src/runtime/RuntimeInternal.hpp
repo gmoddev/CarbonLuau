@@ -56,6 +56,13 @@ struct StorageCallback {
     Persistence::Identity Identity;
     Persistence::Bytes Envelope;
 };
+// Private fixed discovery roots, independent of the ordinary queue capacity.
+struct DiscoveryCallback {
+    uint64_t Route = 0, Expires = 0, Due = 0, Sequence = 0;
+    bool Accepted = false, Ready = false, Notified = false, Submitted = false;
+    lua_State* Thread = nullptr;
+    int Reference = LUA_NOREF;
+};
 
 struct Domain {
     uint64_t Id = 0;
@@ -74,6 +81,7 @@ struct Domain {
     // Separate intake slots: ordinary task/event queues cannot consume these.
     std::array<uint64_t,8> StorageReservations{};
     std::array<std::unique_ptr<StorageCallback>,8> StorageCallbacks;
+    std::array<DiscoveryCallback,2> DiscoveryCallbacks{};
     std::vector<StorageName> StorageNames;
     std::vector<StorageHint> StorageHints;
     ClHostCall Host = nullptr;
@@ -116,6 +124,8 @@ struct Vm {
     bool IntegrityFailed = false;
     uint32_t StorageReserved = 0;
     uint64_t StorageSequence = 0;
+    uint32_t DiscoveryReserved = 0;
+    uint64_t DiscoverySequence = 0;
     int GuiValueEqual = LUA_NOREF;
     int EntityIdentities = LUA_NOREF;
     ~Vm();
@@ -183,6 +193,13 @@ bool MergeStorageHint(std::vector<StorageHint>& Hints, Domain& Owner, const std:
     const std::vector<std::string>& Fields);
 bool PublishStorageHint(Vm& Runtime, Domain& Owner, const StorageHint& Hint);
 StorageCallback* NextStorage(Domain& Owner);
+void InstallDiscovery(lua_State* State, Domain& Owner);
+bool CanDispatchDiscovery(const Vm& Runtime, const Domain& Owner);
+void ClearDiscovery(Vm& Runtime, Domain& Owner);
+bool ReleaseDiscovery(Vm& Runtime, Domain& Owner, DiscoveryCallback& Work);
+void ExpireDiscovery(Vm& Runtime, Domain& Owner, uint64_t Now);
+DiscoveryCallback* NextDiscovery(Domain& Owner);
+ClStatus ReadyDiscovery(Vm& Runtime, Domain& Owner, const char* Bytes, uint32_t Length);
 void RollbackPublication(PublicationScope& Scope);
 int FindStaged(Vm& Runtime, Domain* Owner, Module* Value);
 void Interrupt(lua_State* State, int Gc);

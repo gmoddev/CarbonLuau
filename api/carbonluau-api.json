@@ -159,6 +159,20 @@
       "Preview": "Unavailable"
     },
     {
+      "Id": "EntityDiscoveryOptions",
+      "Name": "EntityDiscoveryOptions",
+      "Kind": "Value",
+      "Summary": "Plain options table; exact nonempty UTF-8 prefab up to 512 bytes without NUL; Limit defaults to 256 and is an integer in 1..256.",
+      "Availability": {
+        "SinceApi": "0.6.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Alias",
+      "TypeExpression": "{Prefab: string?, Limit: number?}"
+    },
+    {
       "Id": "Frame",
       "Name": "Frame",
       "Kind": "Class",
@@ -7841,6 +7855,50 @@
           "Returns": [
             "Vector3"
           ]
+        }
+      ]
+    },
+    {
+      "Id": "Workspace.GetEntitiesInRadiusAsync",
+      "Name": "GetEntitiesInRadiusAsync",
+      "OwnerId": "Workspace",
+      "Kind": "Method",
+      "Summary": "Committed-owner non-yielding bounded radius discovery; finite nonnegative radius. Results are encounter observations with exact lifetime validation at callback admission; failures return nil/ErrorCode. Two requests/domain, eight globally, 256 results and 120-second absolute deadline including queued completion. Later births excluded; retirement suppresses callbacks; no replay.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Position",
+              "Type": "Vector3",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Radius",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Callback",
+              "Type": "({Entity}?, string?) -> ()",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Options",
+              "Type": "EntityDiscoveryOptions?",
+              "Optional": true,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
         }
       ]
     },

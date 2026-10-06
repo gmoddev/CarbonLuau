@@ -887,6 +887,9 @@
   "@carbonluau/global/Vector3.new": {
     "documentation": "Vector3.new."
   },
+  "@carbonluau/globaltype/Workspace.GetEntitiesInRadiusAsync": {
+    "documentation": "Committed-owner non-yielding bounded radius discovery; finite nonnegative radius. Results are encounter observations with exact lifetime validation at callback admission; failures return nil/ErrorCode. Two requests/domain, eight globally, 256 results and 120-second absolute deadline including queued completion. Later births excluded; retirement suppresses callbacks; no replay."
+  },
   "@carbonluau/globaltype/Workspace.GetEntityById": {
     "documentation": "Find one live entity by canonical decimal network ID, or nil if absent."
   }

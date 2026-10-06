@@ -35,7 +35,10 @@ namespace Carbon.Plugins
             {
                 CarbonLuau Current = Owner;
                 Owner = null;
-                if (Current != null) Current.StopEntityDiscovery();
+                // Unexpected receiver loss cannot strand native captures. Normal
+                // teardown clears Owner before engine destruction, so this does
+                // not recursively tear down an already retiring runtime.
+                if (Current != null) Current.ReleaseNative();
             }
         }
 
@@ -148,7 +151,7 @@ namespace Carbon.Plugins
         // Private asynchronous admission only. No Luau method/callback binding.
         private EntityDiscoveryTraversal.StartStatus StartEntityDiscovery(FacadeSession Session,
             EntityDiscoveryTraversal.Query Query, Action<EntityDiscoveryTraversal.Completion> Callback,
-            out ulong RequestId)
+            out ulong RequestId, Func<bool> CompletionAuthorized = null)
         {
             RequestId = 0;
             if (Thread.CurrentThread.ManagedThreadId != EntityOwnerThread || EntityDiscovery == null ||
@@ -191,7 +194,7 @@ namespace Carbon.Plugins
             }, Completion => {
                 // Delivery and this last lifetime check are one uninterrupted
                 // owner turn. Retired requests never enter replacement code.
-                if (Current()) Callback(Completion);
+                if ((CompletionAuthorized ?? Current)()) Callback(Completion);
             }, EntityDiscoveryClock, out RequestId);
             return Status;
         }
@@ -220,7 +223,7 @@ namespace Carbon.Plugins
                 PumpEntityDiscovery();
             }
             catch (Exception) {
-                StopEntityDiscovery();
+                ReleaseNative();
                 PrintWarning("[CarbonLuau:Discovery] Private traversal stopped after an internal intake failure.");
             }
         }
@@ -247,6 +250,7 @@ namespace Carbon.Plugins
 
         private void StopEntityDiscovery()
         {
+            RetireDiscovery(null);
             if (EntityDiscovery != null) EntityDiscovery.Dispose();
             EntityDiscovery = null;
             EntityDiscoveryFrame Pump = EntityDiscoveryFramePump;

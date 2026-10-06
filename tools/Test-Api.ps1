@@ -141,7 +141,7 @@ $ServiceReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Ser
 $Catalog = Get-Content -Raw -LiteralPath (Join-Path $Root 'api/carbonluau-api.json') | ConvertFrom-Json
 $Definitions = Get-Content -Raw -LiteralPath (Join-Path $Root 'generated/carbonluau.d.luau')
 $PersistenceTypes = @('DataStoreService','DataStore','DataStoreOptions','DataStoreQuery','DataStoreQueryResult','PersistedValue')
-$EntityTypes = @('Workspace','Entity')
+$EntityTypes = @('Workspace','Entity','EntityDiscoveryOptions')
 foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
     $IsPersistence = $Declaration.Id -cin $PersistenceTypes -or $Declaration.OwnerId -cin $PersistenceTypes
     if ($IsPersistence) {
@@ -189,8 +189,9 @@ foreach ($Example in @('exact-lookup','equality','string-id')) {
 }
 $EntityMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Entity' } | ForEach-Object Name | Sort-Object)
 if (($EntityMembers -join ',') -cne 'Id,Position,Prefab') { throw 'Unexpected Entity public member' }
-$WorkspaceMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Workspace' } | ForEach-Object Name)
-if (($WorkspaceMembers -join ',') -cne 'GetEntityById' -or
+$WorkspaceMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Workspace' } | ForEach-Object Name | Sort-Object)
+if (($WorkspaceMembers -join ',') -cne 'GetEntitiesInRadiusAsync,GetEntityById' -or
+    !$Definitions.Contains('function GetEntitiesInRadiusAsync(self, Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?): ()') -or
     !$Definitions.Contains('function GetEntityById(self, Id: string): (Entity?)') -or
     !$Definitions.Contains('function GetService(self, Name: "Workspace"): (Workspace)')) {
     throw 'Workspace runtime/catalog/definition drift'

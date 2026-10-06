@@ -8,7 +8,10 @@ namespace Carbon.Plugins
     // in the trusted bootstrap; this layer never exports Rust/Unity references.
     public partial class CarbonLuau
     {
-        partial void BindEntityFacade() { Gameplay.Entities = new EntityFacadeAdapter(this); }
+        partial void BindEntityFacade() {
+            Gameplay.Entities = new EntityFacadeAdapter(this);
+            Gameplay.Discovery = new EntityDiscoveryFacadeAdapter(this);
+        }
 
         private sealed class EntityFacadeAdapter : IEntityFacadeHost
         {

@@ -30,6 +30,15 @@ This is server-side Luau, not Roblox API compatibility.
 | Server-driven retained GUI with qualified Foundation 2A layout, 2B typed images and 2C scrolling source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
 | Experimental v0.5 persistence ([combined qualification](../PersistenceFoundation2D.md)) | [Guide and examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md), [DataStoreQuery](Types/DataStoreQuery.md), [DataStoreQueryResult](Types/DataStoreQueryResult.md), [PersistedValue](Types/PersistedValue.md) |
 
+Discovery-2B adds the selected development contract for
+[`Workspace:GetEntitiesInRadiusAsync`](Services/Workspace.md#getentitiesinradiusasync).
+See the [discovery guide](Discovery.md),
+[EntityDiscoveryOptions](Types/EntityDiscoveryOptions.md) and
+[runnable example](../../examples/world/discovery/init.luau). Public completion
+qualification is pending in the [2B record](../WorldEntityFoundation2B.md).
+This surface targets development API `0.6.0-experimental` and is not included
+in published package `0.5.0`.
+
 Optional `GetDataStore` field-name hints are the Persistence-2B addition.
 `DataStore:Query` adds structured equality, inclusive range and ordered top-N
 requests with bounded, opaque keyset pagination. See the
@@ -71,7 +80,8 @@ Player-1F-A adds committed-only verified `Player:TakeItem`; Player-1F-B adds
 [Player-1F-A](../PlayerInteractionFoundation1FA.md) and
 [Player-1F-B](../PlayerInteractionFoundation1FB-Validation.md) and
 [Player-1F-C combined closure](../PlayerInteractionFoundation1FC.md) qualification records. Not implemented in
-the current scripting surface: raw inventory objects, world enumeration or mutation, health mutation,
+the current scripting surface: raw inventory objects, synchronous world enumeration,
+world mutation, health mutation,
 moderation/admin mutation, networking, HTTP, filesystem APIs,
 arbitrary hooks/console execution, reflection, Roblox hierarchy/replication and
 `task.wait`. Historical Phase 4 was deferred; the implemented Player-1C/1F

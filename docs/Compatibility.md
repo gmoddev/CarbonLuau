@@ -717,7 +717,11 @@ Windows/Linux hosts, using supported owner-thread structural-storage affinity.
 It does not claim universal external-writer serialization, an atomic pose/world
 snapshot, or a new engine storage lease. The following research-status paragraphs
 record the earlier gates, superseded only within Foundation 2A's measured scope.
-No public discovery method or Luau completion binding is implemented.
+[Discovery-2B](WorldEntityFoundation2B.md) separately records the public
+`Workspace:GetEntitiesInRadiusAsync` binding, callback admission and development
+API `0.6.0-experimental` evidence. It does not change package `0.5.0`, the exact
+host envelope, initial-startup observer requirement or Entity lifetime rules.
+The research-status statements below remain historical, not public phase gates.
 
 Foundation 1 intentionally has no collection query, radius query, lifecycle
 Signal, Spawn or Destroy compatibility promise. A result limit does not authorize

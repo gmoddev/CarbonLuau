@@ -18,6 +18,7 @@ namespace Carbon.Plugins
             internal readonly PlayerGiveItemOperation GiveItems;
             internal readonly GuiRetainedWorld Gui;
             internal IEntityFacadeHost Entities;
+            internal IEntityDiscoveryFacadeHost Discovery;
             public FacadeSession Active { get; private set; }
             private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
             private long GuiFlushCursor;
@@ -180,6 +181,7 @@ namespace Carbon.Plugins
             public int PendingCount { get { return Pending.Count; } }
             public int ListenerCount { get { return Listeners.Count; } }
             public readonly NativeRuntime.HostDelegate Callback;
+            internal ulong FacadeVm;
             public FacadeSession(FacadeWorld World, long Generation, int Capacity)
                 : this(World, Generation, Generation, Capacity) { }
             public FacadeSession(FacadeWorld World, long VmGenerationId, long DomainLifetimeId, int Capacity)
@@ -294,6 +296,7 @@ namespace Carbon.Plugins
                 }
             }
             public void Clear() {
+                if (World.Discovery != null) World.Discovery.Retire(this);
                 RootPublication.Retired = true;
                 foreach (PublicationCheckpoint Checkpoint in Publications) Checkpoint.Witness.Retired = true;
                 Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear();
@@ -372,6 +375,19 @@ namespace Carbon.Plugins
                     if (Fields.Length != 3) throw new FacadeException("invalid Entity read arguments");
                     if (World.Entities == null) throw new FacadeException("Entity world is unavailable");
                     return World.Entities.Read(this, Fields[0], Fields[1], Fields[2]);
+                }
+                if (Code == 36 || Code == 38) {
+                    if (!Active || !World.IsActive(this) || Disposed)
+                        throw new FacadeException("Discovery requires a committed domain");
+                    if (World.Discovery == null) throw new FacadeException("DiscoveryUnavailable");
+                    if (Code == 36) return World.Discovery.Submit(this, Fields);
+                    if (Fields.Length != 1) throw new FacadeException("InvalidDiscovery");
+                    return World.Discovery.Admit(this, Fields[0]);
+                }
+                if (Code == 37) {
+                    if (Fields.Length != 1) throw new FacadeException("InvalidDiscovery");
+                    if (World.Discovery != null) World.Discovery.Release(this, Fields[0]);
+                    return new string[0];
                 }
                 int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 :
                     Code == 25 ? 1 : Code == 26 ? 3 : (Code == 27 || Code == 29) ? 4 : (Code == 28 || Code == 30) ? 5 :
@@ -496,7 +512,9 @@ namespace Carbon.Plugins
                 if (Code==31 || Code==32 || Code==33) return StorageCall(ExpectedDomainLifetime,Code,Request,Length);
                 try {
                     World.Players.CheckOwner();
-                    if (Disposed || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;
+                    // Private release remains legal during native domain/VM
+                    // teardown after the exact managed session has retired.
+                    if ((Disposed && Code != 37) || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;
                     var Bytes = new byte[Length]; if (Length != 0) Marshal.Copy(Request, Bytes, 0, (int)Length);
                     var Result = FacadePolicy.Pack(Operation(Code, FacadePolicy.Unpack(Bytes)));
                     if (Result.Length > Capacity) throw new FacadeException("host response exceeds bound");

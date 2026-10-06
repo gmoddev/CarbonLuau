@@ -358,9 +358,41 @@ Unsupported off-thread structural mutation is not made supported by I12.
 deliveries, 120-second absolute deadline and bounded maintenance. A fixed private
 Update receiver avoids Carbon's shared growing next-frame enqueue. Expiry is
 checked before work/delivery when host service resumes; this is not a wall-clock
-callback SLA under host starvation. No public discovery binding/identity exists;
-the next phase must qualify fresh bounded Luau completion admission with exact
-host/session/domain/VM/publication authority immediately before entry.
+callback SLA under host starvation. [Discovery-2B](WorldEntityFoundation2B.md)
+implements the additive development API below; its public qualification is
+separate from the private 2A evidence.
+
+```luau
+Workspace:GetEntitiesInRadiusAsync(Position: Vector3, Radius: number,
+    Callback: ({Entity}?, string?) -> (),
+    Options: { Prefab: string?, Limit: number? }?) -> ()
+```
+
+Radius is finite and nonnegative (zero tests the exact sampled point). Options
+are an ordinary table containing only an optional exact full Prefab (512 UTF-8
+bytes, nonempty, no NUL) and integer Limit 1..256, default 256. There are no
+predicates, nearest-N, cursors or cancellation objects. Submission is non-yielding
+and committed-owner-only under the shared current-operation/publication predicate;
+a foreign Workspace or committed closure cannot launder provisional work.
+Cold modules may export closures that submit later in valid committed execution.
+Synchronous validation/stale/admission rejection enqueues zero requests. Success
+is a fresh Entity array plus nil error, including an empty array; later failure
+is nil plus a controlled error code, never truncated success. Physical encounter
+order is deterministic for the traversed catalog, not nearest-distance order or
+an immutable order across queries. Results preserve encounter-time membership
+and position; properties read from returned Entity proxies remain live reads.
+
+Native captures are bounded independently of ordinary task/event queues, two
+per domain and eight per VM, including traversal-complete/undelivered work.
+Fresh owner-thread scheduler admission owns the callback deadline and exact
+host/session/VM/domain authority. Every result is revalidated and converted from
+its original weak catalog candidate, never by ID lookup; expiry/catalog loss or
+stale results fails the whole request. No callback reaches a retired/replacement
+authority. Detachment/release is at most once; callback failure/timeout/recovery
+never replays the traversal. Initial-install/full-unload restart rules remain.
+Public token conversion is limited to returned matches, with cold pre-sized
+lookup storage and bounded weak-token maintenance; resource exhaustion fails
+closed without disabling independent Foundation 1 keyed lookup.
 
 The [observation-boundary continuation](WorldEntityObservationBoundaryInvestigation.md),
 [traversal investigation](WorldEntityAsyncTraversalInvestigation.md),
@@ -702,6 +734,8 @@ Entity is not retroactively available there. Package/release/tag stay at
 Entity metadata `SinceApi` is `0.6.0-experimental`; previous declarations
 retain their exact introduction identities. [Entity-1C](WorldEntityFoundation1C.md)
 owns combined public qualification and release-readiness evidence.
+Discovery-2B joins this same additive development identity; it does not bump the
+package or native ABI and is not a package-release/final Foundation 2 closure.
 
 On 2026-09-23 the user assigned Persistence Foundation 1 to scripting API
 `CarbonLuau 0.5.0-experimental`. Persistence is not retroactively available in
