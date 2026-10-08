@@ -118,7 +118,9 @@ try {
                     'examples/addons/guiowner/addon.json','examples/addons/guiowner/init.luau','examples/addons/guiowner/api.luau',
                     'examples/addons/guiconsumer/addon.json','examples/addons/guiconsumer/init.luau',
                     'examples/world/exact-lookup/init.luau','examples/world/equality/init.luau','examples/world/string-id/init.luau',
-                    'docs/api/Services/Workspace.md','docs/api/Types/Entity.md','docs/api/World-Examples.md')) {
+                    'examples/world/discovery/init.luau',
+                    'docs/api/Services/Workspace.md','docs/api/Types/Entity.md','docs/api/World-Examples.md',
+                    'docs/api/Discovery.md','docs/api/Types/EntityDiscoveryOptions.md')) {
                 if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $ExampleEntry })) {
                     throw "Release bundle is missing public example: $ExampleEntry"
                 }

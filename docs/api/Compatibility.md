@@ -41,6 +41,8 @@ The [private 2A record](../WorldEntityFoundation2A.md) owns the additional pinne
 Unity images; its evidence does not qualify public callback admission. The same
 startup/restart requirements apply. Package `0.5.0`, ABI `1.5`, provider protocol,
 schema and Luau pin remain unchanged; no release is implied.
+Combined closure and final release-readiness evidence are owned by
+[Foundation 2C](../WorldEntityFoundation2C.md).
 
 [Persistence Foundation 2](../PersistenceFoundation2.md) defines structured
 Query for the same `0.5.0-experimental` API. Optional field-name hints in

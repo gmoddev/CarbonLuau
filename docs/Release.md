@@ -9,6 +9,18 @@ manifest. No v0.6.0 package, tag, release or editor artifact is authorized here.
 The native ABI remains `1.5`, provider protocol `1.2`, addon schema `1`, and
 the Luau pin unchanged.
 
+[World/Entity Foundation 2C](WorldEntityFoundation2C.md) owns the final combined
+qualification and next-package readiness verdict. [Planned v0.6.0 release
+notes](releases/0.6.0.md) cover keyed lookup and bounded asynchronous discovery.
+Publication remains a separate authorization. Its narrow identity change must
+update `release.json`, the plugin Info/PackageVersion and native CMake package
+version, current-release documentation/navigation, and hardcoded bundle/artifact
+names in the validation workflow. Keep API `0.6.0-experimental`, ABI `1.5`,
+provider `1.2`, schema `1` and Luau unchanged, then rebuild/test that exact release
+commit and verify checksums/provenance before any tag or GitHub release.
+Development dry-run archives named v0.5.0 contain the development API and must
+never be uploaded as replacement v0.5.0 artifacts.
+
 The v0.5.0 experimental mapping follows [D12](Invariants.md#d12--scripting-and-protocol-identity),
 qualified [Persistence Foundation 1C](PersistenceFoundation1C.md) and
 [Persistence Foundation 2D](PersistenceFoundation2D.md). The 2D source/CI gate

@@ -6,7 +6,9 @@ exact-host/resource policy and final qualification. No public discovery binding
 is implemented by this closure.
 The separately qualified [Discovery-2B](WorldEntityFoundation2B.md) now owns the
 public bounded callback API and fresh admission/proxy conversion evidence.
-Combined Foundation 2 final/public-release-readiness closure remains separately scoped.
+The separately scoped combined final/public-release-readiness closure is recorded
+in [Foundation 2C](WorldEntityFoundation2C.md), including its current verdict and
+the v0.6.0 publication handoff.
 
 The paragraphs below preserve the pre-implementation gate history. Their open
 catalog/position/policy conclusions are superseded by Foundation 2A's supported

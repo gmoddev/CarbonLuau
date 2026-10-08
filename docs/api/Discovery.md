@@ -4,7 +4,8 @@ Discovery-2B contract for development scripting API `0.6.0-experimental`.
 Public binding and runtime qualification are recorded as PASS in the
 [Foundation 2B record](../WorldEntityFoundation2B.md). The latest published
 package remains `0.5.0` and does not include Workspace or Entity. This guide
-does not announce a package release or final Foundation 2 release closure.
+does not announce a package release. Combined lifecycle, scale and release
+readiness are recorded in [Foundation 2C](../WorldEntityFoundation2C.md).
 
 Obtain the service with `game:GetService("Workspace")`. The existing
 [exact lookup reference](Services/Workspace.md) owns

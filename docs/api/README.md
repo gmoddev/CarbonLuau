@@ -38,6 +38,8 @@ See the [discovery guide](Discovery.md),
 qualification is PASS in the [2B record](../WorldEntityFoundation2B.md).
 This surface targets development API `0.6.0-experimental` and is not included
 in published package `0.5.0`.
+Combined lifecycle, scale and next-package readiness are recorded in
+[Foundation 2C](../WorldEntityFoundation2C.md).
 
 Optional `GetDataStore` field-name hints are the Persistence-2B addition.
 `DataStore:Query` adds structured equality, inclusive range and ordered top-N

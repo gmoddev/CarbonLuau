@@ -10,6 +10,19 @@ All notable public changes to CarbonLuau are recorded here.
   `Position` on the pinned Rust/Carbon host targets. Entity equality follows
   exact lifetime, not network ID. Initial installation or full plugin reload
   after world startup requires a server restart before lookup.
+- `Workspace:GetEntitiesInRadiusAsync(Position, Radius, Callback, Options?)`
+  with exact Prefab filtering, Limit 1..256, bounded shared traversal, exact
+  lifetime validation and at-most-once later delivery. Positions are encounter
+  observations rather than an atomic world snapshot; excess results fail the
+  whole query.
+
+### Release preparation
+
+- Final World/Entity closure adds combined addon/provider replacement tests and
+  maximum-catalog churn qualification. Development bundles now include the
+  discovery guide and options reference, checked during clean installation.
+- [Planned v0.6.0 notes](docs/releases/0.6.0.md) record the additive API,
+  exact-host/restart requirements and experimental limits.
 
 The latest published package remains v0.5.0; no v0.6.0 release or tag exists.
 

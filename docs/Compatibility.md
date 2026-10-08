@@ -721,6 +721,11 @@ record the earlier gates, superseded only within Foundation 2A's measured scope.
 `Workspace:GetEntitiesInRadiusAsync` binding, callback admission and development
 API `0.6.0-experimental` evidence. It does not change package `0.5.0`, the exact
 host envelope, initial-startup observer requirement or Entity lifetime rules.
+The combined final closure and v0.6.0 readiness are recorded in
+[Foundation 2C](WorldEntityFoundation2C.md), including exact final workflow,
+scale, live, sanitizer, bundle and clean-install results. Its qualification
+does not broaden host support, close historical client/Windows deferrals or
+create a package release.
 The research-status statements below remain historical, not public phase gates.
 
 Foundation 1 intentionally has no collection query, radius query, lifecycle

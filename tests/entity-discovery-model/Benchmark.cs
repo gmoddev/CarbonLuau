@@ -36,6 +36,7 @@ internal static partial class Program
             Console.WriteLine("[CarbonLuau:EntityDiscoveryBenchmark] PreparationMs=" + BenchmarkNumber(Preparation.Elapsed.TotalMilliseconds));
             RunBenchmarkLane(Model, false);
             RunBenchmarkLane(Model, true);
+            RunMaximumCatalogClosure(Model, Entities);
             // Catalog identities are deliberately strong for both lanes: GC must
             // not silently turn this full-catalog measurement into a hole scan.
             GC.KeepAlive(Entities);
@@ -45,6 +46,82 @@ internal static partial class Program
 
     private static string BenchmarkNumber(double Value)
     { return Value.ToString("F3", CultureInfo.InvariantCulture); }
+
+    private static void RunMaximumCatalogClosure(Model Model, Entity[] Entities)
+    {
+        var Authority = new Model.Authority(1, 1, 1);
+        Func<Model.Authority, bool> Current = Ignore => true;
+        Func<object, Model.HostEvidence> Read = Identity => {
+            var Value = (Entity)Identity;
+            return new Model.HostEvidence(Value.Alive, true, true, Value.Id, Value.Prefab, Value.Alive ? Value : null);
+        };
+        Func<Model.MembershipCandidate, Traversal.CandidateObservation> Observe = Candidate => {
+            Model.HostEvidence Evidence;
+            if (!Model.TryObserveCatalog(Candidate, Authority, Current, Read, out Evidence))
+                return new Traversal.CandidateObservation(Traversal.CandidateStatus.Skip);
+            var Value = (Entity)Candidate.Target;
+            return new Traversal.CandidateObservation(Candidate, Candidate.Birth, Evidence.NetworkId,
+                Evidence.Prefab, Value.X, Value.Y, Value.Z);
+        };
+        Func<Traversal.CandidateObservation, bool> Validate = Observation => {
+            Model.HostEvidence Evidence;
+            return Model.TryObserveCatalog(Observation.Candidate, Authority, Current, Read, out Evidence) &&
+                Evidence.NetworkId == Observation.Id && Evidence.Prefab == Observation.Prefab;
+        };
+        var Policy = new Traversal.WorkPolicy(8, 2, 1024, 1024, 256, BenchmarkSlots, 2, 512, Stopwatch.Frequency * 120);
+        // Holes are made through actual observed Spawn retirement. Half are
+        // reused only after all requests have captured their birth watermark.
+        for (int Index = 256; Index < 512; ++Index)
+            Check(!Model.CompleteSpawn(Model.BeginSpawn(Entities[Index]), false, true), "failed completed attempt leaves catalog hole");
+        long Raw = 0; int Delivered = 0, Turns = 0;
+        using (var Scheduler = new Traversal(Model, Policy)) {
+            for (int Index = 0; Index < 8; ++Index) {
+                ulong Id;
+                Check(Scheduler.TryStart(new Traversal.Query(0, 0, 0, 0, null, 256), (ulong)(Index / 2 + 1),
+                    Observe, () => true, Validate, Result => {
+                        Check(Result.Status == Traversal.Outcome.Success && Result.RawSlots == BenchmarkSlots && Result.Count == 255,
+                            "maximum catalog: holes, pre-encounter retirement and reused births yield complete original cohort");
+                        for (int Match = 0; Match < Result.Count; ++Match)
+                            Check(Result.GetResult(Match).Id == (ulong)Match + 2, "maximum catalog excludes replaced same-object epoch/ID");
+                        Delivered++;
+                    }, 0, out Id) == Traversal.StartStatus.Accepted, "maximum churn concurrent acceptance");
+            }
+            Entities[0].Id = 999999;
+            Check(Model.CompleteSpawn(Model.BeginSpawn(Entities[0]), true, true), "new matching epoch after watermark");
+            for (int Index = 256; Index < 384; ++Index)
+                Check(Model.CompleteSpawn(Model.BeginSpawn(Entities[Index]), true, true), "post-watermark slot reuse");
+            while (Scheduler.ActiveCount != 0) {
+                var Work = Scheduler.RunTurn(++Turns);
+                Check(Turns < 4096 && Work.Units <= 1024 && Work.RawSlots <= 1024 && Work.Deliveries <= 2,
+                    "maximum churn shared hard work/delivery envelope"); Raw += Work.RawSlots;
+            }
+            Check(Raw == 8L * BenchmarkSlots && Delivered == 8 && Scheduler.CallbackFailures == 0,
+                "maximum churn counts holes and reused slots exactly once per request");
+        }
+        int Stale = 0;
+        using (var Scheduler = new Traversal(Model, Policy)) {
+            for (int Index = 0; Index < 8; ++Index) {
+                ulong Id;
+                Check(Scheduler.TryStart(new Traversal.Query(0, 0, 0, 0, null, 256), (ulong)(Index / 2 + 1),
+                    Observe, () => true, Validate, Result => {
+                        Check(Result.Status == Traversal.Outcome.StaleResult && Result.Count == 0,
+                            "maximum catalog pre-admission retirement fails whole query"); Stale++;
+                    }, 0, out Id) == Traversal.StartStatus.Accepted, "maximum stale concurrent acceptance");
+            }
+            Scheduler.RunTurn(1); // Each request has encountered the first matching lifetimes.
+            Check(!Model.CompleteSpawn(Model.BeginSpawn(Entities[1]), false, true), "failed attempt retires encountered lifetime");
+            for (int Turn = 2; Scheduler.ActiveCount != 0 && Turn < 4096; ++Turn) {
+                var Work = Scheduler.RunTurn(Turn);
+                Check(Work.Units <= 1024 && Work.RawSlots <= 1024 && Work.Deliveries <= 2, "maximum stale shared envelope");
+            }
+            Check(Scheduler.ActiveCount == 0 && Stale == 8 && Scheduler.CallbackFailures == 0,
+                "maximum stale completion cleans every request without partial publication");
+        }
+        CheckTokenStorageEmpty(Model);
+        Console.WriteLine("[CarbonLuau:EntityDiscoveryMaximumClosure] PASS NonHost=True Slots=262144 Queries=8 " +
+            "Raw=" + Raw + " Holes=128 ReusedBirthsExcluded=129 Success=8 StaleWholeFailures=8 " +
+            "Pending=0 F1Tokens=0; no host-read timing or portable managed-byte claim");
+    }
 
     private static void RunBenchmarkLane(Model Model, bool Observed)
     {

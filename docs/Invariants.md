@@ -393,6 +393,9 @@ never replays the traversal. Initial-install/full-unload restart rules remain.
 Public token conversion is limited to returned matches, with cold pre-sized
 lookup storage and bounded weak-token maintenance; resource exhaustion fails
 closed without disabling independent Foundation 1 keyed lookup.
+Combined final lifecycle, scale and release-readiness qualification is owned by
+[Foundation 2C](WorldEntityFoundation2C.md); it changes no D20/I12 semantics or
+package identity and does not authorize release publication.
 
 The [observation-boundary continuation](WorldEntityObservationBoundaryInvestigation.md),
 [traversal investigation](WorldEntityAsyncTraversalInvestigation.md),
@@ -736,6 +739,8 @@ retain their exact introduction identities. [Entity-1C](WorldEntityFoundation1C.
 owns combined public qualification and release-readiness evidence.
 Discovery-2B joins this same additive development identity; it does not bump the
 package or native ABI and is not a package-release/final Foundation 2 closure.
+The separately scoped combined Foundation 2 closure and next-package handoff are
+recorded in [Foundation 2C](WorldEntityFoundation2C.md).
 
 On 2026-09-23 the user assigned Persistence Foundation 1 to scripting API
 `CarbonLuau 0.5.0-experimental`. Persistence is not retroactively available in

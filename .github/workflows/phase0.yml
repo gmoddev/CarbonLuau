@@ -46,6 +46,8 @@ jobs:
         run: dotnet run --project tests/entity-lifetime-model/EntityLifetimeModelTests.csproj -c Release
       - name: Private Entity discovery scheduler model
         run: dotnet run --project tests/entity-discovery-model/EntityDiscoveryModelTests.csproj -c Release
+      - name: Maximum-catalog discovery closure and fairness
+        run: dotnet run --project tests/entity-discovery-model/EntityDiscoveryModelTests.csproj -c Release --no-build -- --benchmark
       - name: Bounded Entity position composition
         run: dotnet run --project tests/entity-position-model/EntityPositionModelTests.csproj -c Release
       - name: Public bounded discovery bindings (Windows)

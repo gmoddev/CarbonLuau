@@ -29,9 +29,10 @@ For clean-checkout builds, checksums, and provenance, see the [release reproduci
 
 The `CarbonLuau 0.5.0-experimental` API retains controlled modules/tasks, Player events, permission-protected commands, live position/health reads, inventory checks, verified GiveItem/TakeItem and Teleport. It adds private local durable stores with callback-based Get/Set/Remove and bounded structured Query. Execution uses bounded logging, memory and deadlines. Provider-owned addon packages share one VM with exact dependency lifetimes and explicit public modules imported through `require("@id[/path]")`.
 
-Development source now assigns exact keyed read-only `Workspace`/`Entity` lookup
-to scripting API `0.6.0-experimental`, on the [pinned host envelope](docs/api/Services/Workspace.md).
-The latest published package remains 0.5.0 and does not contain that API.
+Development API `0.6.0-experimental` adds exact read-only `Workspace`/`Entity`
+lookup and [bounded async discovery](docs/api/Discovery.md) on the pinned hosts.
+See [qualification and release readiness](docs/WorldEntityFoundation2C.md).
+The latest published package remains 0.5.0 and does not contain these APIs.
 
 Addon packages are registered by a loaded Carbon provider plugin. CarbonLuau does not scan an addon directory or download packages. See [addon composition](docs/api/Addons.md), the [provider protocol](docs/api/Addon-Providers.md), and the [Foundation E qualification record](docs/FoundationE.md).
 

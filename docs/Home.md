@@ -9,8 +9,10 @@ local persistence and structured Query under scripting API
 [combined Foundation 2 qualification](PersistenceFoundation2D.md).
 Platform and client limits remain in [Compatibility](Compatibility.md).
 Development scripting API `0.6.0-experimental` adds read-only
-[Workspace/Entity](api/Services/Workspace.md) on an exact pinned host envelope;
-the published package remains v0.5.0.
+[Workspace/Entity](api/Services/Workspace.md) and [bounded async discovery](api/Discovery.md)
+on an exact pinned host envelope. [Final closure](WorldEntityFoundation2C.md) and
+[planned v0.6.0 notes](releases/0.6.0.md) own readiness; the published package
+remains v0.5.0.
 
 Start with [installation](Installation.md), then use the
 [experimental API reference](api/README.md). Read the
