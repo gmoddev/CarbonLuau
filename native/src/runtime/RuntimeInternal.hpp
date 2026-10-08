@@ -26,7 +26,10 @@ constexpr uint64_t MiB = 1024 * 1024;
 struct Module { std::string Source; int Reference = LUA_NOREF; bool Loading = false, Loaded = false; };
 struct Domain;
 struct DependencyBinding { std::string Id; Domain* Target = nullptr; };
-struct Callback { uint64_t Due, Sequence; Domain* Owner; lua_State* Thread; int Reference, Arguments; std::string Gate; };
+struct Callback {
+    uint64_t Due, Sequence; Domain* Owner; lua_State* Thread; int Reference, Arguments; std::string Gate;
+    uint64_t GameplayReservation = 0;
+};
 struct Later {
     bool operator()(const Callback& A, const Callback& B) const {
         return A.Due > B.Due || (A.Due == B.Due && A.Sequence > B.Sequence);
@@ -63,6 +66,7 @@ struct DiscoveryCallback {
     lua_State* Thread = nullptr;
     int Reference = LUA_NOREF;
 };
+struct GameplayReservation { uint64_t Nonce = 0; Domain* Owner = nullptr; };
 
 struct Domain {
     uint64_t Id = 0;
@@ -82,11 +86,16 @@ struct Domain {
     std::array<uint64_t,8> StorageReservations{};
     std::array<std::unique_ptr<StorageCallback>,8> StorageCallbacks;
     std::array<DiscoveryCallback,2> DiscoveryCallbacks{};
+    uint32_t GameplayReserved = 0;
     std::vector<StorageName> StorageNames;
     std::vector<StorageHint> StorageHints;
     ClHostCall Host = nullptr;
     uint64_t HostIdentity = 0;
     int Game = LUA_NOREF, Dispatch = LUA_NOREF, GuiBindings = LUA_NOREF;
+    // Only the trusted bootstrap callback map is journaled. Each first facade
+    // use in a publication scope adds one snapshot, under existing nesting.
+    int FacadeCallbackRoots = LUA_NOREF;
+    std::vector<int> FacadeCallbackPublications;
     std::unique_ptr<std::array<char, 262144>> HostBuffer;
 };
 
@@ -126,6 +135,12 @@ struct Vm {
     uint64_t StorageSequence = 0;
     uint32_t DiscoveryReserved = 0;
     uint64_t DiscoverySequence = 0;
+    // Fixed owner-thread accounting only; existing Queue remains the scheduler.
+    std::array<GameplayReservation,512> GameplayReservations{};
+    uint32_t GameplayReserved = 0;
+    Domain* GameplayInFlightOwner = nullptr;
+    uint64_t GameplayInFlightReservation = 0;
+    std::string* GameplayInFlightPayload = nullptr;
     int GuiValueEqual = LUA_NOREF;
     int EntityIdentities = LUA_NOREF;
     ~Vm();
@@ -164,6 +179,7 @@ struct PublicationScope {
 extern int TestAllocationFailureAfter;
 extern uint64_t TestLiveBytes;
 extern bool TestStorageCopyFailure;
+extern bool TestGameplayCopyFailure;
 #endif
 
 struct DeadlineExceeded {};
@@ -180,6 +196,11 @@ Domain* GetDomain(Vm& Runtime, ClHandle Id, bool Active = false);
 void ReleaseDomain(Vm& Runtime, Domain& Value);
 Domain* AddDomain(Vm& Runtime, uint32_t MaxQueued);
 bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation);
+void ClearFacadeCallbacks(Vm& Runtime, Domain& Owner);
+bool ReserveGameplay(Vm& Runtime, Domain& Owner, uint64_t Nonce);
+bool ReleaseGameplay(Vm& Runtime, Domain& Owner, uint64_t Nonce, bool NotifyHost = true);
+bool ClearGameplayInFlight(Vm& Runtime);
+void ClearGameplay(Vm& Runtime, Domain& Owner);
 bool CanMutateHost(const Vm& Runtime);
 // Private Persistence-1A admission seam. Namespace authority follows the
 // admitted resource owner, never the provenance of a borrowed export closure.

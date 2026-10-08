@@ -9,6 +9,12 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length == 2 && Args[0] == "--gameplay-publication") {
+            try {
+                using (var Native = new Runtime.NativeRuntime(Args[1])) GameplayPublicationTests.RunNative(Native);
+                return 0;
+            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:GameplayPublication] FAIL: " + Error); return 1; }
+        }
         if (Args.Length == 3 && Args[0] == "--discovery2b") {
             try { DiscoveryPublicTests.Run(Args[1], Args[2]); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:DiscoveryPublic] FAIL: " + Error); return 1; }
@@ -219,6 +225,7 @@ internal static class Program
                 Check(Generation.Execute("stale", "return 3", 3).Status == Runtime.RuntimeStatus.INVALID_ARGUMENT, "stale managed generation");
                 ScriptTests.Run(Native, Root);
                 FacadeTests.Run(Native, Args.Length > 3 ? Args[3] : null);
+                GameplayPublicationTests.RunNative(Native);
                 GuiFoundation1BTests.RunNative(Native);
                 GuiFoundation1CTests.RunNative(Native);
                 GuiFoundation1DTests.RunNative(Native);

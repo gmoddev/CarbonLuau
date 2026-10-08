@@ -39,7 +39,9 @@ local Host, MakeUserdata, SharedValueEqual, StorageService, EntityIdentityRecord
 if EntityIdentityRecords == nil then
     EntityIdentityRecords = setmetatable({}, {__mode = "k"})
 end
-local Callbacks = {}
+-- Native publication owns this private holder, including rollback of callback
+-- roots. No user table or captured application state participates in its journal.
+local Callbacks = {Roots = {}}
 local Proxies = setmetatable({}, {__mode = "v"})
 local Records = setmetatable({}, {__mode = "k"})
 local function Fail(Message) error(Message, 3) end
@@ -316,12 +318,12 @@ local function Signal(Kind)
     function Value.Connect(Self, Callback)
         if Self ~= Value or type(Callback) ~= "function" then Fail("Signal:Connect expects a function") end
         local Id = Host(6, Kind)[1]
-        Callbacks[Id] = Callback
+        Callbacks.Roots[Id] = Callback
         local Connection = {}
         function Connection.Disconnect(SelfConnection)
             if SelfConnection ~= Connection then Fail("invalid Connection") end
             Host(7, Id)
-            Callbacks[Id] = nil
+            Callbacks.Roots[Id] = nil
         end
         return table.freeze(Connection)
     end
@@ -355,7 +357,7 @@ function Commands.Register(Self, Name, Options, Callback)
     local Permission = Options.permission == nil and "" or String(Options.permission, "permission")
     local Description = Options.description == nil and "" or String(Options.description, "description")
     local Id = Host(8, Name, Permission, Description)[1]
-    Callbacks[Id] = Callback
+    Callbacks.Roots[Id] = Callback
 end
 table.freeze(Commands)
 local GuiObjectRecords = setmetatable({}, {__mode = "k"})
@@ -467,12 +469,12 @@ local function GuiSignal(Object)
     function SignalValue.Connect(Self, Callback)
         if Self ~= SignalValue or type(Callback) ~= "function" then Fail("Signal:Connect expects a function") end
         local Id = Host(21, "connect", RecordValue.Id)[1]
-        Callbacks[Id] = Callback
-        local Active = true
+        Callbacks.Roots[Id] = Callback
         local Connection = {}
         function Connection.Disconnect(SelfConnection)
             if SelfConnection ~= Connection then Fail("invalid Connection") end
-            if Active then Active = false; Host(21, "disconnect", RecordValue.Id, Id); Callbacks[Id] = nil end
+            Host(21, "disconnect", RecordValue.Id, Id)
+            Callbacks.Roots[Id] = nil
         end
         return table.freeze(Connection)
     end
@@ -509,7 +511,7 @@ end
 -- @carbonluau-api {"Owner":"$Gui","Name":"Destroy","Kind":"Method","Args":[],"Returns":[],"Summary":"Destroy this retained object and its owned subtree.","Preview":"Pure","Binding":"function GuiObjectMethods.Destroy(Self)"}
 function GuiObjectMethods.Destroy(Self)
     local Fields = Host(21, "destroy", GuiRecord(Self).Id)
-    for _, Id in Fields do Callbacks[Id] = nil end
+    for _, Id in Fields do Callbacks.Roots[Id] = nil end
 end
 -- @carbonluau-api {"Owner":"$Gui","Name":"Show","Kind":"Method","Args":[["Player","Player"]],"Returns":[],"Summary":"Show this screen to an exact connected player.","Preview":"Pure","Binding":"function GuiObjectMethods.Show(Self, Player)"}
 function GuiObjectMethods.Show(Self, Player)
@@ -675,7 +677,7 @@ end
 table.freeze(Game)
 -- One host-admitted callback per scheduler work item; no dispatch fan-out in Lua.
 local function Dispatch(Fields)
-    local Callback = Callbacks[Fields[2]]
+    local Callback = Callbacks.Roots[Fields[2]]
     if not Callback then return end
     local Player = GetPlayer(Fields[3], Fields[4], Fields[5])
     if Fields[1] == "command" then
@@ -684,4 +686,4 @@ local function Dispatch(Fields)
         Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))
     else Callback(Player) end
 end
-return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Vector3 = Vector3, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont, GiveItemBehavior = GiveItemBehavior}), SharedValueEqual, EntityIdentityRecords
+return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Vector3 = Vector3, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont, GiveItemBehavior = GiveItemBehavior}), SharedValueEqual, EntityIdentityRecords, Callbacks

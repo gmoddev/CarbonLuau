@@ -9,7 +9,7 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
-        public sealed class FacadeWorld
+        public sealed partial class FacadeWorld
         {
             public readonly PlayerDirectory Players;
             public readonly ItemDirectory Items;
@@ -45,6 +45,7 @@ namespace Carbon.Plugins
                 this.Items = Items ?? throw new ArgumentNullException("Items");
                 GiveItems = new PlayerGiveItemOperation(TakeItems.SharedGate);
                 Gui = new GuiRetainedWorld(Limits ?? throw new ArgumentNullException("Limits"), Players, Backend ?? new InMemoryGuiBackend());
+                GameplayEvents = new GameplayEventBudget(this);
             }
             public void Commit(FacadeSession Next)
             {
@@ -53,7 +54,7 @@ namespace Carbon.Plugins
                 if (Active != null) Active.Active = false;
                 Active = Next;
                 if (Next != null) Next.Active = true;
-                PublicationVersion++;
+                PublicationVersion++; InvalidateGameplayDemand();
             }
             public void CommitAddon(FacadeSession Previous, FacadeSession Next)
             {
@@ -65,7 +66,7 @@ namespace Carbon.Plugins
                     if (Addons.ContainsKey(Next.DomainLifetimeId)) throw new FacadeException("duplicate active addon domain");
                     Addons.Add(Next.DomainLifetimeId, Next); Next.Active = true;
                 }
-                PublicationVersion++;
+                PublicationVersion++; InvalidateGameplayDemand();
             }
             public void Retire(FacadeSession Value)
             {
@@ -143,7 +144,14 @@ namespace Carbon.Plugins
             public long Generation { get { return DomainLifetimeId; } }
             public readonly SortedDictionary<string, ScriptCommand> Commands = new SortedDictionary<string, ScriptCommand>(StringComparer.Ordinal);
             private readonly SortedDictionary<ulong, string> Listeners = new SortedDictionary<ulong, string>();
-            private readonly Queue<byte[]> Pending = new Queue<byte[]>();
+            private readonly struct FacadePendingEvent
+            {
+                internal readonly byte[] Payload;
+                internal readonly ulong GameplayReservation;
+                internal FacadePendingEvent(byte[] Payload, ulong GameplayReservation = 0)
+                { this.Payload = Payload; this.GameplayReservation = GameplayReservation; }
+            }
+            private readonly Queue<FacadePendingEvent> Pending = new Queue<FacadePendingEvent>();
             private sealed class PublicationCheckpoint
             {
                 public readonly SortedDictionary<ulong, string> Listeners;
@@ -167,6 +175,7 @@ namespace Carbon.Plugins
                 { this.Owner = Owner; this.Token = Token; this.Parent = Parent; }
             }
             private readonly Stack<PublicationCheckpoint> Publications = new Stack<PublicationCheckpoint>();
+            private PublicationCheckpoint FirstPublication;
             private readonly Dictionary<ulong, PublicationWitness> EntityWitnesses = new Dictionary<ulong, PublicationWitness>();
             private readonly PublicationWitness RootPublication;
             private ulong NextPublicationToken = 1;
@@ -233,7 +242,7 @@ namespace Carbon.Plugins
                 if (!Active || Disposed || Pending.Count >= Capacity) { Rejected++; return; }
                 byte[] Bytes = FacadePolicy.Pack(Fields);
                 if (Bytes.Length > 16384) { Rejected++; return; }
-                Pending.Enqueue(Bytes);
+                Pending.Enqueue(new FacadePendingEvent(Bytes));
             }
             public void Event(string Kind, PlayerLifetime Player)
             {
@@ -256,7 +265,7 @@ namespace Carbon.Plugins
                         Payloads.Add(Payload);
                     }
                 } catch { Rejected++; return false; }
-                foreach (byte[] Payload in Payloads) Pending.Enqueue(Payload);
+                foreach (byte[] Payload in Payloads) Pending.Enqueue(new FacadePendingEvent(Payload));
                 return true;
             }
             public bool Invoke(string Name, string UserId, string[] Arguments)
@@ -281,8 +290,13 @@ namespace Carbon.Plugins
             {
                 World.Players.CheckOwner();
                 for (int Count = 0; Count < 64 && Pending.Count != 0 && Watch.Elapsed.TotalMilliseconds < Milliseconds; ++Count) {
-                    if (Runtime.Event(Pending.Dequeue()) != RuntimeStatus.OK) Rejected++;
-                    if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
+                    FacadePendingEvent Item = Pending.Dequeue();
+                    if (Item.GameplayReservation != 0) World.GameplayEvents.ToNative(this, Item.GameplayReservation);
+                    if (Runtime.Event(Item.Payload) != RuntimeStatus.OK) {
+                        Rejected++;
+                        if (Item.GameplayReservation != 0) World.GameplayEvents.Release(this, Item.GameplayReservation, true);
+                    }
+                    if (Runtime.Info.Ready == 0) { ClearPendingGameplay(); break; }
                 }
             }
             public void Flush(RuntimeDomain Runtime, System.Diagnostics.Stopwatch Watch, int Milliseconds)
@@ -291,16 +305,24 @@ namespace Carbon.Plugins
             {
                 World.Players.CheckOwner();
                 for (int Count = 0; Count < Maximum && Pending.Count != 0 && Watch.Elapsed.TotalMilliseconds < Milliseconds; ++Count) {
-                    if (Runtime.Event(Pending.Dequeue()) != RuntimeStatus.OK) Rejected++;
-                    if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
+                    FacadePendingEvent Item = Pending.Dequeue();
+                    if (Item.GameplayReservation != 0) World.GameplayEvents.ToNative(this, Item.GameplayReservation);
+                    if (Runtime.Event(Item.Payload) != RuntimeStatus.OK) {
+                        Rejected++;
+                        if (Item.GameplayReservation != 0) World.GameplayEvents.Release(this, Item.GameplayReservation, true);
+                    }
+                    if (Runtime.Info.Ready == 0) { ClearPendingGameplay(); break; }
                 }
             }
             public void Clear() {
                 if (World.Discovery != null) World.Discovery.Retire(this);
+                ClearPendingGameplay(); World.GameplayEvents.Cancel(this);
                 RootPublication.Retired = true;
                 foreach (PublicationCheckpoint Checkpoint in Publications) Checkpoint.Witness.Retired = true;
                 Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear();
                 EntityWitnesses.Clear(); ClearStorageHints(); Gui.Dispose();
+                FirstPublication = null; GameplayDiedListeners = GameplaySpawnedListeners = 0;
+                World.InvalidateGameplayDemand();
             }
             private bool Gate(string[] Fields)
             {
@@ -318,6 +340,7 @@ namespace Carbon.Plugins
                         UInt64.TryParse(Fields[8], NumberStyles.None, CultureInfo.InvariantCulture, out ButtonId) &&
                         World.Gui.ValidateQueued(Fields[5], Fields[1], Fields[2], Fields[3], ScreenId, Epoch, ButtonId);
                 }
+                if (GameplayEventPolicy.Kind(Fields[0]) && !World.GameplayEvents.Validate(this, Fields)) return false;
                 ulong IdValue; string Kind;
                 return ulong.TryParse(Fields[1], out IdValue) && Listeners.TryGetValue(IdValue, out Kind) && Kind == Fields[0];
             }
@@ -342,7 +365,7 @@ namespace Carbon.Plugins
                     PublicationWitness Witness = new PublicationWitness(this, ++NextPublicationToken, Parent);
                     PublicationCheckpoint Checkpoint = new PublicationCheckpoint(Listeners, Commands, Witness);
                     Gui.BeginPublication();
-                    try { Publications.Push(Checkpoint); }
+                    try { Publications.Push(Checkpoint); if (Publications.Count == 1) FirstPublication = Checkpoint; }
                     catch { Gui.RollbackPublication(); throw; }
                     return new string[0];
                 }
@@ -350,7 +373,8 @@ namespace Carbon.Plugins
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication commit");
                     try { Gui.CommitPublication(); }
                     catch { Publications.Peek().Witness.Retired = true; throw; }
-                    Publications.Pop(); return new string[0];
+                    Publications.Pop(); if (Publications.Count == 0) FirstPublication = null;
+                    RefreshGameplayListeners(); return new string[0];
                 }
                 if (Code == 12) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication rollback");
@@ -361,9 +385,17 @@ namespace Carbon.Plugins
                     PruneEntityWitnesses();
                     Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
                     Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
+                    if (Publications.Count == 0) FirstPublication = null;
+                    RefreshGameplayListeners();
                     return new string[0];
                 }
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
+                if (Code == 39) {
+                    ulong Nonce;
+                    if (Fields.Length != 1 || !GameplayEventPolicy.Identity(Fields[0], out Nonce) ||
+                        !World.GameplayEvents.Release(this, Nonce)) throw new FacadeException("stale gameplay reservation");
+                    return new string[0];
+                }
                 if (Code == 20) return Gui.Query(Fields);
                 if (Code == 21) return Gui.Mutate(Fields, Id);
                 if (Code == 34) {
@@ -484,14 +516,15 @@ namespace Carbon.Plugins
                         return new[] {Result ? "1" : "0"};
                     }
                     case 6: {
-                        if (Fields[0] != "added" && Fields[0] != "removing") throw new FacadeException("unknown signal");
+                        if (Fields[0] != "added" && Fields[0] != "removing" && !GameplayEventPolicy.Kind(Fields[0])) throw new FacadeException("unknown signal");
                         int Count = 0; foreach (string Kind in Listeners.Values) if (Kind == Fields[0]) Count++;
                         if (Count >= FacadePolicy.ListenersPerSignal || Listeners.Count >= FacadePolicy.Listeners) throw new FacadeException("signal listener limit reached");
-                        string Value = Id(); Listeners.Add(ulong.Parse(Value, CultureInfo.InvariantCulture), Fields[0]); return new[] {Value};
+                        string Value = Id(); Listeners.Add(ulong.Parse(Value, CultureInfo.InvariantCulture), Fields[0]);
+                        RefreshGameplayListeners(); return new[] {Value};
                     }
                     case 7: {
                         ulong Value; if (!ulong.TryParse(Fields[0], out Value)) throw new FacadeException("invalid Connection");
-                        Listeners.Remove(Value); return new string[0];
+                        Listeners.Remove(Value); RefreshGameplayListeners(); return new string[0];
                     }
                     case 8: {
                         if (Active) throw new FacadeException("Commands:Register is initialization-only");
@@ -514,7 +547,7 @@ namespace Carbon.Plugins
                     World.Players.CheckOwner();
                     // Private release remains legal during native domain/VM
                     // teardown after the exact managed session has retired.
-                    if ((Disposed && Code != 37) || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;
+                    if ((Disposed && Code != 37 && Code != 39) || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;
                     var Bytes = new byte[Length]; if (Length != 0) Marshal.Copy(Request, Bytes, 0, (int)Length);
                     var Result = FacadePolicy.Pack(Operation(Code, FacadePolicy.Unpack(Bytes)));
                     if (Result.Length > Capacity) throw new FacadeException("host response exceeds bound");

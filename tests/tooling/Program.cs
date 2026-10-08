@@ -16,6 +16,7 @@ Check(Definitions == File.ReadAllText(Path.Combine(Root, "generated/carbonluau.d
 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
 Check(JToken.DeepEquals(Catalog, ApiCatalog.Build(Bootstrap, Release, Native)), "catalog repeat/culture determinism");
 Check(Definitions == ApiArtifacts.Definitions(ApiCatalog.Build(Bootstrap, Release, Native)), "definition repeat determinism");
+GameplaySignalTypes.Run(Catalog);
 Check(Definitions.Contains("GiveItem") && Definitions.Contains("GiveItemBehavior") && Definitions.Contains("InventoryOnly") && !Definitions.Contains("TextBox") && Definitions.Contains("TakeItem"), "current implemented inventory API exposure");
 Check(Definitions.Contains("declare extern type Entity") && Definitions.Contains("declare extern type Workspace") &&
     Definitions.Contains("function GetEntityById(self, Id: string): (Entity?)") &&

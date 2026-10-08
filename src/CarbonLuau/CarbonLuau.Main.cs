@@ -48,6 +48,7 @@ namespace Carbon.Plugins
             {
                 Native = new NativeRuntime(Oxide.Core.Interface.Oxide.DataDirectory);
                 InitializeGameplay();
+                InitializeGameplayLifecycle();
                 Host = new ScriptHost(Native, Settings, () => ScriptSnapshot.Load(Oxide.Core.Interface.Oxide.DataDirectory, Settings), Gameplay);
                 Addons = new AddonRegistry(Host, Native.HostLifetimeId);
                 InitializePersistence();
@@ -71,6 +72,7 @@ namespace Carbon.Plugins
             RunEntityPrivateFixtures();
             RunEntityReadFixtures();
             RunEntityDiscoveryFixtures();
+            RunGameplayHostProofFixtures();
             if (Host == null) return;
             try
             {
@@ -133,11 +135,13 @@ namespace Carbon.Plugins
             finally { if (TeardownPending) ReleaseNative(); }
         }
 
-        private void Unload() { StopEntityObserver(); ReleaseNative(); }
+        partial void RunGameplayHostProofFixtures();
+        private void Unload() { StopGameplayLifecycle(); StopEntityObserver(); ReleaseNative(); }
 
         private void ReleaseNative()
         {
             Stopping = true;
+            StopGameplayLifecycle();
             StopEntityDiscovery();
             StopPersistence();
             DrainWakeDueNs = 0; DrainWakeToken++;
