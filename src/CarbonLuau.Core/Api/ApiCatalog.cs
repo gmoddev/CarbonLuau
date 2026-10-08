@@ -31,8 +31,18 @@ namespace CarbonLuau.Core
                     Bindings.Add(Binding);
                     if (Binding.TrimStart().StartsWith("function ", StringComparison.Ordinal) && Declaration["Args"] is JArray Arguments) {
                         int Start = Binding.IndexOf('('), End = Binding.IndexOf(')', Start);
-                        var Parameters = Binding.Substring(Start + 1, End - Start - 1).Split(',').Select(Value => Value.Trim()).Where(Value => Value.Length > 0);
+                        IEnumerable<string> Parameters = Binding.Substring(Start + 1, End - Start - 1).Split(',').Select(Value => Value.Trim()).Where(Value => Value.Length > 0);
                         if ((string)Declaration["Kind"] == "Method") Parameters = Parameters.Skip(1);
+                        // A trusted fixed-signature wrapper can capture only to
+                        // reject surplus arguments. This is not a public variadic
+                        // signature, and must be explicitly annotated as such.
+                        if ((bool?)Declaration["RejectExtraArguments"] == true) {
+                            var Fixed = Parameters.ToArray();
+                            if (Fixed.Length == 0 || Fixed[Fixed.Length - 1] != "..." ||
+                                Arguments.Cast<JArray>().Any(Argument => Argument.Count > 2 && (bool)Argument[2]))
+                                throw new InvalidOperationException("invalid extra-argument rejection binding");
+                            Parameters = Fixed.Take(Fixed.Length - 1);
+                        }
                         if (!Parameters.SequenceEqual(Arguments.Cast<JArray>().Select(Argument => Argument.Count > 2 && (bool)Argument[2] ? "..." : (string)Argument[0])))
                             throw new InvalidOperationException("API parameter names differ from binding: " + Binding);
                     }
@@ -65,7 +75,7 @@ namespace CarbonLuau.Core
             if (!StorageRegistrations.SetEquals(StorageMethods.Select(Value => (string)Value["Name"])))
                 throw new InvalidOperationException("native persistence API declaration lacks registration");
             // Declared public function tables must not acquire an unannotated function.
-            string[] Tables = { "UDim", "UDim2", "Vector2", "Vector3", "Color3", "ImageSource", "PlayerMethods", "Players", "Commands", "GuiObjectMethods", "Gui", "Items", "Game" };
+            string[] Tables = { "UDim", "UDim2", "Vector2", "Vector3", "Color3", "ImageSource", "PlayerMethods", "Players", "Commands", "GuiObjectMethods", "Gui", "Items", "Workspace", "Game" };
             foreach (string Line in Lines) {
                 if (Tables.Any(Table => Line.StartsWith("function " + Table + ".", StringComparison.Ordinal)) && !Bindings.Contains(Line))
                     throw new InvalidOperationException("runtime function lacks API declaration: " + Line);

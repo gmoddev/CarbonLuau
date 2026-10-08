@@ -77,6 +77,14 @@ namespace Carbon.Plugins
         private void SeedPlayers() { }
         private void RegisterActivePermissions() { if (PermissionAction!=null) PermissionAction(); }
         private void QueueAddonWork() { }
+        // This fixture links Main without the Carbon/Rust-only Entity observer.
+        // Entity lifetime is exercised by its dedicated model and live fixtures.
+        private void InitializeEntityObserver() { }
+        private void QualifyEntityStartup() { }
+        private void StopEntityObserver() { }
+        private void StopEntityDiscovery() { }
+        private void SweepIdleEntityDiscovery() { }
+        partial void RunEntityDiscoveryFixtures();
 
         internal void TestInitialize(string DataDirectory)
         {

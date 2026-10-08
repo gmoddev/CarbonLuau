@@ -1,6 +1,15 @@
 # CarbonLuau World/Entity Foundation 1
 
-Status: **HOST-PRIMITIVE-GATED / DEFERRED — accepted future architecture; Entity-1A BLOCKED**
+Status: **Entity-1A private lifetime and Entity-1B read-only runtime qualified on pinned hosts; [Entity-1C](WorldEntityFoundation1C.md) records the public Foundation 1 closure.**
+
+The original 2026-09-23 gate below is historical. The later
+[Entity-1A qualification](WorldEntityFoundation1A-Validation.md) and amended
+[D20](Invariants.md#d20--worldentity-foundation-1) close the private
+exact-lifetime gate through continuous startup observation and full-Spawn
+completion fencing. The later [Entity-1B validation](WorldEntityFoundation1B-Validation.md)
+records the exact keyed `Workspace`/`Entity` read-only runtime binding. Entity-1C
+owns the combined lifecycle, public metadata/docs and `0.6.0-experimental`
+development scripting API assignment; it does not publish package `0.6.0`.
 
 Closure adopted 2026-09-23: [D20](Invariants.md#d20--worldentity-foundation-1)
 requires a supported authoritative incarnation/retirement primitive before any
@@ -807,9 +816,13 @@ inheritance or generic `CallMethod`.**
 
 ## 20. Implementation routing
 
-Architecture adoption alone authorizes no production API. Entity-1A is BLOCKED;
-Entity-1B/1C are deferred until D20's host-primitive gate closes. Persistence
-Foundation 1 is the next design track, not a workaround for Entity identity.
+Architecture adoption alone authorizes no production API. The private Entity-1A
+gate has since closed only within the pinned host/deployment envelope in
+[its validation](WorldEntityFoundation1A-Validation.md). The separately scoped
+[Entity-1B runtime](WorldEntityFoundation1B-Validation.md) is qualified on that
+host envelope; [Entity-1C](WorldEntityFoundation1C.md) is the combined/public
+lifecycle/scale closure. The original conditional phase description below is
+retained as historical design, not an instruction to reimplement Entity-1A.
 
 ### Entity-1A — exact identity/lifetime substrate
 
@@ -872,8 +885,9 @@ Close:
 - public docs/examples;
 - compatibility and release planning.
 
-Only Entity-1C may assign the implemented surface to a future package/scripting
-identity.
+Entity-1C assigns the implemented surface to development scripting API
+`0.6.0-experimental`; a future package/release identity remains separately
+authorized.
 
 ### Later foundations
 
@@ -889,9 +903,9 @@ D20 adoption changes **no** package version, scripting API identity, native ABI,
 provider protocol, package schema or Luau pin. It does not retroactively add
 Workspace/Entity to `0.4.0-experimental`.
 
-If Entity-1A through 1C later complete as an additive release, `0.5.0-experimental`
-is the natural release-planning candidate, but D20 intentionally leaves that identity
-unassigned until implementation/public-closure evidence exists.
+The historical 0.5 candidate above was superseded when package v0.5.0 shipped
+without Entity. Entity-1C assigns the implemented read-only surface to
+development API `0.6.0-experimental`; package v0.6.0 is not released or tagged.
 
 ## 22. Explicitly deferred
 
@@ -1002,10 +1016,15 @@ Later Spawn/Destroy work stops rather than ships if exact-build callback/resourc
 verification behavior cannot distinguish safe pre-COMMIT rejection from
 post-COMMIT uncertainty.
 
-## 25. Validation required before public implementation
+## 25. Validation requirements and qualification routing
 
-Architecture adoption is documentation/policy work only. It does not claim that the
-runtime currently contains Workspace or Entity.
+At architecture adoption, this document was policy only and did not claim a
+Workspace or Entity runtime. The implemented, exact-host-qualified Foundation 1
+surface and its remaining limits are recorded in
+[Entity-1A](WorldEntityFoundation1A-Validation.md),
+[Entity-1B](WorldEntityFoundation1B-Validation.md), and the
+[Entity-1C public closure](WorldEntityFoundation1C.md). Those records, not this
+original architecture plan, establish current implementation status.
 
 Entity-1 implementation must add target-specific fixtures rather than relying only on
 ecosystem convention:
@@ -1026,4 +1045,5 @@ ecosystem convention:
 Current upstream sources are architecture evidence. Exact-build implementation claims
 must be recorded separately in Entity-1A/1B/1C qualification documents.
 
-No production Workspace/Entity code is authorized or implemented by this document.
+This document does not authorize later World/Entity query, event, or mutation
+surfaces beyond the qualified Foundation 1 runtime.

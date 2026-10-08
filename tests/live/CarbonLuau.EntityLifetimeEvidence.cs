@@ -1,10 +1,18 @@
 // Research-only fixture. Install ONLY on a disposable, isolated Rust/Carbon server.
 // This deliberately mutates fixture-owned host objects; it is NOT an Entity adapter.
 using System;
+using System.Threading;
 using UnityEngine;
 
 namespace Oxide.Plugins
 {
+    // Deliberate late-Spawn failure probe on a disposable fixture entity only.
+    public sealed class CarbonLuauEntityThrowingUpdate : MonoBehaviour, IOnSendNetworkUpdate
+    {
+        public void OnSendNetworkUpdate(BaseEntity Entity)
+        { throw new InvalidOperationException("fixture late network update failure"); }
+    }
+
     [Info("CarbonLuau.EntityLifetimeEvidence", "CarbonLuau", "0.1.0")]
     [Description("Isolated exact-build entity lifecycle research; no public Luau API")]
     public class CarbonLuauEntityLifetimeEvidence : RustPlugin
@@ -12,7 +20,8 @@ namespace Oxide.Plugins
         private const string Prefab = "assets/prefabs/deployable/woodenbox/woodbox_deployed.prefab";
         private BaseEntity Owned;
         private bool Veto;
-        private int KillHooks, SpawnHooks, SpawnedHooks, LoadedHooks, Checks;
+        private int KillHooks, SpawnHooks, SpawnedHooks, LoadedHooks, Checks, OwnerThread;
+        private bool SpawnThreadMatched = true, PrefixWasUnspawned = true;
 
         private void Assert(bool Condition, string Label)
         {
@@ -20,17 +29,23 @@ namespace Oxide.Plugins
             Checks++;
             Puts("[CarbonLuau:EntityLive] CHECK " + Label);
         }
-        private void OnServerInitialized() { NextTick(Run); }
+        private void OnServerInitialized() { OwnerThread = Thread.CurrentThread.ManagedThreadId; NextTick(Run); }
         private void OnEntitySpawn(BaseNetworkable Entity)
         {
             if (!ReferenceEquals(Entity, Owned)) return;
             SpawnHooks++;
-            Puts("[CarbonLuau:EntityLive] PRESPAWN fully=" + Entity.IsFullySpawned() + " destroyed=" + Entity.IsDestroyed + " net=" + (Entity.net != null));
+            SpawnThreadMatched &= Thread.CurrentThread.ManagedThreadId == OwnerThread;
+            PrefixWasUnspawned &= !Entity.IsFullySpawned();
+            Puts("[CarbonLuau:EntityLive] PRESPAWN fully=" + Entity.IsFullySpawned() + " destroyed=" + Entity.IsDestroyed +
+                " net=" + (Entity.net != null) + " occupied=" + (Entity.net != null &&
+                    ReferenceEquals(BaseNetworkable.serverEntities.Find(Entity.net.ID), Entity)) +
+                " ownerThread=" + (Thread.CurrentThread.ManagedThreadId == OwnerThread));
         }
         private void OnEntitySpawned(BaseNetworkable Entity)
         {
             if (!ReferenceEquals(Entity, Owned)) return;
             SpawnedHooks++;
+            SpawnThreadMatched &= Thread.CurrentThread.ManagedThreadId == OwnerThread;
             Puts("[CarbonLuau:EntityLive] SPAWNED fully=" + Entity.IsFullySpawned() + " occupied=" + ReferenceEquals(BaseNetworkable.serverEntities.Find(Entity.net.ID), Entity));
         }
         private void OnEntityLoaded(BaseNetworkable Entity, BaseNetworkable.LoadInfo Info)
@@ -61,6 +76,7 @@ namespace Oxide.Plugins
                 var Instance = First.GetInstanceID();
                 Assert(First.IsFullySpawned() && ReferenceEquals(BaseNetworkable.serverEntities.Find(Id), First), "spawn has current keyed occupancy");
                 Assert(SpawnHooks == 1 && SpawnedHooks == 1, "prefix and spawned hooks observed");
+                Assert(SpawnThreadMatched && PrefixWasUnspawned, "synchronous prefix on owner thread before first admission");
                 Veto = true;
                 First.Kill();
                 Assert(KillHooks == 1 && !First.IsDestroyed && ReferenceEquals(BaseNetworkable.serverEntities.Find(Id), First), "vetoed Kill did not retire entity");
@@ -83,10 +99,26 @@ namespace Oxide.Plugins
                 var Third = Create();
                 bool ThirdReused = ReferenceEquals(First, Third);
                 Third.InitLoad(Id);
-                Assert(ReferenceEquals(BaseNetworkable.serverEntities.Find(Id), Third), "InitLoad restores explicit ID before Spawn");
+                Assert(ReferenceEquals(BaseNetworkable.serverEntities.Find(Id), Third) && !Third.IsFullySpawned(),
+                    "InitLoad restores explicit ID before Spawn but remains non-admissible");
                 Third.Spawn();
                 Assert(Third.net.ID.Value == Id.Value && Third.PrefabName == Prefab && !Third.IsDestroyed && Third.IsFullySpawned(), "forced load path restores same ID and prefab");
+                Assert(SpawnHooks == 3 && SpawnedHooks == 3 && SpawnThreadMatched && PrefixWasUnspawned,
+                    "all fixture Spawn paths crossed owner-thread prefix before admission");
                 Puts("[CarbonLuau:EntityLive] RESTORED sameManaged=" + ThirdReused + " sameUnityId=" + (Third.GetInstanceID() == Instance) + "; same-object ABA " + (ThirdReused ? "OBSERVED" : "NOT OBSERVED"));
+                Third.Kill();
+                var Late = Create();
+                Late.gameObject.AddComponent<CarbonLuauEntityThrowingUpdate>();
+                bool LateThrew = false;
+                try { Late.Spawn(); }
+                catch (InvalidOperationException Error) { LateThrew = Error.Message.Contains("fixture late network update failure"); }
+                Puts("[CarbonLuau:EntityLive] LATE_FAILURE threw=" + LateThrew +
+                    " fully=" + Late.IsFullySpawned() + " destroyed=" + Late.IsDestroyed +
+                    " nonzeroId=" + (Late.net != null && Late.net.ID.Value != 0) +
+                    " occupied=" + (Late.net != null && ReferenceEquals(BaseNetworkable.serverEntities.Find(Late.net.ID), Late)));
+                Assert(LateThrew && Late.IsFullySpawned() && !Late.IsDestroyed && Late.net != null && Late.net.ID.Value != 0 &&
+                    ReferenceEquals(BaseNetworkable.serverEntities.Find(Late.net.ID), Late),
+                    "late Spawn exception leaves all current admission predicates true");
                 Complete = true;
             }
             catch (Exception Error) { Puts("[CarbonLuau:EntityLive] FAIL " + Error.Message); }

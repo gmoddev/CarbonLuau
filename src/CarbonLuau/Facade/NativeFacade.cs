@@ -29,6 +29,7 @@ namespace Carbon.Plugins
                 if ((AbiVersion & 65535) < 2) throw new FacadeException("Phase 3 requires native ABI 1.2 or later");
                 if (InstallFacade == null) { InstallFacade = Loader.Bind<FacadeDelegate>("cl_vm_facade"); AdmitEvent = Loader.Bind<EventDelegate>("cl_vm_event"); }
                 FacadeRoots.Add(Handle, Session); // Root until native destruction succeeds, including failed installation.
+                Session.FacadeVm = Handle;
                 InsideNative = true;
                 try { Require(InstallFacade(Handle, (ulong)Session.Generation, Session.Callback)); }
                 finally { InsideNative = false; }
@@ -48,6 +49,7 @@ namespace Carbon.Plugins
                     throw new FacadeException("storage facade lifetime mismatch");
                 BindStorage();
                 Session.StorageVm=Vm;
+                Session.FacadeVm=Vm;
                 DomainFacadeRoots.Add(Domain, Session);
                 InsideNative = true;
                 try { Require(InstallDomainFacade(Vm, Domain, Session.Callback), "domain facade"); }

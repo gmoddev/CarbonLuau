@@ -18,6 +18,9 @@ internal static class ReleaseInstallTests
             if (Rid == "linux-x64" && chmod(Path.Combine(Data, "CarbonLuau/native/linux-x64/carbonluau_compiler"), 493) != 0)
                 throw new Exception("Cannot make installed compiler executable");
             if (!File.Exists(Path.Combine(Root, "carbon/plugins/CarbonLuau.cszip"))) throw new Exception("Missing production plugin");
+            foreach (string Document in new[] {"docs/api/Discovery.md", "docs/api/Types/EntityDiscoveryOptions.md",
+                "docs/api/Services/Workspace.md", "docs/api/Types/Entity.md", "examples/world/discovery/init.luau"})
+                if (!File.Exists(Path.Combine(Root, Document))) throw new Exception("Missing World/Entity release content: " + Document);
             using (var Native = new Runtime.NativeRuntime(Data)) {
                 int Count = 0;
                 ulong Vm = Native.Create(new Runtime.RuntimeConfig());

@@ -1,5 +1,26 @@
 # Release identity and reproducibility
 
+Current development source targets scripting API `0.6.0-experimental` for
+read-only [Workspace/Entity](WorldEntityFoundation1C.md). The latest published
+package/tag remains `0.5.0`/`v0.5.0` with API `0.5.0-experimental`.
+Development `release.json` deliberately has package/release/tag `0.5.0` and
+API `0.6.0-experimental`; it is **not** a v0.5.0 reproducibility or publication
+manifest. No v0.6.0 package, tag, release or editor artifact is authorized here.
+The native ABI remains `1.5`, provider protocol `1.2`, addon schema `1`, and
+the Luau pin unchanged.
+
+[World/Entity Foundation 2C](WorldEntityFoundation2C.md) owns the final combined
+qualification and next-package readiness verdict. [Planned v0.6.0 release
+notes](releases/0.6.0.md) cover keyed lookup and bounded asynchronous discovery.
+Publication remains a separate authorization. Its narrow identity change must
+update `release.json`, the plugin Info/PackageVersion and native CMake package
+version, current-release documentation/navigation, and hardcoded bundle/artifact
+names in the validation workflow. Keep API `0.6.0-experimental`, ABI `1.5`,
+provider `1.2`, schema `1` and Luau unchanged, then rebuild/test that exact release
+commit and verify checksums/provenance before any tag or GitHub release.
+Development dry-run archives named v0.5.0 contain the development API and must
+never be uploaded as replacement v0.5.0 artifacts.
+
 The v0.5.0 experimental mapping follows [D12](Invariants.md#d12--scripting-and-protocol-identity),
 qualified [Persistence Foundation 1C](PersistenceFoundation1C.md) and
 [Persistence Foundation 2D](PersistenceFoundation2D.md). The 2D source/CI gate
@@ -13,7 +34,8 @@ own the experimental author-facing summary.
 | Identity | Value |
 |---|---|
 | Package / tag | `0.5.0` / `v0.5.0` |
-| Current scripting API | `CarbonLuau 0.5.0-experimental` |
+| Published scripting API | `CarbonLuau 0.5.0-experimental` |
+| Development scripting API | `CarbonLuau 0.6.0-experimental` |
 | API status | `Experimental` |
 | Native ABI | `1.5` (additive reserved persistence-completion export) |
 | Provider protocol | `CarbonLuau.Addons` / `1.2` |

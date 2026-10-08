@@ -1,5 +1,10 @@
 # Entity-1A authoritative lifecycle investigation
 
+Historical negative evidence. The later
+[Entity-1A validation](WorldEntityFoundation1A-Validation.md) supersedes this
+document's **then-current** blocked disposition on its pinned host target;
+the registry-continuity counterexample remains valid.
+
 Research only, 2026-09-22 (EDT); CarbonLuau baseline
 `72efcf253f46c5d4499bd7f2b5a69ae4ceb23946`. This follows the preserved
 [initial Entity-1A investigation](WorldEntityFoundation1A.md), not an implementation

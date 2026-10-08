@@ -18,8 +18,9 @@ bindings; historical 0.4 API artifacts do not provide persistence.
 
 Persistence is the next runtime foundation; separately scoped implementation and
 final qualification proceed under resolved D21, not another architecture investigation.
-It does not depend on reopening D20: World/Entity remains
-HOST-PRIMITIVE-GATED / DEFERRED, Entity-1A BLOCKED. Persist application identifiers
+It did not depend on reopening D20: the old Entity-1A gate was independent and
+has since closed privately on the pinned host, without adding a public Entity API.
+Persist application identifiers
 such as string Player.UserId, never Entity.Id as evidence of persistent identity.
 
 ## 1. Product and public contract

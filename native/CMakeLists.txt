@@ -50,6 +50,7 @@ set(CARBONLUAU_RUNTIME_SOURCES
     src/scripts/ModuleLoader.cpp
     src/facade/FacadeBridge.cpp
     src/facade/PersistenceFacade.cpp
+    src/facade/DiscoveryFacade.cpp
     src/persistence/Format.cpp)
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/third_party/LUAU_REVISION.txt" LUAU_REVISION)
 string(REGEX MATCH "Pinned commit: ([0-9a-f]+)" LUAU_PIN_MATCH "${LUAU_REVISION}")
@@ -169,6 +170,14 @@ if(BUILD_TESTING)
     add_dependencies(PersistenceAdmissionTests carbonluau_compiler)
     add_test(NAME PersistenceAdmission COMMAND PersistenceAdmissionTests $<TARGET_FILE:carbonluau_compiler>)
     set_tests_properties(PersistenceAdmission PROPERTIES TIMEOUT 30)
+    add_executable(DiscoveryFacadeTests ../tests/native/DiscoveryFacadeTests.cpp src/Runtime.cpp ${CARBONLUAU_RUNTIME_SOURCES})
+    target_compile_features(DiscoveryFacadeTests PRIVATE cxx_std_17)
+    target_include_directories(DiscoveryFacadeTests PRIVATE include "${CMAKE_CURRENT_BINARY_DIR}/generated")
+    target_compile_definitions(DiscoveryFacadeTests PRIVATE CARBONLUAU_REVISION="${LUAU_REVISION}" CARBONLUAU_TESTING)
+    target_link_libraries(DiscoveryFacadeTests PRIVATE Luau.VM ${CMAKE_DL_LIBS})
+    add_dependencies(DiscoveryFacadeTests carbonluau_compiler)
+    add_test(NAME DiscoveryFacade COMMAND DiscoveryFacadeTests $<TARGET_FILE:carbonluau_compiler>)
+    set_tests_properties(DiscoveryFacade PROPERTIES TIMEOUT 180)
     add_executable(PersistenceFacadeTests ../tests/native/PersistenceFacadeTests.cpp src/Runtime.cpp ${CARBONLUAU_RUNTIME_SOURCES})
     target_compile_features(PersistenceFacadeTests PRIVATE cxx_std_17)
     target_include_directories(PersistenceFacadeTests PRIVATE include "${CMAKE_CURRENT_BINARY_DIR}/generated")

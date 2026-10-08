@@ -100,7 +100,7 @@ qualified supported Rust/Carbon host behavior, normal documented callback
 outcomes, and host uncertainty covered by existing failure semantics.
 
 **External interference** occurs when another trusted in-process component
-synchronously mutates host state relevant to an admitted CarbonLuau operation
+mutates host state relevant to an admitted CarbonLuau operation
 in a way that invalidates the operation's qualified premises. Examples include
 changes to Item.amount, effective stack limits, target slot/container contents,
 Item parent/state, inventory contents or operation-relevant world state during
@@ -130,6 +130,27 @@ retain bounded diagnostics where useful. No new outcome, recovery or replay
 mechanism is introduced. I1/I3/I4/I8/I9/I10 and D7/D10/D11 retain ownership,
 non-reentrancy, publication, exact-Player lifetime and failure authority.
 
+For host observations, distinguish three guarantees. **Safety and lifetime**
+remain mandatory: exact admission/revalidation, no stale-reference retargeting,
+no use-after-free or raw-host escape, and bounded CarbonLuau work/allocation.
+**CarbonLuau-owned ordering** follows I4's serialized owner-thread operations
+and their existing publication/admission rules; an async traversal's turns and
+CarbonLuau-originated effects must have a defined order, not race each other.
+**External observation** is not transactionally isolated: Rust, Unity, Carbon,
+Oxide, physics/jobs and other trusted in-process writers may race an observation,
+including between traversal turns. Discovery need not freeze the world or prove
+universal writer serialization to observe a candidate.
+
+This observational boundary is not a native-memory access permission. A reader
+still needs a qualified storage-lifetime/access premise and a hard work bound;
+checking after an unsafe read cannot repair an earlier invalid dereference, and
+a deadline cannot interrupt an unbounded native wait already entered. Ordinary
+qualified host behavior remains CarbonLuau's responsibility. An operation's
+position-observation semantics must be explicit; this boundary does not silently
+substitute local coordinates, arbitrarily old caches, an incomplete candidate
+set, or failed lifetime validation. It creates no new inventory outcome or replay
+rule and does not weaken Entity-1A's completed-Spawn/continuity gates.
+
 ## Decision register
 
 This is the single location for unresolved architecture/policy choices. Accepted directions are not reopened merely because implementation has not begun.
@@ -155,7 +176,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
-| D20 — HOST-PRIMITIVE-GATED / DEFERRED | Accepted future read-only World/Entity architecture is retained; Entity-1A is BLOCKED. [Lifetime investigation](WorldEntityLifetimeInvestigation.md) establishes a missing authoritative incarnation/retirement proof, not demonstrated ordinary-gameplay pooled retargeting. | Establish the supported authoritative host primitive specified below before reopening Entity-1A; Entity-1B/1C remain gated |
+| D20 — exact-host Entity Foundation 1 read-only public-development surface | A continuously installed, exact-host full-Spawn observer plus successful-startup reconciliation establishes private spawn epochs and no-retargeting Entity lifetime tokens. [Entity-1A qualification](WorldEntityFoundation1A-Validation.md) owns the narrow host/deployment envelope; [Entity-1B validation](WorldEntityFoundation1B-Validation.md) owns keyed runtime behavior; [Entity-1C](WorldEntityFoundation1C.md) owns combined public closure, metadata and release planning. Older negative investigations remain historical evidence. | Requalify any host/patch drift; the `0.6.0-experimental` development API assignment is not a package release |
 | D21 — resolved Persistence Foundation 1 architecture; private 1A PASS; public API assigned 0.5 | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The approved PERSIST/EXTRA and physical-budget amendments preserve hard logical/backend extent bounds; 1,280 MiB is an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) and [public 1B](PersistenceFoundation1B.md) retain their scoped evidence. [1C](PersistenceFoundation1C.md) owns combined closure and the exact final verdict. D12 experimental availability is not package publication approval. |
 | D22 — resolved Persistence Foundation 2 bounded derived-index Query architecture; 2A/2B PASS, public 2C implemented | DataStore:Query uses required Field plus structured Equals/Min/Max/order with automatic CarbonLuau-owned derived indexes. Authors manage no schema, version, migration or index lifecycle; optional Indexes string-list hints only request proactive preparation/retention. Online bounded preparation keeps ordinary persistence available. [PersistenceFoundation2.md](PersistenceFoundation2.md) owns exact API, bounds and qualification gates. | Implement only through Persistence-2A–2D. Public Query is assigned to unreleased `0.5.0-experimental`; package identity is unchanged. [2C evidence](PersistenceFoundation2C.md) owns its qualification, distinct from 2D combined closure. |
 
@@ -199,25 +220,44 @@ release-candidate VSIX packaging is not a signature or publication claim.
 
 #### D20 — World/Entity Foundation 1
 
-**HOST-PRIMITIVE-GATED / DEFERRED (2026-09-23).** The following remains accepted
-future architecture, not a ready implementation. Entity-1A is **BLOCKED** until a
-supported authoritative mechanism distinguishes exact host incarnations or retires
-the private lifetime token before another incarnation can satisfy the old facade's
-validation premises. An incarnation ID, registry insertion/removal generation,
-complete supported post-retirement notification, or equivalent proven primitive
-could satisfy this gate; no upstream implementation is prescribed.
+**Entity-1A private lifetime substrate and Entity-1B read-only runtime qualified
+on the pinned hosts; Entity-1C owns combined public closure.** On the exact [qualified host target](WorldEntityFoundation1A-Validation.md),
+CarbonLuau's initial-batch Carbon AutoPatch observer installs before world
+restoration. A synchronous prefix on each of the 24 qualified full virtual
+`Spawn` method bodies advances the per-object epoch and retires its prior
+lifetime. Only the successful outermost invocation, with its original run and
+entire base chain completed normally, marks the epoch `COMPLETED`; a skipped,
+throwing, nested/unqualified or incomplete attempt never does. A bounded
+`OnServerInitialized` reconciliation requires every then-keyed admissible
+entity to have an observed completed epoch before the startup baseline is
+qualified. Later Spawn attempts remain under the same continuous observer.
+Neither current flags nor a world-load marker manufactures per-object history.
 
-Object + network ID + prefab/current-occupancy snapshots are necessary checks,
-not sufficient lifetime proof. The [investigation](WorldEntityLifetimeInvestigation.md)
-found registry removal/reinsertion bypassing tested hooks and kill veto preserving
-the entity. No complete mechanism was established; **actual pooled BaseEntity reuse
-was NOT demonstrated** on the tested prefab. This is a proof gap, not evidence that
-ordinary Rust gameplay definitely retargets pooled entities. Preserve exact
-no-retargeting: no best-effort or merely valid-at-access facade, polling/world scan,
-raw host escape, or Harmony/detour dependency to enable this read-only surface.
-No production Workspace/Entity implementation may proceed while this gate is open.
+This is a **narrow, exact-host-qualified Carbon AutoPatch/Harmony adaptation**
+for private Entity lifetime only, not general permission to patch Rust or Carbon.
+The 24-method inventory, Carbon hook pair, patch topology/order and host binary
+identities fail closed on drift. Initial installation into an already-running
+server cannot establish the baseline: Entity admission stays unavailable until
+a qualified server restart. Full CarbonLuau plugin unload/reload breaks observer
+continuity and likewise requires restart. Ordinary root/addon replacement and
+VM recovery preserve the still-installed host observer while retiring the old
+VM/domain/publication facade authority. Host-process restart creates a fresh
+observer and lifetime space; no Entity token persists across processes.
 
-World/Entity Foundation 1 approves exactly this future read-only surface:
+The historical [registry-continuity investigation](WorldEntityLifetimeInvestigation.md)
+remains valid negative evidence: object, network ID, prefab and current keyed
+occupancy alone do not prove an incarnation, and actual same-object pooled reuse
+was **not observed**. The [Spawn-prefix probe](WorldEntitySpawnEpochProbe.md)
+showed failed Spawn can leave fully-spawned/keyed state. The
+[completion-fence investigation](WorldEntityCompletionFenceInvestigation.md)
+showed base-method success can precede a throwing outer `BaseEntity.Spawn` tail.
+These findings are superseded as blockers by the continuously installed
+full-virtual-call fence and startup reconciliation, not erased. Registry
+removal/reinsertion by itself is not a new incarnation: unobserved same-object,
+same-epoch churn does not retarget; observed missing required occupancy may
+conservatively retire. Trusted in-process interference remains bounded by I12.
+
+World/Entity Foundation 1 approves exactly this read-only development surface:
 `game:GetService("Workspace")`; `Workspace:GetEntityById(Id: string) -> Entity?`;
 and the generic host-backed `Entity` properties `Id: string`, `Prefab: string`
 and `Position: Vector3`. `Workspace` is Rust-world ergonomics, not a Roblox
@@ -229,8 +269,10 @@ supporting host research and implementation-facing detail.
 A public Entity represents one exact currently registered BaseEntity host lifetime.
 CarbonLuau assigns an internal monotonically increasing EntityLifetimeToken, never
 reused within the loaded CarbonLuau host instance, and binds it to the exact managed
-host object, captured nonzero network ID, current keyed registry occupancy and
-captured prefab-lifetime evidence. Every host-backed operation revalidates the owning
+host object, its completed SpawnEpoch, captured nonzero network ID, current keyed
+registry occupancy and captured prefab-lifetime evidence. Private state uses weak
+object identity and survives VM/domain replacement only while the observer is
+continuous. Every host-backed operation revalidates the owning
 domain/publication/VM lifetime plus that exact host evidence on the owner thread.
 Destroyed, pooled, replaced, ID-changed or registry-replaced host state retires the
 old lifetime permanently. A stale proxy never re-resolves by ID and never retargets a
@@ -285,7 +327,85 @@ state and never replays effects.
 Foundation 1 adopts no whole-world enumeration, prefab-filter query, spatial/radius
 query, lifecycle Signal or synthetic startup event. Rust worlds can contain hundreds
 of thousands of entities; a returned-result cap does not make an O(all entities)
-scan bounded. D20 creates no CarbonLuau world index. Current spawn/kill/load hook
+scan bounded. The Foundation 2 async-traversal pivot explicitly permits a future
+complete traversal with total O(world population) work only if it has hard
+per-owner-thread-turn and aggregate work, retained-state, result, total-inspection
+and absolute-deadline bounds. No unbounded synchronous O(all-world) discovery is
+permitted. Mutation/continuation completeness and encounter-time versus snapshot
+semantics must be explicit; a successful subset cannot masquerade as complete
+discovery. Under I12, external in-process mutation may race candidate observations;
+no atomic world snapshot or universal external-writer serialization is required.
+CarbonLuau-owned operations remain ordered on the owner thread. Exact Entity-1A
+admission, storage/memory safety and hard read/work bounds remain mandatory.
+The private [Foundation 2A substrate](WorldEntityFoundation2A.md) now implements
+fixed-slot completed-Spawn membership and watermarked asynchronous traversal.
+It is not a spatial index or mutable registry iterator. Later births are excluded,
+holes/reused slots count as work, and all results are exact lifetime-revalidated
+before successful delivery. Catalog/observer loss, unsafe read, excess depth/work/
+results or expiry fails the whole query, never a truncated successful subset.
+
+The hash-pinned current-position adapter copies at most 65 local TRS/parent
+records and performs at most 64 compositions, without entering Unity, waiting/
+helping jobs, calling user code or retaining pointers. Its storage premise is
+supported Unity owner-thread topology/reclamation: an uninterrupted owner-thread
+borrow cannot interleave with supported structural mutation. Supported Transform
+jobs can race scalar values; copied positions are encounter observations, not
+atomic poses. Exception catching or post-checking does not create a storage lease.
+Unsupported off-thread structural mutation is not made supported by I12.
+
+`EntityDiscoveryPolicy` centralizes 262,144 slots, eight requests/two per domain,
+1,024 shared scan/delivery units and raw slots per Update, 256 results, two
+deliveries, 120-second absolute deadline and bounded maintenance. A fixed private
+Update receiver avoids Carbon's shared growing next-frame enqueue. Expiry is
+checked before work/delivery when host service resumes; this is not a wall-clock
+callback SLA under host starvation. [Discovery-2B](WorldEntityFoundation2B.md)
+implements the additive development API below; its public qualification is
+separate from the private 2A evidence.
+
+```luau
+Workspace:GetEntitiesInRadiusAsync(Position: Vector3, Radius: number,
+    Callback: ({Entity}?, string?) -> (),
+    Options: { Prefab: string?, Limit: number? }?) -> ()
+```
+
+Radius is finite and nonnegative (zero tests the exact sampled point). Options
+are an ordinary table containing only an optional exact full Prefab (512 UTF-8
+bytes, nonempty, no NUL) and integer Limit 1..256, default 256. There are no
+predicates, nearest-N, cursors or cancellation objects. Submission is non-yielding
+and committed-owner-only under the shared current-operation/publication predicate;
+a foreign Workspace or committed closure cannot launder provisional work.
+Cold modules may export closures that submit later in valid committed execution.
+Synchronous validation/stale/admission rejection enqueues zero requests. Success
+is a fresh Entity array plus nil error, including an empty array; later failure
+is nil plus a controlled error code, never truncated success. Physical encounter
+order is deterministic for the traversed catalog, not nearest-distance order or
+an immutable order across queries. Results preserve encounter-time membership
+and position; properties read from returned Entity proxies remain live reads.
+
+Native captures are bounded independently of ordinary task/event queues, two
+per domain and eight per VM, including traversal-complete/undelivered work.
+Fresh owner-thread scheduler admission owns the callback deadline and exact
+host/session/VM/domain authority. Every result is revalidated and converted from
+its original weak catalog candidate, never by ID lookup; expiry/catalog loss or
+stale results fails the whole request. No callback reaches a retired/replacement
+authority. Detachment/release is at most once; callback failure/timeout/recovery
+never replays the traversal. Initial-install/full-unload restart rules remain.
+Public token conversion is limited to returned matches, with cold pre-sized
+lookup storage and bounded weak-token maintenance; resource exhaustion fails
+closed without disabling independent Foundation 1 keyed lookup.
+Combined final lifecycle, scale and release-readiness qualification is owned by
+[Foundation 2C](WorldEntityFoundation2C.md); it changes no D20/I12 semantics or
+package identity and does not authorize release publication.
+
+The [observation-boundary continuation](WorldEntityObservationBoundaryInvestigation.md),
+[traversal investigation](WorldEntityAsyncTraversalInvestigation.md),
+[catalog proof](WorldEntityCatalogInvestigation.md),
+[native ordering](WorldEntityPositionOrderingInvestigation.md) and
+[position alternatives](WorldEntityPositionAlternativesInvestigation.md) preserve
+all earlier open gates/negative findings in their original historical scope.
+Foundation 2A does not revive the rejected movement-index, mutable registry cursor,
+guarded waiting getter or universal snapshot-phase mechanisms.
+`GetEntityById` remains exact keyed lookup and must never scan. Current spawn/kill/load hook
 ordering is also not adopted as a simple symmetric EntityAdded/EntityRemoving
 contract. Any future collection/event surface requires explicit inspected-work,
 returned-result/queue and lifecycle-ordering bounds.
@@ -316,19 +436,21 @@ outcomes or verification defects. Host-driven recursive VM entry remains prohibi
 any future CarbonLuau-owned resulting event is admitted later through I4 bounded
 scheduling.
 
-After the host-primitive gate closes, Foundation 1's implementation routing is: Entity-1A internal exact
-identity/lifetime/publication substrate; Entity-1B the read-only Workspace/Entity
-surface plus exact Rust build `25353106` / Carbon `2.0.259` registry, prefab,
-Position, startup/shutdown and churn qualification; Entity-1C cross-domain,
-replacement, provider unload, reload/fatal recovery, save/restart semantics,
+With the Entity-1A private gate closed, [Entity-1B](WorldEntityFoundation1B-Validation.md)
+implements the read-only Workspace/Entity runtime and qualifies keyed lookup,
+Prefab, Position and stale behavior on exact Rust build `25653776` and pinned
+Windows/Linux Carbon targets. [Entity-1C](WorldEntityFoundation1C.md) records
+cross-domain and replacement composition, provider/recovery behavior,
 identity-table scale, public metadata/docs and release planning. Enumeration,
 spatial query, Signals, Spawn, Destroy and specialized capabilities require later
 explicit architecture rather than being implicitly authorized follow-on phases.
 
-D20 adoption changes no package/API/ABI/provider/schema/Luau identity. Because the
-architecture is after the published 0.4.0 line, `0.5.0-experimental` is a natural
-future release-planning candidate if Entity-1 closes, but no such identity is assigned
-until implementation/public qualification.
+D20's Entity-1A/1B work changed no package/API/ABI/provider/schema/Luau
+identity. The published `0.5.0-experimental` API covers Persistence, not Entity;
+Entity-1C assigns the additive read-only Workspace/Entity surface to the
+development scripting API `0.6.0-experimental`. Package `0.5.0` remains the
+published identity until a separately authorized release. Native ABI `1.5`,
+provider protocol `1.2`, package schema `1` and the Luau pin do not change.
 
 
 #### D21 — Persistence Foundation 1
@@ -340,7 +462,8 @@ private Persistence-1A substrate is qualified within the scope recorded in
 scope; [1C](PersistenceFoundation1C.md) owns combined closure and its exact final
 verdict without changing D21 semantics. D12 assigns
 this experimental development surface `0.5.0-experimental`, not retroactive
-0.4 availability. D20 remains independently HOST-PRIMITIVE-GATED / DEFERRED. The exact
+0.4 availability. D20's Entity-1A/1B runtime gates are closed, and Entity-1C
+public development assignment is independent of Persistence. The exact
 surface is `game:GetService("DataStoreService")`, synchronous disk-free
 `GetDataStore(StoreName)`, and `DataStore:GetAsync(Key, Callback)`,
 `SetAsync(Key, Value, Callback)`, `RemoveAsync(Key, Callback)`. Async means
@@ -605,6 +728,20 @@ A domain-bound facade retains bounded identity snapshots and opaque project toke
 
 #### D12 — scripting and protocol identity
 
+Entity-1C assigns the additive read-only D20 `Workspace`/`Entity` surface to
+development scripting API `CarbonLuau 0.6.0-experimental`. Published package
+`0.5.0` and its `0.5.0-experimental` API remain historical and unchanged;
+Entity is not retroactively available there. Package/release/tag stay at
+`0.5.0`/`v0.5.0` until a separately authorized future release. Native ABI
+`1.5`, provider protocol `1.2`, addon schema `1` and the Luau pin are unchanged.
+Entity metadata `SinceApi` is `0.6.0-experimental`; previous declarations
+retain their exact introduction identities. [Entity-1C](WorldEntityFoundation1C.md)
+owns combined public qualification and release-readiness evidence.
+Discovery-2B joins this same additive development identity; it does not bump the
+package or native ABI and is not a package-release/final Foundation 2 closure.
+The separately scoped combined Foundation 2 closure and next-package handoff are
+recorded in [Foundation 2C](WorldEntityFoundation2C.md).
+
 On 2026-09-23 the user assigned Persistence Foundation 1 to scripting API
 `CarbonLuau 0.5.0-experimental`. Persistence is not retroactively available in
 `0.4.0-experimental`; existing declarations retain their explicit historical
@@ -625,13 +762,11 @@ architecture identity only: no Foundation 2
 metadata or API availability exists until its implementation phases qualify, and D22 does not
 change the development package, tag or release.
 
-Package `0.5.0` is the intended future persistence release identity. No package
-bump, tag or release is authorized by this assignment. The existing machinery
-permits API/package versions to differ, so development package/release/tag fields
-remain `0.4.0`/`v0.4.0`; [Release.md](Release.md) records the non-publishable
-development mapping. Provider protocol 1.2, addon schema 1 and the Luau pin remain
-unchanged. Native ABI changes only for an actual boundary change and is mapped
-independently, never inferred from the API version.
+The preceding 0.5 planning assignment was fulfilled by published package
+`0.5.0`; the historical pre-release `0.4.0` package mapping below is retained
+as chronology, not current development state. [Release.md](Release.md) records
+the separate current development API/package identities. Native ABI changes
+only for an actual boundary change, never by inference from API version.
 
 The following records the earlier 0.4 assignment, not persistence availability.
 

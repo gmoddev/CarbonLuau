@@ -7,9 +7,9 @@ not modify the shared facade or grant host authority.
 
 | Signature / field | Type / return | Behavior |
 |---|---|---|
-| `game:GetService(Name)` | string -> Players, Commands, Gui, Items or DataStoreService | Exact case-sensitive names. DataStoreService is a private domain-bound experimental 0.5 development service with scoped 1B qualification; 1C closure remains separate. See its reference. |
+| `game:GetService(Name)` | string -> Players, Commands, Gui, Items, Workspace or DataStoreService | Exact case-sensitive names. Workspace begins with development API 0.6; the published 0.5.0 package has no Workspace. |
 | `game.ApiName` | read-only string | `CarbonLuau` |
-| `game.ApiVersion` | read-only string | Current development identity: `0.5.0-experimental` |
+| `game.ApiVersion` | read-only string | Current development identity: `0.6.0-experimental` |
 | `game.ApiStatus` | read-only string | `Experimental` |
 
 Wrong receiver, non-string service name or unknown service raises a Luau error.
@@ -30,6 +30,6 @@ local Items = game:GetService("Items")
 The existing services retain their earlier availability. Persistence's API version
 assignment does not establish qualification or retroactive 0.4 availability.
 See [Players](Services/Players.md), [Commands](Services/Commands.md), [Items](Services/Items.md), [GUI](Gui.md),
-[DataStoreService](Services/DataStoreService.md) and
+[DataStoreService](Services/DataStoreService.md), [Workspace](Services/Workspace.md) and
 [compatibility](Compatibility.md). No other services or global host-call primitive
 are exposed. Existing standard-library/sandbox restrictions remain in force.

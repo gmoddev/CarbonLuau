@@ -1,11 +1,25 @@
 # World/Entity Foundation 1A — lifetime proof investigation
 
-Canonical closure, 2026-09-23: D20 is now **HOST-PRIMITIVE-GATED / DEFERRED**;
-Entity-1A remains **BLOCKED**. This file preserves the initial report as history,
+Historical 2026-09-23 closure: D20 was then **HOST-PRIMITIVE-GATED / DEFERRED**;
+Entity-1A was **BLOCKED**. The later
+[startup-observed Entity-1A qualification](WorldEntityFoundation1A-Validation.md)
+supersedes that status on the pinned Windows/Linux hosts. This file preserves
+the initial report as history,
 including its then-uncommitted status and unchanged-D20 statement. The subsequent
 [investigation and adoption](WorldEntityLifetimeInvestigation.md) supersede that
 repository disposition, not the negative evidence. Actual pooled BaseEntity reuse
-was not demonstrated; no production implementation is authorized.
+was not demonstrated; production implementation was not authorized by that
+historical investigation. The later private Entity-1A substrate is qualified
+only under its separate exact-host validation record.
+
+The later [exact-target Spawn-epoch probe](WorldEntitySpawnEpochProbe.md) confirmed
+the prefix candidate but found a failed/partial Spawn completion counterexample.
+It did not adopt the proposed D20 amendment or authorize Entity-1B.
+The [successful-completion follow-up](WorldEntityCompletionFenceInvestigation.md)
+found that `BaseEntity.Spawn` has a fallible tail after the base method returns
+and that pre-existing hotloaded entities had no proven successful-Spawn baseline
+under that proposed mechanism; D20 remained gated at the time. The later
+startup-observer qualification supersedes this historical gate.
 
 Follow-up: [authoritative lifecycle investigation](WorldEntityLifetimeInvestigation.md)
 records the expanded host/hook research and separate live-evidence status. The

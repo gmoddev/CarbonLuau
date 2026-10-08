@@ -320,9 +320,10 @@ ClStatus cl_vm_scheduler(ClHandle Id, ClSchedulerInfo* Info) try
     std::lock_guard<std::recursive_mutex> Lock(RegistryMutex);
     Vm* Runtime = GetVm(Id);
     if (!Runtime || (!Runtime->Scripts && Runtime->Domains.empty())) return CL_INVALID_ARGUMENT;
-    Info->NowNs = NowNs(); Info->Sequence = Runtime->Sequence;
-    Info->Discarded = Runtime->RetiredDiscarded;
+    Info->NowNs = NowNs();
     for (const auto& Item : Runtime->Domains) if (Item) {
+        ExpireDiscovery(*Runtime, *Item, Info->NowNs);
+        if (Runtime->State && Runtime->IntegrityFailed) { Retire(*Runtime); return CL_INTERNAL_ERROR; }
         const Domain& Owner = *Item;
         Info->Rejected += Owner.Rejected;
         if (!Owner.Alive || !Owner.Active) continue;
@@ -330,8 +331,15 @@ ClStatus cl_vm_scheduler(ClHandle Id, ClSchedulerInfo* Info) try
         if (!Owner.Queue.empty() && (!Info->NextDueNs || Owner.Queue.front().Due < Info->NextDueNs)) Info->NextDueNs = Owner.Queue.front().Due;
         for (const auto& Work : Owner.StorageCallbacks) if (Work && Work->Ready) ++Info->Queued;
         if (auto* Work = NextStorage(*Item); Work && (!Info->NextDueNs || Work->Due < Info->NextDueNs)) Info->NextDueNs = Work->Due;
+        for (const auto& Work : Owner.DiscoveryCallbacks) if (Work.Accepted) {
+            ++Info->Queued;
+            uint64_t Due = Work.Ready ? Work.Due : Work.Expires;
+            if (!Info->NextDueNs || Due < Info->NextDueNs) Info->NextDueNs = Due;
+        }
         for (const auto& Entry : Owner.Modules) if (Entry.second.Loaded) ++Info->Modules;
     }
+    Info->Discarded = Runtime->RetiredDiscarded;
+    Info->Sequence = Runtime->Sequence;
     return CL_OK;
 } catch (...) { return CL_INTERNAL_ERROR; }
 
@@ -344,13 +352,18 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
     std::lock_guard<std::recursive_mutex> Lock(RegistryMutex);
     Vm* Runtime = GetVm(Id);
     if (!Runtime || !Runtime->State || Runtime->ThreadId || Runtime->Admission) return CL_INVALID_ARGUMENT;
+    uint64_t Now = NowNs();
+    for (const auto& Item : Runtime->Domains) if (Item) ExpireDiscovery(*Runtime, *Item, Now);
+    if (Runtime->IntegrityFailed) { Retire(*Runtime); Result->Flags = 1; return CL_INTERNAL_ERROR; }
     Domain* Selected = nullptr;
     for (const auto& Item : Runtime->Domains) if (Item && Item->Alive && Item->Active) {
         const Callback* Candidate = Item->Queue.empty() ? nullptr : &Item->Queue.front();
         StorageCallback* Storage = NextStorage(*Item);
+        DiscoveryCallback* Discovery = NextDiscovery(*Item);
         bool TaskReady = Candidate && Candidate->Due <= CutoffNs && Candidate->Sequence <= Sequence;
         bool StorageReady = Storage && Storage->Due <= CutoffNs && Storage->Sequence <= Sequence;
-        if (!TaskReady && !StorageReady) continue;
+        bool DiscoveryReady = Discovery && Discovery->Due <= CutoffNs && Discovery->Sequence <= Sequence;
+        if (!TaskReady && !StorageReady && !DiscoveryReady) continue;
         bool CandidateAfterCursor = Item->Id > Runtime->SchedulerCursor;
         bool SelectedAfterCursor = Selected && Selected->Id > Runtime->SchedulerCursor;
         if (!Selected || (CandidateAfterCursor && !SelectedAfterCursor) ||
@@ -360,12 +373,25 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
     Runtime->SchedulerCursor = Selected->Id;
     Callback Work{};
     std::unique_ptr<StorageCallback> StorageWork;
+    DiscoveryCallback* DiscoveryWork = nullptr;
     StorageCallback* Storage = NextStorage(*Selected);
+    DiscoveryCallback* Discovery = NextDiscovery(*Selected);
     const Callback* Task = Selected->Queue.empty() ? nullptr : &Selected->Queue.front();
     bool StorageFirst = Storage && Storage->Due <= CutoffNs && Storage->Sequence <= Sequence &&
         (!Task || Task->Due > CutoffNs || Task->Sequence > Sequence || Storage->Due < Task->Due ||
             (Storage->Due == Task->Due && Storage->Sequence < Task->Sequence));
-    if (StorageFirst) {
+    bool DiscoveryFirst = Discovery && Discovery->Due <= CutoffNs && Discovery->Sequence <= Sequence &&
+        (!Task || Task->Due > CutoffNs || Task->Sequence > Sequence || Discovery->Due < Task->Due ||
+            (Discovery->Due == Task->Due && Discovery->Sequence < Task->Sequence)) &&
+        (!StorageFirst || Discovery->Due < Storage->Due ||
+            (Discovery->Due == Storage->Due && Discovery->Sequence < Storage->Sequence));
+    if (DiscoveryFirst) {
+        DiscoveryWork = Discovery;
+        Work = Callback{Discovery->Due, Discovery->Sequence, Selected, Discovery->Thread, Discovery->Reference, 0, {}};
+        // The scheduler takes the reference; the reservation survives until
+        // callback completion, including materialization and callback errors.
+        Discovery->Reference = LUA_NOREF;
+    } else if (StorageFirst) {
         for (auto& Slot : Selected->StorageCallbacks) if (Slot.get() == Storage) { StorageWork = std::move(Slot); break; }
         Work = Callback{Storage->Due, Storage->Sequence, Selected, Storage->Thread, Storage->Reference, 0, {}};
         ReleaseStorage(*Runtime, *Selected, Storage->Route);
@@ -401,7 +427,15 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
         // this same fresh admission and deadline as the user's callback.
         if (StorageWork && !ReleaseStorageHost(*Runtime, *Work.Owner, StorageWork->Route))
             throw std::runtime_error("storage reservation release failed");
-        int Code = lua_resume(Work.Thread, nullptr, Work.Arguments);
+        struct DiscoveryCompletion {
+            Vm& Runtime; Domain& Owner; DiscoveryCallback* Work;
+            ~DiscoveryCompletion() { if (Work && !ReleaseDiscovery(Runtime, Owner, *Work)) Runtime.IntegrityFailed = true; }
+        };
+        int Code;
+        {
+            DiscoveryCompletion Cleanup{*Runtime, *Work.Owner, DiscoveryWork};
+            Code = lua_resume(Work.Thread, nullptr, Work.Arguments);
+        }
         lua_callbacks(Runtime->State)->interrupt = nullptr;
         Runtime->Admission = nullptr;
         if (Runtime->AllocationFailed || Code == LUA_ERRMEM) {
@@ -417,7 +451,7 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
             Status = CL_INTERNAL_ERROR;
             Diagnostic(*Runtime, *Result, "publication integrity failure; VM retired");
             Retire(*Runtime);
-        } else if (StorageWork && Status == CL_MEMORY_LIMIT) Retire(*Runtime);
+        } else if ((StorageWork || DiscoveryWork) && Status == CL_MEMORY_LIMIT) Retire(*Runtime);
         else ReleaseThread(*Runtime, Status == CL_MEMORY_LIMIT);
         if (!Runtime->State) Result->Flags |= 1;
     } catch (const DeadlineExceeded&) {

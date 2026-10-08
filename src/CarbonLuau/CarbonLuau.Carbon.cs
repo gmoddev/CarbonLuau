@@ -121,7 +121,9 @@ namespace Carbon.Plugins
             var Limits = new GuiConfig().Validate();
             Gameplay = new FacadeWorld(Players, CommandRegistrar, new ItemDirectory(ReadItemDefinition), Limits,
                 new RustCuiBackend(Limits, new CarbonRustCuiTransport(Players)));
+            BindEntityFacade();
         }
+        partial void BindEntityFacade();
         private void SeedPlayers()
         {
             Gameplay.Players.CheckOwner();

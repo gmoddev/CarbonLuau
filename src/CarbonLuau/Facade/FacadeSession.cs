@@ -17,6 +17,8 @@ namespace Carbon.Plugins
             internal readonly PlayerTakeItemOperation TakeItems = new PlayerTakeItemOperation();
             internal readonly PlayerGiveItemOperation GiveItems;
             internal readonly GuiRetainedWorld Gui;
+            internal IEntityFacadeHost Entities;
+            internal IEntityDiscoveryFacadeHost Discovery;
             public FacadeSession Active { get; private set; }
             private readonly SortedDictionary<long, FacadeSession> Addons = new SortedDictionary<long, FacadeSession>();
             private long GuiFlushCursor;
@@ -146,13 +148,28 @@ namespace Carbon.Plugins
             {
                 public readonly SortedDictionary<ulong, string> Listeners;
                 public readonly SortedDictionary<string, ScriptCommand> Commands;
-                public PublicationCheckpoint(SortedDictionary<ulong, string> Listeners, SortedDictionary<string, ScriptCommand> Commands)
+                public readonly PublicationWitness Witness;
+                public PublicationCheckpoint(SortedDictionary<ulong, string> Listeners, SortedDictionary<string, ScriptCommand> Commands,
+                    PublicationWitness Witness)
                 {
                     this.Listeners = new SortedDictionary<ulong, string>(Listeners);
                     this.Commands = new SortedDictionary<string, ScriptCommand>(Commands, StringComparer.Ordinal);
+                    this.Witness = Witness;
                 }
             }
+            internal sealed class PublicationWitness
+            {
+                internal readonly FacadeSession Owner;
+                internal readonly ulong Token;
+                internal readonly PublicationWitness Parent;
+                internal bool Retired;
+                internal PublicationWitness(FacadeSession Owner, ulong Token, PublicationWitness Parent)
+                { this.Owner = Owner; this.Token = Token; this.Parent = Parent; }
+            }
             private readonly Stack<PublicationCheckpoint> Publications = new Stack<PublicationCheckpoint>();
+            private readonly Dictionary<ulong, PublicationWitness> EntityWitnesses = new Dictionary<ulong, PublicationWitness>();
+            private readonly PublicationWitness RootPublication;
+            private ulong NextPublicationToken = 1;
             private readonly FacadeWorld World;
             internal readonly GuiRetainedRegistry Gui;
             private readonly int Capacity;
@@ -164,12 +181,48 @@ namespace Carbon.Plugins
             public int PendingCount { get { return Pending.Count; } }
             public int ListenerCount { get { return Listeners.Count; } }
             public readonly NativeRuntime.HostDelegate Callback;
+            internal ulong FacadeVm;
             public FacadeSession(FacadeWorld World, long Generation, int Capacity)
                 : this(World, Generation, Generation, Capacity) { }
             public FacadeSession(FacadeWorld World, long VmGenerationId, long DomainLifetimeId, int Capacity)
             { this.World = World; this.VmGenerationId = VmGenerationId; this.DomainLifetimeId = DomainLifetimeId;
                 this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents);
+                RootPublication = new PublicationWitness(this, 1, null);
                 Gui = new GuiRetainedRegistry(World.Gui, checked((ulong)VmGenerationId), checked((ulong)DomainLifetimeId)); Callback = HostCall; }
+            internal PublicationWitness CapturePublicationWitness()
+            {
+                World.Players.CheckOwner();
+                if (Disposed) throw new FacadeException("stale facade publication");
+                return Publications.Count == 0 ? RootPublication : Publications.Peek().Witness;
+            }
+            internal PublicationWitness CaptureEntityWitness()
+            {
+                PublicationWitness Witness = CapturePublicationWitness();
+                EntityWitnesses[Witness.Token] = Witness;
+                return Witness;
+            }
+            internal PublicationWitness FindEntityWitness(ulong Token)
+            {
+                World.Players.CheckOwner();
+                PublicationWitness Witness;
+                return EntityWitnesses.TryGetValue(Token, out Witness) &&
+                    IsPublicationWitnessCurrent(Witness) ? Witness : null;
+            }
+            private void PruneEntityWitnesses()
+            {
+                var Retired = new List<ulong>();
+                foreach (var Entry in EntityWitnesses)
+                    if (!IsPublicationWitnessCurrent(Entry.Value)) Retired.Add(Entry.Key);
+                foreach (ulong Token in Retired) EntityWitnesses.Remove(Token);
+            }
+            internal bool IsPublicationWitnessCurrent(PublicationWitness Witness)
+            {
+                World.Players.CheckOwner();
+                if (Disposed || Witness == null || !ReferenceEquals(Witness.Owner, this)) return false;
+                for (PublicationWitness Current = Witness; Current != null; Current = Current.Parent)
+                    if (Current.Retired) return false;
+                return true;
+            }
             private string Id()
             {
                 if (NextRegistration == ulong.MaxValue) throw new FacadeException("registration identity exhausted");
@@ -242,7 +295,13 @@ namespace Carbon.Plugins
                     if (Runtime.Info.Ready == 0) { Pending.Clear(); break; }
                 }
             }
-            public void Clear() { Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear(); ClearStorageHints(); Gui.Dispose(); }
+            public void Clear() {
+                if (World.Discovery != null) World.Discovery.Retire(this);
+                RootPublication.Retired = true;
+                foreach (PublicationCheckpoint Checkpoint in Publications) Checkpoint.Witness.Retired = true;
+                Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear();
+                EntityWitnesses.Clear(); ClearStorageHints(); Gui.Dispose();
+            }
             private bool Gate(string[] Fields)
             {
                 if (!Active || !World.IsActive(this) || Disposed || Fields.Length < 5) return false;
@@ -278,7 +337,10 @@ namespace Carbon.Plugins
                 }
                 if (Code == 10) {
                     if (Fields.Length != 0) throw new FacadeException("invalid publication begin");
-                    PublicationCheckpoint Checkpoint = new PublicationCheckpoint(Listeners, Commands);
+                    if (NextPublicationToken == ulong.MaxValue) throw new FacadeException("publication lifetime exhausted");
+                    PublicationWitness Parent = Publications.Count == 0 ? RootPublication : Publications.Peek().Witness;
+                    PublicationWitness Witness = new PublicationWitness(this, ++NextPublicationToken, Parent);
+                    PublicationCheckpoint Checkpoint = new PublicationCheckpoint(Listeners, Commands, Witness);
                     Gui.BeginPublication();
                     try { Publications.Push(Checkpoint); }
                     catch { Gui.RollbackPublication(); throw; }
@@ -286,12 +348,17 @@ namespace Carbon.Plugins
                 }
                 if (Code == 11) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication commit");
-                    Gui.CommitPublication(); Publications.Pop(); return new string[0];
+                    try { Gui.CommitPublication(); }
+                    catch { Publications.Peek().Witness.Retired = true; throw; }
+                    Publications.Pop(); return new string[0];
                 }
                 if (Code == 12) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication rollback");
+                    PublicationCheckpoint Checkpoint = Publications.Peek();
+                    Checkpoint.Witness.Retired = true;
                     Gui.RollbackPublication();
-                    PublicationCheckpoint Checkpoint = Publications.Pop();
+                    Publications.Pop();
+                    PruneEntityWitnesses();
                     Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
                     Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
                     return new string[0];
@@ -299,6 +366,29 @@ namespace Carbon.Plugins
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
                 if (Code == 20) return Gui.Query(Fields);
                 if (Code == 21) return Gui.Mutate(Fields, Id);
+                if (Code == 34) {
+                    if (Fields.Length != 1) throw new FacadeException("invalid Entity lookup arguments");
+                    if (World.Entities == null) throw new FacadeException("Entity world is unavailable");
+                    return World.Entities.Lookup(this, Fields[0]);
+                }
+                if (Code == 35) {
+                    if (Fields.Length != 3) throw new FacadeException("invalid Entity read arguments");
+                    if (World.Entities == null) throw new FacadeException("Entity world is unavailable");
+                    return World.Entities.Read(this, Fields[0], Fields[1], Fields[2]);
+                }
+                if (Code == 36 || Code == 38) {
+                    if (!Active || !World.IsActive(this) || Disposed)
+                        throw new FacadeException("Discovery requires a committed domain");
+                    if (World.Discovery == null) throw new FacadeException("DiscoveryUnavailable");
+                    if (Code == 36) return World.Discovery.Submit(this, Fields);
+                    if (Fields.Length != 1) throw new FacadeException("InvalidDiscovery");
+                    return World.Discovery.Admit(this, Fields[0]);
+                }
+                if (Code == 37) {
+                    if (Fields.Length != 1) throw new FacadeException("InvalidDiscovery");
+                    if (World.Discovery != null) World.Discovery.Release(this, Fields[0]);
+                    return new string[0];
+                }
                 int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 :
                     Code == 25 ? 1 : Code == 26 ? 3 : (Code == 27 || Code == 29) ? 4 : (Code == 28 || Code == 30) ? 5 :
                     (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
@@ -422,7 +512,9 @@ namespace Carbon.Plugins
                 if (Code==31 || Code==32 || Code==33) return StorageCall(ExpectedDomainLifetime,Code,Request,Length);
                 try {
                     World.Players.CheckOwner();
-                    if (Disposed || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;
+                    // Private release remains legal during native domain/VM
+                    // teardown after the exact managed session has retired.
+                    if ((Disposed && Code != 37) || ExpectedDomainLifetime != (ulong)DomainLifetimeId || Length > 16384 || Capacity != 262144) return 1;
                     var Bytes = new byte[Length]; if (Length != 0) Marshal.Copy(Request, Bytes, 0, (int)Length);
                     var Result = FacadePolicy.Pack(Operation(Code, FacadePolicy.Unpack(Bytes)));
                     if (Result.Length > Capacity) throw new FacadeException("host response exceeds bound");

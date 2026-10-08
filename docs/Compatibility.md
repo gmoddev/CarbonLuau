@@ -676,43 +676,89 @@ Later Player phases require their own
 applicable Windows/Linux/native/live/sanitizer qualification.
 
 
-## World/Entity Foundation 1 architecture gate
+## World/Entity Foundation 1 read-only runtime qualification
 
-[D20](Invariants.md#d20--worldentity-foundation-1) adopts a design-only read-safe
-world/entity baseline. [WorldEntityFoundation1.md](WorldEntityFoundation1.md)
-owns the host research, exact-lifetime model, bounded surface and implementation
-gates. No production `Workspace` or `Entity` API exists merely because the
-architecture is adopted.
+[D20](Invariants.md#d20--worldentity-foundation-1) retains the future read-safe
+world/entity contract. [WorldEntityFoundation1.md](WorldEntityFoundation1.md)
+owns its supporting design. [Entity-1A validation](WorldEntityFoundation1A-Validation.md)
+qualifies a **private** startup-observed, full-Spawn lifetime substrate on Rust
+build `25653776`, protocol `2634.289.1`, Linux Carbon `2.0.261.0` at
+`c74c4ca`, and Windows Carbon `2.0.262.0` at `8a81d70` with the recorded
+binary/hook pins. Changed host builds, patches or hook-component variants are
+requalification-gated. [Entity-1B validation](WorldEntityFoundation1B-Validation.md)
+qualifies the exact keyed, read-only `Workspace`/`Entity` runtime on these hosts.
+Entity-1C assigns public metadata to development scripting API
+`0.6.0-experimental`; package v0.5.0 remains the latest published package and
+does not contain Workspace/Entity. [Entity-1C](WorldEntityFoundation1C.md)
+owns combined lifecycle, scale, tooling and public-closure evidence.
 
-**HOST-PRIMITIVE-GATED / DEFERRED:** Entity-1A is BLOCKED by the missing supported
-authoritative incarnation/retirement proof. The [investigation](WorldEntityLifetimeInvestigation.md)
-records bypassed registry-transition hooks and kill veto, but no demonstrated
-same-object pooled reincarnation. Snapshot heuristics cannot close this gate.
-Only after the gate closes may the Entity-1A through Entity-1C sequence proceed.
-Entity-1B may expose `game:GetService("Workspace")`,
+The initial Carbon plugin batch installs the exact-qualified observer before
+restoration. First install into a running server, or full plugin unload/reload
+after a qualified startup, leaves private Entity admission unavailable until
+server restart. Ordinary VM/domain replacement preserves a continuous observer
+while old facade authority stales. Old snapshot-only and prefix-only failures
+remain documented in the [historical investigation](WorldEntityLifetimeInvestigation.md),
+[failed-Spawn probe](WorldEntitySpawnEpochProbe.md) and
+[base-completion follow-up](WorldEntityCompletionFenceInvestigation.md).
+Entity-1B implements `game:GetService("Workspace")`,
 `Workspace:GetEntityById(Id: string) -> Entity?`, and read-only
-`Entity.Id`, `Entity.Prefab` and `Entity.Position` only after the exact
-target proves keyed registry lookup, exact BaseEntity lifetime validation,
-prefab capture/bounds, root world-space Transform reads and lifecycle behavior.
-The starting feature-sensitive host target is Rust Dedicated Server app
-`258550`, build `25353106`, with Carbon `2.0.259`, protocol
-`2026.09.03.0`, revision `21063e8490adf412101bcc7d1cfe9d6280f61e80`,
-matching the later Player/inventory evidence. Current upstream Rust metadata has
-advanced beyond that build; current upstream source/docs are research input, not
-a substitute for target-build qualification.
+`Entity.Id`, `Entity.Prefab` and `Entity.Position` under the exact
+target's keyed registry lookup, exact BaseEntity lifetime validation,
+prefab capture/bounds and root world-space Transform reads. Combined
+cross-domain/provider/reload scale and public metadata/docs are Entity-1C
+qualification gates, not 1B evidence.
+The earlier build `25353106` / Carbon `2.0.259` was historical Player/inventory
+evidence, not the current Entity-1A host target.
+
+Private Foundation 2A's subsequent implementation/qualification is routed through
+[WorldEntityFoundation2A.md](WorldEntityFoundation2A.md). It closes catalog
+activation and capped no-wait current-position observation on exact pinned
+Windows/Linux hosts, using supported owner-thread structural-storage affinity.
+It does not claim universal external-writer serialization, an atomic pose/world
+snapshot, or a new engine storage lease. The following research-status paragraphs
+record the earlier gates, superseded only within Foundation 2A's measured scope.
+[Discovery-2B](WorldEntityFoundation2B.md) separately records the public
+`Workspace:GetEntitiesInRadiusAsync` binding, callback admission and development
+API `0.6.0-experimental` evidence. It does not change package `0.5.0`, the exact
+host envelope, initial-startup observer requirement or Entity lifetime rules.
+The combined final closure and v0.6.0 readiness are recorded in
+[Foundation 2C](WorldEntityFoundation2C.md), including exact final workflow,
+scale, live, sanitizer, bundle and clean-install results. Its qualification
+does not broaden host support, close historical client/Windows deferrals or
+create a package release.
+The research-status statements below remain historical, not public phase gates.
 
 Foundation 1 intentionally has no collection query, radius query, lifecycle
 Signal, Spawn or Destroy compatibility promise. A result limit does not authorize
-an O(all server entities) scan, and D20 establishes no CarbonLuau world index.
+an unbounded synchronous O(all server entities) scan, and D20 establishes no
+CarbonLuau world index. The [Foundation 2 async-traversal research](WorldEntityAsyncTraversalInvestigation.md)
+permits future complete traversal spread across hard-bounded turns, with separate
+memory/result/total-work/deadline limits and explicit mutation/encounter semantics.
+Its [selected lifetime catalog](WorldEntityCatalogInvestigation.md) now has
+opt-in direct completed-Spawn/retirement model integration with Windows/Linux
+tests. Production activation/live reconciliation and bounded current-position
+acquisition remain unqualified; the
+[native ordering investigation](WorldEntityPositionOrderingInvestigation.md)
+records fixed fast paths without claiming a serialized read interval. The
+[position-alternatives continuation](WorldEntityPositionAlternativesInvestigation.md)
+adds cache/batch review and Windows/Linux phase observations without qualifying
+a universal snapshot phase or bounded Transform-job admission/read primitive.
+Pending work must not be hidden through candidate deferral/partial success. No
+async discovery API is implemented or added to a compatibility identity.
+The later [observation-boundary continuation](WorldEntityObservationBoundaryInvestigation.md)
+adopts I12's practical separation of hard lifetime/memory/resource safety,
+CarbonLuau-owned ordering and trusted external observation races. It adds new
+Windows/Linux read-only access-wrapper mapping, not a qualified position producer
+or traversal. A capped no-wait copy remains gated on its structural-storage borrow;
+universal external-writer freshness serialization is not the new gate.
 Future collection/event APIs require explicit inspected-work/result/queue bounds.
 Future Spawn/Destroy/Position mutations require their own exact-host evidence and
 Player-1F-C's corrected committed-only mutation predicate.
 
-D20 architecture adoption changes no package version, scripting API identity,
-native ABI, provider protocol, package schema or Luau revision. The published
-0.4.0 line is unchanged. An implemented additive World/Entity surface may later
-be planned for `0.5.0-experimental`, but no such identity is assigned until
-Entity-1C public closure.
+D20's Entity-1A/1B qualification did not change identities. Entity-1C assigns
+the development scripting API `0.6.0-experimental` without changing published
+package `0.5.0`, native ABI `1.5`, provider protocol `1.2`, package schema `1`
+or the Luau pin. The published `0.5.0-experimental` API does not include Entity.
 
 ## Persistence Foundation 1 qualification
 

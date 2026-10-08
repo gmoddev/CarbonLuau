@@ -1,5 +1,8 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures)
 $ErrorActionPreference = 'Stop'
+if ($IncludeDiscoveryFixtures -and $IncludeDiscovery2BFixtures) {
+    throw '[CarbonLuau:Package] Select either private Discovery-2A or public Discovery-2B fixtures, never both'
+}
 . (Join-Path $PSScriptRoot 'Get-CoreSources.ps1')
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -40,6 +43,18 @@ try {
         }
         if ($IncludePlayer1FBFixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.Player1FBFixtures.cs') 'CarbonLuau.Player1FBFixtures.cs'
+        }
+        if ($IncludeEntity1AFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityPrivateFixtures.cs') 'CarbonLuau.EntityPrivateFixtures.cs'
+        }
+        if ($IncludeEntity1BFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityReadFixtures.cs') 'CarbonLuau.EntityReadFixtures.cs'
+        }
+        if ($IncludeDiscoveryFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityDiscoveryFixtures.cs') 'CarbonLuau.EntityDiscoveryFixtures.cs'
+        }
+        if ($IncludeDiscovery2BFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.DiscoveryPublicFixtures.cs') 'CarbonLuau.DiscoveryPublicFixtures.cs'
         }
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }

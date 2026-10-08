@@ -8,6 +8,7 @@ Vm::~Vm()
         for (const auto& Item : Domains) if (Item) {
             Domain& Value = *Item;
             ClearStorage(*this, Value);
+            ClearDiscovery(*this, Value);
             for (const auto& Work : Value.Queue) lua_unref(State, Work.Reference);
             for (const auto& Work : Value.PendingCallbacks) lua_unref(State, Work.Reference);
             for (const auto& Entry : Value.Modules) if (Entry.second.Loaded) lua_unref(State, Entry.second.Reference);
@@ -18,6 +19,7 @@ Vm::~Vm()
         }
         Domains.clear();
         if (GuiValueEqual != LUA_NOREF) lua_unref(State, GuiValueEqual);
+        if (EntityIdentities != LUA_NOREF) lua_unref(State, EntityIdentities);
         if (Reference != LUA_NOREF) lua_unref(State, Reference);
         lua_close(State);
     }
@@ -65,6 +67,7 @@ void ReleaseDomain(Vm& Runtime, Domain& Value)
 {
     if (!Value.Alive) return;
     ClearStorage(Runtime, Value);
+    ClearDiscovery(Runtime, Value);
     Value.Alive = false; Value.Active = false;
     for (auto& Reservation : Value.StorageReservations) {
         if (Reservation) { --Runtime.StorageReserved; Reservation=0; }

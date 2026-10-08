@@ -1,6 +1,8 @@
 # Scripting compatibility and limits
 
-Published v0.5.0 identity: `CarbonLuau`, API `0.5.0-experimental`, status `Experimental`.
+Latest published package v0.5.0 uses API `0.5.0-experimental`.
+The development API identity is `CarbonLuau 0.6.0-experimental`, status `Experimental`;
+the new Workspace/Entity surface has no package 0.6.0 release yet.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
 `carbonluau.status`. This identity is distinct from package `0.5.0`, native ABI
 `1.5`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
@@ -14,6 +16,33 @@ records Query and derived-index closure. ABI 1.5 is required by the additive
 completion ingress. [Release mapping](../Release.md)
 and [the 1B record](../PersistenceFoundation1B.md) separate identity from evidence.
 Existing APIs keep their historical introduction versions and qualification.
+
+Read-only `Workspace:GetEntityById` and `Entity.Id`, `Prefab`, `Position`
+begin in development API `0.6.0-experimental`. This is an exact-host feature:
+Rust build `25653776`, protocol `2634.289.1`, Windows Carbon `2.0.262.0`
+(`8a81d70`), Linux Carbon `2.0.261.0` (`c74c4ca`), Harmony `2.4.2.0`,
+plus the pinned assembly/hook topology in the [Entity-1A record](../WorldEntityFoundation1A-Validation.md).
+First installation after world startup and full CarbonLuau plugin unload/reload
+require a server restart before Entity lookup; an unqualified world fails with
+a controlled error, not `nil`. Root/addon replacement and fatal VM recovery
+retain the continuous host observer while their old facades stale. Host drift
+fails closed pending requalification. See the [Workspace reference](Services/Workspace.md).
+
+Discovery-2B's selected `Workspace:GetEntitiesInRadiusAsync` contract targets the
+same development `0.6.0-experimental` identity. The mandatory callback is third;
+optional [EntityDiscoveryOptions](Types/EntityDiscoveryOptions.md) is last, with
+exact full Prefab and integer Limit 1..256 (default 256). Submission is committed-only;
+completion is a fresh bounded owner-thread admission with every result validated.
+Success includes an empty array; whole-query failure supplies nil array and a
+controlled error; retirement silently discards completion. Encounter positions
+and accepted birth watermark do not form an atomic world snapshot. See the
+[discovery guide](Discovery.md) and [public qualification](../WorldEntityFoundation2B.md).
+The [private 2A record](../WorldEntityFoundation2A.md) owns the additional pinned
+Unity images; its evidence does not qualify public callback admission. The same
+startup/restart requirements apply. Package `0.5.0`, ABI `1.5`, provider protocol,
+schema and Luau pin remain unchanged; no release is implied.
+Combined closure and final release-readiness evidence are owned by
+[Foundation 2C](../WorldEntityFoundation2C.md).
 
 [Persistence Foundation 2](../PersistenceFoundation2.md) defines structured
 Query for the same `0.5.0-experimental` API. Optional field-name hints in
@@ -102,6 +131,12 @@ retrying. Neither timeout nor recovery provides rollback or exactly-once deliver
 | Resource | Bound |
 |---|---|
 | Connected-player population / snapshot | 1024; larger host population fails closed |
+| Entity ID / Prefab snapshot | Canonical 1–20 digit nonzero UInt64 string / 512 UTF-8 bytes, no NUL |
+| Workspace lookup | One keyed registry lookup plus constant validation; no world scan or index |
+| Discovery-2B: catalog / total raw slots per request | 262,144; qualified on the exact pinned Windows/Linux hosts |
+| Discovery-2B contract: pending requests global / domain lifetime | 8 / 2, including completed-undelivered work |
+| Discovery-2B contract: shared scan/delivery units / raw slots per frame | 1,024 / 1,024 across all queries |
+| Discovery-2B contract: result Limit / absolute deadline | Integer 1..256, default 256 / 120 seconds including completion queue |
 | Player name / user ID | 128 UTF-8 bytes / 20 ASCII decimal digits |
 | Vector3 components | Finite System.Single range; no clamping |
 | Item short name / physical inventory entries | 1..128 lowercase ASCII bytes / 128 direct main+belt+wear entries |
