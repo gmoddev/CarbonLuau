@@ -5,6 +5,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using UnityEngine;
 
@@ -412,6 +414,125 @@ S.W=W; S.Run=require('cold'); S.ColdAttempted=true
             DiscoveryPublicReceipt("unexpected-pump-ondestroy-zero-pending-runtime-and-roots-cleared");
         }
 
+        private static byte[] DiscoveryClosurePackage(string Id, string Kind, string Source, bool Export = false)
+        {
+            string Dependencies = Kind == null ? "" : ",\"dependencies\":{\"required\":[" +
+                (Kind == "required" ? "\"closureowner\"" : "") + "],\"optional\":[" +
+                (Kind == "optional" ? "\"closureowner\"" : "") + "]}";
+            using (var Output = new MemoryStream()) {
+                using (var Archive = new ZipArchive(Output, ZipArchiveMode.Create, true)) {
+                    Action<string, string> Add = (Name, Text) => {
+                        using (var Writer = new StreamWriter(Archive.CreateEntry(Name).Open())) Writer.Write(Text);
+                    };
+                    Add("addon.json", "{\"schema\":1,\"id\":\"" + Id + "\",\"version\":\"1.0.0\"" + Dependencies +
+                        (Export ? ",\"publicModules\":[\"api\"]" : "") + "}");
+                    Add("init.luau", Source); Add("state.luau", "return {}");
+                    if (Export) Add("api.luau", "local W=game:GetService('Workspace'); return {Read=function() return 23 end," +
+                        "Borrowed=function() W:GetEntitiesInRadiusAsync(Vector3.new(0,6000,0),0,function() end) end}");
+                }
+                return Output.ToArray();
+            }
+        }
+
+        private void DiscoveryClosureProcess(AddonRegistry Registry)
+        {
+            for (int Index = 0; Index < 64 && Registry.HasPending; ++Index) Registry.ProcessOne();
+            RequireDiscoveryPublic(!Registry.HasPending, "closure addon graph did not converge");
+        }
+
+        private FacadeSession DiscoveryClosureSession(string[] Status)
+        {
+            RequireDiscoveryPublic(Status[0] == "OK" && Status[2] == "Active", "closure addon not Active: " + String.Join("|", Status));
+            foreach (FacadeSession Value in Gameplay.Sessions())
+                if (Value.DomainLifetimeId.ToString(CultureInfo.InvariantCulture) == Status[7]) return Value;
+            throw new InvalidOperationException("exact closure addon session missing");
+        }
+
+        private void DiscoveryClosureExecute(FacadeSession Session, string Source)
+        {
+            ExecutionResult Result = Native.DomainExecute(Session.FacadeVm, (ulong)Session.DomainLifetimeId,
+                "discovery2c.addon", Source, 100);
+            RequireDiscoveryPublic(Result.Status == RuntimeStatus.OK, "closure addon execution: " + Result.Error);
+        }
+
+        private void DiscoveryPublicAddonClosure()
+        {
+            DiscoveryPublicBaseline();
+            const string Consumer = "local S=require('state'); S.A=require('@closureowner/api'); " +
+                "assert(S.A.Read()==23 and not pcall(S.A.Borrowed)); task.defer(function() " +
+                "assert(S.A.Read()==23 and not pcall(S.A.Borrowed)) end)";
+            const string Query = "local S=require('state'); local W=game:GetService('Workspace'); " +
+                "for I=1,2 do W:GetEntitiesInRadiusAsync(Vector3.new(0,6000,0),0,function(E,R) " +
+                "assert(E and #E==0 and R==nil and S.A.Read()==23); S.Count=(S.Count or 0)+1 end) end";
+            using (var Registry = new AddonRegistry(Host, Native.HostLifetimeId)) {
+                object Provider = new object(), Consumers = new object();
+                string[] Owner = Registry.RegisterArchive(Provider, DiscoveryClosurePackage("closureowner", null, "return", true));
+                DiscoveryClosureProcess(Registry);
+                string[] Required = Registry.RegisterArchive(Consumers, DiscoveryClosurePackage("closurerequired", "required", Consumer));
+                string[] Optional = Registry.RegisterArchive(Consumers, DiscoveryClosurePackage("closureoptional", "optional", Consumer));
+                DiscoveryClosureProcess(Registry); DiscoveryPublicDrain(); DiscoveryPublicBaseline();
+                FacadeSession RequiredSession = DiscoveryClosureSession(Registry.Status(Consumers, Required[1]));
+                FacadeSession OptionalSession = DiscoveryClosureSession(Registry.Status(Consumers, Optional[1]));
+                DiscoveryClosureExecute(RequiredSession, Query); DiscoveryClosureExecute(OptionalSession, Query);
+                DiscoveryPublicReady();
+                RequireDiscoveryPublic(DiscoveryPublicPending() == 4, "addon ready captures lost before replacement");
+                RequireDiscoveryPublic(Registry.ReplaceArchive(Consumers, Required[1], DiscoveryClosurePackage("closurerequired", "required",
+                    Consumer + "; error('failed addon candidate')"))[0] == "OK", "failed addon replacement intake");
+                DiscoveryClosureProcess(Registry);
+                RequireDiscoveryPublic(ReferenceEquals(RequiredSession, DiscoveryClosureSession(Registry.Status(Consumers, Required[1]))) &&
+                    DiscoveryPublicPending() == 4, "failed addon replacement lost committed captures");
+                DiscoveryPublicDrain(); DiscoveryPublicBaseline();
+                DiscoveryClosureExecute(RequiredSession, "assert(require('state').Count==2)");
+                DiscoveryClosureExecute(OptionalSession, "assert(require('state').Count==2)");
+                DiscoveryPublicReceipt("failed-addon-preserves-ready-public-completions");
+                // One addon is scanning, the other has already completed. Both
+                // must release when required-dependency authority retires.
+                DiscoveryClosureExecute(RequiredSession, Query); DiscoveryPublicReady();
+                DiscoveryClosureExecute(RequiredSession, "assert(not pcall(function() " + Query + " end))");
+                DiscoveryClosureExecute(OptionalSession, Query);
+                RequireDiscoveryPublic(Registry.ReplaceArchive(Provider, Owner[1], DiscoveryClosurePackage("closureowner", null, "return", true))[0] == "OK",
+                    "dependency replacement intake"); DiscoveryClosureProcess(Registry);
+                RequireDiscoveryPublic(RequiredSession.Disposed && DiscoveryPublicPending() == 2 &&
+                    ReferenceEquals(OptionalSession, DiscoveryClosureSession(Registry.Status(Consumers, Optional[1]))) &&
+                    Registry.BindingStatus(Consumers, Optional[1], "closureowner")[1] == "stale", "dependency replacement retargeted old authority");
+                DiscoveryPublicReady(); DiscoveryPublicDrain(); DiscoveryPublicBaseline();
+                DiscoveryClosureExecute(OptionalSession, "local S=require('state'); assert(S.Count==4 and S.A.Read()==23); " +
+                    "assert(not addon:IsDependencyAvailable('closureowner') and not pcall(S.A.Borrowed)); " +
+                    "assert(not pcall(function() require('@closureowner/api') end))");
+                RequiredSession = DiscoveryClosureSession(Registry.Status(Consumers, Required[1]));
+                DiscoveryClosureExecute(RequiredSession, Query); DiscoveryPublicReady();
+                RequireDiscoveryPublic(Registry.UnloadProvider(Provider) == 1 && RequiredSession.Disposed &&
+                    Registry.Status(Consumers, Required[1])[2] == "Blocked" && DiscoveryPublicPending() == 0,
+                    "required provider loss failed to retire query captures");
+                RequireDiscoveryPublic(Registry.Status(Provider, Owner[1])[0] == "ERROR", "old provider token did not stale");
+                DiscoveryPublicDrain(); DiscoveryPublicReady(); DiscoveryPublicBaseline();
+                Owner = Registry.RegisterArchive(Provider, DiscoveryClosurePackage("closureowner", null, "return", true));
+                DiscoveryClosureProcess(Registry); DiscoveryPublicDrain();
+                RequiredSession = DiscoveryClosureSession(Registry.Status(Consumers, Required[1]));
+                RequireDiscoveryPublic(Registry.BindingStatus(Consumers, Optional[1], "closureowner")[1] == "stale", "optional restoration silently rebound");
+                DiscoveryClosureExecute(RequiredSession, "assert(addon:IsDependencyAvailable('closureowner'))");
+                DiscoveryClosureExecute(RequiredSession, Query); DiscoveryPublicReady(); DiscoveryPublicDrain(); DiscoveryPublicBaseline();
+                DiscoveryPublicReceipt("dependency-provider-loss-restoration-optional-no-rebind-retained-pure-value");
+                for (int Cycle = 0; Cycle < 4; ++Cycle) {
+                    DiscoveryClosureExecute(RequiredSession, Query);
+                    if ((Cycle & 1) == 0) DiscoveryPublicReady();
+                    RequireDiscoveryPublic(Registry.ReplaceArchive(Consumers, Required[1], DiscoveryClosurePackage("closurerequired", "required", Consumer))[0] == "OK",
+                        "repeated addon replacement intake"); DiscoveryClosureProcess(Registry);
+                    RequireDiscoveryPublic(RequiredSession.Disposed && DiscoveryPublicPending() == 0, "replacement retained captures");
+                    DiscoveryPublicReady(); DiscoveryPublicDrain(); DiscoveryPublicBaseline();
+                    RequiredSession = DiscoveryClosureSession(Registry.Status(Consumers, Required[1]));
+                }
+                DiscoveryClosureExecute(RequiredSession, Query); DiscoveryPublicReady();
+                DiscoveryClosureExecute(OptionalSession, Query);
+                RequireDiscoveryPublic(Registry.UnloadProvider(Consumers) == 2 && DiscoveryPublicPending() == 0,
+                    "consumer provider unload did not clear scanning/ready work");
+                DiscoveryPublicReady(); DiscoveryPublicDrain(); DiscoveryPublicBaseline();
+                DiscoveryPublicReceipt("repeated-addon-replacement-provider-unload-scanning-ready-no-replay");
+            }
+            RequireDiscoveryPublic(Host.DomainCount == 1, "closure addon teardown did not return to root only");
+            DiscoveryPublicBaseline();
+        }
+
         private void ExecuteDiscoveryPublicFixtures()
         {
             bool Success = false, Held = false;
@@ -476,6 +597,7 @@ S.W=W; S.Run=require('cold'); S.ColdAttempted=true
                 DiscoveryPublicQuery("default-257-fails", "P", "0", null, "assert(Entities==nil and Error=='DiscoveryResultLimit')");
                 foreach (BaseEntity Value in Scale) Value.Kill();
                 DiscoveryPublicRetirement();
+                DiscoveryPublicAddonClosure();
                 DiscoveryPublicCatalogLoss(); // Last query phase: production loss is sticky.
                 DiscoveryPublicPumpLoss(); // Terminal engine fault; no VM work may follow.
                 Success = true;

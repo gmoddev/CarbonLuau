@@ -122,6 +122,9 @@ def Main():
             "CHECK failed-root-preserves-ready-completion", "CHECK successful-root-cancels-scanning-and-ready-work",
             "CHECK internal-cancel-stable-error", "CHECK absolute-deadline-at-op38-injected-clock",
             "CHECK callback-fault-no-replay", "CHECK fresh-vm", "CHECK vm-fatal-ready-discard-fresh-authority",
+            "CHECK failed-addon-preserves-ready-public-completions",
+            "CHECK dependency-provider-loss-restoration-optional-no-rebind-retained-pure-value",
+            "CHECK repeated-addon-replacement-provider-unload-scanning-ready-no-replay",
             "CHECK catalog-loss-empty-ready-before-op38", "CHECK catalog-loss-scanning-live-callback-authority",
             "CHECK unexpected-pump-ondestroy-zero-pending-runtime-and-roots-cleared")
         if any("[CarbonLuau:DiscoveryPublicFixture] " + Marker not in Content for Marker in Markers) or "[CarbonLuau:DiscoveryPublicFixture] FAIL" in Content or "[CarbonLuau:EntityLifetime] Private startup observer qualified" not in Content:

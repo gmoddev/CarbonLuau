@@ -119,6 +119,112 @@ internal static class DiscoveryPublicTests
             foreach (var Result in Host.Drain()) Check(Result.Status == Runtime.RuntimeStatus.OK, "discovery callback: " + Result.Error);
         Check(!Host.HasReadyWork, "bounded drain finished");
     }
+    private static void Process(Runtime.AddonRegistry Registry)
+    {
+        for (int Index = 0; Index < 64 && Registry.HasPending; ++Index) Registry.ProcessOne();
+        Check(!Registry.HasPending, "closure graph work converged");
+    }
+    private static Runtime.FacadeSession Session(Runtime.FacadeWorld World, string[] Status)
+    {
+        Check(Status[0] == "OK" && Status[2] == "Active", "closure addon active: " + String.Join("|", Status));
+        foreach (var Value in World.Sessions())
+            if (Value.DomainLifetimeId.ToString(CultureInfo.InvariantCulture) == Status[7]) return Value;
+        throw new Exception("closure exact addon session missing");
+    }
+    private static void ExecuteDomain(Runtime.NativeRuntime Native, Runtime.FacadeSession Session, string Source)
+    {
+        var Result = Native.DomainExecute(Session.FacadeVm, (ulong)Session.DomainLifetimeId, "discovery.closure", Source, 100);
+        Check(Result.Status == Runtime.RuntimeStatus.OK, "closure domain execution: " + Result.Error);
+    }
+    private static byte[] ClosurePackage(string Id, string Kind, string Source, bool Export = false)
+    {
+        string Dependencies = Kind == null ? "" : ",\"dependencies\":{\"required\":[" +
+            (Kind == "required" ? "\"closureowner\"" : "") + "],\"optional\":[" +
+            (Kind == "optional" ? "\"closureowner\"" : "") + "]}";
+        return Package("{\"schema\":1,\"id\":\"" + Id + "\",\"version\":\"1.0.0\"" + Dependencies +
+            (Export ? ",\"publicModules\":[\"api\"]" : "") + "}", Source,
+            Export ? "local W=game:GetService('Workspace'); return {Read=function() return 23 end," +
+                "Borrowed=function() W:GetEntitiesInRadiusAsync(Vector3.new(0,0,0),1,function() end) end}" : null);
+    }
+    private static void RunAddonClosure(Runtime.ScriptHost Host, Runtime.NativeRuntime Native,
+        Runtime.FacadeWorld World, DiscoveryHost Discovery)
+    {
+        const string Consumer = "local A=require('@closureowner/api'); assert(A.Read()==23); " +
+            "assert(not pcall(A.Borrowed)); task.defer(function() assert(A.Read()==23 and not pcall(A.Borrowed)) end)";
+        const string Query = "local W=game:GetService('Workspace'); for I=1,2 do " +
+            "W:GetEntitiesInRadiusAsync(Vector3.new(0,0,0),1,function(E,R) assert(E and #E==2 and R==nil) end) end";
+        using (var Registry = new Runtime.AddonRegistry(Host, Native.HostLifetimeId)) {
+            object OwnerProvider = new object(), Consumers = new object();
+            string[] Owner = Registry.RegisterArchive(OwnerProvider, ClosurePackage("closureowner", null, "return", true));
+            Process(Registry);
+            string[] Required = Registry.RegisterArchive(Consumers, ClosurePackage("closurerequired", "required", Consumer));
+            string[] Optional = Registry.RegisterArchive(Consumers, ClosurePackage("closureoptional", "optional", Consumer));
+            Process(Registry); Drain(Host);
+            var RequiredSession = Session(World, Registry.Status(Consumers, Required[1]));
+            var OptionalSession = Session(World, Registry.Status(Consumers, Optional[1]));
+            Check(Discovery.Held.Count == 0, "public cold/provisional/foreign facade calls publish no query");
+            int First = Discovery.History.Count;
+            ExecuteDomain(Native, RequiredSession, Query); ExecuteDomain(Native, OptionalSession, Query);
+            Check(Discovery.Held.Count == 4 && Discovery.Ready(First) == Runtime.RuntimeStatus.OK &&
+                Discovery.Ready(First + 2) == Runtime.RuntimeStatus.OK, "two addon scanning and ready captures");
+            Check(Registry.ReplaceArchive(Consumers, Required[1], ClosurePackage("closurerequired", "required",
+                Consumer + "; error('failed candidate')"))[0] == "OK", "failed replacement accepted for qualification");
+            Process(Registry);
+            Check(ReferenceEquals(RequiredSession, Session(World, Registry.Status(Consumers, Required[1]))) &&
+                Discovery.Held.Count == 4, "failed addon replacement preserves all old query captures");
+            Check(Registry.ReplaceArchive(Consumers, Required[1], ClosurePackage("closurerequired", "required", Consumer))[0] == "OK",
+                "successful addon replacement accepted");
+            Process(Registry); Drain(Host);
+            Check(RequiredSession.Disposed && Discovery.Held.Count == 1 &&
+                Discovery.Ready(First) == Runtime.RuntimeStatus.INVALID_ARGUMENT, "successful addon replacement discards its ready/scanning work only");
+            Check(Discovery.Ready(First + 3) == Runtime.RuntimeStatus.OK, "unrelated optional scanning request survives"); Drain(Host);
+            RequiredSession = Session(World, Registry.Status(Consumers, Required[1]));
+            First = Discovery.History.Count;
+            ExecuteDomain(Native, RequiredSession, Query); ExecuteDomain(Native, OptionalSession, Query);
+            Check(Discovery.Ready(First) == Runtime.RuntimeStatus.OK && Discovery.Ready(First + 2) == Runtime.RuntimeStatus.OK,
+                "dependency replacement barrier");
+            Check(Registry.ReplaceArchive(OwnerProvider, Owner[1], ClosurePackage("closureowner", null, "return", true))[0] == "OK",
+                "same-provider dependency replacement accepted");
+            Process(Registry); Drain(Host);
+            Check(RequiredSession.Disposed && !ReferenceEquals(RequiredSession, Session(World, Registry.Status(Consumers, Required[1]))) &&
+                ReferenceEquals(OptionalSession, Session(World, Registry.Status(Consumers, Optional[1]))) &&
+                Registry.BindingStatus(Consumers, Optional[1], "closureowner")[1] == "stale" && Discovery.Held.Count == 1,
+                "required reconstructs; optional exact binding stays stale while its own query survives");
+            ExecuteDomain(Native, OptionalSession, "assert(not addon:IsDependencyAvailable('closureowner')); " +
+                "assert(not pcall(function() require('@closureowner/api') end))");
+            Check(Discovery.Ready(First + 3) == Runtime.RuntimeStatus.OK, "optional completion remains its own authority"); Drain(Host);
+            RequiredSession = Session(World, Registry.Status(Consumers, Required[1]));
+            First = Discovery.History.Count; ExecuteDomain(Native, RequiredSession, Query);
+            Check(Discovery.Ready(First) == Runtime.RuntimeStatus.OK, "provider loss with ready and scanning work");
+            Check(Registry.UnloadProvider(OwnerProvider) == 1 && RequiredSession.Disposed && Discovery.Held.Count == 0 &&
+                Registry.Status(Consumers, Required[1])[2] == "Blocked", "required dependency loss retires pending query authority");
+            Check(Registry.Status(OwnerProvider, Owner[1])[0] == "ERROR", "old provider token rejects after unload");
+            Owner = Registry.RegisterArchive(OwnerProvider, ClosurePackage("closureowner", null, "return", true));
+            Process(Registry); Drain(Host);
+            RequiredSession = Session(World, Registry.Status(Consumers, Required[1]));
+            ExecuteDomain(Native, RequiredSession, "assert(addon:IsDependencyAvailable('closureowner')); " +
+                "assert(require('@closureowner/api').Read()==23)");
+            Check(Registry.BindingStatus(Consumers, Optional[1], "closureowner")[1] == "stale",
+                "explicit provider restoration cannot hot-rebind optional consumer");
+            for (int Cycle = 0; Cycle < 8; ++Cycle) {
+                First = Discovery.History.Count; ExecuteDomain(Native, RequiredSession, Query);
+                Check(Discovery.Ready(First) == Runtime.RuntimeStatus.OK, "repeated replacement ready barrier");
+                Check(Registry.ReplaceArchive(Consumers, Required[1], ClosurePackage("closurerequired", "required", Consumer))[0] == "OK",
+                    "repeated replacement accepted"); Process(Registry); Drain(Host);
+                Check(RequiredSession.Disposed && Discovery.Held.Count == 0 &&
+                    Discovery.Ready(First) == Runtime.RuntimeStatus.INVALID_ARGUMENT, "repeated retirement releases all captures without replay");
+                RequiredSession = Session(World, Registry.Status(Consumers, Required[1]));
+            }
+            First = Discovery.History.Count; ExecuteDomain(Native, RequiredSession, Query);
+            Check(Discovery.Ready(First) == Runtime.RuntimeStatus.OK && Registry.UnloadProvider(Consumers) == 2 &&
+                Discovery.Held.Count == 0, "consumer provider unload clears ready/scanning work");
+            Drain(Host); Check(Discovery.Ready(First) == Runtime.RuntimeStatus.INVALID_ARGUMENT, "late provider readiness rejects");
+        }
+        Check(Discovery.Held.Count == 0 && Host.DomainCount == 1 && Host.SchedulerSnapshot.Queued == 0,
+            "combined addon/provider closure converges to root-only baseline");
+        Console.WriteLine("[CarbonLuau:DiscoveryClosure] PASS failed/successful/repeated addon replacement, exact shared modules, " +
+            "required loss/restoration, optional no-rebind, provider unload and zero retained captures");
+    }
     private static void RunExample(Runtime.ScriptHost Host, DiscoveryHost Discovery)
     {
         int Start = Discovery.History.Count, Fetches = Discovery.Fetches;
@@ -292,6 +398,7 @@ internal static class DiscoveryPublicTests
                         Check(Discovery.Fetches == PriorFetches && Discovery.Ready(PendingStart) == Runtime.RuntimeStatus.INVALID_ARGUMENT,
                             "retired addon readiness/callback cannot replay");
                     }
+                    RunAddonClosure(Host, Native, World, Discovery);
                     RunExample(Host, Discovery);
                     RunStress(Host, Discovery);
                     Execute(Host, "game:GetService('Workspace'):GetEntitiesInRadiusAsync(Vector3.new(0,0,0),1,function() error('ordinary discovery callback failure') end)");
