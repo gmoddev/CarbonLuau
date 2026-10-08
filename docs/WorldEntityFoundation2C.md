@@ -1,6 +1,13 @@
 # World/Entity Foundation 2C: final closure and v0.6.0 readiness
 
-Qualification date: 2026-10-08. Final hosted qualification is pending.
+**WORLD/ENTITY FOUNDATION 2 FINAL PASS — v0.6.0 RELEASE READY**
+
+Qualification date: 2026-10-08. Final qualification source:
+`4444d25f987a3b86e59148a41485d7c31dc053c0`. All four required source workflows
+completed successfully. The evidence-only commit carrying the completed ledger
+must also finish its automatic workflows before task handoff; their exact HEAD
+and results are checked and reported separately, without treating running work
+as PASS.
 Starting evidence HEAD: `465dcc167ae2aab899006e9734981764cd008f93`.
 Qualified production implementation: `79f0ddb38b8414007761a74bd7472525c9824516`.
 The first closure fixture commit is `55a7a34c841e214f38ca08ee8c43c30f158162b8`.
@@ -257,6 +264,48 @@ completed successfully: [validation](https://github.com/gmoddev/CarbonLuau/actio
 The separately path-filtered tooling-baseline workflow had passed the unchanged
 contract at production revision 79f0ddb; final closure dispatches it explicitly.
 
-Final closure source/evidence commits, completed workflow URLs, bundle/install
-results and exact tested HEAD are recorded here after those gates finish.
-Until then this record makes no final PASS or publication-readiness verdict.
+The first closure fixture commit `55a7a34c841e214f38ca08ee8c43c30f158162b8`
+also completed [full validation](https://github.com/gmoddev/CarbonLuau/actions/runs/37743063710)
+and [tooling](https://github.com/gmoddev/CarbonLuau/actions/runs/37743063712).
+Final qualification source `4444d25f987a3b86e59148a41485d7c31dc053c0` adds
+maximum-catalog churn, mandatory hosted scale coverage, bundle documentation
+correction, extracted-content assertions and release planning. Completed gates:
+
+| Workflow | Completed result |
+|---|---|
+| [CarbonLuau validation](https://github.com/gmoddev/CarbonLuau/actions/runs/37744910348) | PASS: Windows 23/23 native, Linux 24/24 native, full runtime/worker/loader regressions, maximum catalog, examples, deterministic bundles and clean install |
+| Same workflow, sanitizer job | PASS: 24/24 ASan/UBSan/leak lifecycle/fault tests; no new suppression |
+| [Tooling Foundations A/B](https://github.com/gmoddev/CarbonLuau/actions/runs/37744910364) | PASS on Windows/Linux/macOS; macOS tooling is not server support |
+| [Tooling baseline contracts](https://github.com/gmoddev/CarbonLuau/actions/runs/37744910488) | PASS, explicitly dispatched for this exact HEAD |
+| [Documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/37744910354) | PASS |
+
+Hosted generated API JSON equals the canonical checked-in catalog. The actual
+generated `.d.luau` contains `EntityDiscoveryOptions = {Prefab: string?, Limit:
+number?}` and `GetEntitiesInRadiusAsync(self, Position, Radius, Callback,
+Options?)` with the exact public types; there is no variadic public signature.
+Hosted committed-source dry-run bundle hashes are Windows
+`82ad2721620d9e42a11dbccf160bfbb8bfd744f1c4dfb91f5cbaf6f354a9a47d`
+and Linux `4c79fc1b256e4cba2a7109bfcf6ca1471ddf04a196e74ed5b19998acad02d83e`.
+They are development qualification artifacts, not a published v0.5 replacement.
+
+Local receipt integrity, relative to the evidence directories above:
+
+| Receipt | SHA-256 |
+|---|---|
+| Windows `windows-native-final.log` | `1a49cc429858f99cc5e06344c48e9d8c7cabd765e6369c6458e755a00e938128` |
+| Windows `windows-runtime-final.log` | `4fb234e7d86994b41693bc5a755faaa9c8dbb3720d34c07becaea52b23964071` |
+| Windows `windows-maximum-final.log` | `b08be36a2b718049f4152c8fc67731d280a43254cd7d9416a46606e4506eea67` |
+| Windows `windows-package-final.log` | `f85cf7416b8562356f8e81926198e664f4063f2f42e7b002de3f502b54cc9da0` |
+| Linux `linux-runtime-complete.log` | `b536c61e6fccf77214c828e7347c878c16fccfd653b9c61238c6530518cec6e6` |
+| Linux `linux-maximum-final.log` | `74d567fff92a88242843a4d40a82a30fd7452da664a4c2742d7956617ddac236` |
+| Linux `linux-package-final.log` | `3058a3aee9448babc4d657a180d30c99befa1496a301466d57e3b3ddb93e0a05` |
+
+No Foundation 2 gate or separate server-release blocker remains. Publication
+still requires the deliberate identity/provenance/release procedure above,
+not another discovery design. Historical negative evidence and qualification
+deferrals are preserved. All task-owned servers, compiler/storage workers and
+containers exited; no fixture port remains open. Reusable evidence/build caches
+are retained, with no credentials, binaries or databases committed. The closure
+is pushed on `main` with GitHub no-reply author/committer metadata; tracked
+worktree cleanliness/synchronization and the final evidence HEAD workflows are
+confirmed at task handoff. No v0.6.0 release/tag or later feature was started.

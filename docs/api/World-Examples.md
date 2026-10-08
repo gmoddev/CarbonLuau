@@ -13,3 +13,11 @@ operational error, not `nil`.
 
 These examples only read current Rust world state. They do not Spawn, Destroy,
 enumerate, subscribe to entity events or persist `Entity.Id` as durable identity.
+
+For bounded asynchronous radius discovery, run the
+[discovery example](../../examples/world/discovery/init.luau) and follow the
+[discovery guide](Discovery.md). It submits from deferred committed execution,
+uses an exact full Prefab and Limit, and handles both submission rejection and
+later callback failure. It does not create entities or assume matching entities
+exist. [Foundation 2C](../WorldEntityFoundation2C.md) owns combined qualification
+and release readiness for these four world examples.
