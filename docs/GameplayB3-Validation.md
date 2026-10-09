@@ -1,6 +1,8 @@
 # Gameplay B3: EntityDestroyed qualification
 
 Starting source: `d3e464ad4405f791182bbc6e5bdb5a2924ce0b57`, clean `main`.
+Implementation/evidence and qualified production source:
+`12ebee77c90529aed84c2cba9296f89918e03e40`.
 Status: Windows/Linux live fixtures, full native/managed regressions,
 sanitizers, final tooling/LSP and deterministic production packaging pass. A later exact-host
 never-active native-deletion negative exposed missing cancellation coverage.
@@ -9,8 +11,13 @@ live probes, including the previously failing never-active case. A separately
 pinned pool-admission fence covers world retirement without Unity invalidity and
 passes controlled real-pool Windows/Linux qualification. All eight final
 three-source host modes pass on both platforms, including off-thread rejection
-and teardown. Final-source hosted CI/documentation and commit synchronization
-remain pending. Dedicated B3 allocation-fault reruns and refreshed full
+and teardown. Implementation/evidence is committed, pushed and synchronized;
+final-source hosted core validation awaits a fixture-only corrected rerun. The
+first core run failed Ubuntu's persistence-adapter compile because its isolated
+stub lacked `StopEntityDestroyedSource`; Windows was fail-fast cancelled. Hosted
+tooling on Windows, Linux and macOS, core sanitizer job, baseline and documentation
+deployment pass. The no-op fixture correction and focused Windows/Linux tests pass.
+Dedicated B3 allocation-fault reruns and refreshed full
 managed suites pass. Final production clean-bundle execution passes on both hosts.
 This is not a completed overall PASS record yet. No release or tag is created.
 Development API remains `0.6.5-experimental`; package remains `0.5.0`.
@@ -222,7 +229,9 @@ Preliminary live fixture package SHA256, before the native coverage correction:
 | Final three-source normal/no-replay/watch-byte/watch-count/depth | PASS fresh Windows/Linux host runs; exact receipts below |
 | Final off-thread source rejection | PASS Windows/Linux injected owner-thread violation fails the source closed |
 | Final full source teardown | PASS Windows/Linux zero held watches, slots/text/pending accounting; disposable hosts stopped and prior D20 state restored |
-| Final-source hosted CI/documentation | Pending source commit and final runs |
+| Final-source hosted core validation CI | First run Ubuntu persistence test-fixture compile failure; Windows cancelled, sanitizer PASS; fixture-only corrected rerun pending |
+| Final-source hosted tooling CI | PASS Windows/Linux/macOS; links below |
+| Final-source hosted baseline/documentation | PASS on tested implementation commit; links below |
 
 Both preliminary live fixtures exercise actual vetoed/completed Kill, direct alternate
 Terminate without IsDestroyed, recursive same-entity Kill, registry churn,
@@ -424,6 +433,33 @@ introduction and are not in published v0.5.0. The frozen v0.6.0 candidate's evid
 does not qualify this feature. No release/tag, damage/killer/inventory API, loot
 policy or generic hook is authorized.
 
-Implementation/evidence commit, final tested SHA and hosted URLs will be recorded
-after required gates pass. B2 remains a separate EntityDied task: cause-independent
-removal proves neither a death transition nor killer attribution.
+Implementation/evidence commit and qualified production SHA are
+`12ebee77c90529aed84c2cba9296f89918e03e40`, pushed to `main`. Author and committer
+passed the configured GitHub no-reply guard. The tracked tree was clean and local
+`main` synchronized with `origin/main` immediately after that push. No disposable
+Rust server or orphaned task worker remained on either Windows or Linux. This
+subsequent test-fixture/evidence update does not change the qualified production
+source. The final repository qualification SHA will include that correction and
+be recorded after the required hosted rerun passes.
+
+| Hosted final-source gate | Run / current result |
+|---|---|
+| Initial Windows/Linux validation | [37909458868](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458868) / FAILED Ubuntu CompilePersistenceAdapter `CS0103`; Windows fail-fast cancelled; sanitizer PASS |
+| Corrected final Windows/Linux validation | Pending test-fixture/evidence commit and hosted rerun |
+| Tooling A/B | [37909458865](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458865) / PASS Windows/Linux/macOS |
+| Baseline | [37909458922](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458922) / PASS |
+| Documentation deployment | [37909458932](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458932) / PASS |
+
+Overall B3 PASS remains pending the core validation result. No release, tag or
+identity change accompanies this implementation or evidence closure. B2 remains
+a separate EntityDied task: cause-independent removal proves neither a death
+transition nor killer attribution.
+
+The initial core failure is preserved rather than reported as a passing run.
+Only `tests/persistence-adapter/CarbonStubs.cs` required correction: that isolated
+fixture links the main managed source but not the Rust/Carbon observers, so its
+documented teardown no-op supplies `StopEntityDestroyedSource` without production
+behavior. Focused Windows/Linux adapter builds and real-VM/worker teardown tests
+pass with zero reservations, VMs, callback roots, native mappings or task threads.
+No production source changed; the exact-host eight-mode evidence remains valid
+for production commit `12ebee77c90529aed84c2cba9296f89918e03e40`.
