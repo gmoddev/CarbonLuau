@@ -213,4 +213,13 @@ Their exact current Windows/Linux source adapters require the pinned Rust/Carbon
 tuple in [Gameplay A evidence](../GameplayFoundationA-Validation.md). Unknown
 host/patch drift fails closed. Authenticated Steam/client traces remain
 unqualified; constructed exact-host server tests and synthetic VM tests are
-explicitly labelled separately. No Entity or inventory event bus is exposed.
+explicitly labelled separately. No generic Entity or inventory event bus is exposed.
+
+Gameplay B1 adds `Workspace.EntitySpawned` under the same development identity.
+It reports only qualified future full-Spawn completions, with original-lifetime
+revalidation before callback admission and no network-ID retarget or startup
+replay. It shares the Player lifecycle producer/fanout/queue/retention envelopes,
+not a separate budget. Overload drops are diagnosed and never retried. The D20
+continuous-observer, pinned-host and restart requirements remain mandatory.
+See [B1 qualification](../GameplayB1-Validation.md) for numeric bounds and
+separately labelled live, model, VM, sanitizer and CI evidence.

@@ -2,7 +2,8 @@
 
 Current development source targets scripting API `0.6.5-experimental` for
 read-only [Workspace/Entity](WorldEntityFoundation1C.md) and
-[player lifecycle Signals](GameplayFoundationA-Validation.md). The user chose
+[player lifecycle Signals](GameplayFoundationA-Validation.md) and
+[Workspace.EntitySpawned](GameplayB1-Validation.md). The user chose
 this development identity for Gameplay A; it is not an automatic package release.
 The latest published
 package/tag remains `0.5.0`/`v0.5.0` with API `0.5.0-experimental`.
@@ -14,7 +15,7 @@ the Luau pin unchanged.
 
 [World/Entity Foundation 2C](WorldEntityFoundation2C.md) owns the final combined
 qualification of its frozen `fc71db4` source and next-package readiness verdict.
-Gameplay A is not retroactively qualified by that source. The callback-root
+Gameplay A or B1 is not retroactively qualified by that source. The callback-root
 publication correction discovered during Gameplay A also needs affected
 requalification/backport before any publication of the older candidate.
 [Planned v0.6.0 release

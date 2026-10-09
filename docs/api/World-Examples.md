@@ -21,3 +21,10 @@ uses an exact full Prefab and Limit, and handles both submission rejection and
 later callback failure. It does not create entities or assume matching entities
 exist. [Foundation 2C](../WorldEntityFoundation2C.md) owns combined qualification
 and release readiness for these four world examples.
+
+The [EntitySpawned example](../../examples/world/entity-spawned/init.luau)
+requires development API `0.6.5-experimental`. It observes future completed
+Spawns through the existing Signal path and uses `pcall` for live Entity reads
+that can race later host changes. It does not create entities or replay the
+existing world. [Gameplay B1](../GameplayB1-Validation.md) owns its distinct
+qualification; the frozen 0.6.0 evidence does not qualify this new Signal.

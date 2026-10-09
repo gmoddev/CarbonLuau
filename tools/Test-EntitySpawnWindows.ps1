@@ -162,7 +162,8 @@ try {
     if ($Server.ExitCode -notin @(0,-1)) { throw "$Prefix Server exited with code $($Server.ExitCode): $Log" }
     $Content = Get-Content -Raw -LiteralPath $Log
     $Content -split "`n" | Where-Object { $_ -match 'EntitySpawnFixture|EntityLifetime|Server startup complete' }
-    $Required = @('PASS completed outer Spawn','CLEANUP owned entities retired','NO_ORPHANS_PASS')
+    $Required = @('PASS completed outer Spawn','CLEANUP owned entities retired','NO_ORPHANS_PASS',
+        'PASS recursive full Spawn','RECURSIVE_CLEANUP_PASS')
     foreach ($Marker in $Required) {
         if (!$Content.Contains('[CarbonLuau:EntitySpawnFixture] ' + $Marker)) { throw "$Prefix Missing receipt '$Marker': $Log" }
     }

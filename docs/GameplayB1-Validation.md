@@ -48,11 +48,11 @@ wooden-box Spawn/Kill, the known failed same-object retry,512 actual Spawns,
 original source->managed reservation->native deferred Lua, Entity fields/equality,
 early-hook exclusion,root replacement/no replay and unchanged 24 D20 stamps.
 
-Final live package SHA256 `e7261bef8900e9d5efa74cbccc4256e9e5414b89fa9a3268361377ded9e38ef4`.
-Windows receipt: `D:/Sandbox/Codex/Entity1AStartup/evidence/entityspawn-20261009-005539-812/server.log`,
-SHA256 `629bdb245b8e889bfe5bd6dc575bbb99ebf8811416965f5a1ba5b902341893af`.
-Linux receipt: `/root/codex/world-movement-20261003/evidence/entityspawn-20261009-005459-1538032/server.log`,
-SHA256 `294ed21989548253e4243047214d82a58e399c2385d475e23d9fec394add6c41`.
+Final live package SHA256 `85fba817154afe5e27871b707d6c7a94e2ab0e7528b5d91ccec0ca3eea173ebd`.
+Windows receipt: `D:/Sandbox/Codex/Entity1AStartup/evidence/entityspawn-20261009-010820-340/server.log`,
+SHA256 `5ea64b2ac183ce8fa189a6d6818aefa72fa3b65a8da93427fd32b6ce511c788c`.
+Linux receipt: `/root/codex/world-movement-20261003/evidence/entityspawn-20261009-010816-1539917/server.log`,
+SHA256 `1fcf912f4729d5284b4176ef1e2d5dfbec4f9d5d8acb51bb0b95439ddb91cffa`.
 Both prove no new live entities,zero reservations,normal shutdown and restoration
 of prior package/native/compiler/hooks/config plus20 database/world files.
 No test server is left running. Authenticated-client behavior is not claimed.
@@ -69,8 +69,8 @@ package0.5.0 and Luau pin remain unchanged.
 
 | Gate | Result and attribution |
 |---|---|
-| Windows exact Carbon | PASS final live fixture, 1,019 startup keyed completions; early hook has zero pending event, full return has one; actual Spawn/Kill/retry and 512-Spawn burst |
-| Linux exact Carbon | PASS final live fixture, 1,004 startup keyed completions; same public end-to-end matrix |
+| Windows exact Carbon | PASS final live fixture, 1,019 startup keyed completions; early hook has zero pending event, full return has one; actual Spawn/Kill/retry, 512-Spawn burst and one-shot actual recursive Spawn |
+| Linux exact Carbon | PASS final live fixture, 1,005 startup keyed completions; same public end-to-end matrix |
 | Windows native | PASS all 23 CTests, 148.91 s; current bridge/bootstrap and Entity codec tests |
 | Linux native | PASS all 24 CTests, 117.61 s |
 | Windows/Linux managed | PASS full runtime suites, including Gameplay A, Player, GUI, commands, discovery, persistence, addons A-F and existing execution/module regression paths |
@@ -103,9 +103,18 @@ state after each disposable run. Linux hooks are the pinned Entity-1A tuple.
 Historical exact-host negative first-install hotload, same-process observer
 unload/reload, rejected self-updated host and failed outer-tail/network paths
 remain [Entity-1A evidence](WorldEntityFoundation1A-Validation.md#live-qualification-and-negative-evidence).
-Their unchanged source gate is reused, not claimed as new B1 live runs. B1's
-unavailable registration and recursive/stale admission are additionally covered
-in the current model/real-VM tests. Natural pooled reuse and successful reuse of
+Their unchanged source gate is reused, not claimed as new B1 live runs.
+B1 additionally performs a current exact-host negative probe on both systems:
+on a fresh actual Unity frame it queues a real successful Spawn, then injects
+one recursive call to the same actor's actual virtual Spawn from the existing
+early Carbon hook. The normal D20 chain checker reports `Spawn nested or
+base-chain mismatch`; no observer patch is added. The source becomes unavailable,
+the old queued callback is suppressed, and new EntitySpawned registration and
+keyed lookup reject. Actors are killed, reservations converge to zero and the
+disposable process quits. This is injected **real host execution**, not evidence
+that Rust spontaneously recurses in normal operation. Model/real-VM tests also
+cover unavailable registration and recursive/stale admission.
+Natural pooled reuse and successful reuse of
 an already-spawned Rust object were not observed; same-ID/new-object and
 same-object/new-epoch suppression are controlled model cases, not live claims.
 Provider unload/dependency reconstruction and callback faults are real registry,

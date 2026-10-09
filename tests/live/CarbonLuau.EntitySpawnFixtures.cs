@@ -14,6 +14,8 @@ namespace Carbon.Plugins
         private readonly List<BaseEntity> EntitySpawnFixtureOwned = new List<BaseEntity>(600);
         private bool EntitySpawnFixtureRunning;
         private int EntitySpawnFixtureEarly;
+        private BaseEntity EntitySpawnFixtureRecursive;
+        private int EntitySpawnFixtureRecursions;
         // Request only the already-qualified Carbon 1/1 pair. Neither callback
         // supplies completion or lifetime authority to the public Signal.
         private void OnEntitySpawn(BaseNetworkable Entity) { }
@@ -24,13 +26,27 @@ namespace Carbon.Plugins
             RequireEntitySpawnFixture(!Host.Busy,"early Carbon hook reentered Lua");
             if(EntitySpawnFixtureEarly==1)
                 RequireEntitySpawnFixture(Gameplay.GameplayEvents.PendingCount==0,"early hook manufactured completion");
+            if(ReferenceEquals(Entity,EntitySpawnFixtureRecursive)) {
+                EntitySpawnFixtureRecursive=null; EntitySpawnFixtureRecursions++;
+                try{ ((BaseEntity)Entity).Spawn(); }catch(Exception){}
+            }
         }
         partial void RunEntitySpawnFixtures()
         {
             NextTick(()=>{
-                try{ ExecuteEntitySpawnFixtures(); }
-                catch(Exception Error){ PrintError(EntitySpawnFixturePrefix+"FAIL "+Error); }
-                finally{ ConsoleSystem.Run(ConsoleSystem.Option.Server,"quit"); }
+                try{
+                    ExecuteEntitySpawnFixtures();
+                    // Fresh actual Unity frame; do not reset or fake the shared
+                    // production frame clock after the 512-Spawn saturation.
+                    NextTick(()=>{
+                        try{ ExecuteEntitySpawnRecursiveFixture(); }
+                        catch(Exception Error){ PrintError(EntitySpawnFixturePrefix+"FAIL "+Error); }
+                        finally{ ConsoleSystem.Run(ConsoleSystem.Option.Server,"quit"); }
+                    });
+                }catch(Exception Error){
+                    PrintError(EntitySpawnFixturePrefix+"FAIL "+Error);
+                    ConsoleSystem.Run(ConsoleSystem.Option.Server,"quit");
+                }
             });
         }
         private static void RequireEntitySpawnFixture(bool Value,string Message)
@@ -117,6 +133,31 @@ namespace Carbon.Plugins
                 Puts(EntitySpawnFixturePrefix+"NO_ORPHANS_PASS");
                 RequireEntitySpawnFixture(Gameplay.GameplayEvents.PendingCount==0&&Gameplay.GameplayEvents.RetainedBytes==0,"teardown retained transport");
                 Puts(EntitySpawnFixturePrefix+"CLEANUP owned entities retired; reservations zero");
+            }
+        }
+        private void ExecuteEntitySpawnRecursiveFixture()
+        {
+            RequireEntitySpawnFixture(EntityStartupQualified&&!EntityObserverBroken,"recursive probe needs qualified source");
+            EntitySpawnFixtureRunning=true;
+            try{
+                var Queued=NewEntitySpawnFixture(); Queued.Spawn();
+                RequireEntitySpawnFixture(Gameplay.GameplayEvents.PendingCount==1,"negative probe must hold an actual deferred event");
+                var Recursive=NewEntitySpawnFixture(); EntitySpawnFixtureRecursive=Recursive;
+                try{Recursive.Spawn();}catch(Exception){}
+                RequireEntitySpawnFixture(EntitySpawnFixtureRecursions==1&&EntityObserverBroken&&!EntityStartupQualified,
+                    "recursive full Spawn did not fail closed");
+                RequireEntitySpawnFixture(EntitySpawnFixtureDrain()=="","broken source admitted an old or recursive Entity callback");
+                EntitySpawnFixtureExecute("local W=game:GetService('Workspace'); assert(not pcall(function() W.EntitySpawned:Connect(function() end) end)); "+
+                    "assert(not pcall(function() W:GetEntityById('"+Queued.net.ID.Value.ToString(CultureInfo.InvariantCulture)+"') end))");
+                Puts(EntitySpawnFixturePrefix+"PASS recursive full Spawn rejects source, cancels pending Entity admission and rejects new registration/lookup; injected one-shot recursion through actual Carbon hook");
+            }finally{
+                EntitySpawnFixtureRunning=false; EntitySpawnFixtureRecursive=null;
+                foreach(var Entity in EntitySpawnFixtureOwned)if(Entity!=null&&!Entity.IsDestroyed){Entity.EnableSaving(false);Entity.Kill();}
+                foreach(var Entity in EntitySpawnFixtureOwned)
+                    RequireEntitySpawnFixture(Entity==null||Entity.IsDestroyed,"recursive probe orphan");
+                EntitySpawnFixtureOwned.Clear();
+                RequireEntitySpawnFixture(Gameplay.GameplayEvents.PendingCount==0&&Gameplay.GameplayEvents.RetainedBytes==0,"negative probe retained transport");
+                Puts(EntitySpawnFixturePrefix+"RECURSIVE_CLEANUP_PASS exact scoped actors killed; reservations zero");
             }
         }
     }

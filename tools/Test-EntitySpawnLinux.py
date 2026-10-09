@@ -140,7 +140,8 @@ def Main():
                 raise RuntimeError("Server exited with code " + str(Server.returncode) + ": " + str(Log))
         Content = Log.read_text(errors="replace") if Log.exists() else ""
         print("\n".join(Line for Line in Content.splitlines() if "EntitySpawnFixture" in Line or "EntityLifetime" in Line or "Server startup complete" in Line), flush=True)
-        Markers = ("PASS completed outer Spawn", "CLEANUP owned entities retired", "NO_ORPHANS_PASS")
+        Markers = ("PASS completed outer Spawn", "CLEANUP owned entities retired", "NO_ORPHANS_PASS",
+                   "PASS recursive full Spawn", "RECURSIVE_CLEANUP_PASS")
         if any("[CarbonLuau:EntitySpawnFixture] " + Marker not in Content for Marker in Markers) or "[CarbonLuau:EntitySpawnFixture] FAIL" in Content or "[CarbonLuau:EntitySpawnFixture] CLEANUP_FAIL" in Content or "[CarbonLuau:EntityLifetime] Private startup observer qualified" not in Content:
             raise RuntimeError("Missing/failed qualification receipts: " + str(Log))
         if "Shutting down Carbon.." not in Content or "Saving complete" not in Content:

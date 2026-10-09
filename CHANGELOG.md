@@ -16,6 +16,15 @@ All notable public changes to CarbonLuau are recorded here.
   observations rather than an atomic world snapshot; excess results fail the
   whole query.
 
+### Added in development (scripting API `0.6.5-experimental`)
+
+- `Players.PlayerDied` and `Players.PlayerSpawned` with qualified exact-host
+  completion semantics, immutable contexts and original connection lifetimes.
+- `Workspace.EntitySpawned` for future completed outermost Spawns. Callback
+  admission revalidates the original exact Entity lifetime; no early-hook,
+  startup replay or network-ID replacement. Player/Entity streams share bounded
+  event work and memory. See [Gameplay B1 qualification](docs/GameplayB1-Validation.md).
+
 ### Release preparation
 
 - Final World/Entity closure adds combined addon/provider replacement tests and
