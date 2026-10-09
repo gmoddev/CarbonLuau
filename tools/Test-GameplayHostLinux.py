@@ -1,4 +1,4 @@
-"""Run on BigKVM after coordination. Default is read-only artifact preflight."""
+"""Run on BigVPS after coordination. Default is read-only artifact preflight."""
 import argparse
 import hashlib
 import os
@@ -9,6 +9,7 @@ import subprocess
 import time
 import zipfile
 import json
+import re
 
 
 Prefix = "[CarbonLuau:GameplayHostRunner]"
@@ -18,6 +19,23 @@ Parser.add_argument("--package", required=True)
 Parser.add_argument("--native", required=True)
 Parser.add_argument("--compiler", required=True)
 Parser.add_argument("--run-coordinated", action="store_true")
+
+
+def DatabaseFiles(Root):
+    Expected = pathlib.Path("/root/codex/world-movement-20261003/server-linux/server/entity1a-adapter-check")
+    WorldFiles = {"proceduralmap.1000.13579.289.sav", "proceduralmap.1000.13579.289.sav.1",
+                  "proceduralmap.1000.13579.289.sav.2", "proceduralmap.1000.13579.289.navmesh"}
+    if Root != Expected or Root.is_symlink() or not Root.is_dir() or Root.resolve() != Expected:
+        raise RuntimeError("Unsafe isolated database directory")
+    Files = [Path for Path in Root.iterdir() if re.search(r"\.db(?:-(?:wal|shm|journal))?$", Path.name) or Path.name in WorldFiles]
+    if len(Files) > 128:
+        raise RuntimeError("Database file bound exceeded")
+    for Path in Files:
+        if (not re.fullmatch(r"[A-Za-z0-9_.-]+\.db(?:-(?:wal|shm|journal))?", Path.name) and Path.name not in WorldFiles) or Path.is_symlink() or not Path.is_file() or Path.resolve().parent != Expected:
+            raise RuntimeError("Unsafe database snapshot target")
+    if sum(Path.stat().st_size for Path in Files) > 67108864:
+        raise RuntimeError("Database byte bound exceeded")
+    return Files
 
 
 def Hash(Path):
@@ -34,6 +52,7 @@ def Main():
     if Work != pathlib.Path("/root/codex/world-movement-20261003"):
         raise RuntimeError("Expected established task-owned Linux server")
     Root = Work / "server-linux"
+    DatabaseRoot = Root / "server/entity1a-adapter-check"
     NativeDirectory = Root / "carbon/data/CarbonLuau/native/linux-x64"
     Inputs = [(Root / "carbon/plugins/CarbonLuau.cszip", pathlib.Path(Args.package).resolve(), "package.cszip"),
               (NativeDirectory / "libcarbonluau_native.so", pathlib.Path(Args.native).resolve(), "native.so"),
@@ -55,6 +74,7 @@ def Main():
         raise RuntimeError("Qualified Linux hook tuple required")
     with zipfile.ZipFile(Inputs[0][1]) as Archive:
         Names = Archive.namelist()
+        GameplayPublicRequired = "CarbonLuau.GameplayPublicFixtures.cs" in Names
         if Names.count("CarbonLuau.GameplayHostProofFixtures.cs") != 1 or "CarbonLuau.EntityDiscoveryFixtures.cs" in Names:
             raise RuntimeError("Select the public fixture package exclusively")
     InputHashes = {}
@@ -71,10 +91,19 @@ def Main():
     Lease = LeasePath.open("x")
     Evidence = Work / "evidence" / ("gameplay-host-" + time.strftime("%Y%m%d-%H%M%S") + "-" + str(os.getpid()))
     Backups = []
+    DatabaseBackups = {}
+    DatabaseSnapshotReady = False
     Server = None
     RestoreErrors = []
     try:
         Evidence.mkdir(exist_ok=False)
+        DatabaseEvidence = Evidence / "prior-player-databases"
+        DatabaseEvidence.mkdir()
+        for Target in DatabaseFiles(DatabaseRoot):
+            Backup = DatabaseEvidence / Target.name
+            shutil.copy2(Target, Backup)
+            DatabaseBackups[Target.name] = (Target, Backup, Hash(Backup))
+        DatabaseSnapshotReady = True
         Preserved = [(Target, Name) for Target, _, Name in Inputs] + [(Config, "carbon-config.json")]
         Preserved.extend((Hooks / Name, Name) for Name in ("Carbon.Hooks.Base.dll", "Carbon.Hooks.Community.dll", "Carbon.Hooks.Oxide.dll"))
         for Target, Name in Preserved:
@@ -101,7 +130,7 @@ def Main():
             Deadline = time.monotonic() + 600
             while Server.poll() is None and time.monotonic() < Deadline:
                 Content = Log.read_text(errors="replace") if Log.exists() else ""
-                if any(Marker in Content for Marker in ("Failed compiling", "Failed to compile", "[CarbonLuau:GameplayHostProof] FAIL")):
+                if any(Marker in Content for Marker in ("Failed compiling", "Failed to compile", "[CarbonLuau:GameplayHostProof] FAIL", "[CarbonLuau:GameplayHostProof] CLEANUP_FAIL", "[CarbonLuau:GameplayPublic] FAIL")):
                     raise RuntimeError("Compile/fixture failure: " + str(Log))
                 time.sleep(1)
             if Server.poll() is None:
@@ -112,9 +141,11 @@ def Main():
                 raise RuntimeError("Server exited with code " + str(Server.returncode) + ": " + str(Log))
         Content = Log.read_text(errors="replace") if Log.exists() else ""
         print("\n".join(Line for Line in Content.splitlines() if "GameplayHostProof" in Line or "EntityLifetime" in Line or "Server startup complete" in Line), flush=True)
-        Markers = ("BASELINE_PASS actual initial+respawn", "CLEANUP owned players retired; private receivers restored")
-        if any("[CarbonLuau:GameplayHostProof] " + Marker not in Content for Marker in Markers) or "[CarbonLuau:GameplayHostProof] FAIL" in Content or "[CarbonLuau:EntityLifetime] Private startup observer qualified" not in Content:
+        Markers = ("BASELINE_PASS actual initial+respawn", "CLEANUP owned players/corpses retired=", "NO_ORPHANS_PASS")
+        if any("[CarbonLuau:GameplayHostProof] " + Marker not in Content for Marker in Markers) or "[CarbonLuau:GameplayHostProof] FAIL" in Content or "[CarbonLuau:GameplayHostProof] CLEANUP_FAIL" in Content or "[CarbonLuau:EntityLifetime] Private startup observer qualified" not in Content:
             raise RuntimeError("Missing/failed qualification receipts: " + str(Log))
+        if GameplayPublicRequired and "[CarbonLuau:GameplayPublic] PASS production admission/receiver" not in Content:
+            raise RuntimeError("Missing production public-dispatch receipt: " + str(Log))
         if "Shutting down Carbon.." not in Content or "Saving complete" not in Content:
             raise RuntimeError("Missing qualified quit shutdown/save receipt: " + str(Log))
         print(Prefix + " PROCESS_EXIT " + str(Server.returncode) + " qualified Shutdown -> Process.Kill", flush=True)
@@ -149,6 +180,18 @@ def Main():
                 Exited = False
                 RestoreErrors.append("Owned process group did not exit; backups retained")
         if Exited:
+            if DatabaseSnapshotReady:
+                try:
+                    for Target in DatabaseFiles(DatabaseRoot):
+                        if Target.name not in DatabaseBackups:
+                            Target.unlink()
+                    for Target, Backup, Expected in DatabaseBackups.values():
+                        shutil.copy2(Backup, Target)
+                        if Hash(Target) != Expected:
+                            raise RuntimeError("database restoration hash mismatch")
+                    print(Prefix + " DATABASE_WORLD_RESTORE " + str(len(DatabaseBackups)) + " prior database/companion/world-save files restored", flush=True)
+                except Exception as Error:
+                    RestoreErrors.append("Database cleanup: " + str(Error))
             for Target, Backup, Expected in Backups:
                 try:
                     shutil.copy2(Backup, Target)

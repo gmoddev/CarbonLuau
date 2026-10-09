@@ -425,6 +425,18 @@
   "@carbonluau/globaltype/Player.UserId": {
     "documentation": "Player.UserId."
   },
+  "@carbonluau/globaltype/PlayerDeathContext.Killer": {
+    "documentation": "Captured exact direct human initiator connection, never retargeted at delivery."
+  },
+  "@carbonluau/globaltype/PlayerDeathContext.KillerId": {
+    "documentation": "Optional captured direct killer UserId, not a lookup request."
+  },
+  "@carbonluau/globaltype/PlayerDeathContext.Position": {
+    "documentation": "Optional root world position observed at terminal death completion."
+  },
+  "@carbonluau/globaltype/PlayerSpawnContext.Position": {
+    "documentation": "Optional root world position observed at completed spawn."
+  },
   "@carbonluau/globaltype/Players.GetPlayerByUserId": {
     "documentation": "Find a connected player by decimal user ID, or nil."
   },
@@ -434,8 +446,14 @@
   "@carbonluau/globaltype/Players.PlayerAdded": {
     "documentation": "Fires when a connection is added."
   },
+  "@carbonluau/globaltype/Players.PlayerDied": {
+    "documentation": "Completed terminal death of an exact tracked human life, not a wounded or vetoed attempt."
+  },
   "@carbonluau/globaltype/Players.PlayerRemoving": {
     "documentation": "Fires when a connection is removed."
+  },
+  "@carbonluau/globaltype/Players.PlayerSpawned": {
+    "documentation": "Completed eligible initial activation or full respawn; no wake/reconnect/revive or history replay."
   },
   "@carbonluau/globaltype/ScreenGui.ClassName": {
     "documentation": "Retained ClassName."

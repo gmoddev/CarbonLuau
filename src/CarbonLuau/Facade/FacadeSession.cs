@@ -291,11 +291,9 @@ namespace Carbon.Plugins
                 World.Players.CheckOwner();
                 for (int Count = 0; Count < 64 && Pending.Count != 0 && Watch.Elapsed.TotalMilliseconds < Milliseconds; ++Count) {
                     FacadePendingEvent Item = Pending.Dequeue();
-                    if (Item.GameplayReservation != 0) World.GameplayEvents.ToNative(this, Item.GameplayReservation);
-                    if (Runtime.Event(Item.Payload) != RuntimeStatus.OK) {
-                        Rejected++;
-                        if (Item.GameplayReservation != 0) World.GameplayEvents.Release(this, Item.GameplayReservation, true);
-                    }
+                    if (!TransferPendingGameplay(Item)) continue;
+                    try { if (Runtime.Event(Item.Payload) != RuntimeStatus.OK) RejectPendingGameplay(Item); }
+                    catch { RejectPendingGameplay(Item); throw; }
                     if (Runtime.Info.Ready == 0) { ClearPendingGameplay(); break; }
                 }
             }
@@ -306,13 +304,24 @@ namespace Carbon.Plugins
                 World.Players.CheckOwner();
                 for (int Count = 0; Count < Maximum && Pending.Count != 0 && Watch.Elapsed.TotalMilliseconds < Milliseconds; ++Count) {
                     FacadePendingEvent Item = Pending.Dequeue();
-                    if (Item.GameplayReservation != 0) World.GameplayEvents.ToNative(this, Item.GameplayReservation);
-                    if (Runtime.Event(Item.Payload) != RuntimeStatus.OK) {
-                        Rejected++;
-                        if (Item.GameplayReservation != 0) World.GameplayEvents.Release(this, Item.GameplayReservation, true);
-                    }
+                    if (!TransferPendingGameplay(Item)) continue;
+                    try { if (Runtime.Event(Item.Payload) != RuntimeStatus.OK) RejectPendingGameplay(Item); }
+                    catch { RejectPendingGameplay(Item); throw; }
                     if (Runtime.Info.Ready == 0) { ClearPendingGameplay(); break; }
                 }
+            }
+            private bool TransferPendingGameplay(FacadePendingEvent Item)
+            {
+                if (Item.GameplayReservation == 0 || World.GameplayEvents.ToNative(this, Item.GameplayReservation)) return true;
+                // A duplicate transfer may already be owned by the native
+                // queue. Drop this intake copy without refunding that owner.
+                if (Rejected != UInt64.MaxValue) Rejected++;
+                World.GameplayEvents.RejectTransfer(); return false;
+            }
+            private void RejectPendingGameplay(FacadePendingEvent Item)
+            {
+                if (Rejected != UInt64.MaxValue) Rejected++;
+                if (Item.GameplayReservation != 0) World.GameplayEvents.Release(this, Item.GameplayReservation, true);
             }
             public void Clear() {
                 if (World.Discovery != null) World.Discovery.Retire(this);
@@ -340,7 +349,8 @@ namespace Carbon.Plugins
                         UInt64.TryParse(Fields[8], NumberStyles.None, CultureInfo.InvariantCulture, out ButtonId) &&
                         World.Gui.ValidateQueued(Fields[5], Fields[1], Fields[2], Fields[3], ScreenId, Epoch, ButtonId);
                 }
-                if (GameplayEventPolicy.Kind(Fields[0]) && !World.GameplayEvents.Validate(this, Fields)) return false;
+                if (GameplayEventPolicy.Kind(Fields[0]) && (!World.GameplayEvents.Validate(this, Fields) ||
+                    World.Players.Resolve(Fields[2], Fields[3]) == null)) return false;
                 ulong IdValue; string Kind;
                 return ulong.TryParse(Fields[1], out IdValue) && Listeners.TryGetValue(IdValue, out Kind) && Kind == Fields[0];
             }
@@ -517,6 +527,8 @@ namespace Carbon.Plugins
                     }
                     case 6: {
                         if (Fields[0] != "added" && Fields[0] != "removing" && !GameplayEventPolicy.Kind(Fields[0])) throw new FacadeException("unknown signal");
+                        if (GameplayEventPolicy.Kind(Fields[0]) && (World.GameplayAvailable == null || !World.GameplayAvailable(Fields[0])))
+                            throw new FacadeException("player lifecycle observation unavailable for this host");
                         int Count = 0; foreach (string Kind in Listeners.Values) if (Kind == Fields[0]) Count++;
                         if (Count >= FacadePolicy.ListenersPerSignal || Listeners.Count >= FacadePolicy.Listeners) throw new FacadeException("signal listener limit reached");
                         string Value = Id(); Listeners.Add(ulong.Parse(Value, CultureInfo.InvariantCulture), Fields[0]);

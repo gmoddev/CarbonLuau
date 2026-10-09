@@ -9,7 +9,7 @@ not modify the shared facade or grant host authority.
 |---|---|---|
 | `game:GetService(Name)` | string -> Players, Commands, Gui, Items, Workspace or DataStoreService | Exact case-sensitive names. Workspace begins with development API 0.6; the published 0.5.0 package has no Workspace. |
 | `game.ApiName` | read-only string | `CarbonLuau` |
-| `game.ApiVersion` | read-only string | Current development identity: `0.6.0-experimental` |
+| `game.ApiVersion` | read-only string | Current development identity: `0.6.5-experimental` |
 | `game.ApiStatus` | read-only string | `Experimental` |
 
 Wrong receiver, non-string service name or unknown service raises a Luau error.

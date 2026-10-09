@@ -142,6 +142,7 @@ $Catalog = Get-Content -Raw -LiteralPath (Join-Path $Root 'api/carbonluau-api.js
 $Definitions = Get-Content -Raw -LiteralPath (Join-Path $Root 'generated/carbonluau.d.luau')
 $PersistenceTypes = @('DataStoreService','DataStore','DataStoreOptions','DataStoreQuery','DataStoreQueryResult','PersistedValue')
 $EntityTypes = @('Workspace','Entity','EntityDiscoveryOptions')
+$GameplayTypes = @('PlayerDeathContext','PlayerSpawnContext')
 foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
     $IsPersistence = $Declaration.Id -cin $PersistenceTypes -or $Declaration.OwnerId -cin $PersistenceTypes
     if ($IsPersistence) {
@@ -154,9 +155,21 @@ foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
             $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
             throw "Entity availability/qualification differs: $($Declaration.Id)"
         }
+    } elseif ($Declaration.Id -cin $GameplayTypes -or $Declaration.OwnerId -cin $GameplayTypes -or
+        $Declaration.Id -cin @('Players.PlayerDied','Players.PlayerSpawned')) {
+        if ($Declaration.Availability.SinceApi -cne '0.6.5-experimental' -or
+            $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
+            throw "Gameplay A availability/qualification differs: $($Declaration.Id)"
+        }
     } elseif ([version]($Declaration.Availability.SinceApi -split '-')[0] -gt [version]'0.4.0') {
         throw "Historical introduction version advanced: $($Declaration.Id)"
     }
+}
+foreach ($Name in @('PlayerDied','PlayerSpawned')) {
+    $Signal = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Players' -and $_.Name -ceq $Name })
+    if ($Signal.Count -ne 1 -or $Signal[0].Kind -cne 'Signal' -or
+        $Signal[0].Signatures[0].Parameters.Count -ne 2 -or
+        !$Definitions.Contains("read ${Name}: SignalWith<")) { throw "Gameplay A typed Signal differs: $Name" }
 }
 foreach ($Method in @('GetDataStore','GetAsync','SetAsync','RemoveAsync','Query')) {
     if (!$Persistence.Contains("int $Method(lua_State* State)") -or

@@ -122,6 +122,7 @@ namespace Carbon.Plugins
                 foreach (Reservation Value in Held.Values) if (Object.ReferenceEquals(Value.Owner, Owner)) Value.Cancelled = true;
             }
             internal void RejectQueue() { Count(ref QueueRejected); }
+            internal void RejectTransfer() { Count(ref StaleRejected); }
             internal string Status
             {
                 get { return "[CarbonLuau:Gameplay] pending=" + PendingCount + "; retained_transport=" + RetainedBytes +

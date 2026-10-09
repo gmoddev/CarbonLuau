@@ -2,7 +2,7 @@
   "SchemaVersion": 1,
   "Api": {
     "Name": "CarbonLuau",
-    "Version": "0.6.0-experimental",
+    "Version": "0.6.5-experimental",
     "Status": "Experimental"
   },
   "Types": [
@@ -333,6 +333,32 @@
         "Qualification": "Experimental"
       },
       "Preview": "Unavailable"
+    },
+    {
+      "Id": "PlayerDeathContext",
+      "Name": "PlayerDeathContext",
+      "Kind": "Class",
+      "Summary": "Immutable terminal-death snapshot; optional fields reflect qualified observations.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
+    },
+    {
+      "Id": "PlayerSpawnContext",
+      "Name": "PlayerSpawnContext",
+      "Kind": "Class",
+      "Summary": "Immutable completed-spawn snapshot.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
     },
     {
       "Id": "Players",
@@ -1522,7 +1548,7 @@
         "Implemented": true,
         "Qualification": "Experimental"
       },
-      "ValueType": "\"0.6.0-experimental\"",
+      "ValueType": "\"0.6.5-experimental\"",
       "Writable": false
     },
     {
@@ -4000,6 +4026,66 @@
       "Writable": false
     },
     {
+      "Id": "PlayerDeathContext.Killer",
+      "Name": "Killer",
+      "OwnerId": "PlayerDeathContext",
+      "Kind": "Property",
+      "Summary": "Captured exact direct human initiator connection, never retargeted at delivery.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Player?",
+      "Writable": false
+    },
+    {
+      "Id": "PlayerDeathContext.KillerId",
+      "Name": "KillerId",
+      "OwnerId": "PlayerDeathContext",
+      "Kind": "Property",
+      "Summary": "Optional captured direct killer UserId, not a lookup request.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string?",
+      "Writable": false
+    },
+    {
+      "Id": "PlayerDeathContext.Position",
+      "Name": "Position",
+      "OwnerId": "PlayerDeathContext",
+      "Kind": "Property",
+      "Summary": "Optional root world position observed at terminal death completion.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Vector3?",
+      "Writable": false
+    },
+    {
+      "Id": "PlayerSpawnContext.Position",
+      "Name": "Position",
+      "OwnerId": "PlayerSpawnContext",
+      "Kind": "Property",
+      "Summary": "Optional root world position observed at completed spawn.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Vector3?",
+      "Writable": false
+    },
+    {
       "Id": "Players.GetPlayerByUserId",
       "Name": "GetPlayerByUserId",
       "OwnerId": "Players",
@@ -4075,6 +4161,38 @@
       ]
     },
     {
+      "Id": "Players.PlayerDied",
+      "Name": "PlayerDied",
+      "OwnerId": "Players",
+      "Kind": "Signal",
+      "Summary": "Completed terminal death of an exact tracked human life, not a wounded or vetoed attempt.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Context",
+              "Type": "PlayerDeathContext",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
       "Id": "Players.PlayerRemoving",
       "Name": "PlayerRemoving",
       "OwnerId": "Players",
@@ -4092,6 +4210,38 @@
             {
               "Name": "Player",
               "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Players.PlayerSpawned",
+      "Name": "PlayerSpawned",
+      "OwnerId": "Players",
+      "Kind": "Signal",
+      "Summary": "Completed eligible initial activation or full respawn; no wake/reconnect/revive or history replay.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Context",
+              "Type": "PlayerSpawnContext",
               "Optional": false,
               "Variadic": false
             }

@@ -1,22 +1,31 @@
 # Release identity and reproducibility
 
-Current development source targets scripting API `0.6.0-experimental` for
-read-only [Workspace/Entity](WorldEntityFoundation1C.md). The latest published
+Current development source targets scripting API `0.6.5-experimental` for
+read-only [Workspace/Entity](WorldEntityFoundation1C.md) and
+[player lifecycle Signals](GameplayFoundationA-Validation.md). The user chose
+this development identity for Gameplay A; it is not an automatic package release.
+The latest published
 package/tag remains `0.5.0`/`v0.5.0` with API `0.5.0-experimental`.
 Development `release.json` deliberately has package/release/tag `0.5.0` and
-API `0.6.0-experimental`; it is **not** a v0.5.0 reproducibility or publication
+API `0.6.5-experimental`; it is **not** a v0.5.0 reproducibility or publication
 manifest. No v0.6.0 package, tag, release or editor artifact is authorized here.
 The native ABI remains `1.5`, provider protocol `1.2`, addon schema `1`, and
 the Luau pin unchanged.
 
 [World/Entity Foundation 2C](WorldEntityFoundation2C.md) owns the final combined
-qualification and next-package readiness verdict. [Planned v0.6.0 release
+qualification of its frozen `fc71db4` source and next-package readiness verdict.
+Gameplay A is not retroactively qualified by that source. The callback-root
+publication correction discovered during Gameplay A also needs affected
+requalification/backport before any publication of the older candidate.
+[Planned v0.6.0 release
 notes](releases/0.6.0.md) cover keyed lookup and bounded asynchronous discovery.
 Publication remains a separate authorization. Its narrow identity change must
 update `release.json`, the plugin Info/PackageVersion and native CMake package
 version, current-release documentation/navigation, and hardcoded bundle/artifact
-names in the validation workflow. Keep API `0.6.0-experimental`, ABI `1.5`,
-provider `1.2`, schema `1` and Luau unchanged, then rebuild/test that exact release
+names in the validation workflow. Select the release scope explicitly: a frozen
+v0.6.0 backport keeps API `0.6.0-experimental`; a later Gameplay A development
+package follows the user-selected `0.6.5-experimental` API identity. Keep ABI
+`1.5`, provider `1.2`, schema `1` and Luau unchanged, then rebuild/test that exact release
 commit and verify checksums/provenance before any tag or GitHub release.
 Development dry-run archives named v0.5.0 contain the development API and must
 never be uploaded as replacement v0.5.0 artifacts.
@@ -35,7 +44,7 @@ own the experimental author-facing summary.
 |---|---|
 | Package / tag | `0.5.0` / `v0.5.0` |
 | Published scripting API | `CarbonLuau 0.5.0-experimental` |
-| Development scripting API | `CarbonLuau 0.6.0-experimental` |
+| Development scripting API | `CarbonLuau 0.6.5-experimental` |
 | API status | `Experimental` |
 | Native ABI | `1.5` (additive reserved persistence-completion export) |
 | Provider protocol | `CarbonLuau.Addons` / `1.2` |

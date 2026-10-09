@@ -34,11 +34,15 @@ namespace Carbon.Plugins
         private Action<GameplayHostObservation> GameplayObservationReceiver;
         private Func<string, bool> GameplayCaptureAdmission;
         private const int GameplayMaximumFrames = 16;
-        private static CarbonLuau ActiveGameplayObserver;
+        private static volatile CarbonLuau ActiveGameplayObserver;
         private static bool GameplayDeathMarkerValid;
         private static string GameplayDeathPreparation, GameplaySpawnPreparation;
         private int GameplayLifecycleOwner;
-        private bool GameplayDeathQualified, GameplaySpawnQualified;
+        private volatile bool GameplayDeathQualified, GameplaySpawnQualified;
+        private volatile bool GameplayOffThreadDeathSeen, GameplayOffThreadSpawnSeen;
+        private int GameplayOffThreadDeathPending, GameplayOffThreadSpawnPending;
+        private bool GameplayOffThreadReported;
+        private long GameplayLifecycleOffThreadRejected;
         private string GameplayLifecycleFailure;
         private long GameplayLifecycleDeaths, GameplayLifecycleSpawns, GameplayLifecycleDrops;
         private long GameplayLifecycleRejected, GameplayLifecycleNested, GameplayLifecycleFailures;
@@ -54,6 +58,8 @@ namespace Carbon.Plugins
         private const string GameplayDeathHook = "Carbon.Hooks.Category_Player+Player_BasePlayer+Player_BasePlayer_db9ac3eb926b4eff9bee0481b3b20c1a";
         private const string GameplayEntityDeathHook = "Carbon.Hooks.Category_Entity+Entity_BaseCombatEntity+Entity_BaseCombatEntity_165ca5e2aedc4e16bb94f45744faead3";
         private const string GameplayRespawnHook = "Carbon.Hooks.Category_Player+Player_BasePlayer+Player_BasePlayer_09385e6f153d459aae0f142f5eaf7f5d";
+        private const string GameplayWindowsStartupHash = "b7fcd4e088dcf362a2ff13931119c411a60bd7f2205efd9fa4a0fcffe715fe28";
+        private const string GameplayLinuxStartupHash = "7f3f16e569ed7963d54f03a8074a8b5f1206071c0e616da34aafb58af7b165f0";
         private string GameplayHooksMvid;
         private const int GameplayMaximumPatchRecords = 8192, GameplayMaximumPatchBytes = 65536;
         private FieldInfo GameplayPatchStateField, GameplayPatchLockField;
@@ -79,6 +85,36 @@ namespace Carbon.Plugins
             internal bool EntryAlive, Poisoned, BaseReturned, PostfixSeen, OriginalRan, Exited;
         }
         private static void CountGameplay(ref long Counter) { if (Counter < Int64.MaxValue) Counter++; }
+        private void RejectGameplayOffThread(bool Death)
+        {
+            // Managed atomic data only: no host object, collection, VM or logger.
+            if (Death) {
+                GameplayOffThreadDeathSeen = true; GameplayDeathQualified = false;
+                Interlocked.Exchange(ref GameplayOffThreadDeathPending, 1);
+            }
+            else {
+                GameplayOffThreadSpawnSeen = true; GameplaySpawnQualified = false;
+                Interlocked.Exchange(ref GameplayOffThreadSpawnPending, 1);
+            }
+            // One CAS, no retry loop. Saturating diagnostic is best effort under
+            // concurrent rejection; invalidation/pending bits never depend on it.
+            long Current = Interlocked.Read(ref GameplayLifecycleOffThreadRejected);
+            if (Current < Int64.MaxValue) Interlocked.CompareExchange(ref GameplayLifecycleOffThreadRejected, Current + 1, Current);
+        }
+        private void DrainGameplayThreadDiagnostics()
+        {
+            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) return;
+            bool Death = Interlocked.Exchange(ref GameplayOffThreadDeathPending, 0) != 0;
+            bool Spawn = Interlocked.Exchange(ref GameplayOffThreadSpawnPending, 0) != 0;
+            if (GameplayOffThreadDeathSeen) GameplayDeathQualified = false;
+            if (GameplayOffThreadSpawnSeen) GameplaySpawnQualified = false;
+            if ((!Death && !Spawn) || GameplayOffThreadReported) return;
+            GameplayOffThreadReported = true;
+            CountGameplay(ref GameplayLifecycleFailures);
+            if (GameplayLifecycleFailure == null) GameplayLifecycleFailure = "off-thread lifecycle capture";
+            try { PrintWarning("[CarbonLuau:Gameplay] Private lifecycle capture rejected off-thread; affected capability disabled."); }
+            catch (Exception) { }
+        }
         private static MethodInfo ResolveGameplayMethod(Type Owner, string Name, int Token, params string[] Parameters)
         {
             try {
@@ -97,8 +133,29 @@ namespace Carbon.Plugins
 
         private void InitializeGameplayLifecycle()
         {
+            int CurrentThread = Thread.CurrentThread.ManagedThreadId;
+            if (GameplayLifecycleOwner != 0 && CurrentThread != GameplayLifecycleOwner) {
+                RejectGameplayOffThread(true); RejectGameplayOffThread(false); return;
+            }
+            try { if (Gameplay != null) Gameplay.Players.CheckOwner(); }
+            catch (Exception) { RejectGameplayOffThread(true); RejectGameplayOffThread(false); return; }
             GameplayLifecycleOwner = Thread.CurrentThread.ManagedThreadId;
+            if (Gameplay != null) {
+                Gameplay.GameplayEvents.FrameClock = () => UnityEngine.Time.frameCount;
+                Gameplay.GameplayAvailable = Kind => Kind == "died" ? GameplayDeathQualified : Kind == "spawned" && GameplaySpawnQualified;
+                GameplayCaptureAdmission = Kind => !Stopping && Host != null && Host.Ready && Gameplay.GameplayEvents.Capture(Kind);
+                GameplayObservationReceiver = Observation => {
+                    if (Stopping || Host == null || !Host.Ready || Gameplay == null) return;
+                    Gameplay.GameplayEvent(Observation.Kind, Observation.PlayerToken, Observation.UserId, Observation.Name,
+                        Observation.Position, Observation.KillerToken, Observation.KillerId, Observation.KillerName);
+                    RequestDrain();
+                };
+            }
             GameplayDeathQualified = GameplaySpawnQualified = false;
+            GameplayOffThreadDeathSeen = GameplayOffThreadSpawnSeen = false;
+            Interlocked.Exchange(ref GameplayOffThreadDeathPending, 0);
+            Interlocked.Exchange(ref GameplayOffThreadSpawnPending, 0);
+            GameplayOffThreadReported = false;
             GameplayLifecycleFailure = null;
             GameplayLives.Clear(); GameplayFrames.Clear();
             if (ActiveGameplayObserver != null && !ReferenceEquals(ActiveGameplayObserver, this)) {
@@ -128,6 +185,8 @@ namespace Carbon.Plugins
         }
         private void ReportGameplayInitialization()
         {
+            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) return;
+            DrainGameplayThreadDiagnostics();
             try {
                 Puts("[CarbonLuau:Gameplay] Private initialization Death=" + GameplayDeathQualified +
                     " Spawn=" + GameplaySpawnQualified + " Marker=" + GameplayDeathMarkerValid +
@@ -137,6 +196,18 @@ namespace Carbon.Plugins
                     " Reason=" + (GameplayLifecycleFailure ?? "none"));
             }
             catch (Exception) { }
+        }
+        private string GameplayLifecycleStatus
+        {
+            get {
+                DrainGameplayThreadDiagnostics();
+                return "[CarbonLuau:Gameplay] died_source=" + GameplayDeathQualified + "; spawned_source=" + GameplaySpawnQualified +
+                    "; reason=" + (GameplayLifecycleFailure ?? "none") + "; deaths=" + GameplayLifecycleDeaths +
+                    "; spawns=" + GameplayLifecycleSpawns + "; drops=" + GameplayLifecycleDrops +
+                    "; rejected=" + GameplayLifecycleRejected + "; nested=" + GameplayLifecycleNested +
+                    "; off_thread_rejected=" + Interlocked.Read(ref GameplayLifecycleOffThreadRejected) +
+                    "\n" + (Gameplay == null ? "[CarbonLuau:Gameplay] unavailable" : Gameplay.GameplayEvents.Status);
+            }
         }
         // Explicit A0 fixture diagnostic only. Never used by capture/admission,
         // never a permission to accept a changed live method body.
@@ -263,6 +334,15 @@ namespace Carbon.Plugins
         }
         private void StopGameplayLifecycle()
         {
+            if (GameplayLifecycleOwner == 0) {
+                GameplayDeathQualified = GameplaySpawnQualified = false;
+                if (ReferenceEquals(ActiveGameplayObserver, this)) ActiveGameplayObserver = null;
+                GameplayCaptureAdmission = null; GameplayObservationReceiver = null; return;
+            }
+            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) {
+                RejectGameplayOffThread(true); RejectGameplayOffThread(false); return;
+            }
+            DrainGameplayThreadDiagnostics();
             GameplayDeathQualified = GameplaySpawnQualified = false;
             if (ReferenceEquals(ActiveGameplayObserver, this)) ActiveGameplayObserver = null;
             GameplayLives.Clear(); GameplayFrames.Clear();
@@ -279,6 +359,7 @@ namespace Carbon.Plugins
         }
         private void RejectGameplayCapability(bool Death, string Reason)
         {
+            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) { RejectGameplayOffThread(Death); return; }
             if (Death) GameplayDeathQualified = false; else GameplaySpawnQualified = false;
             CountGameplay(ref GameplayLifecycleFailures);
             if (GameplayLifecycleFailure == null) {
@@ -302,6 +383,7 @@ namespace Carbon.Plugins
                 Managed.Parent.Parent == null) return false;
             string CarbonManaged = Path.Combine(Managed.Parent.Parent.FullName, "carbon", "managed");
             Assembly Carbon = LoadedEntityAssembly("Carbon"), Common = typeof(CarbonPlugin).Assembly;
+            Assembly Startup = LoadedEntityAssembly("Carbon.Startup");
             Assembly HarmonyAssembly = typeof(Harmony).Assembly;
             if (Carbon == null || Carbon.GetName().Version.ToString() != (Linux ? "2.0.261.0" : "2.0.262.0") ||
                 Carbon.ManifestModule.ModuleVersionId.ToString("D") != (Linux ? LinuxCarbonMvid : WindowsCarbonMvid) ||
@@ -311,12 +393,21 @@ namespace Carbon.Plugins
                 !HasFileHash(Path.Combine(CarbonManaged, "Carbon.Common.dll"), Linux ? LinuxCarbonCommonHash : WindowsCarbonCommonHash) ||
                 (!String.IsNullOrEmpty(Carbon.Location) && !HasHash(Carbon, Linux ? LinuxCarbonHash : WindowsCarbonHash)) ||
                 (!String.IsNullOrEmpty(Common.Location) && !HasHash(Common, Linux ? LinuxCarbonCommonHash : WindowsCarbonCommonHash)) ||
+                Startup == null || Startup.GetName().Version.ToString() != (Linux ? "2.0.261.0" : "2.0.262.0") ||
+                Startup.ManifestModule.ModuleVersionId.ToString("D") !=
+                    (Linux ? "4e5e212d-8fa6-4aa7-9141-1a5c52297ddb" : "0b893c28-fec5-44c5-bac5-f7795614beea") ||
+                !HasFileHash(Path.Combine(CarbonManaged, "Carbon.Startup.dll"), Linux ? GameplayLinuxStartupHash : GameplayWindowsStartupHash) ||
+                (!String.IsNullOrEmpty(Startup.Location) && !HasHash(Startup, Linux ? GameplayLinuxStartupHash : GameplayWindowsStartupHash)) ||
                 HarmonyAssembly.GetName().Version.ToString() != "2.4.2.0" ||
                 HarmonyAssembly.ManifestModule.ModuleVersionId.ToString("D") != "b9e6cf65-9433-482b-8860-83cff28d0128" ||
                 !HasFileHash(Path.Combine(CarbonManaged, "lib", "0Harmony.dll"), LinuxHarmonyHash) ||
                 (!String.IsNullOrEmpty(HarmonyAssembly.Location) && !HasHash(HarmonyAssembly, LinuxHarmonyHash)) ||
                 !HasFileHash(Path.Combine(CarbonManaged, "hooks", "Carbon.Hooks.Oxide.dll"), Linux ? LinuxHooksHash : WindowsHooksHash) ||
                 !HasFileHash(Path.Combine(CarbonManaged, "hooks", "Carbon.Hooks.Community.dll"), Linux ? LinuxCommunityHash : WindowsOldCommunityHash)) return false;
+            FieldInfo IPlayer = typeof(BasePlayer).GetField("IPlayer", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            if (IPlayer == null || IPlayer.IsStatic || !IPlayer.IsNotSerialized ||
+                IPlayer.FieldType.FullName != "Oxide.Core.Libraries.Covalence.IPlayer" ||
+                !ReferenceEquals(IPlayer.FieldType.Assembly, Common)) return false;
             GameplayHooksMvid = Linux ? "24c572a8-968b-4048-94a7-40ae119d0b8c" : "25387c43-282d-4de5-9dcf-2aea220206a2";
             return true;
         }
@@ -332,20 +423,28 @@ namespace Carbon.Plugins
                 bool Linux = Environment.OSVersion.Platform == PlatformID.Unix;
                 if (Method == null) return false;
                 if (Method.IsAbstract || Method.ReturnType != typeof(void)) { Failure = "method shape"; return false; }
+                // These are the processed LIVE module bodies, not original PE
+                // bodies. Pinned Carbon.Startup.InjectIPlayer adds one field;
+                // Cecil serialization reindexes operand tokens. The research
+                // helper independently reproduces all four exact live hashes
+                // and verifies unchanged opcodes/resolved operands/EH on W/L.
+                // VerifyGameplayHost separately pins the original backing PE.
                 string Expected; int Token, Size;
                 if (!Death) { Token = 0x06001abe; Size = 618; Expected = Linux ?
-                    "359f25d330d3d98479a856328960b9447208004df56cee0cde5b3d81ae81bef8" :
-                    "4055a6fbeb2250fdd3b3d90c7ed8b71868a2d821cf362a748fcc3640f2642c48"; }
+                    "30f2bd0521a68902d2acce8687014f10f6f92938e4e2690576308311ab475bc5" :
+                    "ae7730d132edacf55b32d62947aeba9149cdac022862bc7266456d629d8d7f17"; }
                 else if (Method.DeclaringType == typeof(BaseCombatEntity)) { Token = 0x0600149b; Size = 337;
-                    Expected = "98d37bb0ed3930bde68fcd230d26e723c3e54b18cc4c3e82ec857680dbd8023b"; }
+                    Expected = "ab193eb2cb6a1abe502927eb2ca174993e02674b8883b265a2931e12b661c363"; }
                 else if (Method.Name == "OnDied") { Token = 0x06001abd; Size = 2861; Expected = Linux ?
-                    "a2ab58a09f46917492846116d287e85dcb6676d841a1146b2dc5b285ab3584bd" :
-                    "bf596e3f53f60fcaffc191de834398b090d98178a7aa82b03715141592cd4acc"; }
+                    "2462879e57b67cbac0ea8f0e079c353cca437458f422554cf1de51d12ec40b1b" :
+                    "617412ad28c15aedd49143a2057e1b4c9c72ce835c97e12b1bc864a83576e9c7"; }
                 else { Token = 0x06001aea; Size = 210; Expected = "3e6d22f6ace067b6b16a8cc209946f91d39c605bd6c43e5aa61b190e5662b731"; }
-                byte[] Bytes = Method.GetMethodBody().GetILAsByteArray();
+                MethodBody Body = Method.GetMethodBody();
+                byte[] Bytes = Body.GetILAsByteArray();
                 if (Method.MetadataToken != Token || Bytes.Length != Size) {
                     Failure = "token=0x" + Method.MetadataToken.ToString("x8") + "/size=" + Bytes.Length; return false;
                 }
+                if (!GameplayEhPinned(Body, Token)) { Failure = "exception regions"; return false; }
                 using (SHA256 Hash = SHA256.Create()) {
                     string Actual = BitConverter.ToString(Hash.ComputeHash(Bytes)).Replace("-", "").ToLowerInvariant();
                     bool Valid = String.Equals(Actual, Expected, StringComparison.Ordinal);
@@ -354,6 +453,29 @@ namespace Carbon.Plugins
                 }
             }
             catch (Exception Error) { Failure = Error.GetType().Name; return false; }
+        }
+        private static bool GameplayEhPinned(MethodBody Body, int Token)
+        {
+            // Independently matched original, reproduced and live receipts.
+            // Every recorded handler is Finally; RespawnAt has zero clauses.
+            int[] Expected;
+            if (Token == 0x06001abe) return Body.ExceptionHandlingClauses.Count == 0;
+            if (Token == 0x06001aea) Expected = new[] { 12, 187, 199, 10 };
+            else if (Token == 0x0600149b) Expected = new[] { 308, 16, 324, 12 };
+            else if (Token == 0x06001abd) Expected = new[] {
+                62, 40, 102, 14, 522, 101, 623, 14,
+                1062, 128, 1190, 14, 2625, 18, 2643, 12
+            };
+            else return false;
+            if (Body.ExceptionHandlingClauses.Count != Expected.Length / 4) return false;
+            for (int Index = 0; Index < Expected.Length / 4; Index++) {
+                ExceptionHandlingClause Clause = Body.ExceptionHandlingClauses[Index];
+                int At = Index * 4;
+                if (Clause.Flags != ExceptionHandlingClauseOptions.Finally ||
+                    Clause.TryOffset != Expected[At] || Clause.TryLength != Expected[At + 1] ||
+                    Clause.HandlerOffset != Expected[At + 2] || Clause.HandlerLength != Expected[At + 3]) return false;
+            }
+            return true;
         }
         private bool OwnGameplayPatch(HarmonyLib.Patch Patch, Type Type, string Name)
         {
@@ -442,6 +564,7 @@ namespace Carbon.Plugins
 
         private PlayerLifetime CurrentGameplayPlayer(BasePlayer Player, PlayerLifetime Expected = null)
         {
+            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) return null;
             if (Gameplay == null || Player == null || Player.IsDestroyed || Player.IsNpc || !Player.IsConnected ||
                 Player.Connection == null || !Player.Connection.connected || !Player.Connection.active ||
                 !ReferenceEquals(Player.Connection.player, Player)) return null;
@@ -454,7 +577,8 @@ namespace Carbon.Plugins
         private GameplayFrame EnterGameplay(BasePlayer Player, string Kind)
         {
             bool Death = Kind == "died";
-            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) { RejectGameplayCapability(Death, "owner thread"); return null; }
+            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) { RejectGameplayOffThread(Death); return null; }
+            DrainGameplayThreadDiagnostics();
             if (!(Death ? GameplayDeathQualified : GameplaySpawnQualified)) return null;
             bool Busy;
             if (!VerifyGameplayTopology(Death, out Busy)) {
@@ -487,20 +611,28 @@ namespace Carbon.Plugins
         private static void GameplayBaseDeathReturned(BasePlayer Player)
         {
             CarbonLuau Observer = ActiveGameplayObserver;
-            if (Observer == null || Thread.CurrentThread.ManagedThreadId != Observer.GameplayLifecycleOwner || Observer.GameplayFrames.Count == 0) return;
+            if (Observer == null) return;
+            if (Thread.CurrentThread.ManagedThreadId != Observer.GameplayLifecycleOwner) { Observer.RejectGameplayOffThread(true); return; }
+            if (Observer.GameplayFrames.Count == 0) return;
             GameplayFrame Frame = Observer.GameplayFrames[Observer.GameplayFrames.Count - 1];
             if (Frame.Kind == "died" && ReferenceEquals(Frame.Player, Player)) Frame.BaseReturned = true;
         }
-        private void ExitGameplay(Exception Error, GameplayFrame Frame, HitInfo Hit)
+        private void CompleteGameplayPostfix(bool OriginalRan, GameplayFrame Frame, bool Death)
         {
+            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) { RejectGameplayOffThread(Death); return; }
+            if (Frame != null) { Frame.PostfixSeen = true; Frame.OriginalRan = OriginalRan; }
+        }
+        private void ExitGameplay(Exception Error, GameplayFrame Frame, HitInfo Hit, bool Death)
+        {
+            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) { RejectGameplayOffThread(Death); return; }
+            DrainGameplayThreadDiagnostics();
             if (Frame == null || Frame.Exited) return;
             Frame.Exited = true;
             try {
                 if (GameplayFrames.Count == 0 || !ReferenceEquals(GameplayFrames[GameplayFrames.Count - 1], Frame)) {
                     CountGameplay(ref GameplayLifecycleRejected); return;
                 }
-                bool Death = Frame.Kind == "died";
-                if (!ReferenceEquals(ActiveGameplayObserver, this) || Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner ||
+                if (!ReferenceEquals(ActiveGameplayObserver, this) ||
                     !(Death ? GameplayDeathQualified : GameplaySpawnQualified) || Frame.Poisoned || Error != null ||
                     !Frame.PostfixSeen || !Frame.OriginalRan) { CountGameplay(ref GameplayLifecycleRejected); return; }
                 bool Busy;
@@ -558,6 +690,7 @@ namespace Carbon.Plugins
         }
         private PlayerPosition? ObserveGameplayPosition(BasePlayer Player, PlayerLifetime Lifetime)
         {
+            if (Thread.CurrentThread.ManagedThreadId != GameplayLifecycleOwner) return null;
             if (EntityObserverBroken || !EntityStartupQualified || EntityLifetimes == null || EntityPositionReader == null ||
                 !EntityPositionReader.Available || !EntityLifetimes.HasCatalogObservation(Player) || !EntityDiscoveryPatchCurrent(Player)) return null;
             EntityPositionComposition.Position Position;
@@ -604,10 +737,10 @@ namespace Carbon.Plugins
             }
             [HarmonyPostfix, HarmonyPriority(Priority.Last)]
             private static void Postfix(bool __runOriginal, GameplayFrame __state)
-            { if (__state != null) { __state.PostfixSeen = true; __state.OriginalRan = __runOriginal; } }
+            { if (__state != null && __state.Observer != null) __state.Observer.CompleteGameplayPostfix(__runOriginal, __state, true); }
             [HarmonyFinalizer, HarmonyPriority(Priority.Last)]
             private static void Finalizer(Exception __exception, GameplayFrame __state, HitInfo __0)
-            { if (__state != null && __state.Observer != null) __state.Observer.ExitGameplay(__exception, __state, __0); }
+            { if (__state != null && __state.Observer != null) __state.Observer.ExitGameplay(__exception, __state, __0, true); }
         }
         [AutoPatch(IsRequired = true), HarmonyPatch]
         private static class GameplaySpawnPatch
@@ -627,10 +760,10 @@ namespace Carbon.Plugins
             }
             [HarmonyPostfix, HarmonyPriority(Priority.Last)]
             private static void Postfix(bool __runOriginal, GameplayFrame __state)
-            { if (__state != null) { __state.PostfixSeen = true; __state.OriginalRan = __runOriginal; } }
+            { if (__state != null && __state.Observer != null) __state.Observer.CompleteGameplayPostfix(__runOriginal, __state, false); }
             [HarmonyFinalizer, HarmonyPriority(Priority.Last)]
             private static void Finalizer(Exception __exception, GameplayFrame __state)
-            { if (__state != null && __state.Observer != null) __state.Observer.ExitGameplay(__exception, __state, null); }
+            { if (__state != null && __state.Observer != null) __state.Observer.ExitGameplay(__exception, __state, null, false); }
         }
     }
 }

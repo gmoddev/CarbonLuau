@@ -106,7 +106,7 @@ namespace Carbon.Plugins
                 if (Addons != null) Status += "\nAddon protocol: " + AddonPolicy.ProtocolName + " " + AddonPolicy.ProtocolVersion +
                     "; package schema: " + AddonPolicy.Schema + "\nAddons: " + Addons.Count + "; snapshot bytes: " +
                     Addons.SnapshotBytes + " / " + AddonPolicy.MaxAggregateSnapshotBytes;
-                if (Gameplay != null) Status += "\n" + Gameplay.GuiStatus;
+                if (Gameplay != null) Status += "\n" + Gameplay.GuiStatus + "\n" + GameplayLifecycleStatus;
                 if (Persistence != null) Status += "\n" + Persistence.Status;
                 Arg.ReplyWith(Status);
             }

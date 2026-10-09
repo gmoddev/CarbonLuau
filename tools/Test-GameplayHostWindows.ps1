@@ -1,4 +1,4 @@
-# Run on dockerbox only after the main owner coordinates these built artifacts.
+# Run on DockerPC only after the main owner coordinates these built artifacts.
 # Without -RunCoordinated this performs read-only artifact/server preflight.
 param(
     [string]$Work = 'D:\Sandbox\Codex\Entity1AStartup',
@@ -14,6 +14,30 @@ if ([IO.Path]::GetFullPath($Work).TrimEnd('\') -ne 'D:\Sandbox\Codex\Entity1ASta
     throw "$Prefix Expected established task-owned Windows server"
 }
 $Root = Join-Path $Work 'server'
+$DatabaseRoot = Join-Path $Root 'server\entity1a-adapter-windows'
+function Get-GameplayDatabaseFiles {
+    $ExpectedRoot = 'D:\Sandbox\Codex\Entity1AStartup\server\server\entity1a-adapter-windows'
+    $WorldFiles = @('proceduralmap.1000.13579.289.sav','proceduralmap.1000.13579.289.sav.1',
+        'proceduralmap.1000.13579.289.sav.2','proceduralmap.1000.13579.289.navmesh')
+    if ([IO.Path]::GetFullPath($DatabaseRoot) -cne $ExpectedRoot -or
+        !(Test-Path -LiteralPath $DatabaseRoot -PathType Container) -or
+        ((Get-Item -LiteralPath $DatabaseRoot).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+        throw "$Prefix Unsafe isolated database directory"
+    }
+    $Files = @(Get-ChildItem -LiteralPath $DatabaseRoot -File | Where-Object {
+        $_.Name -match '\.db(?:-(?:wal|shm|journal))?$' -or $_.Name -cin $WorldFiles })
+    if ($Files.Count -gt 128 -or ($Files | Measure-Object Length -Sum).Sum -gt 67108864) {
+        throw "$Prefix Database snapshot bound exceeded"
+    }
+    foreach ($File in $Files) {
+        if (($File.Name -notmatch '^[A-Za-z0-9_.-]+\.db(?:-(?:wal|shm|journal))?$' -and $File.Name -cnotin $WorldFiles) -or
+            ($File.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+            [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($File.FullName)) -cne $ExpectedRoot) {
+            throw "$Prefix Unsafe database snapshot target"
+        }
+    }
+    return $Files
+}
 $Package = Join-Path $Root 'carbon\plugins\CarbonLuau.cszip'
 $NativeDirectory = Join-Path $Root 'carbon\data\CarbonLuau\native\win-x64'
 $Native = Join-Path $NativeDirectory 'carbonluau_native.dll'
@@ -49,6 +73,7 @@ public static class DiscoveryPublicProcessErrors {
 $Archive = [IO.Compression.ZipFile]::OpenRead([IO.Path]::GetFullPath($PackageSource))
 try {
     $Names = @($Archive.Entries | ForEach-Object FullName)
+    $GameplayPublicRequired = $Names -contains 'CarbonLuau.GameplayPublicFixtures.cs'
     if (@($Names | Where-Object { $_ -eq 'CarbonLuau.GameplayHostProofFixtures.cs' }).Count -ne 1 -or
         $Names -contains 'CarbonLuau.EntityDiscoveryFixtures.cs') { throw "$Prefix Select the public fixture package exclusively" }
 } finally { $Archive.Dispose() }
@@ -72,10 +97,20 @@ $LeasePath = Join-Path $Work 'gameplay-host.runner.lock'
 $Lease = [IO.File]::Open($LeasePath,[IO.FileMode]::CreateNew,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
 $Evidence = Join-Path $Work ('evidence\gameplay-host-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
 $Restorations = [Collections.Generic.List[object]]::new()
+$DatabaseBackups = @{}
+$DatabaseSnapshotReady = $false
 $Server = $null
 $RestoreErrors = [Collections.Generic.List[string]]::new()
 try {
     New-Item -ItemType Directory -Path $Evidence | Out-Null
+    $DatabaseEvidence = Join-Path $Evidence 'prior-player-databases'
+    New-Item -ItemType Directory -Path $DatabaseEvidence | Out-Null
+    foreach ($File in @(Get-GameplayDatabaseFiles)) {
+        $Backup = Join-Path $DatabaseEvidence $File.Name
+        Copy-Item -LiteralPath $File.FullName -Destination $Backup
+        $DatabaseBackups[$File.Name] = [pscustomobject]@{Target=$File.FullName; Backup=$Backup; Hash=(Get-FileHash -LiteralPath $Backup).Hash}
+    }
+    $DatabaseSnapshotReady = $true
     foreach ($Record in $Inputs) {
         $Backup = Join-Path $Evidence ('prior-' + $Record.Name)
         Copy-Item -LiteralPath $Record.Target -Destination $Backup
@@ -114,7 +149,7 @@ try {
     while ((Get-Date) -lt $Deadline -and !$Server.HasExited) {
         if (Test-Path -LiteralPath $Log) {
             $Content = Get-Content -Raw -LiteralPath $Log
-            if ($Content -match 'Failed compiling|Failed to compile|\[CarbonLuau:GameplayHostProof\] FAIL') {
+            if ($Content -match 'Failed compiling|Failed to compile|\[CarbonLuau:GameplayHostProof\] (?:FAIL|CLEANUP_FAIL)|\[CarbonLuau:GameplayPublic\] FAIL') {
                 throw "$Prefix Compile/fixture failure: $Log"
             }
         }
@@ -128,11 +163,14 @@ try {
     if ($Server.ExitCode -notin @(0,-1)) { throw "$Prefix Server exited with code $($Server.ExitCode): $Log" }
     $Content = Get-Content -Raw -LiteralPath $Log
     $Content -split "`n" | Where-Object { $_ -match 'GameplayHostProof|EntityLifetime|Server startup complete' }
-    $Required = @('BASELINE_PASS actual initial+respawn','CLEANUP owned players retired; private receivers restored')
+    $Required = @('BASELINE_PASS actual initial+respawn','CLEANUP owned players/corpses retired=','NO_ORPHANS_PASS')
     foreach ($Marker in $Required) {
         if (!$Content.Contains('[CarbonLuau:GameplayHostProof] ' + $Marker)) { throw "$Prefix Missing receipt '$Marker': $Log" }
     }
-    if ($Content -match '\[CarbonLuau:GameplayHostProof\] FAIL' -or
+    if ($GameplayPublicRequired -and !$Content.Contains('[CarbonLuau:GameplayPublic] PASS production admission/receiver')) {
+        throw "$Prefix Missing production public-dispatch receipt: $Log"
+    }
+    if ($Content -match '\[CarbonLuau:GameplayHostProof\] (?:FAIL|CLEANUP_FAIL)' -or
         $Content -notmatch '\[CarbonLuau:EntityLifetime\] Private startup observer qualified') { throw "$Prefix Qualification failed: $Log" }
     Write-Output "$Prefix EVIDENCE $Log SHA256=$((Get-FileHash -LiteralPath $Log).Hash) PACKAGE=$($InputHashes['package.cszip']) NATIVE=$($InputHashes['native.dll']) COMPILER=$($InputHashes['compiler.exe'])"
     if (!$Content.Contains('Shutting down Carbon..') -or !$Content.Contains('Saving complete')) {
@@ -149,6 +187,20 @@ try {
         if (!$Exited) { $RestoreErrors.Add('Owned server did not exit; backups retained, loaded files not overwritten') }
     }
     if ($Exited) {
+        if ($DatabaseSnapshotReady) {
+            try {
+                # Remove only new database companions inside the checked exact
+                # identity directory; previous files remain recoverable below.
+                foreach ($File in @(Get-GameplayDatabaseFiles)) {
+                    if (!$DatabaseBackups.ContainsKey($File.Name)) { Remove-Item -LiteralPath $File.FullName }
+                }
+                foreach ($Record in $DatabaseBackups.Values) {
+                    Copy-Item -LiteralPath $Record.Backup -Destination $Record.Target
+                    if ((Get-FileHash -LiteralPath $Record.Target).Hash -ne $Record.Hash) { throw 'database restoration hash mismatch' }
+                }
+                Write-Output "$Prefix DATABASE_WORLD_RESTORE $($DatabaseBackups.Count) prior database/companion/world-save files restored"
+            } catch { $RestoreErrors.Add('Database cleanup: ' + $_.Exception.Message) }
+        }
         foreach ($Record in $Restorations) {
             try {
                 Copy-Item -LiteralPath $Record.Backup -Destination $Record.Target

@@ -1,8 +1,8 @@
 # Scripting compatibility and limits
 
 Latest published package v0.5.0 uses API `0.5.0-experimental`.
-The development API identity is `CarbonLuau 0.6.0-experimental`, status `Experimental`;
-the new Workspace/Entity surface has no package 0.6.0 release yet.
+The development API identity is `CarbonLuau 0.6.5-experimental`, status `Experimental`;
+the newer Workspace/Entity and player lifecycle surface is not in published v0.5.0.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
 `carbonluau.status`. This identity is distinct from package `0.5.0`, native ABI
 `1.5`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
@@ -29,7 +29,7 @@ retain the continuous host observer while their old facades stale. Host drift
 fails closed pending requalification. See the [Workspace reference](Services/Workspace.md).
 
 Discovery-2B's selected `Workspace:GetEntitiesInRadiusAsync` contract targets the
-same development `0.6.0-experimental` identity. The mandatory callback is third;
+same original `0.6.0-experimental` introduction identity. The mandatory callback is third;
 optional [EntityDiscoveryOptions](Types/EntityDiscoveryOptions.md) is last, with
 exact full Prefab and integer Limit 1..256 (default 256). Submission is committed-only;
 completion is a fresh bounded owner-thread admission with every result validated.
@@ -197,3 +197,20 @@ GUI serialization size, flush CPU/byte/send budgets and full-reconciliation
 checkpoints are internal bounded tuning values rather than public scripting API
 promises. See the [GUI guide](Gui.md) for observable semantics and unsupported
 features.
+
+Gameplay A adds no configuration knobs or per-addon heap limit. Its current
+hard internal safety ceilings are 128 observed captures per frame, 128 total
+lifecycle callback admissions per frame, 32 per domain per frame, 4,096 bounded
+producer/fanout visits per frame, 512 globally held deliveries and 2,048 bytes
+per payload. Conservative transport accounting charges two payload copies and
+remains at most 2 MiB, including native-held/in-flight work. Existing per-signal
+128 and per-domain 256 Player listener limits still apply across the new members.
+These bounds do not promise delivery under overload or a wall-clock callback SLA.
+Drops are visible in operator status and are never replayed.
+
+PlayerDied and PlayerSpawned are development API `0.6.5-experimental` additions.
+Their exact current Windows/Linux source adapters require the pinned Rust/Carbon
+tuple in [Gameplay A evidence](../GameplayFoundationA-Validation.md). Unknown
+host/patch drift fails closed. Authenticated Steam/client traces remain
+unqualified; constructed exact-host server tests and synthetic VM tests are
+explicitly labelled separately. No Entity or inventory event bus is exposed.

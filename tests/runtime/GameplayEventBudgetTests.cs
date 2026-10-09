@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Runtime = Carbon.Plugins.CarbonLuau;
@@ -22,12 +23,22 @@ internal static class GameplayEventBudgetTests
     }
     private sealed class Fixture : IDisposable
     {
-        internal readonly Runtime.FacadeWorld World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), new Registrar());
+        internal readonly Runtime.FacadeWorld World;
+        internal readonly Dictionary<string,Runtime.PlayerView> Views = new Dictionary<string,Runtime.PlayerView>(StringComparer.Ordinal);
+        internal Runtime.PlayerLifetime Victim;
         internal readonly List<Runtime.FacadeSession> Owners = new List<Runtime.FacadeSession>();
         internal readonly List<Delivery> Taken = new List<Delivery>();
         internal long Frame, NextDomain = 1;
         internal Runtime.GameplayEventBudget Budget { get { return World.GameplayEvents; } }
-        internal Fixture() { Budget.FrameClock = () => Frame; }
+        internal Fixture() {
+            var Players = new Runtime.PlayerDirectory(Id=>{Runtime.PlayerView View; return Views.TryGetValue(Id,out View) ? View : null;});
+            World = new Runtime.FacadeWorld(Players,new Registrar());
+            Victim = Connect("76561190000999888"); Budget.FrameClock = () => Frame;
+        }
+        internal Runtime.PlayerLifetime Connect(string UserId)
+        { var View = Player(UserId); Views[UserId] = View; return World.Players.Connect(View); }
+        internal Runtime.PlayerLifetime Disconnect(string UserId)
+        { var Removed = World.Players.Disconnect(UserId,Views[UserId].Identity); Views.Remove(UserId); return Removed; }
         internal Runtime.FacadeSession Add(int Listeners = 1, int Capacity = 256, bool Root = false)
         {
             Runtime.FacadeSession Owner = Candidate(Listeners,Capacity);
@@ -43,7 +54,7 @@ internal static class GameplayEventBudgetTests
         internal void Emit()
         {
             Check(Budget.Capture("died"), "explicit producer capture accepted");
-            World.GameplayEvent("died", "1", "76561190000999888", "Snapshot", new Runtime.PlayerPosition(1, 2, 3));
+            World.GameplayEvent("died", Victim.Token, Victim.UserId, "Snapshot", new Runtime.PlayerPosition(1, 2, 3));
         }
         internal List<Delivery> Take(Runtime.FacadeSession Owner, bool ToNative = true)
         {
@@ -55,8 +66,8 @@ internal static class GameplayEventBudgetTests
                 byte[] Payload = (byte[])Item.GetType().GetField("Payload", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Item);
                 string[] Fields = Runtime.FacadePolicy.Unpack(Payload);
                 var Value = new Delivery {Owner = Owner, Payload = Payload, Fields = Fields,
-                    Nonce = UInt64.Parse(Fields[5], CultureInfo.InvariantCulture)};
-                if (ToNative) Check(Budget.ToNative(Owner, Value.Nonce), "model transfer retains reservation");
+                    Nonce = Fields.Length == 12 ? UInt64.Parse(Fields[5], CultureInfo.InvariantCulture) : 0};
+                if (ToNative && Value.Nonce != 0) Check(Budget.ToNative(Owner, Value.Nonce), "model transfer retains reservation");
                 Values.Add(Value); Taken.Add(Value);
             }
             return Values;
@@ -98,8 +109,37 @@ internal static class GameplayEventBudgetTests
 
     internal static void Run()
     {
-        FrameLimits(); RetainedReservations(); Publication(); SaturationProgress(); ValidationAndCancellation();
+        FrameLimits(); RetainedReservations(); Publication(); SaturationProgress(); ValidationAndCancellation(); VictimLifetime();
         Console.WriteLine("[CarbonLuau:GameplayBudgetModel] PASS bounded producer/fanout/scans, retained quota, publication, cancellation and100-domain progress; no Rust/VM event qualification");
+    }
+    private static Runtime.PlayerView Player(string UserId)
+    { return new Runtime.PlayerView {Identity=new object(),Connection=new object(),UserId=UserId,Name="Snapshot",Connected=true,
+        Send=Text=>{},Permission=Name=>true}; }
+    private static Runtime.FacadeWorld LiveWorld()
+    {
+        Runtime.PlayerView View = Player("76561190000999888");
+        var Players = new Runtime.PlayerDirectory(Id=>Id == View.UserId ? View : null); Players.Connect(View);
+        return new Runtime.FacadeWorld(Players,new Registrar());
+    }
+    private static void VictimLifetime()
+    {
+        using (var Value = new Fixture()) {
+            Runtime.FacadeSession Owner = Value.Add(); string Removing = Operation(Owner,6,"removing")[0];
+            Value.Emit(); Delivery Death = Value.Take(Owner)[0];
+            Runtime.PlayerLifetime Removed = Value.Disconnect(Value.Victim.UserId);
+            Check(!Host(Owner,9,Death.Fields),"victim disconnect suppresses queued death before entry");
+            Value.World.Event("removing",Removed); Delivery Legacy = Value.Take(Owner)[0];
+            Check(Legacy.Fields[1] == Removing && Host(Owner,9,Legacy.Fields),"existing PlayerRemoving retains disconnected snapshot delivery");
+            Runtime.PlayerLifetime Reconnected = Value.Connect(Removed.UserId);
+            Check(Reconnected.Token != Removed.Token && !Host(Owner,9,Death.Fields),"same-user reconnect cannot retarget queued original victim");
+            Check(Host(Owner,39,new[] {Death.Fields[5]}),"suppressed death refunds only on discard");
+            Value.Victim = Reconnected;
+            Runtime.PlayerLifetime Killer = Value.Connect("76561190000999889");
+            Check(Value.Budget.Capture("died"),"killer lifetime capture");
+            Value.World.GameplayEvent("died",Reconnected.Token,Reconnected.UserId,"Snapshot",null,Killer.Token,Killer.UserId,"Killer");
+            Delivery WithKiller = Value.Take(Owner)[0]; Value.Disconnect(Killer.UserId);
+            Check(Host(Owner,9,WithKiller.Fields),"killer disconnect alone does not suppress live victim observation");
+        }
     }
     private static void FrameLimits()
     {
@@ -255,7 +295,7 @@ internal static class GameplayEventBudgetTests
     internal static void RunNative(Runtime.NativeRuntime Native)
     {
         Run();
-        var World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id=>null),new Registrar());
+        var World = LiveWorld();
         long Frame = 0; World.GameplayEvents.FrameClock = ()=>Frame;
         var Config = new Runtime.RuntimeConfig {MaxCallbackMilliseconds=100,FrameDrainBudgetMilliseconds=20,MaxQueuedCallbacks=1};
         using (var Vm = new Runtime.RuntimeGeneration(Native,77,Config)) {
@@ -286,13 +326,13 @@ internal static class GameplayEventBudgetTests
                     "actual native domain destruction releases disposed exact owner");
             }
         }
-        RunRecovery(Native);
+        RunFalseTransfer(Native); RunDisposedStatus(Native); RunDisposedNativeException(Native); RunRecovery(Native);
         Check(Native.LiveVmCount == 0, "private native budget fixture teardown");
         Console.WriteLine("[CarbonLuau:GameplayBudgetNative] PASS private managed/native ownership, rejection, disposal and D9 no-replay; public gameplay Signals absent");
     }
     private static void RunRecovery(Runtime.NativeRuntime Native)
     {
-        var World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id=>null),new Registrar());
+        var World = LiveWorld();
         World.GameplayEvents.FrameClock = ()=>0;
         using (var Host = new Runtime.ScriptHost(Native,new Runtime.RuntimeConfig {MaxCallbackMilliseconds=10,FrameDrainBudgetMilliseconds=20},
             ()=>new Runtime.ScriptSnapshot {EntryName="init.luau",EntrySource="return true"},World)) {
@@ -307,6 +347,94 @@ internal static class GameplayEventBudgetTests
                 "fatal VM recovery discards captured work and rebuilds fresh owner without replay");
             Check(World.Active.ListenerCount == 0 && !World.GameplayEvents.Capture("died") && !Host.HasWork,
                 "reconstruction does not synthesize or replay historical lifecycle captures");
+        }
+    }
+    private static Runtime.RuntimeDomain Domain(Runtime.NativeRuntime Native,Runtime.RuntimeGeneration Vm,Runtime.RuntimeConfig Config,
+        Runtime.FacadeWorld World,out Runtime.FacadeSession Owner)
+    {
+        var Value = new Runtime.RuntimeDomain(Native,Vm,Config,new Runtime.ScriptSnapshot {EntryName="init.luau",EntrySource="return true"});
+        Owner = new Runtime.FacadeSession(World,Value.VmGenerationId,Value.DomainLifetimeId,256);
+        Value.Facade(Owner); Operation(Owner,6,"died");
+        Check(Value.Execute("gameplay.transfer.fixture","return true",100).Status == Runtime.RuntimeStatus.OK,"transfer fixture initialization");
+        Value.Commit(); World.Commit(Owner); return Value;
+    }
+    private static byte[] PendingPayload(Runtime.FacadeSession Owner)
+    {
+        var Queue = (IEnumerable)typeof(Runtime.FacadeSession).GetField("Pending",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(Owner);
+        foreach (object Item in Queue)
+            return (byte[])Item.GetType().GetField("Payload",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(Item);
+        throw new Exception("Gameplay event budget: missing pending fixture");
+    }
+    private static void Emit(Runtime.FacadeWorld World)
+    {
+        Check(World.GameplayEvents.Capture("died"),"transfer capture admission");
+        World.GameplayEvent("died","1","76561190000999888","Snapshot",null);
+    }
+    private static void RunFalseTransfer(Runtime.NativeRuntime Native)
+    {
+        foreach (bool GenerationFlush in new[] {false,true}) {
+            var World = LiveWorld(); var Config = new Runtime.RuntimeConfig {MaxQueuedCallbacks=4,MaxCallbackMilliseconds=100};
+            using (var Vm = new Runtime.RuntimeGeneration(Native,78,Config)) {
+                Runtime.FacadeSession Owner;
+                using (var Value = Domain(Native,Vm,Config,World,out Owner)) {
+                    Emit(World); byte[] Payload = PendingPayload(Owner);
+                    ulong Nonce = UInt64.Parse(Runtime.FacadePolicy.Unpack(Payload)[5],CultureInfo.InvariantCulture);
+                    Check(World.GameplayEvents.ToNative(Owner,Nonce) && Value.Event(Payload) == Runtime.RuntimeStatus.OK,
+                        "actual native queue already owns duplicate intake nonce");
+                    int Charge = World.GameplayEvents.RetainedBytes; ulong Before = Vm.Scheduler.Rejected;
+                    if (GenerationFlush) Owner.Flush(Vm,Stopwatch.StartNew(),20); else Owner.Flush(Value,Stopwatch.StartNew(),20);
+                    Check(Owner.PendingCount == 0 && Vm.Scheduler.Queued == 1 && Vm.Scheduler.Rejected == Before &&
+                        World.GameplayEvents.PendingCount == 1 && World.GameplayEvents.RetainedBytes == Charge &&
+                        World.GameplayEvents.StaleRejected == 1 && World.GameplayEvents.NativeRejected == 0,
+                        "false transfer neither resubmits nor refunds native ownership in either Flush overload");
+                    bool Ran; var Result = Vm.Callback(Vm.Scheduler,100,out Ran);
+                    Check(Ran && Result.Status == Runtime.RuntimeStatus.OK && Vm.Info.Ready != 0 &&
+                        World.GameplayEvents.PendingCount == 0 && World.GameplayEvents.Released == 1,
+                        "original native item still acknowledges once after duplicate intake is discarded");
+                    World.Retire(Owner);
+                }
+            }
+        }
+    }
+    private static void RunDisposedStatus(Runtime.NativeRuntime Native)
+    {
+        var World = LiveWorld(); var Config = new Runtime.RuntimeConfig {MaxQueuedCallbacks=4,MaxCallbackMilliseconds=100};
+        using (var Vm = new Runtime.RuntimeGeneration(Native,79,Config)) {
+            Runtime.FacadeSession Owner;
+            using (var Value = Domain(Native,Vm,Config,World,out Owner)) {
+                Emit(World); Value.Dispose(); Owner.Flush(Value,Stopwatch.StartNew(),20);
+                Check(Owner.PendingCount == 0 && World.GameplayEvents.PendingCount == 0 && World.GameplayEvents.RetainedBytes == 0 &&
+                    World.GameplayEvents.NativeRejected == 1 && World.GameplayEvents.Released == 1,
+                    "disposed domain INVALID_ARGUMENT refunds just-transferred reservation");
+                World.Retire(Owner);
+            }
+        }
+    }
+    private static void RunDisposedNativeException(Runtime.NativeRuntime Existing)
+    {
+        var Loader = (Runtime.NativeLibraryLoader)typeof(Runtime.NativeRuntime).GetField("Loader",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(Existing);
+        string Data = new DirectoryInfo(Path.GetDirectoryName(Loader.LibraryPath)).Parent.Parent.Parent.FullName;
+        foreach (bool GenerationFlush in new[] {false,true}) {
+            var Native = new Runtime.NativeRuntime(Data); var World = LiveWorld();
+            var Config = new Runtime.RuntimeConfig {MaxQueuedCallbacks=4,MaxCallbackMilliseconds=100};
+            var Vm = new Runtime.RuntimeGeneration(Native,80,Config); Runtime.FacadeSession Owner;
+            var Value = Domain(Native,Vm,Config,World,out Owner);
+            try {
+                Emit(World); Native.Dispose(); bool Threw = false;
+                try {
+                    if (GenerationFlush) Owner.Flush(Vm,Stopwatch.StartNew(),20); else Owner.Flush(Value,Stopwatch.StartNew(),20);
+                } catch (ObjectDisposedException) { Threw = true; }
+                Check(Threw && Owner.PendingCount == 0 && World.GameplayEvents.PendingCount == 0 &&
+                    World.GameplayEvents.RetainedBytes == 0 && World.GameplayEvents.NativeRejected == 1 &&
+                    World.GameplayEvents.Released == 1 && Native.LiveVmCount == 0,
+                    "actual disposed NativeRuntime exception refunds once before propagating in both overloads");
+            } finally {
+                World.Retire(Owner);
+                // Native.Dispose has already destroyed this actual VM. Release
+                // the wrapper handles without trying to reenter its unloaded host.
+                try { Value.Dispose(); } catch (ObjectDisposedException) { }
+                Vm.Handle=0; Vm.Dispose(); Native.Dispose();
+            }
         }
     }
 }

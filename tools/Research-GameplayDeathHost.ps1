@@ -10,6 +10,7 @@ param(
     [switch]$InitiatorInventory,
     [switch]$ReproducePublicizer,
     [string[]]$CommonAssemblyPath,
+    [string[]]$StartupAssemblyPath,
     [string[]]$LiveLogPath,
     [string]$DecoderSource,
     [switch]$Body
@@ -18,8 +19,9 @@ param(
 $ErrorActionPreference = 'Stop'
 Add-Type -Path (Resolve-Path -LiteralPath $CecilPath).Path
 if ($ReproducePublicizer) {
-    if ($CommonAssemblyPath.Count -ne $AssemblyPath.Count -or $LiveLogPath.Count -ne $AssemblyPath.Count -or !$DecoderSource) {
-        throw 'Reproduction requires one pinned Common assembly and live receipt per Rust assembly, plus the diagnostic decoder source.'
+    if ($CommonAssemblyPath.Count -ne $AssemblyPath.Count -or $StartupAssemblyPath.Count -ne $AssemblyPath.Count -or
+        $LiveLogPath.Count -ne $AssemblyPath.Count -or !$DecoderSource) {
+        throw 'Reproduction requires Common, Startup, and live receipt per Rust assembly, plus the diagnostic decoder source.'
     }
     $Source = Get-Content -Raw -LiteralPath $DecoderSource
     $Begin = $Source.IndexOf('        private static string GameplayIlType(')
@@ -78,9 +80,23 @@ public static string Canonical(MethodInfo Method) {
         for ($InputIndex = 0; $InputIndex -lt $AssemblyPath.Count; $InputIndex++) {
             $OriginalPath = (Resolve-Path -LiteralPath $AssemblyPath[$InputIndex]).Path
             $CommonPath = (Resolve-Path -LiteralPath $CommonAssemblyPath[$InputIndex]).Path
+            $StartupPath = (Resolve-Path -LiteralPath $StartupAssemblyPath[$InputIndex]).Path
             $ReceiptPath = (Resolve-Path -LiteralPath $LiveLogPath[$InputIndex]).Path
             $Receipt = Get-Content -LiteralPath $ReceiptPath
             Write-Output "REPRO_SOURCE=$OriginalPath SHA256=$((Get-FileHash $OriginalPath).Hash.ToLowerInvariant()) COMMON=$CommonPath COMMON_SHA256=$((Get-FileHash $CommonPath).Hash.ToLowerInvariant()) RECEIPT_SHA256=$((Get-FileHash $ReceiptPath).Hash.ToLowerInvariant())"
+            $Startup = [Mono.Cecil.AssemblyDefinition]::ReadAssembly($StartupPath, $Parameters)
+            try {
+                Write-Output "TRANSFORM_OWNER=$StartupPath SHA256=$((Get-FileHash $StartupPath).Hash.ToLowerInvariant()) VERSION=$($Startup.Name.Version) MVID=$($Startup.MainModule.Mvid)"
+                foreach ($OwnerType in $Startup.MainModule.Types) {
+                    if ($OwnerType.FullName -notin @('Carbon.Publicizer.AssemblyCSharp', 'Carbon.Publicizer.Patch')) { continue }
+                    foreach ($OwnerMethod in $OwnerType.Methods) {
+                        if ($OwnerMethod.Name -notin @('Execute', 'InjectIPlayer', 'UpdateBuffer', 'Load')) { continue }
+                        $OwnerText = @($OwnerMethod.Body.Instructions | ForEach-Object { $_.ToString() }) -join "`n"
+                        Write-Output "TRANSFORM_METHOD=$($OwnerMethod.FullName) TOKEN=$($OwnerMethod.MetadataToken) SIZE=$($OwnerMethod.Body.CodeSize) IL_TEXT_SHA256=$(Get-ProofHash ([Text.Encoding]::UTF8.GetBytes($OwnerText)))"
+                    }
+                }
+            }
+            finally { $Startup.Dispose() }
             $Original = [Mono.Cecil.AssemblyDefinition]::ReadAssembly($OriginalPath, $Parameters)
             $Common = [Mono.Cecil.AssemblyDefinition]::ReadAssembly($CommonPath, $Parameters)
             $Buffer = [IO.MemoryStream]::new()

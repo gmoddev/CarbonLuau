@@ -1,10 +1,19 @@
 # Signal
 
 Availability: experimental API `0.3.0-experimental` for PlayerAdded and
-PlayerRemoving; `TextButton.Activated` is added in `0.4.0-experimental`. There is
+PlayerRemoving; GUI Activated is added in `0.4.0-experimental`. PlayerDied and
+PlayerSpawned add typed second context arguments in development API
+`0.6.5-experimental`. There is
 no public constructor or generic hook.
 
 `Signal:Connect(Callback: (Player) -> ()) -> Connection`
+
+The callback signature follows the particular Signal. PlayerDied uses
+`(Player, PlayerDeathContext) -> ()`; PlayerSpawned uses
+`(Player, PlayerSpawnContext) -> ()`. They reuse the same Connect/Disconnect
+runtime and owned subscription journal, not a second Signal implementation.
+Generated tooling uses a structural `SignalWith<Callback>` specialization for
+these richer callback types; this is not a public constructor or hook API.
 
 Registers one callback in the current owning domain and returns a
 [Connection](Connection.md). No permissions are needed. Wrong receiver or

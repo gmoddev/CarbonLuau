@@ -9,6 +9,22 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length == 2 && (Args[0] == "--gameplay-signals" || Args[0] == "--gameplay-scale" || Args[0] == "--gameplay-dependencies")) {
+            try {
+                using (var Native = new Runtime.NativeRuntime(Args[1])) {
+                    if (Args[0] == "--gameplay-signals") GameplaySignalTests.RunNative(Native);
+                    else if (Args[0] == "--gameplay-scale") GameplayScaleTests.RunNative(Native);
+                    else GameplayDependencySignalTests.RunNative(Native);
+                }
+                return 0;
+            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:Gameplay] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length == 2 && Args[0] == "--gameplay-budget") {
+            try {
+                using (var Native = new Runtime.NativeRuntime(Args[1])) GameplayEventBudgetTests.RunNative(Native);
+                return 0;
+            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:GameplayBudget] FAIL: " + Error); return 1; }
+        }
         if (Args.Length == 2 && Args[0] == "--gameplay-publication") {
             try {
                 using (var Native = new Runtime.NativeRuntime(Args[1])) GameplayPublicationTests.RunNative(Native);
@@ -226,6 +242,10 @@ internal static class Program
                 ScriptTests.Run(Native, Root);
                 FacadeTests.Run(Native, Args.Length > 3 ? Args[3] : null);
                 GameplayPublicationTests.RunNative(Native);
+                GameplayEventBudgetTests.RunNative(Native);
+                GameplaySignalTests.RunNative(Native);
+                GameplayScaleTests.RunNative(Native);
+                GameplayDependencySignalTests.RunNative(Native);
                 GuiFoundation1BTests.RunNative(Native);
                 GuiFoundation1CTests.RunNative(Native);
                 GuiFoundation1DTests.RunNative(Native);

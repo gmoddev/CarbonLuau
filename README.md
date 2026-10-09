@@ -6,6 +6,11 @@ CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers throu
 
 The latest published release is [v0.5.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.5.0). The `0.5.0` release is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
 
+Development `main` adds exact-host player death and spawn Signals in
+`0.6.5-experimental`. See [Players](docs/api/Services/Players.md) and the
+[qualification record](docs/GameplayFoundationA-Validation.md) for current
+limits. These additions are not in the published v0.5.0 archives.
+
 ## Install and write a script
 
 CarbonLuau targets Windows x64 and glibc Linux x64 servers running Carbon. Persistence-2D live host evidence uses Rust build `25653776` and Carbon `2.0.261.0` on Linux; earlier gameplay/GUI evidence uses other recorded builds. See [compatibility](docs/Compatibility.md) for exact platform and feature limits.

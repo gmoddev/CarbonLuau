@@ -12,6 +12,12 @@
 -- @carbonluau-api {"Type":"Connection","Kind":"Class","Summary":"A disconnectable Signal subscription.","SinceApi":"0.3.0-experimental"}
 -- @carbonluau-api {"Type":"CommandContext","Kind":"Class","Summary":"Immutable command callback context.","Representation":"Record","SinceApi":"0.3.0-experimental"}
 -- @carbonluau-api {"Type":"CommandOptions","Kind":"Class","Summary":"Command registration options.","Representation":"Record","SinceApi":"0.3.0-experimental"}
+-- @carbonluau-api {"Type":"PlayerDeathContext","Kind":"Class","Summary":"Immutable terminal-death snapshot; optional fields reflect qualified observations.","Representation":"Record","SinceApi":"0.6.5-experimental"}
+-- @carbonluau-api {"Type":"PlayerSpawnContext","Kind":"Class","Summary":"Immutable completed-spawn snapshot.","Representation":"Record","SinceApi":"0.6.5-experimental"}
+-- @carbonluau-api {"Owner":"PlayerDeathContext","Name":"Position","Kind":"Property","ValueType":"Vector3?","Writable":false,"Summary":"Optional root world position observed at terminal death completion.","SinceApi":"0.6.5-experimental","Binding":"        Context.Position = Position"}
+-- @carbonluau-api {"Owner":"PlayerDeathContext","Name":"Killer","Kind":"Property","ValueType":"Player?","Writable":false,"Summary":"Captured exact direct human initiator connection, never retargeted at delivery.","SinceApi":"0.6.5-experimental","Binding":"            Context.Killer = GetPlayer(Fields[10], Fields[11], Fields[12])"}
+-- @carbonluau-api {"Owner":"PlayerDeathContext","Name":"KillerId","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"Optional captured direct killer UserId, not a lookup request.","SinceApi":"0.6.5-experimental","Binding":"            Context.KillerId = Fields[11]"}
+-- @carbonluau-api {"Owner":"PlayerSpawnContext","Name":"Position","Kind":"Property","ValueType":"Vector3?","Writable":false,"Summary":"Optional root world position observed at completed spawn.","SinceApi":"0.6.5-experimental","Binding":"        Context.Position = Position"}
 -- @carbonluau-api {"Type":"Vector3","Kind":"Value","Summary":"Immutable finite spatial vector."}
 -- @carbonluau-api {"Type":"Addon","Kind":"Global","Summary":"Current addon identity and declared dependency availability."}
 -- @carbonluau-api {"Type":"Task","Kind":"Global","Summary":"Bounded host-admitted scheduling.","SinceApi":"0.2.0-experimental"}
@@ -21,9 +27,9 @@
 -- @carbonluau-api {"Owner":"Player","Name":"Position","Kind":"Property","ValueType":"Vector3","Writable":false,"Summary":"Player.Position.","Binding":"            if Key == \"Position\" then"}
 -- @carbonluau-api {"Owner":"Player","Name":"Health","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.Health.","Binding":"            if Key == \"Health\" then return tonumber(Host(23, Token, UserId)[1]) end"}
 -- @carbonluau-api {"Owner":"Player","Name":"MaxHealth","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.MaxHealth.","Binding":"            if Key == \"MaxHealth\" then return tonumber(Host(24, Token, UserId)[1]) end"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiName","Kind":"Property","ValueType":"\"CarbonLuau\"","Writable":false,"Summary":"Game.ApiName.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.0-experimental\", ApiStatus = \"Experimental\"}"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiVersion","Kind":"Property","ValueType":"\"0.6.0-experimental\"","Writable":false,"Summary":"Game.ApiVersion.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.0-experimental\", ApiStatus = \"Experimental\"}"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiStatus","Kind":"Property","ValueType":"\"Experimental\"","Writable":false,"Summary":"Game.ApiStatus.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiName","Kind":"Property","ValueType":"\"CarbonLuau\"","Writable":false,"Summary":"Game.ApiName.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.5-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiVersion","Kind":"Property","ValueType":"\"0.6.5-experimental\"","Writable":false,"Summary":"Game.ApiVersion.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.5-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiStatus","Kind":"Property","ValueType":"\"Experimental\"","Writable":false,"Summary":"Game.ApiStatus.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.5-experimental\", ApiStatus = \"Experimental\"}"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"X","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.X.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"Y","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Y.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"Z","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Z.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
@@ -330,6 +336,10 @@ local function Signal(Kind)
     return table.freeze(Value)
 end
 local Players = {PlayerAdded = Signal("added"), PlayerRemoving = Signal("removing")}
+-- @carbonluau-api {"Owner":"Players","Name":"PlayerDied","Kind":"Signal","Args":[["Player","Player"],["Context","PlayerDeathContext"]],"Returns":[],"Summary":"Completed terminal death of an exact tracked human life, not a wounded or vetoed attempt.","SinceApi":"0.6.5-experimental","Binding":"Players.PlayerDied = Signal(\"died\")"}
+Players.PlayerDied = Signal("died")
+-- @carbonluau-api {"Owner":"Players","Name":"PlayerSpawned","Kind":"Signal","Args":[["Player","Player"],["Context","PlayerSpawnContext"]],"Returns":[],"Summary":"Completed eligible initial activation or full respawn; no wake/reconnect/revive or history replay.","SinceApi":"0.6.5-experimental","Binding":"Players.PlayerSpawned = Signal(\"spawned\")"}
+Players.PlayerSpawned = Signal("spawned")
 -- @carbonluau-api {"Owner":"Players","Name":"GetPlayers","Kind":"Method","Args":[],"Returns":["{Player}"],"Summary":"Return the currently connected Player proxies.","Preview":"ReadMock","Binding":"function Players.GetPlayers(Self)","SinceApi":"0.3.0-experimental"}
 function Players.GetPlayers(Self)
     if Self ~= Players then Fail("invalid Players service") end
@@ -659,7 +669,7 @@ function Workspace.GetEntitiesInRadiusAsync(Self, Position, Radius, Callback, Op
     end, Options)
 end
 table.freeze(Workspace)
-local Game = {ApiName = "CarbonLuau", ApiVersion = "0.6.0-experimental", ApiStatus = "Experimental"}
+local Game = {ApiName = "CarbonLuau", ApiVersion = "0.6.5-experimental", ApiStatus = "Experimental"}
 -- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items | Workspace | DataStoreService"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
 function Game.GetService(Self, Name)
     if Self ~= Game then Fail("invalid game facade") end
@@ -680,7 +690,19 @@ local function Dispatch(Fields)
     local Callback = Callbacks.Roots[Fields[2]]
     if not Callback then return end
     local Player = GetPlayer(Fields[3], Fields[4], Fields[5])
-    if Fields[1] == "command" then
+    if Fields[1] == "died" or Fields[1] == "spawned" then
+        local Position = nil
+        if Fields[7] ~= "" then
+            Position = Vector3.new(tonumber(Fields[7]), tonumber(Fields[8]), tonumber(Fields[9]))
+        end
+        local Context = {}
+        Context.Position = Position
+        if Fields[1] == "died" and Fields[10] ~= "" then
+            Context.Killer = GetPlayer(Fields[10], Fields[11], Fields[12])
+            Context.KillerId = Fields[11]
+        end
+        Callback(Player, table.freeze(Context))
+    elseif Fields[1] == "command" then
         local Arguments = {}
         for Index = 7, #Fields do Arguments[#Arguments + 1] = Fields[Index] end
         Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))

@@ -179,6 +179,7 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D20 — exact-host Entity Foundation 1 read-only public-development surface | A continuously installed, exact-host full-Spawn observer plus successful-startup reconciliation establishes private spawn epochs and no-retargeting Entity lifetime tokens. [Entity-1A qualification](WorldEntityFoundation1A-Validation.md) owns the narrow host/deployment envelope; [Entity-1B validation](WorldEntityFoundation1B-Validation.md) owns keyed runtime behavior; [Entity-1C](WorldEntityFoundation1C.md) owns combined public closure, metadata and release planning. Older negative investigations remain historical evidence. | Requalify any host/patch drift; the `0.6.0-experimental` development API assignment is not a package release |
 | D21 — resolved Persistence Foundation 1 architecture; private 1A PASS; public API assigned 0.5 | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The approved PERSIST/EXTRA and physical-budget amendments preserve hard logical/backend extent bounds; 1,280 MiB is an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) and [public 1B](PersistenceFoundation1B.md) retain their scoped evidence. [1C](PersistenceFoundation1C.md) owns combined closure and the exact final verdict. D12 experimental availability is not package publication approval. |
 | D22 — resolved Persistence Foundation 2 bounded derived-index Query architecture; 2A/2B PASS, public 2C implemented | DataStore:Query uses required Field plus structured Equals/Min/Max/order with automatic CarbonLuau-owned derived indexes. Authors manage no schema, version, migration or index lifecycle; optional Indexes string-list hints only request proactive preparation/retention. Online bounded preparation keeps ordinary persistence available. [PersistenceFoundation2.md](PersistenceFoundation2.md) owns exact API, bounds and qualification gates. | Implement only through Persistence-2A–2D. Public Query is assigned to unreleased `0.5.0-experimental`; package identity is unchanged. [2C evidence](PersistenceFoundation2C.md) owns its qualification, distinct from 2D combined closure. |
+| D23 — resolved Gameplay A exact-host Player lifecycle observations | Adds only Players.PlayerDied(Player, PlayerDeathContext) and PlayerSpawned(Player, PlayerSpawnContext) through the existing owned Signal path. Completed terminal death and eligible initial/full respawn require the exact host completion fences, original connection and bounded capture/queue/fanout. [Gameplay A evidence](GameplayFoundationA-Validation.md) owns the tested tuple, context fields and qualification scope. | Development API `0.6.5-experimental`; no Entity/inventory signals, policies, generic hooks or release/tag authority. D7/D10/D11 remain authoritative. |
 
 ### Canonical detail for resolved decisions
 
@@ -1418,6 +1419,59 @@ Player-1F-C performs combined lifecycle/public closure. No inventory production
 work is authorized by architecture adoption alone.
 
 **Evidence separation:** [Phase1-Validation.md](Phase1-Validation.md) owns the scoped execution-core results. [Phase2-Validation.md](Phase2-Validation.md) owns module/callback/recovery qualification; Phase 1 does not establish their safety. [Phase3-Validation.md](Phase3-Validation.md) owns first-facade qualification; [Phase4-Validation.md](Phase4-Validation.md) records the blocked item investigation, not an implemented item API.
+
+#### D23 — Gameplay A Player lifecycle Signals
+
+The additive public surface is exactly `Players.PlayerDied(Player,
+PlayerDeathContext)` and `Players.PlayerSpawned(Player, PlayerSpawnContext)`,
+using existing Signal:Connect/Connection:Disconnect. Added/Removing semantics
+remain unchanged. There is no new Events service, hook-name API or scheduler.
+
+PlayerDied observes a completed terminal transition of a tracked eligible human,
+once per private qualified life epoch inside its exact D11 connection. It is not
+wounded entry or a vetoable OnPlayerDeath notification. The exact full original
+BasePlayer.Die must complete normally with its qualified base-death progress;
+current flags alone do not establish completion. PlayerSpawned includes eligible
+initial activation and subsequent completed full RespawnAt, including a full
+alive reset. Wake, revive and sleeper reconnect are not spawns. Skipped, throwing,
+nested/unqualified and NPC paths do not manufacture events. The pinned method,
+Carbon transformation/hook and bounded topology checks fail closed on drift.
+Unavailable source registration raises a controlled error.
+
+Contexts are immutable ordinary tables. Death has only optional Position:
+Vector3, Killer: Player and KillerId: string; spawn has only optional Position:
+Vector3. Positions are qualified completion-time root world observations, not
+damage points, later reads or client poses. Only a qualified direct tracked human
+initiator supplies killer fields; missing/environmental/indirect/NPC attribution
+is ordinary nil. No HitInfo, raw Rust/Unity object, cause, weapon, damage type or
+private life token crosses the event transport. Snapshot values confer no host
+capability; captured Player facades keep their defining owner and original D11
+connection, never a delivery-time UserId re-resolution.
+
+Host observation captures bounded immutable identity/scalars only and never
+recursively enters Luau. Existing scheduler admission gives each callback fresh
+VM/domain/deadline authority and pre-entry validation. A disconnected victim,
+disconnected listener or retired owner suppresses queued work; a reconnect cannot
+inherit it. A later killer disconnect does not retarget its captured proxy or
+cancel an otherwise eligible victim observation. No registration, replacement,
+provider reconstruction or fatal recovery replays history.
+
+D7/D10 publication includes CarbonLuau-owned callback roots and registrations,
+not arbitrary Lua mutations. Committed listener demand remains authoritative
+while nested publication is open; provisional connections receive no backlog.
+Failures restore existing owned callback roots and discard newly staged ones.
+Hard global producer, visit, fanout, queue, payload and retained-reservation
+bounds are centralized in GameplayEventPolicy and qualified in the evidence
+record. Cancellation retains native-held accounting until consumption/destruction;
+refund is exact-owner, at most once. Overload drops are counted, not retried.
+Wrong-thread rejection accesses no host, VM, logger or frame collection; bounded
+atomic diagnostics are reported later from an existing owner-thread boundary.
+
+[Gameplay A qualification](GameplayFoundationA-Validation.md) distinguishes
+exact-host server traces, synthetic managed/native tests, sanitizers, hosted CI
+and authenticated-client evidence. Its experimental identity does not qualify
+arbitrary Rust/Carbon builds or client outcomes. Later gameplay/entity/inventory
+signals and loot/damage policies require separate scoped work.
 
 ## Evidence behind the rules
 

@@ -1,8 +1,9 @@
 # CarbonLuau scripting API
 
 The latest published package is v0.5.0 with experimental scripting API
-`0.5.0-experimental`. The development scripting API is `0.6.0-experimental`;
-Workspace/Entity is assigned there and is **not in published v0.5.0**.
+`0.5.0-experimental`. The development scripting API is `0.6.5-experimental`;
+Workspace/Entity (introduced in 0.6.0) and player lifecycle Signals (introduced in
+0.6.5) are **not in published v0.5.0**.
 [Persistence Foundation 1C](../PersistenceFoundation1C.md)
 and [Foundation 2D](../PersistenceFoundation2D.md) record combined qualification;
 see [persistence](Persistence.md) for the author surface.
@@ -15,6 +16,7 @@ This is server-side Luau, not Roblox API compatibility.
 |---|---|
 | `game` and service discovery | [Globals](Globals.md) |
 | Players, connected-player snapshots, join/leave events | [Players](Services/Players.md) |
+| Development terminal-death and initial/full-respawn observations | [Players](Services/Players.md), [PlayerDeathContext](Types/PlayerDeathContext.md), [PlayerSpawnContext](Types/PlayerSpawnContext.md), [example](../../examples/player-lifecycle/init.luau) |
 | Player-issued chat commands | [Commands](Services/Commands.md) |
 | Player identity, live position/health observation, messaging and permission query | [Player](Types/Player.md) |
 | Rust item identity, bounded physical inventory observation and verified TakeItem/GiveItem | [Items](Services/Items.md), [Player](Types/Player.md), [GiveItemBehavior](Types/GiveItemBehavior.md) |
@@ -36,7 +38,7 @@ See the [discovery guide](Discovery.md),
 [EntityDiscoveryOptions](Types/EntityDiscoveryOptions.md) and
 [runnable example](../../examples/world/discovery/init.luau). Public completion
 qualification is PASS in the [2B record](../WorldEntityFoundation2B.md).
-This surface targets development API `0.6.0-experimental` and is not included
+This surface was introduced in development API `0.6.0-experimental` and is not included
 in published package `0.5.0`.
 Combined lifecycle, scale and next-package readiness are recorded in
 [Foundation 2C](../WorldEntityFoundation2C.md).

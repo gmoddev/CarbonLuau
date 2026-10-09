@@ -9,6 +9,9 @@ namespace Carbon.Plugins
         public sealed partial class FacadeWorld
         {
             internal readonly GameplayEventBudget GameplayEvents;
+            // Carbon replaces this with its exact qualified source predicate.
+            // Carbon-independent fixtures supply synthetic host transitions.
+            internal Func<string, bool> GameplayAvailable = Kind => true;
             private bool GameplayDemandDirty = true;
             private int GameplayDiedDemand, GameplaySpawnedDemand;
             private long GameplayFanoutCursor;

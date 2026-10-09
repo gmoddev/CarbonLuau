@@ -117,6 +117,36 @@ internal static class GameplaySignalTypes
             ["Availability"] = Availability(), ["Preview"] = "Unavailable"
         });
         Reject(() => ApiArtifacts.Definitions(Broken), "static specialization alias collision accepted");
+        ExportLspEvidence(Definitions);
         Console.WriteLine("[CarbonLuau:GameplaySignalTypes] PASS synthetic context callback, legacy compatibility, deterministic generation and invalid signature drift");
+    }
+
+    private static void ExportLspEvidence(string Definitions)
+    {
+        string? Requested = Environment.GetEnvironmentVariable("CARBONLUAU_GAMEPLAY_TYPE_EVIDENCE_DIR");
+        if (String.IsNullOrEmpty(Requested)) return;
+        string DirectoryPath = Path.GetFullPath(Requested);
+        Directory.CreateDirectory(DirectoryPath);
+        File.WriteAllText(Path.Combine(DirectoryPath, "SyntheticGameplay.d.luau"), Definitions);
+        File.WriteAllText(Path.Combine(DirectoryPath, "Valid.luau"), "--!strict\n" +
+            "local Players = game:GetService('Players')\n" +
+            "local DeathConnection = Players.PlayerDied:Connect(function(Player, Context)\n" +
+            "    local Name: string = Player.Name\n" +
+            "    local Position: Vector3? = Context.Position\n" +
+            "    if Position then local X: number = Position.X; print(Name, X) end\n" +
+            "end)\nDeathConnection:Disconnect()\n" +
+            "local AddedConnection = Players.PlayerAdded:Connect(function(Player)\n" +
+            "    local UserId: string = Player.UserId; print(UserId)\n" +
+            "end)\nAddedConnection:Disconnect()\n");
+        File.WriteAllText(Path.Combine(DirectoryPath, "WrongCallback.luau"), "--!strict\n" +
+            "game:GetService('Players').PlayerDied:Connect(function(Player: string, Context: number)\n" +
+            "    print(Player, Context)\nend)\n");
+        File.WriteAllText(Path.Combine(DirectoryPath, "ReadonlyContext.luau"), "--!strict\n" +
+            "game:GetService('Players').PlayerDied:Connect(function(Player, Context)\n" +
+            "    Context.Position = nil\n    print(Player.Name)\nend)\n");
+        File.WriteAllText(Path.Combine(DirectoryPath, "UnknownContextField.luau"), "--!strict\n" +
+            "game:GetService('Players').PlayerDied:Connect(function(Player, Context)\n" +
+            "    print(Player.Name, Context.UnqualifiedCause)\nend)\n");
+        Console.WriteLine("[CarbonLuau:GameplaySignalTypes] LSP_EVIDENCE " + DirectoryPath);
     }
 }

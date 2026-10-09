@@ -1,7 +1,10 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures)
 $ErrorActionPreference = 'Stop'
 if ($IncludeDiscoveryFixtures -and $IncludeDiscovery2BFixtures) {
     throw '[CarbonLuau:Package] Select either private Discovery-2A or public Discovery-2B fixtures, never both'
+}
+if ($IncludeGameplayPublicFixtures -and !$IncludeGameplayHostProofFixtures) {
+    throw '[CarbonLuau:Package] Public gameplay fixtures require the scoped A0 actor/cleanup substrate'
 }
 . (Join-Path $PSScriptRoot 'Get-CoreSources.ps1')
 Add-Type -AssemblyName System.IO.Compression
@@ -59,13 +62,16 @@ try {
         if ($IncludeGameplayHostProofFixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.GameplayHostProofFixtures.cs') 'CarbonLuau.GameplayHostProofFixtures.cs'
         }
+        if ($IncludeGameplayPublicFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.GameplayPublicFixtures.cs') 'CarbonLuau.GameplayPublicFixtures.cs'
+        }
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }
 Write-Output $OutputPath
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../examples/scripts') -Destination $OutputDirectory -Recurse -Force
 $Examples = Join-Path $OutputDirectory 'examples'
 New-Item -ItemType Directory -Force -Path $Examples | Out-Null
-foreach ($Name in @('player-events','hello-command','player-teleport','player-take-item')) {
+foreach ($Name in @('player-events','player-lifecycle','hello-command','player-teleport','player-take-item')) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "../examples/$Name") -Destination $Examples -Recurse -Force
 }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot '../examples/addons') -Destination $Examples -Recurse -Force

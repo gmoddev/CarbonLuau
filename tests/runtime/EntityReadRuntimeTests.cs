@@ -96,7 +96,7 @@ internal static class EntityReadRuntimeTests
                 };
                 using (var Host = new Runtime.ScriptHost(Native,
                     new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 100}, Snapshot, World)) {
-                    Source = "assert(game.ApiVersion=='0.6.0-experimental'); " +
+                    Source = "assert(game.ApiVersion=='" + Runtime.FacadePolicy.ApiVersion + "'); " +
                         "local W=game:GetService('Workspace'); assert(W==game:GetService('Workspace')); " +
                         "assert(not pcall(function() W:GetEntityById('1') end))";
                     Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "unready lookup controlled");
