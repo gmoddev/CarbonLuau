@@ -1,14 +1,35 @@
 # Gameplay Foundation A: Player lifecycle qualification
 
-Local status: implementation, exact-host observation/public dispatch, native,
-managed, dependency/resource, tooling and clean-install checks PASS. Final hosted
-CI is pending at this draft. No release or tag.
+Verdict: **GAMEPLAY-A PASS — PLAYER LIFECYCLE SIGNALS QUALIFIED** within the
+recorded exact-host server observation envelope. Local implementation, live
+public dispatch, native/managed, dependency/resource, tooling, clean install and
+final implementation-source hosted CI PASS. Authenticated-client observations
+remain explicitly UNQUALIFIED. No release or tag.
 
 Original qualified starting source: `fc71db4ddb2053a98ad3fd65811e64b58f75b150`.
 The user-requested portable pause checkpoint was
 `22b6ca74d50632fe2459107093cb48399ab01a57`; the resumed checkout was clean.
-All subsequent changes are Gameplay A. Source/evidence commits and final hosted
-results are recorded in the final-source subsection when available.
+All subsequent changes are Gameplay A. Final tested implementation source:
+`5c96fa1aa527535f999b509db00a6e8e6c2d11d3`. The closing evidence commit changes
+only this record and does not alter its tested runtime/tooling inputs.
+
+## Final implementation-source hosted CI
+
+All runs below tested `5c96fa1aa527535f999b509db00a6e8e6c2d11d3`:
+
+- [CarbonLuau validation](https://github.com/gmoddev/CarbonLuau/actions/runs/37881419445):
+  PASS, Windows and Ubuntu full native/runtime/worker/persistence/packaging lanes
+  plus hosted ASan/UBSan/leak fixtures.
+- [Full tooling](https://github.com/gmoddev/CarbonLuau/actions/runs/37881419415):
+  PASS, Windows, Ubuntu and macOS tooling lanes. Tooling platforms do not imply
+  additional Rust server support.
+- [Tooling baseline contracts](https://github.com/gmoddev/CarbonLuau/actions/runs/37881419470): PASS.
+- [Hosted documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/37881419420): PASS.
+
+Implementation/evidence was committed and pushed to `main` using the configured
+GitHub no-reply author and committer identity. The tracked worktree was clean
+and remote HEAD matched at implementation-source closure. Test servers and
+qualification containers were stopped; caches/receipts remain recoverable.
 
 [D23](Invariants.md#d23--gameplay-a-player-lifecycle-signals) owns the resolved
 observation contract. The [supplied architecture](GameplayEventsArchitecture-Research.md)
@@ -181,7 +202,7 @@ qualify Gameplay A or invalidate unrelated historical Windows evidence.
 | API/architecture/identity/docs checks | PASS |
 | Full tooling and actual generated declarations | PASS; 17 preview goldens/cleanup; no preview lifecycle simulation |
 | Pinned LSP 1.70.0 | Actual generated signatures/inference PASS; wrong callback, mutation and unknown field rejected |
-| Final-source hosted CI/docs deployment | Pending |
+| Final implementation-source hosted CI/docs deployment | PASS; exact runs linked above |
 
 Current fresh native hashes: Windows
 `0ddcab77db85f0ccaad1d9cd1f96e1034514d3eadaf98aad0ae6a34c4c3b8f08`;
