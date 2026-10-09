@@ -1,8 +1,12 @@
 # Gameplay B3: EntityDestroyed qualification
 
+Verdict: **GAMEPLAY-B3 PASS — ENTITY DESTRUCTION SIGNAL QUALIFIED**.
+
 Starting source: `d3e464ad4405f791182bbc6e5bdb5a2924ce0b57`, clean `main`.
 Implementation/evidence and qualified production source:
 `12ebee77c90529aed84c2cba9296f89918e03e40`.
+Current final repository qualification source, including the test-fixture correction:
+`640d44548d432c501b9fb531f6dea625f4205daf`.
 Status: Windows/Linux live fixtures, full native/managed regressions,
 sanitizers, final tooling/LSP and deterministic production packaging pass. A later exact-host
 never-active native-deletion negative exposed missing cancellation coverage.
@@ -12,14 +16,15 @@ pinned pool-admission fence covers world retirement without Unity invalidity and
 passes controlled real-pool Windows/Linux qualification. All eight final
 three-source host modes pass on both platforms, including off-thread rejection
 and teardown. Implementation/evidence is committed, pushed and synchronized;
-final-source hosted core validation awaits a fixture-only corrected rerun. The
-first core run failed Ubuntu's persistence-adapter compile because its isolated
-stub lacked `StopEntityDestroyedSource`; Windows was fail-fast cancelled. Hosted
-tooling on Windows, Linux and macOS, core sanitizer job, baseline and documentation
-deployment pass. The no-op fixture correction and focused Windows/Linux tests pass.
+corrected final-source hosted Windows/Linux core validation and sanitizer jobs
+all pass. Hosted tooling on Windows, Linux and macOS, baseline and documentation
+deployment pass. The initial persistence test-fixture compile failure and
+fail-fast cancellation are preserved below; its no-op correction changed no
+production behavior.
 Dedicated B3 allocation-fault reruns and refreshed full
 managed suites pass. Final production clean-bundle execution passes on both hosts.
-This is not a completed overall PASS record yet. No release or tag is created.
+No release or tag is created. The PASS covers the exact host tuple and truthful
+best-effort observation contract below, not unqualified cleanup/client guarantees.
 Development API remains `0.6.5-experimental`; package remains `0.5.0`.
 
 ## Public contract and coverage
@@ -229,7 +234,7 @@ Preliminary live fixture package SHA256, before the native coverage correction:
 | Final three-source normal/no-replay/watch-byte/watch-count/depth | PASS fresh Windows/Linux host runs; exact receipts below |
 | Final off-thread source rejection | PASS Windows/Linux injected owner-thread violation fails the source closed |
 | Final full source teardown | PASS Windows/Linux zero held watches, slots/text/pending accounting; disposable hosts stopped and prior D20 state restored |
-| Final-source hosted core validation CI | First run Ubuntu persistence test-fixture compile failure; Windows cancelled, sanitizer PASS; fixture-only corrected rerun pending |
+| Final-source hosted core validation CI | PASS corrected Windows/Linux regressions and sanitizer jobs; initial fixture-only failure preserved below |
 | Final-source hosted tooling CI | PASS Windows/Linux/macOS; links below |
 | Final-source hosted baseline/documentation | PASS on tested implementation commit; links below |
 
@@ -439,19 +444,25 @@ passed the configured GitHub no-reply guard. The tracked tree was clean and loca
 `main` synchronized with `origin/main` immediately after that push. No disposable
 Rust server or orphaned task worker remained on either Windows or Linux. This
 subsequent test-fixture/evidence update does not change the qualified production
-source. The final repository qualification SHA will include that correction and
-be recorded after the required hosted rerun passes.
+source. The final repository qualification SHA includes that correction and
+is `640d44548d432c501b9fb531f6dea625f4205daf`, committed and pushed to `main`.
+Its hosted rerun passes all Windows/Linux validation and sanitizer jobs; the
+earlier failure is retained below. This final documentation-only closure introduces
+no code/test/API/identity changes; its commit is separate from the tested source
+and will be recorded in the final task report after guarded commit/push.
 
 | Hosted final-source gate | Run / current result |
 |---|---|
 | Initial Windows/Linux validation | [37909458868](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458868) / FAILED Ubuntu CompilePersistenceAdapter `CS0103`; Windows fail-fast cancelled; sanitizer PASS |
-| Corrected final Windows/Linux validation | Pending test-fixture/evidence commit and hosted rerun |
-| Tooling A/B | [37909458865](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458865) / PASS Windows/Linux/macOS |
+| Corrected final Windows/Linux validation | [37910341161](https://github.com/gmoddev/CarbonLuau/actions/runs/37910341161) / PASS Windows, Ubuntu workers/regressions and sanitizer jobs on `640d44548d432c501b9fb531f6dea625f4205daf` |
+| Initial Tooling A/B | [37909458865](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458865) / PASS Windows/Linux/macOS |
+| Corrected final Tooling A/B | [37910341240](https://github.com/gmoddev/CarbonLuau/actions/runs/37910341240) / PASS Windows/Linux/macOS |
 | Baseline | [37909458922](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458922) / PASS |
-| Documentation deployment | [37909458932](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458932) / PASS |
+| Initial documentation deployment | [37909458932](https://github.com/gmoddev/CarbonLuau/actions/runs/37909458932) / PASS |
+| Corrected final documentation deployment | [37910341214](https://github.com/gmoddev/CarbonLuau/actions/runs/37910341214) / PASS |
 
-Overall B3 PASS remains pending the core validation result. No release, tag or
-identity change accompanies this implementation or evidence closure. B2 remains
+All required available B3 gates pass. No release, tag or identity change
+accompanies this implementation or evidence closure. B2 remains
 a separate EntityDied task: cause-independent removal proves neither a death
 transition nor killer attribution.
 
@@ -463,3 +474,16 @@ behavior. Focused Windows/Linux adapter builds and real-VM/worker teardown tests
 pass with zero reservations, VMs, callback roots, native mappings or task threads.
 No production source changed; the exact-host eight-mode evidence remains valid
 for production commit `12ebee77c90529aed84c2cba9296f89918e03e40`.
+
+The qualified contract excludes attempted/vetoed Kill, destruction inferred from
+flags or D20 retirement alone, registry churn, cancellation intent and weak
+collection before actual completion proof. Equivocal weak identity is counted and
+dropped rather than fabricated or reacquired by ID. Delivery remains bounded,
+best-effort and non-replaying; overload and ambiguous recent-registration windows
+may drop notifications. Natural vanilla pooling and actual pre-proof weak GC were
+NOT OBSERVED in live runs; controlled genuine host-pool admission/reuse and
+synthetic weak-loss safety paths are separately qualified. Still-network-registered
+pool misuse is not successful world removal. Native deletion can leave registry
+ghosts, and no cleanup convergence, loot/death cause, client acknowledgement or
+physical allocation reclamation guarantee is added. These are precise exclusions
+and evidence labels, not unresolved architecture gates.
