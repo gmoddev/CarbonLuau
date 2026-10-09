@@ -150,6 +150,11 @@ foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
             $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
             throw "Persistence availability/qualification differs: $($Declaration.Id)"
         }
+    } elseif ($Declaration.Id -ceq 'Workspace.EntitySpawned') {
+        if ($Declaration.Availability.SinceApi -cne '0.6.5-experimental' -or
+            $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
+            throw 'EntitySpawned availability/qualification differs'
+        }
     } elseif ($Declaration.Id -cin $EntityTypes -or $Declaration.OwnerId -cin $EntityTypes) {
         if ($Declaration.Availability.SinceApi -cne '0.6.0-experimental' -or
             $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
@@ -203,7 +208,8 @@ foreach ($Example in @('exact-lookup','equality','string-id')) {
 $EntityMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Entity' } | ForEach-Object Name | Sort-Object)
 if (($EntityMembers -join ',') -cne 'Id,Position,Prefab') { throw 'Unexpected Entity public member' }
 $WorkspaceMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Workspace' } | ForEach-Object Name | Sort-Object)
-if (($WorkspaceMembers -join ',') -cne 'GetEntitiesInRadiusAsync,GetEntityById' -or
+if (($WorkspaceMembers -join ',') -cne 'EntitySpawned,GetEntitiesInRadiusAsync,GetEntityById' -or
+    !$Definitions.Contains('read EntitySpawned: SignalWith<') -or
     !$Definitions.Contains('function GetEntitiesInRadiusAsync(self, Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?): ()') -or
     !$Definitions.Contains('function GetEntityById(self, Id: string): (Entity?)') -or
     !$Definitions.Contains('function GetService(self, Name: "Workspace"): (Workspace)')) {

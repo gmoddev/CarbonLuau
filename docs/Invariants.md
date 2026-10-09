@@ -235,7 +235,8 @@ qualified. Later Spawn attempts remain under the same continuous observer.
 Neither current flags nor a world-load marker manufactures per-object history.
 
 This is a **narrow, exact-host-qualified Carbon AutoPatch/Harmony adaptation**
-for private Entity lifetime only, not general permission to patch Rust or Carbon.
+for private Entity lifetime and the qualified B1 notification, not general
+permission to patch Rust or Carbon.
 The 24-method inventory, Carbon hook pair, patch topology/order and host binary
 identities fail closed on drift. Initial installation into an already-running
 server cannot establish the baseline: Entity admission stays unavailable until
@@ -244,6 +245,26 @@ continuity and likewise requires restart. Ordinary root/addon replacement and
 VM recovery preserve the still-installed host observer while retiring the old
 VM/domain/publication facade authority. Host-process restart creates a fresh
 observer and lifetime space; no Entity token persists across processes.
+
+Gameplay B1 additively exposes `Workspace.EntitySpawned:Connect(function(Entity)
+end)` on the qualified hosts in development API `0.6.5-experimental`. Only the
+successful completed outermost virtual Spawn, after catalog enrollment and
+startup qualification, may produce this notification. The early Carbon
+`OnEntitySpawned` hook is not completion authority. Reconciliation, listener
+registration, replacement and recovery produce no historical replay.
+
+Delivery revalidates the original exact Entity lifetime and committed listener
+domain/publication at fresh callback admission. An entity killed, replaced,
+re-spawned or otherwise retired before admission is suppressed; network-ID
+lookup must never choose a replacement for a stale event. The resulting proxy
+uses ordinary D20 live reads, equality and weak host identity. Later host races
+may still cause controlled stale errors. D7/D10 listener publication and the
+existing D23 owned Signal, global producer/fanout/retention limits, native
+reservations, cancellation and scheduler are reused; no second event system or
+budget is introduced. Unsupported host/source registration fails closed.
+[Gameplay B1 qualification](GameplayB1-Validation.md) owns the exact tested
+tuple and bounds. Entity death/destruction, damage, inventory and policies are
+not approved by this addition.
 
 The historical [registry-continuity investigation](WorldEntityLifetimeInvestigation.md)
 remains valid negative evidence: object, network ID, prefab and current keyed

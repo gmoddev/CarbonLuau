@@ -27,9 +27,9 @@ bool GameplayUserId(std::string_view Text)
     for (unsigned char Character : Text) if (Character < '0' || Character > '9') return false;
     return true;
 }
-bool GameplayName(std::string_view Text)
+bool GameplayName(std::string_view Text, size_t Maximum = 128)
 {
-    if (Text.size() > 128) return false;
+    if (Text.size() > Maximum) return false;
     for (size_t Index = 0; Index < Text.size();) {
         uint32_t Code = uint8_t(Text[Index++]);
         if (!Code) return false;
@@ -88,8 +88,17 @@ bool ValidateGameplay(const char* Bytes, uint32_t Length, uint64_t& Reservation)
         if (Count == Fields.size()) return false;
         Fields[Count++] = std::string_view(Bytes + Start, End - Start); Start = End + 1;
     }
-    if (Count != Fields.size() || Start != Length || (Fields[0] != "died" && Fields[0] != "spawned")) return false;
+    if (Count != Fields.size() || Start != Length) return false;
     uint64_t Ignored = 0;
+    if (Fields[0] == "entityspawned") {
+        if (!GameplayIdentity(Fields[1], Ignored) || !GameplayIdentity(Fields[2], Ignored) ||
+            !GameplayIdentity(Fields[3], Ignored) || Fields[4].empty() || !GameplayName(Fields[4], 512) ||
+            !GameplayIdentity(Fields[5], Reservation) || !GameplayIdentity(Fields[6], Ignored) ||
+            !GameplayIdentity(Fields[7], Ignored)) return false;
+        for (size_t Index = 8; Index < Fields.size(); ++Index) if (!Fields[Index].empty()) return false;
+        return true;
+    }
+    if (Fields[0] != "died" && Fields[0] != "spawned") return false;
     if (!GameplayIdentity(Fields[1], Ignored) || !GameplayIdentity(Fields[2], Ignored) ||
         !GameplayUserId(Fields[3]) || !GameplayName(Fields[4]) || !GameplayIdentity(Fields[5], Reservation)) return false;
     bool NoPosition = Fields[6].empty() && Fields[7].empty() && Fields[8].empty();
@@ -257,7 +266,7 @@ ClStatus cl_domain_event(ClHandle Id, ClHandle DomainId, const char* Payload, ui
     // This reserved tag is never an ordinary script Signal/event dispatch.
     if (Kind == "discovery")
         return ReadyDiscovery(*Runtime, *Owner, Payload, Length);
-    bool Gameplay = Kind == "died" || Kind == "spawned";
+    bool Gameplay = Kind == "died" || Kind == "spawned" || Kind == "entityspawned";
     uint64_t Reservation = 0;
     if (Gameplay) {
         if (!ValidateGameplay(Payload, Length, Reservation)) return CL_INVALID_ARGUMENT;

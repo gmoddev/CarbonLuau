@@ -905,6 +905,9 @@
   "@carbonluau/global/Vector3.new": {
     "documentation": "Vector3.new."
   },
+  "@carbonluau/globaltype/Workspace.EntitySpawned": {
+    "documentation": "Future qualified full Spawn completions; exact live lifetime revalidated before deferred delivery, no startup replay."
+  },
   "@carbonluau/globaltype/Workspace.GetEntitiesInRadiusAsync": {
     "documentation": "Committed-owner non-yielding bounded radius discovery; finite nonnegative radius. Results are encounter observations with exact lifetime validation at callback admission; failures return nil/ErrorCode. Two requests/domain, eight globally, 256 results and 120-second absolute deadline including queued completion. Later births excluded; retirement suppresses callbacks; no replay."
   },

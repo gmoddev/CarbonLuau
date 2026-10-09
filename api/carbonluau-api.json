@@ -8009,6 +8009,32 @@
       ]
     },
     {
+      "Id": "Workspace.EntitySpawned",
+      "Name": "EntitySpawned",
+      "OwnerId": "Workspace",
+      "Kind": "Signal",
+      "Summary": "Future qualified full Spawn completions; exact live lifetime revalidated before deferred delivery, no startup replay.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Entity",
+              "Type": "Entity",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
       "Id": "Workspace.GetEntitiesInRadiusAsync",
       "Name": "GetEntitiesInRadiusAsync",
       "OwnerId": "Workspace",

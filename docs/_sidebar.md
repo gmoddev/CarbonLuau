@@ -96,4 +96,5 @@
   - [Foundation F](FoundationF.md)
   - [Foundation G](FoundationG.md)
   - [Gameplay A](GameplayFoundationA-Validation.md)
+  - [Gameplay B1](GameplayB1-Validation.md)
   - [Phase 5 evidence](Phase5-Validation.md)

@@ -42,6 +42,15 @@ from this assignment. [Gameplay A evidence](GameplayFoundationA-Validation.md)
 separates qualified exact server observations, synthetic transport fixtures,
 hosted tests and still-unqualified authenticated-client behavior.
 
+Gameplay B1 introduces only `Workspace.EntitySpawned` under the same
+`0.6.5-experimental` development API. [B1 qualification](GameplayB1-Validation.md)
+records exact Windows/Linux completed-Spawn evidence, original-lifetime
+admission, shared global Player/Entity event limits, regressions and host
+topology/restart requirements. Earlier Entity members keep their 0.6.0
+introduction. No package/ABI/provider/schema/Luau identity changes or release/tag
+follow. Live server evidence is separate from synthetic lifecycle/stress tests
+and does not claim authenticated-client behavior.
+
 Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Phase 3 introduces package `0.3.0`, additive native ABI `1.2`, and the separate scripting identity `CarbonLuau` / `0.3.0-experimental` / `Experimental`, inspectable through read-only game fields and operator status. D8/D12 own the minimum policy; [public compatibility](api/Compatibility.md) documents it. Additive changes preserve existing contracts; removing/renaming an API or changing its types, lifetime, failures or authorization is breaking and requires an explicit version, documentation and migration decision. A larger deprecation/negotiation framework remains deferred.
 
 The published `v0.3.0` release maps package `0.3.0`, scripting API

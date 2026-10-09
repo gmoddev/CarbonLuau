@@ -437,6 +437,7 @@ declare extern type Vector3 with
 end
 
 declare extern type Workspace with
+    read EntitySpawned: SignalWith<(Entity: Entity) -> ()>
     function GetEntitiesInRadiusAsync(self, Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?): ()
     function GetEntityById(self, Id: string): (Entity?)
 end

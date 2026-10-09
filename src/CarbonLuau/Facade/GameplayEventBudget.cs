@@ -11,7 +11,7 @@ namespace Carbon.Plugins
             internal const int CapturesPerFrame = 128, DeliveriesPerFrame = 128, DeliveriesPerDomain = 32;
             internal const int VisitsPerFrame = 4096, Reservations = 512, PayloadBytes = 2048;
             internal const int RetainedTransportBytes = Reservations * PayloadBytes * 2;
-            internal static bool Kind(string Value) { return Value == "died" || Value == "spawned"; }
+            internal static bool Kind(string Value) { return Value == "died" || Value == "spawned" || Value == "entityspawned"; }
             internal static bool Identity(string Text, out ulong Value)
             {
                 Value = 0;
@@ -32,6 +32,10 @@ namespace Carbon.Plugins
                 internal FacadeSession.PublicationWitness Publication;
                 internal int Charge;
                 internal bool Native, Cancelled;
+                // Strong canonical record, weak Rust identity. No host object
+                // or network-ID lookup is retained as event authority.
+                internal EntityLifetimeModel.Binding Entity;
+                internal string EntityHost;
             }
             private readonly FacadeWorld World;
             private readonly Dictionary<ulong, Reservation> Held = new Dictionary<ulong, Reservation>(GameplayEventPolicy.Reservations);
@@ -77,7 +81,8 @@ namespace Carbon.Plugins
                 }
                 Deliveries++; DomainDeliveries[Owner.DomainLifetimeId] = CountValue + 1; return true;
             }
-            internal ulong Reserve(FacadeSession Owner, string Kind, string Listener, string[] Fields, out byte[] Payload)
+            internal ulong Reserve(FacadeSession Owner, string Kind, string Listener, string[] Fields, out byte[] Payload,
+                EntityLifetimeModel.Binding Entity = null)
             {
                 Payload = null;
                 if (Held.Count >= GameplayEventPolicy.Reservations || Next == UInt64.MaxValue) { Count(ref QueueRejected); return 0; }
@@ -90,7 +95,8 @@ namespace Carbon.Plugins
                     Payload = null; Count(ref PayloadRejected); return 0;
                 }
                 Held.Add(Nonce, new Reservation {Owner = Owner, Kind = Kind, Listener = Listener,
-                    Publication = Owner.RootGameplayPublication, Charge = Charge});
+                    Publication = Owner.RootGameplayPublication, Charge = Charge, Entity = Entity,
+                    EntityHost = Kind == "entityspawned" ? Fields[6] : null});
                 RetainedBytes += Charge; Count(ref Accepted); return Nonce;
             }
             internal bool ToNative(FacadeSession Owner, ulong Nonce)
@@ -105,6 +111,14 @@ namespace Carbon.Plugins
                 if (Fields.Length != 12 || !GameplayEventPolicy.Identity(Fields[5], out Nonce) ||
                     !Held.TryGetValue(Nonce, out Value) || !Object.ReferenceEquals(Value.Owner, Owner) || !Value.Native || Value.Cancelled ||
                     Value.Kind != Fields[0] || Value.Listener != Fields[1] || !Owner.IsGameplayPublicationCurrent(Value.Publication)) {
+                    Count(ref StaleRejected); return false;
+                }
+                if (Fields[0] == "entityspawned" && (Value.Entity == null || Value.Entity.Retired || Value.Entity.Record.Retired ||
+                    Fields[2] != Value.Entity.Record.Token.ToString(CultureInfo.InvariantCulture) ||
+                    Fields[3] != Value.Entity.Record.NetworkId.ToString(CultureInfo.InvariantCulture) ||
+                    Fields[4] != Value.Entity.Record.Prefab ||
+                    Fields[6] != Value.EntityHost ||
+                    Fields[7] != Value.Publication.Token.ToString(CultureInfo.InvariantCulture))) {
                     Count(ref StaleRejected); return false;
                 }
                 return true;

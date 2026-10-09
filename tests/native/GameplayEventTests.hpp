@@ -102,6 +102,20 @@ struct Fixture {
 
 static void Codec()
 {
+    {
+    Fixture F("return");
+    auto Entity = std::vector<std::string>{"entityspawned", "1", "41", "9", "assets/fixture.prefab", "901", "77", "1", "", "", "", ""};
+    Check(F.Submit(Entity) == CL_OK && F.Step() == CL_OK && !F.Runtime().GameplayReserved,
+        "EntitySpawned shares existing reserved queue and consumption");
+    Entity[5] = "902"; Entity[4] = std::string(512, 'x');
+    Check(F.Submit(Entity) == CL_OK && F.Step() == CL_OK, "maximum prefab bytes");
+    for (const auto& Change : std::vector<std::pair<unsigned, std::string>> {
+        {2,"0"},{2,"01"},{3,"0"},{3,"18446744073709551616"},{4,""},{4,std::string(513,'x')},
+        {4,std::string("\xc0\x80",2)},{6,"0"},{7,"0"},{8,"1"},{11,"invented"}}) {
+        auto Bad = Entity; Bad[4]="assets/fixture.prefab"; Bad[5]="903"; Bad[Change.first]=Change.second;
+        Check(F.Submit(Bad) == CL_INVALID_ARGUMENT && !F.Runtime().GameplayReserved, "malformed EntitySpawned no retention");
+    }
+    }
     Fixture F;
     std::vector<std::vector<std::string>> Invalid;
     for (const auto& Change : std::vector<std::pair<unsigned,std::string>> {

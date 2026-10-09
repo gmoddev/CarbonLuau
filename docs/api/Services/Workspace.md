@@ -8,7 +8,41 @@ qualified Rust/Carbon targets only. The latest published package remains
 | Method | Result | Behavior |
 |---|---|---|
 | `Workspace:GetEntityById(Id: string)` | `Entity?` | One keyed lookup of a currently admitted Rust `BaseEntity`; `nil` if a valid ID is absent. |
+| `Workspace.EntitySpawned` | Signal `(Entity) -> ()` | Future qualified full outer Spawn completions. Introduced in development API `0.6.5-experimental`. |
 | `Workspace:GetEntitiesInRadiusAsync(Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?)` | `()` | Non-yielding committed-only submission; later callback with the whole result array or a controlled error. Qualified by [Discovery-2B](../../WorldEntityFoundation2B.md). |
+
+## EntitySpawned
+
+```luau
+local Workspace = game:GetService("Workspace")
+Workspace.EntitySpawned:Connect(function(Entity)
+    print(Entity.Id, Entity.Prefab, Entity.Position)
+end)
+```
+
+The existing Signal/Connection conventions apply. CarbonLuau captures only
+after the qualified outermost virtual Spawn returns successfully. Carbon's
+early OnEntitySpawned hook is not the event's completion authority.
+
+Each callback receives an ordinary domain-bound exact Entity facade. The original
+private lifetime is revalidated at fresh scheduler admission. A destroyed,
+re-spawned, registry-replaced or retired entity is suppressed, never looked up
+again by network ID to select a replacement. Callback properties remain live
+reads and may fail if the world changes after admission; use pcall for races.
+
+There is no startup/incumbent replay, history buffer or catch-up on registration,
+root/addon replacement, provider reload or VM recovery. First-install hotload and
+full plugin unload/reload retain D20's server-restart requirement. Unknown host or
+patch drift fails closed, including registration while the source is unavailable.
+
+Entity events share Gameplay A's global work/queue/byte limits with Player events,
+not another independent frame budget. Overload can drop deliveries; diagnostics
+count drops without retries. Failed module/candidate connections publish no
+listeners; committed Disconnect suppresses queued work. No Entity death/removal,
+damage, inventory, policy or arbitrary-hook surface is implemented by B1.
+
+See [B1 qualification](../../GameplayB1-Validation.md) and
+[Signal](../Types/Signal.md). This is development source, not the published v0.5.0.
 
 ## GetEntityById
 

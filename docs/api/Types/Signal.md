@@ -15,6 +15,10 @@ runtime and owned subscription journal, not a second Signal implementation.
 Generated tooling uses a structural `SignalWith<Callback>` specialization for
 these richer callback types; this is not a public constructor or hook API.
 
+Workspace.EntitySpawned uses `(Entity) -> ()` in development API
+`0.6.5-experimental`, with the same owned registration/queue/publication path.
+Entity lifetime and startup continuity rules are in the Workspace reference.
+
 Registers one callback in the current owning domain and returns a
 [Connection](Connection.md). No permissions are needed. Wrong receiver or
 non-function callback raises an error. Each Player signal permits 128 live

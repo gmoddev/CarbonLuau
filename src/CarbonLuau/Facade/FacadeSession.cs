@@ -217,6 +217,13 @@ namespace Carbon.Plugins
                 return EntityWitnesses.TryGetValue(Token, out Witness) &&
                     IsPublicationWitnessCurrent(Witness) ? Witness : null;
             }
+            internal PublicationWitness CaptureCommittedEntityWitness()
+            {
+                World.Players.CheckOwner();
+                if (!IsGameplayPublicationCurrent(RootPublication)) throw new FacadeException("stale entity event owner");
+                EntityWitnesses[RootPublication.Token] = RootPublication;
+                return RootPublication;
+            }
             private void PruneEntityWitnesses()
             {
                 var Retired = new List<ulong>();
@@ -330,7 +337,7 @@ namespace Carbon.Plugins
                 foreach (PublicationCheckpoint Checkpoint in Publications) Checkpoint.Witness.Retired = true;
                 Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear();
                 EntityWitnesses.Clear(); ClearStorageHints(); Gui.Dispose();
-                FirstPublication = null; GameplayDiedListeners = GameplaySpawnedListeners = 0;
+                FirstPublication = null; GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = 0;
                 World.InvalidateGameplayDemand();
             }
             private bool Gate(string[] Fields)
@@ -349,8 +356,16 @@ namespace Carbon.Plugins
                         UInt64.TryParse(Fields[8], NumberStyles.None, CultureInfo.InvariantCulture, out ButtonId) &&
                         World.Gui.ValidateQueued(Fields[5], Fields[1], Fields[2], Fields[3], ScreenId, Epoch, ButtonId);
                 }
-                if (GameplayEventPolicy.Kind(Fields[0]) && (!World.GameplayEvents.Validate(this, Fields) ||
-                    World.Players.Resolve(Fields[2], Fields[3]) == null)) return false;
+                if (GameplayEventPolicy.Kind(Fields[0])) {
+                    if (!World.GameplayEvents.Validate(this, Fields)) return false;
+                    if (Fields[0] == "entityspawned") {
+                        if (World.Entities == null) return false;
+                        try {
+                            string[] Value = World.Entities.Read(this, Fields[2], Fields[7], "Id");
+                            if (Value.Length != 1 || Value[0] != Fields[3]) return false;
+                        } catch (FacadeException) { return false; }
+                    } else if (World.Players.Resolve(Fields[2], Fields[3]) == null) return false;
+                }
                 ulong IdValue; string Kind;
                 return ulong.TryParse(Fields[1], out IdValue) && Listeners.TryGetValue(IdValue, out Kind) && Kind == Fields[0];
             }

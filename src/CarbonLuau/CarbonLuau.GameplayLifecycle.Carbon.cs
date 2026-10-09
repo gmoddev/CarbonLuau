@@ -142,7 +142,9 @@ namespace Carbon.Plugins
             GameplayLifecycleOwner = Thread.CurrentThread.ManagedThreadId;
             if (Gameplay != null) {
                 Gameplay.GameplayEvents.FrameClock = () => UnityEngine.Time.frameCount;
-                Gameplay.GameplayAvailable = Kind => Kind == "died" ? GameplayDeathQualified : Kind == "spawned" && GameplaySpawnQualified;
+                Gameplay.GameplayAvailable = Kind => Kind == "entityspawned" ?
+                    EntityHostPinned && EntityStartupQualified && !EntityObserverBroken :
+                    Kind == "died" ? GameplayDeathQualified : Kind == "spawned" && GameplaySpawnQualified;
                 GameplayCaptureAdmission = Kind => !Stopping && Host != null && Host.Ready && Gameplay.GameplayEvents.Capture(Kind);
                 GameplayObservationReceiver = Observation => {
                     if (Stopping || Host == null || !Host.Ready || Gameplay == null) return;

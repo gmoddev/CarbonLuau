@@ -738,9 +738,9 @@ namespace Carbon.Plugins
             if (Chain.Methods.Count != 0) return;
             EntityLifetimeModel.SpawnAttempt Attempt = Chain.Attempt;
             Chain.Attempt = null;
-            if (Attempt != null)
-                EntityLifetimes.CompleteSpawn(Attempt,
-                    !EntityObserverBroken && !Chain.Poisoned && Chain.BaseReturned, !Chain.Poisoned);
+            if (Attempt != null && EntityLifetimes.CompleteSpawn(Attempt,
+                !EntityObserverBroken && !Chain.Poisoned && Chain.BaseReturned, !Chain.Poisoned))
+                ObserveEntitySpawned(Attempt.Target as BaseEntity);
         }
     }
 }

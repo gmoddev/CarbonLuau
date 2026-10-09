@@ -635,6 +635,8 @@ end
 EntityMeta.__metatable = "CarbonLuau.Entity"
 table.freeze(EntityMeta)
 local Workspace = {}
+-- @carbonluau-api {"Owner":"Workspace","Name":"EntitySpawned","Kind":"Signal","Args":[["Entity","Entity"]],"Returns":[],"Summary":"Future qualified full Spawn completions; exact live lifetime revalidated before deferred delivery, no startup replay.","SinceApi":"0.6.5-experimental","Binding":"Workspace.EntitySpawned = Signal(\"entityspawned\")"}
+Workspace.EntitySpawned = Signal("entityspawned")
 local function GetEntity(Fields, Offset)
     local Entity = MakeUserdata(EntityMeta)
     EntityRecords[Entity] = {Token = Fields[Offset + 1], Publication = Fields[Offset + 3]}
@@ -689,6 +691,10 @@ table.freeze(Game)
 local function Dispatch(Fields)
     local Callback = Callbacks.Roots[Fields[2]]
     if not Callback then return end
+    if Fields[1] == "entityspawned" then
+        Callback(GetEntity({Fields[7], Fields[3], Fields[4], Fields[8]}, 1))
+        return
+    end
     local Player = GetPlayer(Fields[3], Fields[4], Fields[5])
     if Fields[1] == "died" or Fields[1] == "spawned" then
         local Position = nil

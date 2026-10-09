@@ -1,4 +1,4 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures)
 $ErrorActionPreference = 'Stop'
 if ($IncludeDiscoveryFixtures -and $IncludeDiscovery2BFixtures) {
     throw '[CarbonLuau:Package] Select either private Discovery-2A or public Discovery-2B fixtures, never both'
@@ -64,6 +64,9 @@ try {
         }
         if ($IncludeGameplayPublicFixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.GameplayPublicFixtures.cs') 'CarbonLuau.GameplayPublicFixtures.cs'
+        }
+        if ($IncludeEntitySpawnFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntitySpawnFixtures.cs') 'CarbonLuau.EntitySpawnFixtures.cs'
         }
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }
