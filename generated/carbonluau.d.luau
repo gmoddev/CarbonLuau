@@ -1,4 +1,8 @@
 -- Generated from implementation-owned CarbonLuau API declarations. Do not edit.
+export type SignalWith<Callback> = {
+    read Connect: (self: SignalWith<Callback>, Callback: Callback) -> (Connection),
+}
+
 declare extern type Addon with
     read Id: string
     function IsDependencyAvailable(self, Id: string): (boolean)
@@ -52,6 +56,12 @@ declare extern type Entity with
     read Position: Vector3
     read Prefab: string
 end
+
+export type EntityDestroyedContext = {
+    read Id: string,
+    read Position: Vector3?,
+    read Prefab: string,
+}
 
 export type EntityDiscoveryOptions = {Prefab: string?, Limit: number?}
 
@@ -121,7 +131,7 @@ end
 declare extern type Game with
     read ApiName: "CarbonLuau"
     read ApiStatus: "Experimental"
-    read ApiVersion: "0.6.0-experimental"
+    read ApiVersion: "0.6.5-experimental"
     function GetService(self, Name: "Commands"): (Commands)
     function GetService(self, Name: "DataStoreService"): (DataStoreService)
     function GetService(self, Name: "Gui"): (Gui)
@@ -218,11 +228,23 @@ declare extern type Player with
     read UserId: string
 end
 
+export type PlayerDeathContext = {
+    read Killer: Player?,
+    read KillerId: string?,
+    read Position: Vector3?,
+}
+
+export type PlayerSpawnContext = {
+    read Position: Vector3?,
+}
+
 declare extern type Players with
     function GetPlayerByUserId(self, UserId: string): (Player?)
     function GetPlayers(self): ({Player})
     read PlayerAdded: Signal
+    read PlayerDied: SignalWith<(Player: Player, Context: PlayerDeathContext) -> ()>
     read PlayerRemoving: Signal
+    read PlayerSpawned: SignalWith<(Player: Player, Context: PlayerSpawnContext) -> ()>
 end
 
 declare extern type ScreenGui extends GuiNode with
@@ -421,6 +443,8 @@ declare extern type Vector3 with
 end
 
 declare extern type Workspace with
+    read EntityDestroyed: SignalWith<(Context: EntityDestroyedContext) -> ()>
+    read EntitySpawned: SignalWith<(Entity: Entity) -> ()>
     function GetEntitiesInRadiusAsync(self, Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?): ()
     function GetEntityById(self, Id: string): (Entity?)
 end

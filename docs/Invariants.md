@@ -176,9 +176,10 @@ This is the single location for unresolved architecture/policy choices. Accepted
 | D17 - resolved GUI Foundation 3 architecture; implemented and release-candidate qualified through 3E | Foundation 3 additively specializes D15/D16 with deterministic grids, bounded Frame clipping, immutable project-owned fonts and one-way per-Presentation scroll effects as specified below. [GuiFoundation3.md](GuiFoundation3.md) retains the complete supporting design; [GuiFoundation3A.md](GuiFoundation3A.md), [GuiFoundation3B.md](GuiFoundation3B.md), [GuiFoundation3C.md](GuiFoundation3C.md), [GuiFoundation3D.md](GuiFoundation3D.md) and [GuiFoundation3E.md](GuiFoundation3E.md) record implementation and qualification. GUI-3E assigns the additive surface to the still-unreleased package `0.4.0` and scripting API `0.4.0-experimental`. Authenticated-client clipping, font and scroll gates and Windows native/local qualification remain explicit. | Requalify affected behavior; do not claim unobserved client or deferred Windows-native behavior |
 | D18 — resolved Player Interaction Foundation 1 architecture plus inventory-mutation amendment; TakeItem/GiveItem implemented | Foundation 1 additively approves immutable `Vector3`; exact-connection Player position, health and bounded physical inventory observation; read-only item existence; committed-only teleport; and scoped `GiveItem`/`TakeItem` under revised D13. [PlayerInteractionFoundation1.md](PlayerInteractionFoundation1.md) retains the original rationale, [InventoryOwnershipFailureReassessment.md](InventoryOwnershipFailureReassessment.md) owns the mutation amendment, Player-1A through Player-1D record read/spatial implementations, [PlayerInteractionFoundation1FA.md](PlayerInteractionFoundation1FA.md) records TakeItem and [PlayerInteractionFoundation1FB-Validation.md](PlayerInteractionFoundation1FB-Validation.md) records GiveItem InventoryOnly. Authenticated-client Teleport behavior and later closure work remain unqualified or unimplemented as documented. | Implement only through scoped Player-1A–1F and Inventory-M phases; qualify exact host adapters, bounds, lifetime, publication, mutation gates and applicable client behavior before support |
 | D19 — accepted official editor tooling baseline | Shared semantics, API metadata, tooling host and preview plans belong to CarbonLuau; editor integration belongs to carbonluau-vscode. Detailed contracts are in [ToolingBaseline.md](ToolingBaseline.md). Adoption is not Foundation A completion. | Qualify each tooling phase; LSP pairing, platform containment and distribution administration remain implementation gates |
-| D20 — exact-host Entity Foundation 1 read-only public-development surface | A continuously installed, exact-host full-Spawn observer plus successful-startup reconciliation establishes private spawn epochs and no-retargeting Entity lifetime tokens. [Entity-1A qualification](WorldEntityFoundation1A-Validation.md) owns the narrow host/deployment envelope; [Entity-1B validation](WorldEntityFoundation1B-Validation.md) owns keyed runtime behavior; [Entity-1C](WorldEntityFoundation1C.md) owns combined public closure, metadata and release planning. Older negative investigations remain historical evidence. | Requalify any host/patch drift; the `0.6.0-experimental` development API assignment is not a package release |
+| D20 — exact-host Entity Foundation 1 read-only public-development surface | A continuously installed, exact-host full-Spawn observer plus successful-startup reconciliation establishes private spawn epochs and no-retargeting Entity lifetime tokens. [Entity-1A qualification](WorldEntityFoundation1A-Validation.md) owns the narrow host/deployment envelope; [Entity-1B validation](WorldEntityFoundation1B-Validation.md) owns keyed runtime behavior; [Entity-1C](WorldEntityFoundation1C.md) owns combined public closure, metadata and release planning. Additive [B1](GameplayB1-Validation.md) completed-Spawn and [B3](GameplayB3-Validation.md) successful-removal observations retain separate proof/gates. Older negative investigations remain historical evidence. | Requalify host/patch drift; original Entity API `0.6.0-experimental` and B1/B3 `0.6.5-experimental` introductions imply no package release |
 | D21 — resolved Persistence Foundation 1 architecture; private 1A PASS; public API assigned 0.5 | Private root/addon DataStoreService, callback-based GetAsync/SetAsync/RemoveAsync, bounded snapshots and durable per-key transactions in a private SQLite worker. [PersistenceFoundation1.md](PersistenceFoundation1.md) owns signatures, limits, backend contract and qualification gates. The approved PERSIST/EXTRA and physical-budget amendments preserve hard logical/backend extent bounds; 1,280 MiB is an operational safety budget. Historical negative evidence is preserved. | [Private 1A qualification](PersistenceFoundation1A.md) and [public 1B](PersistenceFoundation1B.md) retain their scoped evidence. [1C](PersistenceFoundation1C.md) owns combined closure and the exact final verdict. D12 experimental availability is not package publication approval. |
 | D22 — resolved Persistence Foundation 2 bounded derived-index Query architecture; 2A/2B PASS, public 2C implemented | DataStore:Query uses required Field plus structured Equals/Min/Max/order with automatic CarbonLuau-owned derived indexes. Authors manage no schema, version, migration or index lifecycle; optional Indexes string-list hints only request proactive preparation/retention. Online bounded preparation keeps ordinary persistence available. [PersistenceFoundation2.md](PersistenceFoundation2.md) owns exact API, bounds and qualification gates. | Implement only through Persistence-2A–2D. Public Query is assigned to unreleased `0.5.0-experimental`; package identity is unchanged. [2C evidence](PersistenceFoundation2C.md) owns its qualification, distinct from 2D combined closure. |
+| D23 — resolved Gameplay A exact-host Player lifecycle observations | Adds only Players.PlayerDied(Player, PlayerDeathContext) and PlayerSpawned(Player, PlayerSpawnContext) through the existing owned Signal path. Completed terminal death and eligible initial/full respawn require the exact host completion fences, original connection and bounded capture/queue/fanout. [Gameplay A evidence](GameplayFoundationA-Validation.md) owns the tested tuple, context fields and qualification scope. | Development API `0.6.5-experimental`; no Entity/inventory signals, policies, generic hooks or release/tag authority. D7/D10/D11 remain authoritative. |
 
 ### Canonical detail for resolved decisions
 
@@ -234,7 +235,8 @@ qualified. Later Spawn attempts remain under the same continuous observer.
 Neither current flags nor a world-load marker manufactures per-object history.
 
 This is a **narrow, exact-host-qualified Carbon AutoPatch/Harmony adaptation**
-for private Entity lifetime only, not general permission to patch Rust or Carbon.
+for private Entity lifetime and the qualified B1 notification, not general
+permission to patch Rust or Carbon.
 The 24-method inventory, Carbon hook pair, patch topology/order and host binary
 identities fail closed on drift. Initial installation into an already-running
 server cannot establish the baseline: Entity admission stays unavailable until
@@ -244,10 +246,68 @@ VM recovery preserve the still-installed host observer while retiring the old
 VM/domain/publication facade authority. Host-process restart creates a fresh
 observer and lifetime space; no Entity token persists across processes.
 
+Gameplay B1 additively exposes `Workspace.EntitySpawned:Connect(function(Entity)
+end)` on the qualified hosts in development API `0.6.5-experimental`. Only the
+successful completed outermost virtual Spawn, after catalog enrollment and
+startup qualification, may produce this notification. The early Carbon
+`OnEntitySpawned` hook is not completion authority. Reconciliation, listener
+registration, replacement and recovery produce no historical replay.
+
+Delivery revalidates the original exact Entity lifetime and committed listener
+domain/publication at fresh callback admission. An entity killed, replaced,
+re-spawned or otherwise retired before admission is suppressed; network-ID
+lookup must never choose a replacement for a stale event. The resulting proxy
+uses ordinary D20 live reads, equality and weak host identity. Later host races
+may still cause controlled stale errors. D7/D10 listener publication and the
+existing D23 owned Signal, global producer/fanout/retention limits, native
+reservations, cancellation and scheduler are reused; no second event system or
+budget is introduced. Unsupported host/source registration fails closed.
+[Gameplay B1 qualification](GameplayB1-Validation.md) owns the exact tested
+tuple and bounds. Entity death/destruction, damage, inventory and policies are
+not approved by this addition.
+
+Gameplay B3 separately adds `Workspace.EntityDestroyed:Connect(function(Context)
+end)` in development API `0.6.5-experimental`. It observes actual original-
+incarnation removal through the exact-host collective observer: successful
+original TerminateOnServer completion with original registry/network authority
+released and deactivation; actual hash-pinned pool stack admission after original
+registry/network authority release with unchanged epoch; or bounded owner-thread
+observation that the original weak Unity wrapper is invalid and its epoch
+unchanged. Pool admission certifies before later callbacks/reuse and does not
+require IsDestroyed or deactivation. Native cancellation is
+only a prompt, not complete coverage; original-watch intake uses the existing
+bounded frame pump without realm scans or ID reacquisition. Cancellation, Kill
+attempt, veto, flags, registry churn or D20 lifetime
+retirement alone are not proof. Native deletion may leave host bookkeeping ghosts;
+the event guarantees no cleanup convergence, pool completion or client receipt.
+
+The callback receives only an immutable ordinary `EntityDestroyedContext` with
+captured `Id: string`, `Prefab: string` and optional pre-removal `Position: Vector3`.
+It never receives a destroyed live Entity proxy. Native-only/direct-pool removal supplies nil
+Position. Identity and deduplication bind to the original observed D20 epoch;
+network ID must never reacquire a replacement. Missing weak identity before proof
+cannot certify native destruction. Once certified, the historical scalar fact
+may outlive the wrapper. Native fanout admits only listeners published by the
+last positive live-observation cutoff; ambiguous recent-registration windows may
+drop rather than replay. Snapshots are ordinary values and delivery is best-effort.
+
+B3 retains D20 startup continuity/restart requirements and all 24 Spawn patch
+targets unchanged. Its separately pinned three-target removal/pool topology and native observation
+source fail closed on drift or continuity loss. It reuses D7/D10 listener
+publication and D23/B1 scheduling, reservation, fairness, cancellation and global
+event bounds, with bounded weak watch/text retention and removal nesting. No
+registration, reconciliation, replacement, recovery or shutdown replay exists.
+[Gameplay B3 qualification](GameplayB3-Validation.md) owns exact completion
+evidence, concrete bounds and final gate status. EntityDied, damage, inventory,
+loot/policies and generic hooks remain outside this addition.
+
 The historical [registry-continuity investigation](WorldEntityLifetimeInvestigation.md)
 remains valid negative evidence: object, network ID, prefab and current keyed
 occupancy alone do not prove an incarnation, and actual same-object pooled reuse
-was **not observed**. The [Spawn-prefix probe](WorldEntitySpawnEpochProbe.md)
+was **not observed** in that historical run. B3 separately qualifies controlled
+actual host-pool admission/Pop and same-object reuse with a new completed Spawn
+epoch; it does not retroactively change the historical evidence or claim natural
+world pooling was observed. The [Spawn-prefix probe](WorldEntitySpawnEpochProbe.md)
 showed failed Spawn can leave fully-spawned/keyed state. The
 [completion-fence investigation](WorldEntityCompletionFenceInvestigation.md)
 showed base-method success can precede a throwing outer `BaseEntity.Spawn` tail.
@@ -1418,6 +1478,59 @@ Player-1F-C performs combined lifecycle/public closure. No inventory production
 work is authorized by architecture adoption alone.
 
 **Evidence separation:** [Phase1-Validation.md](Phase1-Validation.md) owns the scoped execution-core results. [Phase2-Validation.md](Phase2-Validation.md) owns module/callback/recovery qualification; Phase 1 does not establish their safety. [Phase3-Validation.md](Phase3-Validation.md) owns first-facade qualification; [Phase4-Validation.md](Phase4-Validation.md) records the blocked item investigation, not an implemented item API.
+
+#### D23 — Gameplay A Player lifecycle Signals
+
+The additive public surface is exactly `Players.PlayerDied(Player,
+PlayerDeathContext)` and `Players.PlayerSpawned(Player, PlayerSpawnContext)`,
+using existing Signal:Connect/Connection:Disconnect. Added/Removing semantics
+remain unchanged. There is no new Events service, hook-name API or scheduler.
+
+PlayerDied observes a completed terminal transition of a tracked eligible human,
+once per private qualified life epoch inside its exact D11 connection. It is not
+wounded entry or a vetoable OnPlayerDeath notification. The exact full original
+BasePlayer.Die must complete normally with its qualified base-death progress;
+current flags alone do not establish completion. PlayerSpawned includes eligible
+initial activation and subsequent completed full RespawnAt, including a full
+alive reset. Wake, revive and sleeper reconnect are not spawns. Skipped, throwing,
+nested/unqualified and NPC paths do not manufacture events. The pinned method,
+Carbon transformation/hook and bounded topology checks fail closed on drift.
+Unavailable source registration raises a controlled error.
+
+Contexts are immutable ordinary tables. Death has only optional Position:
+Vector3, Killer: Player and KillerId: string; spawn has only optional Position:
+Vector3. Positions are qualified completion-time root world observations, not
+damage points, later reads or client poses. Only a qualified direct tracked human
+initiator supplies killer fields; missing/environmental/indirect/NPC attribution
+is ordinary nil. No HitInfo, raw Rust/Unity object, cause, weapon, damage type or
+private life token crosses the event transport. Snapshot values confer no host
+capability; captured Player facades keep their defining owner and original D11
+connection, never a delivery-time UserId re-resolution.
+
+Host observation captures bounded immutable identity/scalars only and never
+recursively enters Luau. Existing scheduler admission gives each callback fresh
+VM/domain/deadline authority and pre-entry validation. A disconnected victim,
+disconnected listener or retired owner suppresses queued work; a reconnect cannot
+inherit it. A later killer disconnect does not retarget its captured proxy or
+cancel an otherwise eligible victim observation. No registration, replacement,
+provider reconstruction or fatal recovery replays history.
+
+D7/D10 publication includes CarbonLuau-owned callback roots and registrations,
+not arbitrary Lua mutations. Committed listener demand remains authoritative
+while nested publication is open; provisional connections receive no backlog.
+Failures restore existing owned callback roots and discard newly staged ones.
+Hard global producer, visit, fanout, queue, payload and retained-reservation
+bounds are centralized in GameplayEventPolicy and qualified in the evidence
+record. Cancellation retains native-held accounting until consumption/destruction;
+refund is exact-owner, at most once. Overload drops are counted, not retried.
+Wrong-thread rejection accesses no host, VM, logger or frame collection; bounded
+atomic diagnostics are reported later from an existing owner-thread boundary.
+
+[Gameplay A qualification](GameplayFoundationA-Validation.md) distinguishes
+exact-host server traces, synthetic managed/native tests, sanitizers, hosted CI
+and authenticated-client evidence. Its experimental identity does not qualify
+arbitrary Rust/Carbon builds or client outcomes. Later gameplay/entity/inventory
+signals and loot/damage policies require separate scoped work.
 
 ## Evidence behind the rules
 

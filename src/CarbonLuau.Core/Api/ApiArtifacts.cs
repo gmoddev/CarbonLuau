@@ -10,9 +10,18 @@ namespace CarbonLuau.Core
     {
         public static string Definitions(JObject Catalog)
         {
+            ApiCatalog.Validate(Catalog);
             var Result = new StringBuilder("-- Generated from implementation-owned CarbonLuau API declarations. Do not edit.\n");
             var Types = ((JArray)Catalog["Types"]).Cast<JObject>().ToDictionary(Value => (string)Value["Id"], StringComparer.Ordinal);
             var Members = ((JArray)Catalog["Members"]).Cast<JObject>().ToList();
+            if (Members.Where(Value => (string)Value["Kind"] == "Signal").Any(Value => SignalType(Value) != "Signal")) {
+                if (Types.ContainsKey("SignalWith")) throw new InvalidOperationException("generated Signal callback alias conflicts with API type");
+                // A static structural specialization of the same runtime Signal.
+                // Preserve the existing nominal Signal and its legacy callback.
+                Result.Append("export type SignalWith<Callback> = {\n")
+                    .Append("    read Connect: (self: SignalWith<Callback>, Callback: Callback) -> (Connection),\n")
+                    .Append("}\n\n");
+            }
             var Written = new HashSet<string>(StringComparer.Ordinal);
             foreach (string Name in Types.Keys.OrderBy(Value => Value, StringComparer.Ordinal))
                 WriteType(Name, Types, Members, Written, Result);
@@ -67,7 +76,7 @@ namespace CarbonLuau.Core
                 if (Kind == "Property" || Kind == "Signal") {
                     Result.Append("    ");
                     if (Kind == "Signal" || !(bool)Member["Writable"]) Result.Append("read ");
-                    Result.Append(MemberName).Append(": ").Append(Kind == "Signal" ? "Signal" : (string)Member["ValueType"]).Append('\n');
+                    Result.Append(MemberName).Append(": ").Append(Kind == "Signal" ? SignalType(Member) : (string)Member["ValueType"]).Append('\n');
                     continue;
                 }
                 foreach (JObject Signature in (JArray)Member["Signatures"])
@@ -87,6 +96,22 @@ namespace CarbonLuau.Core
         { return "(" + String.Join(", ", ((JArray)Signature["Returns"]).Select(Value => (string)Value)) + ")"; }
         private static string FunctionType(JObject Signature)
         { return "(" + Parameters(Signature, false) + ") -> " + Returns(Signature); }
+        private static string SignalType(JObject Member)
+        {
+            var Signatures = Member["Signatures"] as JArray;
+            if (Signatures == null || Signatures.Count == 0 || Signatures.Any(Value =>
+                !(Value is JObject) || !(Value["Parameters"] is JArray) || !(Value["Returns"] is JArray) ||
+                ((JArray)Value["Returns"]).Count != 0))
+                throw new InvalidOperationException("invalid observation Signal signature: " + (string)Member["Id"]);
+            if (Signatures.Count == 1) {
+                var Parameters = (JArray)Signatures[0]["Parameters"];
+                if (Parameters.Count == 1 && (string)Parameters[0]["Type"] == "Player" &&
+                    !(bool)Parameters[0]["Optional"] && !(bool)Parameters[0]["Variadic"]) return "Signal";
+            }
+            var Callbacks = Signatures.Cast<JObject>().Select(FunctionType).Distinct(StringComparer.Ordinal).ToArray();
+            return "SignalWith<" + (Callbacks.Length == 1 ? Callbacks[0] :
+                String.Join(" & ", Callbacks.Select(Value => "(" + Value + ")"))) + ">";
+        }
         public static JObject Documentation(JObject Catalog)
         {
             var Result = new JObject();

@@ -68,6 +68,15 @@
   "@carbonluau/globaltype/Entity.Prefab": {
     "documentation": "Full canonical prefab name for this exact live entity."
   },
+  "@carbonluau/globaltype/EntityDestroyedContext.Id": {
+    "documentation": "Captured original canonical network ID for event correlation, not reusable lifetime authority."
+  },
+  "@carbonluau/globaltype/EntityDestroyedContext.Position": {
+    "documentation": "Optional pre-removal root world position snapshot."
+  },
+  "@carbonluau/globaltype/EntityDestroyedContext.Prefab": {
+    "documentation": "Captured original prefab identity before removal."
+  },
   "@carbonluau/globaltype/Frame.AnchorPoint": {
     "documentation": "Retained AnchorPoint."
   },
@@ -425,6 +434,18 @@
   "@carbonluau/globaltype/Player.UserId": {
     "documentation": "Player.UserId."
   },
+  "@carbonluau/globaltype/PlayerDeathContext.Killer": {
+    "documentation": "Captured exact direct human initiator connection, never retargeted at delivery."
+  },
+  "@carbonluau/globaltype/PlayerDeathContext.KillerId": {
+    "documentation": "Optional captured direct killer UserId, not a lookup request."
+  },
+  "@carbonluau/globaltype/PlayerDeathContext.Position": {
+    "documentation": "Optional root world position observed at terminal death completion."
+  },
+  "@carbonluau/globaltype/PlayerSpawnContext.Position": {
+    "documentation": "Optional root world position observed at completed spawn."
+  },
   "@carbonluau/globaltype/Players.GetPlayerByUserId": {
     "documentation": "Find a connected player by decimal user ID, or nil."
   },
@@ -434,8 +455,14 @@
   "@carbonluau/globaltype/Players.PlayerAdded": {
     "documentation": "Fires when a connection is added."
   },
+  "@carbonluau/globaltype/Players.PlayerDied": {
+    "documentation": "Completed terminal death of an exact tracked human life, not a wounded or vetoed attempt."
+  },
   "@carbonluau/globaltype/Players.PlayerRemoving": {
     "documentation": "Fires when a connection is removed."
+  },
+  "@carbonluau/globaltype/Players.PlayerSpawned": {
+    "documentation": "Completed eligible initial activation or full respawn; no wake/reconnect/revive or history replay."
   },
   "@carbonluau/globaltype/ScreenGui.ClassName": {
     "documentation": "Retained ClassName."
@@ -886,6 +913,12 @@
   },
   "@carbonluau/global/Vector3.new": {
     "documentation": "Vector3.new."
+  },
+  "@carbonluau/globaltype/Workspace.EntityDestroyed": {
+    "documentation": "Future qualified terminal world removals or completed native Entity deletions, with immutable original-incarnation snapshots, no live Entity proxy and no historical replay."
+  },
+  "@carbonluau/globaltype/Workspace.EntitySpawned": {
+    "documentation": "Future qualified full Spawn completions; exact live lifetime revalidated before deferred delivery, no startup replay."
   },
   "@carbonluau/globaltype/Workspace.GetEntitiesInRadiusAsync": {
     "documentation": "Committed-owner non-yielding bounded radius discovery; finite nonnegative radius. Results are encounter observations with exact lifetime validation at callback admission; failures return nil/ErrorCode. Two requests/domain, eight globally, 256 results and 120-second absolute deadline including queued completion. Later births excluded; retirement suppresses callbacks; no replay."

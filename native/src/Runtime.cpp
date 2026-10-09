@@ -5,6 +5,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <exception>
 
 using namespace CarbonLuau::Runtime;
 
@@ -305,6 +306,7 @@ ClStatus cl_domain_destroy(ClHandle Id, ClHandle DomainId) try
     if (Runtime->ThreadDomain == Owner || (Runtime->Admission && Runtime->Admission->Owner == Owner))
         return CL_INVALID_ARGUMENT;
     ReleaseDomain(*Runtime, *Owner);
+    if (Runtime->IntegrityFailed) { Retire(*Runtime); return CL_INTERNAL_ERROR; }
     if (Runtime->LegacyDomain == Owner) Runtime->LegacyDomain = nullptr;
     if (Runtime->State) {
         if (lua_cpcall(Runtime->State, Collect, nullptr) != LUA_OK) { Retire(*Runtime); return CL_INTERNAL_ERROR; }
@@ -399,6 +401,16 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
         std::pop_heap(Selected->Queue.begin(), Selected->Queue.end(), Later{});
         Work = std::move(Selected->Queue.back()); Selected->Queue.pop_back();
     }
+    Runtime->GameplayInFlightOwner = Work.GameplayReservation ? Work.Owner : nullptr;
+    Runtime->GameplayInFlightReservation = Work.GameplayReservation;
+    Runtime->GameplayInFlightPayload = Work.GameplayReservation ? &Work.Gate : nullptr;
+    struct GameplayCompletion {
+        Vm& Runtime; ClResult& Result;
+        ~GameplayCompletion() {
+            bool Success = ClearGameplayInFlight(Runtime);
+            if (!Success || std::uncaught_exceptions()) { Retire(Runtime); Result.Flags |= 1; }
+        }
+    } GameplayCleanup{*Runtime, *Result};
     *Ran = 1;
     Runtime->Thread = Work.Thread; Runtime->Reference = Work.Reference;
     Runtime->ThreadDomain = Work.Owner;
@@ -410,8 +422,11 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
         Domain& Owner = *Work.Owner;
         if (!Owner.Alive || !Owner.Active || !Owner.Host || Owner.Host(Owner.HostIdentity, 9, Work.Gate.data(), uint32_t(Work.Gate.size()),
             Owner.HostBuffer->data(), uint32_t(Owner.HostBuffer->size()), &Written) != 0) {
-            ++Owner.Rejected;
+            if (Owner.Rejected != UINT64_MAX) ++Owner.Rejected;
             ReleaseThread(*Runtime, false);
+            if (!ClearGameplayInFlight(*Runtime)) {
+                Retire(*Runtime); Result->Flags = 1; return CL_INTERNAL_ERROR;
+            }
             if (!Runtime->State) Result->Flags = 1;
             return CL_OK;
         }
@@ -453,6 +468,11 @@ ClStatus cl_vm_callback(ClHandle Id, uint64_t CutoffNs, uint64_t Sequence, uint6
             Retire(*Runtime);
         } else if ((StorageWork || DiscoveryWork) && Status == CL_MEMORY_LIMIT) Retire(*Runtime);
         else ReleaseThread(*Runtime, Status == CL_MEMORY_LIMIT);
+        if (!ClearGameplayInFlight(*Runtime)) {
+            Status = CL_INTERNAL_ERROR;
+            Diagnostic(*Runtime, *Result, "gameplay reservation release failed; VM retired");
+            Retire(*Runtime);
+        }
         if (!Runtime->State) Result->Flags |= 1;
     } catch (const DeadlineExceeded&) {
         Runtime->Admission = nullptr;

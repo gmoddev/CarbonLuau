@@ -152,6 +152,7 @@ namespace Carbon.Plugins
                 Gameplay.Players.CheckOwner();
                 if (Player == null) return;
                 var Lifetime = Gameplay.Players.Disconnect(Player.UserIDString, Player);
+                GameplayLifecycleDisconnected(Lifetime);
                 Gameplay.DisconnectGui(Lifetime);
                 Gameplay.Event("removing", Lifetime);
                 if (Host != null && !Host.Busy) RequestDrain();

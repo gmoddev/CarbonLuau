@@ -1,15 +1,19 @@
 #include "RuntimeInternal.hpp"
+#include <charconv>
 
 namespace CarbonLuau::Runtime {
 Vm::~Vm()
 {
     if (State) {
         lua_callbacks(State)->interrupt = nullptr;
+        ClearGameplayInFlight(*this);
         for (const auto& Item : Domains) if (Item) {
             Domain& Value = *Item;
             ClearStorage(*this, Value);
             ClearDiscovery(*this, Value);
-            for (const auto& Work : Value.Queue) lua_unref(State, Work.Reference);
+            ClearFacadeCallbacks(*this, Value);
+            ClearGameplay(*this, Value);
+            for (const auto& Work : Value.Queue) if (Work.Reference != LUA_NOREF) lua_unref(State, Work.Reference);
             for (const auto& Work : Value.PendingCallbacks) lua_unref(State, Work.Reference);
             for (const auto& Entry : Value.Modules) if (Entry.second.Loaded) lua_unref(State, Entry.second.Reference);
             for (const auto& Entry : Value.PendingModules) lua_unref(State, Entry.Reference);
@@ -63,11 +67,74 @@ Domain* GetDomain(Vm& Runtime, ClHandle Id, bool Active)
     return nullptr;
 }
 
+bool ReserveGameplay(Vm& Runtime, Domain& Owner, uint64_t Nonce)
+{
+    if (!Nonce || Runtime.GameplayReserved >= Runtime.GameplayReservations.size() || Owner.GameplayReserved >= 256)
+        return false;
+    GameplayReservation* Empty = nullptr;
+    for (auto& Slot : Runtime.GameplayReservations) {
+        if (Slot.Nonce == Nonce) return false;
+        if (!Slot.Nonce && !Empty) Empty = &Slot;
+    }
+    if (!Empty) return false;
+    *Empty = GameplayReservation{Nonce, &Owner};
+    ++Runtime.GameplayReserved; ++Owner.GameplayReserved; return true;
+}
+
+bool ReleaseGameplay(Vm& Runtime, Domain& Owner, uint64_t Nonce, bool NotifyHost)
+{
+    if (!Nonce) return true;
+    GameplayReservation* Found = nullptr;
+    for (auto& Slot : Runtime.GameplayReservations)
+        if (Slot.Nonce == Nonce && Slot.Owner == &Owner) { Found = &Slot; break; }
+    if (!Found) { Runtime.IntegrityFailed = true; return false; }
+    // Clear native ownership exactly once before the private, non-Lua host
+    // acknowledgement. A failed acknowledgement retires scripting, not retries.
+    *Found = {};
+    --Runtime.GameplayReserved; --Owner.GameplayReserved;
+    if (!NotifyHost) return true;
+    char Text[21]; auto Result = std::to_chars(Text, Text + 20, Nonce); *Result.ptr = 0;
+    uint32_t Written = 0;
+    bool Success = Owner.Host && Owner.HostBuffer && Owner.Host(Owner.HostIdentity, 39, Text,
+        uint32_t(Result.ptr - Text + 1), Owner.HostBuffer->data(), uint32_t(Owner.HostBuffer->size()), &Written) == 0 && !Written;
+    if (!Success) Runtime.IntegrityFailed = true;
+    return Success;
+}
+
+bool ClearGameplayInFlight(Vm& Runtime)
+{
+    Domain* Owner = Runtime.GameplayInFlightOwner;
+    uint64_t Nonce = Runtime.GameplayInFlightReservation;
+    if (Runtime.GameplayInFlightPayload) std::string().swap(*Runtime.GameplayInFlightPayload);
+    Runtime.GameplayInFlightOwner = nullptr;
+    Runtime.GameplayInFlightReservation = 0;
+    Runtime.GameplayInFlightPayload = nullptr;
+    return !Nonce || (Owner && ReleaseGameplay(Runtime, *Owner, Nonce));
+}
+
+void ClearGameplay(Vm& Runtime, Domain& Owner)
+{
+    if (Runtime.GameplayInFlightOwner == &Owner) ClearGameplayInFlight(Runtime);
+    for (auto& Work : Owner.Queue) if (Work.GameplayReservation) {
+        // Drop the Lua root and native payload before returning bridge quota.
+        if (Runtime.State && Work.Reference != LUA_NOREF) lua_unref(Runtime.State, Work.Reference);
+        Work.Reference = LUA_NOREF;
+        std::string().swap(Work.Gate);
+        ReleaseGameplay(Runtime, Owner, Work.GameplayReservation);
+        Work.GameplayReservation = 0;
+    }
+    // Covers partial enqueue and integrity cleanup, with a fixed scan bound.
+    for (auto& Slot : Runtime.GameplayReservations)
+        if (Slot.Nonce && Slot.Owner == &Owner) ReleaseGameplay(Runtime, Owner, Slot.Nonce);
+}
+
 void ReleaseDomain(Vm& Runtime, Domain& Value)
 {
     if (!Value.Alive) return;
     ClearStorage(Runtime, Value);
     ClearDiscovery(Runtime, Value);
+    ClearFacadeCallbacks(Runtime, Value);
+    ClearGameplay(Runtime, Value);
     Value.Alive = false; Value.Active = false;
     for (auto& Reservation : Value.StorageReservations) {
         if (Reservation) { --Runtime.StorageReserved; Reservation=0; }
@@ -75,7 +142,7 @@ void ReleaseDomain(Vm& Runtime, Domain& Value)
     Value.Discarded += Value.Queue.size() + Value.PendingCallbacks.size();
     Runtime.RetiredDiscarded += Value.Queue.size() + Value.PendingCallbacks.size();
     if (Runtime.State) {
-        for (const auto& Work : Value.Queue) lua_unref(Runtime.State, Work.Reference);
+        for (const auto& Work : Value.Queue) if (Work.Reference != LUA_NOREF) lua_unref(Runtime.State, Work.Reference);
         for (const auto& Work : Value.PendingCallbacks) lua_unref(Runtime.State, Work.Reference);
         for (const auto& Entry : Value.Modules) if (Entry.second.Loaded) lua_unref(Runtime.State, Entry.second.Reference);
         for (const auto& Entry : Value.PendingModules) lua_unref(Runtime.State, Entry.Reference);
@@ -179,6 +246,7 @@ int Initialize(lua_State* State)
 
 void Retire(Vm& Runtime)
 {
+    ClearGameplayInFlight(Runtime);
     for (const auto& Item : Runtime.Domains) if (Item) ReleaseDomain(Runtime, *Item);
     Runtime.Thread = nullptr;
     Runtime.ThreadId = 0;

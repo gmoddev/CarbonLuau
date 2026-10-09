@@ -16,6 +16,7 @@ Check(Definitions == File.ReadAllText(Path.Combine(Root, "generated/carbonluau.d
 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
 Check(JToken.DeepEquals(Catalog, ApiCatalog.Build(Bootstrap, Release, Native)), "catalog repeat/culture determinism");
 Check(Definitions == ApiArtifacts.Definitions(ApiCatalog.Build(Bootstrap, Release, Native)), "definition repeat determinism");
+GameplaySignalTypes.Run(Catalog);
 Check(Definitions.Contains("GiveItem") && Definitions.Contains("GiveItemBehavior") && Definitions.Contains("InventoryOnly") && !Definitions.Contains("TextBox") && Definitions.Contains("TakeItem"), "current implemented inventory API exposure");
 Check(Definitions.Contains("declare extern type Entity") && Definitions.Contains("declare extern type Workspace") &&
     Definitions.Contains("function GetEntityById(self, Id: string): (Entity?)") &&
@@ -42,11 +43,28 @@ var EntityTypes = new[] { "Workspace", "Entity", "EntityDiscoveryOptions" };
 foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catalog["Members"]!)) {
     bool Persistence = PersistenceTypes.Contains((string?)Declaration["Id"]) || PersistenceTypes.Contains((string?)Declaration["OwnerId"]);
     bool Entity = EntityTypes.Contains((string?)Declaration["Id"]) || EntityTypes.Contains((string?)Declaration["OwnerId"]);
+    bool GameplayA = new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext" }.Contains((string?)Declaration["Id"]) ||
+        new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext" }.Contains((string?)Declaration["OwnerId"]) ||
+        new[] { "Players.PlayerDied", "Players.PlayerSpawned", "Workspace.EntitySpawned", "Workspace.EntityDestroyed" }.Contains((string?)Declaration["Id"]);
     Version Since = Version.Parse(((string)Declaration["Availability"]!["SinceApi"]!).Split('-')[0]);
-    Check(Entity ? Since == new Version(0, 6, 0) : Persistence ? Since == new Version(0, 5, 0) : Since <= new Version(0, 4, 0), "historical introduction version changed");
+    Check(GameplayA ? Since == new Version(0, 6, 5) : Entity ? Since == new Version(0, 6, 0) :
+        Persistence ? Since == new Version(0, 5, 0) : Since <= new Version(0, 4, 0), "historical introduction version changed");
     if (Persistence) Check((string)Declaration["Availability"]!["Qualification"]! == "Experimental" &&
         (string)Declaration["Preview"]! == "Unavailable", "persistence qualification/preview drift");
 }
+var DestroyedSignal = ((JArray)Catalog["Members"]!).Cast<JObject>().Single(Value => (string?)Value["Id"] == "Workspace.EntityDestroyed");
+var DestroyedSignature = (JObject)((JArray)DestroyedSignal["Signatures"]!).Single();
+Check((string?)DestroyedSignal["Kind"] == "Signal" && ((JArray)DestroyedSignature["Parameters"]!).Count == 1 &&
+    (string?)DestroyedSignature["Parameters"]![0]!["Type"] == "EntityDestroyedContext" &&
+    ((JArray)DestroyedSignature["Returns"]!).Count == 0 &&
+    Definitions.Contains("read EntityDestroyed: SignalWith<(Context: EntityDestroyedContext) -> ()>"),
+    "B3 Signal lost snapshot-only callback signature");
+var DestroyedFields = ((JArray)Catalog["Members"]!).Cast<JObject>()
+    .Where(Value => (string?)Value["OwnerId"] == "EntityDestroyedContext").OrderBy(Value => (string?)Value["Name"]).ToArray();
+Check(string.Join(",", DestroyedFields.Select(Value => (string?)Value["Name"])) == "Id,Position,Prefab" &&
+    string.Join(",", DestroyedFields.Select(Value => (string?)Value["ValueType"])) == "string,Vector3?,string" &&
+    DestroyedFields.All(Value => (string?)Value["Kind"] == "Property" && (bool?)Value["Writable"] == false) &&
+    Definitions.Contains("export type EntityDestroyedContext = {"), "B3 immutable context surface changed");
 Check(Definitions.Contains("export type PersistedValue = boolean | number | string | {PersistedValue} | {[string]: PersistedValue}"), "recursive persisted value alias missing");
 Check(Definitions.Contains("export type DataStoreOptions = {Indexes: {string}?}") &&
     Definitions.Contains("function GetDataStore(self, StoreName: string, Options: DataStoreOptions?): (DataStore)"),

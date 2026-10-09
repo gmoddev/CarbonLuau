@@ -2,7 +2,7 @@
   "SchemaVersion": 1,
   "Api": {
     "Name": "CarbonLuau",
-    "Version": "0.6.0-experimental",
+    "Version": "0.6.5-experimental",
     "Status": "Experimental"
   },
   "Types": [
@@ -157,6 +157,19 @@
         "Qualification": "Experimental"
       },
       "Preview": "Unavailable"
+    },
+    {
+      "Id": "EntityDestroyedContext",
+      "Name": "EntityDestroyedContext",
+      "Kind": "Class",
+      "Summary": "Immutable original-incarnation snapshot after qualified terminal world removal or completed native Entity deletion; no live Entity proxy or bookkeeping-cleanup guarantee.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
     },
     {
       "Id": "EntityDiscoveryOptions",
@@ -333,6 +346,32 @@
         "Qualification": "Experimental"
       },
       "Preview": "Unavailable"
+    },
+    {
+      "Id": "PlayerDeathContext",
+      "Name": "PlayerDeathContext",
+      "Kind": "Class",
+      "Summary": "Immutable terminal-death snapshot; optional fields reflect qualified observations.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
+    },
+    {
+      "Id": "PlayerSpawnContext",
+      "Name": "PlayerSpawnContext",
+      "Kind": "Class",
+      "Summary": "Immutable completed-spawn snapshot.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
     },
     {
       "Id": "Players",
@@ -1052,6 +1091,51 @@
       "Writable": false
     },
     {
+      "Id": "EntityDestroyedContext.Id",
+      "Name": "Id",
+      "OwnerId": "EntityDestroyedContext",
+      "Kind": "Property",
+      "Summary": "Captured original canonical network ID for event correlation, not reusable lifetime authority.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDestroyedContext.Position",
+      "Name": "Position",
+      "OwnerId": "EntityDestroyedContext",
+      "Kind": "Property",
+      "Summary": "Optional pre-removal root world position snapshot.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Vector3?",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDestroyedContext.Prefab",
+      "Name": "Prefab",
+      "OwnerId": "EntityDestroyedContext",
+      "Kind": "Property",
+      "Summary": "Captured original prefab identity before removal.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
       "Id": "Frame.AnchorPoint",
       "Name": "AnchorPoint",
       "OwnerId": "Frame",
@@ -1522,7 +1606,7 @@
         "Implemented": true,
         "Qualification": "Experimental"
       },
-      "ValueType": "\"0.6.0-experimental\"",
+      "ValueType": "\"0.6.5-experimental\"",
       "Writable": false
     },
     {
@@ -4000,6 +4084,66 @@
       "Writable": false
     },
     {
+      "Id": "PlayerDeathContext.Killer",
+      "Name": "Killer",
+      "OwnerId": "PlayerDeathContext",
+      "Kind": "Property",
+      "Summary": "Captured exact direct human initiator connection, never retargeted at delivery.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Player?",
+      "Writable": false
+    },
+    {
+      "Id": "PlayerDeathContext.KillerId",
+      "Name": "KillerId",
+      "OwnerId": "PlayerDeathContext",
+      "Kind": "Property",
+      "Summary": "Optional captured direct killer UserId, not a lookup request.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string?",
+      "Writable": false
+    },
+    {
+      "Id": "PlayerDeathContext.Position",
+      "Name": "Position",
+      "OwnerId": "PlayerDeathContext",
+      "Kind": "Property",
+      "Summary": "Optional root world position observed at terminal death completion.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Vector3?",
+      "Writable": false
+    },
+    {
+      "Id": "PlayerSpawnContext.Position",
+      "Name": "Position",
+      "OwnerId": "PlayerSpawnContext",
+      "Kind": "Property",
+      "Summary": "Optional root world position observed at completed spawn.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Vector3?",
+      "Writable": false
+    },
+    {
       "Id": "Players.GetPlayerByUserId",
       "Name": "GetPlayerByUserId",
       "OwnerId": "Players",
@@ -4075,6 +4219,38 @@
       ]
     },
     {
+      "Id": "Players.PlayerDied",
+      "Name": "PlayerDied",
+      "OwnerId": "Players",
+      "Kind": "Signal",
+      "Summary": "Completed terminal death of an exact tracked human life, not a wounded or vetoed attempt.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Context",
+              "Type": "PlayerDeathContext",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
       "Id": "Players.PlayerRemoving",
       "Name": "PlayerRemoving",
       "OwnerId": "Players",
@@ -4092,6 +4268,38 @@
             {
               "Name": "Player",
               "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Players.PlayerSpawned",
+      "Name": "PlayerSpawned",
+      "OwnerId": "Players",
+      "Kind": "Signal",
+      "Summary": "Completed eligible initial activation or full respawn; no wake/reconnect/revive or history replay.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Player",
+              "Type": "Player",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Context",
+              "Type": "PlayerSpawnContext",
               "Optional": false,
               "Variadic": false
             }
@@ -7855,6 +8063,58 @@
           "Returns": [
             "Vector3"
           ]
+        }
+      ]
+    },
+    {
+      "Id": "Workspace.EntityDestroyed",
+      "Name": "EntityDestroyed",
+      "OwnerId": "Workspace",
+      "Kind": "Signal",
+      "Summary": "Future qualified terminal world removals or completed native Entity deletions, with immutable original-incarnation snapshots, no live Entity proxy and no historical replay.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Context",
+              "Type": "EntityDestroyedContext",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Workspace.EntitySpawned",
+      "Name": "EntitySpawned",
+      "OwnerId": "Workspace",
+      "Kind": "Signal",
+      "Summary": "Future qualified full Spawn completions; exact live lifetime revalidated before deferred delivery, no startup replay.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Entity",
+              "Type": "Entity",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
         }
       ]
     },

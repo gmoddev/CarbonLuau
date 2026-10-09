@@ -82,6 +82,14 @@ namespace Carbon.Plugins
         private void InitializeEntityObserver() { }
         private void QualifyEntityStartup() { }
         private void StopEntityObserver() { }
+        // B3's exact-host watch teardown is outside this adapter-only fixture.
+        private void StopEntityDestroyedSource() { }
+        // Gameplay's exact Rust completion observers are deliberately excluded
+        // from this persistence-adapter fixture, just like the Entity observer.
+        // Only real-host fixtures qualify those observation contracts.
+        private void InitializeGameplayLifecycle() { }
+        private void StopGameplayLifecycle() { }
+        private string GameplayLifecycleStatus { get { return "fixture excludes Rust lifecycle observers"; } }
         private void StopEntityDiscovery() { }
         private void SweepIdleEntityDiscovery() { }
         partial void RunEntityDiscoveryFixtures();

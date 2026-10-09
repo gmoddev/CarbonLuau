@@ -36,14 +36,77 @@ bool ReleaseStorage(Vm& Runtime, Domain& ResourceOwner, uint64_t RequestId)
     *Slot=0; --Runtime.StorageReserved; return true;
 }
 
+struct FacadeCallbackPublicationInput { Domain* Owner; uint32_t Operation; };
+static int ControlFacadeCallbacks(lua_State* State)
+{
+    auto& Input = *static_cast<FacadeCallbackPublicationInput*>(lua_touserdata(State, 1));
+    Domain& Owner = *Input.Owner;
+    lua_getref(State, Owner.FacadeCallbackRoots);
+    if (Input.Operation == 10) {
+        lua_getfield(State, -1, "Roots");
+        // This table contains only host-admitted Player/GUI listeners and
+        // commands, bounded by their existing per-domain envelopes. Cloning
+        // is charged to the same VM heap; at most one clone per touched scope.
+        lua_clonetable(State, -1);
+        CallbackScope Snapshot{State};
+        Snapshot.Reference = lua_ref(State, -1);
+        Owner.FacadeCallbackPublications.push_back(Snapshot.Reference);
+        Snapshot.Reference = LUA_NOREF;
+    } else if (Input.Operation == 12) {
+        // Swap the private root map rather than allocating while restoring
+        // individual keys. All bootstrap closures access the same holder.
+        lua_getref(State, Owner.FacadeCallbackPublications.back());
+        lua_setfield(State, -2, "Roots");
+    }
+    return 0;
+}
+
+void ClearFacadeCallbacks(Vm& Runtime, Domain& Owner)
+{
+    if (Runtime.State) {
+        for (int Reference : Owner.FacadeCallbackPublications) lua_unref(Runtime.State, Reference);
+        if (Owner.FacadeCallbackRoots != LUA_NOREF) {
+            // Escaped service/Connection closures may still retain the holder
+            // in another domain. Retire its owned callbacks as well as our ref.
+            lua_getref(Runtime.State, Owner.FacadeCallbackRoots);
+            lua_getfield(Runtime.State, -1, "Roots");
+            lua_cleartable(Runtime.State, -1);
+            lua_pop(Runtime.State, 2);
+            lua_unref(Runtime.State, Owner.FacadeCallbackRoots);
+        }
+    }
+    Owner.FacadeCallbackPublications.clear();
+    Owner.FacadeCallbackRoots = LUA_NOREF;
+}
+
 bool ControlPublication(Vm& Runtime, Domain& Owner, uint32_t Operation)
 {
     if (!Owner.Host || !Owner.HostBuffer) return true;
+    bool CallbackRoots = Owner.FacadeCallbackRoots != LUA_NOREF;
+    if (CallbackRoots) {
+        if (Operation != 10 && Owner.FacadeCallbackPublications.empty()) {
+            Runtime.IntegrityFailed = true; return false;
+        }
+        if (Operation == 10 || Operation == 12) {
+            FacadeCallbackPublicationInput Input{&Owner, Operation};
+            if (lua_cpcall(Runtime.State, ControlFacadeCallbacks, &Input) != LUA_OK) {
+                Runtime.IntegrityFailed = true; return false;
+            }
+        }
+    }
     uint32_t Written = 0;
     if (Owner.Host(Owner.HostIdentity, Operation, "", 0, Owner.HostBuffer->data(),
         uint32_t(Owner.HostBuffer->size()), &Written) != 0) {
+        if (CallbackRoots && Operation == 10) {
+            lua_unref(Runtime.State, Owner.FacadeCallbackPublications.back());
+            Owner.FacadeCallbackPublications.pop_back();
+        }
         Runtime.IntegrityFailed = true;
         return false;
+    }
+    if (CallbackRoots && Operation != 10) {
+        lua_unref(Runtime.State, Owner.FacadeCallbackPublications.back());
+        Owner.FacadeCallbackPublications.pop_back();
     }
     return true;
 }

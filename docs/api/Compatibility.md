@@ -1,8 +1,8 @@
 # Scripting compatibility and limits
 
 Latest published package v0.5.0 uses API `0.5.0-experimental`.
-The development API identity is `CarbonLuau 0.6.0-experimental`, status `Experimental`;
-the new Workspace/Entity surface has no package 0.6.0 release yet.
+The development API identity is `CarbonLuau 0.6.5-experimental`, status `Experimental`;
+the newer Workspace/Entity and player lifecycle surface is not in published v0.5.0.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
 `carbonluau.status`. This identity is distinct from package `0.5.0`, native ABI
 `1.5`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
@@ -29,7 +29,7 @@ retain the continuous host observer while their old facades stale. Host drift
 fails closed pending requalification. See the [Workspace reference](Services/Workspace.md).
 
 Discovery-2B's selected `Workspace:GetEntitiesInRadiusAsync` contract targets the
-same development `0.6.0-experimental` identity. The mandatory callback is third;
+same original `0.6.0-experimental` introduction identity. The mandatory callback is third;
 optional [EntityDiscoveryOptions](Types/EntityDiscoveryOptions.md) is last, with
 exact full Prefab and integer Limit 1..256 (default 256). Submission is committed-only;
 completion is a fresh bounded owner-thread admission with every result validated.
@@ -43,6 +43,16 @@ startup/restart requirements apply. Package `0.5.0`, ABI `1.5`, provider protoco
 schema and Luau pin remain unchanged; no release is implied.
 Combined closure and final release-readiness evidence are owned by
 [Foundation 2C](../WorldEntityFoundation2C.md).
+
+`Workspace.EntitySpawned` and snapshot-only `Workspace.EntityDestroyed` begin
+in development API `0.6.5-experimental`, not published v0.5.0. Both inherit the
+exact D20 startup/restart requirement and shared Gameplay A event budgets.
+[B1 evidence](../GameplayB1-Validation.md) qualifies completed Spawn followed by
+original live-lifetime admission. [B3 evidence](../GameplayB3-Validation.md)
+records successful original world removal or proven original native destruction,
+not attempted Kill. Native-only destruction supplies nil Position and does not
+promise Rust bookkeeping cleanup. Source/patch drift fails closed; no historical
+replay or new package identity follows.
 
 [Persistence Foundation 2](../PersistenceFoundation2.md) defines structured
 Query for the same `0.5.0-experimental` API. Optional field-name hints in
@@ -197,3 +207,29 @@ GUI serialization size, flush CPU/byte/send budgets and full-reconciliation
 checkpoints are internal bounded tuning values rather than public scripting API
 promises. See the [GUI guide](Gui.md) for observable semantics and unsupported
 features.
+
+Gameplay A adds no configuration knobs or per-addon heap limit. Its current
+hard internal safety ceilings are 128 observed captures per frame, 128 total
+lifecycle callback admissions per frame, 32 per domain per frame, 4,096 bounded
+producer/fanout visits per frame, 512 globally held deliveries and 2,048 bytes
+per payload. Conservative transport accounting charges two payload copies and
+remains at most 2 MiB, including native-held/in-flight work. Existing per-signal
+128 and per-domain 256 Player listener limits still apply across the new members.
+These bounds do not promise delivery under overload or a wall-clock callback SLA.
+Drops are visible in operator status and are never replayed.
+
+PlayerDied and PlayerSpawned are development API `0.6.5-experimental` additions.
+Their exact current Windows/Linux source adapters require the pinned Rust/Carbon
+tuple in [Gameplay A evidence](../GameplayFoundationA-Validation.md). Unknown
+host/patch drift fails closed. Authenticated Steam/client traces remain
+unqualified; constructed exact-host server tests and synthetic VM tests are
+explicitly labelled separately. No generic Entity or inventory event bus is exposed.
+
+Gameplay B1 adds `Workspace.EntitySpawned` under the same development identity.
+It reports only qualified future full-Spawn completions, with original-lifetime
+revalidation before callback admission and no network-ID retarget or startup
+replay. It shares the Player lifecycle producer/fanout/queue/retention envelopes,
+not a separate budget. Overload drops are diagnosed and never retried. The D20
+continuous-observer, pinned-host and restart requirements remain mandatory.
+See [B1 qualification](../GameplayB1-Validation.md) for numeric bounds and
+separately labelled live, model, VM, sanitizer and CI evidence.

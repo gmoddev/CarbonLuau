@@ -55,7 +55,10 @@ This document owns contribution workflow and prompt construction. It applies to 
 | World/Entity Foundation 2 private bounded async traversal QUALIFIED | [WorldEntityFoundation2A.md](docs/WorldEntityFoundation2A.md) owns completed-Spawn fixed-slot membership, private birth watermark, exact lifetime validation, hash-pinned bounded no-wait TRS observations, numeric policy and Windows/Linux qualification. [WorldEntityFoundation2.md](docs/WorldEntityFoundation2.md) routes preserved negative catalog/movement/guarded-getter/native-history/position-alternative research. D20/I12 separate hard lifetime/memory/resource safety, CarbonLuau-owned ordering and trusted external observation races. Private 2A introduced no public binding; the qualified 2B public phase is routed below. |
 | Discovery-2B PASS: public bounded radius API | [WorldEntityFoundation2B.md](docs/WorldEntityFoundation2B.md) owns `Workspace:GetEntitiesInRadiusAsync`, fixed native callback reservations, exact result conversion at fresh callback admission, public argument/retirement/expiry gates, metadata and tooling. Windows/Linux live and real-VM, sanitizer, lifecycle, stress and hosted checks PASS. The separate final combined closure is owned by Foundation 2C below. |
 | World/Entity Foundation 2 final closure and v0.6.0 readiness | [WorldEntityFoundation2C.md](docs/WorldEntityFoundation2C.md) owns the combined lifecycle/provider/publication, maximum-catalog, security, final hosted qualification and release handoff. [Planned release notes](docs/releases/0.6.0.md) describe the next experimental package; no tag or release is authorized by closure. |
+| Gameplay Foundation A implementation and qualification | [D23](docs/Invariants.md#d23--gameplay-a-player-lifecycle-signals) owns the qualified observation contract; [GameplayFoundationA-Validation.md](docs/GameplayFoundationA-Validation.md) owns exact-host proof, public dispatcher/resource tests, negative findings and current completion gates. The [supplied architecture](docs/GameplayEventsArchitecture-Research.md) remains research. Development API is user-selected `0.6.5-experimental`; published package remains v0.5.0, with no new release/tag authority. |
 | Historical blocked Entity lifetime investigation and negative evidence | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) and [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
+| Gameplay B1 EntitySpawned implementation and qualification | [GameplayB1-Validation.md](docs/GameplayB1-Validation.md) owns completion-source, exact-lifetime admission, global event bounds, lifecycle/platform evidence and B2 handoff. D20 remains Entity identity/topology owner; Gameplay A's owned Signal/scheduler/publication path is reused. API stays `0.6.5-experimental`; no release/tag or later B phase authority. |
+| Gameplay B3 EntityDestroyed implementation and qualification | [GameplayB3-Validation.md](docs/GameplayB3-Validation.md) owns collective successful world-removal/pool-admission/native-destruction proof, original-incarnation immutable snapshots, independent three-target removal topology, shared event/watch bounds and current completion gates. D20 owns the additive contract; Gameplay A/B1 transport is reused. API stays `0.6.5-experimental`; no EntityDied/B2 or release/tag authority. |
 | Historical Spawn-prefix and base-completion counterexamples; startup observer investigation | [WorldEntitySpawnEpochProbe.md](docs/WorldEntitySpawnEpochProbe.md), [WorldEntityCompletionFenceInvestigation.md](docs/WorldEntityCompletionFenceInvestigation.md) and [WorldEntityStartupObserverInvestigation.md](docs/WorldEntityStartupObserverInvestigation.md) |
 | Canonical Persistence Foundation 1 architecture (resolved; private 1A qualified) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
 | Persistence design source evidence, consistency review and qualification limits | [PersistenceFoundation1-Validation.md](docs/PersistenceFoundation1-Validation.md) |
@@ -317,9 +320,12 @@ with canonical metadata, definitions, and public documentation routed through
 [Entity-1C](docs/WorldEntityFoundation1C.md). Package `0.5.0` remains the last
 published release; no Entity release/tag follows from that API assignment.
 Whole-world enumeration, prefab
-filtering, spatial queries, lifecycle Signals, Spawn, Destroy and specialized
-entity capabilities require later explicit architecture rather than being
-implicitly authorized by D20. Entity-1A/1B made no package/ABI/provider/schema/
+filtering, additional spatial queries, additional lifecycle Signals, Spawn,
+Destroy and specialized entity capabilities require later explicit scoped work.
+Qualified async discovery, Gameplay B1's `Workspace.EntitySpawned` and
+Gameplay B3's snapshot-only `Workspace.EntityDestroyed` are
+additive D20 amendments routed above, not implicit Foundation 1 availability.
+Entity-1A/1B made no package/ABI/provider/schema/
 Luau identity change; the 1C API assignment is separate.
 
 Persistence Foundation 1 is the next runtime foundation under

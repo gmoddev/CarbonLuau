@@ -500,6 +500,25 @@ namespace Carbon.Plugins
                 State.State == SpawnState.Completed && !State.Poisoned;
         }
 
+        // Host-observation witness only: no domain admission and no public
+        // facade token is manufactured. B3 links pre-removal scalars to the
+        // existing completed epoch/catalog birth, including startup epochs.
+        internal MembershipCandidate CaptureCompletedWitness(object Identity)
+        {
+            CheckOwner();
+            ObjectState State;
+            if (!HasCompletedObservation(Identity) || !HasCatalogObservation(Identity) ||
+                !States.TryGetValue(Identity,out State)) return null;
+            return CatalogSlots[State.CatalogSlot];
+        }
+        internal bool IsWitnessEpochUnchanged(MembershipCandidate Witness)
+        {
+            CheckOwner();
+            return Witness!=null&&ReferenceEquals(Witness.Owner,this)&&ObserverContinuous&&!Disposed&&
+                Witness.ObservationGeneration==ObservationGeneration&&
+                Witness.State.ObservationGeneration==Witness.ObservationGeneration&&Witness.State.Epoch==Witness.Epoch;
+        }
+
         internal void BreakObserverContinuity()
         {
             CheckOwner();
