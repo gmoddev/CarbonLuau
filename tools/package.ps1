@@ -1,5 +1,8 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures)
 $ErrorActionPreference = 'Stop'
+if (@($IncludeEntitySpawnFixtures,$IncludeEntityDestroyResearch,$IncludeEntityDestroyedFixtures).Where({$_}).Count -gt 1) {
+    throw '[CarbonLuau:Package] Select B1 fixtures, B3 research or B3 qualification exclusively'
+}
 if ($IncludeDiscoveryFixtures -and $IncludeDiscovery2BFixtures) {
     throw '[CarbonLuau:Package] Select either private Discovery-2A or public Discovery-2B fixtures, never both'
 }
@@ -67,6 +70,12 @@ try {
         }
         if ($IncludeEntitySpawnFixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntitySpawnFixtures.cs') 'CarbonLuau.EntitySpawnFixtures.cs'
+        }
+        if ($IncludeEntityDestroyResearch) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityDestroyResearch.cs') 'CarbonLuau.EntityDestroyResearch.cs'
+        }
+        if ($IncludeEntityDestroyedFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityDestroyedFixtures.cs') 'CarbonLuau.EntityDestroyedFixtures.cs'
         }
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }

@@ -51,6 +51,24 @@ introduction. No package/ABI/provider/schema/Luau identity changes or release/ta
 follow. Live server evidence is separate from synthetic lifecycle/stress tests
 and does not claim authenticated-client behavior.
 
+Gameplay B3 adds `Workspace.EntityDestroyed` and immutable `EntityDestroyedContext`
+under the same `0.6.5-experimental` identity. [B3 evidence](GameplayB3-Validation.md)
+separates successful original world removal and proven pool admission from native
+deletion with potentially surviving Rust bookkeeping, and records nil native-only/
+direct-pool Position, exact epoch proof, the separate three-target removal/pool
+topology and unchanged 24-target Spawn
+topology. Native cancellation alone, pre-proof weak collection and attempted Kill
+are not completion. The native complement observes at most 128 original weak
+watch slots per actual Unity frame through existing frame intake; it does not
+scan the realm or resolve IDs. Last-live publication cutoffs prevent replay and
+may conservatively suppress ambiguous recent-registration windows. B3 adds
+bounded weak observation state: 262,144 watches, 64-MiB UTF-16 snapshot text
+accounting and 16 removal frames. That text charge is not a total
+managed-heap or process-RSS guarantee. Existing Player/Entity event budgets remain
+shared, not per addon. The evidence record owns current completion gates;
+historical A/B1 evidence is preserved, not substituted. No package/ABI/provider/
+schema/Luau identity change or release/tag follows.
+
 Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Phase 3 introduces package `0.3.0`, additive native ABI `1.2`, and the separate scripting identity `CarbonLuau` / `0.3.0-experimental` / `Experimental`, inspectable through read-only game fields and operator status. D8/D12 own the minimum policy; [public compatibility](api/Compatibility.md) documents it. Additive changes preserve existing contracts; removing/renaming an API or changing its types, lifetime, failures or authorization is breaking and requires an explicit version, documentation and migration decision. A larger deprecation/negotiation framework remains deferred.
 
 The published `v0.3.0` release maps package `0.3.0`, scripting API

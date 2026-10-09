@@ -14,6 +14,13 @@ on an exact pinned host envelope. [Final closure](WorldEntityFoundation2C.md) an
 [planned v0.6.0 notes](releases/0.6.0.md) own readiness; the published package
 remains v0.5.0.
 
+Development API `0.6.5-experimental` also adds
+[Player lifecycle Signals](api/Services/Players.md), completed Entity Spawn
+observations and immutable Entity destruction snapshots through
+[Workspace](api/Services/Workspace.md). [Gameplay A](GameplayFoundationA-Validation.md),
+[B1](GameplayB1-Validation.md) and [B3](GameplayB3-Validation.md) record their
+separate semantics and qualification limits. They are not in published v0.5.0.
+
 Start with [installation](Installation.md), then use the
 [experimental API reference](api/README.md). Read the
 [compatibility limits](api/Compatibility.md) before deploying.

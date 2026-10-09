@@ -79,6 +79,18 @@ bool GameplayCoordinate(std::string_view Text)
     return Result.ec == std::errc{} && Result.ptr == Text.data() + Text.size() && std::isfinite(Value) &&
         (Value != 0 || Text == "0");
 }
+bool GameplaySnapshotCoordinate(std::string_view Text)
+{
+    if (!GameplayCoordinate(Text)) return false;
+    // B3 snapshots materialize ordinary Luau Vector3 values. A Single's short
+    // round-trip decimal can round to a finite float while exceeding the exact
+    // host-coordinate bound when parsed as Luau's binary64 number.
+    double Value = 0;
+    auto Result = std::from_chars(Text.data(), Text.data() + Text.size(), Value, std::chars_format::general);
+    constexpr double Maximum = 3.4028234663852886e38;
+    return Result.ec == std::errc{} && Result.ptr == Text.data() + Text.size() && std::isfinite(Value) &&
+        Value >= -Maximum && Value <= Maximum;
+}
 bool ValidateGameplay(const char* Bytes, uint32_t Length, uint64_t& Reservation)
 {
     if (Length > 2048) return false;
@@ -96,6 +108,16 @@ bool ValidateGameplay(const char* Bytes, uint32_t Length, uint64_t& Reservation)
             !GameplayIdentity(Fields[5], Reservation) || !GameplayIdentity(Fields[6], Ignored) ||
             !GameplayIdentity(Fields[7], Ignored)) return false;
         for (size_t Index = 8; Index < Fields.size(); ++Index) if (!Fields[Index].empty()) return false;
+        return true;
+    }
+    if (Fields[0] == "entitydestroyed") {
+        if (!GameplayIdentity(Fields[1], Ignored) || !GameplayIdentity(Fields[2], Ignored) ||
+            !GameplayIdentity(Fields[3], Ignored) || Fields[4].empty() || !GameplayName(Fields[4], 512) ||
+            !GameplayIdentity(Fields[5], Reservation)) return false;
+        bool NoPosition = Fields[6].empty() && Fields[7].empty() && Fields[8].empty();
+        if (!NoPosition && (!GameplaySnapshotCoordinate(Fields[6]) || !GameplaySnapshotCoordinate(Fields[7]) ||
+            !GameplaySnapshotCoordinate(Fields[8]))) return false;
+        for (size_t Index = 9; Index < Fields.size(); ++Index) if (!Fields[Index].empty()) return false;
         return true;
     }
     if (Fields[0] != "died" && Fields[0] != "spawned") return false;
@@ -266,7 +288,7 @@ ClStatus cl_domain_event(ClHandle Id, ClHandle DomainId, const char* Payload, ui
     // This reserved tag is never an ordinary script Signal/event dispatch.
     if (Kind == "discovery")
         return ReadyDiscovery(*Runtime, *Owner, Payload, Length);
-    bool Gameplay = Kind == "died" || Kind == "spawned" || Kind == "entityspawned";
+    bool Gameplay = Kind == "died" || Kind == "spawned" || Kind == "entityspawned" || Kind == "entitydestroyed";
     uint64_t Reservation = 0;
     if (Gameplay) {
         if (!ValidateGameplay(Payload, Length, Reservation)) return CL_INVALID_ARGUMENT;

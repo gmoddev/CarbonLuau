@@ -64,6 +64,7 @@
   - [Entity discovery](api/Discovery.md)
   - [EntityDiscoveryOptions](api/Types/EntityDiscoveryOptions.md)
   - [Entity](api/Types/Entity.md)
+  - [EntityDestroyedContext](api/Types/EntityDestroyedContext.md)
   - [World examples](api/World-Examples.md)
   - [Persistence guide and examples](api/Persistence.md)
   - [DataStoreService](api/Services/DataStoreService.md)
@@ -97,4 +98,5 @@
   - [Foundation G](FoundationG.md)
   - [Gameplay A](GameplayFoundationA-Validation.md)
   - [Gameplay B1](GameplayB1-Validation.md)
+  - [Gameplay B3](GameplayB3-Validation.md)
   - [Phase 5 evidence](Phase5-Validation.md)

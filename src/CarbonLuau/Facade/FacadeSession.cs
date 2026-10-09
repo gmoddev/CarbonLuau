@@ -55,6 +55,7 @@ namespace Carbon.Plugins
                 Active = Next;
                 if (Next != null) Next.Active = true;
                 PublicationVersion++; InvalidateGameplayDemand();
+                if (Next != null) Next.PublishGameplayListenerBoundary();
             }
             public void CommitAddon(FacadeSession Previous, FacadeSession Next)
             {
@@ -67,6 +68,7 @@ namespace Carbon.Plugins
                     Addons.Add(Next.DomainLifetimeId, Next); Next.Active = true;
                 }
                 PublicationVersion++; InvalidateGameplayDemand();
+                if (Next != null) Next.PublishGameplayListenerBoundary();
             }
             public void Retire(FacadeSession Value)
             {
@@ -337,7 +339,7 @@ namespace Carbon.Plugins
                 foreach (PublicationCheckpoint Checkpoint in Publications) Checkpoint.Witness.Retired = true;
                 Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear();
                 EntityWitnesses.Clear(); ClearStorageHints(); Gui.Dispose();
-                FirstPublication = null; GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = 0;
+                FirstPublication = null; GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = GameplayEntityDestroyedListeners = 0;
                 World.InvalidateGameplayDemand();
             }
             private bool Gate(string[] Fields)
@@ -364,7 +366,7 @@ namespace Carbon.Plugins
                             string[] Value = World.Entities.Read(this, Fields[2], Fields[7], "Id");
                             if (Value.Length != 1 || Value[0] != Fields[3]) return false;
                         } catch (FacadeException) { return false; }
-                    } else if (World.Players.Resolve(Fields[2], Fields[3]) == null) return false;
+                    } else if (Fields[0] != "entitydestroyed" && World.Players.Resolve(Fields[2], Fields[3]) == null) return false;
                 }
                 ulong IdValue; string Kind;
                 return ulong.TryParse(Fields[1], out IdValue) && Listeners.TryGetValue(IdValue, out Kind) && Kind == Fields[0];

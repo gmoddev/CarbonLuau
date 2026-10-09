@@ -143,6 +143,7 @@ namespace Carbon.Plugins
         private void ReleaseNative()
         {
             Stopping = true;
+            StopEntityDestroyedSource();
             StopGameplayLifecycle();
             StopEntityDiscovery();
             StopPersistence();

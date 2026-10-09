@@ -159,6 +159,19 @@
       "Preview": "Unavailable"
     },
     {
+      "Id": "EntityDestroyedContext",
+      "Name": "EntityDestroyedContext",
+      "Kind": "Class",
+      "Summary": "Immutable original-incarnation snapshot after qualified terminal world removal or completed native Entity deletion; no live Entity proxy or bookkeeping-cleanup guarantee.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
+    },
+    {
       "Id": "EntityDiscoveryOptions",
       "Name": "EntityDiscoveryOptions",
       "Kind": "Value",
@@ -1071,6 +1084,51 @@
       "Preview": "Unavailable",
       "Availability": {
         "SinceApi": "0.6.0-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDestroyedContext.Id",
+      "Name": "Id",
+      "OwnerId": "EntityDestroyedContext",
+      "Kind": "Property",
+      "Summary": "Captured original canonical network ID for event correlation, not reusable lifetime authority.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDestroyedContext.Position",
+      "Name": "Position",
+      "OwnerId": "EntityDestroyedContext",
+      "Kind": "Property",
+      "Summary": "Optional pre-removal root world position snapshot.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Vector3?",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDestroyedContext.Prefab",
+      "Name": "Prefab",
+      "OwnerId": "EntityDestroyedContext",
+      "Kind": "Property",
+      "Summary": "Captured original prefab identity before removal.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
         "Implemented": true,
         "Qualification": "Experimental"
       },
@@ -8005,6 +8063,32 @@
           "Returns": [
             "Vector3"
           ]
+        }
+      ]
+    },
+    {
+      "Id": "Workspace.EntityDestroyed",
+      "Name": "EntityDestroyed",
+      "OwnerId": "Workspace",
+      "Kind": "Signal",
+      "Summary": "Future qualified terminal world removals or completed native Entity deletions, with immutable original-incarnation snapshots, no live Entity proxy and no historical replay.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Context",
+              "Type": "EntityDestroyedContext",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
         }
       ]
     },

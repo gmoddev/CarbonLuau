@@ -7,9 +7,11 @@ CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers throu
 The latest published release is [v0.5.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.5.0). The `0.5.0` release is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
 
 Development `main` adds exact-host player death/spawn Signals and
-`Workspace.EntitySpawned` in `0.6.5-experimental`. See
+`Workspace.EntitySpawned` and snapshot-only `Workspace.EntityDestroyed` in
+`0.6.5-experimental`. See
 [Players](docs/api/Services/Players.md), [Workspace](docs/api/Services/Workspace.md)
-and the [B1 qualification record](docs/GameplayB1-Validation.md) for current
+and the [B1](docs/GameplayB1-Validation.md) / [B3](docs/GameplayB3-Validation.md)
+qualification records for current
 limits. These additions are not in the published v0.5.0 archives.
 
 ## Install and write a script

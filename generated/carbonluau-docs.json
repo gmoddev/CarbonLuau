@@ -68,6 +68,15 @@
   "@carbonluau/globaltype/Entity.Prefab": {
     "documentation": "Full canonical prefab name for this exact live entity."
   },
+  "@carbonluau/globaltype/EntityDestroyedContext.Id": {
+    "documentation": "Captured original canonical network ID for event correlation, not reusable lifetime authority."
+  },
+  "@carbonluau/globaltype/EntityDestroyedContext.Position": {
+    "documentation": "Optional pre-removal root world position snapshot."
+  },
+  "@carbonluau/globaltype/EntityDestroyedContext.Prefab": {
+    "documentation": "Captured original prefab identity before removal."
+  },
   "@carbonluau/globaltype/Frame.AnchorPoint": {
     "documentation": "Retained AnchorPoint."
   },
@@ -904,6 +913,9 @@
   },
   "@carbonluau/global/Vector3.new": {
     "documentation": "Vector3.new."
+  },
+  "@carbonluau/globaltype/Workspace.EntityDestroyed": {
+    "documentation": "Future qualified terminal world removals or completed native Entity deletions, with immutable original-incarnation snapshots, no live Entity proxy and no historical replay."
   },
   "@carbonluau/globaltype/Workspace.EntitySpawned": {
     "documentation": "Future qualified full Spawn completions; exact live lifetime revalidated before deferred delivery, no startup replay."

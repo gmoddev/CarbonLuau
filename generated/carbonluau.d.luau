@@ -57,6 +57,12 @@ declare extern type Entity with
     read Prefab: string
 end
 
+export type EntityDestroyedContext = {
+    read Id: string,
+    read Position: Vector3?,
+    read Prefab: string,
+}
+
 export type EntityDiscoveryOptions = {Prefab: string?, Limit: number?}
 
 declare extern type GuiNode with
@@ -437,6 +443,7 @@ declare extern type Vector3 with
 end
 
 declare extern type Workspace with
+    read EntityDestroyed: SignalWith<(Context: EntityDestroyedContext) -> ()>
     read EntitySpawned: SignalWith<(Entity: Entity) -> ()>
     function GetEntitiesInRadiusAsync(self, Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?): ()
     function GetEntityById(self, Id: string): (Entity?)

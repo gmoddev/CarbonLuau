@@ -13,30 +13,37 @@ namespace Carbon.Plugins
             // Carbon-independent fixtures supply synthetic host transitions.
             internal Func<string, bool> GameplayAvailable = Kind => true;
             private bool GameplayDemandDirty = true;
-            private int GameplayDiedDemand, GameplaySpawnedDemand, GameplayEntitySpawnedDemand;
+            private int GameplayDiedDemand, GameplaySpawnedDemand, GameplayEntitySpawnedDemand, GameplayEntityDestroyedDemand;
             private long GameplayFanoutCursor;
-            internal void InvalidateGameplayDemand() { GameplayDemandDirty = true; }
+            internal ulong DestroyedListenerVersion { get; private set; }
+            internal void InvalidateGameplayDemand() {
+                GameplayDemandDirty = true;
+                if (DestroyedListenerVersion != UInt64.MaxValue) DestroyedListenerVersion++;
+            }
             internal bool HasGameplayDemand(string Kind)
             {
                 Players.CheckOwner();
                 if (GameplayDemandDirty) {
-                    GameplayDiedDemand = GameplaySpawnedDemand = GameplayEntitySpawnedDemand = 0;
+                    GameplayDiedDemand = GameplaySpawnedDemand = GameplayEntitySpawnedDemand = GameplayEntityDestroyedDemand = 0;
                     if (Active != null && Active.Active && !Active.Disposed) {
                         if (!GameplayEvents.Visit()) return false;
                         GameplayDiedDemand += Active.GameplayDiedListeners;
                         GameplaySpawnedDemand += Active.GameplaySpawnedListeners;
                         GameplayEntitySpawnedDemand += Active.GameplayEntitySpawnedListeners;
+                        GameplayEntityDestroyedDemand += Active.GameplayEntityDestroyedListeners;
                     }
                     foreach (FacadeSession Session in Addons.Values) if (Session.Active && !Session.Disposed) {
                         if (!GameplayEvents.Visit()) return false;
                         GameplayDiedDemand += Session.GameplayDiedListeners;
                         GameplaySpawnedDemand += Session.GameplaySpawnedListeners;
                         GameplayEntitySpawnedDemand += Session.GameplayEntitySpawnedListeners;
+                        GameplayEntityDestroyedDemand += Session.GameplayEntityDestroyedListeners;
                     }
                     GameplayDemandDirty = false;
                 }
                 return Kind == "died" ? GameplayDiedDemand != 0 : Kind == "spawned" ? GameplaySpawnedDemand != 0 :
-                    Kind == "entityspawned" && GameplayEntitySpawnedDemand != 0;
+                    Kind == "entityspawned" ? GameplayEntitySpawnedDemand != 0 :
+                    Kind == "entitydestroyed" && GameplayEntityDestroyedDemand != 0;
             }
             // Snapshot data only; no host object or callback is retained here.
             internal void GameplayEvent(string Kind, string Token, string UserId, string Name,
@@ -67,7 +74,15 @@ namespace Carbon.Plugins
                 FanoutGameplay(new[] {"entityspawned", "", "", "", "", "", HostIdentity.ToString(CultureInfo.InvariantCulture),
                     "", "", "", "", ""}, Capture);
             }
-            private void FanoutGameplay(string[] Fields, Func<FacadeSession, EntityLifetimeModel.Binding> Capture)
+            internal void EntityDestroyed(GameplayEntityDestroyedObservation Observation)
+            {
+                Players.CheckOwner();
+                if (Observation == null) throw new FacadeException("invalid entity destruction source");
+                FanoutGameplay(new[] {"entitydestroyed", "", Observation.EpochText, Observation.Id, Observation.Prefab, "",
+                    Observation.X, Observation.Y, Observation.Z, "", "", ""}, null, Observation);
+            }
+            private void FanoutGameplay(string[] Fields, Func<FacadeSession, EntityLifetimeModel.Binding> Capture,
+                GameplayEntityDestroyedObservation Destroyed = null)
             {
                 List<FacadeSession> Values = Sessions();
                 Values.Sort((Left, Right) => Left.DomainLifetimeId.CompareTo(Right.DomainLifetimeId));
@@ -76,7 +91,7 @@ namespace Carbon.Plugins
                 for (int Index = 0; Index < Values.Count; ++Index) {
                     if (!GameplayEvents.Visit()) break;
                     FacadeSession Session = Values[(Start + Index) % Values.Count];
-                    if (Session.GameplayEvent(Fields, Capture)) GameplayFanoutCursor = Session.DomainLifetimeId;
+                    if (Session.GameplayEvent(Fields, Capture, Destroyed)) GameplayFanoutCursor = Session.DomainLifetimeId;
                 }
             }
             private static string GameplayCoordinate(float Value)
@@ -91,19 +106,25 @@ namespace Carbon.Plugins
             internal int GameplayDiedListeners { get; private set; }
             internal int GameplaySpawnedListeners { get; private set; }
             internal int GameplayEntitySpawnedListeners { get; private set; }
+            internal int GameplayEntityDestroyedListeners { get; private set; }
+            internal ulong GameplayDestroyedListenerVersion { get; private set; }
+            internal void PublishGameplayListenerBoundary()
+            { GameplayDestroyedListenerVersion = World.DestroyedListenerVersion; }
             internal PublicationWitness RootGameplayPublication { get { return RootPublication; } }
             internal bool IsGameplayPublicationCurrent(PublicationWitness Witness)
             { return !Disposed && Active && World.IsActive(this) && Object.ReferenceEquals(Witness, RootPublication) && !Witness.Retired; }
             private void RefreshGameplayListeners()
             {
-                GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = 0;
+                GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = GameplayEntityDestroyedListeners = 0;
                 var Published = FirstPublication == null ? Listeners : FirstPublication.Listeners;
                 foreach (string Kind in Published.Values) {
                     if (Kind == "died") GameplayDiedListeners++;
                     else if (Kind == "spawned") GameplaySpawnedListeners++;
                     else if (Kind == "entityspawned") GameplayEntitySpawnedListeners++;
+                    else if (Kind == "entitydestroyed") GameplayEntityDestroyedListeners++;
                 }
                 World.InvalidateGameplayDemand();
+                GameplayDestroyedListenerVersion = World.DestroyedListenerVersion;
             }
             private void ClearPendingGameplay()
             {
@@ -112,10 +133,19 @@ namespace Carbon.Plugins
                     if (Value.GameplayReservation != 0) World.GameplayEvents.Release(this, Value.GameplayReservation);
                 }
             }
-            internal bool GameplayEvent(string[] Fields, Func<FacadeSession, EntityLifetimeModel.Binding> Capture = null)
+            internal bool GameplayEvent(string[] Fields, Func<FacadeSession, EntityLifetimeModel.Binding> Capture = null,
+                GameplayEntityDestroyedObservation Destroyed = null)
             {
                 if (!Active || Disposed || !World.IsActive(this) ||
-                    (Fields[0] == "died" ? GameplayDiedListeners : Fields[0] == "spawned" ? GameplaySpawnedListeners : GameplayEntitySpawnedListeners) == 0) return false;
+                    (Fields[0] == "died" ? GameplayDiedListeners : Fields[0] == "spawned" ? GameplaySpawnedListeners :
+                    Fields[0] == "entityspawned" ? GameplayEntitySpawnedListeners : GameplayEntityDestroyedListeners) == 0) return false;
+                // Polling cannot timestamp native deletion between visits. Only
+                // listeners already published at the last positive live proof
+                // may receive that observation, never a post-removal replay.
+                if (Destroyed != null && (World.DestroyedListenerVersion == UInt64.MaxValue ||
+                    GameplayDestroyedListenerVersion > Destroyed.PublicationCutoff)) {
+                    World.GameplayEvents.RejectTransfer(); return false;
+                }
                 bool Admitted = false;
                 EntityLifetimeModel.Binding Entity = null;
                 var Published = FirstPublication == null ? Listeners : FirstPublication.Listeners;
@@ -134,7 +164,7 @@ namespace Carbon.Plugins
                     }
                     string IdValue = Listener.Key.ToString(CultureInfo.InvariantCulture);
                     Fields[1] = IdValue; byte[] Payload;
-                    ulong Nonce = World.GameplayEvents.Reserve(this, Fields[0], IdValue, Fields, out Payload, Entity);
+                    ulong Nonce = World.GameplayEvents.Reserve(this, Fields[0], IdValue, Fields, out Payload, Entity, Destroyed);
                     if (Nonce == 0) break;
                     try { Pending.Enqueue(new FacadePendingEvent(Payload, Nonce)); Admitted = true; }
                     catch { World.GameplayEvents.Release(this, Nonce, true); throw; }

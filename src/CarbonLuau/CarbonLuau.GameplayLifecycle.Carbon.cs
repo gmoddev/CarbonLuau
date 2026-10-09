@@ -142,7 +142,7 @@ namespace Carbon.Plugins
             GameplayLifecycleOwner = Thread.CurrentThread.ManagedThreadId;
             if (Gameplay != null) {
                 Gameplay.GameplayEvents.FrameClock = () => UnityEngine.Time.frameCount;
-                Gameplay.GameplayAvailable = Kind => Kind == "entityspawned" ?
+                Gameplay.GameplayAvailable = Kind => Kind == "entitydestroyed" ? EntityDestroyedAvailable() : Kind == "entityspawned" ?
                     EntityHostPinned && EntityStartupQualified && !EntityObserverBroken :
                     Kind == "died" ? GameplayDeathQualified : Kind == "spawned" && GameplaySpawnQualified;
                 GameplayCaptureAdmission = Kind => !Stopping && Host != null && Host.Ready && Gameplay.GameplayEvents.Capture(Kind);
@@ -208,7 +208,8 @@ namespace Carbon.Plugins
                     "; spawns=" + GameplayLifecycleSpawns + "; drops=" + GameplayLifecycleDrops +
                     "; rejected=" + GameplayLifecycleRejected + "; nested=" + GameplayLifecycleNested +
                     "; off_thread_rejected=" + Interlocked.Read(ref GameplayLifecycleOffThreadRejected) +
-                    "\n" + (Gameplay == null ? "[CarbonLuau:Gameplay] unavailable" : Gameplay.GameplayEvents.Status);
+                    "\n" + (Gameplay == null ? "[CarbonLuau:Gameplay] unavailable" : Gameplay.GameplayEvents.Status) +
+                    "\n" + EntityDestroyedStatus;
             }
         }
         // Explicit A0 fixture diagnostic only. Never used by capture/admission,

@@ -14,6 +14,10 @@
 -- @carbonluau-api {"Type":"CommandOptions","Kind":"Class","Summary":"Command registration options.","Representation":"Record","SinceApi":"0.3.0-experimental"}
 -- @carbonluau-api {"Type":"PlayerDeathContext","Kind":"Class","Summary":"Immutable terminal-death snapshot; optional fields reflect qualified observations.","Representation":"Record","SinceApi":"0.6.5-experimental"}
 -- @carbonluau-api {"Type":"PlayerSpawnContext","Kind":"Class","Summary":"Immutable completed-spawn snapshot.","Representation":"Record","SinceApi":"0.6.5-experimental"}
+-- @carbonluau-api {"Type":"EntityDestroyedContext","Kind":"Class","Summary":"Immutable original-incarnation snapshot after qualified terminal world removal or completed native Entity deletion; no live Entity proxy or bookkeeping-cleanup guarantee.","Representation":"Record","SinceApi":"0.6.5-experimental"}
+-- @carbonluau-api {"Owner":"EntityDestroyedContext","Name":"Id","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Captured original canonical network ID for event correlation, not reusable lifetime authority.","SinceApi":"0.6.5-experimental","Binding":"        DestroyedContext.Id = Fields[4]"}
+-- @carbonluau-api {"Owner":"EntityDestroyedContext","Name":"Prefab","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Captured original prefab identity before removal.","SinceApi":"0.6.5-experimental","Binding":"        DestroyedContext.Prefab = Fields[5]"}
+-- @carbonluau-api {"Owner":"EntityDestroyedContext","Name":"Position","Kind":"Property","ValueType":"Vector3?","Writable":false,"Summary":"Optional pre-removal root world position snapshot.","SinceApi":"0.6.5-experimental","Binding":"            DestroyedContext.Position = Vector3.new(tonumber(Fields[7]), tonumber(Fields[8]), tonumber(Fields[9]))"}
 -- @carbonluau-api {"Owner":"PlayerDeathContext","Name":"Position","Kind":"Property","ValueType":"Vector3?","Writable":false,"Summary":"Optional root world position observed at terminal death completion.","SinceApi":"0.6.5-experimental","Binding":"        Context.Position = Position"}
 -- @carbonluau-api {"Owner":"PlayerDeathContext","Name":"Killer","Kind":"Property","ValueType":"Player?","Writable":false,"Summary":"Captured exact direct human initiator connection, never retargeted at delivery.","SinceApi":"0.6.5-experimental","Binding":"            Context.Killer = GetPlayer(Fields[10], Fields[11], Fields[12])"}
 -- @carbonluau-api {"Owner":"PlayerDeathContext","Name":"KillerId","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"Optional captured direct killer UserId, not a lookup request.","SinceApi":"0.6.5-experimental","Binding":"            Context.KillerId = Fields[11]"}
@@ -637,6 +641,8 @@ table.freeze(EntityMeta)
 local Workspace = {}
 -- @carbonluau-api {"Owner":"Workspace","Name":"EntitySpawned","Kind":"Signal","Args":[["Entity","Entity"]],"Returns":[],"Summary":"Future qualified full Spawn completions; exact live lifetime revalidated before deferred delivery, no startup replay.","SinceApi":"0.6.5-experimental","Binding":"Workspace.EntitySpawned = Signal(\"entityspawned\")"}
 Workspace.EntitySpawned = Signal("entityspawned")
+-- @carbonluau-api {"Owner":"Workspace","Name":"EntityDestroyed","Kind":"Signal","Args":[["Context","EntityDestroyedContext"]],"Returns":[],"Summary":"Future qualified terminal world removals or completed native Entity deletions, with immutable original-incarnation snapshots, no live Entity proxy and no historical replay.","SinceApi":"0.6.5-experimental","Binding":"Workspace.EntityDestroyed = Signal(\"entitydestroyed\")"}
+Workspace.EntityDestroyed = Signal("entitydestroyed")
 local function GetEntity(Fields, Offset)
     local Entity = MakeUserdata(EntityMeta)
     EntityRecords[Entity] = {Token = Fields[Offset + 1], Publication = Fields[Offset + 3]}
@@ -693,6 +699,16 @@ local function Dispatch(Fields)
     if not Callback then return end
     if Fields[1] == "entityspawned" then
         Callback(GetEntity({Fields[7], Fields[3], Fields[4], Fields[8]}, 1))
+        return
+    end
+    if Fields[1] == "entitydestroyed" then
+        local DestroyedContext = {}
+        DestroyedContext.Id = Fields[4]
+        DestroyedContext.Prefab = Fields[5]
+        if Fields[7] ~= "" then
+            DestroyedContext.Position = Vector3.new(tonumber(Fields[7]), tonumber(Fields[8]), tonumber(Fields[9]))
+        end
+        Callback(table.freeze(DestroyedContext))
         return
     end
     local Player = GetPlayer(Fields[3], Fields[4], Fields[5])

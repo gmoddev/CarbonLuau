@@ -29,7 +29,10 @@ namespace Carbon.Plugins
             private void Update()
             {
                 CarbonLuau Current = Owner;
-                if (Current != null) Current.RunEntityDiscoveryFrame();
+                if (Current != null) {
+                    Current.RunEntityDestroyedFrame();
+                    Current.RunEntityDiscoveryFrame();
+                }
             }
             private void OnDestroy()
             {

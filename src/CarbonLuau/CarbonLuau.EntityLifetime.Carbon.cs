@@ -101,6 +101,7 @@ namespace Carbon.Plugins
                 ActiveEntityObserver = this;
                 string HostFailure;
                 EntityHostPinned = VerifyEntityHostPins(out HostFailure);
+                InitializeEntityDestroyedSource();
                 if (!EntityHostPinned) BreakEntityObserver("host pin mismatch: " + HostFailure);
             }
             catch (Exception) { BreakEntityObserver("observer initialization failed"); }
@@ -461,6 +462,7 @@ namespace Carbon.Plugins
                 }
                 EntityStartupQualified = true;
                 InitializeEntityDiscovery();
+                QualifyEntityDestroyedSource();
                 if (ReadWarmupCandidate != null && Native != null && Gameplay != null)
                     WarmEntityReadPath(ReadWarmupCandidate);
                 if (EntityObserverBroken) return;
@@ -694,6 +696,7 @@ namespace Carbon.Plugins
                 if (!SameEntityMethod(Outer, Method)) { BreakEntityObserver("Spawn outer-chain mismatch"); return null; }
                 Chain.Poisoned = false;
                 Chain.BaseReturned = false;
+                RetireEntityDestroyWatchAtSpawn(Entity);
                 Chain.Attempt = EntityLifetimes.BeginSpawn(Entity);
             }
             else {
@@ -739,8 +742,10 @@ namespace Carbon.Plugins
             EntityLifetimeModel.SpawnAttempt Attempt = Chain.Attempt;
             Chain.Attempt = null;
             if (Attempt != null && EntityLifetimes.CompleteSpawn(Attempt,
-                !EntityObserverBroken && !Chain.Poisoned && Chain.BaseReturned, !Chain.Poisoned))
+                !EntityObserverBroken && !Chain.Poisoned && Chain.BaseReturned, !Chain.Poisoned)) {
+                ArmEntityDestroyWatch(Attempt.Target as BaseEntity);
                 ObserveEntitySpawned(Attempt.Target as BaseEntity);
+            }
         }
     }
 }

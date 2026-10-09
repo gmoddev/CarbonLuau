@@ -18,11 +18,15 @@ these richer callback types; this is not a public constructor or hook API.
 Workspace.EntitySpawned uses `(Entity) -> ()` in development API
 `0.6.5-experimental`, with the same owned registration/queue/publication path.
 Entity lifetime and startup continuity rules are in the Workspace reference.
+Workspace.EntityDestroyed uses `(EntityDestroyedContext) -> ()` in that same
+development API. Its [context](EntityDestroyedContext.md) is a frozen original
+incarnation snapshot, not a live Entity facade. Both Workspace signals reuse the
+existing Signal/Connection infrastructure and shared global gameplay limits.
 
 Registers one callback in the current owning domain and returns a
 [Connection](Connection.md). No permissions are needed. Wrong receiver or
-non-function callback raises an error. Each Player signal permits 128 live
-listeners and 256 total per root generation. GUI Activated uses its documented
+non-function callback raises an error. Each Player/Workspace signal permits 128
+live listeners, with 256 total per domain. GUI Activated uses its documented
 per-button and per-domain bounds. Exceeding a limit raises an error. Repeated registration
 of the same function creates distinct listeners in registration order.
 
@@ -42,5 +46,6 @@ Connection:Disconnect()
 Successful reload/unload removes registrations; failed candidate preserves active
 listeners. No callbacks run inline in Carbon's event hook. See
 [Players](../Services/Players.md) for exact join/leave semantics, [GUI](../Gui.md)
-for Activated authority/lifetime semantics, and
+for Activated authority/lifetime semantics, [Workspace](../Services/Workspace.md)
+for Entity completion/snapshot semantics, and
 [limits](../Compatibility.md) for queue behavior.

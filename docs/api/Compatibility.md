@@ -44,6 +44,16 @@ schema and Luau pin remain unchanged; no release is implied.
 Combined closure and final release-readiness evidence are owned by
 [Foundation 2C](../WorldEntityFoundation2C.md).
 
+`Workspace.EntitySpawned` and snapshot-only `Workspace.EntityDestroyed` begin
+in development API `0.6.5-experimental`, not published v0.5.0. Both inherit the
+exact D20 startup/restart requirement and shared Gameplay A event budgets.
+[B1 evidence](../GameplayB1-Validation.md) qualifies completed Spawn followed by
+original live-lifetime admission. [B3 evidence](../GameplayB3-Validation.md)
+records successful original world removal or proven original native destruction,
+not attempted Kill. Native-only destruction supplies nil Position and does not
+promise Rust bookkeeping cleanup. Source/patch drift fails closed; no historical
+replay or new package identity follows.
+
 [Persistence Foundation 2](../PersistenceFoundation2.md) defines structured
 Query for the same `0.5.0-experimental` API. Optional field-name hints in
 `GetDataStore(Name, Options?)` are the 2B addition and appear in generated

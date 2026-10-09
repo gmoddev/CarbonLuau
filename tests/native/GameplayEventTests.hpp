@@ -25,6 +25,11 @@ static std::vector<std::string> Frame(uint64_t Nonce = 1)
     return {"died", "1", "1", "76561190000999888", "Fixture", std::to_string(Nonce),
         "1.25", "-2.5", "0", "", "", ""};
 }
+static std::vector<std::string> DestroyedFrame(uint64_t Nonce = 1)
+{
+    return {"entitydestroyed", "1", "41", "9", "assets/fixture.prefab", std::to_string(Nonce),
+        "1.25", "-2.5", "0", "", "", ""};
+}
 static uint32_t Host(uint64_t OwnerId, uint32_t Operation, const char* Bytes, uint32_t Length,
     char* Output, uint32_t Capacity, uint32_t* Written)
 {
@@ -33,7 +38,8 @@ static uint32_t Host(uint64_t OwnerId, uint32_t Operation, const char* Bytes, ui
         *Written = uint32_t(std::snprintf(Output, Capacity, "%llu", (unsigned long long)++NextListener) + 1);
     else if (Operation == 9) {
         Vm& Runtime = *CurrentRuntime;
-        if (Length >= 5 && (!std::memcmp(Bytes, "died\0", 5) || (Length >= 8 && !std::memcmp(Bytes, "spawned\0", 8)))) {
+        if (Length >= 5 && (!std::memcmp(Bytes, "died\0", 5) || (Length >= 8 && !std::memcmp(Bytes, "spawned\0", 8)) ||
+            (Length >= 16 && !std::memcmp(Bytes, "entitydestroyed\0", 16)))) {
             ++Gates;
             Check(Runtime.GameplayInFlightOwner && Runtime.GameplayInFlightOwner->Id == OwnerId &&
                 Runtime.GameplayInFlightReservation && Runtime.GameplayInFlightPayload &&
@@ -104,6 +110,49 @@ static void Codec()
 {
     {
     Fixture F("return");
+    F.Run(F.Root, "game:GetService('Workspace').EntityDestroyed:Connect(function(Context) "
+        "assert(type(Context)=='table' and table.isfrozen(Context)) "
+        "assert(Context.Id=='9' and Context.Prefab=='assets/fixture.prefab') "
+        "assert(not pcall(function() Context.Id='retargeted' end)) "
+        "assert(Context.Entity==nil and Context.Cause==nil) "
+        "if Context.Position then "
+        "assert(Context.Position==Vector3.new(1.25,-2.5,0)) "
+        "assert(not pcall(function() Context.Position.X=7 end)) end end)");
+    auto Destroyed = DestroyedFrame(801); Destroyed[1] = "2";
+    Check(F.Submit(Destroyed) == CL_OK && F.Step() == CL_OK && Gates == 1 && !F.Runtime().GameplayReserved,
+        "EntityDestroyed delivers exactly one immutable snapshot without live facade resolution");
+    Destroyed[5] = "802"; Destroyed[6] = Destroyed[7] = Destroyed[8] = "";
+    Check(F.Submit(Destroyed) == CL_OK && F.Step() == CL_OK && Gates == 2 && Releases.size() == 2,
+        "EntityDestroyed accepts absent optional position and refunds reservation after delivery");
+    }
+    {
+    Fixture F("return");
+    auto Destroyed = DestroyedFrame(803); Destroyed[4] = std::string(512,'x');
+    Destroyed[6] = "3.4028234663852886e38"; Destroyed[7] = "-3.4028234663852886e38";
+    Destroyed[8] = "1.401298464324817e-45";
+    Check(F.Submit(Destroyed) == CL_OK && F.Step() == CL_OK, "EntityDestroyed prefab and Single boundaries");
+    for (const auto& Change : std::vector<std::pair<unsigned, std::string>> {
+        {0,"entitydestroyedx"},{1,"0"},{1,"01"},{2,"0"},{2,"01"},{2,"18446744073709551616"},
+        {3,"0"},{3,"01"},{3,"18446744073709551616"},{4,""},{4,std::string(513,'x')},
+        {4,std::string("\xc0\x80",2)},{4,std::string("\xed\xa0\x80",3)},{5,"0"},{5,"01"},
+        {6,"NaN"},{6,"Infinity"},{6,"1e39"},{6,"1e-99"},{6,"3.4028235e38"},{6,"-3.4028235e38"},
+        {6,"+1"},{6," 1"},{6,"01"},
+        {6,"-0"},{6,"0.0"},{6,"1e2junk"},{7,""},{8,""},{9,"1"},{10,"1"},{11,"invented"}}) {
+        auto Bad = DestroyedFrame(804); Bad[Change.first] = Change.second;
+        Check(F.Submit(Bad) == CL_INVALID_ARGUMENT && !F.Runtime().GameplayReserved,
+            "malformed EntityDestroyed leaves no retained payload or reservation");
+    }
+    auto Missing = DestroyedFrame(804); Missing.pop_back();
+    auto Extra = DestroyedFrame(804); Extra.push_back("");
+    auto Oversized = DestroyedFrame(804); Oversized[4] = std::string(2048,'x');
+    Check(F.Submit(Missing) == CL_INVALID_ARGUMENT && F.Submit(Extra) == CL_INVALID_ARGUMENT &&
+        F.Submit(Oversized) == CL_INVALID_ARGUMENT, "EntityDestroyed exact field count and payload ceiling");
+    std::string Unterminated = Pack(DestroyedFrame(804)); Unterminated.pop_back();
+    Check(cl_domain_event(F.VmId,F.Root,Unterminated.data(),uint32_t(Unterminated.size())) == CL_INVALID_ARGUMENT,
+        "EntityDestroyed missing final terminator rejected");
+    }
+    {
+    Fixture F("return");
     auto Entity = std::vector<std::string>{"entityspawned", "1", "41", "9", "assets/fixture.prefab", "901", "77", "1", "", "", "", ""};
     Check(F.Submit(Entity) == CL_OK && F.Step() == CL_OK && !F.Runtime().GameplayReserved,
         "EntitySpawned shares existing reserved queue and consumption");
@@ -159,6 +208,19 @@ static void Codec()
 
 static void Ownership()
 {
+    {
+        Fixture F("error('must be suppressed')"); RejectGate = true;
+        Check(F.Submit(DestroyedFrame(701)) == CL_OK && F.Step() == CL_OK && Releases.count(701) &&
+            !F.Runtime().GameplayReserved, "EntityDestroyed fresh gate cancellation refunds exact reservation");
+    }
+    {
+        Fixture F("return");
+        Check(F.Submit(DestroyedFrame(702)) == CL_OK && F.Submit(DestroyedFrame(703)) == CL_OK,
+            "EntityDestroyed accepted queued snapshots");
+        Check(cl_domain_destroy(F.VmId,F.Root) == CL_OK && Releases.size() == 2 &&
+            Releases.count(702) && Releases.count(703) && !F.Runtime().GameplayReserved,
+            "EntityDestroyed owner retirement cancels without replay or reservation leak");
+    }
     for (int Mode = 0; Mode < 7; ++Mode) {
         const char* Body = Mode == 1 ? "error('ordinary')" : Mode == 2 ? "coroutine.yield()" :
             Mode == 3 ? "while true do end" : Mode == 4 ? "buffer.create(16777217)" : "assert(Player.UserId=='76561190000999888')";
@@ -195,7 +257,8 @@ static void Ownership()
 static void Bounds()
 {
     Fixture F; ClHandle Other = F.Add("return"), Third = F.Add("return");
-    for (uint64_t Index = 1; Index <= 256; ++Index) Check(F.Submit(Frame(Index)) == CL_OK, "domain256 envelope");
+    for (uint64_t Index = 1; Index <= 256; ++Index)
+        Check(F.Submit(Index % 2 ? Frame(Index) : DestroyedFrame(Index)) == CL_OK, "shared domain256 envelope");
     Check(F.Submit(Frame(257)) == CL_INVALID_ARGUMENT && F.Owner().GameplayReserved == 256,
         "per-domain gameplay quota cannot consume entire global budget");
     Check(F.Submit(Frame(1),Other) == CL_INVALID_ARGUMENT, "nonce is unique across all owners while retained");
@@ -237,6 +300,17 @@ static void Allocation()
         TestAllocationFailureAfter = Position; auto Status = F.Step(); TestAllocationFailureAfter = -1;
         Check((Status == CL_OK || Status == CL_MEMORY_LIMIT || Status == CL_RUNTIME_ERROR) &&
             F.Runtime().GameplayReserved == 0 && Releases.count(1) == 1, "callback allocation failures release accepted reservation");
+    }
+    for (int Position = 0; Position < 64; ++Position) {
+        Fixture F("return");
+        F.Run(F.Root, "game:GetService('Workspace').EntityDestroyed:Connect(function(Context) "
+            "assert(table.isfrozen(Context) and Context.Position~=nil) end)");
+        auto Snapshot = DestroyedFrame(); Snapshot[1] = "2"; Snapshot[4] = std::string(512,'x');
+        Check(F.Submit(Snapshot) == CL_OK, "snapshot allocation queue");
+        TestAllocationFailureAfter = Position; auto Status = F.Step(); TestAllocationFailureAfter = -1;
+        Check((Status == CL_OK || Status == CL_MEMORY_LIMIT || Status == CL_RUNTIME_ERROR) &&
+            F.Runtime().GameplayReserved == 0 && Releases.count(1) == 1,
+            "EntityDestroyed record/Vector3 allocation failures refund exactly once");
     }
 }
 inline void RunFaults()
