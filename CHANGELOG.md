@@ -35,8 +35,31 @@ All notable public changes to CarbonLuau are recorded here.
 - Final World/Entity closure adds combined addon/provider replacement tests and
   maximum-catalog churn qualification. Development bundles now include the
   discovery guide and options reference, checked during clean installation.
-- [Planned v0.6.0 notes](docs/releases/0.6.0.md) record the additive API,
-  exact-host/restart requirements and experimental limits.
+- [Planned v0.6.0 notes](docs/releases/0.6.0.md) retain the original World-only
+  candidate and audit the current Gameplay A–D/C4 scope, exact-host/restart
+  requirements, separate final-source gates and experimental limits.
+
+### Breaking migration in development (scripting API `0.7.0-experimental`)
+
+- Inventory operations belong to `Player:GetInventory()`: `CountItem(ShortName)`,
+  `HasItem(ShortName, Amount?)`, `GiveItem(ShortName, Amount, Behavior?)`,
+  `TakeItem(ShortName, Amount)` and the unchanged sampled ItemChanged Signal.
+- Legacy Player HasItem/CountItem/GiveItem/TakeItem are deprecated in the
+  [migration record](docs/api/Inventory-Migration.md) and removed, without aliases.
+  Existing Inventory HasItem/CountItem names are retained; no method rename is made.
+  No RemoveItem, GetItem/GetItems or mutable Item object is added.
+- The migration preserves exact connection/domain/publication authority,
+  D13 PREPARE/COMMIT/VERIFY and one cross-domain mutation gate. GiveItem still defaults
+  to GiveItemBehavior.InventoryOnly. Indeterminate failure and sampled Signal
+  semantics are unchanged; no rollback, world-drop fallback or automatic retry.
+- Existing SinceApi introductions remain unchanged; new `PlayerInventory:GiveItem`
+  and `PlayerInventory:TakeItem` methods begin at 0.7.0-experimental. Development
+  package/tag stay 0.5.0/v0.5.0, ABI 1.5, provider 1.2, schema 1 and Luau unchanged.
+  The API bump does not authorize package publication or relabel older evidence.
+- All bundled inventory calls and author-facing guides use the migrated surface.
+  [Release readiness](docs/Release.md#gameplay-ad-release-readiness) distinguishes
+  the prior Gameplay A–D PASS records, preserved C2 PARTIAL and C3 sampled PASS,
+  from pending C4 final-source runtime, tooling, examples, packaging and hosted CI.
 
 The latest published package remains v0.5.0; no v0.6.0 release or tag exists.
 

@@ -6,17 +6,20 @@ CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers throu
 
 The latest published release is [v0.5.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.5.0). The `0.5.0` release is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
 
-Development `main` adds exact-host player death/spawn Signals and
-`Workspace.EntitySpawned` and snapshot-only `Workspace.EntityDestroyed` in
-`0.6.5-experimental`. See
+Development `main` targets API `0.7.0-experimental`. It includes exact-host Player
+and Entity lifecycle Signals, Loot Replace and the PlayerInventory facade with
+sampled ItemChanged. API 0.7 removes Player HasItem/CountItem/GiveItem/TakeItem:
+use `Player:GetInventory():HasItem`, `CountItem`, `GiveItem` or `TakeItem`. See the
+[inventory migration guide](docs/api/Inventory-Migration.md),
 [Players](docs/api/Services/Players.md), [Workspace](docs/api/Services/Workspace.md)
-and the [B1](docs/GameplayB1-Validation.md) / [B3](docs/GameplayB3-Validation.md)
-qualification records for current
-limits. These additions are not in the published v0.5.0 archives.
+and [Loot](docs/api/Services/Loot.md). These development additions are not in the
+published v0.5.0 archives. Package remains 0.5.0 and native ABI 1.5;
+[release readiness](docs/Release.md#gameplay-ad-release-readiness) separates prior
+Gameplay A–D/C4 subsystem qualification from the separate package-publication gate.
 
 ## Install and write a script
 
-CarbonLuau targets Windows x64 and glibc Linux x64 servers running Carbon. Persistence-2D live host evidence uses Rust build `25653776` and Carbon `2.0.261.0` on Linux; earlier gameplay/GUI evidence uses other recorded builds. See [compatibility](docs/Compatibility.md) for exact platform and feature limits.
+CarbonLuau targets Windows x64 and glibc Linux x64 servers running Carbon. See [compatibility](docs/Compatibility.md) for exact platform and feature limits.
 
 Use the release archive matching the server OS. Install `CarbonLuau.cszip` in `carbon/plugins` and all three matching native files—the runtime DLL or SO, compiler worker and storage worker—in `carbon/data/CarbonLuau/native/win-x64` or `native/linux-x64`. On Linux, make both workers executable after extraction. Put your entrypoint at `carbon/data/CarbonLuau/scripts/init.luau` and create its `modules` directory, even when empty. Do not mix platform binaries or overwrite existing scripts.
 
@@ -35,9 +38,9 @@ For clean-checkout builds, checksums, and provenance, see the [release reproduci
 
 ## What is included
 
-The `CarbonLuau 0.5.0-experimental` API retains controlled modules/tasks, Player events, permission-protected commands, live position/health reads, inventory checks, verified GiveItem/TakeItem and Teleport. It adds private local durable stores with callback-based Get/Set/Remove and bounded structured Query. Execution uses bounded logging, memory and deadlines. Provider-owned addon packages share one VM with exact dependency lifetimes and explicit public modules imported through `require("@id[/path]")`.
+The published `CarbonLuau 0.5.0-experimental` API retains controlled modules/tasks, Player events, permission-protected commands, live position/health reads, inventory checks, verified legacy inventory mutations and Teleport. It adds private local durable stores with callback-based Get/Set/Remove and bounded structured Query. Execution uses bounded logging, memory and deadlines. Provider-owned addon packages share one VM with exact dependency lifetimes and explicit public modules imported through `require("@id[/path]")`.
 
-Development API `0.6.0-experimental` adds exact read-only `Workspace`/`Entity`
+Current development includes exact read-only `Workspace`/`Entity` (introduced at API 0.6)
 lookup and [bounded async discovery](docs/api/Discovery.md) on the pinned hosts.
 See [qualification and release readiness](docs/WorldEntityFoundation2C.md).
 The latest published package remains 0.5.0 and does not contain these APIs.
@@ -65,7 +68,7 @@ does not simulate gameplay or connect to a server.
 
 Callbacks and host inputs are bounded, deadlines are cooperative, and the VM cap is not a whole-server memory cap. Successful reload cancels old listeners and commands; failed candidates preserve them. CarbonLuau does not expose raw Rust objects, arbitrary console execution, filesystem or network APIs, or a Roblox hierarchy.
 
-Inventory mutation is not transactional: false means mutation never started, true means its physical postcondition was verified, and a post-mutation error may leave changes. GiveItem supports only InventoryOnly. Raw inventory objects, world-drop fallback, health mutation, TextBox, package downloads and version solving are unavailable. Teleport is server-qualified but not authenticated-client-qualified.
+Inventory mutation is not transactional: false means mutation never started, true means its physical postcondition was verified, and a post-mutation error may leave changes. Development `Inventory:GiveItem` supports only the unchanged typed `GiveItemBehavior.InventoryOnly`. Raw inventory objects, world-drop fallback, health mutation, TextBox, package downloads and version solving are unavailable. Teleport is server-qualified but not authenticated-client-qualified.
 
 TextBox is not implemented because the current host cannot preserve submitted text exactly.
 

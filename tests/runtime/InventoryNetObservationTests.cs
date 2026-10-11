@@ -661,16 +661,18 @@ internal static class InventoryNetObservationTests
                 };
                 Check(Host.Reload().Status == Runtime.RuntimeStatus.OK && Player.Scans == 0 && Value.Samples.WatchCount == 0,
                     "old PlayerInventory acquisition still scan/watch free");
-                Run("local S=require('state'); assert(S.I:CountItem('scrap')==3 and S.P:CountItem('scrap')==3); assert(S.I:HasItem('scrap',3)==S.P:HasItem('scrap',3)); assert(not S.I:HasItem('scrap',4)); assert(S.I:CountItem('missing')==0); assert(not S.I:HasItem('missing')); assert(game:GetService('Items'):Exists('scrap')); assert(not game:GetService('Items'):Exists('missing')); assert(not pcall(function() S.I.X=1 end)); for _,K in {'ItemAdded','ItemRemoved','Changed','Signal','GiveItem','TakeItem'} do assert(not pcall(function() return S.I[K] end)) end; assert(type(S.I.ItemChanged.Connect)=='function')");
+                Check(Runtime.PhysicalInventoryObservation.Count(Player.Source(),Scrap)==3 &&
+                    Runtime.PhysicalInventoryObservation.Has(Player.Source(),Scrap,3),"qualified backend read parity");
+                Run("local S=require('state'); assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(S.I:CountItem('scrap')==3 and S.I:HasItem('scrap',3)); assert(not S.I:HasItem('scrap',4)); assert(S.I:CountItem('missing')==0); assert(not S.I:HasItem('missing')); assert(game:GetService('Items'):Exists('scrap')); assert(not game:GetService('Items'):Exists('missing')); assert(not pcall(function() S.I.X=1 end)); for _,K in {'ItemAdded','ItemRemoved','Changed','Signal'} do assert(not pcall(function() return S.I[K] end)) end; assert(type(S.I.GiveItem)=='function' and type(S.I.TakeItem)=='function' and type(S.I.ItemChanged.Connect)=='function')");
                 Run("local S=require('state'); assert(not pcall(function() require('nested') end)); assert(not pcall(function() S.Leak:CountItem('scrap') end)); assert(S.I:CountItem('scrap')==3)");
                 Player.Clear(); for (int Index = 0; Index < 128; Index++) Player.Add(Scrap, 3);
-                Run("local S=require('state'); assert(S.I:CountItem('scrap')==384 and S.P:CountItem('scrap')==384); assert(S.I:HasItem('scrap',384) and not S.I:HasItem('scrap',385))");
+                Run("local S=require('state'); assert(S.I:CountItem('scrap')==384 and S.P:GetInventory():CountItem('scrap')==384); assert(S.I:HasItem('scrap',384) and not S.I:HasItem('scrap',385))");
                 Player.Add(Scrap, 1, 1, false);
-                Run("local S=require('state'); for _,O in {S.I,S.P} do assert(not pcall(function() O:CountItem('scrap') end)); assert(not pcall(function() O:HasItem('scrap') end)) end");
+                Run("local S=require('state'); for _,O in {S.I,S.P:GetInventory()} do assert(not pcall(function() O:CountItem('scrap') end)); assert(not pcall(function() O:HasItem('scrap') end)) end");
                 Player.Set(Scrap, Runtime.FacadePolicy.MaxExactLuauInteger); Player.Add(Scrap, 1, 1);
-                Run("local S=require('state'); assert(not pcall(function() S.I:CountItem('scrap') end)); assert(not pcall(function() S.P:CountItem('scrap') end))");
+                Run("local S=require('state'); assert(not pcall(function() S.I:CountItem('scrap') end)); assert(not pcall(function() S.P:GetInventory():CountItem('scrap') end))");
                 Player.Set(Scrap, 3); Player.Add(new Definition("scrap"), 999, 1);
-                Run("local S=require('state'); assert(S.I:CountItem('scrap')==3 and S.P:CountItem('scrap')==3)");
+                Run("local S=require('state'); assert(S.I:CountItem('scrap')==3 and S.P:GetInventory():CountItem('scrap')==3)");
                 Player.Set(Scrap, 3);
                 var Root = Value.World.Active; ulong RootDemand = Value.Stage(Root, Player); Value.Step();
                 Player.Set(Scrap, 4); Value.Step(); Change(Value.Samples, RootDemand, "scrap", 3, 4);
@@ -724,12 +726,12 @@ internal static class InventoryNetObservationTests
                 // Lookup and Describe both resolve Grant.Definition as canonical scrap.
                 Value.Samples.Cancel(RootDemand);
                 RootDemand = Value.Stage(Root, Player); Value.Step();
-                Run("local S=require('state'); assert(S.I:CountItem('scrap')==0); assert(S.P:GiveItem('scrap',5)); assert(S.I:CountItem('scrap')==5 and S.P:CountItem('scrap')==5); assert(S.P:TakeItem('scrap',2)); assert(S.I:CountItem('scrap')==3); assert(not S.P:TakeItem('scrap',4)); assert(not S.P:TakeItem('missing',1)); assert(not pcall(function() S.P:GiveItem('missing',1) end)); assert(not pcall(function() S.P:GiveItem('scrap',1,true) end))");
+                Run("local S=require('state'); assert(S.I:CountItem('scrap')==0); assert(S.P:GetInventory():GiveItem('scrap',5)); assert(S.I:CountItem('scrap')==5 and S.P:GetInventory():CountItem('scrap')==5); assert(S.P:GetInventory():TakeItem('scrap',2)); assert(S.I:CountItem('scrap')==3); assert(not S.P:GetInventory():TakeItem('scrap',4)); assert(not S.P:GetInventory():TakeItem('missing',1)); assert(not pcall(function() S.P:GetInventory():GiveItem('missing',1) end)); assert(not pcall(function() S.P:GetInventory():GiveItem('scrap',1,true) end))");
                 Check(Grant.Creates == 1 && Grant.Transfers == 1 && Grant.Cleanups == 0 && Value.World.TakeItems.BusyCount == 0 &&
                     Value.World.GiveItems.BusyCount == 0 && Value.World.GiveItems.TrackedResources == 0, "existing mutation verification and cleanup unchanged");
                 Value.Step(); Change(Value.Samples, RootDemand, "scrap", 0, 3);
                 Grant.Failure = "reject";
-                Run("local Ok,Message=pcall(function() require('state').P:GiveItem('scrap',1) end); assert(not Ok and string.find(Message,'may have changed')); assert(require('state').I:CountItem('scrap')==3)");
+                Run("local Ok,Message=pcall(function() require('state').P:GetInventory():GiveItem('scrap',1) end); assert(not Ok and string.find(Message,'may have changed')); assert(require('state').I:CountItem('scrap')==3)");
                 Check(Grant.Cleanups == 1 && Value.World.GiveItems.TrackedResources == 0 && Value.World.GiveItems.BusyCount == 0,
                     "post-COMMIT grant rejection still indeterminate with temporary-resource cleanup");
                 Grant.Failure = ""; Value.Step(); Empty(Value.Samples, RootDemand, "rejected physical grant has zero sampled delta");

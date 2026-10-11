@@ -440,17 +440,8 @@
   "@carbonluau/globaltype/Loot.RegisterDropRule": {
     "documentation": "Initialization-only copied declaration, staged until successful publication. One qualified prefab and one global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result."
   },
-  "@carbonluau/globaltype/Player.CountItem": {
-    "documentation": "Count observed physical inventory items by short name."
-  },
   "@carbonluau/globaltype/Player.GetInventory": {
-    "documentation": "Acquire an exact-connection read-only facade without scanning inventory or subscribing."
-  },
-  "@carbonluau/globaltype/Player.GiveItem": {
-    "documentation": "Give a bounded amount with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error."
-  },
-  "@carbonluau/globaltype/Player.HasItem": {
-    "documentation": "Check physical inventory for an amount; the default is one."
+    "documentation": "Acquire an exact-connection inventory facade without scanning inventory or subscribing."
   },
   "@carbonluau/globaltype/Player.HasPermission": {
     "documentation": "Check a host permission for this exact player connection."
@@ -473,9 +464,6 @@
   "@carbonluau/globaltype/Player.SendMessage": {
     "documentation": "Send bounded chat text to this connected player."
   },
-  "@carbonluau/globaltype/Player.TakeItem": {
-    "documentation": "Remove a bounded amount with physical verification; indeterminate mutation raises an error."
-  },
   "@carbonluau/globaltype/Player.Teleport": {
     "documentation": "Teleport a connected player after committed-only admission."
   },
@@ -492,13 +480,19 @@
     "documentation": "Optional root world position observed at terminal death completion."
   },
   "@carbonluau/globaltype/PlayerInventory.CountItem": {
-    "documentation": "Same bounded physical main/belt/wear count and validation as Player:CountItem."
+    "documentation": "Bounded physical main/belt/wear count of accepted canonical items."
+  },
+  "@carbonluau/globaltype/PlayerInventory.GiveItem": {
+    "documentation": "Committed-only bounded grant with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error."
   },
   "@carbonluau/globaltype/PlayerInventory.HasItem": {
-    "documentation": "Same bounded physical HasItem as Player; omitted Amount defaults to one."
+    "documentation": "Check bounded physical inventory; omitted Amount defaults to one."
   },
   "@carbonluau/globaltype/PlayerInventory.ItemChanged": {
     "documentation": "Future sampled net changes between accepted physical snapshots; intermediate transfers may appear and balanced changes may be missed. No completed-operation guarantee, attribution or history replay."
+  },
+  "@carbonluau/globaltype/PlayerInventory.TakeItem": {
+    "documentation": "Committed-only bounded removal with physical verification; indeterminate mutation raises an error."
   },
   "@carbonluau/globaltype/PlayerSpawnContext.Position": {
     "documentation": "Optional root world position observed at completed spawn."

@@ -88,7 +88,10 @@ internal static class InventoryChangedPublicTests
             Players = new Runtime.PlayerDirectory(Id => { Runtime.PlayerView Value; return Views.TryGetValue(Id, out Value) ? Value : null; });
             World = new Runtime.FacadeWorld(Players, Registrar, new Runtime.ItemDirectory(Name => {
                 object Value; return Definitions.TryGetValue(Name, out Value) ? Value : null;
-            }, Value => { var Label = Value as Definition; return Label == null ? null : Label.Name; }));
+            }, Value => {
+                foreach (var Item in Definitions) if (ReferenceEquals(Item.Value,Value)) return Item.Key;
+                return null;
+            }));
             World.GameplayEvents.FrameClock = () => Frame;
             Scrap = Item("scrap"); Player = AddPlayer("42"); Player.Set(Scrap, 3);
             Host = new Runtime.ScriptHost(Native, new Runtime.RuntimeConfig {MaxCallbackMilliseconds=30, FrameDrainBudgetMilliseconds=30}, Snapshot, World);
@@ -157,11 +160,12 @@ internal static class InventoryChangedPublicTests
     {
         using (var Value = new Fixture(Native, Acquire + "S.Count=0")) {
             Check(Value.Player.Scans == 0 && Value.World.InventorySamples.WatchCount == 0, "acquisition without scans or watches");
-            Value.Execute(State + "local Current=S.P:GetInventory(); assert(Current==S.P:GetInventory()); assert(S.I:CountItem('scrap')==Current:CountItem('scrap') and S.I:CountItem('scrap')==3 and S.P:CountItem('scrap')==3); " +
+            Value.Execute(State + "assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(type(S.I.GiveItem)=='function' and type(S.I.TakeItem)=='function')");
+            Value.Execute(State + "local Current=S.P:GetInventory(); assert(Current==S.P:GetInventory()); assert(S.I:CountItem('scrap')==Current:CountItem('scrap') and S.I:CountItem('scrap')==3 and S.P:GetInventory():CountItem('scrap')==3); " +
                 "assert(S.I:HasItem('scrap',3) and not S.I:HasItem('scrap',4)); assert(not pcall(function() S.I.ItemChanged=1 end)); " +
                 "local Signal=S.I.ItemChanged; assert(Signal==S.I.ItemChanged); assert(not pcall(function() Signal.X=1 end)); " +
                 "assert(not pcall(function() Signal:Connect(1) end)); assert(not pcall(function() Signal.Connect({},function() end) end)); " +
-                "for _,K in {'ItemAdded','ItemRemoved','GiveItem','TakeItem','Changed'} do assert(not pcall(function() return S.I[K] end)) end; " + Connect);
+                "for _,K in {'ItemAdded','ItemRemoved','Changed'} do assert(not pcall(function() return S.I[K] end)) end; " + Connect);
             Check(Value.World.InventorySamples.WatchCount == 1 && Value.World.InventorySamples.DemandCount == 1, "public connection creates bounded source demand");
             Value.Player.Set(Value.Scrap, 8); Value.Tick(); Check(Value.DrainDeferred() == "", "first Tick establishes fresh subscription baseline");
             Check(Value.Change(10) == "changed scrap 8 10 2\n", "positive deferred delta");
@@ -195,6 +199,34 @@ internal static class InventoryChangedPublicTests
         }
     }
 
+    private static void MutationIntegration(Runtime.NativeRuntime Native)
+    {
+        using (var Value = new Fixture(Native)) {
+            var Grant = new PlayerInteractionFoundation1FBTests.Fixture();
+            Value.Definitions["scrap"] = Grant.Definition;
+            Value.Player.View.Inventory = Grant.Source; Value.Player.View.GiveInventory = Grant;
+            Value.Player.View.TakeInventory = Grant.Take;
+            Value.Tick(); Check(Value.DrainDeferred() == "", "C4 empty baseline before facade mutations");
+            Value.Execute(State + "assert(S.I:GiveItem('scrap',2)); assert(S.I:GiveItem('scrap',3,GiveItemBehavior.InventoryOnly)); assert(S.Count==0 and S.I:CountItem('scrap')==5)");
+            Value.Tick(); Check(Value.DrainDeferred() == "changed scrap 0 5 5\n", "Give through captured facade uses sampled deferred ItemChanged");
+            Value.Execute(State + "assert(S.I:TakeItem('scrap',2)); assert(S.Count==1 and S.I:CountItem('scrap')==3)");
+            Value.Tick(); Check(Value.DrainDeferred() == "changed scrap 5 3 -2\n", "Take through same facade uses existing signed context");
+            Value.Execute(State + "assert(S.I:GiveItem('scrap',1,nil)); assert(S.I:TakeItem('scrap',1)); assert(not S.I:TakeItem('scrap',4)); assert(not S.I:TakeItem('missing',1)); assert(S.Count==2)");
+            Value.Tick(); Check(Value.DrainDeferred() == "", "balanced Give/Take interval is invisible, no operation ledger");
+            Grant.Failure = "reject";
+            Value.Execute(State + "local Ok,Error=pcall(function() S.I:GiveItem('scrap',1) end); assert(not Ok and string.find(Error,'may have changed',1,true)); assert(S.I:CountItem('scrap')==3)");
+            Value.Tick(); Check(Value.DrainDeferred() == "" && Grant.Cleanups == 1, "indeterminate rejected transfer cleans returned item, no invented delta");
+            Grant.Failure = "insert-throw";
+            Value.Execute(State + "local Ok,Error=pcall(function() S.I:GiveItem('scrap',1) end); assert(not Ok and string.find(Error,'may have changed',1,true)); assert(S.Count==2 and S.I:CountItem('scrap')==4)");
+            Grant.Failure = ""; Value.Tick();
+            Check(Value.DrainDeferred() == "changed scrap 3 4 1\n", "sampled physical change remains visible after indeterminate post-insert failure");
+            Value.Player.View.TakeInventory = (Definition,Amount) => Grant.Take(Definition,Amount) - 1;
+            Value.Execute(State + "local Ok,Error=pcall(function() S.I:TakeItem('scrap',1) end); assert(not Ok and string.find(Error,'may have changed',1,true)); assert(S.Count==3)");
+            Value.Tick(); Check(Value.DrainDeferred() == "changed scrap 4 3 -1\n", "Take VERIFY mismatch remains error with independent sampled observation");
+            Check(Value.World.TakeItems.BusyCount == 0 && Value.World.GiveItems.BusyCount == 0 &&
+                Value.World.GiveItems.TrackedResources == 0, "C4 mutation/signal errors converge shared gate and temporary resources");
+        }
+    }
     private static void PublicationAndLifecycle(Runtime.NativeRuntime Native)
     {
         using (var Value = new Fixture(Native)) {
@@ -639,7 +671,7 @@ internal static class InventoryChangedPublicTests
 
     internal static void RunNative(Runtime.NativeRuntime Native)
     {
-        ScalarsAndCutoffs(Native); PublicationAndLifecycle(Native); Addons(Native); FaultsAndQueues(Native); Transport(Native); BoundsAndScale(Native); FairnessRegressions(Native); MixedSources(Native);
+        ScalarsAndCutoffs(Native); MutationIntegration(Native); PublicationAndLifecycle(Native); Addons(Native); FaultsAndQueues(Native); Transport(Native); BoundsAndScale(Native); FairnessRegressions(Native); MixedSources(Native);
         Check(Native.LiveVmCount == 0, "real VM fixture cleanup");
         Console.WriteLine("[CarbonLuau:InventoryChangedTest] PASS real VM sampled immutable context, exact integers, publication/cutoffs, D11/domain retirement, recovery, shared bounds and100 addons; synthetic physical source");
     }

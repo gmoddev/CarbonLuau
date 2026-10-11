@@ -277,12 +277,33 @@ namespace Carbon.Plugins
                 },Gameplay);
                 C3Check(Host.Reload().Status==RuntimeStatus.OK, "real public root load");
                 C3Registry=new AddonRegistry(Host,Native.HostLifetimeId);
+                C3Run(C3State+"assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(type(S.I.GiveItem)=='function' and type(S.I.TakeItem)=='function')");
                 C3Run(C3State+"local Current=S.P:GetInventory(); assert(Current==S.P:GetInventory()); assert(Current:CountItem('scrap')==S.I:CountItem('scrap')); assert(not pcall(function() S.I.ItemChanged=1 end)); local T=S.I.ItemChanged; "+
-                    "assert(not pcall(function() T.X=1 end)); for _,K in {'ItemAdded','ItemRemoved','GiveItem','TakeItem'} do assert(not pcall(function() return S.I[K] end)) end");
+                    "assert(not pcall(function() T.X=1 end)); for _,K in {'ItemAdded','ItemRemoved'} do assert(not pcall(function() return S.I[K] end)) end");
                 Item First=null, Split=null, Clothing=null;
                 C3Steps.Enqueue(()=>{
-                    C3Count(0); First=C3Item(Scrap,100); C3Move(First,Main,0);
-                    C3Count(0); // Host mutation never synchronously enters a Luau callback.
+                    C3Count(C3Expected);
+                    C3Run(C3State+"assert(S.I:GiveItem('scrap',2)); assert(S.I:GiveItem('scrap',3,GiveItemBehavior.InventoryOnly)); assert(S.I:CountItem('scrap')==5)");
+                    C3Count(C3Expected);
+                });
+                C3Steps.Enqueue(()=>{
+                    C3Expect("scrap",0,5);
+                    C3Run(C3State+"assert(S.I:TakeItem('scrap',2)); assert(S.I:CountItem('scrap')==3)");
+                    C3Count(C3Expected);
+                });
+                C3Steps.Enqueue(()=>{
+                    C3Expect("scrap",5,3);
+                    C3Run(C3State+"assert(S.I:TakeItem('scrap',3)); assert(not S.I:TakeItem('scrap',1)); assert(not S.I:TakeItem('c4.unknown',1))");
+                    C3Count(C3Expected);
+                });
+                C3Steps.Enqueue(()=>{
+                    C3Expect("scrap",3,0);
+                    C3Run(C3State+"assert(S.I:GiveItem('scrap',1)); assert(S.I:TakeItem('scrap',1)); assert(S.I:CountItem('scrap')==0)");
+                    C3Count(C3Expected);
+                });
+                C3Steps.Enqueue(()=>{
+                    C3Count(C3Expected); First=C3Item(Scrap,100); C3Move(First,Main,0);
+                    C3Count(C3Expected); // Host mutation never synchronously enters a Luau callback.
                 });
                 C3Steps.Enqueue(()=>{C3Expect("scrap",0,100); First.UseItem(20);});
                 C3Steps.Enqueue(()=>{C3Expect("scrap",100,80); First.amount+=10; First.MarkDirty();});

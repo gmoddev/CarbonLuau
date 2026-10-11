@@ -198,13 +198,21 @@ int HostPrimitive(lua_State* State)
         (Value >= 36 && Value <= 39) ||
         Value != std::floor(Value)) luaL_error(State, "invalid host operation");
     uint32_t Operation = uint32_t(Value);
-    if ((Operation == 4 || Operation == 28 || Operation == 29 || Operation == 30) && !CanMutateHost(Runtime)) {
-        if ((Operation == 29 || Operation == 30) && Owner.Rejected != UINT64_MAX) ++Owner.Rejected;
-        luaL_error(State, Operation == 4
+    // Inventory facades can be shared across domains. Mutation eligibility is
+    // the current admitted operation, never merely the facade owner's state.
+    uint32_t Mutation = Operation;
+    if (Operation == 41 && lua_gettop(State) >= 5 && lua_type(State, 5) == LUA_TSTRING) {
+        size_t Length = 0; const char* Mode = lua_tolstring(State, 5, &Length);
+        if (Length == 4 && std::memcmp(Mode, "take", 4) == 0) Mutation = 29;
+        else if (Length == 4 && std::memcmp(Mode, "give", 4) == 0) Mutation = 30;
+    }
+    if ((Mutation == 4 || Mutation == 28 || Mutation == 29 || Mutation == 30) && !CanMutateHost(Runtime)) {
+        if ((Mutation == 29 || Mutation == 30) && Owner.Rejected != UINT64_MAX) ++Owner.Rejected;
+        luaL_error(State, Mutation == 4
             ? "SendMessage requires a committed domain; use task.defer for startup delivery"
-            : Operation == 28
+            : Mutation == 28
                 ? "Teleport requires a committed domain; use task.defer for startup movement"
-                : Operation == 29 ? "TakeItem requires a committed domain; use task.defer for startup mutation"
+                : Mutation == 29 ? "TakeItem requires a committed domain; use task.defer for startup mutation"
                 : "GiveItem requires a committed domain; use task.defer for startup mutation");
     }
     if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8 || Operation == 21 || Operation == 34 || Operation == 40 || Operation == 42) && !Runtime.Publication->Uses(&Owner)) {

@@ -39,9 +39,9 @@
 -- @carbonluau-api {"Owner":"Player","Name":"Position","Kind":"Property","ValueType":"Vector3","Writable":false,"Summary":"Player.Position.","Binding":"            if Key == \"Position\" then"}
 -- @carbonluau-api {"Owner":"Player","Name":"Health","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.Health.","Binding":"            if Key == \"Health\" then return tonumber(Host(23, Token, UserId)[1]) end"}
 -- @carbonluau-api {"Owner":"Player","Name":"MaxHealth","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Player.MaxHealth.","Binding":"            if Key == \"MaxHealth\" then return tonumber(Host(24, Token, UserId)[1]) end"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiName","Kind":"Property","ValueType":"\"CarbonLuau\"","Writable":false,"Summary":"Game.ApiName.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.5-experimental\", ApiStatus = \"Experimental\"}"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiVersion","Kind":"Property","ValueType":"\"0.6.5-experimental\"","Writable":false,"Summary":"Game.ApiVersion.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.5-experimental\", ApiStatus = \"Experimental\"}"}
--- @carbonluau-api {"Owner":"Game","Name":"ApiStatus","Kind":"Property","ValueType":"\"Experimental\"","Writable":false,"Summary":"Game.ApiStatus.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.6.5-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiName","Kind":"Property","ValueType":"\"CarbonLuau\"","Writable":false,"Summary":"Game.ApiName.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.7.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiVersion","Kind":"Property","ValueType":"\"0.7.0-experimental\"","Writable":false,"Summary":"Game.ApiVersion.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.7.0-experimental\", ApiStatus = \"Experimental\"}"}
+-- @carbonluau-api {"Owner":"Game","Name":"ApiStatus","Kind":"Property","ValueType":"\"Experimental\"","Writable":false,"Summary":"Game.ApiStatus.","SinceApi":"0.3.0-experimental","Binding":"local Game = {ApiName = \"CarbonLuau\", ApiVersion = \"0.7.0-experimental\", ApiStatus = \"Experimental\"}"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"X","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.X.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"Y","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Y.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
 -- @carbonluau-api {"Owner":"Vector3","Name":"Z","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Vector3.Z.","Binding":"    return Value(\"Vector3\", {X = X, Y = Y, Z = Z, Magnitude = math.sqrt(X * X + Y * Y + Z * Z)})"}
@@ -307,7 +307,7 @@ local function Record(Player)
     return Value
 end
 local PlayerMethods = {}
--- @carbonluau-api {"Type":"PlayerInventory","Kind":"Class","Summary":"Read-only inventory facade bound to one original Player connection and defining domain/publication.","SinceApi":"0.6.5-experimental","Preview":"ReadMock"}
+-- @carbonluau-api {"Type":"PlayerInventory","Kind":"Class","Summary":"Immutable inventory facade bound to one original Player connection and defining domain/publication.","SinceApi":"0.6.5-experimental","Preview":"ReadMock"}
 local InventoryRecords = setmetatable({}, {__mode = "k"})
 local InventoryCache = setmetatable({}, {__mode = "kv"})
 local PlayerInventoryMethods = {}
@@ -334,7 +334,7 @@ local InventoryMeta = table.freeze({
     __newindex = function() Fail("PlayerInventory is read-only") end,
     __metatable = "CarbonLuau.PlayerInventory",
 })
--- @carbonluau-api {"Owner":"Player","Name":"GetInventory","Kind":"Method","Args":[],"Returns":["PlayerInventory"],"Summary":"Acquire an exact-connection read-only facade without scanning inventory or subscribing.","SinceApi":"0.6.5-experimental","Preview":"ReadMock","Binding":"function PlayerMethods.GetInventory(Player)"}
+-- @carbonluau-api {"Owner":"Player","Name":"GetInventory","Kind":"Method","Args":[],"Returns":["PlayerInventory"],"Summary":"Acquire an exact-connection inventory facade without scanning inventory or subscribing.","SinceApi":"0.6.5-experimental","Preview":"ReadMock","Binding":"function PlayerMethods.GetInventory(Player)"}
 function PlayerMethods.GetInventory(Player)
     local Value = Record(Player)
     local Publication = Host(40, Value.Token, Value.UserId)[1]
@@ -345,12 +345,12 @@ function PlayerMethods.GetInventory(Player)
     InventoryCache[Player] = Inventory
     return Inventory
 end
--- @carbonluau-api {"Owner":"PlayerInventory","Name":"CountItem","Kind":"Method","Args":[["ShortName","string"]],"Returns":["number"],"Summary":"Same bounded physical main/belt/wear count and validation as Player:CountItem.","SinceApi":"0.6.5-experimental","Preview":"ReadMock","Binding":"function PlayerInventoryMethods.CountItem(Inventory, ShortName)"}
+-- @carbonluau-api {"Owner":"PlayerInventory","Name":"CountItem","Kind":"Method","Args":[["ShortName","string"]],"Returns":["number"],"Summary":"Bounded physical main/belt/wear count of accepted canonical items.","SinceApi":"0.6.5-experimental","Preview":"ReadMock","Binding":"function PlayerInventoryMethods.CountItem(Inventory, ShortName)"}
 function PlayerInventoryMethods.CountItem(Inventory, ShortName)
     local Value = InventoryRecord(Inventory)
     return tonumber(Host(41, Value.Token, Value.UserId, Value.Publication, "count", String(ShortName, "item short name"))[1])
 end
--- @carbonluau-api {"Owner":"PlayerInventory","Name":"HasItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number?"]],"Returns":["boolean"],"Summary":"Same bounded physical HasItem as Player; omitted Amount defaults to one.","SinceApi":"0.6.5-experimental","Preview":"ReadMock","Binding":"function PlayerInventoryMethods.HasItem(Inventory, ShortName, Amount)"}
+-- @carbonluau-api {"Owner":"PlayerInventory","Name":"HasItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number?"]],"Returns":["boolean"],"Summary":"Check bounded physical inventory; omitted Amount defaults to one.","SinceApi":"0.6.5-experimental","Preview":"ReadMock","Binding":"function PlayerInventoryMethods.HasItem(Inventory, ShortName, Amount)"}
 function PlayerInventoryMethods.HasItem(Inventory, ShortName, Amount)
     local Value = InventoryRecord(Inventory)
     String(ShortName, "item short name")
@@ -358,6 +358,25 @@ function PlayerInventoryMethods.HasItem(Inventory, ShortName, Amount)
     Number(Amount, "item amount", 1, 9007199254740991)
     if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
     return Host(41, Value.Token, Value.UserId, Value.Publication, "has", ShortName, string.format("%.0f", Amount))[1] == "1"
+end
+-- @carbonluau-api {"Owner":"PlayerInventory","Name":"TakeItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number"]],"Returns":["boolean"],"Summary":"Committed-only bounded removal with physical verification; indeterminate mutation raises an error.","SinceApi":"0.7.0-experimental","Preview":"HostMutation","Binding":"function PlayerInventoryMethods.TakeItem(Inventory, ShortName, Amount)","Qualification":"ClientUnqualified"}
+function PlayerInventoryMethods.TakeItem(Inventory, ShortName, Amount)
+    local Value = InventoryRecord(Inventory)
+    String(ShortName, "item short name")
+    Number(Amount, "item amount", 1, 2147483647)
+    if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
+    return Host(41, Value.Token, Value.UserId, Value.Publication, "take", ShortName, string.format("%.0f", Amount))[1] == "1"
+end
+-- @carbonluau-api {"Owner":"PlayerInventory","Name":"GiveItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number"],["Behavior","GiveItemBehavior?"]],"Returns":["boolean"],"Summary":"Committed-only bounded grant with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error.","SinceApi":"0.7.0-experimental","Preview":"HostMutation","Binding":"function PlayerInventoryMethods.GiveItem(Inventory, ShortName, Amount, Behavior)","Qualification":"ClientUnqualified"}
+function PlayerInventoryMethods.GiveItem(Inventory, ShortName, Amount, Behavior)
+    local Value = InventoryRecord(Inventory)
+    String(ShortName, "item short name")
+    Number(Amount, "item amount", 1, 2147483647)
+    if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
+    if Behavior == nil then Behavior = GiveItemBehavior.InventoryOnly end
+    if type(Behavior) ~= "userdata" or getmetatable(Behavior) ~= "CarbonLuau.GiveItemBehavior" or
+        tostring(Behavior) ~= "GiveItemBehavior.InventoryOnly" then Fail("expected GiveItemBehavior.InventoryOnly") end
+    return Host(41, Value.Token, Value.UserId, Value.Publication, "give", ShortName, string.format("%.0f", Amount), "InventoryOnly")[1] == "1"
 end
 table.freeze(PlayerInventoryMethods)
 -- @carbonluau-api {"Owner":"Player","Name":"SendMessage","Kind":"Method","Args":[["Message","string"]],"Returns":[],"Summary":"Send bounded chat text to this connected player.","Preview":"HostMutation","Binding":"function PlayerMethods.SendMessage(Player, Message)","SinceApi":"0.3.0-experimental"}
@@ -472,39 +491,6 @@ function PlayerMethods.Teleport(Player, Position)
     local Value = Record(Player)
     local X, Y, Z = Vector3Components(Position)
     Host(28, Value.Token, Value.UserId, tostring(X), tostring(Y), tostring(Z))
-end
--- @carbonluau-api {"Owner":"Player","Name":"CountItem","Kind":"Method","Args":[["ShortName","string"]],"Returns":["number"],"Summary":"Count observed physical inventory items by short name.","Preview":"ReadMock","Binding":"function PlayerMethods.CountItem(Player, ShortName)"}
-function PlayerMethods.CountItem(Player, ShortName)
-    local Value = Record(Player)
-    return tonumber(Host(26, Value.Token, Value.UserId, String(ShortName, "item short name"))[1])
-end
--- @carbonluau-api {"Owner":"Player","Name":"HasItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number?"]],"Returns":["boolean"],"Summary":"Check physical inventory for an amount; the default is one.","Preview":"ReadMock","Binding":"function PlayerMethods.HasItem(Player, ShortName, Amount)"}
-function PlayerMethods.HasItem(Player, ShortName, Amount)
-    local Value = Record(Player)
-    String(ShortName, "item short name")
-    if Amount == nil then Amount = 1 end
-    Number(Amount, "item amount", 1, 9007199254740991)
-    if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
-    return Host(27, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount))[1] == "1"
-end
--- @carbonluau-api {"Owner":"Player","Name":"TakeItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number"]],"Returns":["boolean"],"Summary":"Remove a bounded amount with physical verification; indeterminate mutation raises an error.","Preview":"HostMutation","Binding":"function PlayerMethods.TakeItem(Player, ShortName, Amount)","Qualification":"ClientUnqualified"}
-function PlayerMethods.TakeItem(Player, ShortName, Amount)
-    local Value = Record(Player)
-    String(ShortName, "item short name")
-    Number(Amount, "item amount", 1, 2147483647)
-    if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
-    return Host(29, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount))[1] == "1"
-end
--- @carbonluau-api {"Owner":"Player","Name":"GiveItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number"],["Behavior","GiveItemBehavior?"]],"Returns":["boolean"],"Summary":"Give a bounded amount with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error.","Preview":"HostMutation","Binding":"function PlayerMethods.GiveItem(Player, ShortName, Amount, Behavior)","Qualification":"ClientUnqualified"}
-function PlayerMethods.GiveItem(Player, ShortName, Amount, Behavior)
-    local Value = Record(Player)
-    String(ShortName, "item short name")
-    Number(Amount, "item amount", 1, 2147483647)
-    if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
-    if Behavior == nil then Behavior = GiveItemBehavior.InventoryOnly end
-    if type(Behavior) ~= "userdata" or getmetatable(Behavior) ~= "CarbonLuau.GiveItemBehavior" or
-        tostring(Behavior) ~= "GiveItemBehavior.InventoryOnly" then Fail("expected GiveItemBehavior.InventoryOnly") end
-    return Host(30, Value.Token, Value.UserId, ShortName, string.format("%.0f", Amount), "InventoryOnly")[1] == "1"
 end
 local function EncodeGuiValue(Value, Integer)
     local Kind = type(Value)
@@ -808,7 +794,7 @@ function Loot.RegisterDropRule(Self, ...)
     Host(42, Prefab, table.concat(Fields, "\t"))
 end
 table.freeze(Loot)
-local Game = {ApiName = "CarbonLuau", ApiVersion = "0.6.5-experimental", ApiStatus = "Experimental"}
+local Game = {ApiName = "CarbonLuau", ApiVersion = "0.7.0-experimental", ApiStatus = "Experimental"}
 -- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items | Workspace | DataStoreService | Loot"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
 function Game.GetService(Self, Name)
     if Self ~= Game then Fail("invalid game facade") end

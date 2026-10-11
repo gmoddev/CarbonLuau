@@ -103,7 +103,7 @@ Reject(() => ApiCatalog.Validate(InvalidLoot), "D3 unknown drop-entry field type
 Console.WriteLine("[CarbonLuau:ToolingTests] PASS D3 namespace, nominal enum, entry alias, exact signature, discovery and negative drift; in-memory metadata only");
 if (Args.Contains("--d3-sidecar")) return;
 InventoryChangedTypes.Run(Catalog, Bootstrap, Release, Native);
-if (Args.Contains("--c3-sidecar")) return;
+if (Args.Contains("--c3-sidecar") || Args.Contains("--c4-sidecar")) return;
 Check(Definitions == File.ReadAllText(Path.Combine(Root, "generated/carbonluau.d.luau")).Replace("\r\n", "\n"), "definition golden drift");
 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
 Check(JToken.DeepEquals(Catalog, ApiCatalog.Build(Bootstrap, Release, Native)), "catalog repeat/culture determinism");
@@ -144,8 +144,9 @@ foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catal
         new[] { "Players.PlayerDied", "Players.PlayerSpawned", "Workspace.EntitySpawned", "Workspace.EntityDestroyed", "Workspace.EntityDied", "Player.GetInventory" }.Contains((string?)Declaration["Id"]);
     bool Loot = new[] { "Enum", "DropMode", "Loot", "LootDropEntry" }.Contains((string?)Declaration["Id"]) ||
         new[] { "Enum", "DropMode", "Loot" }.Contains((string?)Declaration["OwnerId"]);
+    bool InventoryMutation = new[] { "PlayerInventory.GiveItem", "PlayerInventory.TakeItem" }.Contains((string?)Declaration["Id"]);
     Version Since = Version.Parse(((string)Declaration["Availability"]!["SinceApi"]!).Split('-')[0]);
-    Check(GameplayA || Loot ? Since == new Version(0, 6, 5) : Entity ? Since == new Version(0, 6, 0) :
+    Check(InventoryMutation ? Since == new Version(0, 7, 0) : GameplayA || Loot ? Since == new Version(0, 6, 5) : Entity ? Since == new Version(0, 6, 0) :
         Persistence ? Since == new Version(0, 5, 0) : Since <= new Version(0, 4, 0), "historical introduction version changed");
     if (Persistence) Check((string)Declaration["Availability"]!["Qualification"]! == "Experimental" &&
         (string)Declaration["Preview"]! == "Unavailable", "persistence qualification/preview drift");

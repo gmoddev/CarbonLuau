@@ -1,3 +1,4 @@
+-- Development API 0.7.0-experimental; Inventory owns inventory operations.
 local Commands = game:GetService("Commands")
 local Items = game:GetService("Items")
 assert(Items:Exists("scrap"), "scrap definition unavailable")
@@ -6,7 +7,7 @@ assert(Items:Exists("scrap"), "scrap definition unavailable")
 Commands:Register("reward", {
     permission = "carbonluau.example.reward",
 }, function(Context)
-    if Context.Player:GiveItem("scrap", 10, GiveItemBehavior.InventoryOnly) then
+    if Context.Player:GetInventory():GiveItem("scrap", 10, GiveItemBehavior.InventoryOnly) then
         Context.Player:SendMessage("Granted 10 scrap.")
     else
         Context.Player:SendMessage("No safe inventory capacity for the reward.")

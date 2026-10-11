@@ -166,7 +166,7 @@ internal static class PlayerInteractionFoundation1FBTests
         Players.Connect(View);
         var World = new Runtime.FacadeWorld(Players, new Registrar(), new Runtime.ItemDirectory(Name => Name == "scrap" ? Value.Definition : null));
         const string Player = "local P=game:GetService('Players'):GetPlayers()[1]; ";
-        string Source = Player + "assert(not pcall(function() P:GiveItem('scrap',1) end)); task.defer(function() assert(P:GiveItem('scrap',1)); print('granted') end)";
+        string Source = Player + "assert(not pcall(function() P:GetInventory():GiveItem('scrap',1) end)); task.defer(function() assert(P:GetInventory():GiveItem('scrap',1)); print('granted') end)";
         Func<Runtime.ScriptSnapshot> Snapshot = () => new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = Source};
         using (var Host = new Runtime.ScriptHost(Native, new Runtime.RuntimeConfig(), Snapshot, World)) {
             Check(Host.Reload().Status == Runtime.RuntimeStatus.OK && Value.Creates == 0, "provisional rejection");
@@ -174,26 +174,26 @@ internal static class PlayerInteractionFoundation1FBTests
             Check(Value.Creates == 1, "deferred after publication");
             string Checks = Player + "assert(type(GiveItemBehavior.InventoryOnly)=='userdata'); assert(GiveItemBehavior.DropRemainder==nil); " +
                 "assert(not pcall(function() GiveItemBehavior.InventoryOnly.X=1 end)); assert(not pcall(function() GiveItemBehavior.X=1 end)); " +
-                "for _,V in {true,false,'InventoryOnly',{},GuiFont.DroidSansMono,1} do assert(not pcall(function() P:GiveItem('scrap',1,V) end)) end; " +
-                "for _,V in {0,-1,0.5,0/0,math.huge,-math.huge,2147483648,'1',true,{}} do assert(not pcall(function() P:GiveItem('scrap',V) end)) end; " +
-                "assert(not pcall(function() P:GiveItem('scrap') end)); assert(not pcall(function() P:GiveItem('missing',1) end)); " +
-                "assert(not pcall(function() P:GiveItem('Scrap',1) end)); assert(not pcall(function() P:GiveItem(string.rep('a',129),1) end)); " +
-                "assert(P:GiveItem('scrap',2,GiveItemBehavior.InventoryOnly)); assert(P:GiveItem('scrap',3)); assert(P:CountItem('scrap')==6); assert(P:TakeItem('scrap',1)); " +
-                "assert(P:CountItem('scrap')==5); Old=P";
+                "for _,V in {true,false,'InventoryOnly',{},GuiFont.DroidSansMono,1} do assert(not pcall(function() P:GetInventory():GiveItem('scrap',1,V) end)) end; " +
+                "for _,V in {0,-1,0.5,0/0,math.huge,-math.huge,2147483648,'1',true,{}} do assert(not pcall(function() P:GetInventory():GiveItem('scrap',V) end)) end; " +
+                "assert(not pcall(function() P:GetInventory():GiveItem('scrap') end)); assert(not pcall(function() P:GetInventory():GiveItem('missing',1) end)); " +
+                "assert(not pcall(function() P:GetInventory():GiveItem('Scrap',1) end)); assert(not pcall(function() P:GetInventory():GiveItem(string.rep('a',129),1) end)); " +
+                "assert(P:GetInventory():GiveItem('scrap',2,GiveItemBehavior.InventoryOnly)); assert(P:GetInventory():GiveItem('scrap',3)); assert(P:GetInventory():CountItem('scrap')==6); assert(P:GetInventory():TakeItem('scrap',1)); " +
+                "assert(P:GetInventory():CountItem('scrap')==5); Old=P";
             var Checked = Host.Execute("give.api", Checks); Check(Checked.Status == Runtime.RuntimeStatus.OK, "native API: " + Checked.Error);
             int Before = Value.Creates;
-            Source = Player + "task.defer(function() P:GiveItem('scrap',1) end); error('candidate failed')";
+            Source = Player + "task.defer(function() P:GetInventory():GiveItem('scrap',1) end); error('candidate failed')";
             Check(Host.Reload().Status != Runtime.RuntimeStatus.OK && Value.Creates == Before, "failed candidate no grant");
-            Check(Host.Execute("give.error", Player + "P:GiveItem('scrap',1); error('after grant')").Status != Runtime.RuntimeStatus.OK && Value.Creates == Before + 1, "irreversible success before error");
+            Check(Host.Execute("give.error", Player + "P:GetInventory():GiveItem('scrap',1); error('after grant')").Status != Runtime.RuntimeStatus.OK && Value.Creates == Before + 1, "irreversible success before error");
             Players.Disconnect(View.UserId, View.Identity); View = Value.View(); View.Connection = new object(); Players.Connect(View);
-            Check(Host.Execute("give.stale", "assert(not pcall(function() Old:GiveItem('scrap',1) end))").Status == Runtime.RuntimeStatus.OK, "reconnect rejects old proxy");
+            Check(Host.Execute("give.stale", "assert(not pcall(function() Old:GetInventory():GiveItem('scrap',1) end))").Status == Runtime.RuntimeStatus.OK, "reconnect rejects old proxy");
             Source = "-- clean recovery source";
             Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "root replacement");
             Before = Value.Creates;
-            Check(Host.Execute("give.timeout", Player + "P:GiveItem('scrap',1); while true do end").Status == Runtime.RuntimeStatus.TIMEOUT, "timeout after irreversible grant");
+            Check(Host.Execute("give.timeout", Player + "P:GetInventory():GiveItem('scrap',1); while true do end").Status == Runtime.RuntimeStatus.TIMEOUT, "timeout after irreversible grant");
             Check(Value.Creates == Before + 1 && World.GiveItems.BusyCount == 0 && World.GiveItems.TrackedResources == 0, "recovery no replay, no gate leak");
             bool Allowed = false; View.Permission = Name => Allowed;
-            Source = "game:GetService('Commands'):Register('grant',{permission='carbonluau.fixture.grant'},function(C) assert(C.Player:GiveItem('scrap',1)); print('command-grant') end)";
+            Source = "game:GetService('Commands'):Register('grant',{permission='carbonluau.fixture.grant'},function(C) assert(C.Player:GetInventory():GiveItem('scrap',1)); print('command-grant') end)";
             Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "grant command publication");
             Before = Value.Creates;
             Check(!World.Active.Invoke("grant", View.UserId, new string[0]) && !Host.HasWork && Value.Creates == Before, "denied command never enters Luau/grants");

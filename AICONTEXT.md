@@ -121,6 +121,14 @@ If documents, code, a task request or upstream evidence conflict, identify the c
 
 ## Working rules
 
+Gameplay C4 migrates all inventory operations to PlayerInventory and removes the
+legacy Player CountItem/HasItem/GiveItem/TakeItem bindings by explicit user decision.
+[C4 qualification](docs/GameplayC4-Validation.md) owns current implementation,
+migration and gate status. D12 assigns breaking development API 0.7.0-experimental;
+prior 0.6.5 evidence/introductions remain historical. D11/D13/D18 and C3 sampled
+ItemChanged semantics remain authoritative. No new scanner, Item object, global
+inventory service, release/tag or unrelated gameplay phase is authorized.
+
 Gameplay C1's Player-owned read-only inventory facade is routed through
 [GameplayC1-Validation.md](docs/GameplayC1-Validation.md) and D18. It reuses the
 existing scanner and exact connection/publication/domain authority. C2 introduced

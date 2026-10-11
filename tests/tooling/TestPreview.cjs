@@ -72,6 +72,28 @@ function FixtureSource(Operations) {
         const Initialized = await Request('initialize', {ExtensionVersion: '0.0.1', ApiVersion: Pack.ApiVersion, PackageSchema: 1,
             Platform: Pack.Platform, PackVersion: Pack.PackVersion, Capabilities: ['StaticAnalysis', 'Metadata', 'PreviewExecution']}).Promise;
         Assert(!Initialized.Error, JSON.stringify(Initialized));
+        const Metadata = await Request('getMetadata').Promise;
+        Assert(!Metadata.Error, JSON.stringify(Metadata));
+        Assert.equal(Metadata.Result.Catalog.Api.Version, '0.7.0-experimental');
+        const Members = Metadata.Result.Catalog.Members;
+        Assert.deepEqual(Members.filter(Member => Member.OwnerId === 'PlayerInventory').map(Member => Member.Id).sort(),
+            ['CountItem', 'GiveItem', 'HasItem', 'ItemChanged', 'TakeItem'].map(Name => 'PlayerInventory.' + Name));
+        for (const Name of ['CountItem', 'HasItem', 'GiveItem', 'TakeItem'])
+            Assert(!Members.some(Member => Member.Id === 'Player.' + Name), 'legacy Player inventory member: ' + Name);
+        for (const Name of ['GiveItem', 'TakeItem']) {
+            const Member = Members.find(Member => Member.Id === 'PlayerInventory.' + Name);
+            Assert.equal(Member.Availability.SinceApi, '0.7.0-experimental');
+            Assert.equal(Member.Availability.Qualification, 'ClientUnqualified');
+            Assert.equal(Member.Preview, 'HostMutation');
+        }
+        for (const Id of ['Player.GetInventory', 'PlayerInventory.CountItem', 'PlayerInventory.HasItem']) {
+            const Member = Members.find(Member => Member.Id === Id);
+            Assert.equal(Member.Availability.SinceApi, '0.6.5-experimental');
+            Assert.equal(Member.Preview, 'ReadMock');
+        }
+        const InventorySignal = Members.find(Member => Member.Id === 'PlayerInventory.ItemChanged');
+        Assert.equal(InventorySignal.Availability.SinceApi, '0.6.5-experimental');
+        Assert.equal(InventorySignal.Preview, 'Unavailable');
         if (process.argv.includes('--supervisor-fixture')) {
             const ManifestPath = Path.join(PackRoot, 'pack.json'), Original = Fs.readFileSync(ManifestPath);
             const FixtureName = Pack.Platform === 'win32-x64' ? 'PreviewFixture.exe' : 'PreviewFixture';

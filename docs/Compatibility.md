@@ -20,6 +20,15 @@ Carbon currently documents targeting .NET Framework 4.8 with `Carbon.targets`. D
 
 ## Version identities
 
+Gameplay C4's user-authorized removal of Player:HasItem, CountItem, GiveItem and
+TakeItem is breaking and advances development API to `0.7.0-experimental`.
+Acquire `Player:GetInventory()` and use those methods on PlayerInventory instead;
+there are no retained aliases. Existing read/Signal introductions stay at 0.6.5;
+facade GiveItem/TakeItem are introduced at 0.7.0. Package/tag remain 0.5.0/v0.5.0,
+ABI 1.5, provider 1.2, schema 1 and Luau unchanged. [C4 qualification](GameplayC4-Validation.md)
+owns the current platform/lifecycle and release-readiness disposition; historical
+C1–C3 evidence describes its actual earlier API, not current legacy availability.
+
 Developer tooling is separate from the production server support table above.
 [ToolingBaseline.md](ToolingBaseline.md) owns its independent extension, protocol,
 pack, metadata, preview-plan, tooling-native and LSP identities, developer-platform

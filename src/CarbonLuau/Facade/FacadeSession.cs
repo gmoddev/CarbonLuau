@@ -464,7 +464,7 @@ namespace Carbon.Plugins
                 }
                 if (Code == 41) {
                     ulong Publication;
-                    if ((Fields.Length != 4 && Fields.Length != 5 && Fields.Length != 6) ||
+                    if ((Fields.Length != 4 && Fields.Length != 5 && Fields.Length != 6 && Fields.Length != 7) ||
                         !GameplayEventPolicy.Identity(Fields[2], out Publication) || FindEntityWitness(Publication) == null)
                         throw new FacadeException("stale PlayerInventory reference");
                     // Delegate, do not duplicate D18 validation/scanner or errors.
@@ -476,7 +476,11 @@ namespace Carbon.Plugins
                         return Operation(26, new[] {Fields[0], Fields[1], Fields[4]});
                     if (Fields[3] == "has" && Fields.Length == 6)
                         return Operation(27, new[] {Fields[0], Fields[1], Fields[4], Fields[5]});
-                    throw new FacadeException("invalid PlayerInventory read arguments");
+                    if (Fields[3] == "take" && Fields.Length == 6)
+                        return Operation(29, new[] {Fields[0], Fields[1], Fields[4], Fields[5]});
+                    if (Fields[3] == "give" && Fields.Length == 7)
+                        return Operation(30, new[] {Fields[0], Fields[1], Fields[4], Fields[5], Fields[6]});
+                    throw new FacadeException("invalid PlayerInventory arguments");
                 }
                 if (Code == 36 || Code == 38) {
                     if (!Active || !World.IsActive(this) || Disposed)

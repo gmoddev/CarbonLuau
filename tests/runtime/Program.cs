@@ -180,9 +180,28 @@ internal static class Program
             try { PlayerInteractionFoundation1FCTests.RunModel(); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
+        if (Args.Length == 3 && Args[0] == "--gameplayc4") {
+            string FixtureRoot = Path.Combine(Path.GetTempPath(), "CarbonLuauC4-" + Guid.NewGuid().ToString("N"));
+            try {
+                string FixtureRid = Runtime.NativeLibraryLoader.GetRid(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+                string FixtureLibrary = Runtime.NativeLibraryLoader.GetLibraryPath(FixtureRoot, FixtureRid);
+                Directory.CreateDirectory(Path.GetDirectoryName(FixtureLibrary)); File.Copy(Args[1], FixtureLibrary);
+                string FixtureCompiler = Path.Combine(Path.GetDirectoryName(FixtureLibrary), FixtureRid == "win-x64" ? "carbonluau_compiler.exe" : "carbonluau_compiler");
+                File.Copy(Args[2], FixtureCompiler);
+                if (FixtureRid == "linux-x64") Check(chmod(FixtureCompiler, 493) == 0, "C4 compiler worker executable mode");
+                using (var Native = new Runtime.NativeRuntime(FixtureRoot)) {
+                    PlayerInteractionFoundation1FCTests.RunC4(Native);
+                    AddonTests.RunMutationPublication(Native);
+                }
+                return 0;
+            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:GameplayC4] FAIL: " + Error); return 1; }
+            finally { if (Directory.Exists(FixtureRoot)) Directory.Delete(FixtureRoot, true); }
+        }
         if (Args.Length == 2 && Args[0] == "--player1fc-module-boundary") {
             try {
-                using (var Native = new Runtime.NativeRuntime(Args[1])) PlayerInteractionFoundation1FCTests.RunNative(Native, ".");
+                using (var Native = new Runtime.NativeRuntime(Args[1])) {
+                    PlayerInteractionFoundation1FCTests.RunNative(Native, ".");
+                }
                 return 0;
             } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }

@@ -152,6 +152,7 @@ try {
                 @{ Source = (Join-Path $Root 'docs/api/Types/Entity.md'); Name = 'docs/api/Types/Entity.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Types/EntityDeathContext.md'); Name = 'docs/api/Types/EntityDeathContext.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Types/PlayerInventory.md'); Name = 'docs/api/Types/PlayerInventory.md' },
+                @{ Source = (Join-Path $Root 'docs/api/Inventory-Migration.md'); Name = 'docs/api/Inventory-Migration.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Types/InventoryChangeContext.md'); Name = 'docs/api/Types/InventoryChangeContext.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Discovery.md'); Name = 'docs/api/Discovery.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Types/EntityDiscoveryOptions.md'); Name = 'docs/api/Types/EntityDiscoveryOptions.md' },

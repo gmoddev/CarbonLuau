@@ -1,8 +1,8 @@
 # Scripting compatibility and limits
 
 Latest published package v0.5.0 uses API `0.5.0-experimental`.
-The development API identity is `CarbonLuau 0.6.5-experimental`, status `Experimental`;
-the newer Workspace/Entity and player lifecycle surface is not in published v0.5.0.
+The development API identity is `CarbonLuau 0.7.0-experimental`, status `Experimental`;
+the newer Workspace/Entity, gameplay and PlayerInventory surface is not in published v0.5.0.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
 `carbonluau.status`. This identity is distinct from package `0.5.0`, native ABI
 `1.5`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
@@ -16,6 +16,17 @@ records Query and derived-index closure. ABI 1.5 is required by the additive
 completion ingress. [Release mapping](../Release.md)
 and [the 1B record](../PersistenceFoundation1B.md) separate identity from evidence.
 Existing APIs keep their historical introduction versions and qualification.
+
+C4 explicitly removes the Player HasItem/CountItem/GiveItem/TakeItem methods,
+without Player aliases. Existing Inventory HasItem/CountItem names are retained. Use
+`Player:GetInventory():HasItem/CountItem/GiveItem/TakeItem` and the existing sampled ItemChanged
+Signal. See the [breaking migration guide](Inventory-Migration.md) and
+[PlayerInventory](Types/PlayerInventory.md) for the separate signatures.
+Acquisition/read/Signal metadata retains its 0.6.5 introduction; new
+`PlayerInventory:GiveItem`/`PlayerInventory:TakeItem` methods are introduced at 0.7.0.
+GiveItemBehavior retains 0.4.0. Package 0.5.0, ABI 1.5, provider 1.2, schema 1 and
+Luau stay unchanged. This mapping does not certify C4 final-source qualification;
+see [release readiness](../Release.md#gameplay-ad-release-readiness).
 
 Read-only `Workspace:GetEntityById` and `Entity.Id`, `Prefab`, `Position`
 begin in development API `0.6.0-experimental`. This is an exact-host feature:
@@ -107,7 +118,8 @@ connections and non-finite host values raise controlled errors. See the
 [Player-1B qualification record](../PlayerInteractionFoundation1B.md).
 
 Player-1C adds the domain-bound `Items` service with `Exists`, plus bounded
-physical `Player:CountItem` and `Player:HasItem` reads under the same identity.
+physical inventory reads under the same historical identity. In current API 0.7,
+these are `Player:GetInventory():CountItem` and `Player:GetInventory():HasItem`.
 The scanner reads only direct main, belt and wear entries, rejects more than 128
 entries before returning any answer, and never uses hook-virtualized count APIs.
 See the [Player-1C qualification record](../PlayerInteractionFoundation1C.md).
@@ -120,18 +132,20 @@ but authenticated-client convergence remains unqualified. See the
 
 Revised D13 and
 [D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
-read-only item observation, now implemented by Player-1C, plus implementation-
-gated `Player:GiveItem` and `Player:TakeItem`. Player-1F-A ships TakeItem using
-the exact Inventory-M2 adapter; Player-1F-B implements GiveItem with the
+read-only item observation implemented by Player-1C, plus the mutations originally
+qualified by Player-1F-A/B. C4 exposes them as `Inventory:GiveItem` and `Inventory:TakeItem`.
+TakeItem reuses the exact Inventory-M2 adapter; GiveItem reuses the
 [requalified supported-host path](../PlayerInteractionFoundation1FB-Validation.md).
 The historical blanket M2 G1 conclusion remains superseded.
-`GiveItem(ShortName, Amount, Behavior?)` defaults to the sole typed member
+`Inventory:GiveItem(ShortName, Amount, Behavior?)` defaults to the sole typed member
 `GiveItemBehavior.InventoryOnly`.
 `DropRemainder` is future design only, not a reserved or exposed enum value.
 Their canonical result contract is `false` only before inventory COMMIT, `true`
 only after physical VERIFY, and a controlled error for post-COMMIT uncertainty.
-This additive implementation removes no implemented API and changes no package, scripting
-API or native ABI identity.
+The original Player-1F implementation was additive. C4's removal from Player is an
+explicit breaking change at API 0.7, with physical behavior preserved and no
+package or native ABI change. Historical Player-1F evidence retains its names
+and source attribution; C4 requires separate qualification.
 
 [Player-1F-C](../PlayerInteractionFoundation1FC.md) records the correction of a
 cold-module mutation bug in `9b27ba5` and combined closure. Provisional outer
@@ -161,9 +175,9 @@ retrying. Neither timeout nor recovery provides rollback or exactly-once deliver
 | Player name / user ID | 128 UTF-8 bytes / 20 ASCII decimal digits |
 | Vector3 components | Finite System.Single range; no clamping |
 | Item short name / physical inventory entries | 1..128 lowercase ASCII bytes / 128 direct main+belt+wear entries |
-| HasItem amount / counted quantity | Exact positive integer through `2^53 - 1` / checked exact Luau integer |
-| TakeItem amount / verification | Exact integer 1..`Int32.MaxValue`; one bounded fresh scan after COMMIT |
-| GiveItem amount / plan / verification | Required exact integer 1..`Int32.MaxValue`; 128 total main/belt/wear slots/entries, 128 chunks, one fresh VERIFY scan |
+| Inventory HasItem amount / CountItem quantity | Exact positive integer through `2^53 - 1` / checked exact Luau integer |
+| Inventory TakeItem amount / verification | Exact integer 1..`Int32.MaxValue`; one bounded fresh scan after COMMIT |
+| Inventory GiveItem amount / plan / verification | Required exact integer 1..`Int32.MaxValue`; 128 total main/belt/wear slots/entries, 128 chunks, one fresh VERIFY scan |
 | Listeners | 128 per signal, 256 per generation |
 | Commands | 64 per generation; initialization-only |
 | Command / permission name | 32 / 128 ASCII bytes |
@@ -229,14 +243,14 @@ remains at most 2 MiB, including native-held/in-flight work. Existing per-signal
 These bounds do not promise delivery under overload or a wall-clock callback SLA.
 Drops are visible in operator status and are never replayed.
 
-PlayerDied and PlayerSpawned are development API `0.6.5-experimental` additions.
+PlayerDied and PlayerSpawned were introduced at API `0.6.5-experimental`.
 Their exact current Windows/Linux source adapters require the pinned Rust/Carbon
 tuple in [Gameplay A evidence](../GameplayFoundationA-Validation.md). Unknown
 host/patch drift fails closed. Authenticated Steam/client traces remain
 unqualified; constructed exact-host server tests and synthetic VM tests are
 explicitly labelled separately. No generic Entity or inventory event bus is exposed.
 
-Gameplay B1 adds `Workspace.EntitySpawned` under the same development identity.
+Gameplay B1 introduced `Workspace.EntitySpawned` at that same 0.6.5 identity.
 It reports only qualified future full-Spawn completions, with original-lifetime
 revalidation before callback admission and no network-ID retarget or startup
 replay. It shares the Player lifecycle producer/fanout/queue/retention envelopes,

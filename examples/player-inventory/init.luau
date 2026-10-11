@@ -1,4 +1,4 @@
--- Development API 0.6.5-experimental, not published package v0.5.0.
+-- Development API 0.7.0-experimental, not published package v0.5.0.
 local Players = game:GetService("Players")
 local function Inspect(Player)
     local Ok, Result = pcall(function()

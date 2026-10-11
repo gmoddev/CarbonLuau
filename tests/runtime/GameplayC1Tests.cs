@@ -52,11 +52,15 @@ internal static class GameplayC1Tests
                 using (var Host=new Runtime.ScriptHost(Native,new Runtime.RuntimeConfig {MaxCallbackMilliseconds=100},Snapshot,World)) {
                     Action<string> Run=Code=>{var Result=Host.Execute("c1",Code); Check(Result.Status==Runtime.RuntimeStatus.OK,Code+": "+Result.Error);};
                     Check(Host.Reload().Status==Runtime.RuntimeStatus.OK && Scans==0,"disk/scan-free acquisition and same-scope cache");
-                    Run("local S=require('state'); assert(S.I:CountItem('scrap')==0 and not S.I:HasItem('scrap')); assert(S.I:CountItem('unknown')==0 and not S.I:HasItem('unknown')); assert(not pcall(function() S.I.X=1 end)); for _,K in {'ItemAdded','ItemRemoved','GiveItem','TakeItem','Unknown'} do assert(not pcall(function() return S.I[K] end)) end");
+                    Run("local S=require('state'); assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(type(S.I.GiveItem)=='function' and type(S.I.TakeItem)=='function')");
+                    Run("local S=require('state'); assert(S.I:CountItem('scrap')==0 and not S.I:HasItem('scrap')); assert(S.I:CountItem('unknown')==0 and not S.I:HasItem('unknown')); assert(not pcall(function() S.I.X=1 end)); for _,K in {'ItemAdded','ItemRemoved','Unknown'} do assert(not pcall(function() return S.I[K] end)) end");
                     StackCount=128;
-                    Run("local S=require('state'); assert(S.I:CountItem('scrap')==384 and S.I:CountItem('scrap')==S.P:CountItem('scrap')); assert(S.I:HasItem('scrap',384) and not S.I:HasItem('scrap',385)); assert(S.I:HasItem('scrap')==S.P:HasItem('scrap'))");
+                    Check(Runtime.PhysicalInventoryObservation.Count(View.Inventory(),Definition)==384 &&
+                        Runtime.PhysicalInventoryObservation.Has(View.Inventory(),Definition,384) &&
+                        !Runtime.PhysicalInventoryObservation.Has(View.Inventory(),Definition,385),"qualified scanner parity at exact bound");
+                    Run("local S=require('state'); assert(S.I:CountItem('scrap')==384); assert(S.I:HasItem('scrap',384) and not S.I:HasItem('scrap',385)); assert(S.I:HasItem('scrap'))");
                     StackCount=129;
-                    Run("local S=require('state'); for _,O in {S.I,S.P} do assert(not pcall(function() O:CountItem('scrap') end)); assert(not pcall(function() O:HasItem('scrap') end)) end");
+                    Run("local S=require('state'); for _,O in {S.I,S.P:GetInventory()} do assert(not pcall(function() O:CountItem('scrap') end)); assert(not pcall(function() O:HasItem('scrap') end)) end");
                     StackCount=2; Amount=Runtime.FacadePolicy.MaxExactLuauInteger;
                     Run("assert(not pcall(function() require('state').I:CountItem('scrap') end))");
                     StackCount=1; Amount=3;

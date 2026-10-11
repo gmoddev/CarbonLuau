@@ -84,6 +84,12 @@ jobs:
       - name: PlayerInventory public binding (Linux)
         if: runner.os == 'Linux'
         run: mono dist/runtime/RuntimeTests.exe --gameplayc1 "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: PlayerInventory C4 breaking migration (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --gameplayc4 "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: PlayerInventory C4 breaking migration (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --gameplayc4 "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
       - name: Private sampled inventory candidate (Windows)
         if: runner.os == 'Windows'
         run: ./dist/runtime/RuntimeTests.exe --inventory-net "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"

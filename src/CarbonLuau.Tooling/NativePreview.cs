@@ -126,7 +126,8 @@ internal sealed class NativePreview : IDisposable
     private static string OperationName(uint Value) => Value switch {
         1 => "Players:GetPlayers", 2 => "Players:GetPlayerByUserId", 3 => "Player observation", 4 => "Player:SendMessage", 5 => "Player:HasPermission",
         6 or 7 => "Players Signal", 8 => "Commands:Register", 22 => "Player.Position", 23 or 24 => "Player health", 25 => "Items:Exists",
-        26 or 27 => "Player inventory", 28 => "Player:Teleport", 29 => "Player:TakeItem", 30 => "Player:GiveItem",
+        26 or 27 => "PlayerInventory observation", 28 => "Player:Teleport", 29 => "PlayerInventory:TakeItem", 30 => "PlayerInventory:GiveItem",
+        40 => "Player:GetInventory", 41 => "PlayerInventory operation",
         42 => "Loot:RegisterDropRule", _ => "Host operation" };
     public void Dispose()
     {

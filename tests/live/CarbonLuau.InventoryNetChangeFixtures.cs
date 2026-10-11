@@ -331,7 +331,7 @@ namespace Carbon.Plugins
                 Puts(C2Prefix + "PASS Take/Remove and bounded ordered changes");
 
                 var Public = Host.Execute("c2.readonly", "local P=game:GetService('Players'):GetPlayerByUserId('" + Id +
-                    "'); local I=P:GetInventory(); assert(I:CountItem('scrap')==0 and P:CountItem('scrap')==0); " +
+                    "'); local I=P:GetInventory(); assert(I:CountItem('scrap')==0 and P:GetInventory():CountItem('scrap')==0); " +
                     "assert(not pcall(function() return I.ItemAdded end)); assert(not pcall(function() return I.ItemRemoved end)); " +
                     "assert(not pcall(function() return I.ItemChanged end))");
                 C2Check(Public.Status == RuntimeStatus.OK, "existing C1 reads/no public C3: " + Public.Error);

@@ -831,6 +831,16 @@ A domain-bound facade retains bounded identity snapshots and opaque project toke
 
 #### D12 — scripting and protocol identity
 
+Gameplay C4 explicitly removes the four legacy Player inventory methods and
+assigns this breaking development contract to `0.7.0-experimental` under the
+user-authorized migration. `Player:GetInventory()` owns facade acquisition;
+`PlayerInventory` owns CountItem, HasItem, GiveItem, TakeItem and sampled ItemChanged.
+New facade mutations have `SinceApi = 0.7.0-experimental`; existing declarations
+retain historical introductions. Experimental status is not permission to reuse
+an incompatible identity. Package `0.5.0`, native ABI `1.5`, provider `1.2`, schema
+`1` and Luau remain unchanged. No release/tag follows. The migration and
+qualification disposition are routed through [Gameplay C4](GameplayC4-Validation.md).
+
 Entity-1C assigns the additive read-only D20 `Workspace`/`Entity` surface to
 development scripting API `CarbonLuau 0.6.0-experimental`. Published package
 `0.5.0` and its `0.5.0-experimental` API remain historical and unchanged;
@@ -1335,27 +1345,34 @@ behavior remains outside the qualified evidence envelope.
 
 #### D18 — Player Interaction Foundation 1
 
-D18 approves exactly this future public surface: immutable `Vector3` construction,
+D18 approves exactly this public surface (C4 supersedes the historical Player
+inventory spellings, without changing their scanner or mutation contracts): immutable `Vector3` construction,
 X/Y/Z/Magnitude, exact equality, addition, subtraction, unary negation, scalar
 multiplication in either operand order and scalar division;
 `Player.Position`, `Player:Teleport(Position)`, `Player.Health`,
-`Player.MaxHealth`, `Player:CountItem(ShortName)`,
-`Player:HasItem(ShortName, Amount?)`; and `game:GetService("Items")` with
+`Player.MaxHealth`, `PlayerInventory:CountItem(ShortName)`,
+`PlayerInventory:HasItem(ShortName, Amount?)`; and `game:GetService("Items")` with
 `Items:Exists(ShortName)`; plus implementation-gated
-`Player:GiveItem(ShortName, Amount, Behavior?)` and
-`Player:TakeItem(ShortName, Amount)` under D13. Gameplay C1 additively approves
+`PlayerInventory:GiveItem(ShortName, Amount, Behavior?)` and
+`PlayerInventory:TakeItem(ShortName, Amount)` under D13. Gameplay C1 additively approved
 `Player:GetInventory() -> PlayerInventory`, `PlayerInventory:CountItem(ShortName)`
 and `PlayerInventory:HasItem(ShortName, Amount?)` under exactly the observation
 semantics below. No other gameplay API is approved by this decision.
 
-PlayerInventory is immutable, read-only and bound to its defining domain,
+PlayerInventory is immutable and bound to its defining domain,
 publication witness, VM and original D11 connection token/UserId pair. Acquisition
 validates the live connection but performs no inventory scan, disk work, watch or
 subscription. Each read revalidates that authority and delegates to the existing
-D18 CountItem/HasItem adapter; no new scanner, mutation aliases or global Inventory
+D18 CountItem/HasItem adapter; C4 mutations delegate to the unchanged D13
+GiveItem/TakeItem backends and shared exact-connection gate. No new scanner,
+mutation aliases or global Inventory
 service. A facade escaping failed candidate/module publication remains stale;
 sharing never transfers ownership. Reconnect with the same account cannot retarget
-it. Existing Player methods and GiveItemBehavior remain unchanged. Gameplay C3
+it. C4 removes Player:CountItem, HasItem, GiveItem and TakeItem; no hidden aliases
+remain. GiveItemBehavior and unrelated Player methods remain unchanged. Native
+admission checks the current operation's committed eligibility before dispatching
+facade mutations, even through a captured foreign facade or shared closure.
+Gameplay C3
 additively accepts only `PlayerInventory.ItemChanged(Context)` as sampled net
 observation, not completed-operation tracking; ItemAdded/ItemRemoved remain deferred.
 See [C1 qualification](GameplayC1-Validation.md).
@@ -1515,7 +1532,7 @@ operation error. No Rust enum, exception or result wrapper is public. Inventory
 mutation additionally preserves D13's exact false/true/error distinction, and
 `pcall` remains the ordinary mechanism for handling indeterminate host failure.
 
-Health mutation; richer inventory/container APIs; `GetInventory`, `GetItems`,
+Health mutation; richer inventory/container APIs; `GetItems`,
 exposed main/belt/wear objects, container/slot-specific giving, item movement,
 splitting, dropping, UID removal, nested/backpack mutation, condition/custom-
 data/skin/attachment options, multi-item transactions, rollback/undo and cross-

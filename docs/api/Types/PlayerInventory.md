@@ -1,6 +1,9 @@
 # PlayerInventory
 
-Development API `0.6.5-experimental`; not part of published package `0.5.0`.
+Current development API `0.7.0-experimental`; not part of published package `0.5.0`.
+Acquisition, inventory reads and ItemChanged retain their `0.6.5-experimental`
+introduction metadata. New `PlayerInventory:GiveItem` / `PlayerInventory:TakeItem` methods
+are introduced in `0.7.0-experimental`. See the [migration guide](../Inventory-Migration.md).
 Obtain it from an exact connected Player:
 
 ```luau
@@ -10,29 +13,135 @@ if Inventory:HasItem("scrap", 100) then
 end
 ```
 
-The read methods are `CountItem(ShortName: string): number` and
-`HasItem(ShortName: string, Amount: number?): boolean`. HasItem defaults to
+| Signature / property | Return | Behavior |
+|---|---|---|
+| `Inventory:CountItem(ShortName: string)` | number | Checked physical quantity across top-level main/belt/wear stacks. |
+| `Inventory:HasItem(ShortName: string, Amount: number?)` | boolean | Whether the quantity reaches Amount; omitted/nil Amount is 1. |
+| `Inventory:GiveItem(ShortName: string, Amount: number, Behavior: GiveItemBehavior?)` | boolean | Verified complete inventory delivery; omitted/nil Behavior is InventoryOnly. Committed execution only. |
+| `Inventory:TakeItem(ShortName: string, Amount: number)` | boolean | Verified exact physical removal. Committed execution only. |
+| `Inventory.ItemChanged` | Signal `(InventoryChangeContext) -> ()` | Deferred sampled net-change observations. |
+
+## CountItem and HasItem
+
+HasItem defaults to
 one; Amount must be an exact integer 1..2^53-1. Names are canonical lowercase
 ASCII, 1..128 bytes, no NUL or silent normalization. Valid unknown names return
-zero/false. Reads use the same nonrecursive main/belt/wear physical scanner as
-Player:CountItem/HasItem, with the same 128 inspected-stack ceiling and errors.
+zero/false. Reads use the existing nonrecursive main/belt/wear physical scanner,
+with the same 128 inspected-stack ceiling and errors.
 Counts do not reserve items. This is not a snapshot or transaction.
+
+Only current positive stacks with the exact item definition and reciprocal
+container membership count; invalid or removal-pending entries do not. Nested
+contents, backpacks, external/plugin storage, world items and corpses are excluded.
+The scanner never invokes hook-virtualized count APIs. Exceeding the bound fails
+before returning a partial answer; accumulation must remain an exact Luau integer.
+
+## Acquisition and lifetime
 
 Acquisition performs no inventory scan or subscription. Reading `ItemChanged`
 also creates no sampling demand; sampling starts only for connected listeners.
 Repeated acquisition in the same publication scope reuses a live weak-cached
 facade while retained;
 there is no identity guarantee across intervening publication scopes or domains.
-Fields are immutable; ItemAdded, ItemRemoved, mutation aliases and raw
-items/containers are not exposed.
+Fields are immutable. There are no ItemAdded/ItemRemoved Signals, GetItem/GetItems,
+RemoveItem, legacy method aliases or raw items/containers.
 
-Every read validates its original connection and owning domain/publication/VM.
+Every operation validates its original connection and owning domain/publication/VM.
 Disconnect/reconnect, owner replacement/provider unload or VM retirement makes
 old authority stale; it never reconnects by UserId. A new Player obtains a new
 facade. Successful cached module exports can be used later; facade acquisition
 and reads are allowed during provisional execution, but a facade created in a
 failed module/candidate stays stale. Sharing a live facade preserves its defining
-owner. Existing Player methods, including GiveItem/TakeItem, are unchanged.
+owner. GiveItem/TakeItem retain these checks and the existing shared exact-Player mutation
+gate. The removed Player inventory methods are unavailable; use this facade.
+
+## GiveItem
+
+GiveItem requires an exact integer Amount from 1 through `Int32.MaxValue`. Omitted/nil
+Behavior selects the sole typed [GiveItemBehavior.InventoryOnly](GiveItemBehavior.md)
+value; strings, booleans and unrelated values are errors. Unknown canonical item
+names are configuration errors before creation, unlike CountItem/HasItem absence or TakeItem
+rejection. Invalid inputs, stale authority and unavailable host operations raise
+controlled Luau errors.
+
+PREPARE uses a complete bounded plan for the exact Player's ordinary main/belt/wear
+inventory: at most 128 total slots/entries and 128 transfer chunks, compatible
+default-item stacks before empty slots. There is no caller-selected container or
+slot. Complex/skinned/custom-data stacks and unqualified clothing, belt conflicts,
+slot-mask and backpack/parachute placements may be excluded. Multi-stack grants
+require the whole request to fit the safe plan; visible Rust UI space alone is
+not sufficient.
+
+`false` means definite PREPARE rejection before item creation begins. COMMIT starts
+immediately before the first creation call. `true` requires every transfer to
+report success, every returned item to reach accepted inventory or terminal stack
+consumption, no deliberate/fallback world drop, the original connection still
+valid and one fresh physical count `After >= Before + Amount`. CountItem alone cannot
+prove success. Callback rejection after creation, partial delivery, failed cleanup
+or any uncertain post-COMMIT result raises an error saying inventory may have
+changed; it never returns false or partial success.
+
+```luau
+local Inventory = Player:GetInventory()
+local CallOk, Granted = pcall(function()
+    return Inventory:GiveItem("scrap", 10, GiveItemBehavior.InventoryOnly)
+end)
+if not CallOk then
+    print("[Inventory:GiveItem] Call failed; reconcile host state before retrying", Granted)
+elseif Granted then
+    print("[Inventory:GiveItem] Verified 10 scrap")
+else
+    print("[Inventory:GiveItem] No grant began")
+end
+```
+
+## TakeItem
+
+TakeItem requires an exact integer Amount from 1 through `Int32.MaxValue`. A canonical
+unknown item or insufficient physical quantity returns `false` in PREPARE before
+removal begins. Invalid arguments, stale authority and provisional use are errors.
+COMMIT starts immediately before the qualified host removal call. `true` requires
+both the host-reported removal to equal Amount and a fresh bounded physical scan
+to prove `Before - After == Amount` on the original connection. A mismatch or
+other failure after COMMIT is indeterminate and raises a controlled error.
+
+```luau
+local Inventory = Player:GetInventory()
+local CallOk, Removed = pcall(function()
+    return Inventory:TakeItem("scrap", 100)
+end)
+if not CallOk then
+    print("[Inventory:TakeItem] Call failed; reconcile host state before retrying", Removed)
+elseif Removed then
+    print("[Inventory:TakeItem] Verified removal of 100 scrap")
+else
+    print("[Inventory:TakeItem] No removal began")
+end
+```
+
+## Mutation authority and failure
+
+GiveItem/TakeItem reuse D13 PREPARE/COMMIT/VERIFY and one synchronous exact-connection gate
+shared across root/addon domains. Recursive same-Player mutation raises an error;
+there is no waiting queue. No additional Player permission is required by these
+methods; command permissions remain the caller's responsibility.
+
+Both require committed execution. Root/addon candidates, first-load modules and
+provisional dependency/shared-module chains cannot mutate, including through
+captured facades. Later committed calls to successfully cached exports may mutate.
+Use `task.defer` for startup work; failed publication never drains it.
+
+Neither operation promises reservation, rollback, automatic retry or exactly-once
+recovery. Separate TakeItem/GiveItem calls are not an atomic exchange; a failed grant does
+not refund an earlier payment. Trusted equally privileged host plugins can change
+inventory inside callbacks. Observed uncertainty cannot become success. Returned
+temporary items remain under supported cleanup/accounting; inaccessible resources
+never returned by a failing host call remain in the host failure domain. A later
+script error, timeout or VM recovery does not undo or replay physical effects.
+
+ItemChanged retains sampled semantics alongside mutations: GiveItem/TakeItem do not force
+an immediate callback, report a cause or guarantee one callback per operation.
+Host callbacks never synchronously enter Luau.
 
 ## ItemChanged
 
@@ -111,9 +220,17 @@ process-memory or GC limit. There are no per-Player sampling timers or unbounded
 history queues.
 
 Tooling retains `ReadMock` metadata for acquisition and inventory reads.
+GiveItem/TakeItem have unavailable preview support; static preview does not mutate inventory.
 `ItemChanged` and its context have unavailable preview support; a static GUI
 preview does not simulate physical inventory changes.
 
 See [Player](Player.md), [Signal](Signal.md),
 [C1 facade qualification](../../GameplayC1-Validation.md) and
-[C2 private sampled evidence and limitations](../../GameplayC2-Validation.md).
+[C2 private sampled evidence and limitations](../../GameplayC2-Validation.md),
+[C3 public sampled qualification](../../GameplayC3-Validation.md),
+[original grant qualification](../../PlayerInteractionFoundation1FB-Validation.md)
+and [combined mutation closure](../../PlayerInteractionFoundation1FC.md).
+These historical receipts retain their tested names/versions; the separate C4
+migration and exact final-source qualification are pending in
+[C4 evidence](../../GameplayC4-Validation.md) and remain a release gate in
+[Release.md](../../Release.md#gameplay-ad-release-readiness).

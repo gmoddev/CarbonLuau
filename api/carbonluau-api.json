@@ -2,7 +2,7 @@
   "SchemaVersion": 1,
   "Api": {
     "Name": "CarbonLuau",
-    "Version": "0.6.5-experimental",
+    "Version": "0.7.0-experimental",
     "Status": "Experimental"
   },
   "Types": [
@@ -440,7 +440,7 @@
       "Id": "PlayerInventory",
       "Name": "PlayerInventory",
       "Kind": "Class",
-      "Summary": "Read-only inventory facade bound to one original Player connection and defining domain/publication.",
+      "Summary": "Immutable inventory facade bound to one original Player connection and defining domain/publication.",
       "Availability": {
         "SinceApi": "0.6.5-experimental",
         "Implemented": true,
@@ -1829,7 +1829,7 @@
         "Implemented": true,
         "Qualification": "Experimental"
       },
-      "ValueType": "\"0.6.5-experimental\"",
+      "ValueType": "\"0.7.0-experimental\"",
       "Writable": false
     },
     {
@@ -4112,39 +4112,11 @@
       ]
     },
     {
-      "Id": "Player.CountItem",
-      "Name": "CountItem",
-      "OwnerId": "Player",
-      "Kind": "Method",
-      "Summary": "Count observed physical inventory items by short name.",
-      "Preview": "ReadMock",
-      "Availability": {
-        "SinceApi": "0.4.0-experimental",
-        "Implemented": true,
-        "Qualification": "Experimental"
-      },
-      "Signatures": [
-        {
-          "Parameters": [
-            {
-              "Name": "ShortName",
-              "Type": "string",
-              "Optional": false,
-              "Variadic": false
-            }
-          ],
-          "Returns": [
-            "number"
-          ]
-        }
-      ]
-    },
-    {
       "Id": "Player.GetInventory",
       "Name": "GetInventory",
       "OwnerId": "Player",
       "Kind": "Method",
-      "Summary": "Acquire an exact-connection read-only facade without scanning inventory or subscribing.",
+      "Summary": "Acquire an exact-connection inventory facade without scanning inventory or subscribing.",
       "Preview": "ReadMock",
       "Availability": {
         "SinceApi": "0.6.5-experimental",
@@ -4156,80 +4128,6 @@
           "Parameters": [],
           "Returns": [
             "PlayerInventory"
-          ]
-        }
-      ]
-    },
-    {
-      "Id": "Player.GiveItem",
-      "Name": "GiveItem",
-      "OwnerId": "Player",
-      "Kind": "Method",
-      "Summary": "Give a bounded amount with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error.",
-      "Preview": "HostMutation",
-      "Availability": {
-        "SinceApi": "0.4.0-experimental",
-        "Implemented": true,
-        "Qualification": "ClientUnqualified"
-      },
-      "Signatures": [
-        {
-          "Parameters": [
-            {
-              "Name": "ShortName",
-              "Type": "string",
-              "Optional": false,
-              "Variadic": false
-            },
-            {
-              "Name": "Amount",
-              "Type": "number",
-              "Optional": false,
-              "Variadic": false
-            },
-            {
-              "Name": "Behavior",
-              "Type": "GiveItemBehavior?",
-              "Optional": true,
-              "Variadic": false
-            }
-          ],
-          "Returns": [
-            "boolean"
-          ]
-        }
-      ]
-    },
-    {
-      "Id": "Player.HasItem",
-      "Name": "HasItem",
-      "OwnerId": "Player",
-      "Kind": "Method",
-      "Summary": "Check physical inventory for an amount; the default is one.",
-      "Preview": "ReadMock",
-      "Availability": {
-        "SinceApi": "0.4.0-experimental",
-        "Implemented": true,
-        "Qualification": "Experimental"
-      },
-      "Signatures": [
-        {
-          "Parameters": [
-            {
-              "Name": "ShortName",
-              "Type": "string",
-              "Optional": false,
-              "Variadic": false
-            },
-            {
-              "Name": "Amount",
-              "Type": "number?",
-              "Optional": true,
-              "Variadic": false
-            }
-          ],
-          "Returns": [
-            "boolean"
           ]
         }
       ]
@@ -4364,40 +4262,6 @@
       ]
     },
     {
-      "Id": "Player.TakeItem",
-      "Name": "TakeItem",
-      "OwnerId": "Player",
-      "Kind": "Method",
-      "Summary": "Remove a bounded amount with physical verification; indeterminate mutation raises an error.",
-      "Preview": "HostMutation",
-      "Availability": {
-        "SinceApi": "0.4.0-experimental",
-        "Implemented": true,
-        "Qualification": "ClientUnqualified"
-      },
-      "Signatures": [
-        {
-          "Parameters": [
-            {
-              "Name": "ShortName",
-              "Type": "string",
-              "Optional": false,
-              "Variadic": false
-            },
-            {
-              "Name": "Amount",
-              "Type": "number",
-              "Optional": false,
-              "Variadic": false
-            }
-          ],
-          "Returns": [
-            "boolean"
-          ]
-        }
-      ]
-    },
-    {
       "Id": "Player.Teleport",
       "Name": "Teleport",
       "OwnerId": "Player",
@@ -4488,7 +4352,7 @@
       "Name": "CountItem",
       "OwnerId": "PlayerInventory",
       "Kind": "Method",
-      "Summary": "Same bounded physical main/belt/wear count and validation as Player:CountItem.",
+      "Summary": "Bounded physical main/belt/wear count of accepted canonical items.",
       "Preview": "ReadMock",
       "Availability": {
         "SinceApi": "0.6.5-experimental",
@@ -4512,11 +4376,51 @@
       ]
     },
     {
+      "Id": "PlayerInventory.GiveItem",
+      "Name": "GiveItem",
+      "OwnerId": "PlayerInventory",
+      "Kind": "Method",
+      "Summary": "Committed-only bounded grant with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error.",
+      "Preview": "HostMutation",
+      "Availability": {
+        "SinceApi": "0.7.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ShortName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Amount",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Behavior",
+              "Type": "GiveItemBehavior?",
+              "Optional": true,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
+    },
+    {
       "Id": "PlayerInventory.HasItem",
       "Name": "HasItem",
       "OwnerId": "PlayerInventory",
       "Kind": "Method",
-      "Summary": "Same bounded physical HasItem as Player; omitted Amount defaults to one.",
+      "Summary": "Check bounded physical inventory; omitted Amount defaults to one.",
       "Preview": "ReadMock",
       "Availability": {
         "SinceApi": "0.6.5-experimental",
@@ -4568,6 +4472,40 @@
             }
           ],
           "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "PlayerInventory.TakeItem",
+      "Name": "TakeItem",
+      "OwnerId": "PlayerInventory",
+      "Kind": "Method",
+      "Summary": "Committed-only bounded removal with physical verification; indeterminate mutation raises an error.",
+      "Preview": "HostMutation",
+      "Availability": {
+        "SinceApi": "0.7.0-experimental",
+        "Implemented": true,
+        "Qualification": "ClientUnqualified"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ShortName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Amount",
+              "Type": "number",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
         }
       ]
     },

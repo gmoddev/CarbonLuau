@@ -27,9 +27,19 @@ $Commit = $Core.IndexOf('// COMMIT:')
 if ($Core.Substring($Commit) -match 'return false;') { throw 'False is forbidden after COMMIT' }
 if (!$Facade.Contains('new PlayerGiveItemOperation(TakeItems.SharedGate)')) { throw 'Give/Take gate split' }
 $Publication = Get-Content -Raw (Join-Path $Root 'native/src/runtime/Publication.cpp')
-if (!$Native.Contains('Operation == 30') -or !$Native.Contains('!CanMutateHost(Runtime)') -or
+if (!$Native.Contains('Mutation == 30') -or !$Native.Contains('!CanMutateHost(Runtime)') -or
     !$Publication.Contains('Runtime.Admission && !Runtime.Admission->Provisional && !Runtime.Publication')) {
     throw 'Missing authoritative admission/publication mutation guard'
+}
+foreach ($Guard in @('Operation == 41 && lua_gettop(State) >= 5 && lua_type(State, 5) == LUA_TSTRING',
+    'Length == 4 && std::memcmp(Mode, "take", 4) == 0) Mutation = 29',
+    'Length == 4 && std::memcmp(Mode, "give", 4) == 0) Mutation = 30')) {
+    if (!$Native.Contains($Guard)) { throw "Missing PlayerInventory current-operation guard: $Guard" }
+}
+foreach ($Guard in @('Fields[3] == "take" && Fields.Length == 6',
+    'Fields[3] == "give" && Fields.Length == 7',
+    'FindEntityWitness(Publication) == null')) {
+    if (!$Facade.Contains($Guard)) { throw "Missing PlayerInventory qualified delegation: $Guard" }
 }
 if (!$Bootstrap.Contains('getmetatable(Behavior) ~= "CarbonLuau.GiveItemBehavior"')) { throw 'Behavior must be typed' }
 if ($Bootstrap -match 'DropRemainder|DropIfFull') { throw 'Future drop behavior exposed' }

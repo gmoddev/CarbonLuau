@@ -148,7 +148,7 @@ end
 declare extern type Game with
     read ApiName: "CarbonLuau"
     read ApiStatus: "Experimental"
-    read ApiVersion: "0.6.5-experimental"
+    read ApiVersion: "0.7.0-experimental"
     function GetService(self, Name: "Commands"): (Commands)
     function GetService(self, Name: "DataStoreService"): (DataStoreService)
     function GetService(self, Name: "Gui"): (Gui)
@@ -244,10 +244,7 @@ export type LootDropEntry = {Item: string, Min: number, Max: number}
 export type PersistedValue = boolean | number | string | {PersistedValue} | {[string]: PersistedValue}
 
 declare extern type Player with
-    function CountItem(self, ShortName: string): (number)
     function GetInventory(self): (PlayerInventory)
-    function GiveItem(self, ShortName: string, Amount: number, Behavior: GiveItemBehavior?): (boolean)
-    function HasItem(self, ShortName: string, Amount: number?): (boolean)
     function HasPermission(self, Permission: string): (boolean)
     read Health: number
     read IsConnected: boolean
@@ -255,7 +252,6 @@ declare extern type Player with
     read Name: string
     read Position: Vector3
     function SendMessage(self, Message: string): ()
-    function TakeItem(self, ShortName: string, Amount: number): (boolean)
     function Teleport(self, Position: Vector3): ()
     read UserId: string
 end
@@ -268,8 +264,10 @@ export type PlayerDeathContext = {
 
 declare extern type PlayerInventory with
     function CountItem(self, ShortName: string): (number)
+    function GiveItem(self, ShortName: string, Amount: number, Behavior: GiveItemBehavior?): (boolean)
     function HasItem(self, ShortName: string, Amount: number?): (boolean)
     read ItemChanged: SignalWith<(Context: InventoryChangeContext) -> ()>
+    function TakeItem(self, ShortName: string, Amount: number): (boolean)
 end
 
 export type PlayerSpawnContext = {

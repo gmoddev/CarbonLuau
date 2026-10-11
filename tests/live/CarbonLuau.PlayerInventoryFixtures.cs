@@ -27,8 +27,26 @@ namespace Carbon.Plugins
                 },Gameplay);
                 if(Host.Reload().Status!=RuntimeStatus.OK) throw new Exception("C1 root load");
                 Action<string> Run=Code=>{var Result=Host.Execute("c1.live",Code);if(Result.Status!=RuntimeStatus.OK)throw new Exception(Result.Error);};
-                Run("local S=require('state'); assert(S.I:CountItem('scrap')==S.P:CountItem('scrap')); assert(not S.I:HasItem('c1.unknown'))");
-                Run("local S=require('state'); assert(S.P:GiveItem('scrap',3)); assert(S.I:CountItem('scrap')==3); assert(S.I:HasItem('scrap') and S.I:HasItem('scrap',3) and not S.I:HasItem('scrap',4)); assert(S.P:TakeItem('scrap',1)); assert(S.I:CountItem('scrap')==2)");
+                Run("local S=require('state'); assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(S.I:CountItem('scrap')==0); assert(not S.I:HasItem('c1.unknown'))");
+                Run("local I=require('state').I; assert(not I:TakeItem('scrap',1) and not I:TakeItem('c1.unknown',1)); for _,B in {true,false,'InventoryOnly',Enum.DropMode.Replace,{},1} do assert(not pcall(function() I:GiveItem('scrap',1,B) end)) end; assert(not I:GiveItem('scrap',2147483647)); assert(I:CountItem('scrap')==0)");
+                Run("local S=require('state'); assert(S.I:GiveItem('scrap',1)); assert(S.I:GiveItem('scrap',2,GiveItemBehavior.InventoryOnly)); assert(S.I:CountItem('scrap')==3); assert(S.I:HasItem('scrap') and S.I:HasItem('scrap',3) and not S.I:HasItem('scrap',4)); assert(S.I:TakeItem('scrap',1)); assert(S.I:CountItem('scrap')==2)");
+                ItemDefinition Scrap=ItemManager.FindItemDefinition("scrap");
+                ItemContainer Main=Player.inventory.containerMain, Belt=Player.inventory.containerBelt;
+                long Full=(long)(Main.capacity+Belt.capacity)*Scrap.stackable;
+                if(Full<=2 || Full>Int32.MaxValue)throw new Exception("bounded full inventory fixture capacity");
+                Run("local I=require('state').I; assert(I:GiveItem('scrap',"+(Full-2)+")); assert(I:CountItem('scrap')=="+Full+"); assert(not I:GiveItem('scrap',1)); assert(I:CountItem('scrap')=="+Full+"); assert(I:TakeItem('scrap',"+(Full-2)+")); assert(I:CountItem('scrap')==2)");
+                Func<BasePlayer,Item,int,bool> OriginalAcceptance=Main.canAcceptItem;
+                Func<BasePlayer,Item,int,bool> OriginalBeltAcceptance=Belt.canAcceptItem;
+                try {
+                    foreach(int Mode in new[]{0,1}) {
+                        Main.canAcceptItem=Mode==0 ? new Func<BasePlayer,Item,int,bool>((P,I,S)=>false) :
+                            new Func<BasePlayer,Item,int,bool>((P,I,S)=>{throw new InvalidOperationException("controlled C4 acceptance failure");});
+                        Belt.canAcceptItem=Main.canAcceptItem;
+                        Run("local I=require('state').I; local Ok,Error=pcall(function() I:GiveItem('scrap',1) end); assert(not Ok and string.find(Error,'may have changed',1,true),'C4 acceptance fault: '..tostring(Ok)..' '..tostring(Error)); assert(I:CountItem('scrap')==2)");
+                        if(Gameplay.GiveItems.BusyCount!=0 || Gameplay.GiveItems.TrackedResources!=0)throw new Exception("C4 failed grant resources");
+                    }
+                } finally {Main.canAcceptItem=OriginalAcceptance;Belt.canAcceptItem=OriginalBeltAcceptance;}
+                Puts("[CarbonLuau:PlayerInventoryFixture] PASS C4 public full/stack capacity rejection, exact Give/Take, post-COMMIT acceptance rejection/exception and resource cleanup");
                 Run("local S=require('state'); assert(not pcall(function() require('bad') end)); assert(not pcall(function() S.Leaked:CountItem('scrap') end)); assert(S.I:CountItem('scrap')==2); assert(not pcall(function() S.I.Amount=1 end)); assert(not pcall(function() return S.I.ItemAdded end))");
                 Source="error('failed root')"; if(Host.Reload().Status!=RuntimeStatus.RUNTIME_ERROR) throw new Exception("failed candidate");
                 Run("assert(require('state').I:CountItem('scrap')==2)");

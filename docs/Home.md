@@ -8,13 +8,23 @@ local persistence and structured Query under scripting API
 `0.5.0-experimental`. See [release notes](releases/0.5.0.md) and
 [combined Foundation 2 qualification](PersistenceFoundation2D.md).
 Platform and client limits remain in [Compatibility](Compatibility.md).
-Development scripting API `0.6.0-experimental` adds read-only
+Current development scripting API is `0.7.0-experimental`; package remains 0.5.0
+and native ABI 1.5. The [inventory migration guide](api/Inventory-Migration.md)
+routes removal of the legacy Player inventory methods to
+`Player:GetInventory():CountItem/HasItem/GiveItem/TakeItem`, with sampled ItemChanged unchanged.
+The [C4 qualification record](GameplayC4-Validation.md) is complete; the
+[release-readiness audit](Release.md#gameplay-ad-release-readiness) separates
+qualified Gameplay A–D/C4 source from the separate package-publication gates. Historical
+foundation descriptions below retain their original availability and names;
+use the migration guide and current API reference for development scripts.
+
+The original development API `0.6.0-experimental` introduced read-only
 [Workspace/Entity](api/Services/Workspace.md) and [bounded async discovery](api/Discovery.md)
 on an exact pinned host envelope. [Final closure](WorldEntityFoundation2C.md) and
 [planned v0.6.0 notes](releases/0.6.0.md) own readiness; the published package
 remains v0.5.0.
 
-Development API `0.6.5-experimental` also adds
+The subsequent API `0.6.5-experimental` introduced
 [Player lifecycle Signals](api/Services/Players.md), completed Entity Spawn
 observations and immutable Entity destruction snapshots through
 [Workspace](api/Services/Workspace.md). [Gameplay A](GameplayFoundationA-Validation.md),

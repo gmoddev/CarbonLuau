@@ -1,3 +1,4 @@
+-- Development API 0.7.0-experimental; Inventory owns inventory operations.
 local Players = game:GetService("Players")
 local Screen = game:GetService("Gui"):Create("ScreenGui")
 local Button = Screen:Create("TextButton")
@@ -7,7 +8,7 @@ Button.AnchorPoint = Vector2.new(0.5, 0.5)
 Button.Text = "Test reward: 10 scrap"
 Button.Activated:Connect(function(Player)
     if not Player:HasPermission("carbonluau.example.reward") then return end
-    if Player:GiveItem("scrap", 10) then
+    if Player:GetInventory():GiveItem("scrap", 10) then
         Player:SendMessage("Granted 10 scrap.")
     else
         Player:SendMessage("No safe inventory capacity for the reward.")

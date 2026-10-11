@@ -11,6 +11,8 @@ static ClHandle CurrentVm;
 static Vm* CurrentRuntime;
 static uint64_t NextListener;
 static unsigned SignalChecks, Gates;
+static unsigned Gives, Takes;
+static int64_t InventoryAmount;
 static bool Stale, RejectGate;
 static std::set<std::string> Listeners;
 static std::set<uint64_t> Releases;
@@ -54,9 +56,37 @@ static uint32_t Host(uint64_t OwnerId, uint32_t Operation, const char* Bytes, ui
         return Reply({"73"});
     }
     if (Operation == 41) {
-        Check(Unpack(Bytes, Length) == std::vector<std::string>({"17", "76561190000999888", "73", "signal"}),
-            "signal acquisition and Connect use exact four-field stale check");
-        ++SignalChecks; return Stale ? 1u : 0u;
+        auto Fields = Unpack(Bytes, Length);
+        Check(Fields.size() >= 4 && Fields[0] == "17" && Fields[1] == "76561190000999888" && Fields[2] == "73",
+            "Inventory41 preserves original connection and publication");
+        if (Stale) return 1;
+        if (Fields[3] == "signal") {
+            Check(Fields.size() == 4, "signal acquisition and Connect exact field count");
+            ++SignalChecks; return 0;
+        }
+        uint32_t Backend = Fields[3] == "count" ? 26 : Fields[3] == "has" ? 27 :
+            Fields[3] == "take" ? 29 : Fields[3] == "give" ? 30 : 0;
+        Check(Backend && Fields.size() == (Backend == 26 ? 5u : Backend == 30 ? 7u : 6u),
+            "Inventory41 delegates only qualified backend shapes");
+        std::vector<std::string> Request{Fields[0], Fields[1]};
+        Request.insert(Request.end(), Fields.begin() + 4, Fields.end());
+        auto Payload = Pack(Request);
+        return Host(OwnerId, Backend, Payload.data(), uint32_t(Payload.size()), Output, Capacity, Written);
+    }
+    if (Operation == 26 || Operation == 27 || Operation == 29 || Operation == 30) {
+        auto Fields = Unpack(Bytes, Length);
+        Check(Fields.size() == (Operation == 26 ? 3u : Operation == 30 ? 5u : 4u) &&
+            Fields[0] == "17" && Fields[1] == "76561190000999888" && Fields[2] == "scrap",
+            "qualified backend receives original token/UserId/short name");
+        if (Operation == 26) return Reply({std::to_string(InventoryAmount)});
+        int64_t Amount = std::stoll(Fields[3]); Check(Amount > 0, "positive exact backend amount");
+        if (Operation == 27) return Reply({InventoryAmount >= Amount ? "1" : "0"});
+        if (Operation == 30) {
+            Check(Fields[4] == "InventoryOnly", "optional/default typed behavior retains backend spelling");
+            ++Gives; InventoryAmount += Amount; return Reply({"1"});
+        }
+        ++Takes; if (InventoryAmount < Amount) return Reply({"0"});
+        InventoryAmount -= Amount; return Reply({"1"});
     }
     if (Operation == 6) {
         auto Fields = Unpack(Bytes, Length);
@@ -95,17 +125,19 @@ static uint32_t Host(uint64_t OwnerId, uint32_t Operation, const char* Bytes, ui
 }
 struct Fixture {
     ClHandle VmId = 0, Root = 0;
-    Fixture(const char* Body = "State.Contexts[#State.Contexts+1]=Context") {
+    Fixture(const char* Body = "State.Contexts[#State.Contexts+1]=Context", const char* Cold = nullptr) {
         NextListener = SignalChecks = Gates = 0; Stale = RejectGate = false;
+        Gives = Takes = 0; InventoryAmount = 0;
         Listeners.clear(); Releases.clear(); TestAllocationFailureAfter = -1; TestGameplayCopyFailure = false;
         ClVmConfig Config{16 * MiB}; Check(cl_vm_create(&Config, &VmId) == CL_OK, "real VM");
         CurrentVm = VmId; CurrentRuntime = GetVm(VmId);
         Check(cl_domain_create(VmId, 4096, &Root) == CL_OK && cl_domain_facade(VmId, Root, Host) == CL_OK,
             "domain-bound script Host mock with actual bootstrap");
         std::string Module = std::string("local Player=game:GetService('Players'):GetPlayers()[1]; ") +
-            "local State={Inventory=Player:GetInventory(),Contexts={}}; State.Signal=State.Inventory.ItemChanged; " +
+            "local State={Player=Player,Inventory=Player:GetInventory(),Contexts={}}; State.Signal=State.Inventory.ItemChanged; " +
             "State.Connection=State.Signal:Connect(function(Context) " + Body + " end); return State";
         Check(cl_domain_module(VmId, Root, "state", Module.data(), uint32_t(Module.size())) == CL_OK, "state module");
+        if (Cold) Check(cl_domain_module(VmId, Root, "c4cold", Cold, uint32_t(std::strlen(Cold))) == CL_OK, "C4 cold module before commit");
         Run("require('state')"); Check(cl_domain_commit(VmId, Root) == CL_OK, "committed listener owner");
     }
     ~Fixture() {
@@ -316,9 +348,28 @@ static void Allocation()
             "frozen context allocation faults release original reservation exactly once");
     }
 }
+static void Migration()
+{
+    const char* Cold = "local I=require('state').Inventory; for _,M in {'GiveItem','TakeItem'} do local Ok,Error=pcall(function() I[M](I,'scrap',1) end); "
+        "assert(not Ok and string.find(Error,'requires a committed domain',1,true)) end; return true";
+    Fixture F("State.Contexts[#State.Contexts+1]=Context", Cold);
+    F.Run("local S=require('state'); local I=S.Inventory; assert(game.ApiVersion=='0.7.0-experimental'); "
+        "for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.Player[K]==nil) end; "
+        "assert(I:GiveItem('scrap',2)); assert(I:GiveItem('scrap',3,GiveItemBehavior.InventoryOnly)); "
+        "assert(I:GiveItem('scrap',1,nil)); assert(I:CountItem('scrap')==6 and I:HasItem('scrap') and I:HasItem('scrap',6)); "
+        "assert(I:TakeItem('scrap',2)); assert(I:CountItem('scrap')==4 and not I:TakeItem('scrap',5)); "
+        "for _,V in {true,false,'InventoryOnly',Enum.DropMode.Replace,{},1} do assert(not pcall(function() I:GiveItem('scrap',1,V) end)) end; "
+        "assert(not pcall(function() I.GiveItem({},'scrap',1) end)); assert(not pcall(function() I.TakeItem({},'scrap',1) end))");
+    Check(Gives == 3 && Takes == 2 && InventoryAmount == 4, "raw embedded bootstrap delegates41 to backend29/30 without duplicate calls");
+    F.Run("assert(require('c4cold'))");
+    Check(Gives == 3 && Takes == 2, "native first-load provisional rejection before managed mutation delegation");
+    Stale = true;
+    F.Run("local I=require('state').Inventory; for _,M in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(not pcall(function() I[M](I,'scrap',1) end)) end");
+    Check(Gives == 3 && Takes == 2, "stale captured Inventory never reaches backend mutation");
+}
 inline void RunFaults()
 {
-    Codec(); PublicContext(); Ownership(); Bounds(); Allocation();
+    Migration(); Codec(); PublicContext(); Ownership(); Bounds(); Allocation();
     std::puts("[CarbonLuau:InventoryChangedNative] PASS exact codec, bound Signal, frozen context, publication and allocation cleanup");
 }
 }

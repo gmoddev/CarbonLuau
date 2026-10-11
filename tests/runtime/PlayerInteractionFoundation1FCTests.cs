@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Runtime = Carbon.Plugins.CarbonLuau;
 using Fixture = PlayerInteractionFoundation1FBTests.Fixture;
 
@@ -91,8 +92,8 @@ internal static class PlayerInteractionFoundation1FCTests
         var World = new Runtime.FacadeWorld(Players, new Registrar(),
             new Runtime.ItemDirectory(Name => Name == "scrap" ? Value.Definition : null));
         const string P = "local P=game:GetService('Players'):GetPlayers()[1]; ";
-        const string Give = "assert(P:GiveItem('scrap',2)); ";
-        const string Take = "assert(P:TakeItem('scrap',1)); ";
+        const string Give = "assert(P:GetInventory():GiveItem('scrap',2)); ";
+        const string Take = "assert(P:GetInventory():TakeItem('scrap',1)); ";
         const string Teleport = "P:Teleport(Vector3.new(1,2,3)); ";
         Func<Runtime.ScriptSnapshot> Snapshot = () => {
             var Result = new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = P +
@@ -124,6 +125,108 @@ internal static class PlayerInteractionFoundation1FCTests
             "D18 STOP: failed first-load modules performed committed-only mutations: creates=" +
             Value.Creates + " takes=" + Takes + " teleports=" + Teleports);
         RunClosure(Native, Repository);
+        RunC4(Native);
+    }
+
+    // Focused migration coverage lives in the existing 1F-C qualification harness.
+    // Backend29/30 remain private reusable operations; their public Player aliases are absent.
+    private static string Boundary(Runtime.FacadeSession Owner, uint Code, bool Success, params string[] Fields)
+    {
+        byte[] Bytes = Runtime.FacadePolicy.Pack(Fields);
+        IntPtr Input = Marshal.AllocHGlobal(Math.Max(1,Bytes.Length)), Output = Marshal.AllocHGlobal(262144);
+        try {
+            if (Bytes.Length != 0) Marshal.Copy(Bytes,0,Input,Bytes.Length);
+            uint Written;
+            uint Status = Owner.Callback((ulong)Owner.DomainLifetimeId,Code,Input,(uint)Bytes.Length,Output,262144,out Written);
+            Check(Status == (Success ? 0u : 1u) && Written <= 262144,"C4 bounded host response " + Code);
+            var Response = new byte[Written]; if (Written != 0) Marshal.Copy(Output,Response,0,(int)Written);
+            return Runtime.FacadePolicy.Utf8.GetString(Response).TrimEnd('\0');
+        } finally { Marshal.FreeHGlobal(Input); Marshal.FreeHGlobal(Output); }
+    }
+    internal static void RunC4(Runtime.NativeRuntime Native)
+    {
+        var Value = new Fixture(); Value.Add(0,0,5);
+        var View = Value.View(); var Players = new Runtime.PlayerDirectory(Id => View);
+        var Lifetime = Players.Connect(View);
+        var World = new Runtime.FacadeWorld(Players,new Registrar(),new Runtime.ItemDirectory(Name => Name == "scrap" ? Value.Definition : null));
+        const string State = "local S=require('state'); ";
+        const string Acquire = State + "S.P=game:GetService('Players'):GetPlayers()[1]; S.I=S.P:GetInventory(); ";
+        const string Absent = "assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; ";
+        const string Block = "for _,M in {'GiveItem','TakeItem'} do local Ok,Error=pcall(function() S.I[M](S.I,'scrap',1) end); assert(not Ok and string.find(Error,'requires a committed domain',1,true)) end; ";
+        string Source = Acquire + Absent + Block;
+        Func<Runtime.ScriptSnapshot> Snapshot = () => {
+            var Result = new Runtime.ScriptSnapshot {EntryName="init.luau",EntrySource=Source};
+            Result.Modules.Add("state","return {}");
+            Result.Modules.Add("failed",State+"S.Leak=S.P:GetInventory(); "+Block+"error('failed C4 module')");
+            Result.Modules.Add("nested","return require('failed')");
+            Result.Modules.Add("child",State+"S.ChildInventory=S.P:GetInventory(); assert(S.ChildInventory:CountItem('scrap')>=0); return S.ChildInventory");
+            Result.Modules.Add("parent","assert(require('child')~=nil); error('parent rollback after successful child')");
+            return Result;
+        };
+        using (var Host = new Runtime.ScriptHost(Native,new Runtime.RuntimeConfig {MaxCallbackMilliseconds=100,FrameDrainBudgetMilliseconds=20},Snapshot,World)) {
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.OK && Value.Creates == 0,"C4 provisional Give/Take never COMMIT");
+            var Owner = World.Active;
+            string Token = Lifetime.Token, UserId = View.UserId;
+            string Publication = Boundary(Owner,40,true,Token,UserId);
+            Check(Boundary(Owner,26,true,Token,UserId,"scrap") == "5" &&
+                Boundary(Owner,27,true,Token,UserId,"scrap","5") == "1","C4 backend26/27 physical parity");
+            Check(Boundary(Owner,30,true,Token,UserId,"scrap","2","InventoryOnly") == "1" && Count(Value,Value.Definition) == 7,
+                "C4 qualified private backend30 preserved");
+            Check(Boundary(Owner,29,true,Token,UserId,"scrap","2") == "1" && Count(Value,Value.Definition) == 5,
+                "C4 qualified private backend29 preserved");
+            Execute(Host,State+Absent+"assert(S.I:GiveItem('scrap',2)); assert(S.I:CountItem('scrap')==7); assert(S.I:TakeItem('scrap',2)); assert(S.I:CountItem('scrap')==5); "+
+                "assert(S.I:GiveItem('scrap',3,GiveItemBehavior.InventoryOnly)); assert(S.I:GiveItem('scrap',1,nil)); assert(S.I:TakeItem('scrap',4)); assert(S.I:CountItem('scrap')==5)");
+            Check(Boundary(Owner,41,true,Token,UserId,Publication,"count","scrap") == "5" &&
+                Boundary(Owner,41,true,Token,UserId,Publication,"has","scrap","5") == "1","C4 op41 shares same physical backend");
+            int Created = Value.Creates, Transfers = Value.Transfers;
+            Execute(Host,State+"assert(not S.I:GiveItem('scrap',2147483647)); assert(not S.I:TakeItem('scrap',6)); assert(not S.I:TakeItem('unknown',1)); "+
+                "for _,M in {'GiveItem','TakeItem'} do for _,A in {0,-1,1.5,0/0,math.huge,2147483648,'1',true,{}} do assert(not pcall(function() S.I[M](S.I,'scrap',A) end)) end; "+
+                "for _,N in {'','Scrap',' scrap','scrap ',string.rep('a',129),'scr\\0ap','é'} do assert(not pcall(function() S.I[M](S.I,N,1) end)) end; "+
+                "assert(not pcall(function() S.I[M]({},'scrap',1) end)); assert(not pcall(function() S.I[M](S.I,'scrap') end)) end; "+
+                "for _,B in {true,false,'InventoryOnly',Enum.DropMode.Replace,GuiFont.DroidSansMono,{},1} do assert(not pcall(function() S.I:GiveItem('scrap',1,B) end)) end; "+
+                "assert(not pcall(function() S.I:GiveItem('unknown',1) end)); assert(S.I:CountItem('scrap')==5)");
+            Check(Value.Creates == Created && Value.Transfers == Transfers,"C4 invalid/full/insufficient PREPARE has no physical COMMIT");
+            Boundary(Owner,41,false,Token,UserId,Publication,"give","scrap","1");
+            Boundary(Owner,41,false,Token,UserId,Publication,"take","scrap","1","InventoryOnly");
+            Boundary(Owner,41,false,Token,UserId,"18446744073709551615","give","scrap","1","InventoryOnly");
+            Check(Value.Creates == Created,"C4 malformed/stale private op41 cannot reach creation");
+            Check(World.TakeItems.SharedGate.TryEnter(Token),"C4 existing shared gate acquired");
+            try {
+                Execute(Host,State+"for _,M in {'GiveItem','TakeItem'} do local Ok,Error=pcall(function() S.I[M](S.I,'scrap',1) end); assert(not Ok and string.find(Error,'already in progress',1,true)) end");
+            } finally { World.TakeItems.SharedGate.Exit(Token); }
+            Check(Value.Creates == Created && Value.Transfers == Transfers,"C4 captured facade respects original shared gate");
+            Execute(Host,State+"assert(not pcall(require,'nested')); for _,M in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(not pcall(function() S.Leak[M](S.Leak,'scrap',1) end)) end; assert(S.I:CountItem('scrap')==5)");
+            Execute(Host,State+"assert(not pcall(require,'parent')); for _,M in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(not pcall(function() S.ChildInventory[M](S.ChildInventory,'scrap',1) end)) end; assert(S.I:CountItem('scrap')==5)");
+            Check(Value.Creates == Created && Value.Transfers == Transfers,"C4 successful child plus failed parent invalidates leaked facade with zero COMMITs");
+            Source = Acquire+Block+"task.defer(function() S.I:GiveItem('scrap',1) end); error('failed C4 root')";
+            Check(Host.Reload().Status != Runtime.RuntimeStatus.OK && World.Active == Owner,"C4 failed replacement preserves defining owner");
+            Drain(Host); Check(Value.Creates == Created,"C4 failed candidate publishes no mutation work");
+            Execute(Host,State+"assert(S.I:GiveItem('scrap',1)); assert(S.I:TakeItem('scrap',1))");
+            foreach (string Failure in new[] {"create","null","reject","transfer","world","insert-false","insert-throw"}) {
+                Value.Failure = Failure;
+                Execute(Host,State+"local Ok,Error=pcall(function() S.I:GiveItem('scrap',1) end); assert(not Ok and string.find(Error,'may have changed',1,true))");
+                Value.Failure = "";
+                Check(World.GiveItems.BusyCount == 0 && World.GiveItems.TrackedResources == 0,"C4 indeterminate Give releases gate/resources: "+Failure);
+            }
+            View.TakeInventory = (Definition,Amount) => Value.Take(Definition,Amount) - 1;
+            Execute(Host,State+"local Ok,Error=pcall(function() S.I:TakeItem('scrap',1) end); assert(not Ok and string.find(Error,'may have changed',1,true))");
+            View.TakeInventory = Value.Take;
+            Players.Disconnect(View.UserId,View.Identity); View = Value.View(); View.Connection = new object(); Lifetime = Players.Connect(View);
+            Execute(Host,State+Absent+"for _,M in {'CountItem','HasItem','GiveItem','TakeItem'} do local Ok,Error=pcall(function() S.I[M](S.I,'scrap',1) end); assert(not Ok and string.find(Error,'no longer connected',1,true)) end; "+
+                "local P=game:GetService('Players'):GetPlayers()[1]; assert(P~=S.P); assert(P:GetInventory():GiveItem('scrap',1))");
+            Source = Acquire+Absent+Block;
+            Check(Host.Reload().Status == Runtime.RuntimeStatus.OK && Owner.Disposed,"C4 successful root replacement retires old inventory owner");
+            Boundary(Owner,41,false,Token,UserId,Publication,"give","scrap","1","InventoryOnly");
+            Created = Value.Creates; long Before = Count(Value,Value.Definition);
+            var Result = Host.Execute("c4.recovery",State+"assert(S.I:GiveItem('scrap',1)); task.defer(function() S.I:GiveItem('scrap',1) end); while true do end");
+            Check(Result.Status == Runtime.RuntimeStatus.TIMEOUT && Host.Ready,"C4 fatal recovery reconstructs facade authority");
+            Drain(Host);
+            Check(Value.Creates == Created+1 && Count(Value,Value.Definition) == Before+1 && World.TakeItems.BusyCount == 0 &&
+                World.GiveItems.BusyCount == 0 && World.GiveItems.TrackedResources == 0,"C4 recovery has no rollback/replay or gate leak");
+            Execute(Host,State+Absent+"assert(S.I:TakeItem('scrap',1))");
+        }
+        Check(World.Active == null && Native.LiveVmCount == 0,"C4 teardown converges VM/domain/resources");
+        Console.WriteLine("[CarbonLuau:GameplayC4] PASS real VM, legacy absence, optional typed behavior, backend parity, publication, failure, gate, exact connection and recovery");
     }
 
     private static void Execute(Runtime.ScriptHost Host, string Source)
@@ -167,9 +270,9 @@ internal static class PlayerInteractionFoundation1FCTests
         var World = new Runtime.FacadeWorld(Players, new Registrar(),
             new Runtime.ItemDirectory(Name => Name == "scrap" ? Value.Definition : Name == "wood" ? Wood : null), new Runtime.GuiConfig().Validate(), Backend);
         const string P = "local P=game:GetService('Players'):GetPlayers()[1]; ";
-        const string Reads = "assert(P.Position==Vector3.new(1,2,3) and P.Health==75 and P.MaxHealth==100); assert(game:GetService('Items'):Exists('scrap')); P:CountItem('scrap'); P:HasItem('scrap'); assert(Vector3.new(1,2,3)*2==Vector3.new(2,4,6)); ";
-        const string Mutate = "assert(P:GiveItem('scrap',2)); assert(P:TakeItem('scrap',1)); P:Teleport(Vector3.new(1,2,3)); ";
-        const string Block = "for _,F in {function() P:GiveItem('scrap',1) end,function() P:TakeItem('scrap',1) end,function() P:Teleport(Vector3.new(1,2,3)) end,function() P:SendMessage('blocked') end} do local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'requires a committed domain',1,true)) end; ";
+        const string Reads = "assert(P.Position==Vector3.new(1,2,3) and P.Health==75 and P.MaxHealth==100); assert(game:GetService('Items'):Exists('scrap')); P:GetInventory():CountItem('scrap'); P:GetInventory():HasItem('scrap'); assert(Vector3.new(1,2,3)*2==Vector3.new(2,4,6)); ";
+        const string Mutate = "assert(P:GetInventory():GiveItem('scrap',2)); assert(P:GetInventory():TakeItem('scrap',1)); P:Teleport(Vector3.new(1,2,3)); ";
+        const string Block = "for _,F in {function() P:GetInventory():GiveItem('scrap',1) end,function() P:GetInventory():TakeItem('scrap',1) end,function() P:Teleport(Vector3.new(1,2,3)) end,function() P:SendMessage('blocked') end} do local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'requires a committed domain',1,true)) end; ";
         string Source = P + Reads + Block;
         Func<Runtime.ScriptSnapshot> Snapshot = () => {
             var Result = new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = Source};
@@ -197,13 +300,14 @@ internal static class PlayerInteractionFoundation1FCTests
             Check(Value.Creates == 1 && Takes == 1 && Teleports == 1, "failed candidate zero COMMITs");
             Execute(Host, "require('cached')()");
             for (int Index = 0; Index < 20; ++Index) {
-                Execute(Host, P + "require('state').Old=P");
+                Execute(Host, P + "local S=require('state'); S.Old=P; S.OldInventory=P:GetInventory()");
                 Players.Disconnect(View.UserId, View.Identity); View = ViewFactory(); Lifetime = Players.Connect(View);
                 Execute(Host, "local P=require('state').Old; assert(P~=nil); " +
                     "for _,F in {function() return P.Position end,function() return P.Health end,function() return P.MaxHealth end," +
-                    "function() return P:CountItem('scrap') end,function() return P:HasItem('scrap') end," +
-                    "function() P:GiveItem('scrap',1) end,function() P:TakeItem('scrap',1) end,function() P:Teleport(Vector3.new(1,2,3)) end} do " +
-                    "local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'no longer connected',1,true)) end");
+                    "function() return P:GetInventory():CountItem('scrap') end,function() return P:GetInventory():HasItem('scrap') end," +
+                    "function() P:GetInventory():GiveItem('scrap',1) end,function() P:GetInventory():TakeItem('scrap',1) end,function() P:Teleport(Vector3.new(1,2,3)) end} do " +
+                    "local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'no longer connected',1,true)) end; " +
+                    "local I=require('state').OldInventory; for _,M in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(P[M]==nil); local Ok,Err=pcall(function() I[M](I,'scrap',1) end); assert(not Ok and string.find(Err,'no longer connected',1,true)) end");
             }
             Check(Value.Creates == 2 && Takes == 2 && Teleports == 2, "stale proxies never retarget reconnect");
             Source = "game:GetService('Commands'):Register('reward',{permission='fixture.reward'},function(C) assert(require('commandcold')); require('cached')() end); " +
@@ -239,7 +343,7 @@ internal static class PlayerInteractionFoundation1FCTests
                         Check(Count(Value, Value.Definition) == Before + 10, "GUI example delivers reward"); continue;
                     }
                     string Command = Example == "player-status" ? "playerstatus" : Example == "player-give-item" ? "reward" : Example == "player-shop" ? "buywood" : "takescrap";
-                    if (Example == "player-shop" || Example == "player-take-item") { Execute(Host, P + "assert(P:GiveItem('scrap',100))"); Before += 100; }
+                    if (Example == "player-shop" || Example == "player-take-item") { Execute(Host, P + "assert(P:GetInventory():GiveItem('scrap',100))"); Before += 100; }
                     Check(World.Active.Invoke(Command, View.UserId, new string[0]), "example command admitted"); Drain(Host);
                     long Expected = Example == "player-status" ? Before : Example == "player-give-item" ? Before + 10 : Before - 100;
                     Check(Count(Value, Value.Definition) == Expected, "example physical result: " + Example);

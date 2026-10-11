@@ -300,7 +300,7 @@ internal static class AddonTests
         string Logs = ""; foreach (Runtime.ExecutionResult Result in Host.Drain()) Logs += Result.Logs; return Logs;
     }
 
-    private static void RunMutationPublication(Runtime.NativeRuntime Native)
+    internal static void RunMutationPublication(Runtime.NativeRuntime Native)
     {
         var Value = new PlayerInteractionFoundation1FBTests.Fixture {Limit = 1000};
         var View = Value.View(); int Takes = 0, Teleports = 0;
@@ -310,12 +310,17 @@ internal static class AddonTests
         var Players = new Runtime.PlayerDirectory(Id => View); Players.Connect(View);
         var World = new Runtime.FacadeWorld(Players, new Registrar(), new Runtime.ItemDirectory(Name => Name == "scrap" ? Value.Definition : null));
         object Provider = new object(), Consumers = new object();
-        const string Api = "local P=game:GetService('Players'):GetPlayers()[1]; return {Player=P,Mutate=function() assert(P:GiveItem('scrap',2)); assert(P:TakeItem('scrap',1)); P:Teleport(Vector3.new(1,2,3)) end}";
-        const string Block = "for _,F in {A.Mutate,function() A.Player:GiveItem('scrap',1) end,function() A.Player:TakeItem('scrap',1) end,function() A.Player:Teleport(Vector3.new(1,2,3)) end} do local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'requires a committed domain',1,true)) end; ";
-        Func<byte[]> Library = () => PublicPackage("mutationlib", "1.0.0", new string[0], new string[0], "require('api')", "api", new[] {"cold", "nested"},
+        const string Api = "local P=game:GetService('Players'):GetPlayers()[1]; local I=P:GetInventory(); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(P[K]==nil) end; return {Player=P,Inventory=I,Mutate=function() " +
+            "for _,M in {'GiveItem','TakeItem'} do local Amount=M=='GiveItem' and 2 or 1; local function Mutate() assert(I[M](I,'scrap',Amount)) end; local Ok,Error=coroutine.resume(coroutine.create(Mutate)); assert(Ok,Error); coroutine.wrap(Mutate)() end; P:Teleport(Vector3.new(1,2,3)) end}";
+        const string Coroutines = "for _,M in {'GiveItem','TakeItem'} do local function Mutate() return A.Inventory[M](A.Inventory,'scrap',1) end; local Ok,Error=coroutine.resume(coroutine.create(Mutate)); assert(not Ok and string.find(Error,'requires a committed domain',1,true)); local Wrapped=coroutine.wrap(Mutate); local Good,Message=pcall(Wrapped); assert(not Good and string.find(Message,'requires a committed domain',1,true)) end; ";
+        const string Block = "for _,F in {A.Mutate,function() A.Inventory:GiveItem('scrap',1) end,function() A.Inventory:TakeItem('scrap',1) end,function() A.Player:Teleport(Vector3.new(1,2,3)) end} do local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'requires a committed domain',1,true)) end; " + Coroutines;
+        Func<byte[]> Library = () => PublicPackage("mutationlib", "1.0.0", new string[0], new string[0], "require('api')", "api", new[] {"cold", "nested", "child", "parent"},
             new EntrySpec("api.luau", Api), new EntrySpec("cold.luau", "local A=require('api'); " + Block + "return true"),
-            new EntrySpec("nested.luau", "assert(require('cold')); return true"));
+            new EntrySpec("nested.luau", "assert(require('cold')); return true"),
+            new EntrySpec("child.luau", "local A=require('api'); A.ChildInventory=A.Player:GetInventory(); assert(A.ChildInventory:CountItem('scrap')>=0); return A.ChildInventory"),
+            new EntrySpec("parent.luau", "local I=require('child'); assert(I~=nil); error('parent rollback after successful child')"));
         const string ConsumerSource = "local A=require('@mutationbridge'); " + Block +
+            "assert(not pcall(require,'@mutationlib/parent')); for _,M in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(not pcall(function() A.ChildInventory[M](A.ChildInventory,'scrap',1) end)) end; assert(A.Inventory:CountItem('scrap')>=0); " +
             "task.defer(function() assert(require('@mutationbridge/cold')); assert(require('@mutationlib/cold')); A.Mutate(); print('committed') end)";
         using (var Host = new Runtime.ScriptHost(Native, new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20},
             () => new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = "return true"}, World)) {
@@ -328,21 +333,25 @@ internal static class AddonTests
                 Process(Registry);
                 string[] Consumer = Registry.RegisterArchive(Consumers, PublicPackage("mutationconsumer", "1.0.0", new[] {"mutationbridge", "mutationlib"}, new string[0],
                     ConsumerSource, null, new string[0])); Process(Registry);
-                Check(Value.Creates == 0 && Takes == 0 && Teleports == 0, "cross-domain provisional context");
-                Check(Drain(Host) == "committed\n" && Value.Creates == 1 && Takes == 1 && Teleports == 1, "public/transitive/nested cold scope; cached shared closure restored");
+                Check(Value.Creates == 0 && Value.Transfers == 0 && Takes == 0 && Teleports == 0 &&
+                    World.GiveItems.Diagnostics.Attempts == 0 && World.TakeItems.Diagnostics.Attempts == 0,
+                    "foreign resume/wrap provisional and successful-child parent rollback have zero backend calls");
+                Check(Drain(Host) == "committed\n" && Value.Creates == 2 && Takes == 2 && Teleports == 1 &&
+                    World.GiveItems.Diagnostics.Attempts == 2 && World.TakeItems.Diagnostics.Attempts == 2,
+                    "foreign resume/wrap cold scopes reject; all four cached shared coroutine mutations succeed committed");
                 string[] Optional = Registry.RegisterArchive(Consumers, PublicPackage("mutationoptional", "1.0.0", new string[0], new[] {"mutationlib"},
-                    "local A=require('@mutationlib'); game:GetService('Commands'):Register('oldmutation',{},function() assert(not addon:IsDependencyAvailable('mutationlib')); assert(A.Player~=nil); assert(not pcall(A.Mutate)); print('stale') end)", null, new string[0]));
+                    "local A=require('@mutationlib'); game:GetService('Commands'):Register('oldmutation',{},function() assert(not addon:IsDependencyAvailable('mutationlib')); assert(A.Player~=nil); assert(not pcall(A.Mutate)); for _,M in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(not pcall(function() A.Inventory[M](A.Inventory,'scrap',1) end)) end; print('stale') end)", null, new string[0]));
                 Process(Registry); string OldOptional = Registry.Status(Consumers, Optional[1])[7];
                 Registry.ReplaceArchive(Consumers, Consumer[1], PublicPackage("mutationconsumer", "1.0.1", new[] {"mutationbridge", "mutationlib"}, new string[0],
                     ConsumerSource + "; error('candidate')", null, new string[0])); Process(Registry);
-                Check(Drain(Host) == "" && Value.Creates == 1, "failed replacement publishes no work");
+                Check(Drain(Host) == "" && Value.Creates == 2 && Takes == 2, "failed replacement publishes no work");
                 Registry.ReplaceArchive(Provider, Lib[1], Library()); Process(Registry);
-                Check(Drain(Host) == "committed\n" && Value.Creates == 2 && Takes == 2 && Teleports == 2, "required subgraph reconstructs with fresh committed authority");
+                Check(Drain(Host) == "committed\n" && Value.Creates == 4 && Takes == 4 && Teleports == 2, "required subgraph reconstructs with fresh committed authority");
                 Check(Registry.Status(Consumers, Optional[1])[7] == OldOptional && Registry.BindingStatus(Consumers, Optional[1], "mutationlib")[1] == "stale", "optional binding does not retarget");
                 Check(Session(World, OldOptional).Invoke("oldmutation", View.UserId, new string[0]), "optional callback admitted");
-                Check(Drain(Host) == "stale\n" && Value.Creates == 2, "retained shared Player cannot mutate replacement");
+                Check(Drain(Host) == "stale\n" && Value.Creates == 4 && Takes == 4, "retained shared Inventory cannot mutate replacement");
                 Registry.UnloadProvider(Provider); Process(Registry); Drain(Host);
-                Check(Value.Creates == 2 && World.GiveItems.BusyCount == 0 && World.GiveItems.TrackedResources == 0, "provider teardown no replay/resources");
+                Check(Value.Creates == 4 && Takes == 4 && World.GiveItems.BusyCount == 0 && World.GiveItems.TrackedResources == 0, "provider teardown no replay/resources");
                 Registry.UnloadProvider(Consumers); Process(Registry);
                 string[] Again = Registry.RegisterArchive(Provider, Library()); Process(Registry);
                 IsState(Registry.Status(Provider, Again[1]), "Active", "provider reload clean publication context");
@@ -363,11 +372,11 @@ internal static class AddonTests
             Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "grant root ready");
             using (var Registry = new Runtime.AddonRegistry(Host, Native.HostLifetimeId)) {
                 string[] Library = Registry.RegisterArchive(Provider, PublicPackage("grantlib", "1.0.0", new string[0], new string[0],
-                    "require('api')", "api", new string[0], new EntrySpec("api.luau", P + "return {Player=P,Behavior=GiveItemBehavior.InventoryOnly,Give=function() return P:GiveItem('scrap',1) end}")));
+                    "require('api')", "api", new string[0], new EntrySpec("api.luau", P + "local I=P:GetInventory(); return {Player=P,Inventory=I,Behavior=GiveItemBehavior.InventoryOnly,Give=function() return I:GiveItem('scrap',1) end}")));
                 Process(Registry); IsState(Registry.Status(Provider, Library[1]), "Active", "grant library active");
                 string Source = "local A=require('@grantlib'); assert(A.Behavior==GiveItemBehavior.InventoryOnly); " +
-                    "assert(not pcall(A.Give)); assert(not pcall(function() A.Player:GiveItem('scrap',1,A.Behavior) end)); " +
-                    "task.defer(function() assert(A.Player:GiveItem('scrap',1,A.Behavior)); print('addon-grant') end)";
+                    "assert(not pcall(A.Give)); assert(not pcall(function() A.Inventory:GiveItem('scrap',1,A.Behavior) end)); " +
+                    "task.defer(function() assert(A.Inventory:GiveItem('scrap',1,A.Behavior)); print('addon-grant') end)";
                 string[] Registration = Registry.RegisterArchive(Consumer, PublicPackage("grantconsumer", "1.0.0", new[] {"grantlib"}, new string[0], Source, null, new string[0]));
                 Process(Registry); IsState(Registry.Status(Consumer, Registration[1]), "Active", "provisional shared-module laundering rejected");
                 Check(Value.Creates == 0 && Drain(Host) == "addon-grant\n" && Value.Creates == 1, "foreign enum accepted; deferred committed grant");
@@ -379,8 +388,8 @@ internal static class AddonTests
                 Runtime.PlayerLifetime Lifetime = Players.Find(View.UserId);
                 Check(World.TakeItems.SharedGate.TryEnter(Lifetime.Token), "host mutation gate acquired");
                 try {
-                    Check(Host.Execute("root.gate", P + "assert(not pcall(function() P:GiveItem('scrap',1) end)); assert(not pcall(function() P:TakeItem('scrap',1) end))").Status == Runtime.RuntimeStatus.OK, "root Give/Take contention");
-                    const string BusyCalls = "for _,F in {function() P:GiveItem('scrap',1) end,function() P:TakeItem('scrap',1) end} do local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'already in progress',1,true)) end; print('busy')";
+                    Check(Host.Execute("root.gate", P + "assert(not pcall(function() P:GetInventory():GiveItem('scrap',1) end)); assert(not pcall(function() P:GetInventory():TakeItem('scrap',1) end))").Status == Runtime.RuntimeStatus.OK, "root Give/Take contention");
+                    const string BusyCalls = "for _,F in {function() P:GetInventory():GiveItem('scrap',1) end,function() P:GetInventory():TakeItem('scrap',1) end} do local Ok,Err=pcall(F); assert(not Ok and string.find(Err,'already in progress',1,true)) end; print('busy')";
                     string[] Busy = Registry.RegisterSource(Consumer, "busygrant", "1.0.0", Bytes(P + "local function Busy() " + BusyCalls + " end; task.defer(Busy); game:GetService('Commands'):Register('busygrant',{},Busy)"));
                     Process(Registry); Check(Drain(Host) == "busy\n" && Value.Creates == 2, "addon Give/Take shares gate");
                     var BusySession = Session(World, Registry.Status(Consumer, Busy[1])[7]);
@@ -392,7 +401,7 @@ internal static class AddonTests
                 } finally {World.TakeItems.SharedGate.Exit(Lifetime.Token);}
                 Registry.UnloadProvider(Consumer); Registry.UnloadProvider(Provider); Drain(Host);
                 Check(Value.Creates == 2 && World.GiveItems.TrackedResources == 0 && World.GiveItems.BusyCount == 0, "provider unload no replay/resources");
-                string[] Reloaded = Registry.RegisterSource(Provider, "grantagain", "1.0.0", Bytes(P + "task.defer(function() assert(P:GiveItem('scrap',1)); print('again') end)"));
+                string[] Reloaded = Registry.RegisterSource(Provider, "grantagain", "1.0.0", Bytes(P + "task.defer(function() assert(P:GetInventory():GiveItem('scrap',1)); print('again') end)"));
                 Process(Registry); Check(Drain(Host) == "again\n" && Value.Creates == 3, "provider registration after unload");
             }
         }
@@ -432,7 +441,7 @@ internal static class AddonTests
             Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "Foundation D root baseline");
             using (var Registry = new Runtime.AddonRegistry(Host, Native.HostLifetimeId)) {
                 var EconomyModules = new List<EntrySpec> {
-                    new EntrySpec("api.luau", "assert(EntrySecret==nil); local Secret=41; local Player=game:GetService('Players'):GetPlayers()[1]; return {Count=0,Read=function() return Secret end,Host=function() return #game:GetService('Players'):GetPlayers() end,Items=game:GetService('Items'),Player=Player,Physical=function() return Player:CountItem('scrap') end}"),
+                    new EntrySpec("api.luau", "assert(EntrySecret==nil); local Secret=41; local Player=game:GetService('Players'):GetPlayers()[1]; return {Count=0,Read=function() return Secret end,Host=function() return #game:GetService('Players'):GetPlayers() end,Items=game:GetService('Items'),Player=Player,Physical=function() return Player:GetInventory():CountItem('scrap') end}"),
                     new EntrySpec("private/hidden.luau", "return {Hidden=true}"),
                     new EntrySpec("nilvalue.luau", "return nil"),
                     new EntrySpec("novalue.luau", "return"),
@@ -460,7 +469,7 @@ internal static class AddonTests
                 Runtime.FacadeSession EconomySession = Session(World, EconomyDomain);
                 Check(EconomySession != null, "public package facade is identifiable");
 
-                string ConsumerSource = "assert(addon.Id=='consumerone' and addon.Version=='1.0.0'); assert(not pcall(function() addon.Id='changed' end)); assert(addon:IsDependencyAvailable('economy')); assert(not addon:IsDependencyAvailable('undeclared')); EntrySecret=99; local A=require('@economy'); local PrivateClosure=require('@economy/freshprivate'); assert(A==require('@economy/api') and A.FromLocal and A.Read()==41 and A.Count==0 and PrivateClosure()==73); assert(A.Items:Exists('scrap') and A.Player:CountItem('scrap')==75 and A.Player:HasItem('scrap',75) and A.Physical()==75); assert(not pcall(function() A.Player:Teleport(Vector3.new(9,8,7)) end)); assert(not pcall(function() A.Player:TakeItem('takefixture',1) end)); task.defer(function() A.Player:Teleport(Vector3.new(9,8,7)); assert(A.Player:TakeItem('takefixture',1)); print('shared-teleport') end); A.Count+=1; assert(not pcall(require,'@economy/private/hidden')); assert(not pcall(require,'@undeclared/api')); assert(not pcall(require,'../bad'))";
+                string ConsumerSource = "assert(addon.Id=='consumerone' and addon.Version=='1.0.0'); assert(not pcall(function() addon.Id='changed' end)); assert(addon:IsDependencyAvailable('economy')); assert(not addon:IsDependencyAvailable('undeclared')); EntrySecret=99; local A=require('@economy'); local PrivateClosure=require('@economy/freshprivate'); assert(A==require('@economy/api') and A.FromLocal and A.Read()==41 and A.Count==0 and PrivateClosure()==73); assert(A.Items:Exists('scrap') and A.Player:GetInventory():CountItem('scrap')==75 and A.Player:GetInventory():HasItem('scrap',75) and A.Physical()==75); assert(not pcall(function() A.Player:Teleport(Vector3.new(9,8,7)) end)); assert(not pcall(function() A.Player:GetInventory():TakeItem('takefixture',1) end)); task.defer(function() A.Player:Teleport(Vector3.new(9,8,7)); assert(A.Player:GetInventory():TakeItem('takefixture',1)); print('shared-teleport') end); A.Count+=1; assert(not pcall(require,'@economy/private/hidden')); assert(not pcall(require,'@undeclared/api')); assert(not pcall(require,'../bad'))";
                 string[] ConsumerOne = Registry.RegisterArchive(Consumers, PublicPackage("consumerone", "1.0.0", new[] {"economy"}, new string[0], ConsumerSource, null, new string[0])); Process(Registry);
                 IsState(Registry.Status(Consumers, ConsumerOne[1]), "Active", "main and path import succeed through required exact binding");
                 Check(Drain(Host) == "shared-teleport\n" && Teleports == 1 && TeleportPosition.X == 9f && TakeMutations == 1,
@@ -501,9 +510,9 @@ internal static class AddonTests
                     new EntrySpec("api.luau", "return {Generation='1',Pure=5,Vector=Vector3.new(1,2,3),Player=game:GetService('Players'):GetPlayers()[1],Items=game:GetService('Items'),Host=function() return #game:GetService('Players'):GetPlayers() end}"));
                 string[] Life = Registry.RegisterArchive(Provider, LifeOne); Process(Registry);
                 string[] Optional = Registry.RegisterArchive(Consumers, PublicPackage("lifeoptional", "1.0.0", new string[0], new[] {"life"},
-                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert(V.Vector==Vector3.new(1,2,3) and V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() assert(V.Generation=='1' and V.Pure==5 and V.Vector*2==Vector3.new(2,4,6)); V.Pure+=1; assert(not pcall(V.Host)); assert(not pcall(function() return V.Player.Health end)); assert(not pcall(function() return V.Player.MaxHealth end)); assert(not pcall(function() return V.Player:CountItem('scrap') end)); assert(not pcall(function() V.Player:TakeItem('takefixture',1) end)); assert(not pcall(function() V.Player:Teleport(Vector3.new(20,21,22)) end)); assert(not pcall(function() return V.Items:Exists('scrap') end)); assert(not pcall(require,'@life')); assert(not addon:IsDependencyAvailable('life')); print('retained-a1') end)", null, new string[0])); Process(Registry);
+                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert(V.Vector==Vector3.new(1,2,3) and V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:GetInventory():CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() assert(V.Generation=='1' and V.Pure==5 and V.Vector*2==Vector3.new(2,4,6)); V.Pure+=1; assert(not pcall(V.Host)); assert(not pcall(function() return V.Player.Health end)); assert(not pcall(function() return V.Player.MaxHealth end)); assert(not pcall(function() return V.Player:GetInventory():CountItem('scrap') end)); assert(not pcall(function() V.Player:GetInventory():TakeItem('takefixture',1) end)); assert(not pcall(function() V.Player:Teleport(Vector3.new(20,21,22)) end)); assert(not pcall(function() return V.Items:Exists('scrap') end)); assert(not pcall(require,'@life')); assert(not addon:IsDependencyAvailable('life')); print('retained-a1') end)", null, new string[0])); Process(Registry);
                 string[] Required = Registry.RegisterArchive(Consumers, PublicPackage("liferequired", "1.0.0", new[] {"life"}, new string[0],
-                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert((V.Generation=='1' and V.Vector==Vector3.new(1,2,3)) or (V.Generation=='2' and V.Vector==Vector3.new(4,5,6)) or (V.Generation=='3' and V.Vector==Vector3.new(7,8,9))); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() if V.Generation=='2' then V.Player:Teleport(Vector3.new(12,13,14)); assert(V.Player:TakeItem('takefixture',1)) end; print('required-'..V.Generation) end)", null, new string[0])); Process(Registry);
+                    "assert(addon:IsDependencyAvailable('life')); local V=require('@life'); assert((V.Generation=='1' and V.Vector==Vector3.new(1,2,3)) or (V.Generation=='2' and V.Vector==Vector3.new(4,5,6)) or (V.Generation=='3' and V.Vector==Vector3.new(7,8,9))); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:GetInventory():CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() if V.Generation=='2' then V.Player:Teleport(Vector3.new(12,13,14)); assert(V.Player:GetInventory():TakeItem('takefixture',1)) end; print('required-'..V.Generation) end)", null, new string[0])); Process(Registry);
                 string OldOptional = Registry.Status(Consumers, Optional[1])[7], OldRequired = Registry.Status(Consumers, Required[1])[7];
                 byte[] LifeTwo = PublicPackage("life", "2.0.0", new string[0], new string[0], "return true", "api", new string[0],
                     new EntrySpec("api.luau", "return {Generation='2',Pure=9,Vector=Vector3.new(4,5,6),Player=game:GetService('Players'):GetPlayers()[1],Items=game:GetService('Items'),Host=function() return #game:GetService('Players'):GetPlayers() end}"));
@@ -519,7 +528,7 @@ internal static class AddonTests
                     "retained A1 mutations stay stale while reconstructed required consumer resolves and mutates through A2");
 
                 string[] Retained = Registry.RegisterArchive(Consumers, PublicPackage("retainedoptional", "1.0.0", new string[0], new[] {"life"},
-                    "local V=require('@life'); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() assert(V.Generation=='2' and V.Pure==9); assert(not pcall(function() return V.Player.Health end)); assert(not pcall(function() return V.Player:HasItem('scrap') end)); assert(not pcall(function() V.Player:TakeItem('takefixture',1) end)); assert(not pcall(function() V.Player:Teleport(Vector3.new(30,31,32)) end)); assert(not pcall(function() return V.Items:Exists('scrap') end)); print('retained-a2') end)", null, new string[0])); Process(Registry);
+                    "local V=require('@life'); assert(V.Player.Health==64.5 and V.Player.MaxHealth==140.25 and V.Player:GetInventory():CountItem('scrap')==75 and V.Items:Exists('scrap')); task.defer(function() assert(V.Generation=='2' and V.Pure==9); assert(not pcall(function() return V.Player.Health end)); assert(not pcall(function() return V.Player:GetInventory():HasItem('scrap') end)); assert(not pcall(function() V.Player:GetInventory():TakeItem('takefixture',1) end)); assert(not pcall(function() V.Player:Teleport(Vector3.new(30,31,32)) end)); assert(not pcall(function() return V.Items:Exists('scrap') end)); print('retained-a2') end)", null, new string[0])); Process(Registry);
                 Registry.ReplaceArchive(Provider, Life[1], PublicPackage("life", "3.0.0", new string[0], new string[0], "return true", "api", new string[0],
                     new EntrySpec("api.luau", "return {Generation='3',Pure=11,Vector=Vector3.new(7,8,9),Player=game:GetService('Players'):GetPlayers()[1],Items=game:GetService('Items')}")));
                 Process(Registry);

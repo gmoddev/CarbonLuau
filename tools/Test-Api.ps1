@@ -174,7 +174,7 @@ foreach ($Service in @('Players','Commands','Gui','Items','Workspace','DataStore
     if (!$Bootstrap.Contains(('if Name == "{0}"' -f $Service))) { throw "Missing registered service: $Service" }
     if ($Service -ne 'Gui' -and !(Test-Path -LiteralPath (Join-Path $Root "docs/api/Services/$Service.md"))) { throw "Missing service reference: $Service" }
 }
-foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection','GiveItemBehavior','Entity','EntityDestroyedContext','EntityDeathContext',
+foreach ($Type in @('Player','PlayerInventory','InventoryChangeContext','Vector3','CommandContext','Signal','Connection','GiveItemBehavior','Entity','EntityDestroyedContext','EntityDeathContext',
         'DataStore','DataStoreOptions','DataStoreQuery','DataStoreQueryResult','PersistedValue','Enum','DropMode','LootDropEntry')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "docs/api/Types/$Type.md"))) { throw "Missing type reference: $Type" }
 }
@@ -235,15 +235,24 @@ foreach ($Property in @('Health','MaxHealth')) {
         throw "Player property differs between bootstrap and reference: $Property"
     }
 }
-foreach ($Method in @('CountItem','HasItem','Teleport','TakeItem','GiveItem')) {
+foreach ($Method in @('GetInventory','Teleport')) {
     if (!$Bootstrap.Contains(('function PlayerMethods.{0}' -f $Method)) -or !$PlayerReference.Contains(('`Player:{0}' -f $Method))) {
         throw "Player method differs between bootstrap and reference: $Method"
+    }
+}
+$InventoryReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/PlayerInventory.md')
+foreach ($Method in @('CountItem','HasItem','TakeItem','GiveItem')) {
+    if (!$Bootstrap.Contains(('function PlayerInventoryMethods.{0}(' -f $Method)) -or !$InventoryReference.Contains($Method)) {
+        throw "PlayerInventory method differs between bootstrap and reference: $Method"
+    }
+    if ($Bootstrap -match ('function\s+PlayerMethods\.{0}\s*\(' -f $Method)) {
+        throw "Legacy Player inventory binding remains: $Method"
     }
 }
 $ItemsReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Services/Items.md')
 $BehaviorReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/GiveItemBehavior.md')
 if (!$Bootstrap.Contains('GiveItemBehavior.InventoryOnly') -or !$BehaviorReference.Contains('GiveItemBehavior.InventoryOnly') -or
-    !$PlayerReference.Contains('Behavior: GiveItemBehavior?')) { throw 'GiveItem typed behavior differs between runtime and public reference' }
+    !$InventoryReference.Contains('Behavior: GiveItemBehavior?')) { throw 'Inventory GiveItem typed behavior differs between runtime and public reference' }
 if (!$Bootstrap.Contains('function Items.Exists') -or !$ItemsReference.Contains('`Items:Exists')) {
     throw 'Items service differs between bootstrap and reference'
 }
@@ -286,6 +295,36 @@ $ServiceReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Ser
 $Catalog = Get-Content -Raw -LiteralPath (Join-Path $Root 'api/carbonluau-api.json') | ConvertFrom-Json
 $Definitions = Get-Content -Raw -LiteralPath (Join-Path $Root 'generated/carbonluau.d.luau')
 Test-D3Metadata $Catalog $Definitions $Bootstrap
+if ($Catalog.Api.Version -cne '0.7.0-experimental' -or $Release.apiVersion -cne '0.7.0-experimental' -or
+    $Release.packageVersion -cne '0.5.0') { throw 'Inventory migration API/package identity differs' }
+$InventoryMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'PlayerInventory' } | Sort-Object Id)
+$ExpectedInventoryMembers = @('PlayerInventory.CountItem','PlayerInventory.GiveItem','PlayerInventory.HasItem',
+    'PlayerInventory.ItemChanged','PlayerInventory.TakeItem')
+if ($InventoryMembers.Count -ne 5 -or
+    (($InventoryMembers.Id -join ',') -cne ($ExpectedInventoryMembers -join ','))) {
+    throw 'PlayerInventory must expose exactly two reads, two mutations and ItemChanged'
+}
+foreach ($Method in @('CountItem','HasItem','GiveItem','TakeItem')) {
+    if (@($Catalog.Members | Where-Object { $_.Id -ceq "Player.$Method" -or
+        ($_.OwnerId -ceq 'Player' -and $_.Name -ceq $Method) }).Count -ne 0) {
+        throw "Legacy Player inventory metadata remains: $Method"
+    }
+}
+$PlayerDefinition = [regex]::Match(($Definitions -replace "`r`n", "`n"), '(?ms)^declare extern type Player with\n(.*?)^end$').Groups[1].Value
+$InventoryDefinition = [regex]::Match(($Definitions -replace "`r`n", "`n"), '(?ms)^declare extern type PlayerInventory with\n(.*?)^end$').Groups[1].Value
+if (!$PlayerDefinition.Contains('function GetInventory(self): (PlayerInventory)') -or
+    $PlayerDefinition -match 'function (CountItem|HasItem|GiveItem|TakeItem)\(') {
+    throw 'Player definitions retain legacy inventory methods or omit GetInventory'
+}
+$ExpectedInventoryDefinition = @(
+    '    function CountItem(self, ShortName: string): (number)',
+    '    function GiveItem(self, ShortName: string, Amount: number, Behavior: GiveItemBehavior?): (boolean)',
+    '    function HasItem(self, ShortName: string, Amount: number?): (boolean)',
+    '    read ItemChanged: SignalWith<(Context: InventoryChangeContext) -> ()>',
+    '    function TakeItem(self, ShortName: string, Amount: number): (boolean)') -join "`n"
+if ($InventoryDefinition -cne ($ExpectedInventoryDefinition + "`n")) {
+    throw 'PlayerInventory definitions differ from the exact five-member contract'
+}
 $PersistenceTypes = @('DataStoreService','DataStore','DataStoreOptions','DataStoreQuery','DataStoreQueryResult','PersistedValue')
 $EntityTypes = @('Workspace','Entity','EntityDiscoveryOptions')
 $GameplayTypes = @('PlayerDeathContext','PlayerSpawnContext','EntityDestroyedContext','EntityDeathContext')
@@ -310,6 +349,12 @@ foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
     } elseif ($Declaration.Id -ceq 'PlayerInventory.ItemChanged' -or $Declaration.Id -ceq 'InventoryChangeContext' -or $Declaration.OwnerId -ceq 'InventoryChangeContext') {
         if ($Declaration.Availability.SinceApi -cne '0.6.5-experimental' -or $Declaration.Preview -cne 'Unavailable') {
             throw 'Sampled inventory Signal metadata identity/preview differs'
+        }
+    } elseif ($Declaration.Id -cin @('PlayerInventory.GiveItem','PlayerInventory.TakeItem')) {
+        if ($Declaration.Availability.SinceApi -cne '0.7.0-experimental' -or
+            !$Declaration.Availability.Implemented -or $Declaration.Availability.Qualification -cne 'ClientUnqualified' -or
+            $Declaration.Preview -cne 'HostMutation') {
+            throw "PlayerInventory mutation introduction/qualification/preview differs: $($Declaration.Id)"
         }
     } elseif ($Declaration.Id -ceq 'PlayerInventory' -or $Declaration.OwnerId -ceq 'PlayerInventory' -or $Declaration.Id -ceq 'Player.GetInventory') {
         if ($Declaration.Availability.SinceApi -cne '0.6.5-experimental' -or $Declaration.Preview -cne 'ReadMock') {

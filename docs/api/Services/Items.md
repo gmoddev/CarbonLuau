@@ -24,5 +24,5 @@ if Items:Exists("scrap") then
 end
 ```
 
-See [Player](../Types/Player.md) for physical inventory observation and
+See [PlayerInventory](../Types/PlayerInventory.md) for physical inventory observation and
 [compatibility](../Compatibility.md) for bounds.

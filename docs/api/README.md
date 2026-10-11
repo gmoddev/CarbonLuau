@@ -1,15 +1,21 @@
 # CarbonLuau scripting API
 
 The latest published package is v0.5.0 with experimental scripting API
-`0.5.0-experimental`. The development scripting API is `0.6.5-experimental`;
+`0.5.0-experimental`. The development scripting API is `0.7.0-experimental`;
 Workspace/Entity (introduced in 0.6.0), player lifecycle Signals and
 `Workspace.EntitySpawned`, `Workspace.EntityDestroyed` and `Workspace.EntityDied` (introduced in 0.6.5)
 are **not in published v0.5.0**.
-The development Loot declaration and `Enum.DropMode.Replace` also use 0.6.5
+The development Loot declaration and `Enum.DropMode.Replace` were introduced at 0.6.5
 and are not in published v0.5.0; see [Loot](Services/Loot.md) for host gates and
 nontransactional payout limits.
-Development `Player:GetInventory()` and `PlayerInventory.ItemChanged` use the
-same `0.6.5-experimental` API and are not in published v0.5.0. ItemChanged reports
+Development `Player:GetInventory()` and `PlayerInventory.ItemChanged` retain
+their `0.6.5-experimental` introductions and are not in published v0.5.0.
+API 0.7 explicitly removes the legacy Player inventory methods. Existing
+Inventory HasItem/CountItem names are retained. Use `Inventory:CountItem`, `HasItem`,
+`GiveItem(ShortName, Amount, Behavior?)` and `TakeItem(ShortName, Amount)`; there are no
+legacy aliases or GetItem/GetItems. New `PlayerInventory:GiveItem`/`PlayerInventory:TakeItem`
+methods are introduced at 0.7. See the [migration guide](Inventory-Migration.md).
+ItemChanged reports
 sampled physical Before/After/Delta observations: temporary transfers can appear,
 balanced changes can be missed, and completed-operation delivery is not promised.
 See [PlayerInventory](Types/PlayerInventory.md#itemchanged) for baselines,
@@ -29,8 +35,9 @@ This is server-side Luau, not Roblox API compatibility.
 | Development terminal-death and initial/full-respawn observations | [Players](Services/Players.md), [PlayerDeathContext](Types/PlayerDeathContext.md), [PlayerSpawnContext](Types/PlayerSpawnContext.md), [example](../../examples/player-lifecycle/init.luau) |
 | Player-issued chat commands | [Commands](Services/Commands.md) |
 | Player identity, live position/health observation, messaging and permission query | [Player](Types/Player.md) |
-| Rust item identity, bounded physical inventory observation and verified TakeItem/GiveItem | [Items](Services/Items.md), [Player](Types/Player.md), [GiveItemBehavior](Types/GiveItemBehavior.md) |
+| Rust item identity, bounded physical inventory CountItem/HasItem and verified GiveItem/TakeItem | [Items](Services/Items.md), [PlayerInventory](Types/PlayerInventory.md), [GiveItemBehavior](Types/GiveItemBehavior.md) |
 | Development Player inventory facade and sampled net-change Signal | [PlayerInventory](Types/PlayerInventory.md), [InventoryChangeContext](Types/InventoryChangeContext.md), [example](../../examples/players/inventory-changed/init.luau) |
+| Breaking API 0.7 inventory removal and migration | [Migration guide](Inventory-Migration.md), [release-readiness audit](../Release.md#gameplay-ad-release-readiness) |
 | Development init-only destruction-payout declarations | [Loot](Services/Loot.md), [Enum](Types/Enum.md), [DropMode](Types/DropMode.md), [LootDropEntry](Types/LootDropEntry.md), [example](../../examples/scripts/loot-replace.luau) |
 | Immutable world-coordinate values | [Vector3](Types/Vector3.md) |
 | Development read-only exact world lookup | [Workspace](Services/Workspace.md), [Entity](Types/Entity.md), [examples](World-Examples.md) |
@@ -88,10 +95,12 @@ end)
 
 Player-1A adds immutable `Vector3` and the live read-only `Player.Position`;
 Player-1B adds live read-only `Player.Health` and `Player.MaxHealth`; Player-1C
-adds `Items:Exists`, `Player:CountItem` and `Player:HasItem` under the same
-identity; Player-1D adds committed-only `Player:Teleport(Vector3)` and
-Player-1F-A adds committed-only verified `Player:TakeItem`; Player-1F-B adds
-`Player:GiveItem(ShortName, Amount, Behavior?)`, defaulting to typed InventoryOnly. See the
+qualified `Items:Exists` and bounded physical inventory reads at the original
+0.4 identity; Player-1D qualified committed-only `Player:Teleport(Vector3)`.
+Player-1F-A/B qualified inventory removal/grants, defaulting to typed InventoryOnly.
+Current API 0.7 puts those inventory contracts on `Player:GetInventory()` as
+CountItem/HasItem/TakeItem/GiveItem. Historical records below preserve their tested names and
+versions; C4 migration qualification is separate. See the
 [Player-1A](../PlayerInteractionFoundation1A.md) and
 [Player-1B](../PlayerInteractionFoundation1B.md) and
 [Player-1C](../PlayerInteractionFoundation1C.md) and
@@ -107,8 +116,8 @@ arbitrary hooks/console execution, reflection, Roblox hierarchy/replication and
 surface is qualified separately under revised D13 and
 [D18](../Invariants.md#d18--player-interaction-foundation-1).
 Teleport is available with exact-build server qualification and an explicit
-authenticated-client deferral. TakeItem is available with exact-build
-PREPARE/COMMIT/VERIFY qualification; GiveItem uses a bounded complete placement plan
+authenticated-client deferral. Inventory TakeItem retains exact-build
+PREPARE/COMMIT/VERIFY semantics; GiveItem uses a bounded complete placement plan
 and the supported-host InventoryOnly adapter.
 Revised D13 requires PREPARE/COMMIT/VERIFY and exact-Player serialization for inventory mutation;
 richer inventory mutation and raw host objects remain deferred.

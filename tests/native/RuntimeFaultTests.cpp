@@ -15,15 +15,26 @@ static void Check(bool Condition, const char* Message)
     if (!Condition) { std::fprintf(stderr, "[CarbonLuau:FaultTest] FAIL: %s\n", Message); std::exit(1); }
 }
 static unsigned FixtureRegistration = 0;
-static uint32_t FixtureHost(uint64_t, uint32_t Operation, const char*, uint32_t, char* Output, uint32_t Capacity, uint32_t* Written)
+static uint32_t FixtureHost(uint64_t Owner, uint32_t Operation, const char* Bytes, uint32_t InputLength, char* Output, uint32_t Capacity, uint32_t* Written)
 {
+    if (Operation == 41) {
+        auto Fields = CarbonLuau::InventoryChangedTests::Unpack(Bytes, InputLength);
+        Check(Fields.size() >= 4, "Inventory41 host adapter field count");
+        if (Fields[3] == "signal") { *Written = 0; return 0; }
+        uint32_t Backend = Fields[3] == "count" ? 26 : Fields[3] == "has" ? 27 : Fields[3] == "take" ? 29 : Fields[3] == "give" ? 30 : 0;
+        Check(Backend && Fields.size() == (Backend == 26 ? 5u : Backend == 30 ? 7u : 6u), "Inventory41 qualified backend delegation");
+        std::vector<std::string> Request{Fields[0], Fields[1]};
+        Request.insert(Request.end(), Fields.begin() + 4, Fields.end());
+        auto Payload = CarbonLuau::InventoryChangedTests::Pack(Request);
+        return FixtureHost(Owner, Backend, Payload.data(), uint32_t(Payload.size()), Output, Capacity, Written);
+    }
     const char* Value = ""; size_t Length = 0;
     static const char Player[] = "1\00076561198000000001\000Fixture\000";
     static const char Info[] = "1\000Fixture\000";
     static const char Id[] = "1\000";
     if (Operation == 1 || Operation == 2) { Value = Player; Length = sizeof(Player) - 1; }
     else if (Operation == 3) { Value = Info; Length = sizeof(Info) - 1; }
-    else if (Operation == 5 || Operation == 40 || Operation == 41) { Value = Id; Length = sizeof(Id) - 1; }
+    else if (Operation == 5 || Operation == 26 || Operation == 27 || Operation == 29 || Operation == 30 || Operation == 40) { Value = Id; Length = sizeof(Id) - 1; }
     else if (Operation == 6 || Operation == 8) {
         *Written = uint32_t(std::snprintf(Output, Capacity, "%u", ++FixtureRegistration) + 1); return 0;
     }
@@ -228,7 +239,7 @@ int main(int ArgumentCount, char** Arguments)
         ClHandle Handle = 0, Thread = 0; ClResult Result{};
         Check(cl_vm_create(&Config, &Handle) == CL_OK && cl_vm_scripts(Handle, 64) == CL_OK &&
             cl_vm_facade(Handle, 1, FixtureHost) == CL_OK, "C1 allocation VM");
-        const char* Source = "local P=game:GetService('Players'):GetPlayers()[1]; local I=P:GetInventory(); assert(I:CountItem('scrap')==1 and I:HasItem('scrap')); assert(I==P:GetInventory())";
+        const char* Source = "local P=game:GetService('Players'):GetPlayers()[1]; local I=P:GetInventory(); assert(I:CountItem('scrap')==1 and I:HasItem('scrap')); assert(I==P:GetInventory()); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(P[K]==nil) end; assert(type(I.GiveItem)=='function' and type(I.TakeItem)=='function'); assert(not pcall(function() I.GiveItem({},'scrap',1) end)); assert(not pcall(function() I.TakeItem({},'scrap',1) end))";
         Check(cl_vm_load_source(Handle,"c1.alloc",Source,uint32_t(std::strlen(Source)),&Thread,&Result)==CL_OK,"C1 load");
         TestAllocationFailureAfter=Failure;
         ClStatus Status=cl_thread_resume(Thread,100000000,&Result);
