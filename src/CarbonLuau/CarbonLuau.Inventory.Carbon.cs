@@ -4,6 +4,19 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
+        private bool InventoryIntakeFailureReported;
+        private void RunInventorySampleFrame()
+        {
+            if (Stopping || Gameplay == null || Host == null || !Host.Ready || Host.Busy ||
+                Gameplay.InventorySamples.DemandCount == 0) return;
+            try { Gameplay.InventorySamples.Tick(UnityEngine.Time.frameCount); Gameplay.FlushInventoryChanges(); if (Gameplay.HasWork) RequestDrain(); }
+            catch (Exception) {
+                if (!InventoryIntakeFailureReported) {
+                    InventoryIntakeFailureReported = true;
+                    PrintWarning("[CarbonLuau:Inventory] Sampled intake rejected; repeated diagnostics suppressed.");
+                }
+            }
+        }
         // Exact-build adaptation only. All references are managed/host-side, operation-local.
         private sealed class RustInventoryGrantHost : IInventoryGrantHost
         {

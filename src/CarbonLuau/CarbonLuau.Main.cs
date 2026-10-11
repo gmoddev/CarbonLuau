@@ -78,6 +78,8 @@ namespace Carbon.Plugins
             RunGameplayHostProofFixtures();
             RunEntitySpawnFixtures();
             RunPlayerInventoryFixtures();
+            RunInventoryNetChangeFixtures();
+            RunInventoryChangedPublicFixtures();
             RunBarrelLootResearch();
             if (Host == null) return;
             try
@@ -143,6 +145,8 @@ namespace Carbon.Plugins
 
         partial void RunGameplayHostProofFixtures();
         partial void RunPlayerInventoryFixtures();
+        partial void RunInventoryNetChangeFixtures();
+        partial void RunInventoryChangedPublicFixtures();
         partial void RunBarrelLootResearch();
         partial void RunEntitySpawnFixtures();
         private void Unload() { StopEntityMeleeSource(); StopEntityDiedSource(); StopLootSource(); StopGameplayLifecycle(); StopEntityObserver(); ReleaseNative(); }
@@ -167,6 +171,7 @@ namespace Carbon.Plugins
             {
                 if (Addons != null) { Addons.Dispose(); Addons = null; }
                 if (Host != null) { Host.Dispose(); Host = null; }
+                if (Gameplay != null) Gameplay.InventorySamples.Dispose();
                 Gameplay = null; CommandRegistrar = null; AddonFrameScheduled = false; DrainScheduled = false;
                 if (Native == null) return;
                 Native.Dispose();

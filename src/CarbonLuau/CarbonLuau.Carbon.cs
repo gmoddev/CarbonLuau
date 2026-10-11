@@ -119,9 +119,12 @@ namespace Carbon.Plugins
             CommandRegistrar = new CarbonCommandRegistrar(this);
             var Players = new PlayerDirectory(ReadPlayer);
             var Limits = new GuiConfig().Validate();
-            Gameplay = new FacadeWorld(Players, CommandRegistrar, new ItemDirectory(ReadItemDefinition), Limits,
+            Gameplay = new FacadeWorld(Players, CommandRegistrar, new ItemDirectory(ReadItemDefinition,
+                Definition => ((ItemDefinition)Definition).shortname), Limits,
                 new RustCuiBackend(Limits, new CarbonRustCuiTransport(Players)));
             BindEntityFacade();
+            Gameplay.InventorySamples.PumpAvailable = () => EntityDiscoveryFramePump != null &&
+                ReferenceEquals(EntityDiscoveryFramePump.Owner, this) && !Stopping;
         }
         partial void BindEntityFacade();
         private void SeedPlayers()

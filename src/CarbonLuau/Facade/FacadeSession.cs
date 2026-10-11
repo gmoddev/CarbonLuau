@@ -13,6 +13,7 @@ namespace Carbon.Plugins
         {
             public readonly PlayerDirectory Players;
             public readonly ItemDirectory Items;
+            internal readonly InventoryNetObservation InventorySamples;
             public readonly ICommandRegistrar Registrar;
             internal readonly PlayerTakeItemOperation TakeItems = new PlayerTakeItemOperation();
             internal readonly PlayerGiveItemOperation GiveItems;
@@ -46,6 +47,7 @@ namespace Carbon.Plugins
                 GiveItems = new PlayerGiveItemOperation(TakeItems.SharedGate);
                 Gui = new GuiRetainedWorld(Limits ?? throw new ArgumentNullException("Limits"), Players, Backend ?? new InMemoryGuiBackend());
                 GameplayEvents = new GameplayEventBudget(this);
+                InventorySamples = new InventoryNetObservation(this);
             }
             public void Commit(FacadeSession Next)
             {
@@ -345,6 +347,8 @@ namespace Carbon.Plugins
                 if (Item.GameplayReservation != 0) World.GameplayEvents.Release(this, Item.GameplayReservation, true);
             }
             public void Clear() {
+                World.InventorySamples.Retire(this);
+                InventoryListeners.Clear();
                 if (World.Discovery != null) World.Discovery.Retire(this);
                 ClearPendingGameplay(); World.GameplayEvents.Cancel(this);
                 RootPublication.Retired = true;
@@ -353,6 +357,7 @@ namespace Carbon.Plugins
                 EntityWitnesses.Clear(); ClearStorageHints(); Gui.Dispose();
                 FirstPublication = null; GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = GameplayEntityDestroyedListeners = 0;
                 GameplayEntityDiedListeners = 0;
+                GameplayInventoryChangedListeners = 0;
                 World.InvalidateGameplayDemand();
             }
             private bool Gate(string[] Fields)
@@ -412,14 +417,15 @@ namespace Carbon.Plugins
                 if (Code == 11) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication commit");
                     try { Gui.CommitPublication(); }
-                    catch { Publications.Peek().Witness.Retired = true; throw; }
+                    catch { Publications.Peek().Witness.Retired = true; World.InventorySamples.PruneRetired(); throw; }
                     Publications.Pop(); if (Publications.Count == 0) FirstPublication = null;
-                    RefreshGameplayListeners(); return new string[0];
+                    PruneInventoryListeners(); RefreshGameplayListeners(); return new string[0];
                 }
                 if (Code == 12) {
                     if (Fields.Length != 0 || Publications.Count == 0) throw new FacadeException("invalid publication rollback");
                     PublicationCheckpoint Checkpoint = Publications.Peek();
                     Checkpoint.Witness.Retired = true;
+                    World.InventorySamples.PruneRetired();
                     Gui.RollbackPublication();
                     Publications.Pop();
                     PruneEntityWitnesses();
@@ -428,6 +434,7 @@ namespace Carbon.Plugins
                     LootRules = Checkpoint.LootRules;
                     if (Publications.Count == 0) FirstPublication = null;
                     RefreshGameplayListeners();
+                    PruneInventoryListeners();
                     return new string[0];
                 }
                 if (Code == 9) { if (!Gate(Fields)) throw new FacadeException("stale or unauthorized callback"); return new string[0]; }
@@ -457,10 +464,14 @@ namespace Carbon.Plugins
                 }
                 if (Code == 41) {
                     ulong Publication;
-                    if ((Fields.Length != 5 && Fields.Length != 6) ||
+                    if ((Fields.Length != 4 && Fields.Length != 5 && Fields.Length != 6) ||
                         !GameplayEventPolicy.Identity(Fields[2], out Publication) || FindEntityWitness(Publication) == null)
                         throw new FacadeException("stale PlayerInventory reference");
                     // Delegate, do not duplicate D18 validation/scanner or errors.
+                    if (Fields[3] == "signal" && Fields.Length == 4) {
+                        if (World.Players.Resolve(Fields[0], Fields[1]) == null) throw new FacadeException("Player is no longer connected");
+                        return new string[0];
+                    }
                     if (Fields[3] == "count" && Fields.Length == 5)
                         return Operation(26, new[] {Fields[0], Fields[1], Fields[4]});
                     if (Fields[3] == "has" && Fields.Length == 6)
@@ -486,6 +497,7 @@ namespace Carbon.Plugins
                     return new string[0];
                 }
                 int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 :
+                    Code == 6 && Fields.Length == 4 && Fields[0] == "itemchanged" ? 4 :
                     Code == 25 ? 1 : Code == 26 ? 3 : (Code == 27 || Code == 29) ? 4 : (Code == 28 || Code == 30) ? 5 :
                     (Code == 4 || Code == 5 || Code == 8) ? 3 : 1;
                 if (Fields.Length != Expected) throw new FacadeException("invalid host arguments");
@@ -580,6 +592,7 @@ namespace Carbon.Plugins
                         return new[] {Result ? "1" : "0"};
                     }
                     case 6: {
+                        if (Fields[0] == "itemchanged") return RegisterInventoryListener(Fields);
                         if (Fields[0] != "added" && Fields[0] != "removing" && !GameplayEventPolicy.Kind(Fields[0])) throw new FacadeException("unknown signal");
                         if (GameplayEventPolicy.Kind(Fields[0]) && (World.GameplayAvailable == null || !World.GameplayAvailable(Fields[0])))
                             throw new FacadeException("player lifecycle observation unavailable for this host");
@@ -590,7 +603,7 @@ namespace Carbon.Plugins
                     }
                     case 7: {
                         ulong Value; if (!ulong.TryParse(Fields[0], out Value)) throw new FacadeException("invalid Connection");
-                        Listeners.Remove(Value); RefreshGameplayListeners(); return new string[0];
+                        Listeners.Remove(Value); PruneInventoryListeners(); RefreshGameplayListeners(); return new string[0];
                     }
                     case 8: {
                         if (Active) throw new FacadeException("Commands:Register is initialization-only");

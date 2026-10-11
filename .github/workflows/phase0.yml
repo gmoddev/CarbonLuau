@@ -84,6 +84,18 @@ jobs:
       - name: PlayerInventory public binding (Linux)
         if: runner.os == 'Linux'
         run: mono dist/runtime/RuntimeTests.exe --gameplayc1 "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: Private sampled inventory candidate (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --inventory-net "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Private sampled inventory candidate (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --inventory-net "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: Sampled ItemChanged public binding (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --inventory-changed "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Sampled ItemChanged public binding (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --inventory-changed "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
       - name: Public bounded discovery bindings (Windows)
         if: runner.os == 'Windows'
         run: ./dist/runtime/RuntimeTests.exe --discovery2b "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"

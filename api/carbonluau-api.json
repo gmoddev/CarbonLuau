@@ -347,6 +347,19 @@
       "Preview": "Unavailable"
     },
     {
+      "Id": "InventoryChangeContext",
+      "Name": "InventoryChangeContext",
+      "Kind": "Class",
+      "Summary": "Frozen sampled physical net change; intermediate transfers may be observed, balanced changes may be missed, and no operation attribution or replay is promised.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
+    },
+    {
       "Id": "Items",
       "Name": "Items",
       "Kind": "Service",
@@ -3973,6 +3986,66 @@
       "Writable": false
     },
     {
+      "Id": "InventoryChangeContext.After",
+      "Name": "After",
+      "OwnerId": "InventoryChangeContext",
+      "Kind": "Property",
+      "Summary": "Latest accepted sampled physical quantity, an exact integer from zero through 2^53-1.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "InventoryChangeContext.Before",
+      "Name": "Before",
+      "OwnerId": "InventoryChangeContext",
+      "Kind": "Property",
+      "Summary": "Previous accepted sampled physical quantity, an exact integer from zero through 2^53-1.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "InventoryChangeContext.Delta",
+      "Name": "Delta",
+      "OwnerId": "InventoryChangeContext",
+      "Kind": "Property",
+      "Summary": "Nonzero exact signed After minus Before, bounded by plus or minus 2^53-1; no causal receipt.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "number",
+      "Writable": false
+    },
+    {
+      "Id": "InventoryChangeContext.Item",
+      "Name": "Item",
+      "OwnerId": "InventoryChangeContext",
+      "Kind": "Property",
+      "Summary": "Canonical item shortname from the accepted physical observations.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
       "Id": "Items.Exists",
       "Name": "Exists",
       "OwnerId": "Items",
@@ -4469,6 +4542,32 @@
           "Returns": [
             "boolean"
           ]
+        }
+      ]
+    },
+    {
+      "Id": "PlayerInventory.ItemChanged",
+      "Name": "ItemChanged",
+      "OwnerId": "PlayerInventory",
+      "Kind": "Signal",
+      "Summary": "Future sampled net changes between accepted physical snapshots; intermediate transfers may appear and balanced changes may be missed. No completed-operation guarantee, attribution or history replay.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Context",
+              "Type": "InventoryChangeContext",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
         }
       ]
     },

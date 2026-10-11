@@ -123,8 +123,13 @@ If documents, code, a task request or upstream evidence conflict, identify the c
 
 Gameplay C1's Player-owned read-only inventory facade is routed through
 [GameplayC1-Validation.md](docs/GameplayC1-Validation.md) and D18. It reuses the
-existing scanner and exact connection/publication/domain authority. C2 quantity
-Signals remain unimplemented. Qualified private Gameplay D2A and the separately
+existing scanner and exact connection/publication/domain authority. C2 introduced
+no public quantity Signals. [C2 evidence](docs/GameplayC2-Validation.md) records
+the private sampled candidate, not public completed-operation Signal qualification.
+The separately authorized C3 public sampled `PlayerInventory.ItemChanged` surface
+and combined qualification are routed through [GameplayC3-Validation.md](docs/GameplayC3-Validation.md).
+This does not authorize ItemAdded/ItemRemoved or reinterpret C2's negative evidence.
+Qualified private Gameplay D2A and the separately
 authorized public D3 phase are routed below. The supplied
 [C/D research](docs/GameplayCDArchitecture-Research.md) preserves static evidence
 and records the user override to future `Enum.DropMode` rather than `Loot.DropMode`.

@@ -28,6 +28,31 @@ bool GameplayUserId(std::string_view Text)
     for (unsigned char Character : Text) if (Character < '0' || Character > '9') return false;
     return true;
 }
+bool GameplayItem(std::string_view Text)
+{
+    if (Text.empty() || Text.size() > 128) return false;
+    auto Whitespace = [](unsigned char Character) { return Character == ' ' || (Character >= '\t' && Character <= '\r'); };
+    if (Whitespace(Text.front()) || Whitespace(Text.back())) return false;
+    // Match FacadePolicy.ItemShortName, including its permitted interior ASCII.
+    for (unsigned char Character : Text)
+        if (!Character || Character > 127 || (Character >= 'A' && Character <= 'Z')) return false;
+    return true;
+}
+bool GameplayQuantity(std::string_view Text, int64_t& Value)
+{
+    if (Text == "0") { Value = 0; return true; }
+    uint64_t Unsigned = 0;
+    if (!GameplayIdentity(Text, Unsigned) || Unsigned > 9007199254740991ull) return false;
+    Value = int64_t(Unsigned); return true;
+}
+bool GameplayDelta(std::string_view Text, int64_t& Value)
+{
+    bool Negative = !Text.empty() && Text.front() == '-';
+    if (Negative) Text.remove_prefix(1);
+    if (!GameplayQuantity(Text, Value) || !Value) return false;
+    if (Negative) Value = -Value;
+    return true;
+}
 bool GameplayName(std::string_view Text, size_t Maximum = 128)
 {
     if (Text.size() > Maximum) return false;
@@ -103,6 +128,14 @@ bool ValidateGameplay(const char* Bytes, uint32_t Length, uint64_t& Reservation)
     }
     if (Start != Length || Count != (Fields[0] == "entitydied" ? 14u : 12u)) return false;
     uint64_t Ignored = 0;
+    if (Fields[0] == "itemchanged") {
+        int64_t Before = 0, After = 0, Delta = 0;
+        return GameplayIdentity(Fields[1], Ignored) && GameplayIdentity(Fields[2], Ignored) &&
+            GameplayUserId(Fields[3]) && GameplayItem(Fields[4]) && GameplayIdentity(Fields[5], Reservation) &&
+            GameplayQuantity(Fields[6], Before) && GameplayQuantity(Fields[7], After) &&
+            GameplayDelta(Fields[8], Delta) && Delta == After - Before &&
+            GameplayIdentity(Fields[9], Ignored) && GameplayIdentity(Fields[10], Ignored) && Fields[11].empty();
+    }
     if (Fields[0] == "entitydied") {
         if (!GameplayIdentity(Fields[1], Ignored) || !GameplayIdentity(Fields[2], Ignored) || !GameplayIdentity(Fields[3], Ignored) ||
             Fields[4].empty() || !GameplayName(Fields[4], 512) || !GameplayIdentity(Fields[5], Reservation)) return false;
@@ -320,7 +353,7 @@ ClStatus cl_domain_event(ClHandle Id, ClHandle DomainId, const char* Payload, ui
     // This reserved tag is never an ordinary script Signal/event dispatch.
     if (Kind == "discovery")
         return ReadyDiscovery(*Runtime, *Owner, Payload, Length);
-    bool Gameplay = Kind == "died" || Kind == "spawned" || Kind == "entityspawned" || Kind == "entitydestroyed" || Kind == "entitydied";
+    bool Gameplay = Kind == "died" || Kind == "spawned" || Kind == "entityspawned" || Kind == "entitydestroyed" || Kind == "entitydied" || Kind == "itemchanged";
     uint64_t Reservation = 0;
     if (Gameplay) {
         if (!ValidateGameplay(Payload, Length, Reservation)) return CL_INVALID_ARGUMENT;

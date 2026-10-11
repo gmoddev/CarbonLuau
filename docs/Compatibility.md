@@ -186,6 +186,17 @@ physical rules, exact D11 connection and domain/publication lifetime remain;
 controlled live Carbon connections and authenticated-client claims. Inventory
 Signals/loot policies are not implied. No native ABI/provider/schema/pin change.
 
+[Gameplay C2](GameplayC2-Validation.md) is a private sampled inventory observation
+candidate, not public ItemAdded/ItemRemoved qualification. Its exact host,
+resource/lifecycle receipts and intermediate-state counterexamples are separate
+from the unchanged C1 read-only support claim. C3 remains separately scoped.
+
+[Gameplay C3](GameplayC3-Validation.md) adds sampled PlayerInventory.ItemChanged in
+`0.6.5-experimental`, with immutable Before/After/Delta observations and no
+completed-operation, every-action, attribution or history guarantee. C2's exact
+host read/scanner rules and shared D23 quotas remain. Package/ABI/provider/schema/
+Luau identities are unchanged; a release/tag is not authorized.
+
 Use the narrowest levels that exercise the changed behavior, adding broader tests when the boundary requires them:
 
 | Change | Relevant evidence |

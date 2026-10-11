@@ -11,7 +11,7 @@ namespace Carbon.Plugins
             internal const int CapturesPerFrame = 128, DeliveriesPerFrame = 128, DeliveriesPerDomain = 32;
             internal const int VisitsPerFrame = 4096, Reservations = 512, PayloadBytes = 2048;
             internal const int RetainedTransportBytes = Reservations * PayloadBytes * 2;
-            internal static bool Kind(string Value) { return Value == "died" || Value == "spawned" || Value == "entityspawned" || Value == "entitydestroyed" || Value == "entitydied"; }
+            internal static bool Kind(string Value) { return Value == "died" || Value == "spawned" || Value == "entityspawned" || Value == "entitydestroyed" || Value == "entitydied" || Value == "itemchanged"; }
             internal static bool Identity(string Text, out ulong Value)
             {
                 Value = 0;
@@ -129,6 +129,7 @@ namespace Carbon.Plugins
                 internal string EntityHost;
                 internal GameplayEntityDestroyedObservation Destroyed;
                 internal readonly GameplayEntityDiedObservation Died;
+                internal InventoryChangedObservation Inventory;
                 internal Reservation(GameplayEntityDiedObservation Died) { this.Died = Died; }
             }
             private readonly FacadeWorld World;
@@ -192,6 +193,14 @@ namespace Carbon.Plugins
                 if (Visits >= GameplayEventPolicy.VisitsPerFrame) { Count(ref ScanRejected); return false; }
                 Visits++; return true;
             }
+            internal bool InventoryInspection()
+            {
+                BeginFrame();
+                if (Visits > GameplayEventPolicy.VisitsPerFrame - FacadePolicy.InventoryStacks) {
+                    Count(ref ScanRejected); return false;
+                }
+                Visits += FacadePolicy.InventoryStacks; return true;
+            }
             internal bool Delivery(FacadeSession Owner)
             {
                 BeginFrame(); int CountValue;
@@ -203,9 +212,12 @@ namespace Carbon.Plugins
             }
             internal ulong Reserve(FacadeSession Owner, string Kind, string Listener, string[] Fields, out byte[] Payload,
                 EntityLifetimeModel.Binding Entity = null, GameplayEntityDestroyedObservation Destroyed = null,
-                GameplayEntityDiedObservation Died = null)
+                GameplayEntityDiedObservation Died = null, InventoryChangedObservation Inventory = null)
             {
                 Payload = null;
+                if ((Inventory != null && Kind != "itemchanged") || (Kind == "itemchanged" && (Inventory == null || !Inventory.Matches(Fields)))) {
+                    Count(ref PayloadRejected); return 0;
+                }
                 if ((Died != null && Kind != "entitydied") ||
                     (Kind == "entitydied" && (Died == null || !Died.Matches(Fields) || Entity != null || Destroyed != null))) {
                     Count(ref PayloadRejected); return 0;
@@ -222,6 +234,7 @@ namespace Carbon.Plugins
                 Held.Add(Nonce, new Reservation(Died) {Owner = Owner, Kind = Kind, Listener = Listener,
                     Publication = Owner.RootGameplayPublication, Charge = Charge, Entity = Entity, Destroyed = Destroyed,
                     EntityHost = Kind == "entityspawned" ? Fields[6] : null});
+                Held[Nonce].Inventory = Inventory;
                 RetainedBytes += Charge; Count(ref Accepted); return Nonce;
             }
             internal bool ToNative(FacadeSession Owner, ulong Nonce)
@@ -262,6 +275,8 @@ namespace Carbon.Plugins
                             !Value.Died.ValidateCompletion()) { Count(ref StaleRejected); return false; }
                     } catch (Exception) { Count(ref StaleRejected); return false; }
                 }
+                if (Fields[0] == "itemchanged" && (Value.Inventory == null || !Value.Inventory.Matches(Fields) ||
+                    !Owner.ValidateInventoryChanged(Value.Inventory))) { Count(ref StaleRejected); return false; }
                 return true;
             }
             internal bool Release(FacadeSession Owner, ulong Nonce, bool Rejected = false)
@@ -269,6 +284,7 @@ namespace Carbon.Plugins
                 World.Players.CheckOwner(); Reservation Value;
                 if (!Held.TryGetValue(Nonce, out Value) || !Object.ReferenceEquals(Value.Owner, Owner)) return false;
                 Held.Remove(Nonce); RetainedBytes -= Value.Charge; Count(ref Released);
+                if (Value.Inventory != null) World.InventorySamples.ReleaseDelivery();
                 if (Rejected) Count(ref NativeRejected); return true;
             }
             internal void Cancel(FacadeSession Owner)
@@ -286,7 +302,7 @@ namespace Carbon.Plugins
                     "; scan_rejected=" + ScanRejected + "; queue_rejected=" + QueueRejected +
                     "; payload_rejected=" + PayloadRejected + "; native_rejected=" + NativeRejected + "; stale_rejected=" + StaleRejected +
                     "; destroy_position_accepted=" + DestroyPositionAccepted + "; destroy_position_rejected=" + DestroyPositionRejected +
-                    "; death_position_accepted=" + DeathPositionAccepted + "; death_position_rejected=" + DeathPositionRejected; }
+                    "; death_position_accepted=" + DeathPositionAccepted + "; death_position_rejected=" + DeathPositionRejected + World.InventorySamples.Status; }
             }
         }
     }

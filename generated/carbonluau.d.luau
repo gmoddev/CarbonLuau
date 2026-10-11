@@ -224,6 +224,13 @@ declare extern type ImageSource with
     read UserId: string
 end
 
+export type InventoryChangeContext = {
+    read After: number,
+    read Before: number,
+    read Delta: number,
+    read Item: string,
+}
+
 declare extern type Items with
     function Exists(self, ShortName: string): (boolean)
 end
@@ -262,6 +269,7 @@ export type PlayerDeathContext = {
 declare extern type PlayerInventory with
     function CountItem(self, ShortName: string): (number)
     function HasItem(self, ShortName: string, Amount: number?): (boolean)
+    read ItemChanged: SignalWith<(Context: InventoryChangeContext) -> ()>
 end
 
 export type PlayerSpawnContext = {

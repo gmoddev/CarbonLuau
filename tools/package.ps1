@@ -1,5 +1,11 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures, [switch]$IncludeD2Research, [switch]$IncludeD2Fixtures, [switch]$IncludeD3Fixtures, [switch]$IncludeB2Fixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures, [switch]$IncludeInventoryNetFixtures, [switch]$IncludeInventoryChangedFixtures, [switch]$IncludeD2Research, [switch]$IncludeD2Fixtures, [switch]$IncludeD3Fixtures, [switch]$IncludeB2Fixtures)
 $ErrorActionPreference = 'Stop'
+if ($IncludeInventoryChangedFixtures -and ($IncludeInventoryNetFixtures -or $IncludeC1Fixtures -or $IncludeD2Research -or $IncludeD2Fixtures -or $IncludeD3Fixtures -or $IncludeB2Fixtures)) {
+    throw '[CarbonLuau:Package] Select public C3 fixture exclusively'
+}
+if ($IncludeInventoryNetFixtures -and ($IncludeC1Fixtures -or $IncludeD2Research -or $IncludeD2Fixtures -or $IncludeD3Fixtures -or $IncludeB2Fixtures)) {
+    throw '[CarbonLuau:Package] Select private C2 fixture exclusively'
+}
 if ($IncludeB2Fixtures) { $IncludeD3Fixtures = $true }
 if ($IncludeD3Fixtures) {
     if ($IncludeD2Research) { throw '[CarbonLuau:Package] Public qualification is not the standalone research fixture' }
@@ -84,6 +90,12 @@ try {
         }
         if ($IncludeC1Fixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.PlayerInventoryFixtures.cs') 'CarbonLuau.PlayerInventoryFixtures.cs'
+        }
+        if ($IncludeInventoryNetFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.InventoryNetChangeFixtures.cs') 'CarbonLuau.InventoryNetChangeFixtures.cs'
+        }
+        if ($IncludeInventoryChangedFixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.InventoryChangedPublicFixtures.cs') 'CarbonLuau.InventoryChangedPublicFixtures.cs'
         }
         if ($IncludeD2Research -or $IncludeD2Fixtures) {
             if ($IncludeC1Fixtures) { throw '[CarbonLuau:Package] Select C1 or D2 research fixture exclusively' }

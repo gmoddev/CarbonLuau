@@ -32,6 +32,7 @@ namespace Carbon.Plugins
                 if (Current != null) {
                     Current.RunEntityDestroyedFrame();
                     Current.RunEntityDiscoveryFrame();
+                    Current.RunInventorySampleFrame();
                 }
             }
             private void OnDestroy()

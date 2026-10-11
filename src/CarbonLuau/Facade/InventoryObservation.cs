@@ -7,9 +7,12 @@ namespace Carbon.Plugins
         public sealed class ItemDirectory
         {
             private readonly Func<string, object> Lookup;
+            internal readonly Func<object, string> Describe;
             private readonly int Owner = System.Threading.Thread.CurrentThread.ManagedThreadId;
             public ItemDirectory(Func<string, object> Lookup)
-            { this.Lookup = Lookup ?? throw new ArgumentNullException("Lookup"); }
+                : this(Lookup, null) { }
+            internal ItemDirectory(Func<string, object> Lookup, Func<object, string> Describe)
+            { this.Lookup = Lookup ?? throw new ArgumentNullException("Lookup"); this.Describe = Describe; }
             public object Resolve(string ShortName)
             {
                 if (System.Threading.Thread.CurrentThread.ManagedThreadId != Owner)
@@ -64,6 +67,24 @@ namespace Carbon.Plugins
             private static long Observe(PhysicalInventorySource Source, object Definition, long Threshold)
             {
                 if (Source == null || Definition == null) throw new FacadeException("inventory observation is unavailable");
+                var Containers = ContainersForObservation(Source);
+                long Total = 0;
+                foreach (PhysicalInventoryContainer Container in Containers) for (int Index = 0; Index < Container.StackCount; ++Index) {
+                    PhysicalInventoryStack Stack = Container.Read(Index);
+                    if (!Accepted(Stack, Container) || !Object.ReferenceEquals(Stack.Definition, Definition)) continue;
+                    try { Total = checked(Total + Stack.Amount); }
+                    catch (OverflowException) { throw new FacadeException("physical item quantity exceeds exact integer range"); }
+                    if (Total > FacadePolicy.MaxExactLuauInteger)
+                        throw new FacadeException("physical item quantity exceeds exact integer range");
+                    if (Threshold != 0 && Total >= Threshold) return Total;
+                }
+                return Total;
+            }
+            private static bool Accepted(PhysicalInventoryStack Stack, PhysicalInventoryContainer Container)
+            { return Stack.Valid && Stack.Amount > 0 && Object.ReferenceEquals(Stack.Parent, Container.Identity); }
+            private static PhysicalInventoryContainer[] ContainersForObservation(PhysicalInventorySource Source)
+            {
+                if (Source == null) throw new FacadeException("inventory observation is unavailable");
                 var Containers = new[] {Source.Main, Source.Belt, Source.Wear};
                 int Inspected = 0;
                 foreach (PhysicalInventoryContainer Container in Containers) {
@@ -74,18 +95,28 @@ namespace Carbon.Plugins
                     if (Inspected > FacadePolicy.InventoryStacks)
                         throw new FacadeException("Player inventory exceeds 128-stack inspection bound");
                 }
-                long Total = 0;
-                foreach (PhysicalInventoryContainer Container in Containers) for (int Index = 0; Index < Container.StackCount; ++Index) {
-                    PhysicalInventoryStack Stack = Container.Read(Index);
-                    if (!Stack.Valid || Stack.Amount <= 0 || !Object.ReferenceEquals(Stack.Parent, Container.Identity) ||
-                        !Object.ReferenceEquals(Stack.Definition, Definition)) continue;
-                    try { Total = checked(Total + Stack.Amount); }
-                    catch (OverflowException) { throw new FacadeException("physical item quantity exceeds exact integer range"); }
-                    if (Total > FacadePolicy.MaxExactLuauInteger)
-                        throw new FacadeException("physical item quantity exceeds exact integer range");
-                    if (Threshold != 0 && Total >= Threshold) return Total;
-                }
-                return Total;
+                return Containers;
+            }
+            // C2 PRIVATE sampled candidate. Same D18 physical acceptance, not a
+            // completed-operation fence or a second inventory implementation.
+            internal static InventoryQuantitySnapshot Snapshot(PhysicalInventorySource Source, Func<object, string> ShortName, Func<string, object> Resolve)
+            {
+                if (ShortName == null || Resolve == null) throw new FacadeException("inventory observation is unavailable");
+                var Containers = ContainersForObservation(Source);
+                var Result = new InventoryQuantitySnapshot();
+                // Definition references are operation-local, never retained by a snapshot.
+                var Definitions = new object[FacadePolicy.InventoryStacks];
+                foreach (PhysicalInventoryContainer Container in Containers)
+                    for (int Index = 0; Index < Container.StackCount; Index++) {
+                        PhysicalInventoryStack Stack = Container.Read(Index);
+                        if (!Accepted(Stack, Container)) continue;
+                        if (Stack.Definition == null) throw new FacadeException("invalid inventory item definition");
+                        string Name = ShortName(Stack.Definition);
+                        FacadePolicy.ItemShortName(Name);
+                        if (!Object.ReferenceEquals(Stack.Definition, Resolve(Name))) continue;
+                        Result.Add(Name, Stack.Definition, Stack.Amount, Definitions);
+                    }
+                return Result;
             }
             internal static void ValidateMutationCapacity(PhysicalInventorySource Source)
             {

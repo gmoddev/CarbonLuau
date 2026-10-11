@@ -422,6 +422,18 @@
   "@carbonluau/globaltype/ImageSource.UserId": {
     "documentation": "Immutable UserId."
   },
+  "@carbonluau/globaltype/InventoryChangeContext.After": {
+    "documentation": "Latest accepted sampled physical quantity, an exact integer from zero through 2^53-1."
+  },
+  "@carbonluau/globaltype/InventoryChangeContext.Before": {
+    "documentation": "Previous accepted sampled physical quantity, an exact integer from zero through 2^53-1."
+  },
+  "@carbonluau/globaltype/InventoryChangeContext.Delta": {
+    "documentation": "Nonzero exact signed After minus Before, bounded by plus or minus 2^53-1; no causal receipt."
+  },
+  "@carbonluau/globaltype/InventoryChangeContext.Item": {
+    "documentation": "Canonical item shortname from the accepted physical observations."
+  },
   "@carbonluau/globaltype/Items.Exists": {
     "documentation": "Check whether a canonical item short name exists."
   },
@@ -484,6 +496,9 @@
   },
   "@carbonluau/globaltype/PlayerInventory.HasItem": {
     "documentation": "Same bounded physical HasItem as Player; omitted Amount defaults to one."
+  },
+  "@carbonluau/globaltype/PlayerInventory.ItemChanged": {
+    "documentation": "Future sampled net changes between accepted physical snapshots; intermediate transfers may appear and balanced changes may be missed. No completed-operation guarantee, attribution or history replay."
   },
   "@carbonluau/globaltype/PlayerSpawnContext.Position": {
     "documentation": "Optional root world position observed at completed spawn."

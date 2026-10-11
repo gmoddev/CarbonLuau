@@ -15,6 +15,7 @@ namespace Carbon.Plugins
             private bool GameplayDemandDirty = true;
             private int GameplayDiedDemand, GameplaySpawnedDemand, GameplayEntitySpawnedDemand, GameplayEntityDestroyedDemand;
             private int GameplayEntityDiedDemand;
+            private int GameplayInventoryChangedDemand;
             private long GameplayFanoutCursor;
             internal ulong DestroyedListenerVersion { get; private set; }
             internal void InvalidateGameplayDemand() {
@@ -27,6 +28,7 @@ namespace Carbon.Plugins
                 if (GameplayDemandDirty) {
                     GameplayDiedDemand = GameplaySpawnedDemand = GameplayEntitySpawnedDemand = GameplayEntityDestroyedDemand = 0;
                     GameplayEntityDiedDemand = 0;
+                    GameplayInventoryChangedDemand = 0;
                     if (Active != null && Active.Active && !Active.Disposed) {
                         if (!GameplayEvents.Visit()) return false;
                         GameplayDiedDemand += Active.GameplayDiedListeners;
@@ -34,6 +36,7 @@ namespace Carbon.Plugins
                         GameplayEntitySpawnedDemand += Active.GameplayEntitySpawnedListeners;
                         GameplayEntityDestroyedDemand += Active.GameplayEntityDestroyedListeners;
                         GameplayEntityDiedDemand += Active.GameplayEntityDiedListeners;
+                        GameplayInventoryChangedDemand += Active.GameplayInventoryChangedListeners;
                     }
                     foreach (FacadeSession Session in Addons.Values) if (Session.Active && !Session.Disposed) {
                         if (!GameplayEvents.Visit()) return false;
@@ -42,13 +45,14 @@ namespace Carbon.Plugins
                         GameplayEntitySpawnedDemand += Session.GameplayEntitySpawnedListeners;
                         GameplayEntityDestroyedDemand += Session.GameplayEntityDestroyedListeners;
                         GameplayEntityDiedDemand += Session.GameplayEntityDiedListeners;
+                        GameplayInventoryChangedDemand += Session.GameplayInventoryChangedListeners;
                     }
                     GameplayDemandDirty = false;
                 }
                 return Kind == "died" ? GameplayDiedDemand != 0 : Kind == "spawned" ? GameplaySpawnedDemand != 0 :
                     Kind == "entityspawned" ? GameplayEntitySpawnedDemand != 0 :
                     Kind == "entitydestroyed" ? GameplayEntityDestroyedDemand != 0 :
-                    Kind == "entitydied" && GameplayEntityDiedDemand != 0;
+                    Kind == "entitydied" ? GameplayEntityDiedDemand != 0 : Kind == "itemchanged" && GameplayInventoryChangedDemand != 0;
             }
             // Snapshot data only; no host object or callback is retained here.
             internal void GameplayEvent(string Kind, string Token, string UserId, string Name,
@@ -121,6 +125,7 @@ namespace Carbon.Plugins
             internal int GameplayEntitySpawnedListeners { get; private set; }
             internal int GameplayEntityDestroyedListeners { get; private set; }
             internal int GameplayEntityDiedListeners { get; private set; }
+            internal int GameplayInventoryChangedListeners { get; private set; }
             internal ulong GameplayDestroyedListenerVersion { get; private set; }
             internal void PublishGameplayListenerBoundary()
             { GameplayDestroyedListenerVersion = World.DestroyedListenerVersion; }
@@ -131,6 +136,7 @@ namespace Carbon.Plugins
             {
                 GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = GameplayEntityDestroyedListeners = 0;
                 GameplayEntityDiedListeners = 0;
+                GameplayInventoryChangedListeners = 0;
                 var Published = FirstPublication == null ? Listeners : FirstPublication.Listeners;
                 foreach (string Kind in Published.Values) {
                     if (Kind == "died") GameplayDiedListeners++;
@@ -138,6 +144,7 @@ namespace Carbon.Plugins
                     else if (Kind == "entityspawned") GameplayEntitySpawnedListeners++;
                     else if (Kind == "entitydestroyed") GameplayEntityDestroyedListeners++;
                     else if (Kind == "entitydied") GameplayEntityDiedListeners++;
+                    else if (Kind == "itemchanged") GameplayInventoryChangedListeners++;
                 }
                 World.InvalidateGameplayDemand();
                 GameplayDestroyedListenerVersion = World.DestroyedListenerVersion;

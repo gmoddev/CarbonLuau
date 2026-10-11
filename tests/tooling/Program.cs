@@ -102,6 +102,8 @@ InvalidLoot = (JObject)LootCatalog.DeepClone();
 Reject(() => ApiCatalog.Validate(InvalidLoot), "D3 unknown drop-entry field type accepted");
 Console.WriteLine("[CarbonLuau:ToolingTests] PASS D3 namespace, nominal enum, entry alias, exact signature, discovery and negative drift; in-memory metadata only");
 if (Args.Contains("--d3-sidecar")) return;
+InventoryChangedTypes.Run(Catalog, Bootstrap, Release, Native);
+if (Args.Contains("--c3-sidecar")) return;
 Check(Definitions == File.ReadAllText(Path.Combine(Root, "generated/carbonluau.d.luau")).Replace("\r\n", "\n"), "definition golden drift");
 CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
 Check(JToken.DeepEquals(Catalog, ApiCatalog.Build(Bootstrap, Release, Native)), "catalog repeat/culture determinism");
@@ -137,8 +139,8 @@ var EntityTypes = new[] { "Workspace", "Entity", "EntityDiscoveryOptions" };
 foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catalog["Members"]!)) {
     bool Persistence = PersistenceTypes.Contains((string?)Declaration["Id"]) || PersistenceTypes.Contains((string?)Declaration["OwnerId"]);
     bool Entity = EntityTypes.Contains((string?)Declaration["Id"]) || EntityTypes.Contains((string?)Declaration["OwnerId"]);
-    bool GameplayA = new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "EntityDeathContext", "PlayerInventory" }.Contains((string?)Declaration["Id"]) ||
-        new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "EntityDeathContext", "PlayerInventory" }.Contains((string?)Declaration["OwnerId"]) ||
+    bool GameplayA = new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "EntityDeathContext", "PlayerInventory", "InventoryChangeContext" }.Contains((string?)Declaration["Id"]) ||
+        new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "EntityDeathContext", "PlayerInventory", "InventoryChangeContext" }.Contains((string?)Declaration["OwnerId"]) ||
         new[] { "Players.PlayerDied", "Players.PlayerSpawned", "Workspace.EntitySpawned", "Workspace.EntityDestroyed", "Workspace.EntityDied", "Player.GetInventory" }.Contains((string?)Declaration["Id"]);
     bool Loot = new[] { "Enum", "DropMode", "Loot", "LootDropEntry" }.Contains((string?)Declaration["Id"]) ||
         new[] { "Enum", "DropMode", "Loot" }.Contains((string?)Declaration["OwnerId"]);

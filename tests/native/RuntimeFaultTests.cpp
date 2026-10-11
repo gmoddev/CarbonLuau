@@ -6,6 +6,7 @@
 #include "Luau/Common.h"
 #include "GameplayPublicationTests.hpp"
 #include "GameplayEventTests.hpp"
+#include "InventoryChangedTests.hpp"
 
 using namespace CarbonLuau::Runtime;
 
@@ -238,5 +239,6 @@ int main(int ArgumentCount, char** Arguments)
     }
     CarbonLuau::GameplayPublicationTests::RunFaults();
     CarbonLuau::GameplayEventTests::RunFaults();
+    CarbonLuau::InventoryChangedTests::RunFaults();
     std::printf("[CarbonLuau:FaultTest] PASS: realloc growth/shrink/failure/overflow/free; 256 init fault positions (%d failed); 64 load; 768 script/module/callback + 1024 facade fault positions; facade event timeout; zero retained allocator bytes\n", Failed);
 }

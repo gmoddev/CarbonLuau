@@ -1355,9 +1355,28 @@ subscription. Each read revalidates that authority and delegates to the existing
 D18 CountItem/HasItem adapter; no new scanner, mutation aliases or global Inventory
 service. A facade escaping failed candidate/module publication remains stale;
 sharing never transfers ownership. Reconnect with the same account cannot retarget
-it. Existing Player methods and GiveItemBehavior remain unchanged. Inventory
-Signals require separately qualified C2 completed net-quantity observation.
+it. Existing Player methods and GiveItemBehavior remain unchanged. Gameplay C3
+additively accepts only `PlayerInventory.ItemChanged(Context)` as sampled net
+observation, not completed-operation tracking; ItemAdded/ItemRemoved remain deferred.
 See [C1 qualification](GameplayC1-Validation.md).
+
+Private C2 sampled reconciliation is recorded in
+[GameplayC2-Validation.md](GameplayC2-Validation.md). It shares this physical
+predicate and exact definition/connection authority, but a difference between
+accepted samples is not proof of a completed host inventory operation. It
+introduced no public Signal. C3's explicit sampled contract does not inherit
+universal operation coverage or causal attribution from the private candidate.
+ItemChanged uses an immutable ordinary `{Item, Before, After, Delta}` table,
+where Delta equals After minus Before for two accepted physical observations.
+Initial/new publication demand establishes a baseline without history. Intermediate
+transfers may appear as decreases/increases; balanced changes between samples may
+be missed. Failed snapshots invalidate the interval; overload drops and advances or
+rebaselines safely, never rewinds or replays. Registration/rollback, defining owner,
+original D11 connection and fresh callback admission reuse D7/D10/D23 machinery.
+The shared 256 pending cap includes managed/native-held inventory reservations;
+exact-owner refunds remain held until consumption/teardown. No synchronous Luau
+entry, new scanner, mutation API or independent event scheduler is introduced.
+See [C3 qualification](GameplayC3-Validation.md) for platform status and numeric policy.
 
 `Vector3` is a project-owned immutable value with no host, Player or domain
 lifetime. X/Y/Z are finite Luau numbers; every stored component and arithmetic

@@ -311,6 +311,7 @@ local PlayerMethods = {}
 local InventoryRecords = setmetatable({}, {__mode = "k"})
 local InventoryCache = setmetatable({}, {__mode = "kv"})
 local PlayerInventoryMethods = {}
+local GenericSignal
 local function InventoryRecord(Inventory)
     local Value = InventoryRecords[Inventory]
     if Value == nil then Fail("invalid PlayerInventory") end
@@ -318,7 +319,14 @@ local function InventoryRecord(Inventory)
 end
 local InventoryMeta = table.freeze({
     __tostring = function() return "PlayerInventory" end,
-    __index = function(_, Key)
+    __index = function(Inventory, Key)
+-- @carbonluau-api {"Owner":"PlayerInventory","Name":"ItemChanged","Kind":"Signal","Args":[["Context","InventoryChangeContext"]],"Returns":[],"Summary":"Future sampled net changes between accepted physical snapshots; intermediate transfers may appear and balanced changes may be missed. No completed-operation guarantee, attribution or history replay.","SinceApi":"0.6.5-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"        if Key == \"ItemChanged\" then"}
+        if Key == "ItemChanged" then
+            local Value = InventoryRecord(Inventory)
+            Host(41, Value.Token, Value.UserId, Value.Publication, "signal")
+            if Value.ItemChanged == nil then Value.ItemChanged = GenericSignal("itemchanged", Value) end
+            return Value.ItemChanged
+        end
         local Method = PlayerInventoryMethods[Key]
         if Method == nil then Fail("unknown PlayerInventory member") end
         return Method
@@ -390,11 +398,17 @@ local function GetPlayer(Token, UserId, Name)
     Proxies[Token] = Player
     return Player
 end
-local function Signal(Kind)
+GenericSignal = function(Kind, BoundTarget)
     local Value = {}
     function Value.Connect(Self, Callback)
         if Self ~= Value or type(Callback) ~= "function" then Fail("Signal:Connect expects a function") end
-        local Id = Host(6, Kind)[1]
+        local Id
+        if BoundTarget ~= nil then
+            Host(41, BoundTarget.Token, BoundTarget.UserId, BoundTarget.Publication, "signal")
+            Id = Host(6, Kind, BoundTarget.Token, BoundTarget.UserId, BoundTarget.Publication)[1]
+        else
+            Id = Host(6, Kind)[1]
+        end
         Callbacks.Roots[Id] = Callback
         local Connection = {}
         function Connection.Disconnect(SelfConnection)
@@ -406,6 +420,7 @@ local function Signal(Kind)
     end
     return table.freeze(Value)
 end
+local Signal = GenericSignal
 local Players = {PlayerAdded = Signal("added"), PlayerRemoving = Signal("removing")}
 -- @carbonluau-api {"Owner":"Players","Name":"PlayerDied","Kind":"Signal","Args":[["Player","Player"],["Context","PlayerDeathContext"]],"Returns":[],"Summary":"Completed terminal death of an exact tracked human life, not a wounded or vetoed attempt.","SinceApi":"0.6.5-experimental","Binding":"Players.PlayerDied = Signal(\"died\")"}
 Players.PlayerDied = Signal("died")
@@ -815,6 +830,20 @@ table.freeze(Game)
 local function Dispatch(Fields)
     local Callback = Callbacks.Roots[Fields[2]]
     if not Callback then return end
+    if Fields[1] == "itemchanged" then
+-- @carbonluau-api {"Type":"InventoryChangeContext","Kind":"Class","Summary":"Frozen sampled physical net change; intermediate transfers may be observed, balanced changes may be missed, and no operation attribution or replay is promised.","Representation":"Record","SinceApi":"0.6.5-experimental","Qualification":"Experimental","Preview":"Unavailable"}
+        local InventoryContext = {}
+-- @carbonluau-api {"Owner":"InventoryChangeContext","Name":"Item","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Canonical item shortname from the accepted physical observations.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"        InventoryContext.Item = Fields[5]"}
+        InventoryContext.Item = Fields[5]
+-- @carbonluau-api {"Owner":"InventoryChangeContext","Name":"Before","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Previous accepted sampled physical quantity, an exact integer from zero through 2^53-1.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"        InventoryContext.Before = tonumber(Fields[7])"}
+        InventoryContext.Before = tonumber(Fields[7])
+-- @carbonluau-api {"Owner":"InventoryChangeContext","Name":"After","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Latest accepted sampled physical quantity, an exact integer from zero through 2^53-1.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"        InventoryContext.After = tonumber(Fields[8])"}
+        InventoryContext.After = tonumber(Fields[8])
+-- @carbonluau-api {"Owner":"InventoryChangeContext","Name":"Delta","Kind":"Property","ValueType":"number","Writable":false,"Summary":"Nonzero exact signed After minus Before, bounded by plus or minus 2^53-1; no causal receipt.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"        InventoryContext.Delta = tonumber(Fields[9])"}
+        InventoryContext.Delta = tonumber(Fields[9])
+        Callback(table.freeze(InventoryContext))
+        return
+    end
     if Fields[1] == "entityspawned" then
         Callback(GetEntity({Fields[7], Fields[3], Fields[4], Fields[8]}, 1))
         return
