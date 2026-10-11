@@ -43,6 +43,7 @@ namespace Carbon.Plugins
                         }
                         return Activation;
                     }
+                    if (Facade != null) Facade.PreflightLootRules(Previous == null ? null : Previous.FacadeSession, Candidate.FacadeSession);
                     Candidate.Commit();
                     if (Facade != null) Facade.CommitAddon(Previous == null ? null : Previous.FacadeSession, Candidate.FacadeSession);
                     AddonDomains.Add(Candidate.DomainLifetimeId, Candidate);

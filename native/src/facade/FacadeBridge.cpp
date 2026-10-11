@@ -1,6 +1,7 @@
 #include "../runtime/RuntimeInternal.hpp"
 #include "../scripts/Compiler.hpp"
 #include "Bootstrap.h"
+#include "../../third_party/luau/VM/src/lobject.h"
 #include <charconv>
 #include <new>
 #include <string_view>
@@ -150,7 +151,7 @@ int HostPrimitive(lua_State* State)
     if (!Owner.Host || !Owner.HostBuffer) luaL_error(State, "host unavailable for domain");
     if (lua_type(State, 1) != LUA_TNUMBER) luaL_error(State, "invalid host operation");
     double Value = lua_tonumber(State, 1);
-    if (Value < 1 || Value > 41 || Value == 31 || Value == 32 || Value == 33 ||
+    if (Value < 1 || Value > 42 || Value == 31 || Value == 32 || Value == 33 ||
         (Value >= 36 && Value <= 39) ||
         Value != std::floor(Value)) luaL_error(State, "invalid host operation");
     uint32_t Operation = uint32_t(Value);
@@ -163,7 +164,7 @@ int HostPrimitive(lua_State* State)
                 : Operation == 29 ? "TakeItem requires a committed domain; use task.defer for startup mutation"
                 : "GiveItem requires a committed domain; use task.defer for startup mutation");
     }
-    if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8 || Operation == 21 || Operation == 34 || Operation == 40) && !Runtime.Publication->Uses(&Owner)) {
+    if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8 || Operation == 21 || Operation == 34 || Operation == 40 || Operation == 42) && !Runtime.Publication->Uses(&Owner)) {
         if (!ControlPublication(Runtime, Owner, 10)) luaL_error(State, "host publication setup failed");
         Runtime.Publication->Facades.push_back(&Owner);
     }
@@ -195,6 +196,20 @@ int MakeFacadeUserdata(lua_State* State)
     lua_newuserdata(State, 0); lua_pushvalue(State, 1); lua_setmetatable(State, -2); return 1;
 }
 
+int CheckLootTable(lua_State* State)
+{
+    // The exact pinned VM exposes the collectable Table identity via
+    // lua_topointer. Only inspect its scalar capacities while owner-thread
+    // execution roots the argument; no callback, allocation or pointer escape.
+    // next can scan empty backing slots, so a key-count cap alone is insufficient.
+    if (lua_gettop(State) != 1 || lua_type(State, 1) != LUA_TTABLE)
+        luaL_error(State, "expected plain loot declaration table");
+    const auto* Value = static_cast<const LuaTable*>(lua_topointer(State, 1));
+    if (!Value || Value->sizearray > 64 || Value->lsizenode > 6)
+        luaL_error(State, "loot declaration table capacity exceeds limit; use a small fresh table");
+    return 0;
+}
+
 struct FacadeInput { Vm* Runtime; Domain* Owner; const std::string* Bytecode; };
 int InstallFacade(lua_State* State)
 {
@@ -208,7 +223,8 @@ int InstallFacade(lua_State* State)
     InstallStorage(State, Owner);
     if (Runtime.EntityIdentities == LUA_NOREF) lua_pushnil(State); else lua_getref(State, Runtime.EntityIdentities);
     InstallDiscovery(State, Owner);
-    lua_call(State, 6, 6);
+    lua_pushcfunction(State, CheckLootTable, "private loot table bound");
+    lua_call(State, 7, 6);
     Owner.FacadeCallbackRoots = lua_ref(State, -1); lua_pop(State, 1);
     if (Runtime.EntityIdentities == LUA_NOREF) Runtime.EntityIdentities = lua_ref(State, -1);
     lua_pop(State, 1);

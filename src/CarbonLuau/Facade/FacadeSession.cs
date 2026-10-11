@@ -50,6 +50,7 @@ namespace Carbon.Plugins
             public void Commit(FacadeSession Next)
             {
                 Players.CheckOwner();
+                PreflightLootRules(Active, Next);
                 Registrar.Publish(Active, Next);
                 if (Active != null) Active.Active = false;
                 Active = Next;
@@ -59,7 +60,12 @@ namespace Carbon.Plugins
             }
             public void CommitAddon(FacadeSession Previous, FacadeSession Next)
             {
-                Players.CheckOwner(); Registrar.Publish(Previous, Next);
+                Players.CheckOwner();
+                if (Next != null && Next.HasLootRule && Previous != null &&
+                    (!Addons.ContainsKey(Previous.DomainLifetimeId) || !Object.ReferenceEquals(Addons[Previous.DomainLifetimeId], Previous)))
+                    throw new FacadeException("stale outgoing addon loot rule owner");
+                PreflightLootRules(Previous, Next);
+                Registrar.Publish(Previous, Next);
                 if (Previous != null) {
                     Addons.Remove(Previous.DomainLifetimeId); Previous.Active = false; Previous.Disposed = true; Previous.Clear();
                 }
@@ -158,12 +164,14 @@ namespace Carbon.Plugins
             {
                 public readonly SortedDictionary<ulong, string> Listeners;
                 public readonly SortedDictionary<string, ScriptCommand> Commands;
+                public readonly SortedDictionary<string, LootDropRule> LootRules;
                 public readonly PublicationWitness Witness;
                 public PublicationCheckpoint(SortedDictionary<ulong, string> Listeners, SortedDictionary<string, ScriptCommand> Commands,
-                    PublicationWitness Witness)
+                    SortedDictionary<string, LootDropRule> LootRules, PublicationWitness Witness)
                 {
                     this.Listeners = new SortedDictionary<ulong, string>(Listeners);
                     this.Commands = new SortedDictionary<string, ScriptCommand>(Commands, StringComparer.Ordinal);
+                    this.LootRules = new SortedDictionary<string, LootDropRule>(LootRules, StringComparer.Ordinal);
                     this.Witness = Witness;
                 }
             }
@@ -193,13 +201,17 @@ namespace Carbon.Plugins
             public int ListenerCount { get { return Listeners.Count; } }
             public readonly NativeRuntime.HostDelegate Callback;
             internal ulong FacadeVm;
+            // Private fixtures may stage during real candidate construction.
+            // Production erases this declaration/call when unimplemented.
+            partial void StageLootQualification();
             public FacadeSession(FacadeWorld World, long Generation, int Capacity)
                 : this(World, Generation, Generation, Capacity) { }
             public FacadeSession(FacadeWorld World, long VmGenerationId, long DomainLifetimeId, int Capacity)
             { this.World = World; this.VmGenerationId = VmGenerationId; this.DomainLifetimeId = DomainLifetimeId;
                 this.Capacity = Math.Min(Capacity, FacadePolicy.PendingEvents);
                 RootPublication = new PublicationWitness(this, 1, null);
-                Gui = new GuiRetainedRegistry(World.Gui, checked((ulong)VmGenerationId), checked((ulong)DomainLifetimeId)); Callback = HostCall; }
+                Gui = new GuiRetainedRegistry(World.Gui, checked((ulong)VmGenerationId), checked((ulong)DomainLifetimeId)); Callback = HostCall;
+                StageLootQualification(); }
             internal PublicationWitness CapturePublicationWitness()
             {
                 World.Players.CheckOwner();
@@ -337,7 +349,7 @@ namespace Carbon.Plugins
                 ClearPendingGameplay(); World.GameplayEvents.Cancel(this);
                 RootPublication.Retired = true;
                 foreach (PublicationCheckpoint Checkpoint in Publications) Checkpoint.Witness.Retired = true;
-                Pending.Clear(); Listeners.Clear(); Commands.Clear(); Publications.Clear();
+                Pending.Clear(); Listeners.Clear(); Commands.Clear(); LootRules.Clear(); Publications.Clear();
                 EntityWitnesses.Clear(); ClearStorageHints(); Gui.Dispose();
                 FirstPublication = null; GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = GameplayEntityDestroyedListeners = 0;
                 World.InvalidateGameplayDemand();
@@ -390,7 +402,7 @@ namespace Carbon.Plugins
                     if (NextPublicationToken == ulong.MaxValue) throw new FacadeException("publication lifetime exhausted");
                     PublicationWitness Parent = Publications.Count == 0 ? RootPublication : Publications.Peek().Witness;
                     PublicationWitness Witness = new PublicationWitness(this, ++NextPublicationToken, Parent);
-                    PublicationCheckpoint Checkpoint = new PublicationCheckpoint(Listeners, Commands, Witness);
+                    PublicationCheckpoint Checkpoint = new PublicationCheckpoint(Listeners, Commands, LootRules, Witness);
                     Gui.BeginPublication();
                     try { Publications.Push(Checkpoint); if (Publications.Count == 1) FirstPublication = Checkpoint; }
                     catch { Gui.RollbackPublication(); throw; }
@@ -412,6 +424,7 @@ namespace Carbon.Plugins
                     PruneEntityWitnesses();
                     Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
                     Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
+                    LootRules = Checkpoint.LootRules;
                     if (Publications.Count == 0) FirstPublication = null;
                     RefreshGameplayListeners();
                     return new string[0];
@@ -464,6 +477,11 @@ namespace Carbon.Plugins
                 if (Code == 37) {
                     if (Fields.Length != 1) throw new FacadeException("InvalidDiscovery");
                     if (World.Discovery != null) World.Discovery.Release(this, Fields[0]);
+                    return new string[0];
+                }
+                if (Code == 42) {
+                    if (Fields.Length != 2) throw new FacadeException("invalid loot rule declaration arguments");
+                    StageLootRule(Fields[0], LootRulePolicy.Parse(Fields[1]));
                     return new string[0];
                 }
                 int Expected = Code == 1 ? 0 : (Code == 3 || (Code >= 22 && Code <= 24)) ? 2 :

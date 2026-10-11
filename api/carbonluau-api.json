@@ -147,6 +147,18 @@
       "Preview": "Unavailable"
     },
     {
+      "Id": "DropMode",
+      "Name": "DropMode",
+      "Kind": "Enum",
+      "Summary": "Immutable qualified destruction-payout policy identity.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Pure"
+    },
+    {
       "Id": "Entity",
       "Name": "Entity",
       "Kind": "Class",
@@ -184,6 +196,18 @@
       "Preview": "Unavailable",
       "Representation": "Alias",
       "TypeExpression": "{Prefab: string?, Limit: number?}"
+    },
+    {
+      "Id": "Enum",
+      "Name": "Enum",
+      "Kind": "Global",
+      "Summary": "Read-only namespace of explicitly registered typed enums.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Pure"
     },
     {
       "Id": "Frame",
@@ -320,6 +344,32 @@
         "Qualification": "Experimental"
       },
       "Preview": "Unavailable"
+    },
+    {
+      "Id": "Loot",
+      "Name": "Loot",
+      "Kind": "Service",
+      "Summary": "Initialization-only qualified destruction-payout declarations.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "HostMutation"
+    },
+    {
+      "Id": "LootDropEntry",
+      "Name": "LootDropEntry",
+      "Kind": "Value",
+      "Summary": "Plain declaration record: qualified Item and inclusive integer amounts 0..1000 with Min <= Max.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Alias",
+      "TypeExpression": "{Item: string, Min: number, Max: number}"
     },
     {
       "Id": "PersistedValue",
@@ -1058,6 +1108,21 @@
       ]
     },
     {
+      "Id": "DropMode.Replace",
+      "Name": "Replace",
+      "OwnerId": "DropMode",
+      "Kind": "Singleton",
+      "Summary": "Replace only eligible qualified destruction-time payouts; no physical rollback guarantee.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "DropMode",
+      "Writable": false
+    },
+    {
       "Id": "Entity.Id",
       "Name": "Id",
       "OwnerId": "Entity",
@@ -1145,6 +1210,21 @@
         "Qualification": "Experimental"
       },
       "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "Enum.DropMode",
+      "Name": "DropMode",
+      "OwnerId": "Enum",
+      "Kind": "Property",
+      "Summary": "Namespace containing the immutable Replace policy value.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "DropMode",
       "Writable": false
     },
     {
@@ -1684,6 +1764,19 @@
           ],
           "Returns": [
             "Items"
+          ]
+        },
+        {
+          "Parameters": [
+            {
+              "Name": "Name",
+              "Type": "\"Loot\"",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "Loot"
           ]
         },
         {
@@ -3786,6 +3879,44 @@
           "Returns": [
             "boolean"
           ]
+        }
+      ]
+    },
+    {
+      "Id": "Loot.RegisterDropRule",
+      "Name": "RegisterDropRule",
+      "OwnerId": "Loot",
+      "Kind": "Method",
+      "Summary": "Initialization-only copied declaration, staged until successful publication. One qualified prefab and one global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result.",
+      "Preview": "HostMutation",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Prefab",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Mode",
+              "Type": "DropMode",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Drops",
+              "Type": "{LootDropEntry}",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
         }
       ]
     },

@@ -26,14 +26,21 @@ namespace CarbonLuau.Core
             foreach (string Name in Types.Keys.OrderBy(Value => Value, StringComparer.Ordinal))
                 WriteType(Name, Types, Members, Written, Result);
             foreach (string Name in Types.Keys.OrderBy(Value => Value, StringComparer.Ordinal)) {
+                // A Global's readonly enum property is a namespace table, not an
+                // enum userdata. Its singletons stay typed as the nominal enum;
+                // a nested enum does not also acquire a standalone global.
+                if (Members.Any(Value => NamespaceEnum(Value, Types, Members) == Name)) continue;
                 var Static = Members.Where(Value => (string)Value["OwnerId"] == Name &&
-                    ((string)Value["Kind"] == "Constructor" || (string)Value["Kind"] == "Singleton")).ToArray();
+                    ((string)Value["Kind"] == "Constructor" || (string)Value["Kind"] == "Singleton" ||
+                        NamespaceEnum(Value, Types, Members) != null)).ToArray();
                 if (Static.Length == 0) continue;
                 string Global = Name == "Task" ? "task" : Name;
                 Result.Append("declare ").Append(Global).Append(": {\n");
                 foreach (var Member in Static) {
                     Result.Append("    read ").Append((string)Member["Name"]).Append(": ");
-                    if ((string)Member["Kind"] == "Singleton") Result.Append((string)Member["ValueType"]);
+                    string Enum = NamespaceEnum(Member, Types, Members);
+                    if (Enum != null) Result.Append(NamespaceType(Enum, Members));
+                    else if ((string)Member["Kind"] == "Singleton") Result.Append((string)Member["ValueType"]);
                     else Result.Append(FunctionType((JObject)Member["Signatures"][0]));
                     Result.Append(",\n");
                 }
@@ -76,7 +83,9 @@ namespace CarbonLuau.Core
                 if (Kind == "Property" || Kind == "Signal") {
                     Result.Append("    ");
                     if (Kind == "Signal" || !(bool)Member["Writable"]) Result.Append("read ");
-                    Result.Append(MemberName).Append(": ").Append(Kind == "Signal" ? SignalType(Member) : (string)Member["ValueType"]).Append('\n');
+                    string Enum = NamespaceEnum(Member, Types, Members);
+                    Result.Append(MemberName).Append(": ").Append(Enum != null ? NamespaceType(Enum, Members) :
+                        Kind == "Signal" ? SignalType(Member) : (string)Member["ValueType"]).Append('\n');
                     continue;
                 }
                 foreach (JObject Signature in (JArray)Member["Signatures"])
@@ -112,12 +121,40 @@ namespace CarbonLuau.Core
             return "SignalWith<" + (Callbacks.Length == 1 ? Callbacks[0] :
                 String.Join(" & ", Callbacks.Select(Value => "(" + Value + ")"))) + ">";
         }
+        private static string NamespaceEnum(JObject Member, IDictionary<string, JObject> Types, IList<JObject> Members)
+        {
+            string Owner = (string)Member["OwnerId"], ValueType = (string)Member["ValueType"];
+            if ((string)Member["Kind"] != "Property" || (bool?)Member["Writable"] != false ||
+                (string)Types[Owner]["Kind"] != "Global" || ValueType == null || !Types.ContainsKey(ValueType) ||
+                (string)Types[ValueType]["Kind"] != "Enum" ||
+                !Members.Any(Value => (string)Value["OwnerId"] == ValueType && (string)Value["Kind"] == "Singleton")) return null;
+            return ValueType;
+        }
+        private static string NamespaceType(string Enum, IList<JObject> Members)
+        {
+            return "{" + String.Join(", ", Members.Where(Value => (string)Value["OwnerId"] == Enum &&
+                (string)Value["Kind"] == "Singleton").OrderBy(Value => (string)Value["Name"], StringComparer.Ordinal)
+                .Select(Value => "read " + (string)Value["Name"] + ": " + (string)Value["ValueType"])) + "}";
+        }
         public static JObject Documentation(JObject Catalog)
         {
             var Result = new JObject();
-            foreach (JObject Member in (JArray)Catalog["Members"])
-                Result["@carbonluau/" + (((string)Member["Kind"] == "Constructor" || (string)Member["Kind"] == "Singleton") ? "global/" : "globaltype/") +
+            var Types = ((JArray)Catalog["Types"]).Cast<JObject>().ToDictionary(Value => (string)Value["Id"], StringComparer.Ordinal);
+            var Members = ((JArray)Catalog["Members"]).Cast<JObject>().ToList();
+            foreach (JObject Member in Members) {
+                bool Static = (string)Member["Kind"] == "Constructor" || (string)Member["Kind"] == "Singleton";
+                var Namespaces = Members.Where(Value => NamespaceEnum(Value, Types, Members) == (string)Member["OwnerId"]).ToArray();
+                if (Static && Namespaces.Length > 0) {
+                    foreach (var Namespace in Namespaces)
+                        Result["@carbonluau/global/" + (string)Namespace["Id"] + "." + (string)Member["Name"]] =
+                            new JObject { ["documentation"] = (string)Member["Summary"] };
+                    continue;
+                }
+                Result["@carbonluau/" + (Static ? "global/" : "globaltype/") +
                     ((string)Member["OwnerId"] == "Task" ? "task." + (string)Member["Name"] : (string)Member["Id"])] = new JObject { ["documentation"] = (string)Member["Summary"] };
+                if (NamespaceEnum(Member, Types, Members) != null)
+                    Result["@carbonluau/global/" + (string)Member["Id"]] = new JObject { ["documentation"] = (string)Member["Summary"] };
+            }
             return Result;
         }
     }

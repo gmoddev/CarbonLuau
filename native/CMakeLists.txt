@@ -77,7 +77,14 @@ target_link_libraries(carbonluau_storage PRIVATE CarbonLuau.Sqlite)
 add_dependencies(carbonluau_native carbonluau_storage)
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../scripts/bootstrap.luau" CARBONLUAU_BOOTSTRAP)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../scripts/bootstrap.luau")
+# Build-time metadata is not executable facade source. Preserve line breaks for
+# diagnostics while keeping the embedded script beneath the unchanged compiler
+# request ceiling; tooling still reads the complete annotated source directly.
+string(REGEX REPLACE "-- @carbonluau-api[^\n]*" "" CARBONLUAU_BOOTSTRAP "${CARBONLUAU_BOOTSTRAP}")
 string(LENGTH "${CARBONLUAU_BOOTSTRAP}" CARBONLUAU_BOOTSTRAP_REMAINING)
+if(CARBONLUAU_BOOTSTRAP_REMAINING GREATER 65536)
+    message(FATAL_ERROR "Executable bootstrap exceeds the 64-KiB compiler request ceiling")
+endif()
 set(CARBONLUAU_BOOTSTRAP_OFFSET 0)
 set(CARBONLUAU_BOOTSTRAP_LITERALS "")
 while(CARBONLUAU_BOOTSTRAP_REMAINING GREATER 0)

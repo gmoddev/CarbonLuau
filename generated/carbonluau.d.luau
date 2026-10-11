@@ -51,6 +51,9 @@ declare extern type DataStoreService with
     function GetDataStore(self, StoreName: string, Options: DataStoreOptions?): (DataStore)
 end
 
+declare extern type DropMode with
+end
+
 declare extern type Entity with
     read Id: string
     read Position: Vector3
@@ -64,6 +67,10 @@ export type EntityDestroyedContext = {
 }
 
 export type EntityDiscoveryOptions = {Prefab: string?, Limit: number?}
+
+declare extern type Enum with
+    read DropMode: {read Replace: DropMode}
+end
 
 declare extern type GuiNode with
     read ClassName: string
@@ -136,6 +143,7 @@ declare extern type Game with
     function GetService(self, Name: "DataStoreService"): (DataStoreService)
     function GetService(self, Name: "Gui"): (Gui)
     function GetService(self, Name: "Items"): (Items)
+    function GetService(self, Name: "Loot"): (Loot)
     function GetService(self, Name: "Players"): (Players)
     function GetService(self, Name: "Workspace"): (Workspace)
 end
@@ -209,6 +217,12 @@ end
 declare extern type Items with
     function Exists(self, ShortName: string): (boolean)
 end
+
+declare extern type Loot with
+    function RegisterDropRule(self, Prefab: string, Mode: DropMode, Drops: {LootDropEntry}): ()
+end
+
+export type LootDropEntry = {Item: string, Min: number, Max: number}
 
 export type PersistedValue = boolean | number | string | {PersistedValue} | {[string]: PersistedValue}
 
@@ -458,6 +472,10 @@ end
 declare Color3: {
     read fromRGB: (R: number, G: number, B: number) -> (Color3),
     read new: (R: number, G: number, B: number) -> (Color3),
+}
+
+declare Enum: {
+    read DropMode: {read Replace: DropMode},
 }
 
 declare GiveItemBehavior: {

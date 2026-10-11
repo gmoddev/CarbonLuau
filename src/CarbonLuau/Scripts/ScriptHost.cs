@@ -105,6 +105,7 @@ namespace Carbon.Plugins
                         return Result;
                     }
                     SchedulerInfo PreviousInfo = Vm.Scheduler;
+                    if (Facade != null) Facade.PreflightLootRules(Current == null ? null : Current.FacadeSession, Candidate.FacadeSession);
                     Candidate.Commit();
                     if (Facade != null) Facade.Commit(Candidate.FacadeSession);
                     ReleaseDomain(true, PreviousInfo);

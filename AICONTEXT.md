@@ -123,9 +123,25 @@ If documents, code, a task request or upstream evidence conflict, identify the c
 Gameplay C1's Player-owned read-only inventory facade is routed through
 [GameplayC1-Validation.md](docs/GameplayC1-Validation.md) and D18. It reuses the
 existing scanner and exact connection/publication/domain authority. C2 quantity
-Signals and all Gameplay D remain unimplemented. The supplied
+Signals remain unimplemented. Qualified private Gameplay D2A and the separately
+authorized public D3 phase are routed below. The supplied
 [C/D research](docs/GameplayCDArchitecture-Research.md) preserves static evidence
 and records the user override to future `Enum.DropMode` rather than `Loot.DropMode`.
+
+The separately authorized private Gameplay D2A investigation is routed through
+[GameplayD2A-Validation.md](docs/GameplayD2A-Validation.md); the supplied
+[D0 report](docs/GameplayD0Architecture-Research.md) remains static evidence.
+Host mechanism qualification precedes private rule/adapter adoption; D23 now
+routes the narrow private implementation, its measured host envelope and final
+qualification status. No public Loot API, C2/B2 addition or release authority
+follows from this work. D3 must qualify its own Luau binding/metadata later.
+
+Gameplay D3's public `Loot:RegisterDropRule(Prefab, Enum.DropMode.Replace, Drops)`
+binding, exact typed enum, raw bounded declaration conversion and platform/API/
+tooling closure are owned by [GameplayD3-Validation.md](docs/GameplayD3-Validation.md).
+D23 owns the additive semantics. Do not reopen D2A's host architecture without
+a demonstrated defect; public qualification is distinct from its private PASS.
+No C2/B2, additional mode/prefab, release/tag or identity bump is authorized.
 
 Post-v0.3.0 addon architecture is canonically owned by the addon amendments in
 [Invariants.md](docs/Invariants.md), including D14. The

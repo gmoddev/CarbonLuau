@@ -9,6 +9,20 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length == 1 && Args[0] == "--storageasync") {
+            try { StorageAsyncCompletionTests.Run(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:StorageAsync] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length == 1 && Args[0] == "--lootpolicy") {
+            try { LootRulePolicyTests.Run(); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:LootPolicy] FAIL: " + Error); return 1; }
+        }
+        if (Args.Length > 0 && Args[0] == "--lootpublic") {
+            try {
+                Check(Args.Length == 3, "usage: --lootpublic <native library> <compiler worker>");
+                LootPublicTests.Run(Args[1], Args[2]); return 0;
+            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:LootPublic] FAIL: " + Error); return 1; }
+        }
         if (Args.Length==3 && Args[0]=="--gameplayc1") {
             try { GameplayC1Tests.Run(Args[1],Args[2]); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:GameplayC1] FAIL: "+Error); return 1; }
@@ -254,6 +268,7 @@ internal static class Program
                 ScriptTests.Run(Native, Root);
                 FacadeTests.Run(Native, Args.Length > 3 ? Args[3] : null);
                 GameplayPublicationTests.RunNative(Native);
+                LootPublicTests.RunNative(Native);
                 GameplayEventBudgetTests.RunNative(Native);
                 GameplaySignalTests.RunNative(Native);
                 GameplayScaleTests.RunNative(Native);

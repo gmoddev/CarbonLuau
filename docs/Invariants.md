@@ -1545,6 +1545,74 @@ and authenticated-client evidence. Its experimental identity does not qualify
 arbitrary Rust/Carbon builds or client outcomes. Later gameplay/entity/inventory
 signals and loot/damage policies require separate scoped work.
 
+Gameplay D2A separately implements a **private-only** one-prefab declarative
+loot policy, with qualification status owned by
+[GameplayD2A-Validation.md](GameplayD2A-Validation.md). It introduces no Loot
+service, Luau declaration, public enum, Signal or new mutation method. Immutable
+bounded rule descriptors use existing D7 inactive-session staging, nested
+rollback and exact outgoing-owner replacement; conflicts are preflighted before
+native and managed publication. D10 forbids active/foreign facade laundering.
+Only a committed exact owner may select a rule for a new occurrence.
+
+On the exact qualified hosts/prefab, a pinned outer OnDied frame and common
+StorageContainer payout cut replace the destruction's stored/bonus/bag paths
+while leaving normal removal processing intact. A small pinned factory fence
+captures genuine temporary world returns before initialization. The existing
+D20 BeginSpawn attempt/completion/epoch machinery supplies identity, not another
+entity model or raw script capability. Failed epochs may be cleaned only with
+unchanged original attempt identity; they are never admitted. Current identity,
+UID, reciprocal ownership and B3 removal certification govern verification.
+
+Suppression begins nontransactional COMMIT. No post-COMMIT vanilla fallback,
+automatic replay, compensation or rollback claim is allowed. Already-completed
+host-owned payouts survive later failure; incomplete or vetoed cleanup is an
+aggregate diagnostic, not false success. D13's inaccessible unreturned-host
+resource boundary and I12 remain authoritative. Before-COMMIT budget/source
+ineligibility leaves vanilla untouched. Numeric private limits and exact targets
+are centralized in LootRulePolicy and the qualification record, not new public
+guarantees. Future public naming is `Enum.DropMode`; global enum redesign,
+collection/fill-only aliases, actor attribution and D3 public exposure remain
+separately scoped. Existing Player/C1/Workspace/persistence contracts are unchanged.
+
+Gameplay D3 adds only the separately authorized public declaration
+`game:GetService("Loot"):RegisterDropRule(Prefab, Enum.DropMode.Replace, Drops)`
+over that same qualified adapter; [D3 qualification](GameplayD3-Validation.md)
+owns its implementation/platform status. It returns no value and is
+initialization-only: registration stages CarbonLuau-owned policy, not a physical
+payout, and successful publication alone makes the copied descriptor selectable.
+The exact defining domain/host/VM owns the rule; sharing a service or closure
+neither transfers ownership nor launders publication authority. Failed first-load
+modules roll back staged rules even when caught. Retired owners cannot register;
+healthy same-owner candidate replacement may supplant its outgoing rule, but a
+foreign committed owner conflicts deterministically before publication.
+
+`Enum` and `Enum.DropMode` are frozen namespaces. `Replace` is an immutable typed
+DropMode userdata, not a number/string/record, dynamically created enum or raw
+host object. Existing `GiveItemBehavior` spelling/type/behavior is unchanged.
+No DropMode global alias, introspection API or other enum member is introduced.
+
+Exactly three arguments are required. Drops is a plain dense array of zero to
+eight plain `{Item, Min, Max}` records with no unknown keys/metatables. Bounded
+raw inspection rejects cycles/unsupported values/sparse arrays without invoking
+author metamethods. Only copied bounded scalars cross the host boundary, followed
+by the existing immutable managed validation. Table inspection cannot become
+unbounded: before each iteration a private pinned-VM
+guard caps each table's array and hash backing capacities at 64 slots each.
+Oversized/preallocated or formerly large tables are a controlled resource error;
+use small fresh declarations. This adds no public VM/object introspection.
+Later caller table mutations cannot change the rule. Only the D2A-qualified full prefab and `scrap` /
+`metal.fragments` are allowed; integer inclusive `0 <= Min <= Max <= 1000`, sum
+of Max <=8000, one rule/domain and one global owner remain authoritative.
+Empty/all-zero declarations suppress the eligible destruction payout. Producer
+bounds remain eight worlds/occurrence, eight occurrences/actual frame and one
+in-flight frame; excess or unavailable source is pre-COMMIT ineligibility with
+vanilla unchanged, never a claim that an unlimited burst was replaced.
+Strict Replace does not reclaim earlier generation-time world drops. D2A's exact
+host, source eligibility and nontransactional partial/indeterminate/no-replay/
+no-compensation envelope is unchanged. There is no public completion callback,
+Signal, conditional breaker policy, additional prefab, fill-only/collection mode,
+new scheduler or release/tag authority. D3 stays in `0.6.5-experimental`.
+
 ## Evidence behind the rules
 
 Rules I1–I11 consolidate the [accepted design](CarbonLuau_FirstVersion_Design.md), especially sections 3–12, 15, 21–27 and 33, with [Phase 0 evidence](Phase0-Validation.md). Upstream inspection on 2026-09-14 confirms available mechanisms, not a completed CarbonLuau sandbox:

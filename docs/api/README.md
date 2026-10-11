@@ -5,6 +5,9 @@ The latest published package is v0.5.0 with experimental scripting API
 Workspace/Entity (introduced in 0.6.0), player lifecycle Signals and
 `Workspace.EntitySpawned` and `Workspace.EntityDestroyed` (introduced in 0.6.5)
 are **not in published v0.5.0**.
+The development Loot declaration and `Enum.DropMode.Replace` also use 0.6.5
+and are not in published v0.5.0; see [Loot](Services/Loot.md) for host gates and
+nontransactional payout limits.
 [Persistence Foundation 1C](../PersistenceFoundation1C.md)
 and [Foundation 2D](../PersistenceFoundation2D.md) record combined qualification;
 see [persistence](Persistence.md) for the author surface.
@@ -21,6 +24,7 @@ This is server-side Luau, not Roblox API compatibility.
 | Player-issued chat commands | [Commands](Services/Commands.md) |
 | Player identity, live position/health observation, messaging and permission query | [Player](Types/Player.md) |
 | Rust item identity, bounded physical inventory observation and verified TakeItem/GiveItem | [Items](Services/Items.md), [Player](Types/Player.md), [GiveItemBehavior](Types/GiveItemBehavior.md) |
+| Development init-only destruction-payout declarations | [Loot](Services/Loot.md), [Enum](Types/Enum.md), [DropMode](Types/DropMode.md), [LootDropEntry](Types/LootDropEntry.md), [example](../../examples/scripts/loot-replace.luau) |
 | Immutable world-coordinate values | [Vector3](Types/Vector3.md) |
 | Development read-only exact world lookup | [Workspace](Services/Workspace.md), [Entity](Types/Entity.md), [examples](World-Examples.md) |
 | Development completed-Spawn Entity observations | [Workspace.EntitySpawned](Services/Workspace.md#entityspawned), [example](../../examples/world/entity-spawned/init.luau), [qualification](../GameplayB1-Validation.md) |

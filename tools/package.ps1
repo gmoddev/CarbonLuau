@@ -1,5 +1,9 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures, [switch]$IncludeD2Research, [switch]$IncludeD2Fixtures, [switch]$IncludeD3Fixtures)
 $ErrorActionPreference = 'Stop'
+if ($IncludeD3Fixtures) {
+    if ($IncludeD2Research) { throw '[CarbonLuau:Package] Public qualification is not the standalone research fixture' }
+    $IncludeD2Fixtures = $true
+}
 if (@($IncludeEntitySpawnFixtures,$IncludeEntityDestroyResearch,$IncludeEntityDestroyedFixtures).Where({$_}).Count -gt 1) {
     throw '[CarbonLuau:Package] Select B1 fixtures, B3 research or B3 qualification exclusively'
 }
@@ -79,6 +83,17 @@ try {
         }
         if ($IncludeC1Fixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.PlayerInventoryFixtures.cs') 'CarbonLuau.PlayerInventoryFixtures.cs'
+        }
+        if ($IncludeD2Research -or $IncludeD2Fixtures) {
+            if ($IncludeC1Fixtures) { throw '[CarbonLuau:Package] Select C1 or D2 research fixture exclusively' }
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.BarrelLootResearch.cs') 'CarbonLuau.BarrelLootResearch.cs'
+        }
+        if ($IncludeD2Fixtures) {
+            if ($IncludeD2Research) { throw '[CarbonLuau:Package] Select D2 research or qualification exclusively' }
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.LootFixtures.cs') 'CarbonLuau.LootFixtures.cs'
+        }
+        if ($IncludeD3Fixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.LootPublicFixtures.cs') 'CarbonLuau.LootPublicFixtures.cs'
         }
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }

@@ -82,6 +82,9 @@ namespace Carbon.Plugins
         private void InitializeEntityObserver() { }
         private void QualifyEntityStartup() { }
         private void StopEntityObserver() { }
+        private void InitializeLootSource() { }
+        private void StopLootSource() { }
+        private string LootStatus { get { return "private loot adapter omitted from persistence teardown fixture"; } }
         // B3's exact-host watch teardown is outside this adapter-only fixture.
         private void StopEntityDestroyedSource() { }
         // Gameplay's exact Rust completion observers are deliberately excluded

@@ -7,7 +7,7 @@ not modify the shared facade or grant host authority.
 
 | Signature / field | Type / return | Behavior |
 |---|---|---|
-| `game:GetService(Name)` | string -> Players, Commands, Gui, Items, Workspace or DataStoreService | Exact case-sensitive names. Workspace begins with development API 0.6; the published 0.5.0 package has no Workspace. |
+| `game:GetService(Name)` | string -> Players, Commands, Gui, Items, Workspace, DataStoreService or Loot | Exact case-sensitive names. Workspace begins with development API 0.6; Loot begins with 0.6.5. The published 0.5.0 package has neither. |
 | `game.ApiName` | read-only string | `CarbonLuau` |
 | `game.ApiVersion` | read-only string | Current development identity: `0.6.5-experimental` |
 | `game.ApiStatus` | read-only string | `Experimental` |
@@ -22,6 +22,13 @@ only in its owning generation; there is no cross-reload state preservation.
 `GiveItemBehavior` is a frozen global table in `0.4.0-experimental`, with only
 the typed `InventoryOnly` member. See [GiveItemBehavior](Types/GiveItemBehavior.md).
 
+`Enum` is a frozen global namespace in development API `0.6.5-experimental`.
+Its frozen `DropMode` namespace contains only the sealed typed userdata
+`Enum.DropMode.Replace`, with public type `DropMode` and string form
+`DropMode.Replace`. See [Enum](Types/Enum.md), [DropMode](Types/DropMode.md) and
+the init-only [Loot](Services/Loot.md) declaration. Existing GiveItemBehavior
+continues to use its global table.
+
 ```lua
 print(game.ApiName, game.ApiVersion, game.ApiStatus)
 local Items = game:GetService("Items")
@@ -30,6 +37,6 @@ local Items = game:GetService("Items")
 The existing services retain their earlier availability. Persistence's API version
 assignment does not establish qualification or retroactive 0.4 availability.
 See [Players](Services/Players.md), [Commands](Services/Commands.md), [Items](Services/Items.md), [GUI](Gui.md),
-[DataStoreService](Services/DataStoreService.md), [Workspace](Services/Workspace.md) and
+[DataStoreService](Services/DataStoreService.md), [Workspace](Services/Workspace.md), [Loot](Services/Loot.md) and
 [compatibility](Compatibility.md). No other services or global host-call primitive
 are exposed. Existing standard-library/sandbox restrictions remain in force.

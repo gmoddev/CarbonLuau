@@ -147,6 +147,23 @@ For Rust/Carbon updates, record candidate versions, compile against the actual r
 
 ## Validation selection
 
+Gameplay D2A is private-only one-prefab destruction-payout adaptation, routed
+through [its qualification record](GameplayD2A-Validation.md). Existing D20/B3
+initial-startup continuity, exact Windows/Linux target and requalification gates
+apply. It introduces no Loot service, public DropMode enum, public metadata or
+release identity. Logical publication and nontransactional physical payout are
+separate; the record distinguishes pre-COMMIT ineligibility, verified outcomes
+and post-COMMIT partial/unknown state without replay or compensating deletion.
+
+Gameplay D3 exposes that same qualified adapter through initialization-only
+`Loot:RegisterDropRule(Prefab, Enum.DropMode.Replace, Drops)` in development
+API `0.6.5-experimental`; [D3 evidence](GameplayD3-Validation.md) owns final public
+Windows/Linux, real-VM, metadata, tooling, packaging and hosted CI status. D2A's
+source eligibility/initial-startup continuity and strict destruction-only failure
+contract remain unchanged. Public declaration acceptance is not a physical payout
+success result. No new prefab, inventory Signal, release/tag or ABI advancement
+is implied; `GiveItemBehavior` retains its existing contract.
+
 Gameplay C1 adds Player:GetInventory and read-only PlayerInventory CountItem/HasItem
 to development API 0.6.5-experimental, not published package 0.5.0. Existing D18
 physical rules, exact D11 connection and domain/publication lifetime remain;

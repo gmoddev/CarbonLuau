@@ -518,6 +518,17 @@ namespace Carbon.Plugins
                 Witness.ObservationGeneration==ObservationGeneration&&
                 Witness.State.ObservationGeneration==Witness.ObservationGeneration&&Witness.State.Epoch==Witness.Epoch;
         }
+        // Private cleanup provenance only. A failed original Spawn may still
+        // own a temporary host resource; this never admits that failed epoch.
+        internal bool IsAttemptEpochUnchanged(SpawnAttempt Attempt)
+        {
+            CheckOwner(); ObjectState Current;
+            object Identity = Attempt == null ? null : Attempt.Target;
+            return Identity != null && ObserverContinuous && !Disposed && !Exhausted &&
+                Attempt.ObservationGeneration == ObservationGeneration &&
+                States.TryGetValue(Identity, out Current) && ReferenceEquals(Current, Attempt.State) &&
+                Current.Epoch == Attempt.Epoch && Current.ObservationGeneration == Attempt.ObservationGeneration;
+        }
 
         internal void BreakObserverContinuity()
         {

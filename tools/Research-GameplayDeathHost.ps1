@@ -7,6 +7,7 @@ param(
     [string]$MethodPattern = '^(Die|OnDied|IsDead|IsAlive|WoundInsteadOfDying|EligibleForWounding|BecomeWounded|StopWounded|RecoverFromWounded|WoundingTick|GoToCrawling|GoToIncapacitated|get_InitiatorPlayer)$',
     [string]$HookPattern = '^(OnPlayerDeath|OnEntityDeath)$',
     [switch]$ReferenceInventory,
+    [string]$ReferencePattern = 'System.Void (BasePlayer|BaseCombatEntity)::Die\(HitInfo\)',
     [switch]$InitiatorInventory,
     [switch]$ReproducePublicizer,
     [string[]]$CommonAssemblyPath,
@@ -221,7 +222,7 @@ foreach ($Path in $AssemblyPath) {
                     if (!$Method.HasBody) { continue }
                     foreach ($Instruction in $Method.Body.Instructions) {
                         if ($Instruction.Operand -is [Mono.Cecil.MethodReference] -and
-                            $Instruction.Operand.FullName -match 'System.Void (BasePlayer|BaseCombatEntity)::Die\(HitInfo\)') {
+                            $Instruction.Operand.FullName -match $ReferencePattern) {
                             Write-Output "DEATH_CALL=$($Method.FullName) TOKEN=0x$('{0:x8}' -f $Method.MetadataToken.ToUInt32()) $Instruction"
                         }
                     }

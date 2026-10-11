@@ -59,6 +59,9 @@
   "@carbonluau/globaltype/DataStoreService.GetDataStore": {
     "documentation": "Disk-free private store acquisition with optional bounded index hints; exact current admission must match resource owner. D21 store names: 1..64 UTF-8 bytes; 64 distinct names/domain. No success or I/O implied."
   },
+  "@carbonluau/global/Enum.DropMode.Replace": {
+    "documentation": "Replace only eligible qualified destruction-time payouts; no physical rollback guarantee."
+  },
   "@carbonluau/globaltype/Entity.Id": {
     "documentation": "Canonical current-world network ID; not a durable identity."
   },
@@ -76,6 +79,12 @@
   },
   "@carbonluau/globaltype/EntityDestroyedContext.Prefab": {
     "documentation": "Captured original prefab identity before removal."
+  },
+  "@carbonluau/globaltype/Enum.DropMode": {
+    "documentation": "Namespace containing the immutable Replace policy value."
+  },
+  "@carbonluau/global/Enum.DropMode": {
+    "documentation": "Namespace containing the immutable Replace policy value."
   },
   "@carbonluau/globaltype/Frame.AnchorPoint": {
     "documentation": "Retained AnchorPoint."
@@ -394,6 +403,9 @@
   },
   "@carbonluau/globaltype/Items.Exists": {
     "documentation": "Check whether a canonical item short name exists."
+  },
+  "@carbonluau/globaltype/Loot.RegisterDropRule": {
+    "documentation": "Initialization-only copied declaration, staged until successful publication. One qualified prefab and one global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result."
   },
   "@carbonluau/globaltype/Player.CountItem": {
     "documentation": "Count observed physical inventory items by short name."

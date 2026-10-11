@@ -77,13 +77,32 @@ namespace Carbon.Plugins
             }
             internal byte[] Exchange(byte[] Request, ulong End)
             { Write(Request, End); return Read(End); }
-            private void Await(IAsyncResult Operation, ulong End)
+            // Only the detached transport worker waits here. Now/End are
+            // monotonic milliseconds on both platforms. Finite framework waits
+            // wake on completion without imposing a sleep per transport stage.
+            // A non-Task APM handle is borrowed, never closed by this worker.
+            private static bool WaitCompletion(IAsyncResult Operation, ulong End, Func<bool> Stopping)
             {
                 while (!Operation.IsCompleted) {
-                    if (Stopping() || Now >= End) throw new TimeoutException("storage transport deadline");
-                    Operation.AsyncWaitHandle.WaitOne(10);
+                    if (Stopping != null && Stopping()) return false;
+                    ulong Current = Now;
+                    if (Current >= End) return false;
+                    int Slice = (int)Math.Min(10UL, End - Current);
+                    var Work = Operation as Task;
+                    if (Work != null) {
+                        try { Work.Wait(Slice); }
+                        catch (AggregateException) when (Work.IsCompleted) {
+                            // EndRead/EndWrite/GetAwaiter remains authoritative
+                            // for the operation's failure after completion.
+                        }
+                    } else Operation.AsyncWaitHandle.WaitOne(Slice);
                 }
-                if (Now >= End) throw new TimeoutException("storage transport deadline");
+                return true;
+            }
+            private void Await(IAsyncResult Operation, ulong End)
+            {
+                if (!WaitCompletion(Operation, End, Stopping) || Now >= End)
+                    throw new TimeoutException("storage transport deadline");
             }
             private void Write(byte[] Bytes, ulong End)
             {
@@ -92,7 +111,7 @@ namespace Carbon.Plugins
                 Stream Output = Child.StandardInput.BaseStream;
                 IAsyncResult Pending = Output.BeginWrite(Frame,0,Frame.Length,null,null); Outstanding=Pending; OutstandingWrite=true;
                 Await(Pending,End);
-                try { Output.EndWrite(Pending); } finally { Pending.AsyncWaitHandle.Close(); Outstanding=null; }
+                try { Output.EndWrite(Pending); } finally { Outstanding=null; }
                 // Process.StandardInput's FileStream may buffer small frames.
                 // Flush off-thread, under the same immutable request deadline.
                 // Framework FileStream.FlushAsync also invokes FlushFileBuffers:
@@ -110,7 +129,7 @@ namespace Carbon.Plugins
                 while (Offset < Bytes.Length) {
                     IAsyncResult Pending = Input.BeginRead(Bytes,Offset,Bytes.Length-Offset,null,null); Outstanding=Pending; OutstandingWrite=false;
                     Await(Pending,End); int Count;
-                    try { Count = Input.EndRead(Pending); } finally { Pending.AsyncWaitHandle.Close(); Outstanding=null; }
+                    try { Count = Input.EndRead(Pending); } finally { Outstanding=null; }
                     if (Count <= 0) throw new IOException("worker response ended"); Offset += Count;
                 }
             }
@@ -134,10 +153,12 @@ namespace Carbon.Plugins
                         OutstandingFlush.Dispose(); OutstandingFlush=null;
                     }
                     if (Outstanding!=null) {
-                        if (!Outstanding.IsCompleted && !Outstanding.AsyncWaitHandle.WaitOne(1000)) return false;
+                        // Cleanup must progress even while Stopping is true;
+                        // retain ownership if the outstanding operation stays stuck.
+                        if (!WaitCompletion(Outstanding, Now + 1000, null)) return false;
                         try { if (OutstandingWrite) Child.StandardInput.BaseStream.EndWrite(Outstanding); else Child.StandardOutput.BaseStream.EndRead(Outstanding); }
                         catch (Exception) { }
-                        Outstanding.AsyncWaitHandle.Close(); Outstanding=null;
+                        Outstanding=null;
                     }
                     Child.Dispose(); Child = null; CloseJob(); return true;
                 } catch (Exception) { return false; }

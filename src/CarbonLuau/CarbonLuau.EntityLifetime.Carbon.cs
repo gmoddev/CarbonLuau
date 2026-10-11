@@ -698,6 +698,7 @@ namespace Carbon.Plugins
                 Chain.BaseReturned = false;
                 RetireEntityDestroyWatchAtSpawn(Entity);
                 Chain.Attempt = EntityLifetimes.BeginSpawn(Entity);
+                ObserveLootWorldSpawnAttempt(Entity as BaseEntity, Chain.Attempt);
             }
             else {
                 Type Parent = Chain.Methods.Peek().DeclaringType.BaseType;

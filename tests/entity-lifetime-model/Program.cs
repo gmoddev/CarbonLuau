@@ -506,6 +506,7 @@ internal static partial class Program
         try
         {
             TestObservationAndCompletion();
+            TestAttemptCleanupEpoch();
             TestAbaAndEvidence();
             TestStartupCompletionAndAuthority();
             TestBoundsAndOwnership();
@@ -522,6 +523,28 @@ internal static partial class Program
         {
             Console.Error.WriteLine("[CarbonLuau:EntityLifetimeModel] FAIL: " + Error);
             return 1;
+        }
+    }
+    private static void TestAttemptCleanupEpoch()
+    {
+        using (var Directory = new Model()) {
+            Directory.BeginQualifiedObservation();
+            object Entity = new object();
+            var First = Directory.BeginSpawn(Entity);
+            Check(Directory.IsAttemptEpochUnchanged(First), "pending original cleanup epoch is exact");
+            Directory.CompleteSpawn(First, false, false);
+            Check(Directory.IsAttemptEpochUnchanged(First) && !Directory.HasCompletedObservation(Entity),
+                "failed original may be cleaned but is never admissible");
+            var Next = Directory.BeginSpawn(Entity);
+            Check(!Directory.IsAttemptEpochUnchanged(First), "same-object new Spawn cannot inherit old cleanup authority");
+            Directory.CompleteSpawn(Next, true, true);
+            Check(Directory.IsAttemptEpochUnchanged(Next), "completion does not change original epoch identity");
+            using (var Other = new Model()) {
+                Other.BeginQualifiedObservation();
+                Check(!Other.IsAttemptEpochUnchanged(Next), "another host/model cannot accept an old cleanup attempt");
+            }
+            Directory.BreakObserverContinuity();
+            Check(!Directory.IsAttemptEpochUnchanged(Next), "continuity loss stales cleanup identity");
         }
     }
 }

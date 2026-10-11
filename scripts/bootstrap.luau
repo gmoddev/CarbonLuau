@@ -45,7 +45,7 @@
 -- @carbonluau-api {"Owner":"CommandOptions","Name":"description","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"CommandOptions.description.","SinceApi":"0.3.0-experimental","Binding":"        if Key ~= \"permission\" and Key ~= \"description\" then Fail(\"unsupported command option\") end"}
 -- @carbonluau-api {"Owner":"Players","Name":"PlayerAdded","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is added.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
 -- @carbonluau-api {"Owner":"Players","Name":"PlayerRemoving","Kind":"Signal","Args":[["Player","Player"]],"Returns":[],"Summary":"Fires when a connection is removed.","SinceApi":"0.3.0-experimental","Binding":"local Players = {PlayerAdded = Signal(\"added\"), PlayerRemoving = Signal(\"removing\")}"}
-local Host, MakeUserdata, SharedValueEqual, StorageService, EntityIdentityRecords, SubmitDiscovery = ...
+local Host, MakeUserdata, SharedValueEqual, StorageService, EntityIdentityRecords, SubmitDiscovery, CheckLootTable = ...
 if EntityIdentityRecords == nil then
     EntityIdentityRecords = setmetatable({}, {__mode = "k"})
 end
@@ -90,6 +90,7 @@ if SharedValueEqual == nil then
         end
         if string.sub(Kind, 1, 8) == "GuiFont." then return true end
         if Kind == "GiveItemBehavior.InventoryOnly" then return true end
+        if Kind == "DropMode.Replace" then return true end
         if Kind == "Entity" then
             local LeftIdentity = EntityIdentityRecords[Left]
             local RightIdentity = EntityIdentityRecords[Right]
@@ -279,6 +280,19 @@ local GiveItemBehaviorMeta = table.freeze({
 })
 -- @carbonluau-api {"Owner":"GiveItemBehavior","Name":"InventoryOnly","Kind":"Singleton","ValueType":"GiveItemBehavior","Writable":false,"Summary":"Place only in inventory; never intentionally drop overflow.","Binding":"local GiveItemBehavior = table.freeze({InventoryOnly = MakeUserdata(GiveItemBehaviorMeta)})"}
 local GiveItemBehavior = table.freeze({InventoryOnly = MakeUserdata(GiveItemBehaviorMeta)})
+-- @carbonluau-api {"Type":"DropMode","Kind":"Enum","Summary":"Immutable qualified destruction-payout policy identity.","SinceApi":"0.6.5-experimental","Preview":"Pure"}
+local DropModeMeta = table.freeze({
+    __index = function() Fail("DropMode has no fields") end,
+    __newindex = function() Fail("DropMode values are immutable") end,
+    __tostring = function() return "DropMode.Replace" end,
+    __eq = SharedValueEqual,
+    __metatable = "CarbonLuau.DropMode",
+})
+-- @carbonluau-api {"Owner":"DropMode","Name":"Replace","Kind":"Singleton","ValueType":"DropMode","Writable":false,"Summary":"Replace only eligible qualified destruction-time payouts; no physical rollback guarantee.","SinceApi":"0.6.5-experimental","Preview":"Pure","Binding":"local DropMode = table.freeze({Replace = MakeUserdata(DropModeMeta)})"}
+local DropMode = table.freeze({Replace = MakeUserdata(DropModeMeta)})
+-- @carbonluau-api {"Type":"Enum","Kind":"Global","Summary":"Read-only namespace of explicitly registered typed enums.","SinceApi":"0.6.5-experimental","Preview":"Pure"}
+-- @carbonluau-api {"Owner":"Enum","Name":"DropMode","Kind":"Property","ValueType":"DropMode","Writable":false,"Summary":"Namespace containing the immutable Replace policy value.","SinceApi":"0.6.5-experimental","Preview":"Pure","Binding":"local Enum = table.freeze({DropMode = DropMode})"}
+local Enum = table.freeze({DropMode = DropMode})
 local function Record(Player)
     local Value = Records[Player]
     if not Value then Fail("invalid Player proxy") end
@@ -722,8 +736,55 @@ function Workspace.GetEntitiesInRadiusAsync(Self, Position, Radius, Callback, Op
     end, Options)
 end
 table.freeze(Workspace)
+-- @carbonluau-api {"Type":"LootDropEntry","Kind":"Value","Representation":"Alias","TypeExpression":"{Item: string, Min: number, Max: number}","Summary":"Plain declaration record: qualified Item and inclusive integer amounts 0..1000 with Min <= Max.","SinceApi":"0.6.5-experimental","Preview":"Unavailable"}
+local Loot = {}
+-- @carbonluau-api {"Owner":"Loot","Name":"RegisterDropRule","Kind":"Method","Args":[["Prefab","string"],["Mode","DropMode"],["Drops","{LootDropEntry}"]],"Returns":[],"Summary":"Initialization-only copied declaration, staged until successful publication. One qualified prefab and one global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result.","SinceApi":"0.6.5-experimental","Preview":"HostMutation","RejectExtraArguments":true,"Binding":"function Loot.RegisterDropRule(Self, ...)"}
+function Loot.RegisterDropRule(Self, ...)
+    if Self ~= Loot then Fail("invalid Loot service") end
+    if select("#", ...) ~= 3 then Fail("expected exactly three loot rule arguments") end
+    local Prefab, Mode, Drops = ...
+    String(Prefab, "loot prefab")
+    if Prefab ~= "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab" then Fail("unsupported loot rule prefab") end
+    if type(Mode) ~= "userdata" or getmetatable(Mode) ~= "CarbonLuau.DropMode" or
+        tostring(Mode) ~= "DropMode.Replace" then Fail("expected Enum.DropMode.Replace") end
+    if type(Drops) ~= "table" or getmetatable(Drops) ~= nil then Fail("expected plain loot entry array") end
+    CheckLootTable(Drops)
+    local Count, Highest = 0, 0
+    -- Count at most nine visited keys; never scan an unbounded malformed table.
+    for Key in next, Drops do
+        Count += 1
+        if Count > 8 then Fail("loot rule entry limit exceeded") end
+        if type(Key) ~= "number" or Key ~= math.floor(Key) or Key < 1 or Key > 8 then Fail("expected dense loot entry array") end
+        Highest = math.max(Highest, Key)
+    end
+    if Highest ~= Count then Fail("expected dense loot entry array") end
+    local Fields, Total = {}, 0
+    for Index = 1, Count do
+        local Entry = rawget(Drops, Index)
+        if type(Entry) ~= "table" or getmetatable(Entry) ~= nil then Fail("expected plain loot entry record") end
+        CheckLootTable(Entry)
+        local Keys = 0
+        for Key in next, Entry do
+            Keys += 1
+            if Keys > 3 or (Key ~= "Item" and Key ~= "Min" and Key ~= "Max") then Fail("unsupported loot entry field") end
+        end
+        local Item = String(rawget(Entry, "Item"), "loot item")
+        if Item ~= "scrap" and Item ~= "metal.fragments" then Fail("unsupported loot rule item") end
+        local Min = Number(rawget(Entry, "Min"), "loot Min", 0, 1000)
+        local Max = Number(rawget(Entry, "Max"), "loot Max", Min, 1000)
+        if Min ~= math.floor(Min) or Max ~= math.floor(Max) then Fail("loot rule amounts must be integers") end
+        Total += Max
+        if Total > 8000 then Fail("loot rule total limit exceeded") end
+        Fields[#Fields + 1] = Item
+        Fields[#Fields + 1] = string.format("%.0f", Min)
+        Fields[#Fields + 1] = string.format("%.0f", Max)
+    end
+    -- Only copied bounded scalars cross the host boundary, never the Lua graph.
+    Host(42, Prefab, table.concat(Fields, "\t"))
+end
+table.freeze(Loot)
 local Game = {ApiName = "CarbonLuau", ApiVersion = "0.6.5-experimental", ApiStatus = "Experimental"}
--- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items | Workspace | DataStoreService"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
+-- @carbonluau-api {"Owner":"Game","Name":"GetService","Kind":"Method","Args":[["Name","string"]],"Returns":["Players | Commands | Gui | Items | Workspace | DataStoreService | Loot"],"Summary":"Get one of the explicitly supported CarbonLuau services.","Preview":"Pure","Binding":"function Game.GetService(Self, Name)","SinceApi":"0.3.0-experimental"}
 function Game.GetService(Self, Name)
     if Self ~= Game then Fail("invalid game facade") end
     String(Name, "service name")
@@ -731,11 +792,13 @@ function Game.GetService(Self, Name)
     if Name == "Commands" then return Commands end
     if Name == "Gui" then return Gui end
     if Name == "Items" then return Items end
+-- @carbonluau-api {"Type":"Loot","Kind":"Service","Summary":"Initialization-only qualified destruction-payout declarations.","SinceApi":"0.6.5-experimental","Preview":"HostMutation","Binding":"    if Name == \"Loot\" then return Loot end"}
+    if Name == "Loot" then return Loot end
 -- @carbonluau-api {"Type":"Workspace","Kind":"Service","Summary":"Exact keyed lookup of currently admitted Rust world entities.","SinceApi":"0.6.0-experimental","Binding":"    if Name == \"Workspace\" then return Workspace end"}
     if Name == "Workspace" then return Workspace end
 -- @carbonluau-api {"Type":"DataStoreService","Kind":"Service","Summary":"Private owner-bound persistence service; preview unavailable.","SinceApi":"0.5.0-experimental","Qualification":"Experimental","Preview":"Unavailable","Binding":"    if Name == \"DataStoreService\" then return StorageService() end"}
     if Name == "DataStoreService" then return StorageService() end
-    Fail("unknown service (expected Players, Commands, Gui, Items, Workspace or DataStoreService)")
+    Fail("unknown service (expected Players, Commands, Gui, Items, Workspace, DataStoreService or Loot)")
 end
 table.freeze(Game)
 -- One host-admitted callback per scheduler work item; no dispatch fan-out in Lua.
@@ -775,4 +838,4 @@ local function Dispatch(Fields)
         Callback(table.freeze({Player = Player, Name = Fields[6], Arguments = table.freeze(Arguments)}))
     else Callback(Player) end
 end
-return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Vector3 = Vector3, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont, GiveItemBehavior = GiveItemBehavior}), SharedValueEqual, EntityIdentityRecords, Callbacks
+return Game, Dispatch, table.freeze({UDim = UDim, UDim2 = UDim2, Vector2 = Vector2, Vector3 = Vector3, Color3 = Color3, ImageSource = ImageSource, GuiFont = GuiFont, GiveItemBehavior = GiveItemBehavior, Enum = Enum}), SharedValueEqual, EntityIdentityRecords, Callbacks

@@ -42,6 +42,26 @@ jobs:
         run: dotnet build tests/managed/LoaderTests.csproj -c Release -o dist/tests
       - name: Compile .NET Framework runtime tests
         run: dotnet build tests/runtime/RuntimeTests.csproj -c Release -o dist/runtime
+      - name: Storage async completion polling (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --storageasync
+      - name: Storage async completion polling (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --storageasync
+      - name: Private loot rule publication model (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --lootpolicy
+      - name: Private loot rule publication model (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --lootpolicy
+      - name: Public loot declaration bindings (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        run: ./dist/runtime/RuntimeTests.exe --lootpublic "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Public loot declaration bindings (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        run: mono dist/runtime/RuntimeTests.exe --lootpublic "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
       - name: Private Entity lifetime model
         run: dotnet run --project tests/entity-lifetime-model/EntityLifetimeModelTests.csproj -c Release
       - name: Private Entity discovery scheduler model

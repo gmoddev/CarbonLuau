@@ -42,6 +42,18 @@ namespace CarbonLuau.Core
                                 Arguments.Cast<JArray>().Any(Argument => Argument.Count > 2 && (bool)Argument[2]))
                                 throw new InvalidOperationException("invalid extra-argument rejection binding");
                             Parameters = Fixed.Take(Fixed.Length - 1);
+                            // Some exact-arity wrappers capture all arguments so
+                            // omitted/nil arguments remain distinguishable. Audit
+                            // both the count guard and positional unpack locally.
+                            if (Fixed.Length == 1) {
+                                var Body = Lines.Skip(Array.IndexOf(Lines, Binding) + 1).TakeWhile(Value => Value != "end").ToArray();
+                                string Names = String.Join(", ", Arguments.Cast<JArray>().Select(Argument => (string)Argument[0]));
+                                if (Arguments.Count == 0 || Arguments.Cast<JArray>().Any(Argument => ((string)Argument[1]).EndsWith("?", StringComparison.Ordinal)) ||
+                                    !Body.Any(Value => Value.StartsWith("    if select(\"#\", ...) ~= " + Arguments.Count + " then Fail(", StringComparison.Ordinal)) ||
+                                    !Body.Contains("    local " + Names + " = ..."))
+                                    throw new InvalidOperationException("invalid captured fixed-argument binding");
+                                Parameters = Arguments.Cast<JArray>().Select(Argument => (string)Argument[0]);
+                            }
                         }
                         if (!Parameters.SequenceEqual(Arguments.Cast<JArray>().Select(Argument => Argument.Count > 2 && (bool)Argument[2] ? "..." : (string)Argument[0])))
                             throw new InvalidOperationException("API parameter names differ from binding: " + Binding);
@@ -75,7 +87,7 @@ namespace CarbonLuau.Core
             if (!StorageRegistrations.SetEquals(StorageMethods.Select(Value => (string)Value["Name"])))
                 throw new InvalidOperationException("native persistence API declaration lacks registration");
             // Declared public function tables must not acquire an unannotated function.
-            string[] Tables = { "UDim", "UDim2", "Vector2", "Vector3", "Color3", "ImageSource", "PlayerMethods", "PlayerInventoryMethods", "Players", "Commands", "GuiObjectMethods", "Gui", "Items", "Workspace", "Game" };
+            string[] Tables = { "UDim", "UDim2", "Vector2", "Vector3", "Color3", "ImageSource", "PlayerMethods", "PlayerInventoryMethods", "Players", "Commands", "GuiObjectMethods", "Gui", "Items", "Workspace", "Loot", "Game" };
             foreach (string Line in Lines) {
                 if (Tables.Any(Table => Line.StartsWith("function " + Table + ".", StringComparison.Ordinal)) && !Bindings.Contains(Line))
                     throw new InvalidOperationException("runtime function lacks API declaration: " + Line);
