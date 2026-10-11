@@ -518,6 +518,15 @@ namespace Carbon.Plugins
                 Witness.ObservationGeneration==ObservationGeneration&&
                 Witness.State.ObservationGeneration==Witness.ObservationGeneration&&Witness.State.Epoch==Witness.Epoch;
         }
+        // Historical immutable observations retain original identity, not a
+        // live proxy. A later Spawn can supersede its epoch without invalidating
+        // an already certified snapshot; observer loss/host teardown cannot.
+        internal bool IsHistoricalObservationCurrent(MembershipCandidate Witness)
+        {
+            CheckOwner();
+            return Witness != null && ReferenceEquals(Witness.Owner, this) && ObserverContinuous && !Disposed && !Exhausted &&
+                Witness.ObservationGeneration == ObservationGeneration;
+        }
         // Private cleanup provenance only. A failed original Spawn may still
         // own a temporary host resource; this never admits that failed epoch.
         internal bool IsAttemptEpochUnchanged(SpawnAttempt Attempt)

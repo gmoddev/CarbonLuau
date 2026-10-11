@@ -60,6 +60,16 @@ declare extern type Entity with
     read Prefab: string
 end
 
+export type EntityDeathContext = {
+    read DamageType: string?,
+    read Id: string,
+    read Killer: Player?,
+    read KillerId: string?,
+    read Position: Vector3?,
+    read Prefab: string,
+    read Weapon: string?,
+}
+
 export type EntityDestroyedContext = {
     read Id: string,
     read Position: Vector3?,
@@ -464,6 +474,7 @@ end
 
 declare extern type Workspace with
     read EntityDestroyed: SignalWith<(Context: EntityDestroyedContext) -> ()>
+    read EntityDied: SignalWith<(Context: EntityDeathContext) -> ()>
     read EntitySpawned: SignalWith<(Entity: Entity) -> ()>
     function GetEntitiesInRadiusAsync(self, Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?): ()
     function GetEntityById(self, Id: string): (Entity?)

@@ -515,6 +515,7 @@ internal static partial class Program
             TestOpaqueTokenBinding();
             TestWeakTokenConvergence();
             TestMembershipCatalog();
+            TestHistoricalDeathWitness();
             TestPrefabValidationBounds();
             Console.WriteLine("[CarbonLuau:EntityLifetimeModel] PASS (" + Checks + " checks)");
             return 0;

@@ -14,6 +14,7 @@ namespace Carbon.Plugins
             internal Func<string, bool> GameplayAvailable = Kind => true;
             private bool GameplayDemandDirty = true;
             private int GameplayDiedDemand, GameplaySpawnedDemand, GameplayEntitySpawnedDemand, GameplayEntityDestroyedDemand;
+            private int GameplayEntityDiedDemand;
             private long GameplayFanoutCursor;
             internal ulong DestroyedListenerVersion { get; private set; }
             internal void InvalidateGameplayDemand() {
@@ -25,12 +26,14 @@ namespace Carbon.Plugins
                 Players.CheckOwner();
                 if (GameplayDemandDirty) {
                     GameplayDiedDemand = GameplaySpawnedDemand = GameplayEntitySpawnedDemand = GameplayEntityDestroyedDemand = 0;
+                    GameplayEntityDiedDemand = 0;
                     if (Active != null && Active.Active && !Active.Disposed) {
                         if (!GameplayEvents.Visit()) return false;
                         GameplayDiedDemand += Active.GameplayDiedListeners;
                         GameplaySpawnedDemand += Active.GameplaySpawnedListeners;
                         GameplayEntitySpawnedDemand += Active.GameplayEntitySpawnedListeners;
                         GameplayEntityDestroyedDemand += Active.GameplayEntityDestroyedListeners;
+                        GameplayEntityDiedDemand += Active.GameplayEntityDiedListeners;
                     }
                     foreach (FacadeSession Session in Addons.Values) if (Session.Active && !Session.Disposed) {
                         if (!GameplayEvents.Visit()) return false;
@@ -38,12 +41,14 @@ namespace Carbon.Plugins
                         GameplaySpawnedDemand += Session.GameplaySpawnedListeners;
                         GameplayEntitySpawnedDemand += Session.GameplayEntitySpawnedListeners;
                         GameplayEntityDestroyedDemand += Session.GameplayEntityDestroyedListeners;
+                        GameplayEntityDiedDemand += Session.GameplayEntityDiedListeners;
                     }
                     GameplayDemandDirty = false;
                 }
                 return Kind == "died" ? GameplayDiedDemand != 0 : Kind == "spawned" ? GameplaySpawnedDemand != 0 :
                     Kind == "entityspawned" ? GameplayEntitySpawnedDemand != 0 :
-                    Kind == "entitydestroyed" && GameplayEntityDestroyedDemand != 0;
+                    Kind == "entitydestroyed" ? GameplayEntityDestroyedDemand != 0 :
+                    Kind == "entitydied" && GameplayEntityDiedDemand != 0;
             }
             // Snapshot data only; no host object or callback is retained here.
             internal void GameplayEvent(string Kind, string Token, string UserId, string Name,
@@ -82,7 +87,7 @@ namespace Carbon.Plugins
                     Observation.X, Observation.Y, Observation.Z, "", "", ""}, null, Observation);
             }
             private void FanoutGameplay(string[] Fields, Func<FacadeSession, EntityLifetimeModel.Binding> Capture,
-                GameplayEntityDestroyedObservation Destroyed = null)
+                GameplayEntityDestroyedObservation Destroyed = null, GameplayEntityDiedObservation Died = null)
             {
                 List<FacadeSession> Values = Sessions();
                 Values.Sort((Left, Right) => Left.DomainLifetimeId.CompareTo(Right.DomainLifetimeId));
@@ -91,13 +96,21 @@ namespace Carbon.Plugins
                 for (int Index = 0; Index < Values.Count; ++Index) {
                     if (!GameplayEvents.Visit()) break;
                     FacadeSession Session = Values[(Start + Index) % Values.Count];
-                    if (Session.GameplayEvent(Fields, Capture, Destroyed)) GameplayFanoutCursor = Session.DomainLifetimeId;
+                    if (Session.GameplayEvent(Fields, Capture, Destroyed, Died)) GameplayFanoutCursor = Session.DomainLifetimeId;
                 }
             }
             private static string GameplayCoordinate(float Value)
             {
                 if (Single.IsNaN(Value) || Single.IsInfinity(Value)) throw new FacadeException("invalid gameplay position");
                 return Value == 0 ? "0" : Value.ToString("R", CultureInfo.InvariantCulture);
+            }
+            internal void EntityDied(GameplayEntityDiedObservation Observation)
+            {
+                Players.CheckOwner();
+                if (Observation == null) throw new FacadeException("invalid entity death source");
+                FanoutGameplay(new[] {"entitydied", "", Observation.EpochText, Observation.Id, Observation.Prefab, "",
+                    Observation.X, Observation.Y, Observation.Z, Observation.KillerToken ?? "", Observation.KillerId ?? "",
+                    Observation.KillerName ?? "", Observation.DamageType ?? "", Observation.Weapon ?? ""}, null, null, Observation);
             }
         }
 
@@ -107,6 +120,7 @@ namespace Carbon.Plugins
             internal int GameplaySpawnedListeners { get; private set; }
             internal int GameplayEntitySpawnedListeners { get; private set; }
             internal int GameplayEntityDestroyedListeners { get; private set; }
+            internal int GameplayEntityDiedListeners { get; private set; }
             internal ulong GameplayDestroyedListenerVersion { get; private set; }
             internal void PublishGameplayListenerBoundary()
             { GameplayDestroyedListenerVersion = World.DestroyedListenerVersion; }
@@ -116,12 +130,14 @@ namespace Carbon.Plugins
             private void RefreshGameplayListeners()
             {
                 GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = GameplayEntityDestroyedListeners = 0;
+                GameplayEntityDiedListeners = 0;
                 var Published = FirstPublication == null ? Listeners : FirstPublication.Listeners;
                 foreach (string Kind in Published.Values) {
                     if (Kind == "died") GameplayDiedListeners++;
                     else if (Kind == "spawned") GameplaySpawnedListeners++;
                     else if (Kind == "entityspawned") GameplayEntitySpawnedListeners++;
                     else if (Kind == "entitydestroyed") GameplayEntityDestroyedListeners++;
+                    else if (Kind == "entitydied") GameplayEntityDiedListeners++;
                 }
                 World.InvalidateGameplayDemand();
                 GameplayDestroyedListenerVersion = World.DestroyedListenerVersion;
@@ -134,11 +150,12 @@ namespace Carbon.Plugins
                 }
             }
             internal bool GameplayEvent(string[] Fields, Func<FacadeSession, EntityLifetimeModel.Binding> Capture = null,
-                GameplayEntityDestroyedObservation Destroyed = null)
+                GameplayEntityDestroyedObservation Destroyed = null, GameplayEntityDiedObservation Died = null)
             {
                 if (!Active || Disposed || !World.IsActive(this) ||
                     (Fields[0] == "died" ? GameplayDiedListeners : Fields[0] == "spawned" ? GameplaySpawnedListeners :
-                    Fields[0] == "entityspawned" ? GameplayEntitySpawnedListeners : GameplayEntityDestroyedListeners) == 0) return false;
+                    Fields[0] == "entityspawned" ? GameplayEntitySpawnedListeners : Fields[0] == "entitydestroyed" ? GameplayEntityDestroyedListeners :
+                    Fields[0] == "entitydied" ? GameplayEntityDiedListeners : 0) == 0) return false;
                 // Polling cannot timestamp native deletion between visits. Only
                 // listeners already published at the last positive live proof
                 // may receive that observation, never a post-removal replay.
@@ -164,7 +181,7 @@ namespace Carbon.Plugins
                     }
                     string IdValue = Listener.Key.ToString(CultureInfo.InvariantCulture);
                     Fields[1] = IdValue; byte[] Payload;
-                    ulong Nonce = World.GameplayEvents.Reserve(this, Fields[0], IdValue, Fields, out Payload, Entity, Destroyed);
+                    ulong Nonce = World.GameplayEvents.Reserve(this, Fields[0], IdValue, Fields, out Payload, Entity, Destroyed, Died);
                     if (Nonce == 0) break;
                     try { Pending.Enqueue(new FacadePendingEvent(Payload, Nonce)); Admitted = true; }
                     catch { World.GameplayEvents.Release(this, Nonce, true); throw; }

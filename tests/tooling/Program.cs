@@ -121,6 +121,10 @@ Reject(() => ApiCatalog.Build(Bootstrap.Replace("    PermanentMarker = Font(\"Pe
 Reject(() => ApiCatalog.Build(Bootstrap.Replace("    if Name == \"Items\" then return Items end\n", ""), Release, Native), "removed service accepted");
 Reject(() => ApiCatalog.Build(Bootstrap.Replace("    if Name == \"Workspace\" then return Workspace end\n", ""), Release, Native), "removed Workspace service accepted");
 Reject(() => ApiCatalog.Build(Bootstrap.Replace("-- @carbonluau-api {\"Type\":\"Workspace\"", "-- @removed-api {\"Type\":\"Workspace\""), Release, Native), "unannotated Workspace service accepted");
+Reject(() => ApiCatalog.Build(Bootstrap.Replace("\nWorkspace.EntityDied = Signal(\"entitydied\")\n", "\n"), Release, Native),
+    "removed EntityDied Signal binding accepted");
+Reject(() => ApiCatalog.Build(Bootstrap.Replace("        DeathContext.Id = Fields[4]\n", ""), Release, Native),
+    "removed EntityDeathContext scalar binding accepted");
 Reject(() => ApiCatalog.Build(Bootstrap, Release, Native.Replace("        lua_setfield(State, -2, \"IsDependencyAvailable\");", "")), "removed native binding accepted");
 var Broken = (JObject)Catalog.DeepClone();
 ((JObject)Broken["Types"]![0]!)["BaseTypeId"] = "Missing";
@@ -133,9 +137,9 @@ var EntityTypes = new[] { "Workspace", "Entity", "EntityDiscoveryOptions" };
 foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catalog["Members"]!)) {
     bool Persistence = PersistenceTypes.Contains((string?)Declaration["Id"]) || PersistenceTypes.Contains((string?)Declaration["OwnerId"]);
     bool Entity = EntityTypes.Contains((string?)Declaration["Id"]) || EntityTypes.Contains((string?)Declaration["OwnerId"]);
-    bool GameplayA = new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "PlayerInventory" }.Contains((string?)Declaration["Id"]) ||
-        new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "PlayerInventory" }.Contains((string?)Declaration["OwnerId"]) ||
-        new[] { "Players.PlayerDied", "Players.PlayerSpawned", "Workspace.EntitySpawned", "Workspace.EntityDestroyed", "Player.GetInventory" }.Contains((string?)Declaration["Id"]);
+    bool GameplayA = new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "EntityDeathContext", "PlayerInventory" }.Contains((string?)Declaration["Id"]) ||
+        new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "EntityDeathContext", "PlayerInventory" }.Contains((string?)Declaration["OwnerId"]) ||
+        new[] { "Players.PlayerDied", "Players.PlayerSpawned", "Workspace.EntitySpawned", "Workspace.EntityDestroyed", "Workspace.EntityDied", "Player.GetInventory" }.Contains((string?)Declaration["Id"]);
     bool Loot = new[] { "Enum", "DropMode", "Loot", "LootDropEntry" }.Contains((string?)Declaration["Id"]) ||
         new[] { "Enum", "DropMode", "Loot" }.Contains((string?)Declaration["OwnerId"]);
     Version Since = Version.Parse(((string)Declaration["Availability"]!["SinceApi"]!).Split('-')[0]);

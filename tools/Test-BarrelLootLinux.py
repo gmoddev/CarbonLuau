@@ -20,6 +20,7 @@ Parser.add_argument("--compiler", required=True)
 Parser.add_argument("--run-coordinated", action="store_true")
 Parser.add_argument("--qualification", action="store_true")
 Parser.add_argument("--public", action="store_true")
+Parser.add_argument("--entity-death", action="store_true")
 
 
 def Hash(Path):
@@ -35,6 +36,8 @@ def Main():
     FixtureMarker = "[CarbonLuau:LootFixture]" if Args.qualification else "[CarbonLuau:BarrelLootResearch]"
     if Args.public and not Args.qualification:
         raise RuntimeError("Public qualification requires the established D2A fixture substrate")
+    if Args.entity_death and not Args.public:
+        raise RuntimeError("Entity death qualification requires the public fixture substrate")
     PassMarker = "PASS public qualification" if Args.public else "PASS private qualification" if Args.qualification else "PASS mechanism"
     Work = pathlib.Path(Args.work).resolve()
     if Work != pathlib.Path("/root/codex/world-movement-20261003"):
@@ -119,10 +122,14 @@ def Main():
             if Server.returncode not in (0, -signal.SIGKILL, 128 + signal.SIGKILL):
                 raise RuntimeError("Server exited with code " + str(Server.returncode) + ": " + str(Log))
         Content = Log.read_text(errors="replace") if Log.exists() else ""
-        print("\n".join(Line for Line in Content.splitlines() if "LootFixture" in Line or "MEASURED case=" in Line or "PASS mechanism" in Line or "EntityLifetime" in Line or "Server startup complete" in Line), flush=True)
+        print("\n".join(Line for Line in Content.splitlines() if "LootFixture" in Line or "EntityDiedFixture" in Line or "EntityMeleeFixture" in Line or "MEASURED case=" in Line or "PASS mechanism" in Line or "EntityLifetime" in Line or "Server startup complete" in Line), flush=True)
         Markers = (PassMarker,)
         if any(FixtureMarker + " " + Marker not in Content for Marker in Markers) or "[CarbonLuau:BarrelLootResearch] FAIL" in Content or "[CarbonLuau:LootFixture] FAIL" in Content or "[CarbonLuau:LootFixture] CLEANUP_FAIL" in Content or "[CarbonLuau:EntityLifetime] Private startup observer qualified" not in Content:
             raise RuntimeError("Missing/failed qualification receipts: " + str(Log))
+        if Args.entity_death and ("[CarbonLuau:EntityDiedFixture] PASS bounded public transport and actual RPC source" not in Content or
+                "[CarbonLuau:EntityMeleeFixture] PASS actual RPC source/terminal proof and cleanup" not in Content or
+                "[CarbonLuau:EntityMeleeFixture] FAIL" in Content or "[CarbonLuau:EntityMeleeFixture] CLEANUP FAIL" in Content):
+            raise RuntimeError("Entity death receipt missing/failed: " + str(Log))
         if "Shutting down Carbon.." not in Content or "Saving complete" not in Content:
             raise RuntimeError("Missing qualified quit shutdown/save receipt: " + str(Log))
         print(Prefix + " PROCESS_EXIT " + str(Server.returncode) + " qualified Shutdown -> Process.Kill", flush=True)

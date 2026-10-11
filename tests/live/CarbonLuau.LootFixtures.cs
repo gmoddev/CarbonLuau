@@ -27,6 +27,8 @@ namespace Carbon.Plugins
         private string LootFixtureSource = "local S=require('state'); local W=game:GetService('Workspace'); W.EntitySpawned:Connect(function(E) S.Spawned=(S.Spawned or 0)+1 end); W.EntityDestroyed:Connect(function(C) S.Destroyed=(S.Destroyed or 0)+1 end)";
         private bool LootFixtureDone;
         private bool LootFixturePublic;
+        partial void PrepareEntityDeathFixture();
+        partial void ContinueEntityDeathFixture(ref bool Deferred);
         partial void SelectPublicLootQualification(ref bool Public);
         private int LootFixtureStep;
         private int LootFixtureCreateFault;
@@ -99,6 +101,7 @@ namespace Carbon.Plugins
                 BarrelResearchCheck(BasePlayer.activePlayerList.Count == 0 && Host != null && Host.Ready &&
                     EntityStartupQualified && LootAvailable(), "isolated qualified private source ready");
                 SelectPublicLootQualification(ref LootFixturePublic);
+                PrepareEntityDeathFixture();
                 if (Addons != null) { Addons.Dispose(); Addons = null; }
                 Host.Dispose();
                 Host = new ScriptHost(Native, new RuntimeConfig { MaxCallbackMilliseconds = 100 }, () => {
@@ -147,7 +150,7 @@ namespace Carbon.Plugins
                 // producer-budget qualification; never sleep or pump Unity inline.
                 if (LootFixtureStep == 0) {
                     LootFixturePayout("root_two", 2, true);
-                    var Result = Host.Execute("loot.events", "local S=require('state'); assert((S.Spawned or 0)>=2 and (S.Destroyed or 0)>=1)");
+                    var Result = Host.Execute("loot.events", "local S=require('state'); assert((S.Spawned or 0)>=2, 'spawned='..tostring(S.Spawned)); assert((S.Destroyed or 0)>=1, 'destroyed='..tostring(S.Destroyed))");
                     BarrelResearchCheck(Result.Status == RuntimeStatus.OK, "B1/B3 callbacks remain usable: " + Result.Error);
                 } else if (LootFixtureStep == 1) {
                     var Old = Gameplay.Active;
@@ -262,7 +265,10 @@ namespace Carbon.Plugins
                     LootFixturePayout("public_range", 2, true);
                     BarrelResearchCheck(Host.Execute("loot.active", "assert(not pcall(function() game:GetService('Loot'):RegisterDropRule('" + LootRulePolicy.Prefab + "',Enum.DropMode.Replace,{}) end))").Status == RuntimeStatus.OK,
                         "committed public declaration rejected without effects");
-                    LootFixtureDone = true; EndLootQualification(null); return;
+                    LootFixtureDone = true;
+                    bool Deferred = false; ContinueEntityDeathFixture(ref Deferred);
+                    if (!Deferred) EndLootQualification(null);
+                    return;
                 }
                 LootFixtureStep++; NextTick(RunLootQualificationStep);
             } catch (Exception Error) { EndLootQualification(Error); }

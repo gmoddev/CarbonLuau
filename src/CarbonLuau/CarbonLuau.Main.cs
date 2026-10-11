@@ -49,6 +49,8 @@ namespace Carbon.Plugins
                 Native = new NativeRuntime(Oxide.Core.Interface.Oxide.DataDirectory);
                 InitializeGameplay();
                 InitializeGameplayLifecycle();
+                InitializeEntityDiedSource();
+                InitializeEntityMeleeSource();
                 InitializeLootSource();
                 Host = new ScriptHost(Native, Settings, () => ScriptSnapshot.Load(Oxide.Core.Interface.Oxide.DataDirectory, Settings), Gameplay);
                 Addons = new AddonRegistry(Host, Native.HostLifetimeId);
@@ -110,7 +112,7 @@ namespace Carbon.Plugins
                 if (Addons != null) Status += "\nAddon protocol: " + AddonPolicy.ProtocolName + " " + AddonPolicy.ProtocolVersion +
                     "; package schema: " + AddonPolicy.Schema + "\nAddons: " + Addons.Count + "; snapshot bytes: " +
                     Addons.SnapshotBytes + " / " + AddonPolicy.MaxAggregateSnapshotBytes;
-                if (Gameplay != null) Status += "\n" + Gameplay.GuiStatus + "\n" + GameplayLifecycleStatus + "\n" + LootStatus;
+                if (Gameplay != null) Status += "\n" + Gameplay.GuiStatus + "\n" + GameplayLifecycleStatus + "\n" + EntityDiedStatus + "\n" + LootStatus;
                 if (Persistence != null) Status += "\n" + Persistence.Status;
                 Arg.ReplyWith(Status);
             }
@@ -143,13 +145,15 @@ namespace Carbon.Plugins
         partial void RunPlayerInventoryFixtures();
         partial void RunBarrelLootResearch();
         partial void RunEntitySpawnFixtures();
-        private void Unload() { StopLootSource(); StopGameplayLifecycle(); StopEntityObserver(); ReleaseNative(); }
+        private void Unload() { StopEntityMeleeSource(); StopEntityDiedSource(); StopLootSource(); StopGameplayLifecycle(); StopEntityObserver(); ReleaseNative(); }
 
         private void ReleaseNative()
         {
             Stopping = true;
             StopEntityDestroyedSource();
             StopGameplayLifecycle();
+            StopEntityDiedSource();
+            StopEntityMeleeSource();
             StopEntityDiscovery();
             StopPersistence();
             DrainWakeDueNs = 0; DrainWakeToken++;

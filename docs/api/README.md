@@ -3,7 +3,7 @@
 The latest published package is v0.5.0 with experimental scripting API
 `0.5.0-experimental`. The development scripting API is `0.6.5-experimental`;
 Workspace/Entity (introduced in 0.6.0), player lifecycle Signals and
-`Workspace.EntitySpawned` and `Workspace.EntityDestroyed` (introduced in 0.6.5)
+`Workspace.EntitySpawned`, `Workspace.EntityDestroyed` and `Workspace.EntityDied` (introduced in 0.6.5)
 are **not in published v0.5.0**.
 The development Loot declaration and `Enum.DropMode.Replace` also use 0.6.5
 and are not in published v0.5.0; see [Loot](Services/Loot.md) for host gates and
@@ -29,6 +29,7 @@ This is server-side Luau, not Roblox API compatibility.
 | Development read-only exact world lookup | [Workspace](Services/Workspace.md), [Entity](Types/Entity.md), [examples](World-Examples.md) |
 | Development completed-Spawn Entity observations | [Workspace.EntitySpawned](Services/Workspace.md#entityspawned), [example](../../examples/world/entity-spawned/init.luau), [qualification](../GameplayB1-Validation.md) |
 | Development successful Entity removal snapshots | [Workspace.EntityDestroyed](Services/Workspace.md#entitydestroyed), [EntityDestroyedContext](Types/EntityDestroyedContext.md), [example](../../examples/world/entity-destroyed/init.luau), [qualification](../GameplayB3-Validation.md) |
+| Development full-death snapshots; source and narrow actor gates are separate | [Workspace.EntityDied](Services/Workspace.md#entitydied), [EntityDeathContext](Types/EntityDeathContext.md), [example](../../examples/world/entity-died/init.luau) |
 | Command payload | [CommandContext](Types/CommandContext.md) |
 | Event subscription | [Signal](Types/Signal.md), [Connection](Types/Connection.md) |
 | Versions and limits | [Compatibility](Compatibility.md) |

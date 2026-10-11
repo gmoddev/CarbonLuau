@@ -1,5 +1,6 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures, [switch]$IncludeD2Research, [switch]$IncludeD2Fixtures, [switch]$IncludeD3Fixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures, [switch]$IncludeD2Research, [switch]$IncludeD2Fixtures, [switch]$IncludeD3Fixtures, [switch]$IncludeB2Fixtures)
 $ErrorActionPreference = 'Stop'
+if ($IncludeB2Fixtures) { $IncludeD3Fixtures = $true }
 if ($IncludeD3Fixtures) {
     if ($IncludeD2Research) { throw '[CarbonLuau:Package] Public qualification is not the standalone research fixture' }
     $IncludeD2Fixtures = $true
@@ -94,6 +95,11 @@ try {
         }
         if ($IncludeD3Fixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.LootPublicFixtures.cs') 'CarbonLuau.LootPublicFixtures.cs'
+        }
+        if ($IncludeB2Fixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityDiedFixtures.cs') 'CarbonLuau.EntityDiedFixtures.cs'
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityDiedMeleeFixtures.cs') 'CarbonLuau.EntityDiedMeleeFixtures.cs'
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityDeathBoundaryFixtures.cs') 'CarbonLuau.EntityDeathBoundaryFixtures.cs'
         }
     } finally { $Archive.Dispose() }
 } finally { $Stream.Dispose() }

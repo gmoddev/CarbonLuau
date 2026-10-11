@@ -20,7 +20,12 @@ Workspace.EntitySpawned uses `(Entity) -> ()` in development API
 Entity lifetime and startup continuity rules are in the Workspace reference.
 Workspace.EntityDestroyed uses `(EntityDestroyedContext) -> ()` in that same
 development API. Its [context](EntityDestroyedContext.md) is a frozen original
-incarnation snapshot, not a live Entity facade. Both Workspace signals reuse the
+incarnation snapshot, not a live Entity facade. Workspace.EntityDied uses
+`(EntityDeathContext) -> ()` with its separate full-death source gate; its
+[seven-field context](EntityDeathContext.md) is frozen and historical, with
+optional original D11 actor attribution limited to the qualified synchronous
+RPC melee source; unknown provenance gives nil actor fields.
+All three Workspace signals reuse the
 existing Signal/Connection infrastructure and shared global gameplay limits.
 
 Registers one callback in the current owning domain and returns a

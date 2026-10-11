@@ -72,12 +72,16 @@ namespace Carbon.Plugins
         private void OnEntitySpawned(BaseNetworkable Entity) { }
         private object OnEntityKill(BaseNetworkable Entity)
         {
+            object BoundaryVeto = null;
+            ObserveEntityDeathBoundaryKill(Entity, ref BoundaryVeto);
+            if (BoundaryVeto != null) return BoundaryVeto;
             var Current = BarrelResearchCurrent;
             if (Current == null || !ReferenceEquals(Entity, Current.Source) || BarrelResearchCleaning) return null;
             if (!BarrelResearchOnOwner()) return null;
             Current.KillHooks++;
             return BarrelResearchVeto ? (object)true : null;
         }
+        partial void ObserveEntityDeathBoundaryKill(BaseNetworkable Entity, ref object Veto);
 
         partial void RunBarrelLootResearch()
         {

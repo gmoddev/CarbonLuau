@@ -10,6 +10,7 @@ qualified Rust/Carbon targets only. The latest published package remains
 | `Workspace:GetEntityById(Id: string)` | `Entity?` | One keyed lookup of a currently admitted Rust `BaseEntity`; `nil` if a valid ID is absent. |
 | `Workspace.EntitySpawned` | Signal `(Entity) -> ()` | Future qualified full outer Spawn completions. Introduced in development API `0.6.5-experimental`. |
 | `Workspace.EntityDestroyed` | Signal `(EntityDestroyedContext) -> ()` | Future qualified successful removals/destruction, delivered as immutable original-incarnation snapshots. Development API `0.6.5-experimental`. |
+| `Workspace.EntityDied` | Signal `(EntityDeathContext) -> ()` | Development full-death observation with frozen historical snapshots; independent of removal and gated by its own source qualification. API `0.6.5-experimental`. |
 | `Workspace:GetEntitiesInRadiusAsync(Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?)` | `()` | Non-yielding committed-only submission; later callback with the whole result array or a controlled error. Qualified by [Discovery-2B](../../WorldEntityFoundation2B.md). |
 
 ## EntitySpawned
@@ -110,8 +111,69 @@ not a fresh budget for each addon or event kind.
 
 See [B3 evidence and qualification scope](../../GameplayB3-Validation.md) and the
 [runnable example](../../../examples/world/entity-destroyed/init.luau). This
-development API is not included in the published v0.5.0 package. It adds no
-EntityDied, killer/damage attribution, loot policy or world-mutation API.
+development API is not included in the published v0.5.0 package. B3 alone adds no
+death/attribution, loot policy or world-mutation API; EntityDied is separately
+described below.
+
+## EntityDied
+
+```luau
+Workspace.EntityDied:Connect(function(Context)
+    print(Context.Id, Context.Prefab)
+    if Context.Position then print(Context.Position) end
+    if Context.KillerId then print(Context.KillerId) end
+end)
+```
+
+Development API `0.6.5-experimental`, not published v0.5.0. The callback receives
+one frozen [EntityDeathContext](../Types/EntityDeathContext.md), with Id, Prefab
+and optional Position, Killer, KillerId, DamageType and Weapon. It receives no
+live Entity proxy. The generated contract does not establish host qualification;
+registration fails with a controlled error while the independently pinned source
+is unavailable. The [example](../../../examples/world/entity-died/init.luau)
+handles that registration failure.
+
+The source requires a qualified original full effective virtual death method
+to return normally with its terminal marker and original incarnation established.
+An early OnEntityDeath notification, a vetoed/skipped/throwing original, a dead
+flag alone or facade retirement cannot manufacture completion. Separately
+qualified resource and direct-death paths need their own equivalent fences.
+The exact supported subtype, episode-reset and host envelope remains a source
+qualification requirement; the presence of a Signal is not proof of that envelope.
+
+Death is distinct from removal. A death method can remove its entity before it
+returns; the historical death snapshot may therefore be delivered after an
+EntityDestroyed snapshot. Death may also complete without removal, and removal
+may occur without death. No cross-Signal ordering or exactly-once guarantee follows.
+
+Id and Prefab remain captured historical values after retirement, pooling or
+ID reuse. Id is correlation, not authority to choose a later incarnation.
+Position is optional pre-death root-world data; it is nil if a safe observation
+or its shared attempt allowance is unavailable. No later live Entity read is
+needed to deliver the snapshot.
+
+Killer/KillerId are original D11 actor data only for the qualified original,
+synchronous RPC melee source on the supported exact host targets. The same
+attack application is checked again at full death completion; other or unknown
+provenance yields nil actor fields. Neither delivery nor an example
+looks up a UserId to select a replacement Player. Optional DamageType and Weapon
+are bounded killing-hit snapshot labels, not a universal cause classifier,
+inventory Item or ownership guarantee. See the context reference for their bounds.
+
+The existing Signal/Connection, publication journal and scheduler are reused.
+Fresh callback admission validates the listener's original domain/publication,
+every captured scalar, source availability and historical completion certificate.
+Disconnect, retired owners, invalid proof and overload suppress queued delivery;
+callbacks do not run inline in the death method. There is no startup replay,
+registration backlog, replacement/recovery replay or hidden retry queue.
+Preview is unavailable; tooling does not simulate death or attribution.
+
+All Player/Entity streams share the existing 128 captures/frame, 128 deliveries/
+frame, 32 deliveries/domain/frame, 4,096 visits/frame, 512 held reservations,
+2,048-byte payload and 2-MiB transport accounting limits. Optional pre-death and
+pre-removal position attempts share a further 128-attempt allowance per frame;
+exhausting it makes Position nil rather than creating an independent budget.
+The continuous D20 startup observer and its restart requirements still apply.
 
 ## GetEntityById
 

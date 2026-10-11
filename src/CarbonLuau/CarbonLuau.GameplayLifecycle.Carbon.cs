@@ -83,6 +83,7 @@ namespace Carbon.Plugins
             internal GameplayLife Life;
             internal string Kind, EntryRespawnId;
             internal bool EntryAlive, Poisoned, BaseReturned, PostfixSeen, OriginalRan, Exited;
+            internal EntityDeathFrame EntityDeath;
         }
         private static void CountGameplay(ref long Counter) { if (Counter < Int64.MaxValue) Counter++; }
         private void RejectGameplayOffThread(bool Death)
@@ -142,7 +143,7 @@ namespace Carbon.Plugins
             GameplayLifecycleOwner = Thread.CurrentThread.ManagedThreadId;
             if (Gameplay != null) {
                 Gameplay.GameplayEvents.FrameClock = () => UnityEngine.Time.frameCount;
-                Gameplay.GameplayAvailable = Kind => Kind == "entitydestroyed" ? EntityDestroyedAvailable() : Kind == "entityspawned" ?
+                Gameplay.GameplayAvailable = Kind => Kind == "entitydied" ? EntityDiedAvailable() : Kind == "entitydestroyed" ? EntityDestroyedAvailable() : Kind == "entityspawned" ?
                     EntityHostPinned && EntityStartupQualified && !EntityObserverBroken :
                     Kind == "died" ? GameplayDeathQualified : Kind == "spawned" && GameplaySpawnQualified;
                 GameplayCaptureAdmission = Kind => !Stopping && Host != null && Host.Ready && Gameplay.GameplayEvents.Capture(Kind);
@@ -551,11 +552,12 @@ namespace Carbon.Plugins
                         if ((Record != null && Stamp == null) || (Stamp != null && Stamp.Length > GameplayMaximumPatchBytes)) return false;
                         if (GameplayPatchStamps.TryGetValue(Target, out Expected) && ReferenceEquals(Expected, Stamp)) continue;
                         Type Own = Target == GameplayDieMethod ? typeof(GameplayDeathPatch) :
-                            Target == GameplayRespawnMethod ? typeof(GameplaySpawnPatch) : null;
+                            Target == GameplayRespawnMethod ? typeof(GameplaySpawnPatch) :
+                            Target == GameplayBaseDieMethod ? typeof(EntityDiedPatch) : null;
                         string Hook = Target == GameplayDieMethod ? GameplayDeathHook :
                             Target == GameplayBaseDieMethod ? GameplayEntityDeathHook :
                             Target == GameplayRespawnMethod ? GameplayRespawnHook : null;
-                        if (!VerifyGameplayMethodTopology(Target, Own, Hook, Target == GameplayDieMethod)) return false;
+                        if (!VerifyGameplayMethodTopology(Target, Own, Hook, Target == GameplayDieMethod || Target == GameplayBaseDieMethod)) return false;
                         GameplayPatchStamps[Target] = Stamp;
                     }
                     return true;
@@ -663,6 +665,11 @@ namespace Carbon.Plugins
                         CountGameplay(ref GameplayLifecycleRejected); return;
                     }
                     Life.Epoch++; Life.Dead = false; CountGameplay(ref GameplayLifecycleSpawns);
+                    DestroyWatch Existing;
+                    if (DestroyWatches.TryGetValue(Frame.Player, out Existing) && !Existing.Closed &&
+                        EntityLifetimes.IsWitnessEpochUnchanged(Existing.Witness)) {
+                        Existing.DeathSeen=false; Existing.DeathPlayerToken=null; Existing.DeathPlayerEpoch=0;
+                    }
                 }
                 Func<string, bool> Admission = GameplayCaptureAdmission;
                 Action<GameplayHostObservation> Receiver = GameplayObservationReceiver;
@@ -737,13 +744,30 @@ namespace Carbon.Plugins
                 if (Observer == null) return;
                 try { __state = Observer.EnterGameplay(__instance, "died"); }
                 catch (Exception) { Observer.RejectGameplayCapability(true, "death entry"); }
+                try {
+                    var Death=Observer.EnterEntityDeath(__instance, GameplayDieMethod,
+                        __state == null || __state.Lifetime == null ? null : __state.Lifetime.Token,
+                        __state == null || __state.Life == null ? 0 : __state.Life.Epoch);
+                    if (Death != null) { if (__state == null) __state=new GameplayFrame {Observer=Observer}; __state.EntityDeath=Death; }
+                } catch(Exception) { LootCount(ref Observer.EntityDeathRejected); }
             }
             [HarmonyPostfix, HarmonyPriority(Priority.Last)]
             private static void Postfix(bool __runOriginal, GameplayFrame __state)
-            { if (__state != null && __state.Observer != null) __state.Observer.CompleteGameplayPostfix(__runOriginal, __state, true); }
+            {
+                if (__state != null && __state.Observer != null) {
+                    if (__state.Lifetime != null) __state.Observer.CompleteGameplayPostfix(__runOriginal, __state, true);
+                    if (__state.EntityDeath != null) { __state.EntityDeath.Postfix=true; __state.EntityDeath.Original=__runOriginal; }
+                }
+            }
             [HarmonyFinalizer, HarmonyPriority(Priority.Last)]
             private static void Finalizer(Exception __exception, GameplayFrame __state, HitInfo __0)
-            { if (__state != null && __state.Observer != null) __state.Observer.ExitGameplay(__exception, __state, __0, true); }
+            {
+                if (__state != null && __state.Observer != null) {
+                    var Observer=__state.Observer; var Death=__state.EntityDeath;
+                    if (__state.Lifetime != null) Observer.ExitGameplay(__exception, __state, __0, true);
+                    if (Death != null) Observer.CompleteEntityDeath(Death,__exception);
+                }
+            }
         }
         [AutoPatch(IsRequired = true), HarmonyPatch]
         private static class GameplaySpawnPatch
@@ -760,13 +784,28 @@ namespace Carbon.Plugins
                 if (Observer == null) return;
                 try { __state = Observer.EnterGameplay(__instance, "spawned"); }
                 catch (Exception) { Observer.RejectGameplayCapability(false, "spawn entry"); }
+                try {
+                    var Reset = Observer.EnterEntityPlayerRespawn(__instance);
+                    if (Reset != null) { if (__state == null) __state=new GameplayFrame {Observer=Observer}; __state.EntityDeath=Reset; }
+                } catch(Exception) { LootCount(ref Observer.EntityDeathRejected); }
             }
             [HarmonyPostfix, HarmonyPriority(Priority.Last)]
             private static void Postfix(bool __runOriginal, GameplayFrame __state)
-            { if (__state != null && __state.Observer != null) __state.Observer.CompleteGameplayPostfix(__runOriginal, __state, false); }
+            {
+                if (__state != null && __state.Observer != null) {
+                    if (__state.Lifetime != null) __state.Observer.CompleteGameplayPostfix(__runOriginal, __state, false);
+                    if (__state.EntityDeath != null) { __state.EntityDeath.Postfix=true; __state.EntityDeath.Original=__runOriginal; }
+                }
+            }
             [HarmonyFinalizer, HarmonyPriority(Priority.Last)]
             private static void Finalizer(Exception __exception, GameplayFrame __state)
-            { if (__state != null && __state.Observer != null) __state.Observer.ExitGameplay(__exception, __state, null, false); }
+            {
+                if (__state != null && __state.Observer != null) {
+                    var Observer=__state.Observer; var Reset=__state.EntityDeath;
+                    if (__state.Lifetime != null) Observer.ExitGameplay(__exception, __state, null, false);
+                    if (Reset != null) Observer.CompleteEntityDeath(Reset,__exception);
+                }
+            }
         }
     }
 }

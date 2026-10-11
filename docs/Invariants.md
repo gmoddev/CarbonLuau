@@ -301,6 +301,49 @@ registration, reconciliation, replacement, recovery or shutdown replay exists.
 evidence, concrete bounds and final gate status. EntityDied, damage, inventory,
 loot/policies and generic hooks remain outside this addition.
 
+Gameplay B2 separately adds `Workspace.EntityDied:Connect(function(Context) end)`
+in development API `0.6.5-experimental`. Its exact-host envelope covers pinned
+BaseCombatEntity and ResourceEntity families, not every BaseEntity removal or
+arbitrary plugin-defined CLR type. Full original effective virtual Die/OnDied
+or separately pinned DieInstantly completion, original terminal progress,
+unchanged D20 incarnation and qualified final terminal state establish the fact.
+An early OnEntityDeath notification, a dead flag, skipped original, throwing
+tail or lifetime retirement alone does not. Ordinary Kill is removal, not death.
+Death may complete without successful removal; removal may occur inside death
+before its full method returns. No universal cross-Signal order is promised.
+
+The only public payload is a frozen ordinary EntityDeathContext: original Id
+and Prefab plus optional pre-invalidation bounded root Position, Killer,
+KillerId, DamageType and Weapon. It contains no live Entity or HitInfo. Certified
+historical scalars may survive original destruction/ID reuse; fresh callback
+admission validates original host/observer continuity and listener VM/domain/
+publication authority, never the current ID occupant. Captured Killer is an
+original D11 connection, not an account-based replacement. Only the separately
+pinned original synchronous melee RPC application supplies actor authority;
+NPC/environmental/indirect/unproved sources yield nil. DamageType is a strongest
+positive finite component snapshot, not universal cause inference. Weapon is
+an optional cached full WeaponPrefab label, not equipped inventory or ownership.
+
+Private deduplication follows qualified death episodes within the existing
+Spawn incarnation. Full qualified Player RespawnAt (including NPC/disconnected
+and alive-retry cases), TrainCar repair and SamSite healing may rearm the latch;
+failed resets do not. One Entity lifetime can therefore have multiple completed
+deaths without an Entity proxy retarget. All relevant original methods are
+host-pinned; attempt-local bounded weak Harmony record stamps reject subtype
+patch/install/unpatch drift even if acceptable current topology is restored.
+No promise protects against arbitrary CLR restoration of identical internal
+records under I12. Narrow Carbon AutoPatch adaptation observes completion only;
+it must preserve original return/exception behavior and never enter Luau inline.
+
+B2 reuses D7/D10 and D23's shared bounded event transport, scheduling, fairness,
+fresh deadline, cancellation and at-most-once/no-replay model, plus B3's bounded
+weak completed-Spawn watch storage. Loss of that shared watch source's
+qualification disables B2 admission/delivery; it cannot advertise a healthy
+source while silently missing new completed-Spawn membership. It adds no damage
+Signal, generic hook API, new scheduler, public mutation or release authority.
+[Gameplay B2 qualification](GameplayB2-Validation.md) records concrete bounds,
+static versus live coverage, preserved negatives and final gate status.
+
 The historical [registry-continuity investigation](WorldEntityLifetimeInvestigation.md)
 remains valid negative evidence: object, network ID, prefab and current keyed
 occupancy alone do not prove an incarnation, and actual same-object pooled reuse
@@ -1544,6 +1587,13 @@ exact-host server traces, synthetic managed/native tests, sanitizers, hosted CI
 and authenticated-client evidence. Its experimental identity does not qualify
 arbitrary Rust/Carbon builds or client outcomes. Later gameplay/entity/inventory
 signals and loot/damage policies require separate scoped work.
+
+The separately authorized B2 addition is owned by D20 and
+[GameplayB2-Validation.md](GameplayB2-Validation.md). It shares this bounded
+transport but has its own fourteen-field private shape and frozen seven-field
+historical public context. B2's original-action melee attribution qualification
+does not redefine A's already-qualified Player context or infer a universal
+actor from A's fields. No new provider protocol or native export follows.
 
 Gameplay D2A separately implements a **private-only** one-prefab declarative
 loot policy, with qualification status owned by

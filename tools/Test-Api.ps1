@@ -174,7 +174,7 @@ foreach ($Service in @('Players','Commands','Gui','Items','Workspace','DataStore
     if (!$Bootstrap.Contains(('if Name == "{0}"' -f $Service))) { throw "Missing registered service: $Service" }
     if ($Service -ne 'Gui' -and !(Test-Path -LiteralPath (Join-Path $Root "docs/api/Services/$Service.md"))) { throw "Missing service reference: $Service" }
 }
-foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection','GiveItemBehavior','Entity','EntityDestroyedContext',
+foreach ($Type in @('Player','Vector3','CommandContext','Signal','Connection','GiveItemBehavior','Entity','EntityDestroyedContext','EntityDeathContext',
         'DataStore','DataStoreOptions','DataStoreQuery','DataStoreQueryResult','PersistedValue','Enum','DropMode','LootDropEntry')) {
     if (!(Test-Path -LiteralPath (Join-Path $Root "docs/api/Types/$Type.md"))) { throw "Missing type reference: $Type" }
 }
@@ -288,7 +288,7 @@ $Definitions = Get-Content -Raw -LiteralPath (Join-Path $Root 'generated/carbonl
 Test-D3Metadata $Catalog $Definitions $Bootstrap
 $PersistenceTypes = @('DataStoreService','DataStore','DataStoreOptions','DataStoreQuery','DataStoreQueryResult','PersistedValue')
 $EntityTypes = @('Workspace','Entity','EntityDiscoveryOptions')
-$GameplayTypes = @('PlayerDeathContext','PlayerSpawnContext','EntityDestroyedContext')
+$GameplayTypes = @('PlayerDeathContext','PlayerSpawnContext','EntityDestroyedContext','EntityDeathContext')
 $LootTypes = @('Enum','DropMode','Loot','LootDropEntry')
 foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
     $IsPersistence = $Declaration.Id -cin $PersistenceTypes -or $Declaration.OwnerId -cin $PersistenceTypes
@@ -297,7 +297,7 @@ foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
             $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
             throw "Persistence availability/qualification differs: $($Declaration.Id)"
         }
-    } elseif ($Declaration.Id -cin @('Workspace.EntitySpawned','Workspace.EntityDestroyed')) {
+    } elseif ($Declaration.Id -cin @('Workspace.EntitySpawned','Workspace.EntityDestroyed','Workspace.EntityDied')) {
         if ($Declaration.Availability.SinceApi -cne '0.6.5-experimental' -or
             $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
             throw "Workspace gameplay Signal availability/qualification differs: $($Declaration.Id)"
@@ -361,9 +361,10 @@ foreach ($Example in @('exact-lookup','equality','string-id')) {
 $EntityMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Entity' } | ForEach-Object Name | Sort-Object)
 if (($EntityMembers -join ',') -cne 'Id,Position,Prefab') { throw 'Unexpected Entity public member' }
 $WorkspaceMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'Workspace' } | ForEach-Object Name | Sort-Object)
-if (($WorkspaceMembers -join ',') -cne 'EntityDestroyed,EntitySpawned,GetEntitiesInRadiusAsync,GetEntityById' -or
+if (($WorkspaceMembers -join ',') -cne 'EntityDestroyed,EntityDied,EntitySpawned,GetEntitiesInRadiusAsync,GetEntityById' -or
     !$Definitions.Contains('read EntitySpawned: SignalWith<') -or
     !$Definitions.Contains('read EntityDestroyed: SignalWith<(Context: EntityDestroyedContext) -> ()>') -or
+    !$Definitions.Contains('read EntityDied: SignalWith<(Context: EntityDeathContext) -> ()>') -or
     !$Definitions.Contains('function GetEntitiesInRadiusAsync(self, Position: Vector3, Radius: number, Callback: ({Entity}?, string?) -> (), Options: EntityDiscoveryOptions?): ()') -or
     !$Definitions.Contains('function GetEntityById(self, Id: string): (Entity?)') -or
     !$Definitions.Contains('function GetService(self, Name: "Workspace"): (Workspace)')) {
@@ -382,6 +383,34 @@ if (($DestroyedFields.Name -join ',') -cne 'Id,Position,Prefab' -or
 $DestroyedExample = Get-Content -Raw -LiteralPath (Join-Path $Root 'examples/world/entity-destroyed/init.luau')
 if (!$DestroyedExample.Contains('EntityDestroyed:Connect(') -or !$DestroyedExample.Contains('if Context.Position then') -or
     $DestroyedExample -match 'GetEntityById\(|:Spawn\(|:Destroy\(') { throw 'EntityDestroyed example invents live entity or mandatory position' }
+$DeathSignal = @($Catalog.Members | Where-Object { $_.Id -ceq 'Workspace.EntityDied' })
+if ($DeathSignal.Count -ne 1 -or $DeathSignal[0].Kind -cne 'Signal' -or
+    $DeathSignal[0].Signatures.Count -ne 1 -or $DeathSignal[0].Signatures[0].Parameters.Count -ne 1 -or
+    $DeathSignal[0].Signatures[0].Parameters[0].Name -cne 'Context' -or
+    $DeathSignal[0].Signatures[0].Parameters[0].Type -cne 'EntityDeathContext' -or
+    $DeathSignal[0].Signatures[0].Parameters[0].Optional -or $DeathSignal[0].Signatures[0].Parameters[0].Variadic -or
+    $DeathSignal[0].Signatures[0].Returns.Count -ne 0) { throw 'EntityDied callback signature differs' }
+$DeathFields = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'EntityDeathContext' } | Sort-Object Name)
+if (($DeathFields.Name -join ',') -cne 'DamageType,Id,Killer,KillerId,Position,Prefab,Weapon' -or
+    @($DeathFields | Where-Object { $_.Kind -cne 'Property' -or $_.Writable }).Count -ne 0 -or
+    ($DeathFields.ValueType -join ',') -cne 'string?,string,Player?,string?,Vector3?,string,string?' -or
+    !$Definitions.Contains('export type EntityDeathContext = {')) { throw 'EntityDeathContext seven-field snapshot differs' }
+$DeathExample = Get-Content -Raw -LiteralPath (Join-Path $Root 'examples/world/entity-died/init.luau')
+if (!$DeathExample.Contains('EntityDied:Connect(') -or !$DeathExample.Contains('if Context.Position then') -or
+    !$DeathExample.Contains('if Context.KillerId then') -or !$DeathExample.Contains('if Context.DamageType then') -or
+    !$DeathExample.Contains('if Context.Weapon then') -or $DeathExample -match 'GetEntityById\(|GetPlayerByUserId\(|:Spawn\(|:Destroy\(') {
+    throw 'EntityDied example invents optional data, live Entity or account re-resolution'
+}
+$DeathReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/EntityDeathContext.md')
+if (!$DeathReference.Contains('0.6.5-experimental') -or
+    !$DeathReference.Contains('Actor attribution is qualified for the narrow original, synchronous RPC melee') -or
+    !$DeathReference.Contains('supported exact host targets') -or !$DeathReference.Contains('original D11') -or
+    !$DeathReference.Contains('writer scope at full death completion') -or
+    !$DeathReference.Contains('Unknown provenance gives nil Killer and KillerId') -or
+    !$DeathReference.Contains('Callbacks never resolve a UserId to select a replacement connection') -or
+    $DeathReference.Contains('qualification is pending') -or !$DeathReference.Contains('frozen')) {
+    throw 'EntityDeathContext reference omits source-qualified narrow RPC actor, immutable/unknown or no-retarget semantics'
+}
 $WorkspaceReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Services/Workspace.md')
 $EntityReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Types/Entity.md')
 foreach ($Name in @('GetEntityById','first','restart')) {

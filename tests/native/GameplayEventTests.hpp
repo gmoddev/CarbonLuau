@@ -30,6 +30,11 @@ static std::vector<std::string> DestroyedFrame(uint64_t Nonce = 1)
     return {"entitydestroyed", "1", "41", "9", "assets/fixture.prefab", std::to_string(Nonce),
         "1.25", "-2.5", "0", "", "", ""};
 }
+static std::vector<std::string> EntityDiedFrame(uint64_t Nonce = 1)
+{
+    return {"entitydied", "1", "41", "9", "assets/fixture.prefab", std::to_string(Nonce),
+        "1.25", "-2.5", "0", "2", "76561190000999889", "Killer", "Slash", "assets/weapon.prefab"};
+}
 static uint32_t Host(uint64_t OwnerId, uint32_t Operation, const char* Bytes, uint32_t Length,
     char* Output, uint32_t Capacity, uint32_t* Written)
 {
@@ -39,7 +44,8 @@ static uint32_t Host(uint64_t OwnerId, uint32_t Operation, const char* Bytes, ui
     else if (Operation == 9) {
         Vm& Runtime = *CurrentRuntime;
         if (Length >= 5 && (!std::memcmp(Bytes, "died\0", 5) || (Length >= 8 && !std::memcmp(Bytes, "spawned\0", 8)) ||
-            (Length >= 16 && !std::memcmp(Bytes, "entitydestroyed\0", 16)))) {
+            (Length >= 16 && !std::memcmp(Bytes, "entitydestroyed\0", 16)) ||
+            (Length >= 11 && !std::memcmp(Bytes, "entitydied\0", 11)))) {
             ++Gates;
             Check(Runtime.GameplayInFlightOwner && Runtime.GameplayInFlightOwner->Id == OwnerId &&
                 Runtime.GameplayInFlightReservation && Runtime.GameplayInFlightPayload &&
@@ -108,6 +114,33 @@ struct Fixture {
 
 static void Codec()
 {
+    {
+    Fixture F("return");
+    F.Run(F.Root, "game:GetService('Workspace').EntityDied:Connect(function(C) "
+        "assert(table.isfrozen(C) and C.Id=='9' and C.Prefab=='assets/fixture.prefab') "
+        "assert(C.Position==Vector3.new(1.25,-2.5,0) and C.Killer.UserId=='76561190000999889') "
+        "assert(C.Killer.Name=='Killer' and C.KillerId==C.Killer.UserId and C.DamageType=='Slash') "
+        "assert(C.Weapon=='assets/weapon.prefab' and C.Entity==nil) end)");
+    auto Died = EntityDiedFrame(810); Died[1] = "2";
+    Check(F.Submit(Died) == CL_OK && F.Step() == CL_OK && Gates == 1 && Releases.count(810),
+        "EntityDied fourteen-field frozen callback and original actor proxy");
+    uint64_t Before = F.Runtime().Used, Sequence = F.Runtime().Sequence;
+    TestAllocationFailureAfter = 0;
+    for (const auto& Change : std::vector<std::pair<unsigned, std::string>> {
+        {1,"0"},{1,"01"},{2,"0"},{3,"0"},{4,""},{4,std::string(513,'x')},{5,"0"},
+        {6,"NaN"},{7,""},{9,"0"},{10,""},{11,std::string(129,'x')},{12,std::string(33,'x')},
+        {13,std::string(513,'x')},{13,std::string("\xc0\x80",2)}}) {
+        auto Bad = EntityDiedFrame(811); Bad[Change.first] = Change.second;
+        Check(F.Submit(Bad) == CL_INVALID_ARGUMENT && F.Runtime().Used == Before &&
+            F.Runtime().Sequence == Sequence && !F.Runtime().GameplayReserved,
+            "malformed EntityDied rejected before allocation or reservation");
+    }
+    auto Missing = EntityDiedFrame(811); Missing.pop_back();
+    auto Extra = EntityDiedFrame(811); Extra.push_back("");
+    Check(F.Submit(Missing) == CL_INVALID_ARGUMENT && F.Submit(Extra) == CL_INVALID_ARGUMENT,
+        "EntityDied exact fourteen fields, not legacy twelve");
+    TestAllocationFailureAfter = -1;
+    }
     {
     Fixture F("return");
     F.Run(F.Root, "game:GetService('Workspace').EntityDestroyed:Connect(function(Context) "
@@ -208,6 +241,23 @@ static void Codec()
 
 static void Ownership()
 {
+    for (int Mode = 0; Mode < 5; ++Mode) {
+        Fixture F("return");
+        const char* Body = Mode == 1 ? "error('ordinary')" : Mode == 2 ? "coroutine.yield()" :
+            Mode == 3 ? "while true do end" : "assert(table.isfrozen(C))";
+        F.Run(F.Root, std::string("game:GetService('Workspace').EntityDied:Connect(function(C) ") + Body + " end)");
+        auto Died = EntityDiedFrame(820); Died[1] = "2";
+        Check(F.Submit(Died) == CL_OK && F.Submit(Died) == CL_INVALID_ARGUMENT, "death duplicate ownership cannot replay");
+        if (Mode == 4) {
+            Check(cl_domain_destroy(F.VmId,F.Root) == CL_OK && Releases.count(820) && !F.Runtime().GameplayReserved,
+                "death domain retirement releases old snapshot before replacement");
+        } else {
+            auto Status = F.Step(Mode == 3 ? 3000000 : 100000000);
+            Check(Status == (Mode == 0 ? CL_OK : Mode == 3 ? CL_TIMEOUT : CL_RUNTIME_ERROR) &&
+                Releases.count(820) && !F.Runtime().GameplayReserved && !F.Runtime().GameplayInFlightPayload,
+                "death normal/error/yield/fatal consumes exactly once without replay");
+        }
+    }
     {
         Fixture F("error('must be suppressed')"); RejectGate = true;
         Check(F.Submit(DestroyedFrame(701)) == CL_OK && F.Step() == CL_OK && Releases.count(701) &&
@@ -315,6 +365,17 @@ static void Allocation()
         Check((Status == CL_OK || Status == CL_MEMORY_LIMIT || Status == CL_RUNTIME_ERROR) &&
             F.Runtime().GameplayReserved == 0 && Releases.count(1) == 1,
             "EntityDestroyed record/Vector3 allocation failures refund exactly once");
+    }
+    for (int Position = 0; Position < 64; ++Position) {
+        Fixture F("return");
+        F.Run(F.Root, "game:GetService('Workspace').EntityDied:Connect(function(C) "
+            "assert(table.isfrozen(C) and C.Killer and C.Position) end)");
+        auto Died = EntityDiedFrame(830); Died[1]="2"; Died[4]=std::string(512,'x'); Died[13]=std::string(512,'w');
+        Check(F.Submit(Died) == CL_OK, "death record/actor/vector allocation queue");
+        TestAllocationFailureAfter = Position; auto Status = F.Step(); TestAllocationFailureAfter = -1;
+        Check((Status == CL_OK || Status == CL_MEMORY_LIMIT || Status == CL_RUNTIME_ERROR) &&
+            !F.Runtime().GameplayReserved && Releases.count(830) == 1,
+            "death record/actor/vector allocation fault releases original reservation once");
     }
 }
 inline void RunFaults()

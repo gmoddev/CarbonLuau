@@ -171,6 +171,19 @@
       "Preview": "Unavailable"
     },
     {
+      "Id": "EntityDeathContext",
+      "Name": "EntityDeathContext",
+      "Kind": "Class",
+      "Summary": "Immutable qualified completed-death snapshot, independent of actual removal; no live Entity proxy.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Unavailable",
+      "Representation": "Record"
+    },
+    {
       "Id": "EntityDestroyedContext",
       "Name": "EntityDestroyedContext",
       "Kind": "Class",
@@ -1165,6 +1178,111 @@
         "Qualification": "Experimental"
       },
       "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDeathContext.DamageType",
+      "Name": "DamageType",
+      "OwnerId": "EntityDeathContext",
+      "Kind": "Property",
+      "Summary": "Optional strongest positive finite component label from the qualified killing-hit snapshot, not a universal cause classifier.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string?",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDeathContext.Id",
+      "Name": "Id",
+      "OwnerId": "EntityDeathContext",
+      "Kind": "Property",
+      "Summary": "Original canonical network ID for event correlation, not reusable lifetime authority.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDeathContext.Killer",
+      "Name": "Killer",
+      "OwnerId": "EntityDeathContext",
+      "Kind": "Property",
+      "Summary": "Optional captured exact human D11 connection, never retargeted by UserId; attribution is qualified source-specific, not inferred ownership.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Player?",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDeathContext.KillerId",
+      "Name": "KillerId",
+      "OwnerId": "EntityDeathContext",
+      "Kind": "Property",
+      "Summary": "Optional legitimate captured human initiator UserId, not a delivery-time lookup.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string?",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDeathContext.Position",
+      "Name": "Position",
+      "OwnerId": "EntityDeathContext",
+      "Kind": "Property",
+      "Summary": "Optional bounded root-world observation before the death operation invalidates the source.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "Vector3?",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDeathContext.Prefab",
+      "Name": "Prefab",
+      "OwnerId": "EntityDeathContext",
+      "Kind": "Property",
+      "Summary": "Original full prefab snapshot before death invalidation.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string",
+      "Writable": false
+    },
+    {
+      "Id": "EntityDeathContext.Weapon",
+      "Name": "Weapon",
+      "OwnerId": "EntityDeathContext",
+      "Kind": "Property",
+      "Summary": "Optional qualified cached full WeaponPrefab label from the killing hit; not an Item, equipped-weapon or owner guarantee.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "string?",
       "Writable": false
     },
     {
@@ -8310,6 +8428,32 @@
             {
               "Name": "Context",
               "Type": "EntityDestroyedContext",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": []
+        }
+      ]
+    },
+    {
+      "Id": "Workspace.EntityDied",
+      "Name": "EntityDied",
+      "OwnerId": "Workspace",
+      "Kind": "Signal",
+      "Summary": "Future qualified full terminal death completions with frozen original-incarnation snapshots; death differs from removal, may deliver after EntityDestroyed, and never replays history.",
+      "Preview": "Unavailable",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "Context",
+              "Type": "EntityDeathContext",
               "Optional": false,
               "Variadic": false
             }

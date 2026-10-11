@@ -9,6 +9,10 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length == 3 && Args[0] == "--entitydied") {
+            try { EntityDiedSignalTests.Run(Args[1], Args[2]); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:EntityDied] FAIL: " + Error); return 1; }
+        }
         if (Args.Length == 1 && Args[0] == "--storageasync") {
             try { StorageAsyncCompletionTests.Run(); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:StorageAsync] FAIL: " + Error); return 1; }
@@ -197,6 +201,7 @@ internal static class Program
             GuiFoundation3DTests.RunModel();
             GuiFoundation3ETests.RunModel();
             EntityPublicationWitnessTests.Run();
+            EntityDiedSignalTests.Run();
             PlayerInteractionFoundation1CTests.RunModel();
             PlayerInteractionFoundation1DTests.RunModel();
             PlayerInteractionFoundation1FATests.RunModel();
@@ -275,6 +280,7 @@ internal static class Program
                 GameplayDependencySignalTests.RunNative(Native);
                 EntitySpawnSignalTests.RunNative(Native);
                 EntityDestroyedSignalTests.RunNative(Native);
+                EntityDiedSignalTests.RunNative(Native);
                 GuiFoundation1BTests.RunNative(Native);
                 GuiFoundation1CTests.RunNative(Native);
                 GuiFoundation1DTests.RunNative(Native);

@@ -62,6 +62,14 @@ jobs:
         if: runner.os == 'Linux'
         timeout-minutes: 5
         run: mono dist/runtime/RuntimeTests.exe --lootpublic "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
+      - name: Entity death public binding (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        run: ./dist/runtime/RuntimeTests.exe --entitydied "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Entity death public binding (Linux)
+        if: runner.os == 'Linux'
+        timeout-minutes: 5
+        run: mono dist/runtime/RuntimeTests.exe --entitydied "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
       - name: Private Entity lifetime model
         run: dotnet run --project tests/entity-lifetime-model/EntityLifetimeModelTests.csproj -c Release
       - name: Private Entity discovery scheduler model

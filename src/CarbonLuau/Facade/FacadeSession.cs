@@ -352,6 +352,7 @@ namespace Carbon.Plugins
                 Pending.Clear(); Listeners.Clear(); Commands.Clear(); LootRules.Clear(); Publications.Clear();
                 EntityWitnesses.Clear(); ClearStorageHints(); Gui.Dispose();
                 FirstPublication = null; GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = GameplayEntityDestroyedListeners = 0;
+                GameplayEntityDiedListeners = 0;
                 World.InvalidateGameplayDemand();
             }
             private bool Gate(string[] Fields)
@@ -378,7 +379,7 @@ namespace Carbon.Plugins
                             string[] Value = World.Entities.Read(this, Fields[2], Fields[7], "Id");
                             if (Value.Length != 1 || Value[0] != Fields[3]) return false;
                         } catch (FacadeException) { return false; }
-                    } else if (Fields[0] != "entitydestroyed" && World.Players.Resolve(Fields[2], Fields[3]) == null) return false;
+                    } else if (Fields[0] != "entitydestroyed" && Fields[0] != "entitydied" && World.Players.Resolve(Fields[2], Fields[3]) == null) return false;
                 }
                 ulong IdValue; string Kind;
                 return ulong.TryParse(Fields[1], out IdValue) && Listeners.TryGetValue(IdValue, out Kind) && Kind == Fields[0];

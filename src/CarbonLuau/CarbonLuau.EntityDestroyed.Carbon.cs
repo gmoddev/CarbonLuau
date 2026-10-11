@@ -52,6 +52,9 @@ namespace Carbon.Plugins
             internal readonly int Slot,Charge,Thread;
             internal CancellationTokenRegistration Registration;
             internal bool Closed,Published,Certified;
+            internal bool DeathSeen;
+            internal string DeathPlayerToken;
+            internal ulong DeathPlayerEpoch;
             internal bool NativeNotified;
             internal ulong LastLivePublication;
             internal PlayerPosition? KillPosition;

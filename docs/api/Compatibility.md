@@ -54,6 +54,17 @@ not attempted Kill. Native-only destruction supplies nil Position and does not
 promise Rust bookkeeping cleanup. Source/patch drift fails closed; no historical
 replay or new package identity follows.
 
+The separate development `Workspace.EntityDied` contract also uses
+`0.6.5-experimental`, with a seven-field frozen historical
+[EntityDeathContext](Types/EntityDeathContext.md). Full death and successful
+removal are different observations. Runtime registration requires its own
+qualified source. Original D11 actor attribution is qualified only for the narrow
+synchronous RPC melee path on the supported exact hosts, with same-writer-scope
+validation at full death completion. Other provenance supplies nil actors;
+metadata does not infer actors by UserId. Preview remains
+unavailable. Existing event/position-attempt budgets and D20 startup continuity
+apply, with no new package, ABI or provider identity.
+
 [Persistence Foundation 2](../PersistenceFoundation2.md) defines structured
 Query for the same `0.5.0-experimental` API. Optional field-name hints in
 `GetDataStore(Name, Options?)` are the 2B addition and appear in generated

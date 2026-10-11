@@ -95,20 +95,30 @@ bool GameplaySnapshotCoordinate(std::string_view Text)
 bool ValidateGameplay(const char* Bytes, uint32_t Length, uint64_t& Reservation)
 {
     if (Length > 2048) return false;
-    std::array<std::string_view,12> Fields;
+    std::array<std::string_view,14> Fields;
     size_t Start = 0, Count = 0;
     for (size_t End = 0; End < Length; ++End) if (!Bytes[End]) {
         if (Count == Fields.size()) return false;
         Fields[Count++] = std::string_view(Bytes + Start, End - Start); Start = End + 1;
     }
-    if (Count != Fields.size() || Start != Length) return false;
+    if (Start != Length || Count != (Fields[0] == "entitydied" ? 14u : 12u)) return false;
     uint64_t Ignored = 0;
+    if (Fields[0] == "entitydied") {
+        if (!GameplayIdentity(Fields[1], Ignored) || !GameplayIdentity(Fields[2], Ignored) || !GameplayIdentity(Fields[3], Ignored) ||
+            Fields[4].empty() || !GameplayName(Fields[4], 512) || !GameplayIdentity(Fields[5], Reservation)) return false;
+        bool NoPosition = Fields[6].empty() && Fields[7].empty() && Fields[8].empty();
+        if (!NoPosition && (!GameplaySnapshotCoordinate(Fields[6]) || !GameplaySnapshotCoordinate(Fields[7]) ||
+            !GameplaySnapshotCoordinate(Fields[8]))) return false;
+        bool NoKiller = Fields[9].empty() && Fields[10].empty() && Fields[11].empty();
+        if (!NoKiller && (!GameplayIdentity(Fields[9], Ignored) || !GameplayUserId(Fields[10]) || !GameplayName(Fields[11]))) return false;
+        return GameplayName(Fields[12], 32) && GameplayName(Fields[13], 512);
+    }
     if (Fields[0] == "entityspawned") {
         if (!GameplayIdentity(Fields[1], Ignored) || !GameplayIdentity(Fields[2], Ignored) ||
             !GameplayIdentity(Fields[3], Ignored) || Fields[4].empty() || !GameplayName(Fields[4], 512) ||
             !GameplayIdentity(Fields[5], Reservation) || !GameplayIdentity(Fields[6], Ignored) ||
             !GameplayIdentity(Fields[7], Ignored)) return false;
-        for (size_t Index = 8; Index < Fields.size(); ++Index) if (!Fields[Index].empty()) return false;
+        for (size_t Index = 8; Index < Count; ++Index) if (!Fields[Index].empty()) return false;
         return true;
     }
     if (Fields[0] == "entitydestroyed") {
@@ -118,7 +128,7 @@ bool ValidateGameplay(const char* Bytes, uint32_t Length, uint64_t& Reservation)
         bool NoPosition = Fields[6].empty() && Fields[7].empty() && Fields[8].empty();
         if (!NoPosition && (!GameplaySnapshotCoordinate(Fields[6]) || !GameplaySnapshotCoordinate(Fields[7]) ||
             !GameplaySnapshotCoordinate(Fields[8]))) return false;
-        for (size_t Index = 9; Index < Fields.size(); ++Index) if (!Fields[Index].empty()) return false;
+        for (size_t Index = 9; Index < Count; ++Index) if (!Fields[Index].empty()) return false;
         return true;
     }
     if (Fields[0] != "died" && Fields[0] != "spawned") return false;
@@ -310,7 +320,7 @@ ClStatus cl_domain_event(ClHandle Id, ClHandle DomainId, const char* Payload, ui
     // This reserved tag is never an ordinary script Signal/event dispatch.
     if (Kind == "discovery")
         return ReadyDiscovery(*Runtime, *Owner, Payload, Length);
-    bool Gameplay = Kind == "died" || Kind == "spawned" || Kind == "entityspawned" || Kind == "entitydestroyed";
+    bool Gameplay = Kind == "died" || Kind == "spawned" || Kind == "entityspawned" || Kind == "entitydestroyed" || Kind == "entitydied";
     uint64_t Reservation = 0;
     if (Gameplay) {
         if (!ValidateGameplay(Payload, Length, Reservation)) return CL_INVALID_ARGUMENT;

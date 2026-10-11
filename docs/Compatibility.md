@@ -69,6 +69,21 @@ shared, not per addon. The evidence record owns current completion gates;
 historical A/B1 evidence is preserved, not substituted. No package/ABI/provider/
 schema/Luau identity change or release/tag follows.
 
+Gameplay B2 adds `Workspace.EntityDied` and the frozen EntityDeathContext under
+`0.6.5-experimental`. [B2 evidence](GameplayB2-Validation.md) owns its final gate
+status and distinguishes all-type structural/loaded-topology coverage from
+representative physical deaths and synthetic VM/lifecycle tests. The source
+observes qualified full terminal completion in pinned combat/resource families;
+ordinary removal is not death. Historical Id/Prefab/optional scalar snapshots
+never reacquire the current ID occupant. Actor authority is source-specific
+original RPC melee only; unproved NPC/environment/indirect attribution is nil.
+Qualified episode resets do not change D20 incarnation or D11 connection rules.
+Eight weak attempt-topology stamps and sixteen frames bound private synchronous
+bookkeeping; all established event budgets remain shared. No authenticated-client
+claim, generic hook, additional mutation, package/ABI/provider/schema/Luau change
+or release/tag follows from this phase. Remaining source/qualification gates are
+reported explicitly in the evidence record, not inferred from generated types.
+
 Phase 0 package `0.0.1`, Phase 1 package `0.1.0`, native ABI `1.0`, and the probe magic are not scripting API versions. Native ABI major mismatch is rejected before runtime binding; layouts and ownership are specified in [Phase1.md](Phase1.md#native-boundary-and-ownership). A package bump does not automatically mean a script break. Phase 3 introduces package `0.3.0`, additive native ABI `1.2`, and the separate scripting identity `CarbonLuau` / `0.3.0-experimental` / `Experimental`, inspectable through read-only game fields and operator status. D8/D12 own the minimum policy; [public compatibility](api/Compatibility.md) documents it. Additive changes preserve existing contracts; removing/renaming an API or changing its types, lifetime, failures or authorization is breaking and requires an explicit version, documentation and migration decision. A larger deprecation/negotiation framework remains deferred.
 
 The published `v0.3.0` release maps package `0.3.0`, scripting API

@@ -83,6 +83,11 @@ namespace Carbon.Plugins
         private void QualifyEntityStartup() { }
         private void StopEntityObserver() { }
         private void InitializeLootSource() { }
+        private void InitializeEntityDiedSource() { }
+        private void StopEntityDiedSource() { }
+        private void InitializeEntityMeleeSource() { }
+        private void StopEntityMeleeSource() { }
+        private string EntityDiedStatus { get { return "entity death adapter omitted from persistence teardown fixture"; } }
         private void StopLootSource() { }
         private string LootStatus { get { return "private loot adapter omitted from persistence teardown fixture"; } }
         // B3's exact-host watch teardown is outside this adapter-only fixture.

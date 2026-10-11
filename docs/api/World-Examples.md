@@ -35,3 +35,13 @@ incarnation snapshot, not a destroyed live Entity. Position may be nil, and Id
 must not be treated as durable lifetime authority. It observes successful removal
 without causing destruction. [Gameplay B3](../GameplayB3-Validation.md) owns its
 separate host/transport qualification and current completion gates.
+
+The [EntityDied example](../../examples/world/entity-died/init.luau) targets the
+development `0.6.5-experimental` contract and handles unavailable-source
+registration. It observes a full-death snapshot rather than causing death or
+removal. Frozen Id/Prefab can describe an already retired original incarnation;
+all five additional fields are optional. It guards Position, captured actor and
+damage/weapon labels and never resolves a network ID or UserId to select a new
+object. Actor fields are supplied only by the qualified original synchronous
+RPC melee source on the supported exact hosts; other or unknown provenance
+leaves them nil. Tooling preview does not simulate it.

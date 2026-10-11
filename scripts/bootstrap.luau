@@ -15,6 +15,14 @@
 -- @carbonluau-api {"Type":"PlayerDeathContext","Kind":"Class","Summary":"Immutable terminal-death snapshot; optional fields reflect qualified observations.","Representation":"Record","SinceApi":"0.6.5-experimental"}
 -- @carbonluau-api {"Type":"PlayerSpawnContext","Kind":"Class","Summary":"Immutable completed-spawn snapshot.","Representation":"Record","SinceApi":"0.6.5-experimental"}
 -- @carbonluau-api {"Type":"EntityDestroyedContext","Kind":"Class","Summary":"Immutable original-incarnation snapshot after qualified terminal world removal or completed native Entity deletion; no live Entity proxy or bookkeeping-cleanup guarantee.","Representation":"Record","SinceApi":"0.6.5-experimental"}
+-- @carbonluau-api {"Type":"EntityDeathContext","Kind":"Class","Summary":"Immutable qualified completed-death snapshot, independent of actual removal; no live Entity proxy.","Representation":"Record","SinceApi":"0.6.5-experimental","Preview":"Unavailable"}
+-- @carbonluau-api {"Owner":"EntityDeathContext","Name":"Id","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Original canonical network ID for event correlation, not reusable lifetime authority.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"        DeathContext.Id = Fields[4]"}
+-- @carbonluau-api {"Owner":"EntityDeathContext","Name":"Prefab","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Original full prefab snapshot before death invalidation.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"        DeathContext.Prefab = Fields[5]"}
+-- @carbonluau-api {"Owner":"EntityDeathContext","Name":"Position","Kind":"Property","ValueType":"Vector3?","Writable":false,"Summary":"Optional bounded root-world observation before the death operation invalidates the source.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"            DeathContext.Position = Vector3.new(tonumber(Fields[7]), tonumber(Fields[8]), tonumber(Fields[9]))"}
+-- @carbonluau-api {"Owner":"EntityDeathContext","Name":"Killer","Kind":"Property","ValueType":"Player?","Writable":false,"Summary":"Optional captured exact human D11 connection, never retargeted by UserId; attribution is qualified source-specific, not inferred ownership.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"            DeathContext.Killer = GetPlayer(Fields[10], Fields[11], Fields[12])"}
+-- @carbonluau-api {"Owner":"EntityDeathContext","Name":"KillerId","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"Optional legitimate captured human initiator UserId, not a delivery-time lookup.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"            DeathContext.KillerId = Fields[11]"}
+-- @carbonluau-api {"Owner":"EntityDeathContext","Name":"DamageType","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"Optional strongest positive finite component label from the qualified killing-hit snapshot, not a universal cause classifier.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"        if Fields[13] ~= \"\" then DeathContext.DamageType = Fields[13] end"}
+-- @carbonluau-api {"Owner":"EntityDeathContext","Name":"Weapon","Kind":"Property","ValueType":"string?","Writable":false,"Summary":"Optional qualified cached full WeaponPrefab label from the killing hit; not an Item, equipped-weapon or owner guarantee.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"        if Fields[14] ~= \"\" then DeathContext.Weapon = Fields[14] end"}
 -- @carbonluau-api {"Owner":"EntityDestroyedContext","Name":"Id","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Captured original canonical network ID for event correlation, not reusable lifetime authority.","SinceApi":"0.6.5-experimental","Binding":"        DestroyedContext.Id = Fields[4]"}
 -- @carbonluau-api {"Owner":"EntityDestroyedContext","Name":"Prefab","Kind":"Property","ValueType":"string","Writable":false,"Summary":"Captured original prefab identity before removal.","SinceApi":"0.6.5-experimental","Binding":"        DestroyedContext.Prefab = Fields[5]"}
 -- @carbonluau-api {"Owner":"EntityDestroyedContext","Name":"Position","Kind":"Property","ValueType":"Vector3?","Writable":false,"Summary":"Optional pre-removal root world position snapshot.","SinceApi":"0.6.5-experimental","Binding":"            DestroyedContext.Position = Vector3.new(tonumber(Fields[7]), tonumber(Fields[8]), tonumber(Fields[9]))"}
@@ -702,6 +710,8 @@ local Workspace = {}
 Workspace.EntitySpawned = Signal("entityspawned")
 -- @carbonluau-api {"Owner":"Workspace","Name":"EntityDestroyed","Kind":"Signal","Args":[["Context","EntityDestroyedContext"]],"Returns":[],"Summary":"Future qualified terminal world removals or completed native Entity deletions, with immutable original-incarnation snapshots, no live Entity proxy and no historical replay.","SinceApi":"0.6.5-experimental","Binding":"Workspace.EntityDestroyed = Signal(\"entitydestroyed\")"}
 Workspace.EntityDestroyed = Signal("entitydestroyed")
+-- @carbonluau-api {"Owner":"Workspace","Name":"EntityDied","Kind":"Signal","Args":[["Context","EntityDeathContext"]],"Returns":[],"Summary":"Future qualified full terminal death completions with frozen original-incarnation snapshots; death differs from removal, may deliver after EntityDestroyed, and never replays history.","SinceApi":"0.6.5-experimental","Preview":"Unavailable","Binding":"Workspace.EntityDied = Signal(\"entitydied\")"}
+Workspace.EntityDied = Signal("entitydied")
 local function GetEntity(Fields, Offset)
     local Entity = MakeUserdata(EntityMeta)
     EntityRecords[Entity] = {Token = Fields[Offset + 1], Publication = Fields[Offset + 3]}
@@ -817,6 +827,22 @@ local function Dispatch(Fields)
             DestroyedContext.Position = Vector3.new(tonumber(Fields[7]), tonumber(Fields[8]), tonumber(Fields[9]))
         end
         Callback(table.freeze(DestroyedContext))
+        return
+    end
+    if Fields[1] == "entitydied" then
+        local DeathContext = {}
+        DeathContext.Id = Fields[4]
+        DeathContext.Prefab = Fields[5]
+        if Fields[7] ~= "" then
+            DeathContext.Position = Vector3.new(tonumber(Fields[7]), tonumber(Fields[8]), tonumber(Fields[9]))
+        end
+        if Fields[10] ~= "" then
+            DeathContext.Killer = GetPlayer(Fields[10], Fields[11], Fields[12])
+            DeathContext.KillerId = Fields[11]
+        end
+        if Fields[13] ~= "" then DeathContext.DamageType = Fields[13] end
+        if Fields[14] ~= "" then DeathContext.Weapon = Fields[14] end
+        Callback(table.freeze(DeathContext))
         return
     end
     local Player = GetPlayer(Fields[3], Fields[4], Fields[5])

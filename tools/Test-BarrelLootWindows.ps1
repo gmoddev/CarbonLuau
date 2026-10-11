@@ -8,6 +8,7 @@ param(
     [Parameter(Mandatory=$true)][string]$QualifiedHookSource,
     [switch]$Qualification,
     [switch]$Public,
+    [switch]$EntityDeath,
     [switch]$RunCoordinated
 )
 $ErrorActionPreference = 'Stop'
@@ -15,6 +16,7 @@ $Prefix = '[CarbonLuau:BarrelLootResearchRunner]'
 $FixtureMarker = if ($Qualification) { '[CarbonLuau:LootFixture]' } else { '[CarbonLuau:BarrelLootResearch]' }
 $PassMarker = if ($Public) { 'PASS public qualification' } elseif ($Qualification) { 'PASS private qualification' } else { 'PASS mechanism' }
 if ($Public -and !$Qualification) { throw 'Public qualification requires the established D2A fixture substrate' }
+if ($EntityDeath -and !$Public) { throw 'Entity death qualification requires the public fixture substrate' }
 if ([IO.Path]::GetFullPath($Work).TrimEnd('\') -ne 'D:\Sandbox\Codex\Entity1AStartup') {
     throw "$Prefix Expected established task-owned Windows server"
 }
@@ -133,11 +135,14 @@ try {
     # which returns -1 on Windows. Accept only after full receipts/shutdown below.
     if ($Server.ExitCode -notin @(0,-1)) { throw "$Prefix Server exited with code $($Server.ExitCode): $Log" }
     $Content = Get-Content -Raw -LiteralPath $Log
-    $Content -split "`n" | Where-Object { $_ -match 'LootFixture|MEASURED case=|PASS mechanism|EntityLifetime|Server startup complete' }
+    $Content -split "`n" | Where-Object { $_ -match 'LootFixture|EntityDiedFixture|EntityMeleeFixture|MEASURED case=|PASS mechanism|EntityLifetime|Server startup complete' }
     $Required = @($PassMarker)
     foreach ($Marker in $Required) {
         if (!$Content.Contains($FixtureMarker + ' ' + $Marker)) { throw "$Prefix Missing receipt '$Marker': $Log" }
     }
+    if ($EntityDeath -and (!$Content.Contains('[CarbonLuau:EntityDiedFixture] PASS bounded public transport and actual RPC source') -or
+        !$Content.Contains('[CarbonLuau:EntityMeleeFixture] PASS actual RPC source/terminal proof and cleanup') -or
+        $Content -match '\[CarbonLuau:(EntityDiedFixture|EntityMeleeFixture)\] (FAIL|CLEANUP FAIL)')) { throw "$Prefix Entity death receipt missing/failed: $Log" }
     if ($Content -match '\[CarbonLuau:(BarrelLootResearch|LootFixture)\] (FAIL|CLEANUP_FAIL)' -or
         $Content -notmatch '\[CarbonLuau:EntityLifetime\] Private startup observer qualified') { throw "$Prefix Qualification failed: $Log" }
     Write-Output "$Prefix EVIDENCE $Log SHA256=$((Get-FileHash -LiteralPath $Log).Hash) PACKAGE=$($InputHashes['package.cszip']) NATIVE=$($InputHashes['native.dll']) COMPILER=$($InputHashes['compiler.exe'])"

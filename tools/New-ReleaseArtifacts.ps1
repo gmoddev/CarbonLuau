@@ -149,6 +149,7 @@ try {
                 @{ Source = (Join-Path $Root 'docs/api/Types/PersistedValue.md'); Name = 'docs/api/Types/PersistedValue.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Services/Workspace.md'); Name = 'docs/api/Services/Workspace.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Types/Entity.md'); Name = 'docs/api/Types/Entity.md' },
+                @{ Source = (Join-Path $Root 'docs/api/Types/EntityDeathContext.md'); Name = 'docs/api/Types/EntityDeathContext.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Discovery.md'); Name = 'docs/api/Discovery.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Types/EntityDiscoveryOptions.md'); Name = 'docs/api/Types/EntityDiscoveryOptions.md' },
                 @{ Source = (Join-Path $Root 'docs/api/World-Examples.md'); Name = 'docs/api/World-Examples.md' },

@@ -11,7 +11,7 @@ namespace Carbon.Plugins
             internal const int CapturesPerFrame = 128, DeliveriesPerFrame = 128, DeliveriesPerDomain = 32;
             internal const int VisitsPerFrame = 4096, Reservations = 512, PayloadBytes = 2048;
             internal const int RetainedTransportBytes = Reservations * PayloadBytes * 2;
-            internal static bool Kind(string Value) { return Value == "died" || Value == "spawned" || Value == "entityspawned" || Value == "entitydestroyed"; }
+            internal static bool Kind(string Value) { return Value == "died" || Value == "spawned" || Value == "entityspawned" || Value == "entitydestroyed" || Value == "entitydied"; }
             internal static bool Identity(string Text, out ulong Value)
             {
                 Value = 0;
@@ -61,6 +61,57 @@ namespace Carbon.Plugins
             }
         }
 
+        // The qualified source must capture a bounded weak/scalar certificate,
+        // never a strong host object or an Entity-by-ID lookup. Its historical
+        // completion predicate may remain valid after the original retires.
+        // This internal transport alone does not qualify a death source.
+        internal sealed class GameplayEntityDiedObservation
+        {
+            internal readonly string Id, Prefab;
+            internal readonly ulong EpochIdentity;
+            internal readonly PlayerPosition? Position;
+            internal readonly Func<bool> ValidateCompletion;
+            internal readonly string KillerToken, KillerId, KillerName, DamageType, Weapon;
+            internal readonly string EpochText, X, Y, Z;
+            internal GameplayEntityDiedObservation(string Id, string Prefab, ulong EpochIdentity,
+                PlayerPosition? Position, Func<bool> ValidateCompletion, string KillerToken = null,
+                string KillerId = null, string KillerName = null, string DamageType = null, string Weapon = null)
+            {
+                ulong Parsed;
+                if (!GameplayEventPolicy.Identity(Id, out Parsed) || EpochIdentity == 0 || ValidateCompletion == null)
+                    throw new FacadeException("invalid entity death observation");
+                FacadePolicy.Text(Prefab, 512, "entity prefab");
+                if (Prefab.Length == 0) throw new FacadeException("invalid entity prefab");
+                if (KillerToken != null) {
+                    if (!GameplayEventPolicy.Identity(KillerToken, out Parsed)) throw new FacadeException("invalid killer lifetime");
+                    FacadePolicy.UserId(KillerId); FacadePolicy.Text(KillerName, 128, "killer name");
+                } else if (KillerId != null || KillerName != null) throw new FacadeException("incomplete killer snapshot");
+                if (DamageType != null) FacadePolicy.Text(DamageType, 32, "damage type");
+                if (Weapon != null) FacadePolicy.Text(Weapon, 512, "weapon");
+                this.Id = Id; this.Prefab = Prefab; this.EpochIdentity = EpochIdentity;
+                this.Position = Position; this.ValidateCompletion = ValidateCompletion;
+                this.KillerToken = KillerToken; this.KillerId = KillerId; this.KillerName = KillerName;
+                this.DamageType = DamageType; this.Weapon = Weapon;
+                EpochText = EpochIdentity.ToString(CultureInfo.InvariantCulture);
+                X = Position.HasValue ? Coordinate(Position.Value.X) : "";
+                Y = Position.HasValue ? Coordinate(Position.Value.Y) : "";
+                Z = Position.HasValue ? Coordinate(Position.Value.Z) : "";
+            }
+            private static string Coordinate(float Value)
+            {
+                if (Single.IsNaN(Value) || Single.IsInfinity(Value)) throw new FacadeException("invalid gameplay position");
+                return Value == 0 ? "0" : ((double)Value).ToString("R", CultureInfo.InvariantCulture);
+            }
+            internal bool Matches(string[] Fields)
+            {
+                return Fields != null && Fields.Length == 14 && Fields[0] == "entitydied" &&
+                    Fields[2] == EpochText && Fields[3] == Id && Fields[4] == Prefab &&
+                    Fields[6] == X && Fields[7] == Y && Fields[8] == Z &&
+                    Fields[9] == (KillerToken ?? "") && Fields[10] == (KillerId ?? "") && Fields[11] == (KillerName ?? "") &&
+                    Fields[12] == (DamageType ?? "") && Fields[13] == (Weapon ?? "");
+            }
+        }
+
         // Accounting only. Pending and native scheduler queues remain their
         // existing owners. A reservation survives transfer and callback entry.
         internal sealed class GameplayEventBudget
@@ -77,6 +128,8 @@ namespace Carbon.Plugins
                 internal EntityLifetimeModel.Binding Entity;
                 internal string EntityHost;
                 internal GameplayEntityDestroyedObservation Destroyed;
+                internal readonly GameplayEntityDiedObservation Died;
+                internal Reservation(GameplayEntityDiedObservation Died) { this.Died = Died; }
             }
             private readonly FacadeWorld World;
             private readonly Dictionary<ulong, Reservation> Held = new Dictionary<ulong, Reservation>(GameplayEventPolicy.Reservations);
@@ -90,6 +143,7 @@ namespace Carbon.Plugins
             internal ulong Accepted, Released, NoSubscribers, ProducerRejected, FanoutRejected, ScanRejected;
             internal ulong QueueRejected, PayloadRejected, NativeRejected, StaleRejected;
             internal ulong DestroyPositionAccepted, DestroyPositionRejected;
+            internal ulong DeathPositionAccepted, DeathPositionRejected;
 
             internal GameplayEventBudget(FacadeWorld World) { this.World = World; }
             private static void Count(ref ulong Value) { if (Value != UInt64.MaxValue) ++Value; }
@@ -111,6 +165,18 @@ namespace Carbon.Plugins
                     Count(ref DestroyPositionRejected); return false;
                 }
                 DestroyPositions++; Count(ref DestroyPositionAccepted); return true;
+            }
+            // Optional pre-Die attempts share the removal-position allowance,
+            // including vetoed/incomplete calls, but use their own demand and
+            // diagnostics. The source must acquire this before any host read.
+            internal bool DeathPositionSnapshot()
+            {
+                BeginFrame();
+                if (!World.HasGameplayDemand("entitydied")) return false;
+                if (DestroyPositions >= GameplayEventPolicy.CapturesPerFrame) {
+                    Count(ref DeathPositionRejected); return false;
+                }
+                DestroyPositions++; Count(ref DeathPositionAccepted); return true;
             }
             internal bool Capture(string Kind)
             {
@@ -136,9 +202,14 @@ namespace Carbon.Plugins
                 Deliveries++; DomainDeliveries[Owner.DomainLifetimeId] = CountValue + 1; return true;
             }
             internal ulong Reserve(FacadeSession Owner, string Kind, string Listener, string[] Fields, out byte[] Payload,
-                EntityLifetimeModel.Binding Entity = null, GameplayEntityDestroyedObservation Destroyed = null)
+                EntityLifetimeModel.Binding Entity = null, GameplayEntityDestroyedObservation Destroyed = null,
+                GameplayEntityDiedObservation Died = null)
             {
                 Payload = null;
+                if ((Died != null && Kind != "entitydied") ||
+                    (Kind == "entitydied" && (Died == null || !Died.Matches(Fields) || Entity != null || Destroyed != null))) {
+                    Count(ref PayloadRejected); return 0;
+                }
                 if (Held.Count >= GameplayEventPolicy.Reservations || Next == UInt64.MaxValue) { Count(ref QueueRejected); return 0; }
                 ulong Nonce = ++Next;
                 Fields[5] = Nonce.ToString(CultureInfo.InvariantCulture);
@@ -148,7 +219,7 @@ namespace Carbon.Plugins
                 if (Payload.Length > GameplayEventPolicy.PayloadBytes || RetainedBytes > GameplayEventPolicy.RetainedTransportBytes - Charge) {
                     Payload = null; Count(ref PayloadRejected); return 0;
                 }
-                Held.Add(Nonce, new Reservation {Owner = Owner, Kind = Kind, Listener = Listener,
+                Held.Add(Nonce, new Reservation(Died) {Owner = Owner, Kind = Kind, Listener = Listener,
                     Publication = Owner.RootGameplayPublication, Charge = Charge, Entity = Entity, Destroyed = Destroyed,
                     EntityHost = Kind == "entityspawned" ? Fields[6] : null});
                 RetainedBytes += Charge; Count(ref Accepted); return Nonce;
@@ -163,7 +234,8 @@ namespace Carbon.Plugins
             {
                 World.Players.CheckOwner();
                 ulong Nonce; Reservation Value;
-                if (Fields.Length != 12 || !GameplayEventPolicy.Identity(Fields[5], out Nonce) ||
+                if (Fields == null || Fields.Length == 0 || Fields.Length != (Fields[0] == "entitydied" ? 14 : 12) ||
+                    !GameplayEventPolicy.Identity(Fields[5], out Nonce) ||
                     !Held.TryGetValue(Nonce, out Value) || !Object.ReferenceEquals(Value.Owner, Owner) || !Value.Native || Value.Cancelled ||
                     Value.Kind != Fields[0] || Value.Listener != Fields[1] || !Owner.IsGameplayPublicationCurrent(Value.Publication)) {
                     Count(ref StaleRejected); return false;
@@ -181,6 +253,13 @@ namespace Carbon.Plugins
                         if (Value.Destroyed == null || !Value.Destroyed.Matches(Fields) ||
                             World.GameplayAvailable == null || !World.GameplayAvailable("entitydestroyed") ||
                             !Value.Destroyed.ValidateCompletion()) { Count(ref StaleRejected); return false; }
+                    } catch (Exception) { Count(ref StaleRejected); return false; }
+                }
+                if (Fields[0] == "entitydied") {
+                    try {
+                        if (Value.Died == null || !Value.Died.Matches(Fields) ||
+                            World.GameplayAvailable == null || !World.GameplayAvailable("entitydied") ||
+                            !Value.Died.ValidateCompletion()) { Count(ref StaleRejected); return false; }
                     } catch (Exception) { Count(ref StaleRejected); return false; }
                 }
                 return true;
@@ -206,7 +285,8 @@ namespace Carbon.Plugins
                     "; producer_rejected=" + ProducerRejected + "; fanout_rejected=" + FanoutRejected +
                     "; scan_rejected=" + ScanRejected + "; queue_rejected=" + QueueRejected +
                     "; payload_rejected=" + PayloadRejected + "; native_rejected=" + NativeRejected + "; stale_rejected=" + StaleRejected +
-                    "; destroy_position_accepted=" + DestroyPositionAccepted + "; destroy_position_rejected=" + DestroyPositionRejected; }
+                    "; destroy_position_accepted=" + DestroyPositionAccepted + "; destroy_position_rejected=" + DestroyPositionRejected +
+                    "; death_position_accepted=" + DeathPositionAccepted + "; death_position_rejected=" + DeathPositionRejected; }
             }
         }
     }
