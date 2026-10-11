@@ -1,105 +1,130 @@
 # CarbonLuau
 
-Among the first public Luau runtimes built specifically for Rust server modding
+Write Rust server mods in Luau, with Carbon doing the hosting.
 
-CarbonLuau brings server-side Luau scripting to Carbon-modded Rust servers through a Roblox-familiar programming model, with gameplay APIs, composable addons, persistent data, retained GUI, and dedicated development tooling.
+CarbonLuau brings a Roblox-familiar scripting style to Carbon-modded Rust servers.
+Use it for chat commands, player rewards, custom menus, persistent progress, and
+addons that work together. It's server-side scripting—not Roblox running inside Rust.
 
-The latest published release is [v0.5.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.5.0). The `0.5.0` release is experimental. Start with the [hosted documentation](https://gmoddev.github.io/CarbonLuau/), [installation](docs/Installation.md), or the [public API reference](docs/api/README.md).
+[Get started](docs/Installation.md) · [Documentation](https://gmoddev.github.io/CarbonLuau/)
+· [API reference](docs/api/README.md) · [Examples](examples)
 
-Development `main` targets API `0.7.0-experimental`. It includes exact-host Player
-and Entity lifecycle Signals, Loot Replace and the PlayerInventory facade with
-sampled ItemChanged. API 0.7 removes Player HasItem/CountItem/GiveItem/TakeItem:
-use `Player:GetInventory():HasItem`, `CountItem`, `GiveItem` or `TakeItem`. See the
-[inventory migration guide](docs/api/Inventory-Migration.md),
-[Players](docs/api/Services/Players.md), [Workspace](docs/api/Services/Workspace.md)
-and [Loot](docs/api/Services/Loot.md). These development additions are not in the
-published v0.5.0 archives. Package remains 0.5.0 and native ABI 1.5;
-[release readiness](docs/Release.md#gameplay-ad-release-readiness) separates prior
-Gameplay A–D/C4 subsystem qualification from the separate package-publication gate.
+## What can I build?
 
-## Install and write a script
+- **Player features:** welcome messages, permission-checked commands, inventory
+  rewards, health checks, and teleports.
+- **Menus and interfaces:** buttons, images, scrolling panels, and layouts through
+  the [GUI API](docs/api/Gui.md).
+- **Saved progress:** local server persistence for things like coins or player
+  settings, with asynchronous reads/writes and structured queries.
+- **Reusable addons:** split a larger project into modules and share public modules
+  between addons. See the [addon guide](docs/api/Addons.md).
 
-CarbonLuau targets Windows x64 and glibc Linux x64 servers running Carbon. See [compatibility](docs/Compatibility.md) for exact platform and feature limits.
+The development version also adds world/entity lookup and radius searches,
+player/entity lifecycle events, sampled inventory changes, and a small loot
+replacement API. Those additions aren't in the latest release yet.
 
-Use the release archive matching the server OS. Install `CarbonLuau.cszip` in `carbon/plugins` and all three matching native files—the runtime DLL or SO, compiler worker and storage worker—in `carbon/data/CarbonLuau/native/win-x64` or `native/linux-x64`. On Linux, make both workers executable after extraction. Put your entrypoint at `carbon/data/CarbonLuau/scripts/init.luau` and create its `modules` directory, even when empty. Do not mix platform binaries or overwrite existing scripts.
+## Pick your version
 
-```lua
+**Latest release:** [v0.5.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.5.0).
+It's experimental and includes local persistence, gameplay helpers, addons, and GUI.
+Start here if you want a published package rather than a development build.
+
+**Development `main`:** scripting API `0.7.0-experimental`. It is ahead of v0.5.0;
+the package version still says `0.5.0`, but development archives are not the
+published release. Check [compatibility](docs/api/Compatibility.md) before mixing
+runtime, script, or editor versions.
+
+One important development change: inventory operations now live on
+`Player:GetInventory()`, not directly on Player. For a connected `Player`:
+
+```luau
+local Inventory = Player:GetInventory()
+local Scrap = Inventory:CountItem("scrap")
+local HasEnough = Inventory:HasItem("scrap", 100)
+```
+
+Use `Inventory:GiveItem` and `Inventory:TakeItem` for writes. The old Player
+methods are removed in API 0.7; the [migration guide](docs/api/Inventory-Migration.md)
+shows the replacements. `ItemChanged` reports sampled net changes, not every
+individual pickup or transfer. Loot replacement currently supports only one
+qualified barrel prefab and its allowlisted items—see the [Loot reference](docs/api/Services/Loot.md).
+
+## Try a first script
+
+You'll need a Windows x64 or glibc Linux x64 server running Carbon. Download the
+matching release archive and follow the [installation guide](docs/Installation.md)
+to copy its files into the right Carbon folders. Keep the runtime and its workers
+together; don't mix files from different releases.
+
+Put your entry script at `carbon/data/CarbonLuau/scripts/init.luau`, and create
+its `modules` folder even if it's empty. Here's a simple welcome message:
+
+```luau
 local Players = game:GetService("Players")
 
 Players.PlayerAdded:Connect(function(Player)
-    print(`Connected: {Player.Name}`)
-    Player:SendMessage("Hello from CarbonLuau")
+    print(`[Players:Welcome] Connected: {Player.Name}`)
+    Player:SendMessage("Hello from CarbonLuau!")
 end)
 ```
 
-Use the administrator commands `carbonluau.status` and `carbonluau.reload`. More examples are available for [player events](examples/player-events/init.luau), [player positions](examples/player-position/init.luau), [player health](examples/player-health/init.luau), [physical inventory reads](examples/player-inventory/init.luau), [permission-protected commands](examples/hello-command/init.luau), [GUI](examples/gui/hello/init.luau), and [addon composition](examples/addons/shop/init.luau). Startup messages must use `task.defer` because provisional generations cannot send them.
+Use `carbonluau.status` to check the runtime and `carbonluau.reload` after editing
+scripts. If you want to send messages during startup, use `task.defer` so they
+run after the script has loaded successfully.
 
-For clean-checkout builds, checksums, and provenance, see the [release reproducibility guide](docs/Release.md).
+For something bigger, try the [command example](examples/hello-command/init.luau),
+[GUI example](examples/gui/hello/init.luau), or [addon shop](examples/addons/shop/init.luau).
+Examples on `main` target the development API; use the examples bundled with your
+release when running v0.5.0.
 
-## What is included
+## Editing your scripts
 
-The published `CarbonLuau 0.5.0-experimental` API retains controlled modules/tasks, Player events, permission-protected commands, live position/health reads, inventory checks, verified legacy inventory mutations and Teleport. It adds private local durable stores with callback-based Get/Set/Remove and bounded structured Query. Execution uses bounded logging, memory and deadlines. Provider-owned addon packages share one VM with exact dependency lifetimes and explicit public modules imported through `require("@id[/path]")`.
+The [official VS Code extension](https://github.com/gmoddev/carbonluau-vscode)
+offers syntax support, API information, project checks, and GUI preview.
+Use a tooling pack that matches your runtime: the published v0.4.0 VSIX isn't a
+qualified match for v0.5.0 or current `main`.
 
-Current development includes exact read-only `Workspace`/`Entity` (introduced at API 0.6)
-lookup and [bounded async discovery](docs/api/Discovery.md) on the pinned hosts.
-See [qualification and release readiness](docs/WorldEntityFoundation2C.md).
-The latest published package remains 0.5.0 and does not contain these APIs.
+Language analysis and GUI preview are qualified on Windows/Linux x64; macOS is
+static-only. Preview is an offline helper, not a Rust client or gameplay simulator,
+and images/fonts can look different in game.
 
-Addon packages are registered by a loaded Carbon provider plugin. CarbonLuau does not scan an addon directory or download packages. See [addon composition](docs/api/Addons.md), the [provider protocol](docs/api/Addon-Providers.md), and the [Foundation E qualification record](docs/FoundationE.md).
+## A few things to keep in mind
 
-The GUI surface offers ScreenGui, Frame, TextLabel, TextButton, ImageLabel,
-ImageButton, ScrollingFrame, typed ImageSource values, deterministic list and
-padding/grid layout, bounded Frame clipping, retained GuiFont values and
-Presentation-specific one-way scroll methods,
-explicit per-Player Show/Hide and secure Activated callbacks.
-See the [GUI guide](docs/api/Gui.md). Authenticated-client visual,
-cursor, click-receipt and reconciliation behavior remains unqualified.
+CarbonLuau is experimental. It limits script work, memory, callbacks, and logging,
+but those limits don't cap the memory of your whole Rust server or make every
+host operation instantly interruptible. Scripts use deliberate APIs rather than
+raw Rust objects or arbitrary filesystem, network, or console access.
 
-[Official VS Code tooling](https://github.com/gmoddev/carbonluau-vscode) provides
-syntax, API reference and project diagnostics, plus trusted language analysis
-and GUI preview on Windows/Linux x64. The preview includes hierarchy, properties,
-viewport controls and resource usage; geometry comes from the runtime's shared
-implementation. The v0.4.0 VSIX is pinned to the older runtime/API and is not
-a qualified matching v0.5.0 artifact; a compatible editor pack requires separate
-qualification. macOS remains static-only. Preview uses offline image/font approximations and
-does not simulate gameplay or connect to a server.
+Inventory writes aren't transactions: `false` means no inventory mutation began,
+`true` means the result was verified, and an error after mutation starts may leave
+changes. There is no automatic rollback or replay. `GiveItemBehavior.InventoryOnly`
+doesn't intentionally drop overflow into the world.
 
-## Limits
+Some real-client GUI visuals, fonts, scrolling, click delivery, and Teleport
+convergence remain unqualified. TextBox is **not implemented** because the host
+cannot preserve submitted text exactly. Client-side Luau, automatic addon
+downloads, raw inventory objects, and health writes aren't provided.
 
-Callbacks and host inputs are bounded, deadlines are cooperative, and the VM cap is not a whole-server memory cap. Successful reload cancels old listeners and commands; failed candidates preserve them. CarbonLuau does not expose raw Rust objects, arbitrary console execution, filesystem or network APIs, or a Roblox hierarchy.
-
-Inventory mutation is not transactional: false means mutation never started, true means its physical postcondition was verified, and a post-mutation error may leave changes. Development `Inventory:GiveItem` supports only the unchanged typed `GiveItemBehavior.InventoryOnly`. Raw inventory objects, world-drop fallback, health mutation, TextBox, package downloads and version solving are unavailable. Teleport is server-qualified but not authenticated-client-qualified.
-
-TextBox is not implemented because the current host cannot preserve submitted text exactly.
-
-`Frame.ClipsDescendants`, `GuiFont`, text `Font`, and the `ScrollTo` methods are
-part of the experimental source surface. Their authenticated-client visual,
-font-asset and scrolling behavior remains unqualified and is not implied by the
-release-candidate identity.
-
-Authenticated real-client behavior and Shockbyte full-runtime behavior remain outside the qualified support envelope. See [API compatibility and limits](docs/api/Compatibility.md) and [platform compatibility](docs/Compatibility.md) for details.
+Addons are registered through Carbon provider plugins rather than downloaded or
+found by scanning an addon folder. Check the [provider guide](docs/api/Addon-Providers.md)
+if you're packaging one. Hosting-provider support also varies; Shockbyte's full
+runtime remains unqualified. The [compatibility guide](docs/Compatibility.md)
+has the detailed tested limits.
 
 ## Contributing
 
-Current persistence foundation: [Foundation 1C](docs/PersistenceFoundation1C.md)
-records combined local durability and asynchronous API qualification; [Foundation
-2D](docs/PersistenceFoundation2D.md) closes derived-index and public Query
-qualification. Structured Query uses `Field`, `Equals` or inclusive `Min`/`Max`.
-Preparation is automatic; optional `Indexes = { "Coins", "Level" }` hints ask
-for early preparation. Authors manage no schemas, versions or migrations. See
-the [author guide](docs/api/Persistence.md), [0.5.0 release notes](docs/releases/0.5.0.md),
-and [canonical design](docs/PersistenceFoundation2.md).
-[World/Entity Foundation 1](docs/WorldEntityFoundation1.md) has a qualified
-private exact-lifetime substrate and read-only runtime on the pinned hosts.
-Historical [negative lifetime evidence](docs/WorldEntityLifetimeInvestigation.md)
-remains preserved; development public docs start at [Workspace](docs/api/Services/Workspace.md).
+Start with [AICONTEXT.md](AICONTEXT.md) for the contributor workflow and canonical
+rules. [Release preparation](docs/Release.md) covers reproducible builds and the
+separate publication gate. The qualification records in `docs/` keep both passing
+tests and earlier failed approaches available for review.
+The [history audit](docs/HistoryCuration-Validation.md) records the unreleased
+squash and scoped email cleanup without changing published releases.
 
-Start with [AICONTEXT.md](AICONTEXT.md), which maps each rule to its canonical document. [Invariants](docs/Invariants.md) owns architecture, security, and lifecycle requirements. [Compatibility](docs/Compatibility.md) owns support and validation policy. Historical phase contracts and qualification records remain in `docs/` for traceability.
-
-## AI Disclaimer
-
-AI tools are used during the development of this addon. However, the project's architecture, design decisions, requirements, and overall direction are substantially human-designed and reviewed.
+AI tools are used during development. The project's architecture, requirements,
+design decisions, and overall direction are substantially human-designed and reviewed.
 
 ## License
 
-Project licensing and third-party attribution are documented in [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+See [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for
+project licensing and third-party attribution.
