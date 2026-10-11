@@ -43,9 +43,9 @@ var EntityTypes = new[] { "Workspace", "Entity", "EntityDiscoveryOptions" };
 foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catalog["Members"]!)) {
     bool Persistence = PersistenceTypes.Contains((string?)Declaration["Id"]) || PersistenceTypes.Contains((string?)Declaration["OwnerId"]);
     bool Entity = EntityTypes.Contains((string?)Declaration["Id"]) || EntityTypes.Contains((string?)Declaration["OwnerId"]);
-    bool GameplayA = new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext" }.Contains((string?)Declaration["Id"]) ||
-        new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext" }.Contains((string?)Declaration["OwnerId"]) ||
-        new[] { "Players.PlayerDied", "Players.PlayerSpawned", "Workspace.EntitySpawned", "Workspace.EntityDestroyed" }.Contains((string?)Declaration["Id"]);
+    bool GameplayA = new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "PlayerInventory" }.Contains((string?)Declaration["Id"]) ||
+        new[] { "PlayerDeathContext", "PlayerSpawnContext", "EntityDestroyedContext", "PlayerInventory" }.Contains((string?)Declaration["OwnerId"]) ||
+        new[] { "Players.PlayerDied", "Players.PlayerSpawned", "Workspace.EntitySpawned", "Workspace.EntityDestroyed", "Player.GetInventory" }.Contains((string?)Declaration["Id"]);
     Version Since = Version.Parse(((string)Declaration["Availability"]!["SinceApi"]!).Split('-')[0]);
     Check(GameplayA ? Since == new Version(0, 6, 5) : Entity ? Since == new Version(0, 6, 0) :
         Persistence ? Since == new Version(0, 5, 0) : Since <= new Version(0, 4, 0), "historical introduction version changed");

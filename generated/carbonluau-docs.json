@@ -398,6 +398,9 @@
   "@carbonluau/globaltype/Player.CountItem": {
     "documentation": "Count observed physical inventory items by short name."
   },
+  "@carbonluau/globaltype/Player.GetInventory": {
+    "documentation": "Acquire an exact-connection read-only facade without scanning inventory or subscribing."
+  },
   "@carbonluau/globaltype/Player.GiveItem": {
     "documentation": "Give a bounded amount with physical verification. Behavior defaults to InventoryOnly; indeterminate mutation raises an error."
   },
@@ -442,6 +445,12 @@
   },
   "@carbonluau/globaltype/PlayerDeathContext.Position": {
     "documentation": "Optional root world position observed at terminal death completion."
+  },
+  "@carbonluau/globaltype/PlayerInventory.CountItem": {
+    "documentation": "Same bounded physical main/belt/wear count and validation as Player:CountItem."
+  },
+  "@carbonluau/globaltype/PlayerInventory.HasItem": {
+    "documentation": "Same bounded physical HasItem as Player; omitted Amount defaults to one."
   },
   "@carbonluau/globaltype/PlayerSpawnContext.Position": {
     "documentation": "Optional root world position observed at completed spawn."

@@ -214,6 +214,7 @@ export type PersistedValue = boolean | number | string | {PersistedValue} | {[st
 
 declare extern type Player with
     function CountItem(self, ShortName: string): (number)
+    function GetInventory(self): (PlayerInventory)
     function GiveItem(self, ShortName: string, Amount: number, Behavior: GiveItemBehavior?): (boolean)
     function HasItem(self, ShortName: string, Amount: number?): (boolean)
     function HasPermission(self, Permission: string): (boolean)
@@ -233,6 +234,11 @@ export type PlayerDeathContext = {
     read KillerId: string?,
     read Position: Vector3?,
 }
+
+declare extern type PlayerInventory with
+    function CountItem(self, ShortName: string): (number)
+    function HasItem(self, ShortName: string, Amount: number?): (boolean)
+end
 
 export type PlayerSpawnContext = {
     read Position: Vector3?,

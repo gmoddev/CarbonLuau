@@ -3,6 +3,7 @@
 #include "../../native/src/scripts/Compiler.hpp"
 #include <atomic>
 #include <cstdio>
+#include "Luau/Common.h"
 #include "GameplayPublicationTests.hpp"
 #include "GameplayEventTests.hpp"
 
@@ -21,7 +22,7 @@ static uint32_t FixtureHost(uint64_t, uint32_t Operation, const char*, uint32_t,
     static const char Id[] = "1\000";
     if (Operation == 1 || Operation == 2) { Value = Player; Length = sizeof(Player) - 1; }
     else if (Operation == 3) { Value = Info; Length = sizeof(Info) - 1; }
-    else if (Operation == 5) { Value = Id; Length = sizeof(Id) - 1; }
+    else if (Operation == 5 || Operation == 40 || Operation == 41) { Value = Id; Length = sizeof(Id) - 1; }
     else if (Operation == 6 || Operation == 8) {
         *Written = uint32_t(std::snprintf(Output, Capacity, "%u", ++FixtureRegistration) + 1); return 0;
     }
@@ -30,6 +31,11 @@ static uint32_t FixtureHost(uint64_t, uint32_t Operation, const char*, uint32_t,
 }
 int main(int ArgumentCount, char** Arguments)
 {
+    std::setvbuf(stdout, nullptr, _IONBF, 0);
+    Luau::assertHandler() = [](const char* Expression, const char* File, int Line, const char* Function) {
+        std::fprintf(stderr,"[CarbonLuau:NativeAssert] %s:%d %s: %s\n",File,Line,Function,Expression);
+        return 1; // Keep the assertion trap; diagnostics never suppress it.
+    };
     Vm Budget;
     Budget.Limit = 128;
     void* Pointer = Allocate(&Budget, nullptr, 99, 64);
@@ -215,6 +221,20 @@ int main(int ArgumentCount, char** Arguments)
         SetCompilerExecutableForTesting(Arguments[1]);
         Check(cl_vm_destroy(Handle)==CL_OK && !TestLiveBytes,"compile containment teardown");
         ResetCompilerForTesting();
+    }
+    for (int Failure = 0; Failure < 48; ++Failure) {
+        std::printf("[CarbonLuau:C1Fault] Position=%d\n", Failure);
+        ClHandle Handle = 0, Thread = 0; ClResult Result{};
+        Check(cl_vm_create(&Config, &Handle) == CL_OK && cl_vm_scripts(Handle, 64) == CL_OK &&
+            cl_vm_facade(Handle, 1, FixtureHost) == CL_OK, "C1 allocation VM");
+        const char* Source = "local P=game:GetService('Players'):GetPlayers()[1]; local I=P:GetInventory(); assert(I:CountItem('scrap')==1 and I:HasItem('scrap')); assert(I==P:GetInventory())";
+        Check(cl_vm_load_source(Handle,"c1.alloc",Source,uint32_t(std::strlen(Source)),&Thread,&Result)==CL_OK,"C1 load");
+        TestAllocationFailureAfter=Failure;
+        ClStatus Status=cl_thread_resume(Thread,100000000,&Result);
+        TestAllocationFailureAfter=-1;
+        Check(Status==CL_OK || Status==CL_MEMORY_LIMIT,"C1 allocation failure controlled");
+        Check(cl_thread_destroy(Thread)==CL_OK && cl_vm_destroy(Handle)==CL_OK,"C1 fault cleanup");
+        Check(TestLiveBytes==0,"C1 native allocator returns to baseline");
     }
     CarbonLuau::GameplayPublicationTests::RunFaults();
     CarbonLuau::GameplayEventTests::RunFaults();

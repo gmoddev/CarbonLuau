@@ -74,6 +74,7 @@ namespace Carbon.Plugins
             RunEntityDiscoveryFixtures();
             RunGameplayHostProofFixtures();
             RunEntitySpawnFixtures();
+            RunPlayerInventoryFixtures();
             if (Host == null) return;
             try
             {
@@ -137,6 +138,7 @@ namespace Carbon.Plugins
         }
 
         partial void RunGameplayHostProofFixtures();
+        partial void RunPlayerInventoryFixtures();
         partial void RunEntitySpawnFixtures();
         private void Unload() { StopGameplayLifecycle(); StopEntityObserver(); ReleaseNative(); }
 

@@ -9,6 +9,10 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length==3 && Args[0]=="--gameplayc1") {
+            try { GameplayC1Tests.Run(Args[1],Args[2]); return 0; }
+            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:GameplayC1] FAIL: "+Error); return 1; }
+        }
         if (Args.Length == 2 && Args[0] == "--entitydestroyed") {
             try { using(var Native=new Runtime.NativeRuntime(Args[1])) EntityDestroyedSignalTests.RunNative(Native); return 0; }
             catch(Exception Error) { Console.Error.WriteLine("[CarbonLuau:EntityDestroyed] FAIL: "+Error); return 1; }

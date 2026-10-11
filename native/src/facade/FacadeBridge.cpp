@@ -150,7 +150,8 @@ int HostPrimitive(lua_State* State)
     if (!Owner.Host || !Owner.HostBuffer) luaL_error(State, "host unavailable for domain");
     if (lua_type(State, 1) != LUA_TNUMBER) luaL_error(State, "invalid host operation");
     double Value = lua_tonumber(State, 1);
-    if (Value < 1 || Value > 35 || Value == 31 || Value == 32 || Value == 33 ||
+    if (Value < 1 || Value > 41 || Value == 31 || Value == 32 || Value == 33 ||
+        (Value >= 36 && Value <= 39) ||
         Value != std::floor(Value)) luaL_error(State, "invalid host operation");
     uint32_t Operation = uint32_t(Value);
     if ((Operation == 4 || Operation == 28 || Operation == 29 || Operation == 30) && !CanMutateHost(Runtime)) {
@@ -162,7 +163,7 @@ int HostPrimitive(lua_State* State)
                 : Operation == 29 ? "TakeItem requires a committed domain; use task.defer for startup mutation"
                 : "GiveItem requires a committed domain; use task.defer for startup mutation");
     }
-    if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8 || Operation == 21 || Operation == 34) && !Runtime.Publication->Uses(&Owner)) {
+    if (Runtime.Publication && (Operation == 6 || Operation == 7 || Operation == 8 || Operation == 21 || Operation == 34 || Operation == 40) && !Runtime.Publication->Uses(&Owner)) {
         if (!ControlPublication(Runtime, Owner, 10)) luaL_error(State, "host publication setup failed");
         Runtime.Publication->Facades.push_back(&Owner);
     }
@@ -226,8 +227,13 @@ int EnqueueEvent(lua_State* State)
     Vm& Runtime = *Input.Runtime; Domain& Owner = *Input.Owner;
     CallbackScope Scope{State};
     lua_State* Thread = lua_newthread(State); Scope.Reference = lua_ref(State, -1);
-    lua_getref(Thread, Owner.Dispatch);
-    PushFields(Thread, Input.Bytes, Input.Length);
+    // lua_cpcall protects State, not the newly created callback thread. Perform
+    // all allocating materialization on that protected state, then transfer
+    // exactly function+argument into the fresh thread's existing basic stack.
+    // A memory error must never unwind with a different LuaException thread.
+    lua_getref(State, Owner.Dispatch);
+    PushFields(State, Input.Bytes, Input.Length);
+    lua_xmove(State, Thread, 2);
 #ifdef CARBONLUAU_TESTING
     if (Input.GameplayReservation && TestGameplayCopyFailure) throw std::bad_alloc{};
 #endif

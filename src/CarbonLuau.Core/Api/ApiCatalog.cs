@@ -75,7 +75,7 @@ namespace CarbonLuau.Core
             if (!StorageRegistrations.SetEquals(StorageMethods.Select(Value => (string)Value["Name"])))
                 throw new InvalidOperationException("native persistence API declaration lacks registration");
             // Declared public function tables must not acquire an unannotated function.
-            string[] Tables = { "UDim", "UDim2", "Vector2", "Vector3", "Color3", "ImageSource", "PlayerMethods", "Players", "Commands", "GuiObjectMethods", "Gui", "Items", "Workspace", "Game" };
+            string[] Tables = { "UDim", "UDim2", "Vector2", "Vector3", "Color3", "ImageSource", "PlayerMethods", "PlayerInventoryMethods", "Players", "Commands", "GuiObjectMethods", "Gui", "Items", "Workspace", "Game" };
             foreach (string Line in Lines) {
                 if (Tables.Any(Table => Line.StartsWith("function " + Table + ".", StringComparison.Ordinal)) && !Bindings.Contains(Line))
                     throw new InvalidOperationException("runtime function lacks API declaration: " + Line);

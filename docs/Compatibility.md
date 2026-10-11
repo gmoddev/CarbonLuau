@@ -147,6 +147,13 @@ For Rust/Carbon updates, record candidate versions, compile against the actual r
 
 ## Validation selection
 
+Gameplay C1 adds Player:GetInventory and read-only PlayerInventory CountItem/HasItem
+to development API 0.6.5-experimental, not published package 0.5.0. Existing D18
+physical rules, exact D11 connection and domain/publication lifetime remain;
+[C1 evidence](GameplayC1-Validation.md) separates synthetic real-VM tests,
+controlled live Carbon connections and authenticated-client claims. Inventory
+Signals/loot policies are not implied. No native ABI/provider/schema/pin change.
+
 Use the narrowest levels that exercise the changed behavior, adding broader tests when the boundary requires them:
 
 | Change | Relevant evidence |

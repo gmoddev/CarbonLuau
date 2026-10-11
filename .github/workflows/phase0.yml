@@ -50,6 +50,12 @@ jobs:
         run: dotnet run --project tests/entity-discovery-model/EntityDiscoveryModelTests.csproj -c Release --no-build -- --benchmark
       - name: Bounded Entity position composition
         run: dotnet run --project tests/entity-position-model/EntityPositionModelTests.csproj -c Release
+      - name: PlayerInventory public binding (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --gameplayc1 "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: PlayerInventory public binding (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --gameplayc1 "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
       - name: Public bounded discovery bindings (Windows)
         if: runner.os == 'Windows'
         run: ./dist/runtime/RuntimeTests.exe --discovery2b "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"

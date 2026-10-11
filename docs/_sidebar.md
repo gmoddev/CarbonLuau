@@ -74,6 +74,7 @@
   - [DataStoreQueryResult](api/Types/DataStoreQueryResult.md)
   - [PersistedValue](api/Types/PersistedValue.md)
   - [Player](api/Types/Player.md)
+  - [PlayerInventory](api/Types/PlayerInventory.md)
   - [GiveItemBehavior](api/Types/GiveItemBehavior.md)
   - [Player examples](api/Player-Examples.md)
   - [Vector3](api/Types/Vector3.md)
@@ -99,4 +100,5 @@
   - [Gameplay A](GameplayFoundationA-Validation.md)
   - [Gameplay B1](GameplayB1-Validation.md)
   - [Gameplay B3](GameplayB3-Validation.md)
+  - [Gameplay C1](GameplayC1-Validation.md)
   - [Phase 5 evidence](Phase5-Validation.md)

@@ -279,7 +279,11 @@ static void Allocation()
     unsigned Failed = 0, Accepted = 0;
     for (int Position = 0; Position < 96; ++Position) {
         Fixture F; TestAllocationFailureAfter = Position;
-        auto Status = F.Submit(Frame()); TestAllocationFailureAfter = -1;
+        // Maximum bounded prefab crosses Luau's small-object freelist bins.
+        // Small already-interned fields can otherwise reuse pages after an
+        // additive bootstrap change and never reach the injected allocator.
+        auto Payload = DestroyedFrame(); Payload[1] = "2"; Payload[4] = std::string(512,'x');
+        auto Status = F.Submit(Payload); TestAllocationFailureAfter = -1;
         if (Status == CL_OK) { ++Accepted; Check(F.Runtime().GameplayReserved == 1 && Releases.empty(), "accepted allocation retains ownership"); }
         else {
             ++Failed; Check(Status == CL_MEMORY_LIMIT && F.Runtime().GameplayReserved == 0 && Releases.empty(),
@@ -315,7 +319,10 @@ static void Allocation()
 }
 inline void RunFaults()
 {
-    Codec(); Ownership(); Bounds(); Allocation();
+    std::puts("[CarbonLuau:GameplayEventNative] Codec"); Codec();
+    std::puts("[CarbonLuau:GameplayEventNative] Ownership"); Ownership();
+    std::puts("[CarbonLuau:GameplayEventNative] Bounds"); Bounds();
+    std::puts("[CarbonLuau:GameplayEventNative] Allocation"); Allocation();
     std::printf("[CarbonLuau:GameplayEventNative] PASS strict private codec, quotas, callback ownership and allocation/retirement cleanup\n");
 }
 }

@@ -1,5 +1,10 @@
 # Player
 
+Gameplay C1 adds `Player:GetInventory() -> PlayerInventory` in development API
+`0.6.5-experimental`. It acquires a read-only, exact-connection facade without
+scanning; see [PlayerInventory](PlayerInventory.md). Existing inventory methods
+below retain their contracts; no Inventory Signals or mutation aliases are added.
+
 Availability: core proxy in experimental API `0.3.0-experimental`; Position,
 Health, MaxHealth, CountItem, HasItem, Teleport, TakeItem and GiveItem are added in `0.4.0-experimental`. Obtained from Players,
 Signals or CommandContext; there is no constructor. A frozen proxy represents

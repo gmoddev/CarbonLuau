@@ -120,6 +120,13 @@ If documents, code, a task request or upstream evidence conflict, identify the c
 
 ## Working rules
 
+Gameplay C1's Player-owned read-only inventory facade is routed through
+[GameplayC1-Validation.md](docs/GameplayC1-Validation.md) and D18. It reuses the
+existing scanner and exact connection/publication/domain authority. C2 quantity
+Signals and all Gameplay D remain unimplemented. The supplied
+[C/D research](docs/GameplayCDArchitecture-Research.md) preserves static evidence
+and records the user override to future `Enum.DropMode` rather than `Loot.DropMode`.
+
 Post-v0.3.0 addon architecture is canonically owned by the addon amendments in
 [Invariants.md](docs/Invariants.md), including D14. The
 [addon design proposal](docs/CarbonLuau_Addon_Decisions_and_Invariants.md) and

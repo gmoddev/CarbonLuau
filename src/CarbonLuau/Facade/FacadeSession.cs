@@ -435,6 +435,24 @@ namespace Carbon.Plugins
                     if (World.Entities == null) throw new FacadeException("Entity world is unavailable");
                     return World.Entities.Read(this, Fields[0], Fields[1], Fields[2]);
                 }
+                if (Code == 40) {
+                    if (Fields.Length != 2) throw new FacadeException("invalid inventory acquisition arguments");
+                    if (World.Players.Resolve(Fields[0], Fields[1]) == null)
+                        throw new FacadeException("Player is no longer connected");
+                    return new[] {CaptureEntityWitness().Token.ToString(CultureInfo.InvariantCulture)};
+                }
+                if (Code == 41) {
+                    ulong Publication;
+                    if ((Fields.Length != 5 && Fields.Length != 6) ||
+                        !GameplayEventPolicy.Identity(Fields[2], out Publication) || FindEntityWitness(Publication) == null)
+                        throw new FacadeException("stale PlayerInventory reference");
+                    // Delegate, do not duplicate D18 validation/scanner or errors.
+                    if (Fields[3] == "count" && Fields.Length == 5)
+                        return Operation(26, new[] {Fields[0], Fields[1], Fields[4]});
+                    if (Fields[3] == "has" && Fields.Length == 6)
+                        return Operation(27, new[] {Fields[0], Fields[1], Fields[4], Fields[5]});
+                    throw new FacadeException("invalid PlayerInventory read arguments");
+                }
                 if (Code == 36 || Code == 38) {
                     if (!Active || !World.IsActive(this) || Disposed)
                         throw new FacadeException("Discovery requires a committed domain");

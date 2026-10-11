@@ -361,6 +361,18 @@
       "Representation": "Record"
     },
     {
+      "Id": "PlayerInventory",
+      "Name": "PlayerInventory",
+      "Kind": "Class",
+      "Summary": "Read-only inventory facade bound to one original Player connection and defining domain/publication.",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "ReadMock"
+    },
+    {
       "Id": "PlayerSpawnContext",
       "Name": "PlayerSpawnContext",
       "Kind": "Class",
@@ -3806,6 +3818,27 @@
       ]
     },
     {
+      "Id": "Player.GetInventory",
+      "Name": "GetInventory",
+      "OwnerId": "Player",
+      "Kind": "Method",
+      "Summary": "Acquire an exact-connection read-only facade without scanning inventory or subscribing.",
+      "Preview": "ReadMock",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [],
+          "Returns": [
+            "PlayerInventory"
+          ]
+        }
+      ]
+    },
+    {
       "Id": "Player.GiveItem",
       "Name": "GiveItem",
       "OwnerId": "Player",
@@ -4127,6 +4160,68 @@
       },
       "ValueType": "Vector3?",
       "Writable": false
+    },
+    {
+      "Id": "PlayerInventory.CountItem",
+      "Name": "CountItem",
+      "OwnerId": "PlayerInventory",
+      "Kind": "Method",
+      "Summary": "Same bounded physical main/belt/wear count and validation as Player:CountItem.",
+      "Preview": "ReadMock",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ShortName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "number"
+          ]
+        }
+      ]
+    },
+    {
+      "Id": "PlayerInventory.HasItem",
+      "Name": "HasItem",
+      "OwnerId": "PlayerInventory",
+      "Kind": "Method",
+      "Summary": "Same bounded physical HasItem as Player; omitted Amount defaults to one.",
+      "Preview": "ReadMock",
+      "Availability": {
+        "SinceApi": "0.6.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Signatures": [
+        {
+          "Parameters": [
+            {
+              "Name": "ShortName",
+              "Type": "string",
+              "Optional": false,
+              "Variadic": false
+            },
+            {
+              "Name": "Amount",
+              "Type": "number?",
+              "Optional": true,
+              "Variadic": false
+            }
+          ],
+          "Returns": [
+            "boolean"
+          ]
+        }
+      ]
     },
     {
       "Id": "PlayerSpawnContext.Position",

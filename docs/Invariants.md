@@ -1300,8 +1300,21 @@ multiplication in either operand order and scalar division;
 `Player:HasItem(ShortName, Amount?)`; and `game:GetService("Items")` with
 `Items:Exists(ShortName)`; plus implementation-gated
 `Player:GiveItem(ShortName, Amount, Behavior?)` and
-`Player:TakeItem(ShortName, Amount)` under D13. No other gameplay API is
-approved by this decision.
+`Player:TakeItem(ShortName, Amount)` under D13. Gameplay C1 additively approves
+`Player:GetInventory() -> PlayerInventory`, `PlayerInventory:CountItem(ShortName)`
+and `PlayerInventory:HasItem(ShortName, Amount?)` under exactly the observation
+semantics below. No other gameplay API is approved by this decision.
+
+PlayerInventory is immutable, read-only and bound to its defining domain,
+publication witness, VM and original D11 connection token/UserId pair. Acquisition
+validates the live connection but performs no inventory scan, disk work, watch or
+subscription. Each read revalidates that authority and delegates to the existing
+D18 CountItem/HasItem adapter; no new scanner, mutation aliases or global Inventory
+service. A facade escaping failed candidate/module publication remains stale;
+sharing never transfers ownership. Reconnect with the same account cannot retarget
+it. Existing Player methods and GiveItemBehavior remain unchanged. Inventory
+Signals require separately qualified C2 completed net-quantity observation.
+See [C1 qualification](GameplayC1-Validation.md).
 
 `Vector3` is a project-owned immutable value with no host, Player or domain
 lifetime. X/Y/Z are finite Luau numbers; every stored component and arithmetic

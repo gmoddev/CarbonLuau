@@ -285,6 +285,51 @@ local function Record(Player)
     return Value
 end
 local PlayerMethods = {}
+-- @carbonluau-api {"Type":"PlayerInventory","Kind":"Class","Summary":"Read-only inventory facade bound to one original Player connection and defining domain/publication.","SinceApi":"0.6.5-experimental","Preview":"ReadMock"}
+local InventoryRecords = setmetatable({}, {__mode = "k"})
+local InventoryCache = setmetatable({}, {__mode = "kv"})
+local PlayerInventoryMethods = {}
+local function InventoryRecord(Inventory)
+    local Value = InventoryRecords[Inventory]
+    if Value == nil then Fail("invalid PlayerInventory") end
+    return Value
+end
+local InventoryMeta = table.freeze({
+    __tostring = function() return "PlayerInventory" end,
+    __index = function(_, Key)
+        local Method = PlayerInventoryMethods[Key]
+        if Method == nil then Fail("unknown PlayerInventory member") end
+        return Method
+    end,
+    __newindex = function() Fail("PlayerInventory is read-only") end,
+    __metatable = "CarbonLuau.PlayerInventory",
+})
+-- @carbonluau-api {"Owner":"Player","Name":"GetInventory","Kind":"Method","Args":[],"Returns":["PlayerInventory"],"Summary":"Acquire an exact-connection read-only facade without scanning inventory or subscribing.","SinceApi":"0.6.5-experimental","Preview":"ReadMock","Binding":"function PlayerMethods.GetInventory(Player)"}
+function PlayerMethods.GetInventory(Player)
+    local Value = Record(Player)
+    local Publication = Host(40, Value.Token, Value.UserId)[1]
+    local Cached = InventoryCache[Player]
+    if Cached ~= nil and InventoryRecord(Cached).Publication == Publication then return Cached end
+    local Inventory = MakeUserdata(InventoryMeta)
+    InventoryRecords[Inventory] = {Token = Value.Token, UserId = Value.UserId, Publication = Publication}
+    InventoryCache[Player] = Inventory
+    return Inventory
+end
+-- @carbonluau-api {"Owner":"PlayerInventory","Name":"CountItem","Kind":"Method","Args":[["ShortName","string"]],"Returns":["number"],"Summary":"Same bounded physical main/belt/wear count and validation as Player:CountItem.","SinceApi":"0.6.5-experimental","Preview":"ReadMock","Binding":"function PlayerInventoryMethods.CountItem(Inventory, ShortName)"}
+function PlayerInventoryMethods.CountItem(Inventory, ShortName)
+    local Value = InventoryRecord(Inventory)
+    return tonumber(Host(41, Value.Token, Value.UserId, Value.Publication, "count", String(ShortName, "item short name"))[1])
+end
+-- @carbonluau-api {"Owner":"PlayerInventory","Name":"HasItem","Kind":"Method","Args":[["ShortName","string"],["Amount","number?"]],"Returns":["boolean"],"Summary":"Same bounded physical HasItem as Player; omitted Amount defaults to one.","SinceApi":"0.6.5-experimental","Preview":"ReadMock","Binding":"function PlayerInventoryMethods.HasItem(Inventory, ShortName, Amount)"}
+function PlayerInventoryMethods.HasItem(Inventory, ShortName, Amount)
+    local Value = InventoryRecord(Inventory)
+    String(ShortName, "item short name")
+    if Amount == nil then Amount = 1 end
+    Number(Amount, "item amount", 1, 9007199254740991)
+    if Amount ~= math.floor(Amount) then Fail("item amount must be an exact integer") end
+    return Host(41, Value.Token, Value.UserId, Value.Publication, "has", ShortName, string.format("%.0f", Amount))[1] == "1"
+end
+table.freeze(PlayerInventoryMethods)
 -- @carbonluau-api {"Owner":"Player","Name":"SendMessage","Kind":"Method","Args":[["Message","string"]],"Returns":[],"Summary":"Send bounded chat text to this connected player.","Preview":"HostMutation","Binding":"function PlayerMethods.SendMessage(Player, Message)","SinceApi":"0.3.0-experimental"}
 function PlayerMethods.SendMessage(Player, Message)
     local Value = Record(Player)

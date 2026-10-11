@@ -160,6 +160,10 @@ foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
             $Declaration.Availability.Qualification -cne 'Experimental' -or $Declaration.Preview -cne 'Unavailable') {
             throw "Entity availability/qualification differs: $($Declaration.Id)"
         }
+    } elseif ($Declaration.Id -ceq 'PlayerInventory' -or $Declaration.OwnerId -ceq 'PlayerInventory' -or $Declaration.Id -ceq 'Player.GetInventory') {
+        if ($Declaration.Availability.SinceApi -cne '0.6.5-experimental' -or $Declaration.Preview -cne 'ReadMock') {
+            throw 'PlayerInventory metadata identity/preview differs'
+        }
     } elseif ($Declaration.Id -cin $GameplayTypes -or $Declaration.OwnerId -cin $GameplayTypes -or
         $Declaration.Id -cin @('Players.PlayerDied','Players.PlayerSpawned')) {
         if ($Declaration.Availability.SinceApi -cne '0.6.5-experimental' -or
