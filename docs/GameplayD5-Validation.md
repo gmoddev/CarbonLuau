@@ -1,6 +1,6 @@
 # Gameplay D5 — Loot item expansion qualification
 
-Status: **LOCAL QUALIFICATION PASS; HOSTED CLOSURE PENDING**.
+Status: **GAMEPLAY-D5 PASS — ADDITIONAL LOOT ITEMS QUALIFIED**.
 Starting main: `4cef0d0f5571784616e36692548c82c7a8d11405`.
 Date: 2026-10-12. This extends the existing service within
 [D2A](GameplayD2A-Validation.md), [D3](GameplayD3-Validation.md),
@@ -38,7 +38,7 @@ epoch and exact original removal/cleanup before opening the allowlist. Then run
 actual copied public declarations and the full failure/publication/recovery
 matrix, minimum/zero/range/max amounts, eight duplicate stacks, mixed supported
 entries, both profiles and controlled stack-premise rejection. Both corrected
-final public matrices now PASS; final-source hosted gates remain separate below.
+final public matrices and final-source hosted gates PASS as attributed below.
 
 ## Exact candidate proof — both live hosts PASS
 
@@ -292,26 +292,43 @@ production semantics were relaxed. Windows PowerShell 5 packaging lacks
 GetRelativePath; the existing installed PowerShell 7 pipeline resolves that
 harness failure without a toolchain change.
 
-Implementation/platform/live/CI receipts and final revision attribution will be
-recorded only after their actual successful checks. No pending or synthetic
+Implementation/platform/live/CI receipts retain their exact successful source
+and artifact attribution below. No pending or synthetic
 result qualifies physical host payout, authenticated-client behavior, arbitrary
 host upgrades, macOS server support or power-loss durability.
 
 ## Hosted closure and source attribution
 
+Implementation/tests/evidence and final tested candidate:
+`d2fc21489d9a511c9204a32e709c04b13479795b`.
 All required exact-host, native/managed/real-VM, tooling model/generation,
 deterministic development packaging and clean-install gates above are complete.
-Final candidate commit/push must independently PASS hosted Windows/Linux core,
-ASan/UBSan/leak/fault/lifecycle, Windows/Linux/macOS developer tooling including
-the actual wood UnsupportedPreviewApi regression, contracts and documentation.
-These remaining gates are not yet counted as a complete D5 PASS.
 
-The implementation candidate and exact hosted run IDs will be recorded after
-successful completion. A subsequent evidence-only closure commit must preserve
-all executable inputs and is covered by Compatibility's documentation-only
-policy; its own final main workflows and exact SHA belong in the completion
-report. No release/tag, ABI/provider/schema/API bump or untested production edit
-is part of closure. Pre-existing `.codexlock` and `derived-369547800317500/` are
+- [Core validation 38303648464](https://github.com/gmoddev/CarbonLuau/actions/runs/38303648464):
+  PASS Windows x64 and Linux x64 native, managed/real-VM, exact public Loot
+  declarations/publication/providers/recovery, B1/B2/B3, C3/C4, persistence
+  lifecycle/scale/lost-ack/worker/import, deterministic packages and clean
+  installation of 71 examples. ASan/UBSan/leak/lifecycle/allocation-fault job PASS.
+- [Tooling 38303648543](https://github.com/gmoddev/CarbonLuau/actions/runs/38303648543):
+  PASS Windows/Linux/macOS developer tooling, deterministic generation/type/
+  drift/contracts and the actual wood UnsupportedPreviewApi regression on
+  Windows/Linux. No macOS server or mock payout qualification.
+- [Contracts 38303649017](https://github.com/gmoddev/CarbonLuau/actions/runs/38303649017):
+  PASS documents, retained historical evidence, API/schema/preview and links.
+- [Documentation 38303648539](https://github.com/gmoddev/CarbonLuau/actions/runs/38303648539):
+  PASS deployment of the candidate documentation.
+
+All candidate jobs pass on their first attempts, with no failed/cancelled job
+or CI rerun. Earlier host/fixture/harness negatives remain preserved above;
+they are not silently relabeled or attributed to unproved interference.
+
+The subsequent closure commit changes only this evidence record, preserves all
+executable inputs and reuses these qualified implementation/live receipts under
+Compatibility's documentation-only policy. Its own final main workflows and
+exact SHA are verified and supplied in the completion report. Published v0.7.0
+tag object `7c7d36f648a5506efd07c1b6d6bcf4b94d3f7d2b` and all six uploaded asset
+digests were rechecked unchanged. No release/tag, ABI/provider/schema/API bump
+or untested production edit is part of closure. Pre-existing `.codexlock` and `derived-369547800317500/` are
 retained untracked; no fixture, raw IL, database/journal, host binary or credential
 is committed or shipped.
 
