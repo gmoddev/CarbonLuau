@@ -89,8 +89,14 @@ if ($NamespaceRestartSupplement) {
     $HostSystemHash = (Get-FileHash -LiteralPath $HostSystemPath -Algorithm SHA256).Hash
     # This exact ConVar.Global.quit path saves, stops networking, then self-Kills.
     # Its installed Process.Kill explicitly passes -1 to TerminateProcess.
-    if ($HostAssemblyHash -eq '543C0EB569EC6B3889DE9AA23F61CD5AF7AE5A8F0D07C2D6F1E9FB94B3D49D09' -and
-        $HostSystemHash -eq '6E03AF58CD23577B5588C90A951D8B4F9E3DFE34C80E3E4171D83D29BA895AEA') {
+    # The release-0.7 exact target was re-inspected with shipped Mono.Cecil:
+    # ConVar.Global.quit IL_003c Shutdown -> IL_0061 Process.Kill;
+    # System.Process.Kill IL_000b ldc.i4.m1 -> IL_000c TerminateProcess.
+    # Keep the earlier qualified pair as historical fixture compatibility.
+    if (($HostAssemblyHash -eq '543C0EB569EC6B3889DE9AA23F61CD5AF7AE5A8F0D07C2D6F1E9FB94B3D49D09' -and
+         $HostSystemHash -eq '6E03AF58CD23577B5588C90A951D8B4F9E3DFE34C80E3E4171D83D29BA895AEA') -or
+        ($HostAssemblyHash -eq 'BB3DE3439F82440280EF61B10287A70B1731ADEFAFA30D1716220A16878376B2' -and
+         $HostSystemHash -eq 'B3531CE3F57CACFFF7C7AF66D3B3BD2EE781695B423057F23CC3509570E7D39D')) {
         $ExpectedQuitExitCode = -1
     } else {
         throw '[CarbonLuau:Persistence1BWorker] Restart supplement host quit-path hashes are not qualified'
