@@ -2,6 +2,15 @@
 
 All notable public changes to CarbonLuau are recorded here.
 
+## Post-v0.7.0 development — no new release
+
+- [Gameplay D4](docs/GameplayD4-Validation.md) adds the exact autospawn
+  `loot-barrel-2.prefab` target to strict Loot Replace, alongside barrel-1.
+  Descriptors retain their declared target; nonmatching barrels remain vanilla.
+  One global/domain rule and all shared producer/ownership/failure limits remain.
+- Public signature, items, modes and identities are unchanged. Published
+  v0.7.0 tags/assets remain barrel-1 only. No new release/tag is created.
+
 ## 0.7.0 — Experimental
 
 ### Published v0.7.0 experimental release

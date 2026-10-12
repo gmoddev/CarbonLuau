@@ -75,6 +75,10 @@ These current design reports do not expand qualified production behavior:
 
 Static findings and offline fixtures are distinct from mandatory live-host gates.
 
+The subsequent [Gameplay D4 qualification](GameplayD4-Validation.md) implements
+only the exact second autospawn barrel. It preserves the offline report as
+historical scope/evidence and does not expand the immutable v0.7.0 artifacts.
+
 [Consolidation receipt](Documentation-Consolidation.md) records the approved
 cleanup, coverage/URL/test consumers and qualification. Do not introduce duplicate
 authority, erase negative results, rewrite old publication identities, or use

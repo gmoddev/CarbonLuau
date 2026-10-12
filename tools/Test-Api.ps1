@@ -52,6 +52,13 @@ function Test-D3Documents {
         $Example -match 'Commands:Register|:Connect\(|task\.|Enum\.DropMode\.(Get|new)') {
         throw 'D3 example must declare the supported positional rule during initialization'
     }
+    $SecondExample = Get-Content -Raw -LiteralPath (Join-Path $Root 'examples/scripts/loot-replace-barrel-2.luau')
+    if (!$SecondExample.Contains('assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab') -or
+        !$SecondExample.Contains('Loot:RegisterDropRule(Prefab, Enum.DropMode.Replace, Drops)') -or
+        !$SecondExample.Contains('Published v0.7.0 assets still support only barrel-1') -or
+        !$LootReference.Contains('loot-barrel-2.prefab') -or !$LootReference.Contains('post-v0.7.0')) {
+        throw 'D4 second-prefab example/reference or immutable release scope drift'
+    }
 }
 function Test-D3Capacity([string]$Bootstrap, [string]$Facade) {
     # Source audit only: capacity precedes next's scan of empty backing slots.

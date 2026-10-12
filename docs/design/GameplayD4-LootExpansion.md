@@ -1,5 +1,10 @@
 # Gameplay D4 — offline loot expansion research
 
+Scope note: this is the preserved offline baseline, not current implementation
+eligibility. Subsequent [D4 live qualification](../GameplayD4-Validation.md)
+implements the exact second autospawn barrel; this research's unqualified
+verdicts, negatives and deferred item/registry proposals retain their original scope.
+
 Status: **RESEARCH COMPLETE; NO ADDITIONAL PREFAB OR ITEM QUALIFIED**.
 Repository baseline: `dabb872094f74e60d75de099379d198fb63a6bf8`, published
 `v0.7.0`; research date: 2026-10-12. This report proposes later work and changes

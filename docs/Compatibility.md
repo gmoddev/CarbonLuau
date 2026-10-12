@@ -202,6 +202,14 @@ contract remain unchanged. Public declaration acceptance is not a physical payou
 success result. No new prefab, inventory Signal, release/tag or ABI advancement
 is implied; `GiveItemBehavior` retains its existing contract.
 
+Post-release [Gameplay D4](GameplayD4-Validation.md) qualifies the second exact
+autospawn barrel on the same pinned Windows/Linux hosts, with unchanged three-target
+interception, publication, item ownership and numerical limits. Exact path/ID pairs
+select immutable descriptors; one global rule remains shared across both profiles.
+Natural individual payouts and a controlled alternate bag branch are distinguished.
+The current development signature and identities remain unchanged; published
+v0.7.0 still supports only barrel-1. No additional item, mode or prefab is implied.
+
 Gameplay C1 adds Player:GetInventory and read-only PlayerInventory CountItem/HasItem
 to development API 0.6.5-experimental, not published package 0.5.0. Existing D18
 physical rules, exact D11 connection and domain/publication lifetime remain;

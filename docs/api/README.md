@@ -7,6 +7,10 @@ Current `main` retains `0.7.0-experimental`. The world, gameplay, Loot and
 PlayerInventory features are included in v0.7.0, but not in v0.5.0. This is local
 server-side Luau, not Roblox cloud/DataModel/replication compatibility.
 
+Current post-release development adds [D4's barrel-2 target](../GameplayD4-Validation.md)
+under the same Loot signature and identities. It is not in published v0.7.0
+assets; use the qualified D4 build. One global rule remains, not one per prefab.
+
 ## Availability and migration
 
 | Introduction | Surface |

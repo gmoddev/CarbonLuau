@@ -17,11 +17,17 @@ Luau errors synchronously. Publication rechecks availability and ownership;
 a conflict can reject the candidate after the declaration returns, preserving
 the prior owner. `pcall` around registration is not proof of publication or payout.
 
-Only this exact prefab is supported:
+Current post-v0.7.0 development builds qualified by
+[Gameplay D4](../../GameplayD4-Validation.md) support these exact prefabs:
 
 ```text
 assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab
+assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab
 ```
+
+Published v0.7.0 assets remain unchanged and support only barrel-1. Barrel-2
+requires the qualified D4 build; no new release is announced here. Short names,
+case variants and other barrel paths are not accepted.
 
 Drops is a plain dense array of zero through eight
 [LootDropEntry](../Types/LootDropEntry.md) records. An empty array requests no
@@ -44,6 +50,12 @@ per domain. A successful replacement can replace its exact outgoing owner's
 rule. A failed candidate preserves the prior rule. Retirement removes the
 owner's rule from future selection; registration and reload do not replay
 earlier destruction events.
+
+The one-rule limit is shared across both prefabs, not one rule per prefab. Choose
+one target. A healthy same-owner replacement may change that target; unrelated
+owners cannot publish another rule even for the other barrel. Barrels that do
+not match the selected rule keep their vanilla destruction payouts. Switching
+profiles within a server frame does not reset the shared producer budget.
 
 Replace applies only to eligible, qualified destruction-time stored, bonus and
 bag payouts. It does not change earlier fill/generation or reclaim items
@@ -69,4 +81,8 @@ not by itself prove public binding qualification.
 See the [initialization example](../../../examples/scripts/loot-replace.luau)
 included in the package's scripts directory; use it as the root `init.luau`
 on the qualified exact host.
+For barrel-2, use the separate [D4 example](../../../examples/scripts/loot-replace-barrel-2.luau)
+instead of installing both examples. The ordinary barrels use individual drops;
+the alternate bag branch was tested with a controlled exact-source selector
+override, not advertised as natural barrel-2 behavior.
 See also the [Enum namespace](../Types/Enum.md).

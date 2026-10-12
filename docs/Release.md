@@ -64,6 +64,12 @@ capacity; file extents are hard bounded, allocated blocks have a qualified
 operational budget, and indeterminate mutations are never replayed.
 Process-crash evidence is not physical power-loss qualification.
 
+The subsequent [D4 qualification](GameplayD4-Validation.md) adds only the exact
+autospawn barrel-2 to current development builds under unchanged identities and
+budgets. It does not change the published v0.7.0 scope, tag or assets. A future
+release must separately qualify/package that extension; this task publishes no
+release or tag and selects no future package version.
+
 Authenticated-client GUI rendering/clicks/fonts/clipping/scrolling/reconciliation
 and Teleport convergence remain unqualified and non-gating for this experimental
 identity. No Shockbyte full-runtime or macOS server claim is made. TextBox is

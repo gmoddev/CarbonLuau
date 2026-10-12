@@ -136,3 +136,22 @@ new scheduler or release/tag authority. D3 stays in `0.6.5-experimental`.
 
 <!-- END RECORD Invariants.md -->
 
+## Gameplay D4 — qualified post-release prefab expansion
+
+The separately authorized [D4 record](../GameplayD4-Validation.md) extends only
+the strict Replace allowlist to exact autospawn barrel-2, ID `555882409`, alongside
+barrel-1, ID `966676416`. This supersedes the historical one-prefab scope above,
+not its publication, ownership, failure or resource contracts. A descriptor
+retains its exact declared full prefab. Host admission requires the corresponding
+exact name/ID pair and existing qualified plain LootContainer/settings/lifetime
+premises. A nonmatching lookup returns no owner or rule.
+
+There is still one global rule and one per domain, not one per prefab. Same-owner
+publication can change the target; foreign owners conflict under the retained
+global cap. The per-frame budget is shared and never reset by profile replacement.
+The three existing adaptation targets, PREPARE/COMMIT/VERIFY, D20 authority,
+I4/I12 and strict destruction-time/no-fallback/no-replay/no-compensation behavior
+remain unchanged. Natural bag behavior is not claimed; the record distinguishes
+its controlled physical branch test. No new mode/item/Signal/attribution, release
+or identity change follows. Published v0.7.0 remains immutable and barrel-1 only.
+

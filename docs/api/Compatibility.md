@@ -5,6 +5,13 @@ The v0.7.0 package contains the complete current API
 Its package identity supersedes earlier phase-local 0.5 development holds,
 not historical API introduction versions or published artifacts.
 
+Post-v0.7.0 [Gameplay D4](../GameplayD4-Validation.md) additionally qualifies the
+exact autospawn `loot-barrel-2.prefab` for strict Loot Replace on current development
+builds. Published v0.7.0 supports only barrel-1; its tag/assets are immutable.
+The signature, items, one global/domain rule, shared eight-occurrence frame
+budget and no-fallback failure contract are unchanged. No new package/API/ABI
+identity or release follows. Other barrel paths/items are not inferred supported.
+
 Earlier published package v0.5.0 uses API `0.5.0-experimental`.
 The development API identity is `CarbonLuau 0.7.0-experimental`, status `Experimental`;
 the newer Workspace/Entity, gameplay and PlayerInventory surface is not in published v0.5.0.

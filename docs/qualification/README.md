@@ -67,6 +67,11 @@ separate lifetime, public binding, traversal and combined gates.
 Sampled ItemChanged is not completed-operation observation; death is not removal;
 Loot Replace is qualified destruction payout, not retrospective collection.
 
+[Post-release D4](../GameplayD4-Validation.md) extends only the exact barrel
+allowlist, preserving one global rule and the shared budgets. It contains new
+Windows/Linux physical receipts and retains the offline/fixture negatives;
+published v0.7.0 remains barrel-1 only.
+
 ## Tooling
 
 [A completion](../ToolingFoundationACompletion.md) and
