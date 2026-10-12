@@ -120,7 +120,10 @@ namespace Carbon.Plugins
                 var Case = BarrelResearchCreate("b2_" + Label, BarrelResearchMode.Vanilla, BarrelResearchPosition, true);
                 EntityDeathBoundaryTarget = Case.Source;
                 string Id = Case.Id.ToString(CultureInfo.InvariantCulture);
-                EntityDeathBoundaryExecute("watch", "local B=require('state').B2Boundary; B.Watched['" + Id + "']='" + BarrelResearchPrefab + "'");
+                string Prefab = Case.Source.PrefabName;
+                BarrelResearchCheck(Prefab == Case.Prefab && Prefab == Case.Binding.Lifetime.Record.Prefab,
+                    "boundary watch captures the exact acquired original source prefab before death");
+                EntityDeathBoundaryExecute("watch", "local B=require('state').B2Boundary; B.Watched['" + Id + "']=" + EntityMeleeFixtureLuaText(Prefab));
                 string ExpectedType = EntityDeathBoundaryStep == 10 ? "Decay" : EntityDeathBoundaryStep == 11 ? "Explosion" : null;
                 if (ExpectedType != null)
                     EntityDeathBoundaryExecute("expect_type", "require('state').B2Boundary.ExpectedType['" + Id + "']='" + ExpectedType + "'");

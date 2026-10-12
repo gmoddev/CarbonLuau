@@ -49,7 +49,7 @@ internal static class LootPublicTests
             World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Registrar,
                 new Runtime.ItemDirectory(Name => {
                     Lookups++; if (ObserveLookup != null) ObserveLookup();
-                    return !MissingItem && (Name == "scrap" || Name == "metal.fragments") ? new object() : null;
+                    return !MissingItem && (Name == "scrap" || Name == "metal.fragments" || Name == "wood") ? new object() : null;
                 }));
             World.LootAvailable = () => SourceAvailable;
             Host = new Runtime.ScriptHost(Native, new Runtime.RuntimeConfig {
@@ -149,6 +149,7 @@ internal static class LootPublicTests
         ValidDeclarations(Native); InvalidDeclarations(Native); BackingCapacity(Native); Publication(Native);
         Availability(Native); RootReplacement(Native); AddonOwnership(Native); ScaleAndRecovery(Native);
         ProfileDeclarations(Native); ProfilePublication(Native); ProfileRootReplacement(Native); ProfileAddonOwnership(Native);
+        ItemDeclarations(Native);
         Check(Native.LiveVmCount == 0, "all real VM fixtures released");
         Console.WriteLine("[CarbonLuau:LootPublic] PASS pinned VM declarations, raw-table validation, enum identity, publication, conflicts, lifecycle, recovery and 100 addons; synthetic host only");
     }
@@ -164,6 +165,40 @@ internal static class LootPublicTests
         Check(!Value.World.TryLootRule(Prefab, out Owner, out Rule) && Owner == null && Rule == null,
             "nonmatching public profile clears both selection outputs");
     }
+    private static void ItemDeclarations(Runtime.NativeRuntime Native)
+    {
+        foreach (string Profile in new[] { Prefab, Prefab2 })
+        using (var Value = new Fixture(Native)) {
+            string Name = Profile == Prefab ? Runtime.LootRulePolicy.Prefab : Barrel2;
+            Value.ObserveLookup = Value.None;
+            Value.Load(Setup + "local Drops={{Item='wood',Min=50,Max=100},{Item='scrap',Min=5,Max=12}," +
+                "{Item='metal.fragments',Min=10,Max=25}}; S.Drops=Drops; " +
+                "Loot:RegisterDropRule(" + Profile + ",Mode,Drops); Drops[1].Item='stones'; table.clear(Drops)");
+            var Owner = Value.World.Active; var Snapshot = ProfileSelected(Value, Name, Owner);
+            EntryIs(Snapshot, 0, "wood", 50, 100); EntryIs(Snapshot, 1, "scrap", 5, 12);
+            EntryIs(Snapshot, 2, "metal.fragments", 10, 25);
+            Check(Snapshot.Count == 3 && Snapshot.MaximumTotal == 137 && Value.Lookups == 3,
+                "mixed qualified items copied before publication on each exact profile");
+            Value.ObserveLookup = null;
+            var Failed = Value.Reload(Setup + "Loot:RegisterDropRule(" + Profile +
+                ",Mode,{{Item='wood',Min=1,Max=1000}}); error('failed wood replacement')");
+            Check(Failed.Status != Runtime.RuntimeStatus.OK && !Owner.Disposed &&
+                Object.ReferenceEquals(ProfileSelected(Value, Name, Owner), Snapshot),
+                "failed wood candidate preserves the original immutable rule");
+            Value.Load(Setup + "local Record=table.freeze({Item='wood',Min=0,Max=1000}); " +
+                "Loot:RegisterDropRule(" + Profile + ",Mode,{Record,Record,Record,Record,Record,Record,Record,Record})");
+            var Maximum = ProfileSelected(Value, Name, Value.World.Active);
+            Check(Maximum.Count == 8 && Maximum.MaximumTotal == 8000, "wood retains global entry/amount budgets");
+            for (int Index = 0; Index < Maximum.Count; Index++) EntryIs(Maximum, Index, "wood", 0, 1000);
+            Value.Load(Setup + "Loot:RegisterDropRule(" + Profile + ",Mode,{{Item='wood',Min=0,Max=0}})");
+            EntryIs(ProfileSelected(Value, Name, Value.World.Active), 0, "wood", 0, 0);
+            Value.MissingItem = true;
+            var Missing = Value.Reload(Setup + "Loot:RegisterDropRule(" + Profile + ",Mode,{{Item='wood',Min=1,Max=1}})");
+            Check(Missing.Status != Runtime.RuntimeStatus.OK, "missing wood definition cannot publish");
+            EntryIs(ProfileSelected(Value, Name, Value.World.Active), 0, "wood", 0, 0);
+        }
+    }
+
     private static void ProfileDeclarations(Runtime.NativeRuntime Native)
     {
         using (var Value = new Fixture(Native)) {
@@ -179,7 +214,7 @@ internal static class LootPublicTests
                 "'assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-3.prefab'" })
                 Code.Append("assert(not pcall(function() Loot:RegisterDropRule(").Append(Name).Append(",Mode,{").Append(Entry).Append("}) end)); ");
             foreach (string Drops in new[] {
-                "{" + Entry + ",{Item='wood',Min=0,Max=1}}",
+                "{" + Entry + ",{Item='stones',Min=0,Max=1}}",
                 "{" + Entry + ",{Item='Scrap',Min=0,Max=1}}",
                 "{" + Entry + ",{Item='scrap\\0',Min=0,Max=1}}",
                 "{" + Entry + ",{Item='scráp',Min=0,Max=1}}",
@@ -381,7 +416,7 @@ internal static class LootPublicTests
             "{{item='scrap',Min=0,Max=1}}", "{{Item='scrap',Min=0,Max=1,Callback=Touch}}",
             "{{Item='scrap',Min=0,Max=1,Self=Cycle}}",
             "(function() local T={}; for Index=1,9 do T[Index]={Item='scrap',Min=0,Max=0} end; return T end)()"}) Drops(Text);
-        foreach (string Item in new[] {"'wood'", "'Scrap'", "' metal.fragments'", "'scrap\\0'", "'scráp'", "''", "string.rep('x',129)",
+        foreach (string Item in new[] {"'stones'", "'Wood'", "'wood.extra'", "'wood\\0'", "'Scrap'", "' metal.fragments'", "'scrap\\0'", "'scráp'", "''", "string.rep('x',129)",
             "42", "true", "{}", "Mode", "Touch"}) Drops("{{Item=" + Item + ",Min=0,Max=1}}");
         foreach (string Number in new[] {"nil", "'1'", "true", "{}", "Touch", "Mode", "-1", "1001", "0.5", "math.huge", "-math.huge", "0/0", "9007199254740992"}) {
             Drops("{{Item='scrap',Min=" + Number + ",Max=1000}}");
@@ -410,7 +445,7 @@ internal static class LootPublicTests
                 "all malformed calls fail before host resolution, staging, subscriptions or deferred effects");
             Value.Execute("assert(require('state').Touched==0)");
             // A rejected call does not poison the inactive session's one-rule slot.
-            Value.Load(Setup + "assert(not pcall(function() Loot:RegisterDropRule(" + Prefab + ",Mode,{{Item='wood',Min=0,Max=1}}) end)); " + Register);
+            Value.Load(Setup + "assert(not pcall(function() Loot:RegisterDropRule(" + Prefab + ",Mode,{{Item='stones',Min=0,Max=1}}) end)); " + Register);
             EntryIs(Value.Selected(Value.World.Active), 0, "scrap", 1, 2);
         }
     }

@@ -155,3 +155,27 @@ remain unchanged. Natural bag behavior is not claimed; the record distinguishes
 its controlled physical branch test. No new mode/item/Signal/attribution, release
 or identity change follows. Published v0.7.0 remains immutable and barrel-1 only.
 
+## Gameplay D5 — qualified post-release item expansion
+
+The separately authorized [D5 record](../GameplayD5-Validation.md) owns the
+additional `wood` item's exact-host qualification status. Both pinned hosts
+prove the name/ID definition pair `wood` / `-151838493`, stackable 1000, ordinary
+generic dropped worlds, original UID/reciprocal ownership and supported cleanup.
+Its Burnable creation callback sets only the existing scalar fuel default;
+XPWhenUsed and ApartmentTax inherit empty creation/world/remove callbacks.
+No extra held/associated entity, nested contents, condition, skin or public fuel
+configuration is introduced. Unrelated consumption/tax behavior is not qualified.
+
+Only the native declaration and managed item allowlist checks expand. D2A/D4's
+three-target adapter, D3's immutable descriptors/staged publication and D13/D20/
+D23/I12 authority, failure and lifetime contracts remain unchanged. The declared
+Max must still fit the actual definition stack limit before COMMIT; a changed
+stack premise is pre-COMMIT ineligibility with vanilla untouched. There is no
+splitting into extra worlds or post-COMMIT fallback/replay/compensation.
+
+One global rule and one per domain remain; all existing numerical budgets are
+shared unchanged. Independent per-prefab ownership is the separately deferred
+[D6 proposal](../design/GameplayD6-PrefabRuleRegistry.md). Other definitions,
+prefabs, modes, generic transactions and attribution are outside D5. Published
+v0.7.0 tag/assets and package/API/ABI/provider/schema/Luau identities are unchanged.
+

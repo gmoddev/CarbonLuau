@@ -22,6 +22,8 @@ Parser.add_argument("--qualification", action="store_true")
 Parser.add_argument("--public", action="store_true")
 Parser.add_argument("--entity-death", action="store_true")
 Parser.add_argument("--barrel2", action="store_true")
+Parser.add_argument("--loot-items", action="store_true")
+Parser.add_argument("--loot-item-probe-only", action="store_true")
 
 
 def Hash(Path):
@@ -34,6 +36,10 @@ def Hash(Path):
 
 def Main():
     Args = Parser.parse_args()
+    if Args.loot_item_probe_only and not Args.loot_items:
+        raise RuntimeError("D5 probe requires LootItems qualification selection")
+    if Args.loot_items:
+        Args.barrel2 = Args.public = Args.qualification = True
     FixtureMarker = "[CarbonLuau:LootFixture]" if Args.qualification else "[CarbonLuau:BarrelLootResearch]"
     if Args.public and not Args.qualification:
         raise RuntimeError("Public qualification requires the established D2A fixture substrate")
@@ -41,7 +47,7 @@ def Main():
         raise RuntimeError("Entity death qualification requires the public fixture substrate")
     if Args.barrel2 and not Args.public:
         raise RuntimeError("Barrel-2 qualification requires the public fixture substrate")
-    PassMarker = "PASS public qualification" if Args.public else "PASS private qualification" if Args.qualification else "PASS mechanism"
+    PassMarker = "PASS D5 item probe" if Args.loot_item_probe_only else "PASS public qualification" if Args.public else "PASS private qualification" if Args.qualification else "PASS mechanism"
     Work = pathlib.Path(Args.work).resolve()
     if Work != pathlib.Path("/root/codex/world-movement-20261003"):
         raise RuntimeError("Expected established task-owned Linux server")
@@ -73,6 +79,10 @@ def Main():
             raise RuntimeError("Qualification fixture selection mismatch")
         if ("CarbonLuau.LootBarrel2Fixtures.cs" in Names) != Args.barrel2:
             raise RuntimeError("Barrel-2 fixture selection mismatch")
+        if ("CarbonLuau.LootItemFixtures.cs" in Names) != Args.loot_items:
+            raise RuntimeError("D5 fixture selection mismatch")
+        if ("CarbonLuau.LootItemProbeFixtures.cs" in Names) != Args.loot_item_probe_only:
+            raise RuntimeError("D5 probe selection mismatch")
     InputHashes = {}
     for Target, Source, Name in Inputs:
         if Source == Target.resolve():
@@ -131,8 +141,10 @@ def Main():
         Markers = (PassMarker,)
         if any(FixtureMarker + " " + Marker not in Content for Marker in Markers) or "[CarbonLuau:BarrelLootResearch] FAIL" in Content or "[CarbonLuau:LootFixture] FAIL" in Content or "[CarbonLuau:LootFixture] CLEANUP_FAIL" in Content or "[CarbonLuau:EntityLifetime] Private startup observer qualified" not in Content:
             raise RuntimeError("Missing/failed qualification receipts: " + str(Log))
-        if Args.barrel2 and "[CarbonLuau:LootFixture] PASS barrel-2" not in Content:
+        if Args.barrel2 and not Args.loot_item_probe_only and "[CarbonLuau:LootFixture] PASS barrel-2" not in Content:
             raise RuntimeError("Barrel-2 physical matrix receipt missing: " + str(Log))
+        if Args.loot_items and not Args.loot_item_probe_only and "[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix" not in Content:
+            raise RuntimeError("D5 physical item matrix receipt missing: " + str(Log))
         if Args.entity_death and ("[CarbonLuau:EntityDiedFixture] PASS bounded public transport and actual RPC source" not in Content or
                 "[CarbonLuau:EntityMeleeFixture] PASS actual RPC source/terminal proof and cleanup" not in Content or
                 "[CarbonLuau:EntityMeleeFixture] FAIL" in Content or "[CarbonLuau:EntityMeleeFixture] CLEANUP FAIL" in Content):

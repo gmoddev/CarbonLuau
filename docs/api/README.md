@@ -11,6 +11,13 @@ Current post-release development adds [D4's barrel-2 target](../GameplayD4-Valid
 under the same Loot signature and identities. It is not in published v0.7.0
 assets; use the qualified D4 build. One global rule remains, not one per prefab.
 
+[D5](../GameplayD5-Validation.md) adds only `wood` to the replacement item
+allowlist, alongside scrap and metal.fragments. Use the
+[wood example](../../examples/scripts/loot-replace-wood.luau) in a D5 build;
+published v0.7.0 does not include it. Signatures, identities and budgets remain
+unchanged. Independent per-prefab ownership is a
+[deferred D6 proposal](../design/GameplayD6-PrefabRuleRegistry.md).
+
 ## Availability and migration
 
 | Introduction | Surface |

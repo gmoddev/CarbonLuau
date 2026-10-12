@@ -8,7 +8,11 @@ All notable public changes to CarbonLuau are recorded here.
   `loot-barrel-2.prefab` target to strict Loot Replace, alongside barrel-1.
   Descriptors retain their declared target; nonmatching barrels remain vanilla.
   One global/domain rule and all shared producer/ownership/failure limits remain.
-- Public signature, items, modes and identities are unchanged. Published
+- [Gameplay D5](docs/GameplayD5-Validation.md) adds `wood` to the existing
+  scrap/metal.fragments replacement allowlist on both exact supported barrels.
+  One global/domain rule, all limits and physical failure/ownership semantics
+  remain unchanged. Per-prefab ownership is a separately deferred D6 proposal.
+- Public signature, modes and identities are unchanged. Published
   v0.7.0 tags/assets remain barrel-1 only. No new release/tag is created.
 
 ## 0.7.0 — Experimental

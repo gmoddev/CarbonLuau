@@ -749,7 +749,7 @@ end
 table.freeze(Workspace)
 -- @carbonluau-api {"Type":"LootDropEntry","Kind":"Value","Representation":"Alias","TypeExpression":"{Item: string, Min: number, Max: number}","Summary":"Plain declaration record: qualified Item and inclusive integer amounts 0..1000 with Min <= Max.","SinceApi":"0.6.5-experimental","Preview":"Unavailable"}
 local Loot = {}
--- @carbonluau-api {"Owner":"Loot","Name":"RegisterDropRule","Kind":"Method","Args":[["Prefab","string"],["Mode","DropMode"],["Drops","{LootDropEntry}"]],"Returns":[],"Summary":"Initialization-only copied declaration for qualified barrel-1 or barrel-2, staged until successful publication. One global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result.","SinceApi":"0.6.5-experimental","Preview":"HostMutation","RejectExtraArguments":true,"Binding":"function Loot.RegisterDropRule(Self, ...)"}
+-- @carbonluau-api {"Owner":"Loot","Name":"RegisterDropRule","Kind":"Method","Args":[["Prefab","string"],["Mode","DropMode"],["Drops","{LootDropEntry}"]],"Returns":[],"Summary":"Initialization-only copied declaration for qualified barrel-1 or barrel-2 with scrap, metal.fragments or wood, staged until successful publication. One global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result.","SinceApi":"0.6.5-experimental","Preview":"HostMutation","RejectExtraArguments":true,"Binding":"function Loot.RegisterDropRule(Self, ...)"}
 function Loot.RegisterDropRule(Self, ...)
     if Self ~= Loot then Fail("invalid Loot service") end
     if select("#", ...) ~= 3 then Fail("expected exactly three loot rule arguments") end
@@ -781,7 +781,7 @@ function Loot.RegisterDropRule(Self, ...)
             if Keys > 3 or (Key ~= "Item" and Key ~= "Min" and Key ~= "Max") then Fail("unsupported loot entry field") end
         end
         local Item = String(rawget(Entry, "Item"), "loot item")
-        if Item ~= "scrap" and Item ~= "metal.fragments" then Fail("unsupported loot rule item") end
+        if Item ~= "scrap" and Item ~= "metal.fragments" and Item ~= "wood" then Fail("unsupported loot rule item") end
         local Min = Number(rawget(Entry, "Min"), "loot Min", 0, 1000)
         local Max = Number(rawget(Entry, "Max"), "loot Max", Min, 1000)
         if Min ~= math.floor(Min) or Max ~= math.floor(Max) then Fail("loot rule amounts must be integers") end

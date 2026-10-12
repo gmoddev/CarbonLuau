@@ -210,6 +210,13 @@ Natural individual payouts and a controlled alternate bag branch are distinguish
 The current development signature and identities remain unchanged; published
 v0.7.0 still supports only barrel-1. No additional item, mode or prefab is implied.
 
+[Gameplay D5](GameplayD5-Validation.md) separately expands only the replacement
+item allowlist to wood on those same pinned Windows/Linux hosts. The record owns
+physical identity/mod/creation/world/cleanup proof, actual public declarations,
+failure/recovery/regressions and final-source closure. It changes neither Loot
+signature nor prefab support, ownership cardinality, numerical budgets or modes.
+Published v0.7.0 remains scrap/metal.fragments and barrel-1 only; no new release.
+
 Gameplay C1 adds Player:GetInventory and read-only PlayerInventory CountItem/HasItem
 to development API 0.6.5-experimental, not published package 0.5.0. Existing D18
 physical rules, exact D11 connection and domain/publication lifetime remain;

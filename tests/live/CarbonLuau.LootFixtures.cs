@@ -29,6 +29,7 @@ namespace Carbon.Plugins
         private bool LootFixtureDone;
         private bool LootFixturePublic;
         private bool LootFixtureBarrel2;
+        private bool LootFixtureItems, LootFixtureItemProbeOnly, LootFixtureItemProbeDone;
         private string LootFixturePrefab = LootRulePolicy.Prefab;
         private int LootFixtureBudgetFrame = -1, LootFixtureBudgetWaits;
         private bool LootFixtureModuleRollback;
@@ -40,6 +41,10 @@ namespace Carbon.Plugins
         partial void PrepareEntityDeathFixture();
         partial void ContinueEntityDeathFixture(ref bool Deferred);
         partial void SelectPublicLootQualification(ref bool Public);
+        partial void SelectLootItemQualification(ref bool Items);
+        partial void SelectLootItemProbe(ref bool ProbeOnly);
+        partial void RunLootItemProbe();
+        partial void RunLootItemCases();
         private int LootFixtureStep;
         private bool LootFixtureInitialPayoutDone;
         private int LootFixtureEventWaits;
@@ -94,10 +99,13 @@ namespace Carbon.Plugins
                 BarrelResearchHold(Value); BarrelResearchHold(Frame.Worlds[Index]);
                 if (!Frame.Accepted[Index]) continue;
                 BarrelResearchCheck(LootWorldOwned(Frame, Index), "accepted original Item/UID/epoch/world reciprocal owner");
+                BarrelResearchCheck(Value.info != null && ReferenceEquals(Value.info, Frame.Definitions[Index]) &&
+                    Value.info.shortname == Frame.Rule.Entry(Index).Item, "actual accepted world exact intended definition including partial outcomes");
                 if (Success) BarrelResearchCheck(VerifyLootWorld(Frame, Index), "verified planned amount/definition");
                 Worlds++;
                 Puts("[CarbonLuau:LootFixture] WORLD item=" + Value.info.shortname + " amount=" + Value.amount +
-                    " uid=" + Value.uid + " id=" + Frame.Worlds[Index].net.ID.Value + " class=" + Frame.Worlds[Index].GetType().Name);
+                    " uid=" + Value.uid + " id=" + Frame.Worlds[Index].net.ID.Value + " class=" + Frame.Worlds[Index].GetType().Name +
+                    " entry=" + Index + " planned=" + Frame.Amounts[Index] + " prefab=" + Frame.Rule.Prefab);
             }
             Puts("[CarbonLuau:LootFixture] RECEIPT success=" + Success + " committed=" + Frame.Committed +
                 " complete=" + Frame.PayoutComplete + " source_removal_certified=" + Frame.Removal.Certified +
@@ -117,12 +125,19 @@ namespace Carbon.Plugins
                 BarrelResearchCheck(BasePlayer.activePlayerList.Count == 0 && Host != null && Host.Ready &&
                     EntityStartupQualified && LootAvailable(), "isolated qualified private source ready");
                 SelectPublicLootQualification(ref LootFixturePublic);
+                SelectLootItemQualification(ref LootFixtureItems);
+                SelectLootItemProbe(ref LootFixtureItemProbeOnly);
                 if (LootFixtureBarrel2) {
                     BarrelResearchCheck(LootFixturePublic, "D4 requires the actual public declaration fixture");
                     LootFixturePrefab = LootRulePolicy.SecondPrefab;
                     BarrelResearchSelectedPrefab = LootFixturePrefab;
                 }
                 Puts("[CarbonLuau:LootFixture] SELECT public=" + LootFixturePublic + " d4_barrel2=" + LootFixtureBarrel2 + " prefab=" + LootFixturePrefab);
+                if (LootFixtureItems) {
+                    BarrelResearchCheck(LootFixturePublic && LootFixtureBarrel2, "D5 requires existing public D4 substrate");
+                    RunLootItemProbe();
+                    if (LootFixtureItemProbeOnly) { EndLootQualification(null); return; }
+                }
                 PrepareEntityDeathFixture();
                 if (Addons != null) { Addons.Dispose(); Addons = null; }
                 Host.Dispose();
@@ -164,12 +179,14 @@ namespace Carbon.Plugins
                 Puts("[CarbonLuau:LootFixture] SEMANTIC_SHA256=" + BitConverter.ToString(Hash.ComputeHash(Encoding.UTF8.GetBytes(Text))).Replace("-", "").ToLowerInvariant());
             foreach (string Line in Lines) Puts("[CarbonLuau:LootFixture] SEMANTIC_IL " + Line);
         }
-        private static LootDropEntry[] TwoLootEntries()
-        { return new[] { new LootDropEntry("scrap", 7, 7), new LootDropEntry("metal.fragments", 11, 11) }; }
+        private LootDropEntry[] TwoLootEntries()
+        { return LootFixtureItems
+            ? new[] { new LootDropEntry("scrap", 7, 7), new LootDropEntry("wood", 11, 11) }
+            : new[] { new LootDropEntry("scrap", 7, 7), new LootDropEntry("metal.fragments", 11, 11) }; }
         private void RunLootQualificationStep()
         {
             try {
-                int Needed = LootFixtureStep == 18 ? 2 : 1;
+                int Needed = LootFixtureStep == 25 ? 6 : LootFixtureStep == 24 ? 5 : LootFixtureStep == 18 ? 2 : 1;
                 if (LootFixtureBarrel2 && (LootFixtureBudgetFrame == Time.frameCount ||
                     LootFrameNumber == Time.frameCount && LootFrameUsed > LootRulePolicy.PerFrame - Needed)) {
                     BarrelResearchCheck(++LootFixtureBudgetWaits <= 16, "D4 bounded wait for next actual frame after exhaustion");
@@ -180,7 +197,11 @@ namespace Carbon.Plugins
                 // producer-budget qualification; never sleep or pump Unity inline.
                 if (LootFixtureStep == 0) {
                     if (!LootFixtureInitialPayoutDone) {
-                        LootFixturePayout("root_two", 2, true);
+                        var Case = BarrelResearchCreate("root_two", BarrelResearchMode.Vanilla, BarrelResearchPosition, true);
+                        // EntitySpawned delivery revalidates the original
+                        // live world. Retain both exact worlds throughout
+                        // the existing bounded wait before owned cleanup.
+                        LootFixturePayout(Case, 2, true, false);
                         LootFixtureInitialPayoutDone = true;
                         LootFixtureEventWaitFrame = Time.frameCount;
                     }
@@ -197,9 +218,10 @@ namespace Carbon.Plugins
                         if (LootFixtureEventWaits < 16) { NextTick(RunLootQualificationStep); return; }
                     }
                     BarrelResearchCheck(Result.Status == RuntimeStatus.OK, "B1/B3 callbacks remain usable: " + Result.Error);
+                    BarrelResearchCleanup();
                 } else if (LootFixtureStep == 1) {
                     var Old = Gameplay.Active;
-                    LootFixtureEntries = new[] { new LootDropEntry("scrap", 1000, 1000) };
+                    LootFixtureEntries = new[] { new LootDropEntry(LootFixtureItems ? "wood" : "scrap", 1000, 1000) };
                     string Previous = LootFixtureSource; LootFixtureSource = "require('failed')";
                     BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.RUNTIME_ERROR && ReferenceEquals(Gameplay.Active, Old), "failed root preserves exact rule owner");
                     LootFixtureSource = Previous;
@@ -242,7 +264,7 @@ namespace Carbon.Plugins
                 } else if (LootFixtureStep == 7) {
                     // Eight maximum descriptor entries, eight distinct actual worlds.
                     LootFixtureEntries = new LootDropEntry[LootRulePolicy.Entries];
-                    for (int Index = 0; Index < LootFixtureEntries.Length; Index++) LootFixtureEntries[Index] = new LootDropEntry("scrap", 1000, 1000);
+                    for (int Index = 0; Index < LootFixtureEntries.Length; Index++) LootFixtureEntries[Index] = new LootDropEntry(LootFixtureItems ? "wood" : "scrap", 1000, 1000);
                     BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK, "max entry publication");
                 } else if (LootFixtureStep == 8) {
                     LootFixturePayout("maximum_entries", 8, true);
@@ -306,7 +328,9 @@ namespace Carbon.Plugins
                     Puts("[CarbonLuau:LootFixture] PASS actual ItemManager.Create fault dispatch; no unreturned allocation claim, partial world retained/no replay");
                     if (LootFixtureStep == 15 && !LootFixturePublic) { LootFixtureDone = true; EndLootQualification(null); return; }
                 } else if (LootFixtureStep == 16) {
-                    LootFixtureEntries = new[] { new LootDropEntry("scrap", 5, 12), new LootDropEntry("metal.fragments", 10, 25) };
+                    LootFixtureEntries = LootFixtureItems
+                        ? new[] { new LootDropEntry("wood", 50, 100), new LootDropEntry("metal.fragments", 10, 25) }
+                        : new[] { new LootDropEntry("scrap", 5, 12), new LootDropEntry("metal.fragments", 10, 25) };
                     BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK, "public inclusive range publication");
                 } else if (LootFixtureStep == 17) {
                     LootFixturePayout("public_range", 2, true);
@@ -327,7 +351,13 @@ namespace Carbon.Plugins
                     LootFixtureCaughtModule();
                 } else if (LootFixtureStep == 23) {
                     LootFixtureControlledBag();
-                    FinishLootFixtureMatrix(); return;
+                    if (!LootFixtureItems) { FinishLootFixtureMatrix(); return; }
+                } else if (LootFixtureStep == 24 || LootFixtureStep == 25) {
+                    RunLootItemCases();
+                    if (LootFixtureStep == 25) {
+                        LootFixtureBudgetFrame = Time.frameCount; LootFixtureBudgetWaits = 0;
+                        NextTick(FinishLootItemMatrix); return;
+                    }
                 }
                 LootFixtureStep++; NextTick(RunLootQualificationStep);
             } catch (Exception Error) { EndLootQualification(Error); }
@@ -362,6 +392,12 @@ namespace Carbon.Plugins
             string Label = Case.Label;
             BarrelResearchCurrent = Case;
             int Before = LootFixtureReceipts, BeforeSuccess = LootFixtureSuccesses;
+            LootDropRule RangeRule = null;
+            if (Label == "public_range") {
+                FacadeSession Owner;
+                BarrelResearchCheck(Gameplay.TryLootRule(Case.Prefab, out Owner, out RangeRule) && RangeRule != null,
+                    "inclusive range checks retain exact selected immutable descriptor");
+            }
             try {
                 Case.Source.Hurt(10000f, Rust.DamageType.Generic, BarrelResearchActor, false);
                 BarrelResearchRetired(Case);
@@ -375,9 +411,14 @@ namespace Carbon.Plugins
                     BarrelResearchCheck(World != null && ReferenceEquals(World.item, Value) && World.IsFullySpawned() && !World.IsDestroyed &&
                         Value.uid.Value == BarrelResearchLedger[Index].ItemUid, "physical current original world owner");
                     Actual++;
-                    if (Label == "public_range")
-                        BarrelResearchCheck((Value.info.shortname == "scrap" && Value.amount >= 5 && Value.amount <= 12) ||
-                            (Value.info.shortname == "metal.fragments" && Value.amount >= 10 && Value.amount <= 25), "public inclusive amount range");
+                    if (RangeRule != null) {
+                        bool Matches = false;
+                        for (int EntryIndex = 0; EntryIndex < RangeRule.Count; EntryIndex++) {
+                            var Entry = RangeRule.Entry(EntryIndex);
+                            if (Value.info.shortname == Entry.Item && Value.amount >= Entry.Min && Value.amount <= Entry.Max) Matches = true;
+                        }
+                        BarrelResearchCheck(Matches, "public physical inclusive amount range from immutable descriptor");
+                    }
                 }
                 BarrelResearchCheck(Actual == ExpectedWorlds, "no extra vanilla/bonus physical payout " + Label);
                 foreach (var Result in Host.Drain()) BarrelResearchCheck(Result.Status == RuntimeStatus.OK, "existing callback regression");
@@ -389,6 +430,22 @@ namespace Carbon.Plugins
             LootFixtureDone = true;
             bool Deferred = false; ContinueEntityDeathFixture(ref Deferred);
             if (!Deferred) EndLootQualification(null);
+        }
+        private void FinishLootItemMatrix()
+        {
+            try {
+                // D5's final six admitted payouts consume the shared actual
+                // frame budget. B2's independent terminal cases start only in
+                // a fresh actual frame; never reset production accounting.
+                if (Time.frameCount == LootFixtureBudgetFrame) {
+                    BarrelResearchCheck(++LootFixtureBudgetWaits <= 16, "D5 bounded actual-frame continuation before B2 regressions");
+                    NextTick(FinishLootItemMatrix); return;
+                }
+                Puts("[CarbonLuau:LootFixture] D5_B2_CONTINUE previous_frame=" + LootFixtureBudgetFrame +
+                    " current_frame=" + Time.frameCount + " loot_frame=" + LootFrameNumber + " prior_used=" + LootFrameUsed +
+                    " production_budget_reset=false fresh_actual_frame=true");
+                FinishLootFixtureMatrix();
+            } catch (Exception Error) { EndLootQualification(Error); }
         }
         partial void ObserveBarrelFixtureProfile(LootContainer Source)
         {
@@ -850,6 +907,11 @@ namespace Carbon.Plugins
                 : "[CarbonLuau:LootFixture] PASS private qualification root/publication/recovery, exact payout/retirement, real failed Spawn ownership and cleanup; no public Loot API");
             if (Error == null && Clean && LootFixtureDone && LootFixtureBarrel2)
                 Puts("[CarbonLuau:LootFixture] PASS barrel-2 public qualification full matrix, exact profiles, vanilla rejection, sole owner/shared frame budget, controlled bag branch; natural_bag_branch=false");
+            if (Error == null && Clean && LootFixtureItems && LootFixtureItemProbeDone)
+                Puts(LootFixtureItemProbeOnly
+                    ? "[CarbonLuau:LootFixture] PASS D5 item probe definition/mods, fresh actual Item/world reciprocal completed-Spawn and exact cleanup; public wood remains unqualified"
+                    : LootFixtureDone ? "[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix, both profiles, exact ownership/failure/budgets and cleanup"
+                    : "[CarbonLuau:LootFixture] D5 incomplete matrix");
             ConsoleSystem.Run(ConsoleSystem.Option.Server, "quit");
         }
     }

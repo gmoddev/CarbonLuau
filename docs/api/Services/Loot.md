@@ -31,8 +31,13 @@ case variants and other barrel paths are not accepted.
 
 Drops is a plain dense array of zero through eight
 [LootDropEntry](../Types/LootDropEntry.md) records. An empty array requests no
-custom payout. Each record has exactly Item, Min and Max; Item is `scrap` or
-`metal.fragments`. Min and Max are finite integers with
+custom payout. Each record has exactly Item, Min and Max; Item is `scrap`,
+`metal.fragments` or `wood`. Wood requires the post-v0.7.0
+[Gameplay D5 build](../../GameplayD5-Validation.md); published v0.7.0 still
+supports only scrap and metal.fragments. The pinned wood definition is
+`-151838493`, stackable 1000. The adapter creates one original Item/world per
+nonzero entry and does not split oversized amounts or configure fuel, condition,
+skins, contents or held entities. Min and Max are finite integers with
 `0 <= Min <= Max <= 1000`; the sum of Max across entries cannot exceed 8000.
 Arrays and entries cannot have metatables, holes or extra keys. Later changes
 to the input tables do not change the copied rule.

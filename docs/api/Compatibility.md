@@ -12,6 +12,12 @@ The signature, items, one global/domain rule, shared eight-occurrence frame
 budget and no-fallback failure contract are unchanged. No new package/API/ABI
 identity or release follows. Other barrel paths/items are not inferred supported.
 
+Post-release [Gameplay D5](../GameplayD5-Validation.md) adds only `wood`, with
+the exact pinned definition and ordinary Item/world ownership path. Scrap and
+metal.fragments, both D4 prefab paths, one global/domain rule and all existing
+entry/amount/frame/retention limits remain. Published v0.7.0 includes neither
+wood nor barrel-2. A future per-prefab registry remains separately scoped D6.
+
 Earlier published package v0.5.0 uses API `0.5.0-experimental`.
 The development API identity is `CarbonLuau 0.7.0-experimental`, status `Experimental`;
 the newer Workspace/Entity, gameplay and PlayerInventory surface is not in published v0.5.0.

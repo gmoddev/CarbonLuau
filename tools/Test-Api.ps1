@@ -59,6 +59,15 @@ function Test-D3Documents {
         !$LootReference.Contains('loot-barrel-2.prefab') -or !$LootReference.Contains('post-v0.7.0')) {
         throw 'D4 second-prefab example/reference or immutable release scope drift'
     }
+    $WoodExample = Get-Content -Raw -LiteralPath (Join-Path $Root 'examples/scripts/loot-replace-wood.luau')
+    foreach ($Claim in @('Item = "wood"','Min = 50, Max = 100','Loot:RegisterDropRule(Prefab, Enum.DropMode.Replace, Drops)',
+        'Published v0.7.0 supports neither wood nor barrel-2')) {
+        if (!$WoodExample.Contains($Claim)) { throw "D5 wood example contract missing: $Claim" }
+    }
+    if (!$LootReference.Contains('Gameplay D5 build') -or !$LootReference.Contains('`wood`') -or
+        !$EntryReference.Contains('Gameplay D5 build') -or !$EntryReference.Contains('`wood`')) {
+        throw 'D5 qualified item/reference or immutable release scope drift'
+    }
 }
 function Test-D3Capacity([string]$Bootstrap, [string]$Facade) {
     # Source audit only: capacity precedes next's scan of empty backing slots.
