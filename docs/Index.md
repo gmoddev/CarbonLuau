@@ -65,6 +65,16 @@ Only the two superseded, unreferenced interruption checkpoints were deleted.
 
 ## Documentation maintenance
 
+The [post-v0.7.0 offline audit](qualification/Release-0.7.0-PostReleaseAudit.md)
+verifies immutable release assets and records forward documentation/tooling fixes.
+These current design reports do not expand qualified production behavior:
+
+- [D4 Loot expansion](design/GameplayD4-LootExpansion.md).
+- [B2 attribution expansion](design/GameplayB2-AttributionExpansion.md).
+- [Inventory observation improvements](design/GameplayC-InventoryObservationExpansion.md).
+
+Static findings and offline fixtures are distinct from mandatory live-host gates.
+
 [Consolidation receipt](Documentation-Consolidation.md) records the approved
 cleanup, coverage/URL/test consumers and qualification. Do not introduce duplicate
 authority, erase negative results, rewrite old publication identities, or use

@@ -7,9 +7,9 @@ not modify the shared facade or grant host authority.
 
 | Signature / field | Type / return | Behavior |
 |---|---|---|
-| `game:GetService(Name)` | string -> Players, Commands, Gui, Items, Workspace, DataStoreService or Loot | Exact case-sensitive names. Workspace begins with development API 0.6; Loot begins with 0.6.5. The published 0.5.0 package has neither. |
+| `game:GetService(Name)` | string -> Players, Commands, Gui, Items, Workspace, DataStoreService or Loot | Exact case-sensitive names. Workspace was introduced at API 0.6, Loot at 0.6.5; both are included in v0.7.0 but not v0.5.0. |
 | `game.ApiName` | read-only string | `CarbonLuau` |
-| `game.ApiVersion` | read-only string | Current development identity: `0.7.0-experimental` |
+| `game.ApiVersion` | read-only string | Published/current identity: `0.7.0-experimental` |
 | `game.ApiStatus` | read-only string | `Experimental` |
 
 Wrong receiver, non-string service name or unknown service raises a Luau error.

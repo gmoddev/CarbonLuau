@@ -10,9 +10,9 @@ Rust servers. Start with [installation](Installation.md), then the
 |---|---|
 | `v0.7.0` experimental | Complete current API `0.7.0-experimental` ([notes](releases/0.7.0.md), [qualification](Release-0.7.0-Validation.md)) |
 | Earlier `v0.5.0` | Experimental API `0.5.0-experimental`: runtime, addons, Player gameplay, GUI, local persistence and structured Query |
-| Current development | API `0.7.0-experimental`: also read-only Workspace/Entity, bounded async discovery, gameplay Signals, Loot Replace and PlayerInventory |
+| Current `main` | Same published API `0.7.0-experimental`; post-release research does not expand qualified gameplay support |
 
-Development features are not retroactively in v0.5.0. C4 removed the four legacy
+The newer features included in v0.7.0 are not retroactively in v0.5.0. C4 removed the four legacy
 Player inventory methods: use `Player:GetInventory()` and the
 [migration guide](api/Inventory-Migration.md). Package/API/ABI identities are
 independent; [release planning](Release.md) and
@@ -42,7 +42,7 @@ authenticated client is not implied by this example.
 - [Addon composition](api/Addons.md) and [provider registration](api/Addon-Providers.md).
 - [GUI guide](api/Gui.md) and [member reference](api/Gui-Reference.md).
 - [Local persistence and Query](api/Persistence.md).
-- Development [world lookup](api/Services/Workspace.md),
+- [World lookup](api/Services/Workspace.md),
   [discovery](api/Discovery.md), [inventory](api/Types/PlayerInventory.md)
   and [Loot](api/Services/Loot.md).
 
@@ -60,4 +60,4 @@ Contributors start at [AICONTEXT](../AICONTEXT.md), then the
 Failed proofs remain available; they are not current open implementation gates.
 
 Published release notes: [0.3](releases/0.3.0.md), [0.4](releases/0.4.0.md),
-[0.5](releases/0.5.0.md).
+[0.5](releases/0.5.0.md), [0.7](releases/0.7.0.md).

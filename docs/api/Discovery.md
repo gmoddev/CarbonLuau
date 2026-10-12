@@ -1,11 +1,10 @@
 # Entity discovery
 
-Discovery-2B contract for development scripting API `0.6.0-experimental`.
+Introduced at API `0.6.0-experimental` and included in published package v0.7.0.
 Public binding and runtime qualification are recorded as PASS in the
-[Foundation 2B record](../WorldEntityFoundation2B.md). The latest published
-package remains `0.5.0` and does not include Workspace or Entity. This guide
-does not announce a package release. Combined lifecycle, scale and release
-readiness are recorded in [Foundation 2C](../WorldEntityFoundation2C.md).
+[Foundation 2B record](../WorldEntityFoundation2B.md). Combined lifecycle, scale
+and release readiness are recorded in [Foundation 2C](../WorldEntityFoundation2C.md)
+and [v0.7 qualification](../Release-0.7.0-Validation.md).
 
 Obtain the service with `game:GetService("Workspace")`. The existing
 [exact lookup reference](Services/Workspace.md) owns
@@ -126,7 +125,7 @@ continuous observer but retires old callback and facade authority.
 The [runnable discovery example](../../examples/world/discovery/init.luau)
 submits from deferred committed execution, supplies an exact full Prefab and
 Limit, and handles submission rejection, later error, empty array and results.
-Copy its `init.luau` into the configured script root on a development build
+Copy its `init.luau` into the configured script root on the qualified v0.7.0 build
 containing Discovery-2B, following [installation](../Installation.md). Adjust
 the center, radius and full prefab to the world you want to observe. The example
 does not create entities or guarantee that this prefab is present.

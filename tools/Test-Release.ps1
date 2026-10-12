@@ -141,6 +141,22 @@ try {
                 $EntryName = 'docs/api/' + [IO.Path]::GetRelativePath((Join-Path $Root 'docs/api'), $Document.FullName).Replace('\','/')
                 if ($EntryName -cnotin $Bundle.Entries.FullName) { throw "Missing current API reference: $EntryName" }
             }
+            foreach ($Document in ($Bundle.Entries | Where-Object { $_.FullName.EndsWith('.md', [StringComparison]::Ordinal) })) {
+                $Reader = New-Object IO.StreamReader($Document.Open())
+                try { $Text = $Reader.ReadToEnd() } finally { $Reader.Dispose() }
+                foreach ($Match in [Text.RegularExpressions.Regex]::Matches($Text, '\]\(([^)]+)\)')) {
+                    $Link = $Match.Groups[1].Value
+                    if ($Link.StartsWith('#') -or $Link.StartsWith('//') -or $Link -match '^[a-zA-Z][a-zA-Z0-9+.-]*:') { continue }
+                    $LinkPath = [Uri]::UnescapeDataString(($Link -split '#', 2)[0])
+                    $VirtualSource = [IO.Path]::Combine($Temp, $Document.FullName)
+                    $Target = [IO.Path]::GetFullPath([IO.Path]::Combine([IO.Path]::GetDirectoryName($VirtualSource), $LinkPath))
+                    if (!$Target.StartsWith($Temp + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+                        throw "Bundled document link escapes archive: $($Document.FullName)"
+                    }
+                    $TargetEntry = [IO.Path]::GetRelativePath($Temp, $Target).Replace('\','/')
+                    if ($TargetEntry -cnotin $Bundle.Entries.FullName) { throw "Broken bundled document link: $($Document.FullName) -> $Link" }
+                }
+            }
             $ProvenanceEntry = $Bundle.Entries | Where-Object { $_.FullName -ceq 'PROVENANCE.json' }
             $Reader = New-Object IO.StreamReader($ProvenanceEntry.Open())
             try { $BundleProvenance = $Reader.ReadToEnd() | ConvertFrom-Json } finally { $Reader.Dispose() }

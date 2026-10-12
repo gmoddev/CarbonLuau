@@ -1,6 +1,6 @@
 # PlayerInventory
 
-Current development API `0.7.0-experimental`; not part of published package `0.5.0`.
+Available in published package v0.7.0 / API `0.7.0-experimental`, not v0.5.0.
 Acquisition, inventory reads and ItemChanged retain their `0.6.5-experimental`
 introduction metadata. New `PlayerInventory:GiveItem` / `PlayerInventory:TakeItem` methods
 are introduced in `0.7.0-experimental`. See the [migration guide](../Inventory-Migration.md).
@@ -231,6 +231,6 @@ See [Player](Player.md), [Signal](Signal.md),
 [original grant qualification](../../qualification/PlayerInteraction.md#playerinteractionfoundation1fb-validation)
 and [combined mutation closure](../../qualification/PlayerInteraction.md#playerinteractionfoundation1fc).
 These historical receipts retain their tested names/versions; the separate C4
-migration and exact final-source qualification are pending in
-[C4 evidence](../../GameplayC4-Validation.md) and remain a release gate in
-[Release.md](../../Release.md#gameplay-ad-release-readiness).
+migration and exact final-source qualification passed within the scope of
+[C4 evidence](../../GameplayC4-Validation.md) and the
+[v0.7 release record](../../Release-0.7.0-Validation.md).

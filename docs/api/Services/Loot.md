@@ -1,7 +1,7 @@
 # Loot
 
-Development scripting API `0.6.5-experimental`; not included in published
-package v0.5.0. Obtain the frozen service with `game:GetService("Loot")`.
+Introduced at API `0.6.5-experimental`, included in published v0.7.0 but not
+v0.5.0. Obtain the frozen service with `game:GetService("Loot")`.
 
 ```luau
 Loot:RegisterDropRule(Prefab: string, Mode: DropMode, Drops: {LootDropEntry}): ()
@@ -68,5 +68,5 @@ not by itself prove public binding qualification.
 
 See the [initialization example](../../../examples/scripts/loot-replace.luau)
 included in the package's scripts directory; use it as the root `init.luau`
-on the qualified development host.
+on the qualified exact host.
 See also the [Enum namespace](../Types/Enum.md).

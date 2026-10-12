@@ -1,6 +1,6 @@
 # Player
 
-Current development API `0.7.0-experimental` moves all inventory operations to
+Published API `0.7.0-experimental` moves all inventory operations to
 [PlayerInventory](PlayerInventory.md). Acquire it with `Player:GetInventory()`;
 see the [breaking migration guide](../Inventory-Migration.md). Acquisition validates
 the original connection and creates no inventory scan or subscription.

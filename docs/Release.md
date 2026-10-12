@@ -107,6 +107,12 @@ Create annotated `v0.7.0` at that commit, push without moving historical tags,
 and publish only a GitHub prerelease with qualified ZIPs/checksums/provenance.
 Download public assets and compare hashes. Never publish a partially qualified release.
 
+Annotated v0.7.0 was published at `dabb872094f74e60d75de099379d198fb63a6bf8`.
+The [post-release audit](qualification/Release-0.7.0-PostReleaseAudit.md) confirms
+its identities/assets and final CI. Forward bundle generation corrects relocated
+document links; released v0.7.0 ZIPs remain immutable. This navigation fix does
+not authorize a new release or expand host/API support.
+
 ## Matching editor artifacts
 
 The published v0.4.0 VSIX is not qualified for the full v0.7.0 API. A matching

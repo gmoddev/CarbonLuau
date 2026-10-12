@@ -1,9 +1,8 @@
-# PlayerInventory migration (development API 0.7)
+# PlayerInventory migration (API 0.7)
 
-Development API `0.7.0-experimental` makes an explicit breaking inventory change
-before the next package release. Player owns acquisition; PlayerInventory owns
-reads, mutations and observation. The last published package remains `0.5.0` with
-API `0.5.0-experimental`. Updated examples require the development runtime.
+Published package v0.7.0 / API `0.7.0-experimental` makes an explicit breaking
+inventory change. Player owns acquisition; PlayerInventory owns reads, mutations
+and observation. Updated examples require v0.7.0, not the earlier v0.5.0 runtime.
 
 ## Removed methods and replacements
 
@@ -80,11 +79,10 @@ New `PlayerInventory:GiveItem` and `PlayerInventory:TakeItem` methods are introd
 `0.7.0-experimental`. Introduction metadata is not a promise that removed spellings
 remain callable or that qualification applies to every later revision.
 
-Development package/release/tag remain `0.5.0`/`v0.5.0`, ABI `1.5`, provider `1.2`,
-addon schema `1` and the pinned Luau revision unchanged. No C ABI boundary change
-is inferred from this API migration. Development dry-run artifacts must never
-replace published v0.5.0 artifacts. The [published release notes](../releases/0.5.0.md)
-and historical qualification records retain their original names and evidence.
+Package/tag are `0.7.0`/`v0.7.0`; ABI `1.5`, provider `1.2`, addon schema `1`
+and the pinned Luau revision are unchanged. No C ABI boundary change is inferred
+from this migration. Published v0.5.0 artifacts remain immutable; [v0.7 notes](../releases/0.7.0.md)
+and historical qualification records retain their actual scope and evidence.
 
 [C4 qualification](../GameplayC4-Validation.md) records the completed migration gates.
 [Release readiness](../Release.md#gameplay-ad-release-readiness) distinguishes prior

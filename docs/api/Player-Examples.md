@@ -1,6 +1,6 @@
 # Player examples
 
-Inventory examples target development API `0.7.0-experimental` and use
+Inventory examples target published API `0.7.0-experimental` and use
 `Player:GetInventory()`; they do not run against the published v0.5.0 inventory
 surface. See the [migration guide](Inventory-Migration.md).
 

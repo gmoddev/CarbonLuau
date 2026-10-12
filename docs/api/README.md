@@ -3,8 +3,8 @@
 Package [v0.7.0](../releases/0.7.0.md) uses the complete experimental API
 `0.7.0-experimental`; [qualification](../Release-0.7.0-Validation.md) records
 the exact tested host and publication envelope. Earlier v0.5.0 uses API 0.5.0.
-Current development uses `0.7.0-experimental`; its newer world, gameplay, Loot and
-PlayerInventory features are not in that published package. This is local
+Current `main` retains `0.7.0-experimental`. The world, gameplay, Loot and
+PlayerInventory features are included in v0.7.0, but not in v0.5.0. This is local
 server-side Luau, not Roblox cloud/DataModel/replication compatibility.
 
 ## Availability and migration
@@ -14,9 +14,9 @@ server-side Luau, not Roblox cloud/DataModel/replication compatibility.
 | 0.3 | Players, Player, Commands, Signals/Connections and bounded script/task/module runtime |
 | 0.4 | Addons/providers, GUI and Player spatial/health/item/inventory operations |
 | 0.5 | Local DataStoreService, Get/Set/Remove, structured Query and optional hints |
-| 0.6 development | Exact read-only Workspace/Entity and bounded asynchronous discovery |
-| 0.6.5 development | Player/Entity lifecycle Signals, PlayerInventory acquisition/reads, sampled ItemChanged and declarative Loot Replace |
-| 0.7 development | Breaking inventory migration: GiveItem/TakeItem move to PlayerInventory; legacy Player HasItem/CountItem/GiveItem/TakeItem are removed without aliases |
+| 0.6 introduction (included in v0.7.0) | Exact read-only Workspace/Entity and bounded asynchronous discovery |
+| 0.6.5 introduction (included in v0.7.0) | Player/Entity lifecycle Signals, PlayerInventory acquisition/reads, sampled ItemChanged and declarative Loot Replace |
+| 0.7 (published) | Breaking inventory migration: GiveItem/TakeItem move to PlayerInventory; legacy Player HasItem/CountItem/GiveItem/TakeItem are removed without aliases |
 
 Use [Player:GetInventory](Types/Player.md) and
 [PlayerInventory](Types/PlayerInventory.md) for CountItem, HasItem, GiveItem,
@@ -31,18 +31,18 @@ new facade mutations are introduced at 0.7. Package version is a separate
 |---|---|
 | `game` and service discovery | [Globals](Globals.md) |
 | Players, connected-player snapshots, join/leave events | [Players](Services/Players.md) |
-| Development terminal-death and initial/full-respawn observations | [Players](Services/Players.md), [PlayerDeathContext](Types/PlayerDeathContext.md), [PlayerSpawnContext](Types/PlayerSpawnContext.md), [example](../../examples/player-lifecycle/init.luau) |
+| terminal-death and initial/full-respawn observations | [Players](Services/Players.md), [PlayerDeathContext](Types/PlayerDeathContext.md), [PlayerSpawnContext](Types/PlayerSpawnContext.md), [example](../../examples/player-lifecycle/init.luau) |
 | Player-issued chat commands | [Commands](Services/Commands.md) |
 | Player identity, live position/health observation, messaging and permission query | [Player](Types/Player.md) |
 | Rust item identity, bounded physical inventory CountItem/HasItem and verified GiveItem/TakeItem | [Items](Services/Items.md), [PlayerInventory](Types/PlayerInventory.md), [GiveItemBehavior](Types/GiveItemBehavior.md) |
-| Development Player inventory facade and sampled net-change Signal | [PlayerInventory](Types/PlayerInventory.md), [InventoryChangeContext](Types/InventoryChangeContext.md), [example](../../examples/players/inventory-changed/init.luau) |
+| Player inventory facade and sampled net-change Signal | [PlayerInventory](Types/PlayerInventory.md), [InventoryChangeContext](Types/InventoryChangeContext.md), [example](../../examples/players/inventory-changed/init.luau) |
 | Breaking API 0.7 inventory removal and migration | [Migration guide](Inventory-Migration.md), [release-readiness audit](../Release.md#gameplay-ad-release-readiness) |
-| Development init-only destruction-payout declarations | [Loot](Services/Loot.md), [Enum](Types/Enum.md), [DropMode](Types/DropMode.md), [LootDropEntry](Types/LootDropEntry.md), [example](../../examples/scripts/loot-replace.luau) |
+| init-only destruction-payout declarations | [Loot](Services/Loot.md), [Enum](Types/Enum.md), [DropMode](Types/DropMode.md), [LootDropEntry](Types/LootDropEntry.md), [example](../../examples/scripts/loot-replace.luau) |
 | Immutable world-coordinate values | [Vector3](Types/Vector3.md) |
-| Development read-only exact world lookup | [Workspace](Services/Workspace.md), [Entity](Types/Entity.md), [examples](World-Examples.md) |
-| Development completed-Spawn Entity observations | [Workspace.EntitySpawned](Services/Workspace.md#entityspawned), [example](../../examples/world/entity-spawned/init.luau), [qualification](../GameplayB1-Validation.md) |
-| Development successful Entity removal snapshots | [Workspace.EntityDestroyed](Services/Workspace.md#entitydestroyed), [EntityDestroyedContext](Types/EntityDestroyedContext.md), [example](../../examples/world/entity-destroyed/init.luau), [qualification](../GameplayB3-Validation.md) |
-| Development full-death snapshots; source and narrow actor gates are separate | [Workspace.EntityDied](Services/Workspace.md#entitydied), [EntityDeathContext](Types/EntityDeathContext.md), [example](../../examples/world/entity-died/init.luau) |
+| read-only exact world lookup | [Workspace](Services/Workspace.md), [Entity](Types/Entity.md), [examples](World-Examples.md) |
+| completed-Spawn Entity observations | [Workspace.EntitySpawned](Services/Workspace.md#entityspawned), [example](../../examples/world/entity-spawned/init.luau), [qualification](../GameplayB1-Validation.md) |
+| successful Entity removal snapshots | [Workspace.EntityDestroyed](Services/Workspace.md#entitydestroyed), [EntityDestroyedContext](Types/EntityDestroyedContext.md), [example](../../examples/world/entity-destroyed/init.luau), [qualification](../GameplayB3-Validation.md) |
+| full-death snapshots; source and narrow actor gates are separate | [Workspace.EntityDied](Services/Workspace.md#entitydied), [EntityDeathContext](Types/EntityDeathContext.md), [example](../../examples/world/entity-died/init.luau) |
 | Command payload | [CommandContext](Types/CommandContext.md) |
 | Event subscription | [Signal](Types/Signal.md), [Connection](Types/Connection.md) |
 | Versions and limits | [Compatibility](Compatibility.md) |
@@ -51,7 +51,7 @@ new facade mutations are introduced at 0.7. Package version is a separate
 | Addon manifests, dependencies and package-qualified imports | [Addon composition](Addons.md) |
 | Carbon provider registration protocol | [Addon providers](Addon-Providers.md) |
 | Server-driven retained GUI with qualified Foundation 2A layout, 2B typed images and 2C scrolling source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
-| Experimental v0.5 persistence ([combined qualification](../PersistenceFoundation2D.md)) | [Guide and examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md), [DataStoreQuery](Types/DataStoreQuery.md), [DataStoreQueryResult](Types/DataStoreQueryResult.md), [PersistedValue](Types/PersistedValue.md) |
+| Local persistence (introduced in v0.5) ([combined qualification](../PersistenceFoundation2D.md)) | [Guide and examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md), [DataStoreQuery](Types/DataStoreQuery.md), [DataStoreQueryResult](Types/DataStoreQueryResult.md), [PersistedValue](Types/PersistedValue.md) |
 
 ## Execution and safety
 

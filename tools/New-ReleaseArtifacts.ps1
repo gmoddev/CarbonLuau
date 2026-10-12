@@ -7,6 +7,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'ZipCentralDirectory.ps1')
+. (Join-Path $PSScriptRoot 'ReleaseDocumentLinks.ps1')
 $Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $NativePath = (Resolve-Path -LiteralPath $NativeLibrary).Path
 $CompilerPath = (Resolve-Path -LiteralPath $CompilerWorker).Path
@@ -180,7 +181,23 @@ try {
                 $Name = 'examples/' + [IO.Path]::GetRelativePath((Join-Path $Root 'examples'), $Example.FullName).Replace('\','/')
                 if (!$Included.ContainsKey($Name)) { $Files += @{ Source = $Example.FullName; Name = $Name } }
             }
+            $DocumentMap = @{}
             foreach ($File in ($Files | Sort-Object Name)) {
+                $Key = [IO.Path]::GetFullPath($File.Source)
+                $SourceRelative = [IO.Path]::GetRelativePath($Root, $Key).Replace('\','/')
+                if (!$DocumentMap.ContainsKey($Key) -or $File.Name -ceq $SourceRelative) { $DocumentMap[$Key] = $File.Name }
+            }
+            $DocumentNumber = 0
+            foreach ($File in ($Files | Sort-Object Name)) {
+                if ([IO.Path]::GetExtension($File.Source) -ceq '.md') {
+                    $Text = Convert-ReleaseDocumentLinks -Text ([IO.File]::ReadAllText($File.Source)) -Root $Root `
+                        -Source $File.Source -ArchiveName $File.Name -SourceRevision $SourceRevision -DocumentMap $DocumentMap
+                    $DocumentPath = Join-Path $Work ("document-$DocumentNumber.md")
+                    $DocumentNumber++
+                    [IO.File]::WriteAllText($DocumentPath, $Text, (New-Object Text.UTF8Encoding($false)))
+                    Add-DeterministicEntry $Archive $DocumentPath $File.Name ([bool]$File.Executable)
+                    continue
+                }
                 Add-DeterministicEntry $Archive $File.Source $File.Name ([bool]$File.Executable)
             }
         } finally { $Archive.Dispose() }

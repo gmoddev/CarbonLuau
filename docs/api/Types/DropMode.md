@@ -1,6 +1,6 @@
 # DropMode
 
-Development scripting API `0.6.5-experimental`; not in published v0.5.0.
+Introduced at API `0.6.5-experimental`, included in published v0.7.0 but not v0.5.0.
 The public type `DropMode` has one sealed immutable userdata value:
 `Enum.DropMode.Replace`. Its containing namespace and the [Enum](Enum.md)
 global are frozen tables.

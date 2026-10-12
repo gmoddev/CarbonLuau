@@ -1,8 +1,7 @@
 # Entity
 
-Availability: development scripting API `0.6.0-experimental` on the
-[qualified exact hosts](../Compatibility.md); not included in published
-package `0.5.0`.
+Introduced at API `0.6.0-experimental`, included in published v0.7.0 on the
+[qualified exact hosts](../Compatibility.md), but not in v0.5.0.
 
 `Entity` is a read-only, non-owning facade for one exact live Rust entity
 lifetime. It exposes no raw Rust, Unity or .NET object.

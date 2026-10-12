@@ -1,8 +1,8 @@
 # Workspace
 
-Availability: development scripting API `0.6.0-experimental`, for the exact
-qualified Rust/Carbon targets only. The latest published package remains
-`0.5.0`; it does **not** contain this API. Obtain the service with
+Introduced at API `0.6.0-experimental`, included in published package v0.7.0,
+for the exact qualified Rust/Carbon targets only. The earlier v0.5.0 package
+does not contain this API. Obtain the service with
 `game:GetService("Workspace")`.
 
 | Method | Result | Behavior |

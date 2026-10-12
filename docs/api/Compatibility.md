@@ -55,13 +55,13 @@ and accepted birth watermark do not form an atomic world snapshot. See the
 [discovery guide](Discovery.md) and [public qualification](../WorldEntityFoundation2B.md).
 The [private 2A record](../WorldEntityFoundation2A.md) owns the additional pinned
 Unity images; its evidence does not qualify public callback admission. The same
-startup/restart requirements apply. Package `0.5.0`, ABI `1.5`, provider protocol,
-schema and Luau pin remain unchanged; no release is implied.
+startup/restart requirements apply. The surface is included in published v0.7.0;
+ABI `1.5`, provider protocol, schema and Luau pin remain unchanged.
 Combined closure and final release-readiness evidence are owned by
 [Foundation 2C](../WorldEntityFoundation2C.md).
 
 `Workspace.EntitySpawned` and snapshot-only `Workspace.EntityDestroyed` begin
-in development API `0.6.5-experimental`, not published v0.5.0. Both inherit the
+at API `0.6.5-experimental`, included in v0.7.0 but not v0.5.0. Both inherit the
 exact D20 startup/restart requirement and shared Gameplay A event budgets.
 [B1 evidence](../GameplayB1-Validation.md) qualifies completed Spawn followed by
 original live-lifetime admission. [B3 evidence](../GameplayB3-Validation.md)
@@ -70,7 +70,7 @@ not attempted Kill. Native-only destruction supplies nil Position and does not
 promise Rust bookkeeping cleanup. Source/patch drift fails closed; no historical
 replay or new package identity follows.
 
-The separate development `Workspace.EntityDied` contract also uses
+The separate `Workspace.EntityDied` contract also uses
 `0.6.5-experimental`, with a seven-field frozen historical
 [EntityDeathContext](Types/EntityDeathContext.md). Full death and successful
 removal are different observations. Runtime registration requires its own

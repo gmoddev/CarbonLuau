@@ -30,6 +30,10 @@ is not the original implementation/evidence commit and must not replace it.
 executed combined evidence, exact release payloads, preserved failures and final
 publication gates. It does not relabel earlier phase receipts or client evidence.
 
+The [post-release offline audit](Release-0.7.0-PostReleaseAudit.md) verifies tag/assets
+and records forward documentation/packaging corrections. It is not new live-host
+or expanded gameplay evidence.
+
 [Phase 0](../Phase0-Validation.md), [Phase 1](../Phase1-Validation.md),
 [Phase 2](../Phase2-Validation.md), [Phase 3](../Phase3-Validation.md),
 [Phase 5](../Phase5-Validation.md) preserve native-load, execution, modules,

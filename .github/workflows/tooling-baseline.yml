@@ -1,9 +1,9 @@
 name: Tooling baseline contracts
 on:
   push:
-    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', '.github/workflows/tooling-baseline.yml']
+    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', 'tools/*Release*.py', 'tools/*Release*.ps1', '.github/workflows/tooling-baseline.yml']
   pull_request:
-    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', '.github/workflows/tooling-baseline.yml']
+    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', 'tools/*Release*.py', 'tools/*Release*.ps1', '.github/workflows/tooling-baseline.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,3 +20,8 @@ jobs:
       - name: Validate API contract schema fixtures
         shell: pwsh
         run: ./tools/Test-ToolingContracts.ps1
+      - name: Read-only release audit negative fixtures
+        run: python tools/Test-PublishedRelease.py
+      - name: Bundle document navigation fixtures
+        shell: pwsh
+        run: ./tools/Test-ReleaseDocumentLinks.ps1

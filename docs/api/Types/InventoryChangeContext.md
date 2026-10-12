@@ -1,7 +1,7 @@
 # InventoryChangeContext
 
-Introduced in development API `0.6.5-experimental`; not included in published
-package `0.5.0`. Passed as the sole argument to
+Introduced at API `0.6.5-experimental`, included in published v0.7.0 but not
+v0.5.0. Passed as the sole argument to
 [PlayerInventory.ItemChanged](PlayerInventory.md#itemchanged). No public constructor.
 
 | Read-only field | Type | Meaning |

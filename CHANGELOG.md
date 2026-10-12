@@ -4,15 +4,17 @@ All notable public changes to CarbonLuau are recorded here.
 
 ## 0.7.0 — Experimental
 
-### v0.7.0 experimental release preparation
+### Published v0.7.0 experimental release
 
 Package identity is now `0.7.0`, with the complete current scripting API
-`0.7.0-experimental`. Final release-source qualification and publication are
-gated by [the release qualification record](docs/Release-0.7.0-Validation.md).
+`0.7.0-experimental`. Annotated `v0.7.0` and its six assets are published as a
+GitHub prerelease; [qualification](docs/Release-0.7.0-Validation.md) records the
+final release-source checks and [post-release audit](docs/qualification/Release-0.7.0-PostReleaseAudit.md)
+records identity/integrity verification without new live-host claims.
 ABI `1.5`, provider `1.2`, schema `1` and Luau remain unchanged.
 The development chronology below retains original phase assignments; its package
-hold at 0.5 is superseded by this authorized candidate. See
-[candidate notes](docs/releases/0.7.0.md) for scope, migration and limitations.
+hold at 0.5 is superseded by the published 0.7 release. See
+[release notes](docs/releases/0.7.0.md) for scope, migration and limitations.
 
 ### Added (introduced at scripting API `0.6.0-experimental`)
 
@@ -49,7 +51,7 @@ hold at 0.5 is superseded by this authorized candidate. See
   candidate and audit the current Gameplay A–D/C4 scope, exact-host/restart
   requirements, separate final-source gates and experimental limits.
 
-### Breaking migration in development (scripting API `0.7.0-experimental`)
+### Breaking migration (scripting API `0.7.0-experimental`)
 
 - Inventory operations belong to `Player:GetInventory()`: `CountItem(ShortName)`,
   `HasItem(ShortName, Amount?)`, `GiveItem(ShortName, Amount, Behavior?)`,
@@ -63,13 +65,13 @@ hold at 0.5 is superseded by this authorized candidate. See
   to GiveItemBehavior.InventoryOnly. Indeterminate failure and sampled Signal
   semantics are unchanged; no rollback, world-drop fallback or automatic retry.
 - Existing SinceApi introductions remain unchanged; new `PlayerInventory:GiveItem`
-  and `PlayerInventory:TakeItem` methods begin at 0.7.0-experimental. Development
-  package/tag stay 0.5.0/v0.5.0, ABI 1.5, provider 1.2, schema 1 and Luau unchanged.
-  The API bump does not authorize package publication or relabel older evidence.
+  and `PlayerInventory:TakeItem` methods begin at 0.7.0-experimental, included in
+  package/tag 0.7.0/v0.7.0. ABI 1.5, provider 1.2, schema 1 and Luau are unchanged.
+  Older evidence retains its actual source and introduction versions.
 - All bundled inventory calls and author-facing guides use the migrated surface.
   [Release readiness](docs/Release.md#gameplay-ad-release-readiness) distinguishes
   the prior Gameplay A–D PASS records, preserved C2 PARTIAL and C3 sampled PASS,
-  from pending C4 final-source runtime, tooling, examples, packaging and hosted CI.
+  and completed C4/0.7 final-source runtime, tooling, examples, packaging and hosted CI.
 
 No v0.6.0 package/tag was published; v0.7.0 includes the complete current surface.
 

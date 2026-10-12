@@ -4,6 +4,14 @@ This document owns compatibility promises, version identities and evidence requi
 
 ## Support dimensions
 
+The current [v0.7.0 release receipt](Release-0.7.0-Validation.md) qualifies Rust
+build 25653776 / revision 166494 / protocol 2634.289.1, Windows Carbon
+2.0.262.0 (`8a81d70`) and Linux Carbon 2.0.261.0 (`c74c4ca`), Harmony 2.4.2.0
+within the recorded assembly/topology and startup-continuity envelope. The
+foundational targets below retain their original evidence depth; they are not
+an unrestricted host-version promise. Post-release offline research does not
+expand that envelope.
+
 | Dimension | Current commitment and evidence limit |
 |---|---|
 | Operating system | Windows and glibc-based Linux are the v0.1 targets. Worker Windows and Ubuntu 24.04 Docker passed Phase 0; this does not qualify every Windows release/Linux distribution or define a minimum glibc version. |
@@ -30,8 +38,8 @@ Gameplay C4's user-authorized removal of Player:HasItem, CountItem, GiveItem and
 TakeItem is breaking and advances development API to `0.7.0-experimental`.
 Acquire `Player:GetInventory()` and use those methods on PlayerInventory instead;
 there are no retained aliases. Existing read/Signal introductions stay at 0.6.5;
-facade GiveItem/TakeItem are introduced at 0.7.0. Package/tag remain 0.5.0/v0.5.0,
-ABI 1.5, provider 1.2, schema 1 and Luau unchanged. [C4 qualification](GameplayC4-Validation.md)
+facade GiveItem/TakeItem are introduced at 0.7.0 and included in package/tag
+0.7.0/v0.7.0. ABI 1.5, provider 1.2, schema 1 and Luau are unchanged. [C4 qualification](GameplayC4-Validation.md)
 owns the current platform/lifecycle and release-readiness disposition; historical
 C1–C3 evidence describes its actual earlier API, not current legacy availability.
 

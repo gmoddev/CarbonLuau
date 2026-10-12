@@ -8,13 +8,15 @@ Existing decision/criteria text is retained; qualification remains separately sc
 
 The user authorizes qualifying and publishing package `0.7.0` / annotated
 `v0.7.0` as an experimental GitHub prerelease containing the complete current
-`0.7.0-experimental` API. Publication remains gated on final release-source
-Windows/Linux, live-host, sanitizer, tooling, packaging and hosted qualification.
+`0.7.0-experimental` API. Those final release-source gates passed and the
+annotated prerelease was published at `dabb872094f74e60d75de099379d198fb63a6bf8`.
+The [post-release audit](../qualification/Release-0.7.0-PostReleaseAudit.md)
+records read-only asset/source and completed CI verification, not new live evidence.
 Native ABI `1.5`, provider `1.2`, addon schema `1` and the Luau pin remain
 unchanged. Historical introduction assignments and published v0.3/v0.4/v0.5
 tags/assets remain immutable. This assignment supersedes only the earlier
 development package hold at 0.5; it does not alter any runtime contract.
-See [release policy](../Release.md) and [candidate notes](../releases/0.7.0.md).
+See [release policy](../Release.md) and [release notes](../releases/0.7.0.md).
 
 <!-- BEGIN RECORD Invariants.md -->
 
@@ -335,4 +337,3 @@ A provider lifetime is the concrete loaded Carbon `Plugin` object plus the curre
 The primary package input is an immutable CarbonLuau-owned source snapshot. Archive and single-source/provider transports normalize to it, and accepted provider input is copied before registration returns. Parsing rejects malformed UTF-8/JSON, duplicate keys, unknown semantic fields, noncanonical/duplicate normalized paths, absolute/traversal/dot/backslash paths, encrypted/unsupported/symlink-style entries and nested archives. Packages are bounded snapshots, never mounted or extracted. Schema 1 limits are 4 MiB archive bytes, 8 MiB expanded bytes, 64 KiB manifest, 64 KiB per source, 4 MiB aggregate source per package, 256 source modules, 512 archive entries, 32 dependencies, 128 live registrations, 32 registrations per provider and 32 MiB of aggregate immutable snapshots. Streamed decompressed bytes are enforced independently of ZIP metadata. Authors use D5 `require` plus `addon:IsDependencyAvailable`; tokens, IDs, graph transitions and lifecycle machinery stay internal.
 
 <!-- END RECORD Invariants.md -->
-
