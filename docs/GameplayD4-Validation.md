@@ -1,12 +1,12 @@
 # Gameplay D4 — barrel-2 strict Replace qualification
 
-Status: **LIVE QUALIFICATION PASS; FINAL OFFLINE / HOSTED CLOSURE PENDING**.
+Status: **GAMEPLAY-D4 PASS — BARREL-2 STRICT REPLACE QUALIFIED**.
 Starting main: `a54d34f5e72554056756e9ad9585bcc53e7c7365`.
 Date: 2026-10-12. This is the scoped continuation of
 [D4 offline research](design/GameplayD4-LootExpansion.md), not another loot engine.
 [D2A](GameplayD2A-Validation.md), [D3](GameplayD3-Validation.md),
 [D23](invariants/Gameplay.md) and [D20](invariants/WorldEntity.md) remain authoritative.
-Final source/CI attribution is recorded at closure; no pending check is PASS.
+Final source/CI attribution appears below; no pending check is counted as PASS.
 
 ## Exact extension and compatibility
 
@@ -215,9 +215,42 @@ real VM; all **70** bundled examples compile, including barrel-2. These outputs
 are uncommitted-working-tree development artifacts, not published v0.7.0 assets.
 The added actual preview regression must still pass hosted tooling; no mock is added.
 
-Final hosted preview, ASan/UBSan/leak and final-source CI must finish before the
-overall D4 PASS is recorded. Definitions/signatures remain unchanged; generated
-summary metadata follows the real binding. Preview must remain UnsupportedPreviewApi.
+Final hosted preview, ASan/UBSan/leak and source qualification all PASS at the
+candidate revision below. Definitions/signatures remain unchanged; generated
+summary metadata follows the real binding. Preview remains UnsupportedPreviewApi.
+
+### Hosted closure and revision attribution
+
+Implementation/tests: `514991ef6b5e3d3868c53fe63630c3c13728f8aa`.
+Evidence/docs and final tested candidate:
+`3c7beded508ef186e92dbe7e71e13544716c6447`.
+
+- [Core validation 38228873736](https://github.com/gmoddev/CarbonLuau/actions/runs/38228873736),
+  attempt 2: PASS Windows x64 and Linux x64 native, managed/real-VM, focused public
+  Loot, publication/providers/recovery, B1/B2/B3, inventory C3/C4, persistence/lost-ack/
+  lifecycle/scale, deterministic packages, clean example installation and worker/import
+  audit. ASan/UBSan/leak/lifecycle/fault job PASS is retained from attempt 1.
+- [Tooling 38228873660](https://github.com/gmoddev/CarbonLuau/actions/runs/38228873660):
+  PASS Windows/Linux/macOS developer tooling, generation/type/drift checks and
+  the added barrel-2 UnsupportedPreviewApi regression. No macOS server claim.
+- [Contracts 38228873565](https://github.com/gmoddev/CarbonLuau/actions/runs/38228873565):
+  PASS document preservation, API/schema/preview contract and navigation fixtures.
+
+Attempt 1's Windows Persistence-1C stress failed after 7,433 submissions when a
+completion callback exceeded the fixture's existing 100-ms deadline. Backend
+status showed ready=True, pending=3, no expiry/corruption/backend failures.
+Linux was cancelled by matrix fail-fast, not PASS. The failed/cancelled jobs were
+rerun once on identical source and both passed. No production/default or fixture
+deadline was relaxed, and no persistence implementation changed. The first
+failure remains timing-sensitive negative evidence; no unproved cause is attributed
+to I12 external interference. Local full suites and actual restart receipts remain
+separate evidence, not a substitute for the corrected hosted result.
+
+The subsequent closure commit changes only this evidence record. Under the
+documentation/evidence-only policy it reuses the tested implementation above;
+the final main push also runs hosted checks and documentation deployment, whose
+exact final SHA/run IDs are supplied in the completion report. No untested
+production change, new release/tag or later Loot implementation is included.
 
 Next recommended Loot work: separately qualify one simple additional replacement
 item through definition/mod/creation/world/cleanup proof (the D4B candidate in
