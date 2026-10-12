@@ -8,8 +8,8 @@ Rust servers. Start with [installation](Installation.md), then the
 
 | Source | Availability |
 |---|---|
-| Published `v0.5.0` | Experimental API `0.5.0-experimental`: runtime, addons, Player gameplay, GUI, local persistence and structured Query |
-| Candidate `v0.7.0` | Complete current API `0.7.0-experimental`; final qualification/publication pending ([notes](releases/0.7.0.md)) |
+| `v0.7.0` experimental | Complete current API `0.7.0-experimental` ([notes](releases/0.7.0.md), [qualification](Release-0.7.0-Validation.md)) |
+| Earlier `v0.5.0` | Experimental API `0.5.0-experimental`: runtime, addons, Player gameplay, GUI, local persistence and structured Query |
 | Current development | API `0.7.0-experimental`: also read-only Workspace/Entity, bounded async discovery, gameplay Signals, Loot Replace and PlayerInventory |
 
 Development features are not retroactively in v0.5.0. C4 removed the four legacy

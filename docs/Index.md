@@ -10,13 +10,12 @@ does not create another contract or qualification receipt.
 - [Home](Home.md), [Installation](Installation.md), [public API](api/README.md).
 - [Scripting compatibility/limits](api/Compatibility.md) and
   [host support/validation selection](Compatibility.md).
-- [Release identities and readiness](Release.md). Published package remains
-  `v0.5.0`; current development API is `0.7.0-experimental`.
+- [Release identities and readiness](Release.md): package `v0.7.0`, API
+  `0.7.0-experimental`, with [release qualification](Release-0.7.0-Validation.md).
 - Published release notes: [0.3](releases/0.3.0.md), [0.4](releases/0.4.0.md),
   [0.5](releases/0.5.0.md). [Planned 0.6 notes](releases/0.6.0.md) remain explicitly
   unpublished scope/number planning; package identity need not match API identity.
-- [0.7 release candidate](releases/0.7.0.md): complete current API, final
-  qualification and publication pending.
+- [0.7 experimental notes](releases/0.7.0.md): complete current API and migration.
 
 Public service/type/guide URLs under `api/` remain stable, including offline
 package contents. Their documentation follows production bindings and canonical

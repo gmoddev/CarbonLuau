@@ -1,15 +1,15 @@
 # Scripting compatibility and limits
 
-The authorized v0.7.0 candidate packages the complete current API
-`0.7.0-experimental`; final qualification and publication are pending.
+The v0.7.0 package contains the complete current API
+`0.7.0-experimental`; see [release qualification](../Release-0.7.0-Validation.md).
 Its package identity supersedes earlier phase-local 0.5 development holds,
 not historical API introduction versions or published artifacts.
 
-Latest published package v0.5.0 uses API `0.5.0-experimental`.
+Earlier published package v0.5.0 uses API `0.5.0-experimental`.
 The development API identity is `CarbonLuau 0.7.0-experimental`, status `Experimental`;
 the newer Workspace/Entity, gameplay and PlayerInventory surface is not in published v0.5.0.
 Scripts inspect `game.ApiName`, `game.ApiVersion`, `game.ApiStatus`; operators use
-`carbonluau.status`. This identity is distinct from package `0.5.0`, native ABI
+`carbonluau.status`. This identity is distinct from package `0.7.0`, native ABI
 `1.5`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema `1`, the
 pinned Luau revision and the installed Rust/Carbon builds. Published v0.3.0
 artifacts remain API `0.3.0-experimental` with native ABI `1.2`.
@@ -29,8 +29,8 @@ Signal. See the [breaking migration guide](Inventory-Migration.md) and
 [PlayerInventory](Types/PlayerInventory.md) for the separate signatures.
 Acquisition/read/Signal metadata retains its 0.6.5 introduction; new
 `PlayerInventory:GiveItem`/`PlayerInventory:TakeItem` methods are introduced at 0.7.0.
-GiveItemBehavior retains 0.4.0. Package 0.5.0, ABI 1.5, provider 1.2, schema 1 and
-Luau stay unchanged. This mapping does not certify C4 final-source qualification;
+GiveItemBehavior retains 0.4.0. Package is now 0.7.0; ABI 1.5, provider 1.2, schema 1 and
+Luau stay unchanged. This mapping alone does not certify final-source qualification;
 see [release readiness](../Release.md#gameplay-ad-release-readiness).
 
 Read-only `Workspace:GetEntityById` and `Entity.Id`, `Prefab`, `Position`

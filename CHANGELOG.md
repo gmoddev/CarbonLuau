@@ -2,18 +2,19 @@
 
 All notable public changes to CarbonLuau are recorded here.
 
-## Unreleased
+## 0.7.0 — Experimental
 
-### v0.7.0 experimental release candidate
+### v0.7.0 experimental release preparation
 
 Package identity is now `0.7.0`, with the complete current scripting API
 `0.7.0-experimental`. Final release-source qualification and publication are
-pending. ABI `1.5`, provider `1.2`, schema `1` and Luau remain unchanged.
+gated by [the release qualification record](docs/Release-0.7.0-Validation.md).
+ABI `1.5`, provider `1.2`, schema `1` and Luau remain unchanged.
 The development chronology below retains original phase assignments; its package
 hold at 0.5 is superseded by this authorized candidate. See
 [candidate notes](docs/releases/0.7.0.md) for scope, migration and limitations.
 
-### Added in development (scripting API `0.6.0-experimental`)
+### Added (introduced at scripting API `0.6.0-experimental`)
 
 - Exact keyed, read-only `Workspace:GetEntityById` and `Entity.Id`, `Prefab`,
   `Position` on the pinned Rust/Carbon host targets. Entity equality follows
@@ -25,7 +26,7 @@ hold at 0.5 is superseded by this authorized candidate. See
   observations rather than an atomic world snapshot; excess results fail the
   whole query.
 
-### Added in development (scripting API `0.6.5-experimental`)
+### Added (introduced at scripting API `0.6.5-experimental`)
 
 - `Players.PlayerDied` and `Players.PlayerSpawned` with qualified exact-host
   completion semantics, immutable contexts and original connection lifetimes.
@@ -70,7 +71,7 @@ hold at 0.5 is superseded by this authorized candidate. See
   the prior Gameplay A–D PASS records, preserved C2 PARTIAL and C3 sampled PASS,
   from pending C4 final-source runtime, tooling, examples, packaging and hosted CI.
 
-The latest published package remains v0.5.0; no v0.6.0 release or tag exists.
+No v0.6.0 package/tag was published; v0.7.0 includes the complete current surface.
 
 ## 0.5.0 — Experimental
 

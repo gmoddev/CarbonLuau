@@ -6,8 +6,8 @@ glibc Linux x64. ARM, x86, macOS and non-glibc Linux are not qualified.
 
 ## Requirements
 
-The v0.7.0 candidate contains the complete `0.7.0-experimental` API and is
-pending final qualification/publication. Its World/gameplay adapters require
+The v0.7.0 package contains the complete `0.7.0-experimental` API.
+Its World/gameplay adapters require
 Rust build `25653776`, protocol `2634.289.1`, Windows Carbon
 `2.0.262.0` (`8a81d70`) or Linux Carbon `2.0.261.0` (`c74c4ca`),
 Harmony `2.4.2.0` and the qualified assembly/hook topology. Install before
@@ -31,7 +31,7 @@ before deploying.
 ## Production layout
 
 The separately published v0.4.0 developer extension is pinned to the older
-runtime/API and is not a qualified matching v0.5.0 artifact. Do not install it
+runtime/API and is not a qualified matching v0.5.0 or v0.7.0 artifact. Do not install it
 as though it provides the complete persistence/Query definitions. See the
 [official tooling project](https://github.com/gmoddev/carbonluau-vscode) for
 future compatible pack qualification; editor preview does not simulate storage.
@@ -130,7 +130,8 @@ provider token; a provider that remains loaded must register again after reload.
 ## Read-only Workspace/Entity startup requirement
 
 Published package v0.5.0 contains no public `Workspace` or `Entity` scripting
-API. Development API `0.6.0-experimental` includes read-only lookup on the
+API. Package v0.7.0 includes the read-only lookup and bounded async discovery
+introduced at API `0.6.0-experimental`. On the
 exact qualified Rust/Carbon
 target, CarbonLuau must be present in Carbon's initial plugin batch before world
 restoration. First installing CarbonLuau into an already-running server cannot

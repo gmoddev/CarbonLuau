@@ -26,6 +26,10 @@ is not the original implementation/evidence commit and must not replace it.
 
 ## Runtime foundations
 
+[v0.7.0 release qualification](../Release-0.7.0-Validation.md) consolidates newly
+executed combined evidence, exact release payloads, preserved failures and final
+publication gates. It does not relabel earlier phase receipts or client evidence.
+
 [Phase 0](../Phase0-Validation.md), [Phase 1](../Phase1-Validation.md),
 [Phase 2](../Phase2-Validation.md), [Phase 3](../Phase3-Validation.md),
 [Phase 5](../Phase5-Validation.md) preserve native-load, execution, modules,

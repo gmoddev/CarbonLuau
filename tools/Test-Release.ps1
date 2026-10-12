@@ -126,6 +126,9 @@ try {
                 }
             }
             foreach ($DocumentEntry in @('GUI.md','GUI-REFERENCE.md','RELEASE-NOTES.md',
+                    'api/carbonluau-api.json','generated/carbonluau.d.luau',
+                    'docs/api/Services/Loot.md','docs/api/Types/DropMode.md','docs/api/Types/LootDropEntry.md',
+                    'docs/api/Types/PlayerInventory.md','docs/api/Types/InventoryChangeContext.md',
                     'docs/api/Persistence.md','docs/api/Services/DataStoreService.md',
                     'docs/api/Types/DataStore.md','docs/api/Types/DataStoreOptions.md',
                     'docs/api/Types/DataStoreQuery.md','docs/api/Types/DataStoreQueryResult.md',
@@ -133,6 +136,10 @@ try {
                 if (!($Bundle.Entries | Where-Object { $_.FullName -ceq $DocumentEntry })) {
                     throw "Release bundle is missing public documentation: $DocumentEntry"
                 }
+            }
+            foreach ($Document in (Get-ChildItem -LiteralPath (Join-Path $Root 'docs/api') -Recurse -File -Filter '*.md')) {
+                $EntryName = 'docs/api/' + [IO.Path]::GetRelativePath((Join-Path $Root 'docs/api'), $Document.FullName).Replace('\','/')
+                if ($EntryName -cnotin $Bundle.Entries.FullName) { throw "Missing current API reference: $EntryName" }
             }
             $ProvenanceEntry = $Bundle.Entries | Where-Object { $_.FullName -ceq 'PROVENANCE.json' }
             $Reader = New-Object IO.StreamReader($ProvenanceEntry.Open())

@@ -139,6 +139,8 @@ try {
                 @{ Source = (Join-Path $Root 'examples/addons/guiconsumer/init.luau'); Name = 'examples/addons/guiconsumer/init.luau' },
                 @{ Source = (Join-Path $Root 'docs/Installation.md'); Name = 'INSTALLATION.md' },
                 @{ Source = (Join-Path $Root "docs/releases/$($Release.releaseVersion).md"); Name = 'RELEASE-NOTES.md' },
+                @{ Source = (Join-Path $Root 'api/carbonluau-api.json'); Name = 'api/carbonluau-api.json' },
+                @{ Source = (Join-Path $Root 'generated/carbonluau.d.luau'); Name = 'generated/carbonluau.d.luau' },
                 @{ Source = (Join-Path $Root 'docs/api/Gui.md'); Name = 'GUI.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Gui-Reference.md'); Name = 'GUI-REFERENCE.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Persistence.md'); Name = 'docs/api/Persistence.md' },
@@ -166,6 +168,13 @@ try {
             # Include every existing public Luau/addon example, including the
             # position/health/Teleport and local-module examples.
             $Included = @{}; foreach ($File in $Files) { $Included[$File.Name] = $true }
+            # Include the complete implemented author reference, not just the
+            # earlier persistence/World subset. Static definitions do not ship
+            # an editor extension, tooling executable or preview backend.
+            foreach ($Document in (Get-ChildItem -LiteralPath (Join-Path $Root 'docs/api') -Recurse -File -Filter '*.md')) {
+                $Name = 'docs/api/' + [IO.Path]::GetRelativePath((Join-Path $Root 'docs/api'), $Document.FullName).Replace('\','/')
+                if (!$Included.ContainsKey($Name)) { $Files += @{ Source = $Document.FullName; Name = $Name }; $Included[$Name] = $true }
+            }
             foreach ($Example in (Get-ChildItem -LiteralPath (Join-Path $Root 'examples') -Recurse -File)) {
                 if ($Example.Extension -cne '.luau' -and $Example.Name -cne 'addon.json') { continue }
                 $Name = 'examples/' + [IO.Path]::GetRelativePath((Join-Path $Root 'examples'), $Example.FullName).Replace('\','/')

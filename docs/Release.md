@@ -1,186 +1,117 @@
 # Release identity and reproducibility
 
-## Current v0.7.0 release candidate
+CarbonLuau v0.7.0 is the experimental package for the complete current API,
+including the breaking PlayerInventory migration. It is not the earlier
+World-only 0.6 backport. [Release notes](releases/0.7.0.md) describe its scope;
+[qualification](Release-0.7.0-Validation.md) owns exact source/hosts, measured
+results, preserved failures and final publication gates.
 
-The 2026-10-11 user decision assigns package/tag `0.7.0` / `v0.7.0` to the
-complete current scripting API `0.7.0-experimental`, not the earlier World-only
-0.6 planning candidate. Native ABI `1.5`, provider protocol `1.2`, addon schema
-`1` and the Luau revision remain unchanged. [Candidate notes](releases/0.7.0.md)
-record the scope and limits. Qualification and publication are pending;
-v0.5.0 remains the latest published package until all release gates pass.
-
-The following readiness chronology retains earlier assignments and their
-source-qualified receipts; its 0.5 development hold is superseded by this release
-assignment. Do not reinterpret historical PASS reports as final candidate tests.
-Publication requires deterministic Windows/Linux artifacts from the final tested
-commit, verified provenance and clean installs, final hosted checks, an annotated
-tag at that commit, and a GitHub prerelease followed by public-asset hash verification.
-No historical tag/assets, archive branch or editor artifact is changed.
-
-Current development source targets scripting API `0.7.0-experimental` for the
-explicitly authorized breaking PlayerInventory migration. Inventory operations
-are `CountItem`, `HasItem`, `GiveItem`, `TakeItem` and sampled `ItemChanged`, acquired through
-`Player:GetInventory()`. Legacy Player HasItem/CountItem/GiveItem/TakeItem are
-removed without aliases. See the [migration guide](api/Inventory-Migration.md)
-and [PlayerInventory contract](api/Types/PlayerInventory.md).
-The preceding Workspace/Entity introduction remains `0.6.0-experimental`;
-Gameplay A/B, Loot and C1/C3 introductions remain `0.6.5-experimental`.
-The API bump is a breaking compatibility decision, not an automatic package release.
-The latest published
-package/tag remains `0.5.0`/`v0.5.0` with API `0.5.0-experimental`.
-Development `release.json` now has package/release/tag `0.7.0` / `v0.7.0` and
-API `0.7.0-experimental`; it is **not** a v0.5.0 reproducibility or publication
-manifest. No v0.6.0 package, tag, release or editor artifact is authorized here.
-The native ABI remains `1.5`, provider protocol `1.2`, addon schema `1`, and
-the Luau pin unchanged.
-
-[World/Entity Foundation 2C](WorldEntityFoundation2C.md) owns the final combined
-qualification of its frozen `fc71db4` source and next-package readiness verdict.
-Gameplay A–D or C4 is not retroactively qualified by that source. The callback-root
-publication correction discovered during Gameplay A also needs affected
-requalification/backport before any publication of the older candidate.
-[Planned v0.6.0 release
-notes](releases/0.6.0.md) retain that World scope and audit the later Gameplay A–D
-and breaking C4 migration scope without reassigning historical evidence.
-Publication remains a separate authorization. Its narrow identity change must
-update `release.json`, the plugin Info/PackageVersion and native CMake package
-version, current-release documentation/navigation, and hardcoded bundle/artifact
-names in the validation workflow. Select the release scope explicitly: a frozen
-v0.6.0 World-only backport keeps API `0.6.0-experimental` after affected
-requalification; a package containing the C4 migration uses API
-`0.7.0-experimental`. The next package number remains a separate publication
-decision; the planned 0.6.0 filename does not authorize release scope. Keep ABI
-`1.5`, provider `1.2`, schema `1` and Luau unchanged, then rebuild/test that exact release
-commit and verify checksums/provenance before any tag or GitHub release.
-Development dry-run archives named v0.5.0 contain the development API and must
-never be uploaded as replacement v0.5.0 artifacts.
-
-The v0.5.0 experimental mapping follows [D12](Invariants.md#d12--scripting-and-protocol-identity),
-qualified [Persistence Foundation 1C](PersistenceFoundation1C.md) and
-[Persistence Foundation 2D](PersistenceFoundation2D.md). The 2D source/CI gate
-closed before the separate v0.5.0 release gate. D20 Entity is not a persistence
-release prerequisite. The [D22 Query contract](PersistenceFoundation2.md)
-joins scripting API `0.5.0-experimental` with structured field/value requests,
-automatic preparation and optional field hints. No public schema, index or
-migration version was introduced. The [0.5.0 release notes](releases/0.5.0.md)
-own the experimental author-facing summary.
+## Identity mapping
 
 | Identity | Value |
 |---|---|
-| Candidate package / tag | `0.7.0` / `v0.7.0` |
-| Latest published package / tag | `0.5.0` / `v0.5.0` (until candidate publication) |
-| Published scripting API | `CarbonLuau 0.5.0-experimental` |
-| Development scripting API | `CarbonLuau 0.7.0-experimental` |
-| API status | `Experimental` |
-| Native ABI | `1.5` (additive reserved persistence-completion export) |
-| Provider protocol | `CarbonLuau.Addons` / `1.2` |
-| Addon package schema | `1` |
-| Pinned Luau | `c6b830185af962c82003f86784e2fe036357c830` |
+| Package / annotated tag | `0.7.0` / `v0.7.0` |
+| Scripting API | `CarbonLuau 0.7.0-experimental` |
+| API / GitHub release status | `Experimental` / prerelease, not stable |
+| Native ABI | `1.5` |
+| Provider protocol / addon schema | `CarbonLuau.Addons` / `1.2`; schema `1` |
+| Luau pin | `c6b830185af962c82003f86784e2fe036357c830` |
 
-Published v0.3.0 remains the gameplay-facade baseline. Addon, GUI and Player
-declarations keep their historical introduction versions through 0.4. Removed
-Player inventory spellings remain in published release history, not current
-bindings. Existing PlayerInventory acquisition/read/Signal introductions remain
-0.6.5; new `PlayerInventory:GiveItem` and `PlayerInventory:TakeItem` are introduced at 0.7.
-Persistence is explicitly introduced at 0.5, without retroactive availability or a stable 1.0
-claim. Package, scripting API, native ABI, provider protocol, package schema and
-pinned Luau are separate compatibility identities. [release.json](https://github.com/gmoddev/CarbonLuau/blob/main/release.json)
-is the machine-readable owner of the mapping, and CI checks it against source and
-documentation.
-
-`tools/Test-Release.ps1` requires releaseVersion/packageVersion/tag to agree but
-does not require them to equal the scripting API version. The v0.5.0 release
-manifest and exact-source artifacts carry API `0.5.0-experimental` and ABI `1.5`
-in provenance. The ABI 1.5 change was
-independently required by the new `cl_domain_storage_completion` ingress; it is
-not inferred from the API version. Provider 1.2, addon schema 1 and Luau are unchanged.
-
-Authenticated-client visual layout, cursor behavior, actual click receipt,
-clipping and hit regions, selected font rendering, one-way scroll behavior and
-client reconciliation remain unqualified and are not release-artifact claims.
-This evidence is non-gating for the experimental identity but must stay visible
-in release notes and compatibility documentation.
-
-`TextBox` and `Submitted` are not part of the release identity. Their D16 design
-remains deferred because the inspected host transport cannot preserve submitted
-text exactly.
+[release.json](../release.json) is the machine-readable owner. CI checks the
+managed plugin, native CMake version, API metadata, ABI, protocol and pin.
+These are separate identities. The 2026-10-11 user decision authorizes the full
+0.7 package only after final gates pass. Earlier tags/assets, curated history
+and archive branches remain unchanged; use forward commits, never a main rewrite.
+Earlier development bundles named v0.5.0 must not replace published v0.5.0 assets.
 
 ## Gameplay A–D release readiness
 
-This audit uses the qualified C3 baseline `cf86b91` and the linked immutable
-phase records. It does not turn prior PASS receipts into final C4-source proof.
+The [release record](Release-0.7.0-Validation.md) owns combined qualification.
+Scoped [A](GameplayFoundationA-Validation.md), [B1](GameplayB1-Validation.md),
+[B2](GameplayB2-Validation.md), [B3](GameplayB3-Validation.md),
+[C1](GameplayC1-Validation.md), [C2](GameplayC2-Validation.md),
+[C3](GameplayC3-Validation.md), [C4](GameplayC4-Validation.md) and
+[D3](GameplayD3-Validation.md) remain evidence for their actual revisions.
+C2's completed-operation rejection remains valid: ItemChanged is sampled.
 
-| Surface | Recorded qualification | Release consequence |
-|---|---|---|
-| A: PlayerDied/PlayerSpawned | [Gameplay A](GameplayFoundationA-Validation.md): exact-host Windows/Linux server, real-VM, lifecycle/resource, sanitizers, tooling, clean-install and implementation-source CI PASS. | Authenticated-client observations remain unqualified; introduction remains 0.6.5. |
-| B: EntitySpawned/EntityDied/EntityDestroyed | [B1](GameplayB1-Validation.md), [B2](GameplayB2-Validation.md), [B3](GameplayB3-Validation.md): separate completion/lifetime/source, platform and hosted gates PASS. | Death/removal differ; B2 actor attribution is narrow original-connection synchronous RPC melee only. Keep pinned-host/startup requirements and best-effort delivery limits. |
-| C: inventory acquisition/reads and sampled ItemChanged | [C1](GameplayC1-Validation.md) PASS; [C2](GameplayC2-Validation.md) historical PARTIAL for complete-operation observation; [C3](GameplayC3-Validation.md) combined sampled PASS with exact-source Windows/Linux live/VM, regressions, sanitizers, tooling, clean-install and hosted receipts. | Sampled semantics remain explicit. C3 does not qualify C4 method removal or mutation-facade admission. |
-| D: Loot Replace | [D2A](GameplayD2A-Validation.md) private strict Replace PASS; [D3](GameplayD3-Validation.md) public conversion/publication, Windows/Linux physical/VM, sanitizer/tooling/package and final-source hosted PASS. | Only the allowlisted barrel prefab, scrap/metal.fragments and Enum.DropMode.Replace are supported. Partial payout has no rollback or vanilla fallback after COMMIT. |
-| C4: breaking inventory migration | [C4 evidence](GameplayC4-Validation.md): PASS final-source Windows/Linux real-VM/live, regressions, sanitizers, metadata/tooling, deterministic clean installs and hosted CI under API 0.7. | Legacy runtime/metadata/definition methods are absent. D13 and sampled C3 remain unchanged. Subsystem readiness is not package publication. |
+C4 removed Player HasItem/CountItem/GiveItem/TakeItem without aliases.
+Use `Player:GetInventory()`; see the [migration guide](api/Inventory-Migration.md).
+Existing read/acquisition/Signal introductions remain 0.6.5; facade mutations begin
+at 0.7. Workspace/Entity/discovery retain 0.6.0, gameplay/Loot 0.6.5, and
+persistence/Query 0.5. Inclusion here does not rewrite earlier availability.
 
-The A–D feature set is broader than the frozen World-only 2C candidate. C4 closes
-the inventory migration and affected combined regression gates at its recorded
-implementation revision; prior host proofs remain attributed to their actual
-revisions. A later package/release task must still qualify its own final identity-
-aligned artifacts and scope, preserve experimental/client limits and obtain final
-release-source checks. No historical receipt is relabeled as evidence for changed
-code or an authenticated client.
+The [0.6 planning notes](releases/0.6.0.md) retain the frozen World-only
+candidate; no 0.6 package/tag was published. Persistence [1C](PersistenceFoundation1C.md)
+and [2D](PersistenceFoundation2D.md) retain their unchanged contract/evidence;
+[0.5 notes](releases/0.5.0.md) remain historical.
 
-Package preparation must select and align package/tag/artifact identities, API 0.7
-for C4-containing source, documentation navigation and bundle contents. Rebuild and
-verify provenance/checksums from that exact release commit. Current development
-archives still named v0.5.0 cannot replace published v0.5.0 artifacts. Matching
-editor artifacts require their own source pin and qualification. Publication/tag
-authorization is still separate; no Gameplay A–D phase receipt grants it.
+## Compatibility envelope
+
+World/gameplay require the exact qualified Rust/Carbon/Harmony tuple and hook
+topology, plus initial-startup observer continuity. First hotload/full plugin
+unload requires restart for World; root/addon replacement and VM recovery retain
+a continuous observer. Host updates require affected requalification.
+
+Discovery is encounter-time, not atomic. ItemChanged is sampled physical net change.
+Death/removal differ with no universal cross-Signal ordering. Entity killer
+attribution is narrow original-connection synchronous RPC melee; unproved
+provenance is nil. Loot supports one barrel prefab, scrap/metal.fragments and
+Enum.DropMode.Replace: destruction-time payout replacement, not earlier drops.
+Post-COMMIT partial payouts have no rollback, fallback, compensation or replay.
+
+Persistence retains local PERSIST/EXTRA. Logical quotas do not reserve physical
+capacity; file extents are hard bounded, allocated blocks have a qualified
+operational budget, and indeterminate mutations are never replayed.
+Process-crash evidence is not physical power-loss qualification.
+
+Authenticated-client GUI rendering/clicks/fonts/clipping/scrolling/reconciliation
+and Teleport convergence remain unqualified and non-gating for this experimental
+identity. No Shockbyte full-runtime or macOS server claim is made. TextBox is
+not implemented. Broader Loot, world mutation, generic hooks, cloud persistence,
+SQL and other deferred APIs remain outside the release.
 
 ## Reproduce a platform bundle
 
-From a clean checkout at the candidate revision, build and test the native
-library for the target platform, then run:
+Build/test native x64 Release from clean final source and audit imports/ABI:
 
 ```powershell
-./tools/New-ReleaseArtifacts.ps1 `
-  -Rid win-x64 `
+./tools/Test-Release.ps1 -Rid win-x64 `
+  -NativeLibrary ./build/win-x64/Release/carbonluau_native.dll `
+  -CompilerWorker ./build/win-x64/Release/carbonluau_compiler.exe
+./tools/New-ReleaseArtifacts.ps1 -Rid win-x64 `
   -NativeLibrary ./build/win-x64/Release/carbonluau_native.dll `
   -CompilerWorker ./build/win-x64/Release/carbonluau_compiler.exe
 ```
 
-On Linux with PowerShell 7:
+On Linux with PowerShell 7, select `linux-x64`, `libcarbonluau_native.so` and
+`carbonluau_compiler` from the Linux build. The sibling storage worker is required.
+The scripts create a ZIP, provenance JSON and SHA-256 sidecar in `dist/release`.
+Entries are sorted with fixed timestamps; repeated packaging from identical inputs
+must match. Different compiler builds are not promised identical binaries.
 
-```powershell
-./tools/New-ReleaseArtifacts.ps1 `
-  -Rid linux-x64 `
-  -NativeLibrary ./build/linux-x64/libcarbonluau_native.so `
-  -CompilerWorker ./build/linux-x64/carbonluau_compiler
-```
+Bundles contain only the production .cszip, matching runtime/compiler/storage
+workers, public examples/reference, canonical metadata/generated definitions,
+installation/release notes and attribution. No fixture DB/journal, host assembly,
+SQLite CLI, probe, credential, log, tooling executable or VSIX is allowed.
+Linux workers have Unix ZIP creator metadata and mode 0755. Clean extraction
+checks payload hashes and executes the real-VM install/example fixtures.
 
-The command creates a platform archive, provenance JSON and SHA-256 checksum in
-`dist/release`. ZIP entries are sorted and use a fixed timestamp. CI builds each
-target from a clean checkout, creates the archive twice and rejects a packaging
-hash mismatch before uploading the release-candidate artifacts.
+## Publication gate
 
-The archive contains only the production `.cszip`, the matching native runtime,
-compiler worker and private storage worker,
-examples, installation/release notes, license/attribution and generated
-provenance. It never contains live qualification fixtures or both platform
-binaries.
+Scripts/workflows do not publish releases. Require clean/synchronized tested source,
+final-source Windows/Linux/native/managed/real-VM/live/sanitizer/tooling/documentation
+checks, deterministic committed-source archives and clean installs before tagging.
+Provenance records the exact final revision and tested payloads.
 
-No tag or GitHub Release is created by these scripts or workflows. The published
-v0.5.0 tag/prerelease is historical. Any next publication requires separate
-authorization after the exact-release-commit gate.
+Create annotated `v0.7.0` at that commit, push without moving historical tags,
+and publish only a GitHub prerelease with qualified ZIPs/checksums/provenance.
+Download public assets and compare hashes. Never publish a partially qualified release.
 
 ## Matching editor artifacts
 
-The extension's `tooling-source.json` pins the exact v0.4.0 runtime candidate. Its
-`tools/Package.py` creates platform VSIX files from the canonical pack, records
-both commits and payload identities, normalizes ZIP metadata, and checks repeated
-packaging for identical hashes. Extension version `0.0.1` and tooling pack
-`0.4.0-rc.1` describe the earlier tooling candidate and are independent of the
-then-current scripting API `0.5.0-experimental` and protocol
-`CarbonLuau.Tooling/1.0`; none changes the runtime ABI or package schema.
-Windows/Linux x64 VSIX artifacts require clean installed-extension E2E; macOS
-arm64 artifacts remain explicitly static-only. Hashes establish integrity, not
-publisher signing or OS sandboxing. The v0.4.0 VSIX bits are not qualified for
-the v0.5.0 persistence/Query API and are not attached to this runtime release.
-No Marketplace or Open VSX publication is authorized by this task; a matching
-extension requires its own source pin, rebuild and qualification.
+The published v0.4.0 VSIX is not qualified for the full v0.7.0 API. A matching
+extension needs separate source-pin, pack, installed-extension and publisher
+qualification. Windows/Linux analysis/preview do not imply macOS server support;
+macOS tooling remains static-only. No new VSIX, Marketplace or Open VSX publication
+is included here. Hashes/annotated tags establish identity/integrity, not publisher
+signing, OS sandboxing or stable production readiness.

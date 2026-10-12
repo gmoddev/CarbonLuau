@@ -20,22 +20,23 @@ addons that work together. It's server-side scripting—not Roblox running insid
 - **Reusable addons:** split a larger project into modules and share public modules
   between addons. See the [addon guide](docs/api/Addons.md).
 
-The development version also adds world/entity lookup and radius searches,
+The current version also includes world/entity lookup and radius searches,
 player/entity lifecycle events, sampled inventory changes, and a small loot
-replacement API. Those additions aren't in the latest release yet.
+replacement API. These features require the qualified host/startup configuration.
 
 ## Pick your version
 
-**Latest release:** [v0.5.0](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.5.0).
-It's experimental and includes local persistence, gameplay helpers, addons, and GUI.
+**v0.7.0 experimental:** [release page](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.7.0).
+It includes the complete current API: persistence, world discovery, gameplay,
+inventory, addons, loot replacement, and GUI.
 Start here if you want a published package rather than a development build.
 
-**Release candidate:** package `0.7.0`, scripting API `0.7.0-experimental`.
-It is undergoing final qualification and is not published yet. See the
-[candidate notes](docs/releases/0.7.0.md). Check [compatibility](docs/api/Compatibility.md) before mixing
+**Runtime identity:** package `0.7.0`, scripting API `0.7.0-experimental`.
+See the [release notes](docs/releases/0.7.0.md) and
+[qualification record](docs/Release-0.7.0-Validation.md). Check [compatibility](docs/api/Compatibility.md) before mixing
 runtime, script, or editor versions.
 
-One important development change: inventory operations now live on
+One important change from v0.5.0: inventory operations now live on
 `Player:GetInventory()`, not directly on Player. For a connected `Player`:
 
 ```luau
@@ -83,7 +84,7 @@ release when running v0.5.0.
 The [official VS Code extension](https://github.com/gmoddev/carbonluau-vscode)
 offers syntax support, API information, project checks, and GUI preview.
 Use a tooling pack that matches your runtime: the published v0.4.0 VSIX isn't a
-qualified match for v0.5.0 or current `main`.
+qualified match for v0.5.0, v0.7.0 or current `main`. This release does not publish a new VSIX.
 
 Language analysis and GUI preview are qualified on Windows/Linux x64; macOS is
 static-only. Preview is an offline helper, not a Rust client or gameplay simulator,
