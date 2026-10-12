@@ -1,5 +1,10 @@
 # Scripting compatibility and limits
 
+The authorized v0.7.0 candidate packages the complete current API
+`0.7.0-experimental`; final qualification and publication are pending.
+Its package identity supersedes earlier phase-local 0.5 development holds,
+not historical API introduction versions or published artifacts.
+
 Latest published package v0.5.0 uses API `0.5.0-experimental`.
 The development API identity is `CarbonLuau 0.7.0-experimental`, status `Experimental`;
 the newer Workspace/Entity, gameplay and PlayerInventory surface is not in published v0.5.0.

@@ -5,6 +5,7 @@
 - [Planned package notes](releases/0.6.0.md)
 - Published releases
   - [0.5.0](releases/0.5.0.md)
+  - [0.7.0](releases/0.7.0.md)
   - [0.4.0](releases/0.4.0.md)
   - [0.3.0](releases/0.3.0.md)
 - API

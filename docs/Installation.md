@@ -6,6 +6,14 @@ glibc Linux x64. ARM, x86, macOS and non-glibc Linux are not qualified.
 
 ## Requirements
 
+The v0.7.0 candidate contains the complete `0.7.0-experimental` API and is
+pending final qualification/publication. Its World/gameplay adapters require
+Rust build `25653776`, protocol `2634.289.1`, Windows Carbon
+`2.0.262.0` (`8a81d70`) or Linux Carbon `2.0.261.0` (`c74c4ca`),
+Harmony `2.4.2.0` and the qualified assembly/hook topology. Install before
+server startup; first hotload or full plugin unload requires restart for World.
+Earlier host receipts below remain historical, not broader support.
+
 - A Carbon-modded Rust server.
 - An x64 server process.
 - A matching `win-x64` or `linux-x64` CarbonLuau release bundle.

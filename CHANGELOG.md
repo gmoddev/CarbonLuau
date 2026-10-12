@@ -4,6 +4,15 @@ All notable public changes to CarbonLuau are recorded here.
 
 ## Unreleased
 
+### v0.7.0 experimental release candidate
+
+Package identity is now `0.7.0`, with the complete current scripting API
+`0.7.0-experimental`. Final release-source qualification and publication are
+pending. ABI `1.5`, provider `1.2`, schema `1` and Luau remain unchanged.
+The development chronology below retains original phase assignments; its package
+hold at 0.5 is superseded by this authorized candidate. See
+[candidate notes](docs/releases/0.7.0.md) for scope, migration and limitations.
+
 ### Added in development (scripting API `0.6.0-experimental`)
 
 - Exact keyed, read-only `Workspace:GetEntityById` and `Entity.Id`, `Prefab`,

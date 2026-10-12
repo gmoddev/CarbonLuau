@@ -30,9 +30,9 @@ replacement API. Those additions aren't in the latest release yet.
 It's experimental and includes local persistence, gameplay helpers, addons, and GUI.
 Start here if you want a published package rather than a development build.
 
-**Development `main`:** scripting API `0.7.0-experimental`. It is ahead of v0.5.0;
-the package version still says `0.5.0`, but development archives are not the
-published release. Check [compatibility](docs/api/Compatibility.md) before mixing
+**Release candidate:** package `0.7.0`, scripting API `0.7.0-experimental`.
+It is undergoing final qualification and is not published yet. See the
+[candidate notes](docs/releases/0.7.0.md). Check [compatibility](docs/api/Compatibility.md) before mixing
 runtime, script, or editor versions.
 
 One important development change: inventory operations now live on

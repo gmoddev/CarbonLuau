@@ -15,6 +15,8 @@ does not create another contract or qualification receipt.
 - Published release notes: [0.3](releases/0.3.0.md), [0.4](releases/0.4.0.md),
   [0.5](releases/0.5.0.md). [Planned 0.6 notes](releases/0.6.0.md) remain explicitly
   unpublished scope/number planning; package identity need not match API identity.
+- [0.7 release candidate](releases/0.7.0.md): complete current API, final
+  qualification and publication pending.
 
 Public service/type/guide URLs under `api/` remain stable, including offline
 package contents. Their documentation follows production bindings and canonical

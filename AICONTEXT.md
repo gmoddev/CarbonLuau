@@ -43,7 +43,8 @@ restating a proposal as a rule or broadening a receipt's tested scope.
 | Package/API/ABI/provider/schema/Luau identities and publication | [D12](docs/invariants/Runtime.md#d12--scripting-and-protocol-identity), [release.json](release.json), [Release](docs/Release.md), [Installation](docs/Installation.md) |
 
 The development API is `0.7.0-experimental`; the latest published package is
-`v0.5.0`. C4 removed Player HasItem/CountItem/GiveItem/TakeItem without aliases;
+`v0.5.0`. Package `0.7.0` / `v0.7.0` is now the authorized release candidate,
+pending final qualification and prerelease publication. C4 removed Player HasItem/CountItem/GiveItem/TakeItem without aliases;
 use PlayerInventory. Earlier introduction versions and source receipts remain
 historical facts, not permission to restore removed bindings. API assignment,
 subsystem readiness and package/tag publication are separate decisions.

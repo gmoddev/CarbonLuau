@@ -1,5 +1,22 @@
 # Release identity and reproducibility
 
+## Current v0.7.0 release candidate
+
+The 2026-10-11 user decision assigns package/tag `0.7.0` / `v0.7.0` to the
+complete current scripting API `0.7.0-experimental`, not the earlier World-only
+0.6 planning candidate. Native ABI `1.5`, provider protocol `1.2`, addon schema
+`1` and the Luau revision remain unchanged. [Candidate notes](releases/0.7.0.md)
+record the scope and limits. Qualification and publication are pending;
+v0.5.0 remains the latest published package until all release gates pass.
+
+The following readiness chronology retains earlier assignments and their
+source-qualified receipts; its 0.5 development hold is superseded by this release
+assignment. Do not reinterpret historical PASS reports as final candidate tests.
+Publication requires deterministic Windows/Linux artifacts from the final tested
+commit, verified provenance and clean installs, final hosted checks, an annotated
+tag at that commit, and a GitHub prerelease followed by public-asset hash verification.
+No historical tag/assets, archive branch or editor artifact is changed.
+
 Current development source targets scripting API `0.7.0-experimental` for the
 explicitly authorized breaking PlayerInventory migration. Inventory operations
 are `CountItem`, `HasItem`, `GiveItem`, `TakeItem` and sampled `ItemChanged`, acquired through
@@ -11,7 +28,7 @@ Gameplay A/B, Loot and C1/C3 introductions remain `0.6.5-experimental`.
 The API bump is a breaking compatibility decision, not an automatic package release.
 The latest published
 package/tag remains `0.5.0`/`v0.5.0` with API `0.5.0-experimental`.
-Development `release.json` deliberately has package/release/tag `0.5.0` and
+Development `release.json` now has package/release/tag `0.7.0` / `v0.7.0` and
 API `0.7.0-experimental`; it is **not** a v0.5.0 reproducibility or publication
 manifest. No v0.6.0 package, tag, release or editor artifact is authorized here.
 The native ABI remains `1.5`, provider protocol `1.2`, addon schema `1`, and
@@ -50,7 +67,8 @@ own the experimental author-facing summary.
 
 | Identity | Value |
 |---|---|
-| Package / tag | `0.5.0` / `v0.5.0` |
+| Candidate package / tag | `0.7.0` / `v0.7.0` |
+| Latest published package / tag | `0.5.0` / `v0.5.0` (until candidate publication) |
 | Published scripting API | `CarbonLuau 0.5.0-experimental` |
 | Development scripting API | `CarbonLuau 0.7.0-experimental` |
 | API status | `Experimental` |

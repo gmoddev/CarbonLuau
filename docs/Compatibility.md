@@ -20,6 +20,12 @@ Carbon currently documents targeting .NET Framework 4.8 with `Carbon.targets`. D
 
 ## Version identities
 
+The current authorized release candidate is package `0.7.0` / `v0.7.0`,
+containing the complete `0.7.0-experimental` API. ABI `1.5`, provider `1.2`,
+schema `1` and Luau are unchanged. Final qualification/publication are pending;
+the phase assignments below remain chronology, not current package holds.
+See [candidate release notes](releases/0.7.0.md).
+
 Gameplay C4's user-authorized removal of Player:HasItem, CountItem, GiveItem and
 TakeItem is breaking and advances development API to `0.7.0-experimental`.
 Acquire `Player:GetInventory()` and use those methods on PlayerInventory instead;

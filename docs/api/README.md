@@ -1,6 +1,8 @@
 # CarbonLuau scripting API
 
 Published package `v0.5.0` uses experimental API `0.5.0-experimental`.
+The complete current API is being qualified as the
+[v0.7.0 candidate](../releases/0.7.0.md); it is not published yet.
 Current development uses `0.7.0-experimental`; its newer world, gameplay, Loot and
 PlayerInventory features are not in that published package. This is local
 server-side Luau, not Roblox cloud/DataModel/replication compatibility.

@@ -296,7 +296,7 @@ $Catalog = Get-Content -Raw -LiteralPath (Join-Path $Root 'api/carbonluau-api.js
 $Definitions = Get-Content -Raw -LiteralPath (Join-Path $Root 'generated/carbonluau.d.luau')
 Test-D3Metadata $Catalog $Definitions $Bootstrap
 if ($Catalog.Api.Version -cne '0.7.0-experimental' -or $Release.apiVersion -cne '0.7.0-experimental' -or
-    $Release.packageVersion -cne '0.5.0') { throw 'Inventory migration API/package identity differs' }
+    $Release.packageVersion -cne '0.7.0') { throw 'Inventory migration API/package identity differs' }
 $InventoryMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'PlayerInventory' } | Sort-Object Id)
 $ExpectedInventoryMembers = @('PlayerInventory.CountItem','PlayerInventory.GiveItem','PlayerInventory.HasItem',
     'PlayerInventory.ItemChanged','PlayerInventory.TakeItem')

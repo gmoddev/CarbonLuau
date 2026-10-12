@@ -4,6 +4,18 @@ This page contains normative detail delegated by the [canonical register](../Inv
 It reorganizes existing rules; it creates no second authority or new contract.
 Existing decision/criteria text is retained; qualification remains separately scoped.
 
+## Current release assignment — 2026-10-11
+
+The user authorizes qualifying and publishing package `0.7.0` / annotated
+`v0.7.0` as an experimental GitHub prerelease containing the complete current
+`0.7.0-experimental` API. Publication remains gated on final release-source
+Windows/Linux, live-host, sanitizer, tooling, packaging and hosted qualification.
+Native ABI `1.5`, provider `1.2`, addon schema `1` and the Luau pin remain
+unchanged. Historical introduction assignments and published v0.3/v0.4/v0.5
+tags/assets remain immutable. This assignment supersedes only the earlier
+development package hold at 0.5; it does not alter any runtime contract.
+See [release policy](../Release.md) and [candidate notes](../releases/0.7.0.md).
+
 <!-- BEGIN RECORD Invariants.md -->
 
 #### D2 — limits in addon-capable operation
