@@ -31,6 +31,9 @@ namespace Carbon.Plugins
         partial void ContinueEntityDeathFixture(ref bool Deferred);
         partial void SelectPublicLootQualification(ref bool Public);
         private int LootFixtureStep;
+        private bool LootFixtureInitialPayoutDone;
+        private int LootFixtureEventWaits;
+        private int LootFixtureEventWaitFrame = -1;
         private int LootFixtureCreateFault;
         private Harmony LootFixtureFaultPatches;
         private MethodInfo LootFixtureCreateMethod;
@@ -149,8 +152,23 @@ namespace Carbon.Plugins
                 // Separate actual owner turns for cleanup/native destruction and
                 // producer-budget qualification; never sleep or pump Unity inline.
                 if (LootFixtureStep == 0) {
-                    LootFixturePayout("root_two", 2, true);
+                    if (!LootFixtureInitialPayoutDone) {
+                        LootFixturePayout("root_two", 2, true);
+                        LootFixtureInitialPayoutDone = true;
+                        LootFixtureEventWaitFrame = Time.frameCount;
+                    }
+                    foreach (var Delivery in Host.Drain())
+                        BarrelResearchCheck(Delivery.Status == RuntimeStatus.OK, "initial deferred event callback");
                     var Result = Host.Execute("loot.events", "local S=require('state'); assert((S.Spawned or 0)>=2, 'spawned='..tostring(S.Spawned)); assert((S.Destroyed or 0)>=1, 'destroyed='..tostring(S.Destroyed))");
+                    if (Result.Status != RuntimeStatus.OK) {
+                        // Event intake is deferred and budgeted by actual Unity
+                        // frame, not by NextTick count. Never replay the payout.
+                        if (LootFixtureEventWaitFrame != Time.frameCount) {
+                            LootFixtureEventWaitFrame = Time.frameCount;
+                            LootFixtureEventWaits++;
+                        }
+                        if (LootFixtureEventWaits < 16) { NextTick(RunLootQualificationStep); return; }
+                    }
                     BarrelResearchCheck(Result.Status == RuntimeStatus.OK, "B1/B3 callbacks remain usable: " + Result.Error);
                 } else if (LootFixtureStep == 1) {
                     var Old = Gameplay.Active;
