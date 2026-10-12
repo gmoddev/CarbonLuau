@@ -1,5 +1,5 @@
-// Controlled private D2A qualification only; constructor and receipt seams are
-// erased when this fixture is not packaged. No Luau Loot service is introduced.
+// Controlled D2A/D3/D4 qualification; all constructor/receipt/selector seams
+// are erased when this fixture is not packaged.
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using System.Runtime.ExceptionServices;
 using HarmonyLib;
 using UnityEngine;
 
@@ -27,6 +28,15 @@ namespace Carbon.Plugins
         private string LootFixtureSource = "local S=require('state'); local W=game:GetService('Workspace'); W.EntitySpawned:Connect(function(E) S.Spawned=(S.Spawned or 0)+1 end); W.EntityDestroyed:Connect(function(C) S.Destroyed=(S.Destroyed or 0)+1 end)";
         private bool LootFixtureDone;
         private bool LootFixturePublic;
+        private bool LootFixtureBarrel2;
+        private string LootFixturePrefab = LootRulePolicy.Prefab;
+        private int LootFixtureBudgetFrame = -1, LootFixtureBudgetWaits;
+        private bool LootFixtureModuleRollback;
+        private MethodInfo LootFixtureIndividualMethod, LootFixtureBagMethod;
+        private BarrelResearchCase LootFixtureBagCase;
+        private DroppedItemContainer LootFixtureBag;
+        private int LootFixtureBagReturns, LootFixtureIndividualOverrides;
+        private bool LootFixtureForceBag;
         partial void PrepareEntityDeathFixture();
         partial void ContinueEntityDeathFixture(ref bool Deferred);
         partial void SelectPublicLootQualification(ref bool Public);
@@ -45,7 +55,7 @@ namespace Carbon.Plugins
             {
                 var Owner = ActiveEntityObserver;
                 if (Owner != null && !Owner.LootFixturePublic && ReferenceEquals(World, Owner.Gameplay) && Owner.LootFixtureEntries != null)
-                    StageLootRule(LootRulePolicy.Prefab, Owner.LootFixtureEntries);
+                    StageLootRule(Owner.LootFixturePrefab, Owner.LootFixtureEntries);
             }
         }
         partial void SelectLootQualification(ref bool Qualification) { Qualification = true; }
@@ -60,7 +70,10 @@ namespace Carbon.Plugins
         }
         partial void LootFixtureWorldCaptured(BaseEntity World, Item Value)
         {
-            BarrelResearchHold(Value); BarrelResearchHold(World);
+            BarrelResearchCheck(LootCurrent != null && LootCurrent.Index >= 0 &&
+                ReferenceEquals(LootCurrent.Items[LootCurrent.Index], Value) && Value.uid.Value == LootCurrent.Uids[LootCurrent.Index],
+                "fixture acquisition uses exact returned production Item/UID");
+            BarrelResearchHold(Value, true); BarrelResearchHold(World);
             if (LootFixtureMutateAmount && LootCurrent != null && LootCurrent.Index == 1) {
                 Value.amount++;
                 Puts("[CarbonLuau:LootFixture] INTERFERENCE actual returned Item.amount changed before world initialization");
@@ -104,13 +117,20 @@ namespace Carbon.Plugins
                 BarrelResearchCheck(BasePlayer.activePlayerList.Count == 0 && Host != null && Host.Ready &&
                     EntityStartupQualified && LootAvailable(), "isolated qualified private source ready");
                 SelectPublicLootQualification(ref LootFixturePublic);
+                if (LootFixtureBarrel2) {
+                    BarrelResearchCheck(LootFixturePublic, "D4 requires the actual public declaration fixture");
+                    LootFixturePrefab = LootRulePolicy.SecondPrefab;
+                    BarrelResearchSelectedPrefab = LootFixturePrefab;
+                }
+                Puts("[CarbonLuau:LootFixture] SELECT public=" + LootFixturePublic + " d4_barrel2=" + LootFixtureBarrel2 + " prefab=" + LootFixturePrefab);
                 PrepareEntityDeathFixture();
                 if (Addons != null) { Addons.Dispose(); Addons = null; }
                 Host.Dispose();
                 Host = new ScriptHost(Native, new RuntimeConfig { MaxCallbackMilliseconds = 100 }, () => {
-                    var Snapshot = new ScriptSnapshot { EntryName = "init.luau", EntrySource = LootFixtureDeclaration() + LootFixtureSource };
+                    var Snapshot = new ScriptSnapshot { EntryName = "init.luau", EntrySource = (LootFixtureModuleRollback ? "" : LootFixtureDeclaration()) + LootFixtureSource };
                     Snapshot.Modules.Add("state", "return {}");
                     Snapshot.Modules.Add("failed", "error('failed publication fixture')");
+                    Snapshot.Modules.Add("stagedfailed", LootFixtureDeclaration() + "error('failed staged loot module')");
                     return Snapshot;
                 }, Gameplay);
                 LootFixtureCreateMethod = typeof(ItemManager).GetMethod("Create", BindingFlags.Static | BindingFlags.Public,
@@ -149,6 +169,13 @@ namespace Carbon.Plugins
         private void RunLootQualificationStep()
         {
             try {
+                int Needed = LootFixtureStep == 18 ? 2 : 1;
+                if (LootFixtureBarrel2 && (LootFixtureBudgetFrame == Time.frameCount ||
+                    LootFrameNumber == Time.frameCount && LootFrameUsed > LootRulePolicy.PerFrame - Needed)) {
+                    BarrelResearchCheck(++LootFixtureBudgetWaits <= 16, "D4 bounded wait for next actual frame after exhaustion");
+                    NextTick(RunLootQualificationStep); return;
+                }
+                LootFixtureBudgetWaits = 0;
                 // Separate actual owner turns for cleanup/native destruction and
                 // producer-budget qualification; never sleep or pump Unity inline.
                 if (LootFixtureStep == 0) {
@@ -188,13 +215,15 @@ namespace Carbon.Plugins
                     BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK, "restore normal descriptor");
                 } else if (LootFixtureStep == 4) {
                     var Case = BarrelResearchCreate("vetoed_death", BarrelResearchMode.Vanilla, BarrelResearchPosition, true);
-                    int Before = LootFixtureSuccesses;
+                    int Before = LootFixtureSuccesses, Receipts = LootFixtureReceipts;
                     BarrelResearchVeto = true;
                     try { Case.Source.Die(null); } finally { BarrelResearchVeto = false; }
-                    BarrelResearchCheck(LootFixtureSuccesses == Before && !Case.Source.IsDestroyed && Case.Source.net != null &&
+                    BarrelResearchCheck(LootFixtureSuccesses == Before && LootFixtureReceipts == Receipts + 1 && !Case.Source.IsDestroyed && Case.Source.net != null &&
                         ValidateEntity(Case.Binding), "vetoed retirement remains partial, original not retargeted");
                     Puts("[CarbonLuau:LootFixture] PASS veto partial; release without payout replay");
-                    Case.Source.Kill(); BarrelResearchCleanup();
+                    Case.Source.Kill(); BarrelResearchRetired(Case);
+                    BarrelResearchCheck(LootFixtureReceipts == Receipts + 1, "releasing Kill veto never replays payout");
+                    BarrelResearchCleanup();
                 } else if (LootFixtureStep == 5) {
                     long CleanupBefore = LootCleanupFailed;
                     LootFixtureInjectSpawn = true;
@@ -281,12 +310,24 @@ namespace Carbon.Plugins
                     BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK, "public inclusive range publication");
                 } else if (LootFixtureStep == 17) {
                     LootFixturePayout("public_range", 2, true);
-                    BarrelResearchCheck(Host.Execute("loot.active", "assert(not pcall(function() game:GetService('Loot'):RegisterDropRule('" + LootRulePolicy.Prefab + "',Enum.DropMode.Replace,{}) end))").Status == RuntimeStatus.OK,
+                    BarrelResearchCheck(Host.Execute("loot.active", "assert(not pcall(function() game:GetService('Loot'):RegisterDropRule('" + LootFixturePrefab + "',Enum.DropMode.Replace,{}) end))").Status == RuntimeStatus.OK,
                         "committed public declaration rejected without effects");
-                    LootFixtureDone = true;
-                    bool Deferred = false; ContinueEntityDeathFixture(ref Deferred);
-                    if (!Deferred) EndLootQualification(null);
-                    return;
+                    if (!LootFixtureBarrel2) { FinishLootFixtureMatrix(); return; }
+                    LootFixtureEntries = TwoLootEntries();
+                    BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK, "D4 restore fixed public descriptor");
+                } else if (LootFixtureStep == 18) {
+                    LootFixtureBothProfiles();
+                } else if (LootFixtureStep == 19) {
+                    LootFixtureProfileBudget();
+                } else if (LootFixtureStep == 20) {
+                    LootFixtureForeignProfiles();
+                } else if (LootFixtureStep == 21) {
+                    LootFixtureRejectedSources();
+                } else if (LootFixtureStep == 22) {
+                    LootFixtureCaughtModule();
+                } else if (LootFixtureStep == 23) {
+                    LootFixtureControlledBag();
+                    FinishLootFixtureMatrix(); return;
                 }
                 LootFixtureStep++; NextTick(RunLootQualificationStep);
             } catch (Exception Error) { EndLootQualification(Error); }
@@ -297,7 +338,7 @@ namespace Carbon.Plugins
             var Source = new StringBuilder("local L=game:GetService('Loot'); assert(table.isfrozen(Enum) and table.isfrozen(Enum.DropMode)); assert(type(Enum.DropMode.Replace)=='userdata' and tostring(Enum.DropMode.Replace)=='DropMode.Replace'); local D={");
             foreach (var Entry in LootFixtureEntries)
                 Source.Append("{Item='").Append(Entry.Item).Append("',Min=").Append(Entry.Min).Append(",Max=").Append(Entry.Max).Append("},");
-            Source.Append("}; L:RegisterDropRule('").Append(LootRulePolicy.Prefab).Append("',Enum.DropMode.Replace,D); if D[1] then D[1].Item='invalid'; D[1].Min=999; D[1].Max=0 end; table.clear(D); ");
+            Source.Append("}; L:RegisterDropRule('").Append(LootFixturePrefab).Append("',Enum.DropMode.Replace,D); if D[1] then D[1].Item='invalid'; D[1].Min=999; D[1].Max=0 end; table.clear(D); ");
             return Source.ToString();
         }
         private byte[] LootFixturePackage(string Id, string Source)
@@ -314,9 +355,15 @@ namespace Carbon.Plugins
         private void LootFixturePayout(string Label, int ExpectedWorlds, bool Success)
         {
             var Case = BarrelResearchCreate(Label, BarrelResearchMode.Vanilla, BarrelResearchPosition, true);
+            LootFixturePayout(Case, ExpectedWorlds, Success, true);
+        }
+        private void LootFixturePayout(BarrelResearchCase Case, int ExpectedWorlds, bool Success, bool Cleanup)
+        {
+            string Label = Case.Label;
+            BarrelResearchCurrent = Case;
             int Before = LootFixtureReceipts, BeforeSuccess = LootFixtureSuccesses;
             try {
-                Case.Source.Hurt(10000f);
+                Case.Source.Hurt(10000f, Rust.DamageType.Generic, BarrelResearchActor, false);
                 BarrelResearchRetired(Case);
                 BarrelResearchCheck(LootFixtureReceipts == Before + 1 && LootFixtureSuccesses == BeforeSuccess + (Success ? 1 : 0),
                     "one private completion, correct success classification " + Label);
@@ -335,7 +382,450 @@ namespace Carbon.Plugins
                 BarrelResearchCheck(Actual == ExpectedWorlds, "no extra vanilla/bonus physical payout " + Label);
                 foreach (var Result in Host.Drain()) BarrelResearchCheck(Result.Status == RuntimeStatus.OK, "existing callback regression");
                 Puts("[CarbonLuau:LootFixture] PASS case=" + Label + " worlds=" + Actual + " success=" + Success);
-            } finally { BarrelResearchCleanup(); }
+            } finally { if (Cleanup) BarrelResearchCleanup(); }
+        }
+        private void FinishLootFixtureMatrix()
+        {
+            LootFixtureDone = true;
+            bool Deferred = false; ContinueEntityDeathFixture(ref Deferred);
+            if (!Deferred) EndLootQualification(null);
+        }
+        partial void ObserveBarrelFixtureProfile(LootContainer Source)
+        {
+            if (!LootFixtureBarrel2) return;
+            uint Id;
+            var Components = Source.GetComponents<Component>();
+            BarrelResearchCheck(Components.Length == 3, "D4 measured three root components");
+            int Transforms = 0, Spawnables = 0, Loot = 0;
+            foreach (var Component in Components) {
+                BarrelResearchCheck(Component != null, "D4 no missing root component");
+                if (Component.GetType() == typeof(Transform)) Transforms++;
+                if (Component.GetType().Name == "Spawnable") Spawnables++;
+                if (Component.GetType() == typeof(LootContainer)) Loot++;
+            }
+            var Cache = LootComponentsField.GetValue(Source) as List<EntityComponentBase>;
+            BarrelResearchCheck(LootRulePolicy.TryPrefabId(Source.PrefabName, out Id) && Id == Source.prefabID &&
+                Source.GetType() == typeof(LootContainer) && Transforms == 1 && Spawnables == 1 && Loot == 1 &&
+                Cache != null && Cache.Count == 0 && Source.dropsLoot && Source.scrapAmount == 2 &&
+                !Source.spawnDeployableCorpseOnDeath && Source.debrisPrefab != null && String.IsNullOrEmpty(Source.debrisPrefab.guid) &&
+                Source.inventory != null && ReferenceEquals(Source.inventory.entityOwner, Source), "D4 exact measured source profile / InitShared cache");
+            LootFixtureIndividualMethod = typeof(LootContainer).GetMethod("ShouldDropItemsIndividually", BindingFlags.Instance |
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly, null, Type.EmptyTypes, null);
+            BarrelResearchCheck(LootFixtureIndividualMethod != null && LootFixtureIndividualMethod.ReturnType == typeof(bool) &&
+                LootFixtureIndividualMethod.MetadataToken == 0x06005771, "D4 exact individual-drop selector");
+            byte[] Body = LootFixtureIndividualMethod.GetMethodBody().GetILAsByteArray();
+            BarrelResearchCheck(Body.Length == 2 && Body[0] == 0x17 && Body[1] == 0x2a &&
+                (bool)LootFixtureIndividualMethod.Invoke(Source, null), "ordinary plain barrel selector is constant true");
+            Puts("[CarbonLuau:LootFixture] PROFILE prefab=" + Source.PrefabName + " prefab_id=" + Id +
+                " type=LootContainer root_components=Transform,Spawnable,LootContainer cache=0 dropsLoot=true scrapAmount=2 corpse=false debris_guid=empty" +
+                " inventory_capacity=" + Source.inventory.capacity + " individual=true natural_bag_branch=false");
+        }
+        private void LootFixtureSelectProfile(string Prefab)
+        {
+            var Old = Gameplay.Active;
+            LootFixturePrefab = Prefab; BarrelResearchSelectedPrefab = Prefab;
+            BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK && Old.Disposed && !Old.Active,
+                "D4 same outgoing root replaces its sole profile");
+            FacadeSession Owner; LootDropRule Rule;
+            BarrelResearchCheck(Gameplay.TryLootRule(Prefab, out Owner, out Rule) && ReferenceEquals(Owner, Gameplay.Active) && Rule.Prefab == Prefab,
+                "D4 declaration selects its immutable exact profile");
+            string Other = Prefab == LootRulePolicy.Prefab ? LootRulePolicy.SecondPrefab : LootRulePolicy.Prefab;
+            BarrelResearchCheck(!Gameplay.TryLootRule(Other, out Owner, out Rule) && Owner == null && Rule == null,
+                "D4 nonmatching profile returns no authority");
+        }
+        private void LootFixtureVanilla(BarrelResearchCase Case, bool ControlledOnDied = false)
+        {
+            BarrelResearchCurrent = Case;
+            // Fixture authority is the original factory resource and captured
+            // completed Spawn witness, never a facade made stale by a control.
+            // No proxy is revived or retargeted by this raw test-only mutation.
+            BarrelResearchCheck(LootFixtureOriginalSourceEpoch(Case) && Case.Source != null && !Case.Source.IsDestroyed &&
+                Case.Source.net != null && Case.Source.net.ID.Value == Case.Id &&
+                ReferenceEquals(BaseNetworkable.serverEntities.Find(Case.Source.net.ID), Case.Source),
+                "vanilla control exact original raw source/ID/Spawn epoch");
+            int Before = LootFixtureReceipts, BeforeSuccess = LootFixtureSuccesses;
+            int Frame = LootFrameNumber, Used = LootFrameUsed;
+            if (ControlledOnDied) {
+                // Hurt's ordinary prelude can refill Components before the
+                // OnDied admission prefix. Enter the exact full pinned payout
+                // method directly so null is present at the intended gate.
+                // This controlled negative does not qualify the outer Die path.
+                BarrelResearchCheck(Case.Source.GetType() == typeof(LootContainer) && LootDeathTarget != null &&
+                    LootDeathTarget.DeclaringType == typeof(LootContainer) && LootAvailable() &&
+                    LootComponentsField.GetValue(Case.Source) == null, "controlled missing cache at full original OnDied entry");
+                Puts("[CarbonLuau:LootFixture] CONTROL case=" + Case.Label +
+                    " entry=full_LootContainer.OnDied cache=null controlled_payout_only=true outer_Die_not_entered=true");
+                LootDeathTarget.Invoke(Case.Source, new object[] { null });
+            } else Case.Source.Hurt(10000f); // Ordinary nil-initiator source, no modifier bonus.
+            BarrelResearchRetired(Case);
+            BarrelResearchCheck(LootFixtureReceipts == Before && LootFixtureSuccesses == BeforeSuccess &&
+                LootFrameNumber == Frame && LootFrameUsed == Used && LootCurrent == null, "D4 pre-COMMIT source leaves counters/budget unchanged");
+            for (int Index = 0; Index < Case.StoredCount; Index++) {
+                Item Value = Case.Stored[Index];
+                WorldItem World = Value.GetWorldEntity() as WorldItem;
+                BarrelResearchHold(World);
+                BarrelResearchCheck(Value.uid.Value == Case.StoredUids[Index] && Value.amount == Case.StoredAmounts[Index] &&
+                    Value.parent == null && World != null && ReferenceEquals(World.item, Value) && World.IsFullySpawned() && !World.IsDestroyed &&
+                    World.net != null && ReferenceEquals(BaseNetworkable.serverEntities.Find(World.net.ID), World) &&
+                    EntityLifetimes.CaptureCompletedWitness(World) != null, "D4 exact original stored Item/UID vanilla world");
+            }
+            Puts("[CarbonLuau:LootFixture] PASS D4 vanilla case=" + Case.Label + " original_worlds=" + Case.StoredCount +
+                " no_commit=true controlled_payout_only=" + ControlledOnDied);
+        }
+        private void LootFixtureBothProfiles()
+        {
+            foreach (string Selected in new[] { LootRulePolicy.SecondPrefab, LootRulePolicy.Prefab }) {
+                LootFixtureSelectProfile(Selected);
+                string Other = Selected == LootRulePolicy.Prefab ? LootRulePolicy.SecondPrefab : LootRulePolicy.Prefab;
+                try {
+                    var Match = BarrelResearchCreate("d4_selected_" + (Selected == LootRulePolicy.SecondPrefab ? "2" : "1"),
+                        BarrelResearchMode.Vanilla, BarrelResearchPosition, true, 0, Selected);
+                    var Nonmatch = BarrelResearchCreate("d4_unselected_" + (Selected == LootRulePolicy.SecondPrefab ? "1" : "2"),
+                        BarrelResearchMode.Vanilla, BarrelResearchPosition + new Vector3(0.25f, 0, 0), true, 1, Other);
+                    LootFixturePayout(Match, 2, true, false);
+                    BarrelResearchCheck(ValidateEntity(Nonmatch.Binding), "D4 other original barrel stays live across selected payout");
+                    for (int Index = 0; Index < Nonmatch.StoredCount; Index++)
+                        BarrelResearchCheck(Nonmatch.Stored[Index].uid.Value == Nonmatch.StoredUids[Index] &&
+                            ReferenceEquals(Nonmatch.Stored[Index].parent, Nonmatch.Container), "D4 other stored owners unchanged");
+                    LootFixtureVanilla(Nonmatch);
+                } finally { BarrelResearchCleanup(); }
+            }
+            LootFixtureSelectProfile(LootRulePolicy.SecondPrefab);
+            Puts("[CarbonLuau:LootFixture] PASS D4 both profiles active; sole matching rule replaces, unselected original stays vanilla");
+        }
+        private void LootFixtureProfileBudget()
+        {
+            int Frame = Time.frameCount;
+            int Remaining = LootFrameNumber == Frame ? LootRulePolicy.PerFrame - LootFrameUsed : LootRulePolicy.PerFrame;
+            int Before = LootFixtureReceipts;
+            for (int Index = 0; Index < Remaining; Index++) LootFixturePayout("d4_frame_fill_" + Index, 2, true);
+            BarrelResearchCheck(LootFixtureReceipts == Before + Remaining && LootFrameNumber == Frame &&
+                LootFrameUsed == LootRulePolicy.PerFrame, "D4 exhaust actual frame before profile switch");
+            foreach (string Selected in new[] { LootRulePolicy.Prefab, LootRulePolicy.SecondPrefab }) {
+                LootFixtureSelectProfile(Selected);
+                BarrelResearchCheck(Time.frameCount == Frame && LootFrameNumber == Frame && LootFrameUsed == LootRulePolicy.PerFrame,
+                    "D4 same-owner profile publication never resets shared frame budget");
+                try {
+                    LootFixtureVanilla(BarrelResearchCreate("d4_switched_budget_" + (Selected == LootRulePolicy.SecondPrefab ? "2" : "1"),
+                        BarrelResearchMode.Vanilla, BarrelResearchPosition, true));
+                } finally { BarrelResearchCleanup(); }
+            }
+            LootFixtureBudgetFrame = Frame;
+            Puts("[CarbonLuau:LootFixture] PASS D4 same-frame profile switch budget retained frame=" + Frame + " used=" + LootFrameUsed);
+        }
+        private void LootFixtureForeignProfiles()
+        {
+            var Old = Gameplay.Active;
+            int RegisteredCount = 0;
+            try {
+                foreach (string Prefab in new[] { LootRulePolicy.SecondPrefab, LootRulePolicy.Prefab }) {
+                    LootFixturePrefab = Prefab;
+                    string[] Registered = Addons.RegisterArchive(LootFixtureProvider, LootFixturePackage("d4conflict" + RegisteredCount, "return true"));
+                    BarrelResearchCheck(Registered[0] == "OK", "D4 conflicting provider snapshot registration");
+                    RegisteredCount++;
+                    BarrelResearchCheck(Addons.ProcessOne() && Addons.Status(LootFixtureProvider, Registered[1])[2] == "Failed" &&
+                        ReferenceEquals(Gameplay.Active, Old) && Old.PublishedLootRule().Prefab == LootRulePolicy.SecondPrefab,
+                        "D4 same/disjoint prefab foreign publication conflicts under one global owner");
+                }
+            } finally {
+                LootFixturePrefab = LootRulePolicy.SecondPrefab;
+                BarrelResearchCheck(Addons.UnloadProvider(LootFixtureProvider) == RegisteredCount, "D4 failed provider registrations retire");
+            }
+            LootFixturePayout("d4_foreign_conflicts_old_rule", 2, true);
+            Puts("[CarbonLuau:LootFixture] PASS D4 same/disjoint foreign profile conflict preserves sole committed owner");
+        }
+        private void LootFixtureRejectedSources()
+        {
+            FieldInfo PrefabField = typeof(BaseNetworkable).GetField("_prefabName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            BarrelResearchCheck(PrefabField != null && PrefabField.FieldType == typeof(string), "D4 exact cached prefab fixture field");
+            for (int Index = 0; Index < 3; Index++) {
+                BarrelResearchCase Case = null;
+                object Cache = null;
+                uint PrefabId = 0;
+                string PrefabCache = null;
+                Exception FirstCause = null;
+                try {
+                    Case = Index == 0
+                        ? BarrelResearchCreate("d4_unsupported_actual_source", BarrelResearchMode.Vanilla, BarrelResearchPosition, true, 0,
+                            "assets/bundled/prefabs/radtown/loot_barrel_1.prefab", false)
+                        : BarrelResearchCreate(Index == 1 ? "d4_wrong_prefab_id" : "d4_missing_component_cache",
+                            BarrelResearchMode.Vanilla, BarrelResearchPosition, true);
+                    Cache = LootComponentsField.GetValue(Case.Source);
+                    PrefabId = Case.Source.prefabID;
+                    PrefabCache = (string)PrefabField.GetValue(Case.Source);
+                    BarrelResearchCheck(Case.Prefab == Case.Binding.Lifetime.Record.Prefab && Case.Source.PrefabName == Case.Prefab,
+                        "negative control starts from exact captured source prefab");
+                    if (Index == 1) Case.Source.prefabID = LootRulePolicy.PrefabId;
+                    if (Index == 2) LootComponentsField.SetValue(Case.Source, null);
+                    uint MeasuredId;
+                    if (Index == 0) BarrelResearchCheck(!LootRulePolicy.TryPrefabId(Case.Source.PrefabName, out MeasuredId),
+                        "actual negative prefab remains outside production admission");
+                    if (Index == 1) BarrelResearchCheck(Case.Source.PrefabName == Case.Binding.Lifetime.Record.Prefab &&
+                        Case.Source.prefabID != PrefabId, "mismatched-ID control keeps original cached source name");
+                    if (Index == 2) BarrelResearchCheck(LootComponentsField.GetValue(Case.Source) == null,
+                        "missing-cache control must actually remove only the original component cache");
+                    Puts("[CarbonLuau:LootFixture] CONTROL case=" + Case.Label + " original_prefab=" + Case.Binding.Lifetime.Record.Prefab +
+                        " observed_prefab=" + Case.Source.PrefabName + " original_prefab_id=" + PrefabId + " observed_prefab_id=" + Case.Source.prefabID);
+                    LootFixtureVanilla(Case, Index == 2);
+                } catch (Exception Error) {
+                    FirstCause = Error;
+                    PrintError("[CarbonLuau:LootFixture] FIRST_CAUSE case=" + (Case == null ? "create_negative_source" : Case.Label) + " " + Error);
+                } finally {
+                    try {
+                        if (Case != null && Case.Binding != null && LootFixtureOriginalSourceEpoch(Case)) {
+                            // Cached presentation identity is a fixture control,
+                            // not cleanup authority. Restore only the still-keyed
+                            // original, using the actual saved scalar/cache values.
+                            if (Case.Source != null && Case.Source.net != null && Case.Source.net.ID.Value == Case.Id &&
+                                ReferenceEquals(BaseNetworkable.serverEntities.Find(Case.Source.net.ID), Case.Source)) {
+                                PrefabField.SetValue(Case.Source, PrefabCache);
+                                Case.Source.prefabID = PrefabId;
+                                LootComponentsField.SetValue(Case.Source, Cache);
+                            }
+                            LootFixtureReleaseStored(Case);
+                        }
+                    } catch (Exception Error) {
+                        PrintError("[CarbonLuau:LootFixture] CONTROL_CLEANUP_FAIL " + Error);
+                        if (FirstCause == null) FirstCause = Error;
+                    }
+                    try { BarrelResearchCleanup(); }
+                    catch (Exception Error) {
+                        PrintError("[CarbonLuau:LootFixture] SECONDARY_CLEANUP_FAIL " + Error);
+                        if (FirstCause == null) FirstCause = Error;
+                    }
+                }
+                if (FirstCause != null) ExceptionDispatchInfo.Capture(FirstCause).Throw();
+            }
+            var Old = Gameplay.Active;
+            LootFixturePrefab = "assets/bundled/prefabs/autospawn/resource/loot/d4-unknown.prefab";
+            try {
+                BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.RUNTIME_ERROR && ReferenceEquals(Gameplay.Active, Old),
+                    "D4 unknown public declaration fails before replacing original owner");
+            } finally { LootFixturePrefab = LootRulePolicy.SecondPrefab; }
+            LootFixturePayout("d4_unknown_declaration_old_rule", 2, true);
+            Puts("[CarbonLuau:LootFixture] PASS D4 actual unsupported/invalid source vanilla; unknown declaration preserves owner");
+        }
+        private bool LootFixtureOriginalSourceEpoch(BarrelResearchCase Case)
+        {
+            for (int Index = 0; Index < BarrelResearchLedgerCount; Index++) {
+                var Resource = BarrelResearchLedger[Index];
+                if (!ReferenceEquals(Resource.Entity, Case.Source)) continue;
+                return Resource.Witness != null && ReferenceEquals(Resource.Witness.Target, Case.Source) &&
+                    Resource.Witness.Epoch == Case.Binding.Lifetime.Record.Epoch &&
+                    Resource.Witness.ObservationGeneration == Case.Binding.Lifetime.Record.ObservationGeneration &&
+                    EntityLifetimes.IsWitnessEpochUnchanged(Resource.Witness);
+            }
+            return false;
+        }
+        private void LootFixtureReleaseStored(BarrelResearchCase Case)
+        {
+            // An assertion before death can leave seeded Items in the original
+            // owned inventory. Release that inventory through its supported
+            // Clear, before normal source Kill; never Remove an owned Item.
+            // Successful vanilla worlds are verified before this cleanup and
+            // do not belong to this container, so no payout is compensated.
+            if (Case.Container == null || Case.Container.itemList == null || Case.Container.itemList.Count == 0) return;
+            BarrelResearchCheck(LootFixtureOriginalSourceEpoch(Case) && Case.Container.uid.ToString() == Case.ContainerUid &&
+                ReferenceEquals(Case.Container.entityOwner, Case.Source) &&
+                (Case.Source.inventory == null || ReferenceEquals(Case.Source.inventory, Case.Container)) &&
+                Case.Container.itemList.Count <= BarrelResearchItemLimit, "cleanup original bounded source inventory/UID/epoch");
+            foreach (var Value in Case.Container.itemList) {
+                bool Original = false;
+                for (int Index = 0; Index < Case.StoredCount; Index++)
+                    if (ReferenceEquals(Value, Case.Stored[Index]) && Value.uid.Value != 0 && Value.uid.Value == Case.StoredUids[Index]) Original = true;
+                BarrelResearchCheck(Original && ReferenceEquals(Value.parent, Case.Container) && ReferenceEquals(Value.GetWorldEntity(), null),
+                    "cleanup only original seeded Items still owned by original inventory");
+            }
+            Case.Container.Clear();
+            BarrelResearchCheck(Case.Container.itemList.Count == 0, "original fixture inventory Clear completed");
+        }
+        private void LootFixtureCaughtModule()
+        {
+            string Previous = LootFixtureSource;
+            LootFixtureModuleRollback = true;
+            LootFixtureSource = "assert(not pcall(function() require('stagedfailed') end))";
+            try {
+                BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK && Gameplay.Active.PublishedLootRule() == null,
+                    "D4 caught failed nested module discards its staged public rule");
+                LootFixtureVanilla(BarrelResearchCreate("d4_caught_module_no_rule", BarrelResearchMode.Vanilla, BarrelResearchPosition, true));
+            } finally {
+                BarrelResearchCleanup(); LootFixtureModuleRollback = false; LootFixtureSource = Previous;
+            }
+            BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK, "D4 root restores public descriptor after nested rollback");
+            Puts("[CarbonLuau:LootFixture] PASS D4 caught nested publication has no rule or replay");
+        }
+        private static bool LootFixtureIndividualPrefix(LootContainer __instance, ref bool __result)
+        {
+            var Owner = ActiveEntityObserver;
+            if (Owner == null || !Owner.LootFixtureForceBag || Owner.LootFixtureBagCase == null ||
+                !ReferenceEquals(__instance, Owner.LootFixtureBagCase.Source)) return true;
+            BarrelResearchCheck(Owner.BarrelResearchOnOwner(), "controlled exact-source getter owner/no VM entry");
+            Owner.LootFixtureIndividualOverrides++;
+            Owner.Puts("[CarbonLuau:LootFixture] BAG_SELECTOR case=" + Owner.LootFixtureBagCase.Label + " calls=" + Owner.LootFixtureIndividualOverrides);
+            BarrelResearchCheck(Owner.LootFixtureIndividualOverrides == 1, "one bounded controlled bag selector call");
+            __result = false; return false;
+        }
+        private static void LootFixtureBagPostfix(ItemContainer __instance, float __3, DroppedItemContainer __result)
+        {
+            var Owner = ActiveEntityObserver;
+            if (Owner == null || !Owner.LootFixtureForceBag || Owner.LootFixtureBagCase == null) return;
+            var Case = Owner.LootFixtureBagCase;
+            if (!ReferenceEquals(__instance, Case.Container)) return;
+            BarrelResearchCheck(Owner.BarrelResearchOnOwner(), "controlled actual bag-return owner/no VM entry");
+            Owner.BarrelResearchHold(__result);
+            Owner.LootFixtureBag = __result;
+            if (__result != null) {
+                __result.enableSaving = false;
+                var Inventory = __result.inventory;
+                BarrelResearchCheck(Inventory != null && Inventory.itemList != null && Inventory.itemList.Count <= BarrelResearchItemLimit,
+                    "bounded actual returned bag inventory capture");
+                // Genuine returned bag and every accessible Item enter the ledger
+                // before physical or cardinality assertions can throw.
+                foreach (var Value in Inventory.itemList) Owner.BarrelResearchHold(Value);
+            }
+            Owner.LootFixtureBagReturns++;
+            Owner.Puts("[CarbonLuau:LootFixture] BAG_RETURN case=" + Case.Label + " returns=" + Owner.LootFixtureBagReturns +
+                " returned=" + (__result != null) + " destroy_percent=" + __3 + " target=" + Owner.LootFixtureBagMethod);
+            BarrelResearchCheck(__result != null && Owner.LootFixtureBagReturns == 1, "one actual original-container Drop bag return");
+        }
+        private void LootFixtureControlledBag()
+        {
+            // The plain asset's real selector is constant true. This override is
+            // limited to one original fixture source and proves a controlled IL
+            // branch, never natural asset configuration or subclass admission.
+            LootFixtureBagMethod = typeof(ItemContainer).GetMethod("Drop", BindingFlags.Public | BindingFlags.NonPublic |
+                BindingFlags.Instance | BindingFlags.DeclaredOnly, null,
+                new[] { typeof(string), typeof(Vector3), typeof(Quaternion), typeof(float) }, null);
+            BarrelResearchCheck(LootFixtureBagMethod != null && LootFixtureBagMethod.ReturnType == typeof(DroppedItemContainer) &&
+                LootFixtureBagMethod.MetadataToken == 0x06006a77 &&
+                LootFixtureIndividualMethod != null, "D4 exact controlled bag-return and selector signatures");
+            Puts("[CarbonLuau:LootFixture] BAG_TARGET selector=" + LootFixtureIndividualMethod +
+                " selector_owner=" + LootFixtureIndividualMethod.DeclaringType.FullName +
+                " selector_token=0x" + LootFixtureIndividualMethod.MetadataToken.ToString("x8") +
+                " selector_virtual=" + LootFixtureIndividualMethod.IsVirtual + " selector_final=" + LootFixtureIndividualMethod.IsFinal +
+                " drop=" + LootFixtureBagMethod + " drop_owner=" + LootFixtureBagMethod.DeclaringType.FullName +
+                " drop_token=0x" + LootFixtureBagMethod.MetadataToken.ToString("x8") +
+                " drop_static=" + LootFixtureBagMethod.IsStatic + " mvid=" + LootFixtureBagMethod.Module.ModuleVersionId);
+            Exception FirstCause = null;
+            try {
+                LootFixtureFaultPatches.Patch(LootFixtureIndividualMethod, prefix: new HarmonyMethod(
+                    typeof(CarbonLuau).GetMethod(nameof(LootFixtureIndividualPrefix), BindingFlags.Static | BindingFlags.NonPublic)));
+                LootFixtureFaultPatches.Patch(LootFixtureBagMethod, postfix: new HarmonyMethod(
+                    typeof(CarbonLuau).GetMethod(nameof(LootFixtureBagPostfix), BindingFlags.Static | BindingFlags.NonPublic)));
+                BarrelResearchCheck(LootAvailable(), "controlled branch observer preserves common-cut/D20/B3 topology");
+                LootFixtureEntries = null;
+                BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK, "controlled bag baseline has no published rule");
+                LootFixtureBagIsolated(() => {
+                    var Case = BarrelResearchCreate("d4_controlled_bag_baseline", BarrelResearchMode.Vanilla, BarrelResearchPosition, true);
+                    LootFixtureBagCase = Case; LootFixtureForceBag = true;
+                    LootFixtureIndividualOverrides = LootFixtureBagReturns = 0;
+                    int Before = LootFixtureReceipts;
+                    LootFixtureBagDiagnostic(); // Captured scalars/owners before actual host dispatch.
+                    Case.Source.Hurt(10000f);
+                    BarrelResearchRetired(Case);
+                    BarrelResearchCheck(LootFixtureReceipts == Before && LootFixtureIndividualOverrides == 1 && LootFixtureBagReturns == 1 &&
+                        LootFixtureBag != null && LootFixtureBag.IsFullySpawned() && LootFixtureBag.net != null &&
+                        ReferenceEquals(BaseNetworkable.serverEntities.Find(LootFixtureBag.net.ID), LootFixtureBag) &&
+                        LootFixtureBag.inventory.itemList.Count == Case.StoredCount, "controlled false selector actually returns one physical bag");
+                    for (int Index = 0; Index < Case.StoredCount; Index++) {
+                        Item Value = Case.Stored[Index];
+                        BarrelResearchCheck(Value.uid.Value == Case.StoredUids[Index] && Value.amount == Case.StoredAmounts[Index] &&
+                            ReferenceEquals(Value.parent, LootFixtureBag.inventory) && LootFixtureBag.inventory.itemList.Contains(Value) &&
+                            ReferenceEquals(Value.GetWorldEntity(), null), "controlled actual bag owns each original Item/UID");
+                    }
+                    Puts("[CarbonLuau:LootFixture] PASS D4 controlled bag baseline bag_returns=1 stored=" + Case.StoredCount +
+                        " provenance=actual_ItemContainer.Drop_return natural_bag_branch=false");
+                });
+                LootFixtureEntries = TwoLootEntries();
+                BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK, "D4 public rule restored for controlled bag suppression");
+                LootFixtureBagIsolated(() => {
+                    var Case = BarrelResearchCreate("d4_controlled_bag_replaced", BarrelResearchMode.Vanilla, BarrelResearchPosition, true);
+                    LootFixtureBagCase = Case; LootFixtureForceBag = true;
+                    LootFixtureIndividualOverrides = LootFixtureBagReturns = 0;
+                    LootFixturePayout(Case, 2, true, false);
+                    BarrelResearchCheck(LootFixtureBagReturns == 0 && LootFixtureIndividualOverrides == 0 && LootFixtureBag == null,
+                        "public common cut suppresses entire bag body before selector or container Drop");
+                    Puts("[CarbonLuau:LootFixture] PASS D4 controlled bag suppression bag_returns=0 replacement_worlds=2 natural_bag_branch=false");
+                });
+            } catch (Exception Error) {
+                FirstCause = Error;
+                PrintError("[CarbonLuau:LootFixture] FIRST_CAUSE controlled_bag " + Error);
+            } finally {
+                LootFixtureForceBag = false; LootFixtureBagCase = null;
+                try { RemoveLootFixtureBagPatches(); }
+                catch (Exception Error) {
+                    PrintError("[CarbonLuau:LootFixture] SECONDARY_CLEANUP_FAIL bag unpatch " + Error);
+                    if (FirstCause == null) FirstCause = Error;
+                }
+            }
+            if (FirstCause != null) ExceptionDispatchInfo.Capture(FirstCause).Throw();
+            BarrelResearchCheck(LootAvailable() && VerifyAllEntityPatches() && EntityDestroyedAvailable(), "D4 controlled branch unpatched with original observer intact");
+        }
+        private void LootFixtureBagIsolated(Action Work)
+        {
+            Exception FirstCause = null;
+            try { Work(); }
+            catch (Exception Error) {
+                FirstCause = Error;
+                PrintError("[CarbonLuau:LootFixture] FIRST_CAUSE case=" + (LootFixtureBagCase == null ? "bag_setup" : LootFixtureBagCase.Label) + " " + Error);
+                try { LootFixtureBagDiagnostic(); }
+                catch (Exception Failure) { PrintError("[CarbonLuau:LootFixture] BAG_DIAGNOSTIC_FAIL " + Failure); }
+            } finally {
+                LootFixtureForceBag = false;
+                try {
+                    if (LootFixtureBagCase != null && LootFixtureOriginalSourceEpoch(LootFixtureBagCase))
+                        LootFixtureReleaseStored(LootFixtureBagCase);
+                } catch (Exception Error) {
+                    PrintError("[CarbonLuau:LootFixture] SECONDARY_CLEANUP_FAIL bag source " + Error);
+                    if (FirstCause == null) FirstCause = Error;
+                }
+                try { BarrelResearchCleanup(); }
+                catch (Exception Error) {
+                    PrintError("[CarbonLuau:LootFixture] SECONDARY_CLEANUP_FAIL bag ledger " + Error);
+                    if (FirstCause == null) FirstCause = Error;
+                }
+                LootFixtureBagCase = null; LootFixtureBag = null;
+            }
+            if (FirstCause != null) ExceptionDispatchInfo.Capture(FirstCause).Throw();
+        }
+        private void LootFixtureBagDiagnostic()
+        {
+            var Case = LootFixtureBagCase;
+            Puts("[CarbonLuau:LootFixture] BAG_STATE selector_calls=" + LootFixtureIndividualOverrides + " bag_returns=" + LootFixtureBagReturns +
+                " receipts=" + LootFixtureReceipts + " successes=" + LootFixtureSuccesses + " selected=" + LootSelected +
+                " verified=" + LootVerified + " partial=" + LootPartial + " rejected=" + LootRejected + " cleanup_failed=" + LootCleanupFailed +
+                " actual_frame=" + Time.frameCount + " budget_frame=" + LootFrameNumber + " budget_used=" + LootFrameUsed +
+                " in_flight=" + (LootCurrent != null) + " source_prefab=" + (Case == null ? "nil" : Case.Prefab) +
+                " source_id=" + (Case == null ? 0 : Case.Id) +
+                " ledger=" + BarrelResearchLedgerCount + " source_keyed=" + (Case != null && Case.Source != null && Case.Source.net != null &&
+                    ReferenceEquals(BaseNetworkable.serverEntities.Find(Case.Source.net.ID), Case.Source)) +
+                " bag_keyed=" + (LootFixtureBag != null && LootFixtureBag.net != null &&
+                    ReferenceEquals(BaseNetworkable.serverEntities.Find(LootFixtureBag.net.ID), LootFixtureBag)));
+            if (Case == null) return;
+            BarrelResearchCheck(Case.StoredCount <= BarrelResearchItemLimit, "bounded bag diagnostic original items");
+            for (int Index = 0; Index < Case.StoredCount; Index++) {
+                Item Value = Case.Stored[Index];
+                var World = Value == null ? null : Value.GetWorldEntity() as WorldItem;
+                // An ineffective forced branch may have produced ordinary
+                // individual worlds. Capture only exact original Item/UID
+                // reciprocal owners for cleanup; no search or ID reacquisition.
+                if (Value != null && Value.uid.Value == Case.StoredUids[Index] && Value.parent == null && World != null &&
+                    ReferenceEquals(World.item, Value) && World.IsFullySpawned() && World.net != null &&
+                    ReferenceEquals(BaseNetworkable.serverEntities.Find(World.net.ID), World) &&
+                    EntityLifetimes.CaptureCompletedWitness(World) != null) BarrelResearchHold(World);
+                Puts("[CarbonLuau:LootFixture] BAG_ITEM index=" + Index + " captured_uid=" + Case.StoredUids[Index] +
+                    " current_uid=" + (Value == null ? 0 : Value.uid.Value) + " parent_source=" + (Value != null && ReferenceEquals(Value.parent, Case.Container)) +
+                    " parent_bag=" + (Value != null && LootFixtureBag != null && ReferenceEquals(Value.parent, LootFixtureBag.inventory)) +
+                    " world_ref=" + (Value != null && !ReferenceEquals(Value.GetWorldEntity(), null)));
+            }
+        }
+        private void RemoveLootFixtureBagPatches()
+        {
+            if (LootFixtureFaultPatches == null) return;
+            if (LootFixtureIndividualMethod != null)
+                LootFixtureFaultPatches.Unpatch(LootFixtureIndividualMethod, HarmonyPatchType.All, LootFixtureFaultPatches.Id);
+            if (LootFixtureBagMethod != null)
+                LootFixtureFaultPatches.Unpatch(LootFixtureBagMethod, HarmonyPatchType.All, LootFixtureFaultPatches.Id);
         }
         private void EndLootQualification(Exception Error)
         {
@@ -344,9 +834,13 @@ namespace Carbon.Plugins
             try {
                 LootFixtureEntries = null; LootFixtureInjectSpawn = false; BarrelResearchVeto = false;
                 LootFixtureCreateFault = 0;
+                LootFixtureMutateAmount = LootFixtureForceBag = false;
+                LootFixtureBagCase = null;
+                RemoveLootFixtureBagPatches();
                 if (LootFixtureFaultPatches != null && LootFixtureCreateMethod != null)
                     LootFixtureFaultPatches.Unpatch(LootFixtureCreateMethod, HarmonyPatchType.All, LootFixtureFaultPatches.Id);
                 BarrelResearchCleanup();
+                LootFixtureBag = null;
                 ReleaseNative();
                 BarrelResearchCheck(LootCurrent == null && BarrelResearchLedgerCount == 0, "private resources converge");
                 Clean = true;
@@ -354,6 +848,8 @@ namespace Carbon.Plugins
             if (Error == null && Clean && LootFixtureDone) Puts(LootFixturePublic
                 ? "[CarbonLuau:LootFixture] PASS public qualification actual Luau declarations/snapshots, root/addon/recovery, physical replacement/partial/cleanup"
                 : "[CarbonLuau:LootFixture] PASS private qualification root/publication/recovery, exact payout/retirement, real failed Spawn ownership and cleanup; no public Loot API");
+            if (Error == null && Clean && LootFixtureDone && LootFixtureBarrel2)
+                Puts("[CarbonLuau:LootFixture] PASS barrel-2 public qualification full matrix, exact profiles, vanilla rejection, sole owner/shared frame budget, controlled bag branch; natural_bag_branch=false");
             ConsoleSystem.Run(ConsoleSystem.Option.Server, "quit");
         }
     }

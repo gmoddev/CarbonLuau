@@ -9,6 +9,7 @@ param(
     [switch]$Qualification,
     [switch]$Public,
     [switch]$EntityDeath,
+    [switch]$Barrel2,
     [switch]$RunCoordinated
 )
 $ErrorActionPreference = 'Stop'
@@ -17,6 +18,7 @@ $FixtureMarker = if ($Qualification) { '[CarbonLuau:LootFixture]' } else { '[Car
 $PassMarker = if ($Public) { 'PASS public qualification' } elseif ($Qualification) { 'PASS private qualification' } else { 'PASS mechanism' }
 if ($Public -and !$Qualification) { throw 'Public qualification requires the established D2A fixture substrate' }
 if ($EntityDeath -and !$Public) { throw 'Entity death qualification requires the public fixture substrate' }
+if ($Barrel2 -and !$Public) { throw 'Barrel-2 qualification requires the public fixture substrate' }
 if ([IO.Path]::GetFullPath($Work).TrimEnd('\') -ne 'D:\Sandbox\Codex\Entity1AStartup') {
     throw "$Prefix Expected established task-owned Windows server"
 }
@@ -59,6 +61,7 @@ try {
     if (@($Names | Where-Object { $_ -eq 'CarbonLuau.BarrelLootResearch.cs' }).Count -ne 1 -or
         $Names -contains 'CarbonLuau.EntityDiscoveryFixtures.cs') { throw "$Prefix Select the public fixture package exclusively" }
     if (($Names -contains 'CarbonLuau.LootFixtures.cs') -ne [bool]$Qualification) { throw "$Prefix Qualification fixture selection mismatch" }
+    if (($Names -contains 'CarbonLuau.LootBarrel2Fixtures.cs') -ne [bool]$Barrel2) { throw "$Prefix Barrel-2 fixture selection mismatch" }
 } finally { $Archive.Dispose() }
 $Inputs = @(
     [pscustomobject]@{Target=$Package; Source=$PackageSource; Name='package.cszip'},
@@ -140,6 +143,7 @@ try {
     foreach ($Marker in $Required) {
         if (!$Content.Contains($FixtureMarker + ' ' + $Marker)) { throw "$Prefix Missing receipt '$Marker': $Log" }
     }
+    if ($Barrel2 -and !$Content.Contains('[CarbonLuau:LootFixture] PASS barrel-2')) { throw "$Prefix Barrel-2 physical matrix receipt missing: $Log" }
     if ($EntityDeath -and (!$Content.Contains('[CarbonLuau:EntityDiedFixture] PASS bounded public transport and actual RPC source') -or
         !$Content.Contains('[CarbonLuau:EntityMeleeFixture] PASS actual RPC source/terminal proof and cleanup') -or
         $Content -match '\[CarbonLuau:(EntityDiedFixture|EntityMeleeFixture)\] (FAIL|CLEANUP FAIL)')) { throw "$Prefix Entity death receipt missing/failed: $Log" }

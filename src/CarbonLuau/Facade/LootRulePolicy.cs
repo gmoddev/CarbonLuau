@@ -10,12 +10,21 @@ namespace Carbon.Plugins
         {
             internal const string Prefab = "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab";
             internal const uint PrefabId = 966676416;
+            internal const string SecondPrefab = "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab";
+            internal const uint SecondPrefabId = 555882409;
             internal const int GlobalRules = 1, DomainRules = 1, Entries = 8;
             internal const int MaximumAmount = 1000, MaximumTotal = 8000, MaximumCreatedWorlds = 8;
             internal const int MaximumSessions = AddonPolicy.MaxRegistrations + 1;
             internal const int DescriptorFields = Entries * 3, DescriptorBytes = 1024;
             // The future adapter must qualify and enforce this before producer work.
             internal const int PerFrame = 8;
+
+            internal static bool TryPrefabId(string Name, out uint Id)
+            {
+                if (String.Equals(Name, Prefab, StringComparison.Ordinal)) { Id = PrefabId; return true; }
+                if (String.Equals(Name, SecondPrefab, StringComparison.Ordinal)) { Id = SecondPrefabId; return true; }
+                Id = 0; return false;
+            }
 
             internal static LootDropEntry[] Parse(string Descriptor)
             {
@@ -58,7 +67,8 @@ namespace Carbon.Plugins
 
             internal static LootDropRule Validate(string PrefabName, LootDropEntry[] Drops, ItemDirectory Items)
             {
-                if (!String.Equals(PrefabName, Prefab, StringComparison.Ordinal))
+                uint Id;
+                if (!TryPrefabId(PrefabName, out Id))
                     throw new FacadeException("unsupported loot rule prefab");
                 if (Drops == null || Drops.Length > Entries)
                     throw new FacadeException("loot rule entry limit exceeded");
@@ -78,7 +88,7 @@ namespace Carbon.Plugins
                 foreach (var Entry in Input)
                     if (Items.Resolve(Entry.Item) == null) throw new FacadeException("loot rule item definition unavailable");
                 // Definitions are deliberately neither copied nor retained.
-                return new LootDropRule(Input, Total);
+                return new LootDropRule(PrefabName, Input, Total);
             }
         }
 
@@ -94,11 +104,11 @@ namespace Carbon.Plugins
         {
             private readonly LootDropEntry[] Entries;
             internal readonly int MaximumTotal;
-            internal string Prefab { get { return LootRulePolicy.Prefab; } }
+            internal readonly string Prefab;
             internal int Count { get { return Entries.Length; } }
             internal LootDropEntry Entry(int Index) { return Entries[Index]; }
-            internal LootDropRule(LootDropEntry[] Entries, int MaximumTotal)
-            { this.Entries = (LootDropEntry[])Entries.Clone(); this.MaximumTotal = MaximumTotal; }
+            internal LootDropRule(string Prefab, LootDropEntry[] Entries, int MaximumTotal)
+            { this.Prefab = Prefab; this.Entries = (LootDropEntry[])Entries.Clone(); this.MaximumTotal = MaximumTotal; }
         }
 
         public sealed partial class FacadeSession
@@ -132,8 +142,14 @@ namespace Carbon.Plugins
             {
                 if (!Active || Disposed || RootPublication.Retired) return null;
                 var Published = FirstPublication == null ? LootRules : FirstPublication.LootRules;
-                LootDropRule Rule;
-                return Published.TryGetValue(LootRulePolicy.Prefab, out Rule) ? Rule : null;
+                if (Published.Count != 1) return null;
+                // A session still owns at most one rule, not one per prefab.
+                foreach (var Entry in Published) {
+                    uint Id;
+                    if (Entry.Value != null && String.Equals(Entry.Key, Entry.Value.Prefab, StringComparison.Ordinal) &&
+                        LootRulePolicy.TryPrefabId(Entry.Key, out Id)) return Entry.Value;
+                }
+                return null;
             }
             internal void CheckLootCommit(FacadeWorld ExpectedWorld)
             {
@@ -176,7 +192,8 @@ namespace Carbon.Plugins
             {
                 Owner = null; Rule = null;
                 Players.CheckOwner();
-                if (!String.Equals(Prefab, LootRulePolicy.Prefab, StringComparison.Ordinal) || !IsLootAvailable() ||
+                uint Id;
+                if (!LootRulePolicy.TryPrefabId(Prefab, out Id) || !IsLootAvailable() ||
                     Addons.Count + (Active == null ? 0 : 1) > LootRulePolicy.MaximumSessions) return false;
                 FacadeSession SelectedOwner = null;
                 LootDropRule Selected = Active == null ? null : Active.PublishedLootRule();
@@ -187,8 +204,9 @@ namespace Carbon.Plugins
                     if (Selected != null) return false; // Corrupt/equivocal authority never chooses a winner.
                     Selected = Candidate; SelectedOwner = Session;
                 }
+                if (Selected == null || !String.Equals(Prefab, Selected.Prefab, StringComparison.Ordinal)) return false;
                 Owner = SelectedOwner; Rule = Selected;
-                return Rule != null;
+                return true;
             }
         }
     }

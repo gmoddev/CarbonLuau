@@ -137,8 +137,10 @@ namespace Carbon.Plugins
             if (LootCurrent != null) { LootCurrent.Poisoned = true; LootCount(ref LootRejected); return null; }
             if (!LootAvailable() || Gameplay == null) return null;
             FacadeSession Domain; LootDropRule Rule;
-            if (Source == null || Source.GetType() != typeof(LootContainer) || Source.PrefabName != LootRulePolicy.Prefab ||
-                Source.prefabID != 966676416 || !Gameplay.TryLootRule(LootRulePolicy.Prefab, out Domain, out Rule)) return null;
+            if (Source == null || Source.GetType() != typeof(LootContainer)) return null;
+            string Prefab = Source.PrefabName; uint PrefabId;
+            if (!LootRulePolicy.TryPrefabId(Prefab, out PrefabId) || Source.prefabID != PrefabId ||
+                !Gameplay.TryLootRule(Prefab, out Domain, out Rule)) return null;
             // Fixed prefab settings exclude pre-OnDied corpse and post-payout debris.
             // Altered/trusted plugin settings make this occurrence ineligible.
             // InitShared populated the pinned cache before completed Spawn. Never

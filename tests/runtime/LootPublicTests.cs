@@ -14,6 +14,8 @@ internal static class LootPublicTests
 {
     private const string Setup = "local S=require('state'); local Loot=game:GetService('Loot'); local Mode=Enum.DropMode.Replace; ";
     private const string Prefab = "'assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab'";
+    private const string Barrel2 = "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab";
+    private const string Prefab2 = "'" + Barrel2 + "'";
     private const string Entry = "{Item='scrap',Min=1,Max=2}";
     private const string Register = "Loot:RegisterDropRule(" + Prefab + ",Mode,{" + Entry + "}); ";
     [DllImport("libc")] private static extern int chmod(string Path, int Mode);
@@ -22,9 +24,11 @@ internal static class LootPublicTests
     {
         internal int Calls;
         internal bool Fail;
+        internal Action ObservePublication;
         public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next)
         {
             Calls++;
+            if (ObservePublication != null) ObservePublication();
             if (Fail && Next != null) throw new InvalidOperationException("loot fixture registrar failure");
         }
     }
@@ -72,10 +76,13 @@ internal static class LootPublicTests
             Check(Result.Status == Runtime.RuntimeStatus.OK, "real VM execution: " + Result.Error + " / " + Code);
         }
         internal Runtime.LootDropRule Selected(out Runtime.FacadeSession Owner)
+        { return Selected(Runtime.LootRulePolicy.Prefab, out Owner); }
+        internal Runtime.LootDropRule Selected(string Prefab, out Runtime.FacadeSession Owner)
         {
             Runtime.LootDropRule Rule;
-            Check(World.TryLootRule(Runtime.LootRulePolicy.Prefab, out Owner, out Rule) && Owner != null && Rule != null,
+            Check(World.TryLootRule(Prefab, out Owner, out Rule) && Owner != null && Rule != null,
                 "committed public declaration selected");
+            Check(String.Equals(Rule.Prefab, Prefab, StringComparison.Ordinal), "public descriptor retains actual prefab");
             return Rule;
         }
         internal Runtime.LootDropRule Selected(Runtime.FacadeSession Expected)
@@ -88,6 +95,8 @@ internal static class LootPublicTests
             Runtime.FacadeSession Owner; Runtime.LootDropRule Rule;
             Check(!World.TryLootRule(Runtime.LootRulePolicy.Prefab, out Owner, out Rule) && Owner == null && Rule == null,
                 "no rule effect or retained selection outputs");
+            Check(!World.TryLootRule(Barrel2, out Owner, out Rule) && Owner == null && Rule == null,
+                "no barrel-2 rule effect or retained selection outputs");
         }
         public void Dispose()
         {
@@ -100,6 +109,8 @@ internal static class LootPublicTests
     private static void Check(bool Condition, string Message)
     { if (!Condition) throw new InvalidOperationException("Loot public: " + Message); }
     private static string Declaration(int Amount)
+    { return Declaration(Prefab, Amount); }
+    private static string Declaration(string Prefab, int Amount)
     {
         string Number = Amount.ToString(CultureInfo.InvariantCulture);
         return Setup + "Loot:RegisterDropRule(" + Prefab + ",Mode,{{Item='scrap',Min=" + Number + ",Max=" + Number + "}}); ";
@@ -137,8 +148,163 @@ internal static class LootPublicTests
     {
         ValidDeclarations(Native); InvalidDeclarations(Native); BackingCapacity(Native); Publication(Native);
         Availability(Native); RootReplacement(Native); AddonOwnership(Native); ScaleAndRecovery(Native);
+        ProfileDeclarations(Native); ProfilePublication(Native); ProfileRootReplacement(Native); ProfileAddonOwnership(Native);
         Check(Native.LiveVmCount == 0, "all real VM fixtures released");
         Console.WriteLine("[CarbonLuau:LootPublic] PASS pinned VM declarations, raw-table validation, enum identity, publication, conflicts, lifecycle, recovery and 100 addons; synthetic host only");
+    }
+
+    private static Runtime.LootDropRule ProfileSelected(Fixture Value, string Prefab, Runtime.FacadeSession Expected)
+    {
+        Runtime.FacadeSession Owner; Runtime.LootDropRule Rule = Value.Selected(Prefab, out Owner);
+        Check(Object.ReferenceEquals(Owner, Expected), "profile selects exact committed owner"); return Rule;
+    }
+    private static void Nonmatching(Fixture Value, string Prefab, Runtime.FacadeSession Incumbent, Runtime.LootDropRule Snapshot)
+    {
+        Runtime.FacadeSession Owner = Incumbent; Runtime.LootDropRule Rule = Snapshot;
+        Check(!Value.World.TryLootRule(Prefab, out Owner, out Rule) && Owner == null && Rule == null,
+            "nonmatching public profile clears both selection outputs");
+    }
+    private static void ProfileDeclarations(Runtime.NativeRuntime Native)
+    {
+        using (var Value = new Fixture(Native)) {
+            var Code = new StringBuilder(Setup);
+            foreach (string Name in new[] {
+                "'loot-barrel-2'", "'loot-barrel-2.prefab'", "string.upper(" + Prefab2 + ")", "' '.." + Prefab2,
+                Prefab2 + "..' '", Prefab2 + "..'extra'", Prefab2 + "..'\\0'", "string.rep('x',1025)",
+                "string.gsub(" + Prefab2 + ", '/', string.char(92))",
+                "'assets/bundled/prefabs/autospawn/resource/loot/../loot/loot-barrel-2.prefab'",
+                "'assets/bundled/prefabs/radtown/loot_barrel_1.prefab'",
+                "'assets/bundled/prefabs/radtown/loot_barrel_2.prefab'",
+                "'assets/bundled/prefabs/radtown/oil_barrel.prefab'",
+                "'assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-3.prefab'" })
+                Code.Append("assert(not pcall(function() Loot:RegisterDropRule(").Append(Name).Append(",Mode,{").Append(Entry).Append("}) end)); ");
+            foreach (string Drops in new[] {
+                "{" + Entry + ",{Item='wood',Min=0,Max=1}}",
+                "{" + Entry + ",{Item='Scrap',Min=0,Max=1}}",
+                "{" + Entry + ",{Item='scrap\\0',Min=0,Max=1}}",
+                "{" + Entry + ",{Item='scráp',Min=0,Max=1}}",
+                "{" + Entry + ",{Item='metal.fragments',Min=2,Max=1}}",
+                "{" + Entry + ",{Item='metal.fragments',Min=0,Max=1001}}" })
+                Code.Append("assert(not pcall(function() Loot:RegisterDropRule(").Append(Prefab2).Append(",Mode,").Append(Drops).Append(") end)); ");
+            Value.Load(Code.ToString()); Value.None();
+            Check(Value.Lookups == 0 && !Value.World.Active.HasLootRule && !Value.Host.HasWork,
+                "barrel-2 malformed and unsupported strings reject before any definition resolver");
+            Value.ObserveLookup = Value.None;
+            Value.Load(Setup + "local Drops={{Item='metal.fragments',Min=3,Max=7}}; S.Drops=Drops; " +
+                "assert(select('#',Loot:RegisterDropRule(" + Prefab2 + ",Mode,Drops))==0); " +
+                "assert(not pcall(function() " + Register + "end)); Drops[1].Item='wood'; Drops[1].Max=99; table.clear(Drops)");
+            Runtime.FacadeSession Owner = Value.World.Active; Runtime.LootDropRule Snapshot = ProfileSelected(Value, Barrel2, Owner);
+            Check(Value.Lookups == 1 && Snapshot.Count == 1 && Snapshot.MaximumTotal == 7,
+                "barrel-2 copies its declaration and different-prefab duplicate rejects before lookup");
+            EntryIs(Snapshot, 0, "metal.fragments", 3, 7);
+            foreach (string Name in new[] { Runtime.LootRulePolicy.Prefab, Barrel2.ToUpperInvariant(), Barrel2 + "extra", null })
+                Nonmatching(Value, Name, Owner, Snapshot);
+            Value.ObserveLookup = null;
+            Value.Execute("table.clear(require('state').Drops)"); EntryIs(Snapshot, 0, "metal.fragments", 3, 7);
+            Value.Load(Setup + "Loot:RegisterDropRule(" + Prefab2 + ",Mode,{})");
+            Check(ProfileSelected(Value, Barrel2, Value.World.Active).Count == 0, "barrel-2 empty replacement remains a rule");
+            Check(Snapshot.Prefab == Barrel2, "captured barrel-2 descriptor keeps its actual prefab after replacement");
+        }
+    }
+    private static void ProfilePublication(Runtime.NativeRuntime Native)
+    {
+        using (var Value = new Fixture(Native)) {
+            Value.Modules.Add("profilefailed", Declaration(Prefab2, 4) + "error('failed barrel-2 module')");
+            Value.Modules.Add("profileinner", Declaration(Prefab2, 5) + "return true");
+            Value.Modules.Add("profileouter", "assert(require('profileinner')); error('failed profile parent')");
+            Value.Load(Setup + "assert(not pcall(require,'profilefailed')); assert(not pcall(require,'profileouter')); " + Register);
+            var Owner = Value.World.Active; var Snapshot = Value.Selected(Owner);
+            Nonmatching(Value, Barrel2, Owner, Snapshot);
+            int Before = Value.Lookups;
+            Value.Execute(Setup + "assert(not pcall(function() " + Declaration(Prefab2, 6) + "end)); " +
+                "assert(not pcall(require,'profilefailed')); task.defer(function() assert(not pcall(function() " +
+                Declaration(Prefab2, 6) + "end)) end)");
+            Check(Drain(Value.Host) == "" && Value.Lookups == Before && Object.ReferenceEquals(Value.Selected(Owner), Snapshot),
+                "active direct, cold module and deferred barrel-2 calls preserve barrel-1 publication");
+            Value.Load(Setup + "assert(not pcall(require,'profilefailed')); " + Declaration(Prefab2, 7));
+            ProfileSelected(Value, Barrel2, Value.World.Active);
+            Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Value.World.Active, ProfileSelected(Value, Barrel2, Value.World.Active));
+        }
+    }
+    private static void ProfileRootReplacement(Runtime.NativeRuntime Native)
+    {
+        using (var Value = new Fixture(Native)) {
+            Value.Load(Declaration(2)); var Previous = Value.World.Active; var Original = Value.Selected(Previous);
+            long Vm = Value.Host.VmGenerationId;
+            Value.ObserveLookup = () => {
+                Check(Object.ReferenceEquals(Value.Selected(Previous), Original), "cross-profile candidate remains invisible while prepared");
+                Nonmatching(Value, Barrel2, Previous, Original);
+            };
+            Value.Registrar.ObservePublication = Value.ObserveLookup;
+            Runtime.ExecutionResult Failed = Value.Reload(Declaration(Prefab2, 9) +
+                "task.defer(function() print('must never run') end); error('failed profile candidate')");
+            Check(Failed.Status == Runtime.RuntimeStatus.RUNTIME_ERROR && Value.World.Active == Previous &&
+                !Previous.Disposed && Drain(Value.Host) == "", "failed cross-profile candidate preserves old lifetime and discards work");
+            Value.Registrar.Fail = true; Failed = Value.Reload(Declaration(Prefab2, 8));
+            Check(Failed.Status != Runtime.RuntimeStatus.OK && Value.World.Active == Previous &&
+                Object.ReferenceEquals(Value.Selected(Previous), Original), "failed cross-profile registrar preserves exact old descriptor");
+            Nonmatching(Value, Barrel2, Previous, Original);
+            Value.Registrar.Fail = false; Value.Load(Declaration(Prefab2, 8));
+            Value.ObserveLookup = null; Value.Registrar.ObservePublication = null;
+            var Next = Value.World.Active; var Second = ProfileSelected(Value, Barrel2, Next);
+            Check(Previous.Disposed && !Previous.HasLootRule && Value.Host.VmGenerationId == Vm,
+                "healthy profile switch retires outgoing root inside same VM");
+            Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Next, Second); EntryIs(Second, 0, "scrap", 8, 8);
+            Value.ObserveLookup = () => {
+                Check(Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Next), Second), "reverse profile switch retains incumbent until publication");
+                Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Next, Second);
+            };
+            Value.Load(Declaration(3)); Value.ObserveLookup = null;
+            Nonmatching(Value, Barrel2, Value.World.Active, Value.Selected(Value.World.Active));
+            Check(Next.Disposed && Original.Prefab == Runtime.LootRulePolicy.Prefab && Second.Prefab == Barrel2,
+                "switching back never retargets captured descriptors");
+            Value.Load(Declaration(Prefab2, 5)); var BeforeRecovery = Value.World.Active;
+            Runtime.ExecutionResult Fatal = Value.Host.Execute("loot.profile.timeout", "while true do end");
+            Check(Fatal.Status == Runtime.RuntimeStatus.TIMEOUT && Value.Host.Ready && BeforeRecovery.Disposed &&
+                !BeforeRecovery.HasLootRule && Value.Host.VmGenerationId != Vm && Value.Host.Recoveries == 1,
+                "fatal recovery retires barrel-2 authority and reconstructs committed source once");
+            var Reconstructed = ProfileSelected(Value, Barrel2, Value.World.Active); EntryIs(Reconstructed, 0, "scrap", 5, 5);
+            Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Value.World.Active, Reconstructed);
+            Check(Drain(Value.Host) == "", "profile recovery creates no callback replay");
+        }
+    }
+    private static void ProfileAddonOwnership(Runtime.NativeRuntime Native)
+    {
+        using (var Value = new Fixture(Native)) {
+            Value.Load(Declaration(2));
+            using (var Registry = new Runtime.AddonRegistry(Value.Host, Native.HostLifetimeId)) {
+                object Provider = new object(), OtherProvider = new object();
+                var Root = Value.World.Active; var RootRule = Value.Selected(Root); int Calls = Value.Registrar.Calls;
+                string Collision = Add(Registry, OtherProvider, Package("lootprofilecollision", Declaration(Prefab2, 3)), "Failed");
+                Check(Value.Registrar.Calls == Calls && Value.Host.DomainCount == 1 && Object.ReferenceEquals(Value.Selected(Root), RootRule),
+                    "different-prefab foreign addon still conflicts before publication");
+                Nonmatching(Value, Barrel2, Root, RootRule);
+                Check(Registry.Unregister(OtherProvider, Collision)[0] == "OK", "profile collision registration removed");
+                Value.Load("return true"); Value.None();
+                string Token = Add(Registry, Provider, Package("lootprofileowner", Declaration(Prefab2, 4)), "Active");
+                Runtime.FacadeSession Owner; var OldRule = Value.Selected(Barrel2, out Owner); Calls = Value.Registrar.Calls;
+                Add(Registry, OtherProvider, Package("lootprofileforeign", Declaration(6)), "Failed");
+                Runtime.ExecutionResult Conflict = Value.Reload(Declaration(7));
+                Check(Conflict.Status != Runtime.RuntimeStatus.OK && Value.Registrar.Calls == Calls &&
+                    Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Owner), OldRule), "different-prefab addon/addon and addon/root conflicts preserve incumbent");
+                Value.Source = "return true";
+                Replace(Registry, Provider, Token, Package("lootprofileowner", Declaration(9) + "error('failed profile addon')", "2.0.0"));
+                Check(Status(Registry, Provider, Token, "Active")[5].Contains("replacement failed") && !Owner.Disposed &&
+                    Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Owner), OldRule), "failed addon profile replacement preserves old plan");
+                Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Owner, OldRule);
+                Value.ObserveLookup = () => {
+                    Check(Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Owner), OldRule), "addon profile candidate stays invisible during preparation");
+                    Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Owner, OldRule);
+                };
+                Replace(Registry, Provider, Token, Package("lootprofileowner", Declaration(8), "3.0.0")); Value.ObserveLookup = null;
+                Runtime.FacadeSession Next; var NextRule = Value.Selected(out Next);
+                Check(Owner.Disposed && !Owner.HasLootRule && Next != Owner, "exact addon owner may publish a different profile");
+                EntryIs(NextRule, 0, "scrap", 8, 8); Nonmatching(Value, Barrel2, Next, NextRule);
+                Check(OldRule.Prefab == Barrel2 && OldRule.Entry(0).Max == 4, "retired addon descriptor retains barrel-2 identity");
+                Check(Registry.UnloadProvider(Provider) == 1 && Next.Disposed, "provider unload removes switched profile authority");
+                Check(Registry.UnloadProvider(OtherProvider) == 1, "failed foreign profile registration released"); Value.None();
+            }
+        }
     }
 
     private static void ValidDeclarations(Runtime.NativeRuntime Native)

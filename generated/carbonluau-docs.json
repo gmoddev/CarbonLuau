@@ -438,7 +438,7 @@
     "documentation": "Check whether a canonical item short name exists."
   },
   "@carbonluau/globaltype/Loot.RegisterDropRule": {
-    "documentation": "Initialization-only copied declaration, staged until successful publication. One qualified prefab and one global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result."
+    "documentation": "Initialization-only copied declaration for qualified barrel-1 or barrel-2, staged until successful publication. One global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result."
   },
   "@carbonluau/globaltype/Player.GetInventory": {
     "documentation": "Acquire an exact-connection inventory facade without scanning inventory or subscribing."

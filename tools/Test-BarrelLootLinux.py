@@ -21,6 +21,7 @@ Parser.add_argument("--run-coordinated", action="store_true")
 Parser.add_argument("--qualification", action="store_true")
 Parser.add_argument("--public", action="store_true")
 Parser.add_argument("--entity-death", action="store_true")
+Parser.add_argument("--barrel2", action="store_true")
 
 
 def Hash(Path):
@@ -38,6 +39,8 @@ def Main():
         raise RuntimeError("Public qualification requires the established D2A fixture substrate")
     if Args.entity_death and not Args.public:
         raise RuntimeError("Entity death qualification requires the public fixture substrate")
+    if Args.barrel2 and not Args.public:
+        raise RuntimeError("Barrel-2 qualification requires the public fixture substrate")
     PassMarker = "PASS public qualification" if Args.public else "PASS private qualification" if Args.qualification else "PASS mechanism"
     Work = pathlib.Path(Args.work).resolve()
     if Work != pathlib.Path("/root/codex/world-movement-20261003"):
@@ -68,6 +71,8 @@ def Main():
             raise RuntimeError("Select the public fixture package exclusively")
         if ("CarbonLuau.LootFixtures.cs" in Names) != Args.qualification:
             raise RuntimeError("Qualification fixture selection mismatch")
+        if ("CarbonLuau.LootBarrel2Fixtures.cs" in Names) != Args.barrel2:
+            raise RuntimeError("Barrel-2 fixture selection mismatch")
     InputHashes = {}
     for Target, Source, Name in Inputs:
         if Source == Target.resolve():
@@ -126,6 +131,8 @@ def Main():
         Markers = (PassMarker,)
         if any(FixtureMarker + " " + Marker not in Content for Marker in Markers) or "[CarbonLuau:BarrelLootResearch] FAIL" in Content or "[CarbonLuau:LootFixture] FAIL" in Content or "[CarbonLuau:LootFixture] CLEANUP_FAIL" in Content or "[CarbonLuau:EntityLifetime] Private startup observer qualified" not in Content:
             raise RuntimeError("Missing/failed qualification receipts: " + str(Log))
+        if Args.barrel2 and "[CarbonLuau:LootFixture] PASS barrel-2" not in Content:
+            raise RuntimeError("Barrel-2 physical matrix receipt missing: " + str(Log))
         if Args.entity_death and ("[CarbonLuau:EntityDiedFixture] PASS bounded public transport and actual RPC source" not in Content or
                 "[CarbonLuau:EntityMeleeFixture] PASS actual RPC source/terminal proof and cleanup" not in Content or
                 "[CarbonLuau:EntityMeleeFixture] FAIL" in Content or "[CarbonLuau:EntityMeleeFixture] CLEANUP FAIL" in Content):

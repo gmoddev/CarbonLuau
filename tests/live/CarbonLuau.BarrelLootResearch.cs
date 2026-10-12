@@ -15,6 +15,7 @@ namespace Carbon.Plugins
     {
         private const string BarrelResearchMarker = "[CarbonLuau:BarrelLootResearch] ";
         private const string BarrelResearchPrefab = "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab";
+        private string BarrelResearchSelectedPrefab;
         private const int BarrelResearchLimit = 64, BarrelResearchItemLimit = 16;
         private static readonly Vector3 BarrelResearchPosition = new Vector3(37, 150, 41);
         private static CarbonLuau BarrelResearchOwner;
@@ -38,6 +39,7 @@ namespace Carbon.Plugins
             internal ulong ItemUid;
             internal BaseEntity Entity;
             internal ulong Id;
+            internal EntityLifetimeModel.MembershipCandidate Witness;
             internal bool OwnershipUnknown;
         }
         private struct BarrelResearchWorld
@@ -53,14 +55,18 @@ namespace Carbon.Plugins
         private sealed class BarrelResearchCase
         {
             internal string Label;
+            internal string Prefab;
             internal LootContainer Source;
             internal ItemContainer Container;
+            internal string ContainerUid;
             internal EntityFacadeBinding Binding;
             internal ulong Id;
             internal Vector3 Position;
             internal BarrelResearchMode Mode;
             internal BarrelResearchFault Fault;
             internal readonly Item[] Stored = new Item[BarrelResearchItemLimit];
+            internal readonly ulong[] StoredUids = new ulong[BarrelResearchItemLimit];
+            internal readonly int[] StoredAmounts = new int[BarrelResearchItemLimit];
             internal readonly Item[] Replacement = new Item[2];
             internal int StoredCount, DropCalls, OriginalCalls, BonusCalls, KillHooks, ReplacementCalls, Injected;
             internal bool ExactBonusActor;
@@ -113,15 +119,22 @@ namespace Carbon.Plugins
                 "external player joined fixture");
         }
 
-        private void BarrelResearchHold(Item Value)
+        private void BarrelResearchHold(Item Value, bool Acquired = false)
         {
-            if (Value == null) return;
+            // Zero UID is the pooled terminal record, not a new acquisition.
+            // Keep any prior ledger UID intact and never remove it again.
+            if (Value == null || Value.uid.Value == 0) return;
             for (int Index = 0; Index < BarrelResearchLedgerCount; Index++)
                 if (ReferenceEquals(BarrelResearchLedger[Index].Item, Value)) {
-                    // Cold seeding can reuse an Item removed from initial loot.
-                    // A fresh explicit acquisition, not IsValid(), establishes
-                    // this fixture's new temporary responsibility.
-                    BarrelResearchLedger[Index].ItemUid = Value.uid.Value; return;
+                    if (BarrelResearchLedger[Index].ItemUid != Value.uid.Value) {
+                        // Only a genuine new acquisition (factory return or
+                        // exact cold inventory) may replace a pooled record.
+                        // Repeated observations never refresh stale UID authority.
+                        BarrelResearchCheck(Acquired && Value.uid.Value != 0 && !BarrelResearchLedger[Index].OwnershipUnknown,
+                            "held Item UID changed without explicit acquisition");
+                        BarrelResearchLedger[Index].ItemUid = Value.uid.Value;
+                    }
+                    return;
                 }
             BarrelResearchCheck(BarrelResearchLedgerCount < BarrelResearchLimit, "Item ledger cap");
             BarrelResearchLedger[BarrelResearchLedgerCount++] = new BarrelResearchResource { Item = Value, ItemUid = Value.uid.Value };
@@ -131,12 +144,20 @@ namespace Carbon.Plugins
             if (ReferenceEquals(Value, null)) return;
             for (int Index = 0; Index < BarrelResearchLedgerCount; Index++) {
                 if (!ReferenceEquals(BarrelResearchLedger[Index].Entity, Value)) continue;
-                if (Value.net != null) BarrelResearchLedger[Index].Id = Value.net.ID.Value;
+                var Witness = BarrelResearchLedger[Index].Witness;
+                BarrelResearchCheck(Witness == null || EntityLifetimes.IsWitnessEpochUnchanged(Witness), "held entity must not acquire a new epoch");
+                if (Value.net != null) {
+                    BarrelResearchCheck(BarrelResearchLedger[Index].Id == 0 || BarrelResearchLedger[Index].Id == Value.net.ID.Value,
+                        "held entity must not acquire a new network ID");
+                    BarrelResearchLedger[Index].Id = Value.net.ID.Value;
+                }
+                if (Witness == null) BarrelResearchLedger[Index].Witness = EntityLifetimes.CaptureCompletedWitness(Value);
                 return;
             }
             BarrelResearchCheck(BarrelResearchLedgerCount < BarrelResearchLimit, "world ledger cap");
             BarrelResearchLedger[BarrelResearchLedgerCount++] = new BarrelResearchResource {
-                Entity = Value, Id = Value.net == null ? 0 : Value.net.ID.Value
+                Entity = Value, Id = Value.net == null ? 0 : Value.net.ID.Value,
+                Witness = EntityLifetimes.CaptureCompletedWitness(Value)
             };
         }
         private void BarrelResearchOwnership(Item Value, bool Unknown)
@@ -155,18 +176,22 @@ namespace Carbon.Plugins
                 Item Value = Container.itemList[Index];
                 BarrelResearchCheck(Value != null && ReferenceEquals(Value.parent, Container) &&
                     ReferenceEquals(Value.GetWorldEntity(), null), "physical stored Item owner");
-                BarrelResearchHold(Value);
-                if (Remember) Case.Stored[Case.StoredCount++] = Value;
+                BarrelResearchHold(Value, !Remember);
+                if (Remember) {
+                    int Stored = Case.StoredCount++;
+                    Case.Stored[Stored] = Value; Case.StoredUids[Stored] = Value.uid.Value; Case.StoredAmounts[Stored] = Value.amount;
+                }
             }
         }
 
-        private BarrelResearchCase BarrelResearchCreate(string Label, BarrelResearchMode Mode, Vector3 Position, bool Seed, int Slot = 0)
+        private BarrelResearchCase BarrelResearchCreate(string Label, BarrelResearchMode Mode, Vector3 Position, bool Seed, int Slot = 0, string Prefab = null, bool QualifiedProfile = true)
         {
             BarrelResearchGuard();
             BarrelResearchCheck(BarrelResearchCases[Slot] == null && BarrelResearchLedgerCount <= 32, "fixture case reservation");
-            BaseEntity Entity = GameManager.server.CreateEntity(BarrelResearchPrefab, Position, Quaternion.identity, true);
+            Prefab = Prefab ?? BarrelResearchSelectedPrefab ?? BarrelResearchPrefab;
+            BaseEntity Entity = GameManager.server.CreateEntity(Prefab, Position, Quaternion.identity, true);
             BarrelResearchHold(Entity); // Also clean a returned wrong-type/unspawned entity.
-            var Case = new BarrelResearchCase { Label = Label, Source = Entity as LootContainer, Mode = Mode, Position = Position };
+            var Case = new BarrelResearchCase { Label = Label, Prefab = Prefab, Source = Entity as LootContainer, Mode = Mode, Position = Position };
             BarrelResearchCases[Slot] = Case;
             BarrelResearchCheck(Case.Source != null, "exact prefab must be LootContainer");
             BarrelResearchCurrent = Case;
@@ -174,9 +199,14 @@ namespace Carbon.Plugins
             BarrelResearchColdPrefab(Case.Source);
             Entity.Spawn();
             BarrelResearchHold(Entity);
-            BarrelResearchCheck(Entity.GetType() == typeof(LootContainer) && Entity.PrefabName == BarrelResearchPrefab,
+            BarrelResearchCheck(Entity.GetType() == typeof(LootContainer) && Entity.PrefabName == Case.Prefab,
                 "exact concrete class / canonical prefab");
+            // An actual unsupported plain prefab may be used only as a vanilla
+            // negative source, never as a qualified replacement profile.
+            BarrelResearchCheck(QualifiedProfile || Mode == BarrelResearchMode.Vanilla, "unsupported fixture source is vanilla-only");
+            if (QualifiedProfile) ObserveBarrelFixtureProfile(Case.Source);
             Case.Container = Case.Source.inventory;
+            Case.ContainerUid = Case.Container == null ? null : Case.Container.uid.ToString();
             BarrelResearchInventory(Case.Container, Case, false);
             if (Seed) {
                 Case.Container.Clear(); ItemManager.DoRemoves();
@@ -196,6 +226,7 @@ namespace Carbon.Plugins
                 " stored=" + Case.StoredCount + " mode=" + Mode);
             return Case;
         }
+        partial void ObserveBarrelFixtureProfile(LootContainer Source);
         private void BarrelResearchSeed(BarrelResearchCase Case, string Name, int Amount, int Slot)
         {
             Item Value = BarrelResearchNewItem(Name, Amount);
@@ -212,7 +243,7 @@ namespace Carbon.Plugins
             ItemDefinition Definition = ItemManager.FindItemDefinition(Name);
             BarrelResearchCheck(Definition != null, "definition " + Name);
             Item Value = ItemManager.Create(Definition, Amount, 0);
-            BarrelResearchHold(Value);
+            BarrelResearchHold(Value, true);
             BaseEntity ObservedWorld = Value == null ? null : Value.GetWorldEntity();
             Puts(BarrelResearchMarker + "NEW_ITEM name=" + Name + " wanted=" + Amount +
                 " returned=" + (Value != null) + " valid=" + (Value != null && Value.IsValid()) +
@@ -295,7 +326,7 @@ namespace Carbon.Plugins
             if (!Owner.BarrelResearchKnown(Owner.BarrelResearchCurrent, __instance) &&
                 Owner.BarrelResearchDropDepth == 0 && Owner.BarrelResearchBonusDepth == 0) return;
             try {
-                Owner.BarrelResearchHold(__instance);
+                Owner.BarrelResearchHold(__instance, !Owner.BarrelResearchKnown(Owner.BarrelResearchCurrent, __instance));
                 // Covers vanilla and bonus as well as our own returned Items:
                 // InitializeItem -> throwing Spawn can precede SetWorldEntity.
                 Owner.BarrelResearchOwnership(__instance, true);
@@ -340,7 +371,7 @@ namespace Carbon.Plugins
         }
         private void BarrelResearchCheckSource(BarrelResearchCase Case)
         {
-            BarrelResearchCheck(Case.Source != null && Case.Source.PrefabName == BarrelResearchPrefab &&
+            BarrelResearchCheck(Case.Source != null && Case.Source.PrefabName == Case.Prefab &&
                 ReferenceEquals(Case.Source.inventory, Case.Container) && Case.Source.net != null && Case.Source.net.ID.Value == Case.Id &&
                 ReferenceEquals(BaseNetworkable.serverEntities.Find(new NetworkableId(Case.Id)), Case.Source), "original payout source");
         }
@@ -760,7 +791,13 @@ namespace Carbon.Plugins
                 var Resource = BarrelResearchLedger[Index];
                 if (ReferenceEquals(Resource.Entity, null)) continue;
                 try {
+                    BarrelResearchCheck(Resource.Witness == null || EntityLifetimes.IsWitnessEpochUnchanged(Resource.Witness),
+                        "cleanup original entity epoch / observer continuity");
+                    BarrelResearchCheck(Resource.Entity == null || Resource.Entity.net == null || Resource.Id == 0 ||
+                        Resource.Entity.net.ID.Value == Resource.Id, "cleanup original entity network ID");
                     if (Resource.Entity != null && !Resource.Entity.IsDestroyed) Resource.Entity.Kill();
+                    BarrelResearchCheck(Resource.Witness == null || EntityLifetimes.IsWitnessEpochUnchanged(Resource.Witness),
+                        "cleanup must not remove a reused entity epoch");
                     BarrelResearchCheck(Resource.Id == 0 || !ReferenceEquals(
                         BaseNetworkable.serverEntities.Find(new NetworkableId(Resource.Id)), Resource.Entity), "owned world removed " + Resource.Id);
                     BarrelResearchCheck(Resource.Entity == null || Resource.Entity.net == null, "owned world network authority released");

@@ -219,6 +219,7 @@ function FixtureSource(Operations) {
             ['game:GetService("Players"):GetPlayers()', 'UnsupportedPreviewApi'],
             ['game:GetService("DataStoreService")', 'UnsupportedPreviewApi'],
             ['game:GetService("Loot"):RegisterDropRule("assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab", Enum.DropMode.Replace, {})', 'UnsupportedPreviewApi'],
+            ['game:GetService("Loot"):RegisterDropRule("assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab", Enum.DropMode.Replace, {})', 'UnsupportedPreviewApi'],
             ['game:GetService("DataStoreService"):GetDataStore("Preview"):GetAsync("Key", function() error("storage callback must not run") end)', 'UnsupportedPreviewApi'],
             ['game:GetService("DataStoreService"):GetDataStore("Preview"):SetAsync("Key", true, function() error("storage callback must not run") end)', 'UnsupportedPreviewApi'],
             ['game:GetService("DataStoreService"):GetDataStore("Preview"):RemoveAsync("Key", function() error("storage callback must not run") end)', 'UnsupportedPreviewApi'],

@@ -4078,7 +4078,7 @@
       "Name": "RegisterDropRule",
       "OwnerId": "Loot",
       "Kind": "Method",
-      "Summary": "Initialization-only copied declaration, staged until successful publication. One qualified prefab and one global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result.",
+      "Summary": "Initialization-only copied declaration for qualified barrel-1 or barrel-2, staged until successful publication. One global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result.",
       "Preview": "HostMutation",
       "Availability": {
         "SinceApi": "0.6.5-experimental",

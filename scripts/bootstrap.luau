@@ -749,13 +749,14 @@ end
 table.freeze(Workspace)
 -- @carbonluau-api {"Type":"LootDropEntry","Kind":"Value","Representation":"Alias","TypeExpression":"{Item: string, Min: number, Max: number}","Summary":"Plain declaration record: qualified Item and inclusive integer amounts 0..1000 with Min <= Max.","SinceApi":"0.6.5-experimental","Preview":"Unavailable"}
 local Loot = {}
--- @carbonluau-api {"Owner":"Loot","Name":"RegisterDropRule","Kind":"Method","Args":[["Prefab","string"],["Mode","DropMode"],["Drops","{LootDropEntry}"]],"Returns":[],"Summary":"Initialization-only copied declaration, staged until successful publication. One qualified prefab and one global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result.","SinceApi":"0.6.5-experimental","Preview":"HostMutation","RejectExtraArguments":true,"Binding":"function Loot.RegisterDropRule(Self, ...)"}
+-- @carbonluau-api {"Owner":"Loot","Name":"RegisterDropRule","Kind":"Method","Args":[["Prefab","string"],["Mode","DropMode"],["Drops","{LootDropEntry}"]],"Returns":[],"Summary":"Initialization-only copied declaration for qualified barrel-1 or barrel-2, staged until successful publication. One global owner; dense zero-to-eight entry array. No immediate gameplay mutation or durable payout-success result.","SinceApi":"0.6.5-experimental","Preview":"HostMutation","RejectExtraArguments":true,"Binding":"function Loot.RegisterDropRule(Self, ...)"}
 function Loot.RegisterDropRule(Self, ...)
     if Self ~= Loot then Fail("invalid Loot service") end
     if select("#", ...) ~= 3 then Fail("expected exactly three loot rule arguments") end
     local Prefab, Mode, Drops = ...
     String(Prefab, "loot prefab")
-    if Prefab ~= "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab" then Fail("unsupported loot rule prefab") end
+    if Prefab ~= "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab" and
+        Prefab ~= "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab" then Fail("unsupported loot rule prefab") end
     if type(Mode) ~= "userdata" or getmetatable(Mode) ~= "CarbonLuau.DropMode" or
         tostring(Mode) ~= "DropMode.Replace" then Fail("expected Enum.DropMode.Replace") end
     if type(Drops) ~= "table" or getmetatable(Drops) ~= nil then Fail("expected plain loot entry array") end

@@ -6,12 +6,17 @@ using Runtime = Carbon.Plugins.CarbonLuau;
 
 internal static class LootRulePolicyTests
 {
+    private const string Barrel2 = "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab";
     private sealed class Registrar : Runtime.ICommandRegistrar
     {
         internal bool Fail;
         internal int Calls;
+        internal Action ObservePublication;
         public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next)
-        { Calls++; if (Fail) throw new InvalidOperationException("fixture publication failure"); }
+        {
+            Calls++; if (ObservePublication != null) ObservePublication();
+            if (Fail) throw new InvalidOperationException("fixture publication failure");
+        }
     }
     private sealed class Fixture
     {
@@ -29,10 +34,13 @@ internal static class LootRulePolicyTests
         internal Runtime.FacadeSession Session()
         { return new Runtime.FacadeSession(World, 7, Next++, 32); }
         internal Runtime.LootDropRule Selected(Runtime.FacadeSession Expected)
+        { return Selected(Runtime.LootRulePolicy.Prefab, Expected); }
+        internal Runtime.LootDropRule Selected(string Prefab, Runtime.FacadeSession Expected)
         {
             Runtime.FacadeSession Owner; Runtime.LootDropRule Rule;
-            Check(World.TryLootRule(Runtime.LootRulePolicy.Prefab, out Owner, out Rule) &&
+            Check(World.TryLootRule(Prefab, out Owner, out Rule) &&
                 Object.ReferenceEquals(Owner, Expected) && Rule != null, "exact committed rule owner");
+            Check(String.Equals(Rule.Prefab, Prefab, StringComparison.Ordinal), "descriptor retains declared prefab");
             return Rule;
         }
         internal void None()
@@ -40,6 +48,8 @@ internal static class LootRulePolicyTests
             Runtime.FacadeSession Owner; Runtime.LootDropRule Rule;
             Check(!World.TryLootRule(Runtime.LootRulePolicy.Prefab, out Owner, out Rule) && Owner == null && Rule == null,
                 "no eligible committed rule or retained out parameters");
+            Check(!World.TryLootRule(Barrel2, out Owner, out Rule) && Owner == null && Rule == null,
+                "no eligible barrel-2 rule or retained out parameters");
         }
     }
     private static void Check(bool Condition, string Message)
@@ -214,7 +224,113 @@ internal static class LootRulePolicyTests
     {
         Validation(); PublicationAndOwnership(); NoRulePreflight(); ConflictsAndReplacement(); SourceAndRegistrar(); BoundsAndTeardown();
         ManagedBoundaryValidation(); ManagedBoundaryOwnership();
+        ProfileValidation(); ProfilePublication(); ProfileReplacement();
         Console.WriteLine("[CarbonLuau:LootPolicy] PASS immutable descriptor, managed declaration boundary, publication, conflicts, source gating and teardown model; no host mutation");
+    }
+    private static void Nonmatching(Fixture Value, string Prefab, Runtime.FacadeSession Incumbent, Runtime.LootDropRule Snapshot)
+    {
+        Runtime.FacadeSession Owner = Incumbent; Runtime.LootDropRule Rule = Snapshot;
+        Check(!Value.World.TryLootRule(Prefab, out Owner, out Rule) && Owner == null && Rule == null,
+            "nonmatching profile clears both selection outputs");
+    }
+    private static void ProfileValidation()
+    {
+        Check(Runtime.LootRulePolicy.GlobalRules == 1 && Runtime.LootRulePolicy.DomainRules == 1,
+            "additional prefab preserves one global rule and one rule per domain");
+        Check(Runtime.LootRulePolicy.Prefab == "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab",
+            "backward-compatible first prefab constant remains unchanged");
+        var Value = new Fixture();
+        foreach (string Prefab in new[] {
+            "loot-barrel-2", "loot-barrel-2.prefab", Barrel2.ToUpperInvariant(), " " + Barrel2, Barrel2 + " ",
+            Barrel2 + "extra", Barrel2 + "\0", Barrel2.Replace('/', '\\'), Barrel2.Replace("/loot/", "/loot/../loot/"),
+            "assets/bundled/prefabs/radtown/loot_barrel_1.prefab",
+            "assets/bundled/prefabs/radtown/loot_barrel_2.prefab",
+            "assets/bundled/prefabs/radtown/oil_barrel.prefab",
+            "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-3.prefab" }) {
+            int Lookups = Value.Lookups;
+            Invalid(Value, Prefab, Drops());
+            Check(Value.Lookups == Lookups, "unsupported prefab rejected before definition resolver");
+            // Embedded NUL is checked above as a managed string; it is a wire delimiter here.
+            InvalidHost(Value, Prefab, "scrap\t0\t1");
+        }
+        foreach (string Item in new[] { "wood", "Scrap", " scrap", "scrap\0", "scráp", "", null }) {
+            int Lookups = Value.Lookups;
+            Invalid(Value, Barrel2, new[] { new Runtime.LootDropEntry("scrap", 0, 1), new Runtime.LootDropEntry(Item, 0, 1) });
+            Check(Value.Lookups == Lookups, "late unsupported item rejected before any definition resolver");
+        }
+        foreach (string Descriptor in new[] { "scrap\t0\t1\twood\t0\t1", "scrap\t0\t1\tScrap\t0\t1",
+            "scrap\t0\t1\tmetal.fragments\t2\t1", "scrap\t0\t1\tmetal.fragments\t0\t1001" })
+            InvalidHost(Value, Barrel2, Descriptor);
+        var Input = Drops(4); var Session = Value.Session();
+        Session.StageLootRule(Barrel2, Input); Input[0] = new Runtime.LootDropEntry("wood", 99, 99);
+        int Before = Value.Lookups;
+        Reject(() => Session.StageLootRule(Runtime.LootRulePolicy.Prefab, Drops()), "different prefab still consumes same domain slot");
+        Check(Value.Lookups == Before, "different-prefab duplicate rejected before definition resolver");
+        Value.None(); Value.World.Commit(Session);
+        var Snapshot = Value.Selected(Barrel2, Session);
+        Check(Snapshot.Entry(0).Item == "scrap" && Snapshot.Entry(0).Max == 4 && Snapshot.MaximumTotal == 4,
+            "barrel-2 owns copied immutable entries and actual prefab");
+        foreach (string Prefab in new[] { Runtime.LootRulePolicy.Prefab, Barrel2.ToUpperInvariant(), Barrel2 + "extra", null })
+            Nonmatching(Value, Prefab, Session, Snapshot);
+        Value.World.Retire(Session); Value.None();
+        Check(Snapshot.Prefab == Barrel2 && Snapshot.Entry(0).Max == 4, "retired snapshot retains actual prefab and entries");
+    }
+    private static void ProfilePublication()
+    {
+        var Value = new Fixture(); var Session = Value.Session();
+        HostPublication(Session, 10); HostPublication(Session, 10);
+        Host(Session, 42, Runtime.FacadePolicy.Pack(Barrel2, "scrap\t1\t2"), true);
+        HostPublication(Session, 11); Value.None(); HostPublication(Session, 12);
+        Check(!Session.HasLootRule, "outer rollback discards nested barrel-2 descriptor");
+        HostPublication(Session, 10);
+        Host(Session, 42, Runtime.FacadePolicy.Pack(Barrel2, "scrap\t3\t4"), true);
+        HostPublication(Session, 12);
+        Declare(Session, "metal.fragments\t5\t6"); Value.World.Commit(Session);
+        var Snapshot = Value.Selected(Session);
+        Nonmatching(Value, Barrel2, Session, Snapshot);
+        HostPublication(Session, 10);
+        Host(Session, 42, Runtime.FacadePolicy.Pack(Barrel2, ""), false);
+        Check(Object.ReferenceEquals(Value.Selected(Session), Snapshot), "active provisional declaration cannot switch profiles");
+        HostPublication(Session, 12); Value.World.Retire(Session); Value.None();
+    }
+    private static void ProfileReplacement()
+    {
+        var Value = new Fixture(); var Root = Value.Session(); Stage(Root); Value.World.Commit(Root);
+        var Original = Value.Selected(Root); Nonmatching(Value, Barrel2, Root, Original);
+        var Candidate = Value.Session(); Candidate.StageLootRule(Barrel2, Drops(7));
+        Value.World.PreflightLootRules(Root, Candidate);
+        Check(Object.ReferenceEquals(Value.Selected(Root), Original), "preflight preserves outgoing profile");
+        Nonmatching(Value, Barrel2, Root, Original);
+        Value.Registrar.ObservePublication = () => {
+            Check(Object.ReferenceEquals(Value.Selected(Root), Original), "registrar observes old profile until publication completes");
+            Nonmatching(Value, Barrel2, Root, Original);
+        };
+        Value.Registrar.Fail = true;
+        try { Value.World.Commit(Candidate); throw new Exception("registrar must fail"); }
+        catch (InvalidOperationException) { }
+        Check(Value.World.Active == Root && Root.Active && !Candidate.Active &&
+            Object.ReferenceEquals(Value.Selected(Root), Original), "failed cross-profile publication preserves old selection");
+        Nonmatching(Value, Barrel2, Root, Original); Value.Registrar.Fail = false;
+        Value.World.Commit(Candidate); Value.Registrar.ObservePublication = null; Value.World.Retire(Root);
+        var Second = Value.Selected(Barrel2, Candidate); Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Candidate, Second);
+        var Foreign = Value.Session(); Stage(Foreign); int Calls = Value.Registrar.Calls;
+        Reject(() => Value.World.PreflightLootRules(null, Foreign), "different prefab foreign owner exceeds global capacity");
+        Reject(() => Value.World.CommitAddon(null, Foreign), "different prefab root/addon collision");
+        Check(Value.Registrar.Calls == Calls && Object.ReferenceEquals(Value.Selected(Barrel2, Candidate), Second),
+            "foreign profile conflicts before registrar publication");
+        Value.World.Retire(Candidate); Value.World.CommitAddon(null, Foreign);
+        var Next = Value.Session(); Next.StageLootRule(Barrel2, Drops(8));
+        Value.World.PreflightLootRules(Foreign, Next); Value.World.CommitAddon(Foreign, Next);
+        Check(Foreign.Disposed && !Foreign.HasLootRule && Value.Selected(Barrel2, Next).Entry(0).Max == 8,
+            "exact outgoing addon may switch profiles atomically");
+        Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Next, Value.Selected(Barrel2, Next));
+        var Incoming = Value.Session(); Stage(Incoming); Calls = Value.Registrar.Calls;
+        Reject(() => Value.World.Commit(Incoming), "different prefab addon/root collision");
+        Reject(() => Value.World.CommitAddon(null, Incoming), "different prefab addon/addon collision");
+        Check(Value.Registrar.Calls == Calls, "cross-profile addon conflicts have no registrar effect");
+        Value.World.Retire(Incoming); Value.World.Retire(Next); Value.None();
+        Check(Original.Prefab == Runtime.LootRulePolicy.Prefab && Second.Prefab == Barrel2 && Second.Entry(0).Max == 7,
+            "captured outgoing descriptors never retarget between profiles");
     }
     private static void Validation()
     {
@@ -244,7 +360,7 @@ internal static class LootRulePolicyTests
         Maximum[7] = new Runtime.LootDropEntry("wood", 0, 0);
         Check(Rule.Entry(7).Item == "metal.fragments", "caller array never mutates descriptor");
         var Copy = new[] { new Runtime.LootDropEntry("scrap", 1, 2) };
-        var Immutable = new Runtime.LootDropRule(Copy, 2); Copy[0] = new Runtime.LootDropEntry("wood", 7, 7);
+        var Immutable = new Runtime.LootDropRule(Runtime.LootRulePolicy.Prefab, Copy, 2); Copy[0] = new Runtime.LootDropEntry("wood", 7, 7);
         Check(Immutable.Entry(0).Item == "scrap", "descriptor constructor owns its array too");
         Value.World.Retire(Session); Value.None();
         var Empty = Value.Session(); Stage(Empty, new Runtime.LootDropEntry[0]); Value.World.Commit(Empty);
