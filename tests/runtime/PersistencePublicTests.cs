@@ -34,7 +34,8 @@ internal static partial class PersistencePublicTests
         internal string Source = "return true";
         internal double WorkerReadyObservedMilliseconds;
         private bool Disposed;
-        internal Fixture(Runtime.NativeRuntime Native, string Executable, string Directory, Func<ulong> Clock = null, bool Initialize = true)
+        internal Fixture(Runtime.NativeRuntime Native, string Executable, string Directory, Func<ulong> Clock = null, bool Initialize = true,
+            Func<string, Runtime.PlayerView> PlayerLookup = null)
         {
             this.Native = Native;
             Check(Native.Storage == null, "isolated public fixture");
@@ -48,7 +49,7 @@ internal static partial class PersistencePublicTests
             } else Queue.Ready = true;
             Modules.Add("state", "return {}");
             var Config = new Runtime.RuntimeConfig { MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 20, MaxQueuedCallbacks = 64 };
-            World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Commands);
+            World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(PlayerLookup ?? (Id => null)), Commands);
             Host = new Runtime.ScriptHost(Native, Config, () => {
                 var Snapshot = new Runtime.ScriptSnapshot { EntryName = "init.luau", EntrySource = Source };
                 foreach (var Entry in Modules) Snapshot.Modules.Add(Entry.Key, Entry.Value);

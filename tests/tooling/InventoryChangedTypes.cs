@@ -110,8 +110,8 @@ internal static class InventoryChangedTypes
     public static void Run(JObject Catalog, string Bootstrap, JObject Release, string Native)
     {
         Contract(Catalog);
-        Check((string?)Release["apiVersion"] == CurrentApi && (string?)Release["packageVersion"] == "0.5.0",
-            "C4 development API must not change published package identity");
+        Check((string?)Release["apiVersion"] == CurrentApi && (string?)Release["packageVersion"] == "0.7.0",
+            "complete C4 release candidate must use its authorized package identity");
         string Definitions = ApiArtifacts.Definitions(Catalog);
         string PlayerDefinition = Regex.Match(Definitions, @"(?ms)^declare extern type Player with\n(.*?)^end$").Groups[1].Value;
         string InventoryDefinition = Regex.Match(Definitions, @"(?ms)^declare extern type PlayerInventory with\n(.*?)^end$").Groups[1].Value;

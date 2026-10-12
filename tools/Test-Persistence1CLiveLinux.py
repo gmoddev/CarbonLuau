@@ -77,7 +77,7 @@ def Ready():
     while time.monotonic() < End:
         Status = Send('carbonluau.status')
         if 'CarbonLuau: ready' in Status and '[CarbonLuau:Persistence] ready=True' in Status:
-            assert '0.5.0-experimental' in Status and 'Native ABI: 1.5 OK' in Status
+            assert '0.7.0-experimental' in Status and 'CarbonLuau package: 0.7.0' in Status and 'Native ABI: 1.5 OK' in Status
             (Run / (Stage + '-status.txt')).write_text(Status)
             return
         time.sleep(0.5)

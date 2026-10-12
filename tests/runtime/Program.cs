@@ -9,6 +9,12 @@ internal static class Program
     private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
+        if (Args.Length == 4 && Args[0] == "--release-combined") {
+            try {
+                PersistencePublicTests.RunStandalone(Args[1], Args[2], Args[3], CombinedOnly: true);
+                return 0;
+            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ReleaseCombined] FAIL: " + Error); return 1; }
+        }
         if (Args.Length == 3 && Args[0] == "--inventory-changed") {
             try { InventoryChangedPublicTests.Run(Args[1], Args[2]); return 0; }
             catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:InventoryChanged] FAIL: " + Error); return 1; }

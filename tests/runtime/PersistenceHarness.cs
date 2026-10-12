@@ -46,7 +46,7 @@ internal static partial class PersistencePublicTests
         System.IO.Directory.CreateDirectory(Result);
         return Result;
     }
-    internal static void RunStandalone(string Library, string Worker, string FixtureDirectory, bool Closure = false, bool QueryOnly = false)
+    internal static void RunStandalone(string Library, string Worker, string FixtureDirectory, bool Closure = false, bool QueryOnly = false, bool CombinedOnly = false)
     {
         Library = Path.GetFullPath(Library); Worker = Path.GetFullPath(Worker);
         string Root = NewDirectory(FixtureDirectory);
@@ -60,7 +60,8 @@ internal static partial class PersistencePublicTests
             File.Copy(Path.Combine(Path.GetDirectoryName(Library), CompilerName), Compiler);
             if (Rid == "linux-x64") Check(PersistenceChmod(Compiler, 493) == 0, "staged compiler executable mode");
             using (var Native = new Runtime.NativeRuntime(Root)) {
-                if (Closure) RunClosure(Native, Worker, Root);
+                if (CombinedOnly) PersistenceGameplaySaturation(Native, Worker, Path.Combine(Root, "store"));
+                else if (Closure) RunClosure(Native, Worker, Root);
                 else if (QueryOnly) QueryPublicVm(Native, Worker, Root);
                 else Run(Native, Worker, Root);
             }

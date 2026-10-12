@@ -12,6 +12,7 @@ internal static partial class PersistencePublicTests
         Check(Native.AbiVersion == 0x00010005, "closure requires ABI 1.5");
         ReplacementCompletionMatrix(Native);
         DependencyCompletionMatrix(Native);
+        PersistenceGameplaySaturation(Native, Worker, Path.Combine(Root, "gameplay-saturation"));
         using (var F = new Fixture(Native, Worker, Path.Combine(Root, "dispatch"))) FairWorkerDispatch(F);
         using (var F = new Fixture(Native, Worker, Path.Combine(Root, "examples"))) PublicExamples(F);
         using (var F = new Fixture(Native, Worker, Path.Combine(Root, "combined"))) CombinedStress(F);
