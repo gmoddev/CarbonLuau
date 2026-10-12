@@ -5,14 +5,14 @@ Status: **CANONICAL DESIGN BASELINE — PRIVATE 1A PASS; PUBLIC 1B QUALIFIED; CO
 startup/profile conditions of the approved physical-budget amendment. The later
 user decision assigns Persistence Foundation 1 to API `0.5.0-experimental` under
 [D12](Invariants.md#d12--scripting-and-protocol-identity), not retroactively to 0.4.
-[Persistence-1B](PersistenceFoundation1B.md) records implementation, scoped local
+[Persistence-1B](qualification/Persistence1B.md#persistencefoundation1b) records implementation, scoped local
 qualification, implementation-source CI and remaining limits. Experimental
 development availability alone is not overall Foundation 1 closure or release approval.
 The current combined status is owned by [Persistence-1C](PersistenceFoundation1C.md).
 
 [D21](Invariants.md#d21--persistence-foundation-1) owns the architecture. This
 document owns its detailed signatures, bounds, storage contract and phased gates;
-the [validation record](PersistenceFoundation1-Validation.md) separates inspected
+the [validation record](history/persistence/PersistenceFoundation1-Validation.md#persistencefoundation1-validation) separates inspected
 source evidence from proposed policy. Examples require the 0.5 development
 bindings; historical 0.4 API artifacts do not provide persistence.
 
@@ -360,10 +360,10 @@ and backups remain operator-owned; independent disk exhaustion can cause a
 controlled storage failure. External interference does not excuse CarbonLuau's
 own allocation or accounting errors.
 
-The [physical-allocation investigation](PersistencePhysicalAllocationInvestigation.md)
+The [physical-allocation investigation](history/persistence/PhysicalAllocation.md#persistencephysicalallocationinvestigation)
 observed no 1,280 MiB breach; this is empirical evidence, not a theorem or 1A PASS.
 Its historical enforcement/proof gap remains preserved. The
-[2026-09-23 adoption](PersistencePhysicalD21Amendment-Proposed.md) changes that
+[2026-09-23 adoption](history/persistence/PhysicalAllocation.md#persistencephysicald21amendment-proposed) changes that
 resource guarantee, conditional on final qualification. The WAL startup rejection
 fix remains mandatory: reject unsupported WAL mode before conversion or WAL/SHM
 creation, including page-1 restoration through hot-journal recovery. A main-header
@@ -397,8 +397,8 @@ It does not eliminate initial file/directory creation, recovery, locking,
 filesystem/device or virtualization assumptions. Process-crash recovery
 evidence is distinct from OS-crash or physical power-loss qualification.
 
-The [2026-09-23 approved amendment](PersistenceD21Amendment-Proposed.md) adopts
-the [investigation's](PersistenceDurabilityInvestigation.md) implementation path,
+The [2026-09-23 approved amendment](history/persistence/Durability.md#persistenced21amendment-proposed) adopts
+the [investigation's](history/persistence/Durability.md#persistencedurabilityinvestigation) implementation path,
 not production qualification. The original DELETE/EXTRA proof gap remains
 historical evidence, not observed NTFS data loss. Lying disks, hardware failure,
 external editing and unsupported mounts are not covered. No universal
@@ -607,7 +607,7 @@ are not implemented by that closure.
 ### Persistence-1B — DataStoreService and completion admission
 
 **Implemented and qualified within recorded scope:** see
-[the 1B record](PersistenceFoundation1B.md). The criteria below define that slice,
+[the 1B record](qualification/Persistence1B.md#persistencefoundation1b). The criteria below define that slice,
 not combined 1C closure or release approval.
 
 Add only the signatures above; no yielding support. Qualify ResourceOwner/admission

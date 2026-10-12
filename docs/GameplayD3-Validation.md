@@ -5,7 +5,7 @@ Starting main: `77a5fcf4288192dd00ec7e5d2a64250c25bd524f`.
 
 This phase adds only the public binding over the qualified
 [D2A substrate](GameplayD2A-Validation.md). [D23](Invariants.md#d23--gameplay-a-player-lifecycle-signals)
-owns semantics; [D0](GameplayD0Architecture-Research.md) remains historical
+owns semantics; [D0](history/gameplay/GameplayD0Architecture-Research.md#gameplayd0architecture-research) remains historical
 research. No settled host-source investigation is repeated or weakened.
 
 ## Public contract and bounded conversion

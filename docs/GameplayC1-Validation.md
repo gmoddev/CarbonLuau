@@ -9,7 +9,7 @@ production source, generated surface, fixture or qualified artifacts.
 
 D18 owns the additive facade; D11 original connection, D7/D10 publication,
 D13 mutations and D23 event separation remain unchanged. Supplied
-[C/D static research](GameplayCDArchitecture-Research.md) is preserved with the
+[C/D static research](history/gameplay/GameplayCDArchitecture-Research.md#gameplaycdarchitecture-research) is preserved with the
 user's amendment: future drop enum namespace is `Enum.DropMode`, not
 `Loot.DropMode`. C1 introduces no Enum/Loot surface or migration of the already
 qualified GiveItemBehavior. No Gameplay D or C2 implementation is authorized.

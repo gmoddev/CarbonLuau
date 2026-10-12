@@ -179,18 +179,18 @@ GUI Foundation 1 is included in package `0.4.0` and scripting API
 revision is unchanged. This experimental identity does not claim authenticated
 client-observed rendering or interaction evidence.
 
-Implementation is split into explicitly scoped phases. [GUI Foundation 1A](GuiFoundation1A.md)
+Implementation is split into explicitly scoped phases. [GUI Foundation 1A](qualification/Gui1.md#guifoundation1a)
 owns only the internal descriptor, limit, render-contract and deterministic mock
-backend substrate. [GUI Foundation 1B](GuiFoundation1B.md) owns the retained
+backend substrate. [GUI Foundation 1B](qualification/Gui1.md#guifoundation1b) owns the retained
 objects, values, lifecycle, ownership, Signal presence and publication journal;
-it does not implement presentations or client rendering. [GUI Foundation 1C](GuiFoundation1C.md)
+it does not implement presentations or client rendering. [GUI Foundation 1C](qualification/Gui1.md#guifoundation1c)
 owns internal presentations, exact Player-bound Show/Hide state, deterministic
 full-plan compilation and the production Rust CUI projection. It remains a
-static projection phase. [GUI Foundation 1D](GuiFoundation1D.md) owns revisioned
+static projection phase. [GUI Foundation 1D](qualification/Gui1.md#guifoundation1d) owns revisioned
 dirty state, coalesced property patches, structural full reconciliation and the
-shared bounded post-Luau GUI flush. [GUI Foundation 1E](GuiFoundation1E.md) owns
+shared bounded post-Luau GUI flush. [GUI Foundation 1E](qualification/Gui1.md#guifoundation1e) owns
 the private action command, presentation-bound authority, exact Player
-validation and bounded scheduler ingress. [GUI Foundation 1F](GuiFoundation1F.md)
+validation and bounded scheduler ingress. [GUI Foundation 1F](qualification/Gui1.md#guifoundation1f)
 owns replacement, fatal recovery, provider/host teardown, backend retry,
 operator diagnostics and leak/stress closure.
 

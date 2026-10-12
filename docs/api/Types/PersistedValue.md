@@ -1,7 +1,7 @@
 # PersistedValue
 
 Since API `0.5.0-experimental`. **Experimental; scoped 1B qualification** is recorded
-[separately](../../PersistenceFoundation1B.md).
+[separately](../../qualification/Persistence1B.md#persistencefoundation1b).
 [1C](../../PersistenceFoundation1C.md) records combined qualification, not package
 publication approval. This generated
 recursive type alias describes ordinary values, not a runtime constructor or

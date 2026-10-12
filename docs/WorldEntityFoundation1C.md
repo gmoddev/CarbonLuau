@@ -24,9 +24,9 @@ unqualified until server restart. Ordinary root/addon replacement and fatal
 Luau VM recovery do not remove the continuously installed observer. Host drift
 fails closed. No arbitrary newer Rust/Carbon build is implied.
 
-The historical [registry-continuity](WorldEntityLifetimeInvestigation.md),
-[failed-Spawn](WorldEntitySpawnEpochProbe.md), and
-[early base-completion](WorldEntityCompletionFenceInvestigation.md) failures
+The historical [registry-continuity](history/world/WorldEntityLifetimeInvestigation.md#worldentitylifetimeinvestigation),
+[failed-Spawn](history/world/WorldEntitySpawnEpochProbe.md#worldentityspawnepochprobe), and
+[early base-completion](history/world/WorldEntityCompletionFenceInvestigation.md#worldentitycompletionfenceinvestigation) failures
 remain negative evidence, not rewritten as successes. Naturally pooled
 same-managed-object reuse and authenticated player/building-block behavior were
 not observed in the disposable host fixtures.

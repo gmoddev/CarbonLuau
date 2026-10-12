@@ -1,183 +1,54 @@
-# Player Interaction Foundation 1F-A
+# Player Interaction Foundation 1F-A — compatibility routing
 
-## Verdict
+This stable compatibility page routes to the complete dated
+[record](qualification/PlayerInteraction.md#playerinteractionfoundation1fa). It is not a second contract or qualification receipt.
+For current documentation roles, use the [documentation index](Index.md).
 
-`Player:TakeItem(ShortName, Amount) -> boolean` is implemented using the
-revised D13 PREPARE, COMMIT and VERIFY model. It is limited to the exact Rust
-build `25353106` and Carbon `2.0.259` adapter qualified by Inventory-M2.
-The implementation revision is
-`82e940c55287d02830d8f3ed3a4f5142389db164`.
+## Original sections
 
-This record does not qualify or implement `Player:GiveItem`, generic inventory
-objects, rollback, multi-item transactions, Player-1F-B or Player-1F-C.
+<a id="player-interaction-foundation-1f-a"></a>
 
-## Public contract
+- [Player Interaction Foundation 1F-A](qualification/PlayerInteraction.md#playerinteractionfoundation1fa-player-interaction-foundation-1f-a)
 
-`ShortName` uses the D18 canonical 1 through 128 byte lowercase ASCII item
-identity. `Amount` is required and must be an exact integer from 1 through
-`Int32.MaxValue`.
+<a id="verdict"></a>
 
-- `true` means the host returned the requested amount and the fresh physical
-  inventory scan proved that exact requested amount disappeared.
-- `false` means PREPARE proved the operation could not proceed and COMMIT did
-  not begin. This includes insufficient quantity and a canonical unknown item.
-- an error after COMMIT means inventory may have changed and CarbonLuau could
-  not establish the final result. No rollback is promised.
+- [Verdict](qualification/PlayerInteraction.md#playerinteractionfoundation1fa-verdict)
 
-Authors that need to handle the indeterminate case separately can use `pcall`:
+<a id="public-contract"></a>
 
-```lua
-local CallOk, Removed = pcall(function()
-    return Player:TakeItem("scrap", 100)
-end)
+- [Public contract](qualification/PlayerInteraction.md#playerinteractionfoundation1fa-public-contract)
 
-if not CallOk then
-    -- The mutation may have started. Re-read authoritative state before acting.
-elseif Removed then
-    print("Removed 100 scrap")
-else
-    print("Player did not have enough scrap")
-end
-```
+<a id="prepare-commit-and-verify"></a>
 
-## PREPARE, COMMIT and VERIFY
+- [PREPARE, COMMIT and VERIFY](qualification/PlayerInteraction.md#playerinteractionfoundation1fa-prepare-commit-and-verify)
 
-PREPARE revalidates the exact D11 connection, resolves the canonical item
-definition and uses `PhysicalInventoryObservation` to count only valid physical
-stacks in main, belt and wear. The scan is nonrecursive and enforces the 128
-direct-entry/capacity envelope. Unknown items and insufficient quantities return
-`false` without calling a mutation helper.
+<a id="mutation-gate-and-publication"></a>
 
-Immediately before COMMIT the exact connection is revalidated. COMMIT is the
-qualified call:
+- [Mutation gate and publication](qualification/PlayerInteraction.md#playerinteractionfoundation1fa-mutation-gate-and-publication)
 
-```csharp
-Player.inventory.Take(null, ItemDefinition.itemid, Amount)
-```
+<a id="interference-and-diagnostics"></a>
 
-After it returns, VERIFY resolves the exact connection again and performs one
-fresh bounded physical scan. Success requires both:
+- [Interference and diagnostics](qualification/PlayerInteraction.md#playerinteractionfoundation1fa-interference-and-diagnostics)
 
-```text
-hostReturnedAmount == requestedAmount
-Q0 - Q1 == requestedAmount
-```
+<a id="qualification"></a>
 
-Checked arithmetic is used. A host exception, connection loss, host amount
-mismatch or physical delta mismatch after COMMIT is a controlled indeterminate
-error. CarbonLuau does not poll, replay or attempt rollback.
+- [Qualification](qualification/PlayerInteraction.md#playerinteractionfoundation1fa-qualification)
 
-## Mutation gate and publication
+<a id="identity-and-remaining-scope"></a>
 
-The root domain and every addon share one owner-thread mutation gate keyed by
-the exact D11 connection token. The gate has no waiting queue. Recursive work
-for the same exact Player is rejected, different Players remain independent,
-and every exit path releases the gate in `finally`.
+- [Identity and remaining scope](qualification/PlayerInteraction.md#playerinteractionfoundation1fa-identity-and-remaining-scope)
 
-TakeItem is committed-only. Candidate initialization, provisional modules and
-cross-addon shared-module calls cannot invoke it. A dependency cannot launder
-provisional admission into committed execution. `task.defer` published by a
-successful candidate is the supported startup pattern. Failed candidates
-publish no deferred mutation.
+<a id="continuation-audit--2026-09-21"></a>
 
-## Interference and diagnostics
+- [Continuation audit — 2026-09-21](qualification/PlayerInteraction.md#playerinteractionfoundation1fa-continuation-audit--2026-09-21)
 
-The gate serializes only CarbonLuau-originated mutations. Model fixtures cover
-altered host return amounts, extra matching-item removal, matching-item
-addition, unrelated-item mutation and callback exceptions. Only the exact host
-and physical predicates return `true`; every ambiguous post-COMMIT result
-errors. Unrelated-item mutation does not invalidate an otherwise exact delta
-for the requested definition.
+## Retained phase-evidence facts
 
-Saturating internal counters cover attempts, PREPARE rejections, verified
-success, stale rejection, gate-busy rejection, host exceptions, host amount
-mismatches, physical delta mismatches and indeterminate outcomes. The native
-domain rejection counter records provisional admission rejection. No host Item
-or ItemContainer enters Luau and no mutation history queue exists.
+These exact phase-era facts are retained for existing verification consumers;
+current inventory names and authority are in PlayerInventory and the C4 record.
 
-## Qualification
-
-The focused model covers empty, unknown, split, partial and full stacks; all
-three accepted containers; the exact 128-entry boundary; over-bound rejection;
-stale transitions; same-account replacement; recursive and cross-Player gate
-behavior; and all interference outcomes. It also performs 1,000 successful
-mutations, 1,000 PREPARE rejections and 1,000 verification-mismatch injections.
-
-The managed native suite covers root and addon calls, shared-module provisional
-laundering rejection, deferred publication, failed-candidate rollback,
-dependency replacement, stale proxies, VM recovery, provider/addon/GUI/package
-regressions and shipped examples. Exact-build live Carbon qualification covers
-partial and full stacks, multiple stacks, main/belt/wear traversal, insufficient
-quantity, canonical unknown identity, repeated calls, reconnect lifetime and
-native teardown.
-
-The final local Windows managed/native suite passed, including the 3,000-case
-focused stress loop, all prior Player slices, addon/provider, GUI, package,
-scheduler and lifecycle regressions. Affected Windows native ScriptCore,
-RuntimeAllocationFaults, RuntimeCore and NativeLoadUnload CTests passed. The
-pre-existing local Foundation G compiler-worker 256 MiB containment check did
-not qualify on this workstation; Linux passed it.
-
-The complete Linux native and managed suite passed. All five release CTests
-passed, including compiler containment, and the ASan/UBSan/leak build passed all
-five CTests. Linux timing for the 3,000 focused operations was 3.20 ms; this is
-an observation, not a compatibility guarantee.
-
-Three isolated exact-build live Carbon cycles passed. Every cycle logged the
-TakeItem PREPARE/COMMIT/VERIFY marker and then unloaded the plugin with the
-native library unmapped. The final isolated Rust process was cgroup-killed
-during server shutdown after all three plugin teardown assertions had passed;
-this is not represented as graceful server-exit evidence.
-
-DockerPC Windows live/native qualification is unavailable for this task and is
-not represented as completed by hosted Windows CI. Hosted CI and documentation
-deployment are recorded at the final tested revision in the completion report.
-
-## Identity and remaining scope
-
-This additive method keeps package `0.4.0`, scripting API
-`0.4.0-experimental`, native ABI `1.4`, provider protocol `CarbonLuau.Addons` / `1.2`, package schema
-`1` and Luau revision `c6b830185af962c82003f86784e2fe036357c830` unchanged.
-`GiveItem`, Player-1F-B and Player-1F-C remain deferred.
-
-## Continuation audit — 2026-09-21
-
-Resumed from evidence commit `7111f494b5c1c27b299dcfdf0ff698e9f1967b8c`;
-the runtime implementation was already present in `82e940c55287d02830d8f3ed3a4f5142389db164`.
-Source review reconfirmed the qualified host call, exact-connection resolution
-before PREPARE/COMMIT and at VERIFY, the shared FacadeWorld-owned gate,
-publication-context rejection in the native bridge, and both success predicates.
-No production source, native/vendor code or version identity changed in this
-continuation. The provider version above corrects a documentation typo from
-`1.0` to the existing `CarbonLuau.Addons` / `1.2` in release.json and D12.
-
-Independently retrieved final-baseline CI status and logs:
-
-- [Windows, Linux and sanitizer validation](https://github.com/gmoddev/CarbonLuau/actions/runs/35585100724)
-  passed at `7111f494b5c1c27b299dcfdf0ff698e9f1967b8c`. Each of the Windows,
-  Linux and ASan/UBSan/leak native jobs passed all five CTests. Both managed
-  runtime jobs passed the Player, addon/provider, GUI, package, scheduler and
-  lifecycle suites. The focused 3,000-operation model reported 11.11 ms on
-  hosted Windows and 4.11 ms on hosted Linux; these are observations only.
-- [Documentation deployment](https://github.com/gmoddev/CarbonLuau/actions/runs/35585100787)
-  passed at that same revision. Hosted tests are not live Rust/Carbon evidence.
-
-Extended the existing focused model with maximum-amount successful removal,
-pre-COMMIT stale/rejection paths, exceptions after actual mutation, VERIFY host
-exceptions, over-bound VERIFY state, post-COMMIT stale state, exact scan counts
-and same-token gate reuse after each outcome. The new boundary cases and the
-original 3,000-operation stress passed in a small local managed-only check:
-PowerShell 7 Add-Type compiled the production FacadePolicy, PlayerDirectory,
-PlayerTeleportOperation, InventoryObservation and InventoryMutation sources
-with PlayerInteractionFoundation1FATests, then invoked RunModel. No native
-build or server was started locally. This check does not substitute for the
-.NET Framework/native integration matrix. API/architecture checks and
-`git diff --check` also passed. The public Player reference now includes the
-separate pcall example without implying rollback or safe automatic retry.
-
-Fresh worker/live runs were unavailable: `DockerPC` did not resolve from this
-Windows profile, and the configured `dockerbox` alias timed out on SSH port 22.
-No host configuration was changed or unrelated worker was substituted. The
-three exact-build live cycles above remain previously recorded evidence, not
-newly reproduced live results. No new real-client or graceful server-exit claim
-is made. GiveItem and Player-1F-B/C remain outside this task.
+- PREPARE, COMMIT and VERIFY
+- Player.inventory.Take(null
+- Q0 - Q1 == requestedAmount
+- 1,000 successful
+- GiveItem

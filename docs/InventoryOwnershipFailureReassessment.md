@@ -1,1455 +1,374 @@
-# D13 Inventory Ownership / Failure Reassessment
+# Inventory ownership/failure rationale: current scope
 
-**Repository baseline:** `main` at `ab221bc55ab7e58d62383a712ecbd793d98782b1` — *Adopt Player Interaction Foundation 1 architecture*.
-**Scope:** architecture/research only. No implementation or repository modification.
+[I12](Invariants.md#i12--trusted-in-process-host-interference),
+[D13](invariants/Runtime.md#d13--inventory-ownership-and-failure-model) and
+[D18](invariants/Player.md) own the accepted rules. The
+[complete original reassessment](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment)
+retains its pre-implementation source, proposals and subsequent amendments.
 
-> **Current canonical amendment (2026-09-21):** This rationale is subordinate
-> to I12/D13/D18 in [Invariants.md](Invariants.md). I12 now defines the general
-> trusted in-process host-interference boundary; it does not excuse unsafe
-> adapters or ordinary acceptance/rejection. GiveItem's intended signature is
-> `Player:GiveItem(ShortName, Amount, Behavior?) -> boolean`, defaulting to
-> `GiveItemBehavior.InventoryOnly`. Two-argument examples remain valid intended
-> calls; Player-1F-B now implements that subset. `DropRemainder` is future
-> design only, not a reserved member. M2's original G1 conclusion is superseded
-> as incomplete; [Player-1F-B](PlayerInteractionFoundation1FB.md) records
-> the subsequent implementation and supported-host requalification, not a documentation-only PASS.
-> TakeItem's qualified implementation and PREPARE/COMMIT/VERIFY are unchanged.
+## Accepted distinction
 
-The question is correctly reframed as what **CarbonLuau** must guarantee rather than whether Rust can provide globally transactional inventory operations.
+Rust inventory mutations are not transactions. PREPARE must be bounded and
+mutation-free; COMMIT begins irreversible host effects; VERIFY decides whether
+the qualified physical result is established. False is a pre-COMMIT rejection,
+true requires verified completion, and a post-COMMIT uncertain result is an error.
+There is no universal rollback, refund, exactly-once or replay promise.
 
----
+CarbonLuau retains responsibility for resources actually returned to its adapter
+until they are accepted, consumed or safely disposed under the qualified model.
+Objects never returned by a failing host call remain in the host failure domain;
+that does not excuse an unsafe adapter or an unverified success claim.
 
-## 1. TL;DR
+Trusted external in-process mutation is not semantically isolated. It may race
+the supported host operation, but lifetime safety, bounds, conservative guards,
+physical verification and truthful failure classification remain mandatory.
+I12 is not permission to ignore ordinary acceptance/rejection or to weaken D13.
 
-**Original D13 is too strict in one important respect.**
+## Current application
 
-Its factual findings about Rust remain correct:
+Use [PlayerInventory](api/Types/PlayerInventory.md). Its GiveItem/TakeItem reuse
+the original-connection gate and one scanner across domains. Only the qualified
+InventoryOnly behavior is implemented; no DropRemainder or compensating world
+deletion is implied. [The Player ledger](qualification/PlayerInteraction.md),
+[retained M2 evidence](InventoryMutationM2Validation.md) and
+[C4](GameplayC4-Validation.md) keep implementation/source/host scopes distinct.
 
-* Rust item/inventory operations are live mutations, not transactions.
-* stack/insertion/removal can partially mutate before completion;
-* item construction can perform meaningful lifecycle work before returning an `Item`;
-* callbacks and plugin hooks can run during inventory operations;
-* arbitrary Rust/plugin side effects cannot generally be rolled back;
-* there is no universal Rust transaction/undo receipt.
+Sampled [ItemChanged](api/Types/PlayerInventory.md#itemchanged) is observation,
+not a host transaction completion receipt. Balanced/intermediate changes and
+overload behavior retain their separately qualified C2/C3 semantics.
 
-Current Rust source still demonstrates this directly. `MoveToContainer` mutates the destination stack and decrements the source before completing the overall operation, can recurse with a remainder, and has a split path capable of world-dropping an item. `ItemContainer.Insert` puts the item into `itemList` and assigns its parent before `FindPosition` and subsequent callbacks complete.
+## Historical section links
 
-**What should change is the guarantee CarbonLuau demands from itself.**
+These compatibility anchors route to the dated original, not a current gate.
 
-D13 currently effectively requires:
+<a id="d13-inventory-ownership--failure-reassessment"></a>
 
-> every host effect after item creation must either complete successfully or be universally rollbackable/cleanable.
+- [D13 Inventory Ownership / Failure Reassessment](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-d13-inventory-ownership--failure-reassessment)
 
-That is stronger than CarbonLuau needs, inconsistent with the more general D10 model for irreversible host effects, and in part makes CarbonLuau responsible for exception safety *inside a supported Rust API before Rust even returns an object to it*.
+<a id="1-tldr"></a>
 
-I recommend replacing that requirement with:
+- [1. TL;DR](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-1-tldr)
 
-```text
-PREPARE
-   ↓
-COMMIT
-   ↓
-VERIFY
-```
+<a id="2-where-original-d13-is-too-strict"></a>
 
-and three externally distinct outcomes:
+- [2. Where original D13 is too strict](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-2-where-original-d13-is-too-strict)
 
-```text
-REJECTED
-    no CarbonLuau inventory COMMIT began
-    → false
+<a id="3-revised-ownership-boundary"></a>
 
-SUCCESS
-    host operation completed and CarbonLuau verified its physical postcondition
-    → true
+- [3. Revised ownership boundary](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-3-revised-ownership-boundary)
 
-INDETERMINATE HOST FAILURE
-    COMMIT began, but success could not be established
-    → controlled Luau error
-    → no rollback/unchanged-state claim
-```
+<a id="a-carbonluau-owned-resources"></a>
 
-Under that contract:
+- [A. CarbonLuau-owned resources](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-a-carbonluau-owned-resources)
 
-* **`Player:GiveItem(shortName, amount) -> boolean` is architecturally viable.**
-* **`Player:TakeItem(shortName, amount) -> boolean` is also architecturally viable**, and arguably easier to verify than GiveItem.
-* neither operation is globally atomic with respect to arbitrary Carbon plugins;
-* neither promises rollback after COMMIT;
-* both remain implementation-gated until the exact target Rust build establishes the required no-world-drop and physical-verification paths.
+<a id="b-returned-host-resources-under-carbonluau-responsibility"></a>
 
-**Final verdict: READY FOR CANONICAL ADOPTION.**
+- [B. Returned host resources under CarbonLuau responsibility](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-b-returned-host-resources-under-carbonluau-responsibility)
 
----
+<a id="c-unreturned-host-internal-resources"></a>
 
-# 2. Where original D13 is too strict
+- [C. Unreturned host-internal resources](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-c-unreturned-host-internal-resources)
 
-D13 was correct to reject this claim:
+<a id="4-precise-atomicity-taxonomy"></a>
 
-> `GiveItem` is an all-or-nothing Rust transaction.
+- [4. Precise atomicity taxonomy](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-4-precise-atomicity-taxonomy)
 
-It was also correct to reject this:
+<a id="5-prepare-semantics"></a>
 
-> If Rust returns false or throws, the inventory necessarily remained unchanged.
+- [5. PREPARE semantics](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-5-prepare-semantics)
 
-Those remain false.
+<a id="prepare-must-not-invoke-canacceptitem"></a>
 
-The excessive part is the stronger ownership requirement that effectively says:
+- [PREPARE must not invoke `CanAcceptItem`](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-prepare-must-not-invoke-canacceptitem)
 
-> CarbonLuau cannot invoke `ItemManager.Create` unless it can deterministically clean every nested host resource Rust may have created before `Create` returns.
+<a id="what-prepare-guarantees"></a>
 
-The historical investigation found a legitimate counterexample: `Create` calls initialization before returning, and initialization can create UIDs, containers, held entities and other item-mod resources. If an internal lifecycle failure occurs before `Create` returns, CarbonLuau never receives the `Item` reference.
+- [What PREPARE guarantees](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-what-prepare-guarantees)
 
-But that should be classified as:
+<a id="6-exact-commit-boundary"></a>
 
-> **failure inside a supported host operation before ownership/control of the returned host resource reached CarbonLuau**
+- [6. Exact COMMIT boundary](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-6-exact-commit-boundary)
 
-rather than:
+<a id="7-verify-semantics"></a>
 
-> **CarbonLuau leaked one of its resources**.
+- [7. VERIFY semantics](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-7-verify-semantics)
 
-That narrower rule is more consistent with I1: Rust, Carbon and Unity own their host objects; CarbonLuau owns its own runtime resources and temporary adaptation responsibilities.
+<a id="giveitem-verification"></a>
 
-This change does **not** excuse CarbonLuau once an `Item` has successfully returned to it.
+- [GiveItem verification](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-giveitem-verification)
 
----
+<a id="why-count-delta-alone-is-insufficient"></a>
 
-# 3. Revised ownership boundary
+- [Why count delta alone is insufficient](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-why-count-delta-alone-is-insufficient)
 
-Use three categories.
+<a id="provenance-limitation"></a>
 
-### A. CarbonLuau-owned resources
+- [Provenance limitation](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-provenance-limitation)
 
-Anything actually owned by CarbonLuau remains under the existing strong rules.
+<a id="takeitem-verification"></a>
 
-Examples:
+- [TakeItem verification](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-takeitem-verification)
 
-* mutation-gate state;
-* temporary snapshots/plans;
-* native/managed buffers;
-* temporary lists;
-* domain/session metadata.
+<a id="8-operation-outcome-model"></a>
 
-Every path must deterministically release them.
+- [8. Operation outcome model](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-8-operation-outcome-model)
 
-**No change to I1/I10 cleanup discipline.**
+<a id="rejected"></a>
 
-### B. Returned host resources under CarbonLuau responsibility
+- [REJECTED](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-rejected)
 
-If:
+<a id="success"></a>
 
-```csharp
-Item item = ItemManager.Create(...);
-```
+- [SUCCESS](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-success)
 
-successfully returns an `Item`, CarbonLuau now knows about a concrete host object.
+<a id="indeterminate-host-failure"></a>
 
-Until one of these terminal outcomes is established:
+- [INDETERMINATE HOST FAILURE](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-indeterminate-host-failure)
 
-```text
-transferred into accepted player inventory
-removed through the supported host cleanup path
-consumed during a successful stack merge
-otherwise explicitly transferred to another accepted host owner
-```
+<a id="9-per-player-carbonluau-mutation-serialization"></a>
 
-CarbonLuau has **temporary responsibility** for it.
+- [9. Per-Player CarbonLuau mutation serialization](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-9-per-player-carbonluau-mutation-serialization)
 
-CarbonLuau must never merely discard its reference on an ordinary failure path.
+<a id="cross-addon-behavior"></a>
 
-If supported cleanup itself is vetoed/fails, however, that becomes **INDETERMINATE HOST FAILURE**. CarbonLuau must not start reproducing private Rust teardown internals to force cleanup.
+- [Cross-addon behavior](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-cross-addon-behavior)
 
-Current Rust reinforces why cleanup cannot be an unconditional rollback mechanism: `Item.Remove()` can be canceled by `OnItemRemove`, and only after that hook does it invoke item-mod `OnRemove`, zero the amount and schedule host removal.
+<a id="disconnect"></a>
 
-### C. Unreturned host-internal resources
+- [Disconnect](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-disconnect)
 
-If CarbonLuau enters a supported Rust API correctly and that API fails before returning the resource:
+<a id="replacementrecovery"></a>
 
-```text
-CarbonLuau → ItemManager.Create(...)
-                 ↓
-             internal host work
-                 ↓
-               failure
-                 X
-          no Item returned
-```
+- [Replacement/recovery](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-replacementrecovery)
 
-then inaccessible resources created entirely inside that invocation belong to the **host failure domain**.
+<a id="10-synchronous-plugin-interference-model"></a>
 
-CarbonLuau:
+- [10. Synchronous plugin interference model](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-10-synchronous-plugin-interference-model)
 
-* reports the operation as an indeterminate host failure;
-* does not claim rollback;
-* does not fabricate a host object it never received;
-* does not call private lifecycle methods trying to reconstruct unreachable internals;
-* does not classify that inaccessible object as a CarbonLuau resource leak.
+<a id="11-giveitem-decision"></a>
 
-That is the exact place D13 should be narrowed.
+- [11. GiveItem decision](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-11-giveitem-decision)
 
----
+<a id="accept-architecturally"></a>
 
-# 4. Precise atomicity taxonomy
+- [ACCEPT ARCHITECTURALLY](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-accept-architecturally)
 
-Avoid describing `GiveItem` or `TakeItem` simply as "atomic."
+<a id="12-exact-giveitem-public-contract"></a>
 
-| Property                                                            | CarbonLuau guarantee           |
-| ------------------------------------------------------------------- | ------------------------------ |
-| Provisional candidate/module execution performs inventory mutation  | **Never**                      |
-| Two Luau-originated mutations for the same exact Player interleave  | **No**                         |
-| CarbonLuau validates and performs bounded PREPARE first             | **Yes**                        |
-| Another Luau addon recursively enters the VM halfway through COMMIT | **No**                         |
-| CarbonLuau knows whether COMMIT has started                         | **Yes**                        |
-| Rust itself makes inventory mutation all-or-nothing                 | **No**                         |
-| Other Carbon plugins are isolated during COMMIT                     | **No**                         |
-| Arbitrary plugin/Rust effects are rollbackable                      | **No**                         |
-| An exception after COMMIT proves inventory unchanged                | **No**                         |
-| `false` means no inventory COMMIT began                             | **Yes**                        |
-| `true` means the requested physical postcondition was verified      | **Yes**                        |
-| controlled post-COMMIT error may mean state changed                 | **Yes, explicitly documented** |
+- [12. Exact GiveItem public contract](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-12-exact-giveitem-public-contract)
 
-The strongest useful term is:
+<a id="inputs"></a>
 
-> **CarbonLuau-serialized, definite-rejection inventory mutation**
+- [Inputs](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-inputs)
 
-not "transactional Rust inventory."
+<a id="inventory-destination"></a>
 
-D7's publication transaction remains a different concept.
+- [Inventory destination](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-inventory-destination)
 
----
+<a id="stacking"></a>
 
-# 5. PREPARE semantics
+- [Stacking](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-stacking)
 
-PREPARE must be **pure with respect to inventory mutation**.
+<a id="multiple-stacks"></a>
 
-For either Give or Take it performs:
+- [Multiple stacks](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-multiple-stacks)
 
-1. exact D11 Player/domain validation;
-2. committed-operation validation;
-3. canonical short-name validation and definition lookup;
-4. amount/type/work-bound validation;
-5. bounded physical snapshot of D18's accepted top-level inventory;
-6. operation-specific feasibility planning.
+<a id="partial-placement"></a>
 
-For GiveItem, inspect:
+- [Partial placement](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-partial-placement)
 
-* current compatible physical stacks;
-* stack capacities;
-* free slots;
-* container capacity;
-* item definition properties;
-* accepted container restrictions that can be inspected without callbacks;
-* the number of host item objects/placements the request would require.
+<a id="full-inventory"></a>
 
-For TakeItem:
+- [Full inventory](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-full-inventory)
 
-* physically count the target definition across main, belt and wear;
-* record relevant item identities/amounts for verification;
-* reject if there is definitely less than requested.
+<a id="exact-player"></a>
 
-### PREPARE must not invoke `CanAcceptItem`
+- [Exact Player](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-exact-player)
 
-Current `CanAcceptItem` is not a pure predicate. It invokes a container delegate and the `CanAcceptItem` Carbon/Oxide hook before returning the result.
+<a id="provisional"></a>
 
-A plugin could mutate arbitrary state from that hook.
+- [Provisional](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-provisional)
 
-Therefore CarbonLuau should not say:
+<a id="13-world-drop-decision"></a>
 
-```text
-PREPARE is mutation-free
-```
+- [13. World-drop decision](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-13-world-drop-decision)
 
-and then call arbitrary plugin code during PREPARE.
+<a id="14-takeitem-decision"></a>
 
-`CanAcceptItem` and equivalent hookable checks belong to COMMIT.
+- [14. TakeItem decision](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-14-takeitem-decision)
 
-### What PREPARE guarantees
+<a id="accept-architecturally-1"></a>
 
-PREPARE can prove:
+- [ACCEPT ARCHITECTURALLY](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-accept-architecturally-1)
 
-> This operation is already structurally impossible, so CarbonLuau rejected it without beginning inventory mutation.
+<a id="verify"></a>
 
-PREPARE **cannot** prove:
+- [VERIFY](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-verify)
 
-> COMMIT must succeed.
+<a id="why-this-is-now-acceptable"></a>
 
-Facepunch itself uses this style. Marketplace work added `ItemSafety`/fit simulation specifically to predict whether a move is likely to fit before attempting the real transaction. Current marketplace code calls `CheckItem.CanFitSimple` before charging the player, but still contains explicit compensation logic later if the transaction fails.
+- [Why this is now acceptable](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-why-this-is-now-acceptable)
 
-That is strong evidence for PREPARE as a useful filter, not as a transaction guarantee.
+<a id="15-provisional-d11-and-deadline-behavior"></a>
 
----
+- [15. Provisional, D11 and deadline behavior](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-15-provisional-d11-and-deadline-behavior)
 
-# 6. Exact COMMIT boundary
+<a id="provisional-1"></a>
 
-For `GiveItem`, COMMIT begins **immediately before entering the first item-creation call**:
+- [Provisional](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-provisional-1)
 
-```text
-COMMIT_BEGUN = true
-ItemManager.Create / CreateByItemID(...)
-```
+<a id="d11"></a>
 
-Not:
+- [D11](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-d11)
 
-```text
-Item successfully returned
-```
+<a id="deadlines"></a>
 
-and not:
+- [Deadlines](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-deadlines)
 
-```text
-MoveToContainer began
-```
+<a id="16-safety-and-resource-bounds"></a>
 
-Why?
+- [16. Safety and resource bounds](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-16-safety-and-resource-bounds)
 
-Because historical target-build evidence established that item initialization occurs before `Create` returns and may allocate UID/item-mod/nested host state.
+<a id="short-name"></a>
 
-Therefore entering item creation is the first point after which CarbonLuau can no longer truthfully promise:
+- [Short name](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-short-name)
 
-> nothing host-visible may have happened.
+<a id="amount"></a>
 
-This also makes the phase boundary trivial to implement and audit:
+- [Amount](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-amount)
 
-```text
-PREPARE
-  all pure validation/planning
+<a id="physical-inventory-inspection"></a>
 
-set phase = COMMIT
+- [Physical inventory inspection](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-physical-inventory-inspection)
 
-Create(...)
-transfer(...)
-verify(...)
-```
+<a id="placement-work"></a>
 
-For `TakeItem`, COMMIT begins immediately before entering the host removal call:
+- [Placement work](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-placement-work)
 
-```csharp
-player.inventory.Take(...)
-```
+<a id="verification"></a>
 
-because that method invokes `OnInventoryItemsTake` before proceeding into sequential container removal.
+- [Verification](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-verification)
 
----
+<a id="mutation-gate"></a>
 
-# 7. VERIFY semantics
+- [Mutation gate](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-mutation-gate)
 
-VERIFY is not rollback.
+<a id="diagnostics"></a>
 
-It answers:
+- [Diagnostics](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-diagnostics)
 
-> Given that COMMIT has finished control flow, can CarbonLuau safely say the requested physical gameplay result is now true?
+<a id="17-d13-amendments"></a>
 
-## GiveItem verification
+- [17. D13 amendments](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-17-d13-amendments)
 
-Capture before COMMIT:
+<a id="keep"></a>
 
-```text
-Q0 = physical count of ShortName across accepted inventory
-S0 = bounded relevant stack identity/amount snapshot
-```
+- [Keep](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-keep)
 
-Retain references to every successfully returned item created as part of this operation until it reaches a known terminal state.
+<a id="amend"></a>
 
-After all transfer calls finish:
+- [Amend](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-amend)
 
-```text
-Q1 = fresh physical count
-S1 = fresh bounded inventory snapshot
-```
+<a id="supersede"></a>
 
-A verified Give success requires **all** of:
+- [Supersede](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-supersede)
 
-1. exact D11 Player is still the same connection;
-2. every CarbonLuau-issued transfer step reported host success;
-3. no CarbonLuau transfer path intentionally world-dropped anything;
-4. every returned created Item is accounted for as either:
+<a id="18-d18-implications"></a>
 
-   * physically within one of the accepted Player containers, or
-   * fully consumed into stack merging/removal through the successful transfer path;
-5. final physical quantity satisfies:
+- [18. D18 implications](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-18-d18-implications)
 
-```text
-Q1 >= Q0 + requestedAmount
-```
+<a id="player-1f--inventory-mutation"></a>
 
-The count condition is deliberately `>=`, not `==`.
+- [Player-1F — inventory mutation](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-player-1f--inventory-mutation)
 
-A synchronous plugin may legitimately add a bonus item during the operation. That does not invalidate the fact that the Player finishes with at least the requested net increase, provided CarbonLuau's own transfer steps also all reported success and the created resources are accounted for.
+<a id="19-roblox-like-author-facing-examples"></a>
 
-### Why count delta alone is insufficient
+- [19. Roblox-like author-facing examples](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-19-roblox-like-author-facing-examples)
 
-This alone is too weak:
+<a id="20-exact-behavior-still-deferredrejected"></a>
 
-```text
-Q1 - Q0 == requestedAmount
-```
+- [20. Exact behavior still deferred/rejected](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-20-exact-behavior-still-deferredrejected)
 
-because another plugin may add or remove the same item during a synchronous hook.
+<a id="21-implementation-phases"></a>
 
-Likewise, the originally created Item's UID cannot be the only proof because a normal successful stack merge can consume/remove the source `Item`. Current `MoveToContainer` increases the destination stack, decrements the source, invokes callbacks, migrates ownership and then removes the exhausted source object.
+- [21. Implementation phases](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-21-implementation-phases)
 
-So verification must combine:
+<a id="inventory-m1--deterministic-transaction-model"></a>
 
-```text
-host transfer outcome
-+ returned-object accounting
-+ final physical state
-```
+- [Inventory-M1 — deterministic transaction model](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-inventory-m1--deterministic-transaction-model)
 
-### Provenance limitation
+<a id="inventory-m2--exact-target-build-adapter-qualification"></a>
 
-CarbonLuau cannot prove causal provenance against an arbitrary trusted plugin deliberately doing something like:
+- [Inventory-M2 — exact target-build adapter qualification](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-inventory-m2--exact-target-build-adapter-qualification)
 
-```text
-destroy CarbonLuau's 100 scrap
-create a different 100 scrap
-```
+<a id="player-1f-a--takeitem"></a>
 
-inside a synchronous callback.
+- [Player-1F-A — TakeItem](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-player-1f-a--takeitem)
 
-But if the final physical postcondition is correct and every CarbonLuau transfer reported success, that distinction is not meaningful to the scripting facade.
+<a id="player-1f-b--giveitem"></a>
 
-CarbonLuau guarantees the **observable physical result**, not forensic provenance against trusted managed plugins.
+- [Player-1F-B — GiveItem](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-player-1f-b--giveitem)
 
-## TakeItem verification
+<a id="player-1f-c--combined-lifecyclepublic-closure"></a>
 
-TakeItem is cleaner.
+- [Player-1F-C — combined lifecycle/public closure](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-player-1f-c--combined-lifecyclepublic-closure)
 
-Capture:
+<a id="22-qualification-plan"></a>
 
-```text
-Q0
-```
+- [22. Qualification plan](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-22-qualification-plan)
 
-Call the host removal path.
+<a id="deterministic-model-tests"></a>
 
-Then:
+- [Deterministic model tests](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-deterministic-model-tests)
 
-```text
-Q1
-```
+<a id="giveitem-host-cases"></a>
 
-SUCCESS requires:
+- [GiveItem host cases](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-giveitem-host-cases)
 
-```text
-host reported removedAmount == requestedAmount
-AND
-Q0 - Q1 == requestedAmount
-```
+<a id="takeitem-host-cases"></a>
 
-using CarbonLuau's physical D18 count rather than the hook-virtualized host `GetAmount`.
+- [TakeItem host cases](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-takeitem-host-cases)
 
-This catches an `OnInventoryItemsTake` plugin that simply returns the requested integer without physically removing anything.
+<a id="callbackreentrancy"></a>
 
----
+- [Callback/reentrancy](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-callbackreentrancy)
 
-# 8. Operation outcome model
+<a id="lifecycle"></a>
 
-Adopt exactly three operational outcomes.
+- [Lifecycle](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-lifecycle)
 
-### REJECTED
+<a id="platforms"></a>
 
-Occurs **only before COMMIT**.
+- [Platforms](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-platforms)
 
-Examples:
+<a id="23-genuinely-unresolved-host-dependent-gates"></a>
 
-* insufficient inventory space known from PREPARE;
-* insufficient physical item quantity for Take;
-* operation would exceed bounded placement work;
-* no accepted top-level placement is structurally possible.
+- [23. Genuinely unresolved host-dependent gates](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-23-genuinely-unresolved-host-dependent-gates)
 
-Public result:
+<a id="g1--giveitem-no-world-drop-adapter"></a>
 
-```lua
-false
-```
+- [G1 — GiveItem no-world-drop adapter](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-g1--giveitem-no-world-drop-adapter)
 
-Guarantee:
+<a id="g2--returned-item-terminal-state-observability"></a>
 
-> No CarbonLuau inventory COMMIT began.
+- [G2 — returned-Item terminal-state observability](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-g2--returned-item-terminal-state-observability)
 
-Programming errors and stale Player state are still **errors**, not `false`.
+<a id="g3--target-build-take-verification"></a>
 
-### SUCCESS
+- [G3 — target-build Take verification](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-g3--target-build-take-verification)
 
-COMMIT completed and VERIFY established the public postcondition.
+<a id="g4--cleanup-handling-for-returned-unattached-items"></a>
 
-Public result:
+- [G4 — cleanup handling for returned unattached items](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-g4--cleanup-handling-for-returned-unattached-items)
 
-```lua
-true
-```
+<a id="g5--work-bounds-from-actual-container-maxima"></a>
 
-### INDETERMINATE HOST FAILURE
+- [G5 — work bounds from actual container maxima](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-g5--work-bounds-from-actual-container-maxima)
 
-Any of these after COMMIT begins:
+<a id="24-final-verdict"></a>
 
-* `Create` throws;
-* `Create` unexpectedly returns unusable state;
-* a host transfer fails;
-* a Rust lifecycle callback fails;
-* expected resource ownership cannot be established;
-* cleanup is vetoed/fails;
-* host returns an ambiguous result;
-* Player disconnects;
-* final verification mismatches;
-* prohibited world-drop state is detected.
+- [24. Final verdict](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-24-final-verdict)
 
-Public result:
+<a id="ready-for-canonical-adoption"></a>
 
-```lua
-error("GiveItem host failure after commit began; inventory state may have changed")
-```
-
-or the Take equivalent.
-
-The exact bounded diagnostic can differ, but **it must be distinguishable from normal `false`**.
-
-Once COMMIT begins, CarbonLuau should conservatively **never downgrade the outcome to `false`**.
-
-That keeps the contract extremely simple:
-
-```text
-false = definitely never committed
-true  = verified physical outcome
-error = may have changed
-```
-
----
-
-# 9. Per-Player CarbonLuau mutation serialization
-
-Use one host-level mutation gate keyed by:
-
-```text
-D11 exact connection lifetime token
-```
-
-not UserId alone and not domain ID.
-
-The gate is:
-
-* domain-independent;
-* shared by root and all addons;
-* owner-thread only;
-* held for one synchronous PREPARE→COMMIT→VERIFY operation;
-* always released in `finally`.
-
-Do **not** use a blocking mutex.
-
-CarbonLuau already serializes VM/game-state execution on the owner thread. The gate is therefore a logical invariant rather than an OS concurrency primitive.
-
-If a mutation for the same exact Player is already in flight:
-
-```text
-reject recursive/inconsistent admission with a controlled error
-```
-
-Do not queue and wait while holding host state.
-
-Deferred callbacks execute later after release.
-
-### Cross-addon behavior
-
-Addon A:
-
-```lua
-Player:GiveItem("scrap", 100)
-```
-
-and addon B attempting another same-player mutation cannot interleave their host operations.
-
-Sequential operations are fine.
-
-### Disconnect
-
-If disconnect occurs:
-
-* before COMMIT: stale Player error; no host mutation;
-* after COMMIT: VERIFY normally fails exact D11 identity and the result is indeterminate.
-
-The gate still disappears in `finally`.
-
-### Replacement/recovery
-
-The gate is ephemeral host-operation state, not domain-owned retained publication.
-
-Root/addon replacement cannot inherit it.
-
-VM retirement/reconstruction cannot replay the failed operation.
-
----
-
-# 10. Synchronous plugin interference model
-
-This needs one correction to the historical D13 threat model.
-
-Current Carbon's hook dispatcher wraps ordinary plugin/module hook invocation in exception handling and logs hook failures. So a normal Carbon plugin `throw` generally does **not** simply unwind through the underlying Rust method.
-
-[Carbon HookCaller source](https://github.com/CarbonCommunity/Carbon/blob/main/src/Carbon.Components/Carbon.Common/src/Carbon/Components/HookCaller.cs?utm_source=chatgpt.com)
-[Carbon HookCallerInternal source](https://github.com/CarbonCommunity/Carbon/blob/main/src/Carbon/src/Hooks/HookCallerInternal.cs?utm_source=chatgpt.com)
-
-Therefore D13 should not collapse these into one category:
-
-```text
-Carbon plugin hook exception
-Rust/internal lifecycle exception
-```
-
-They are different.
-
-However plugin interference remains very relevant because a plugin can synchronously:
-
-* reject acceptance;
-* override a result;
-* change the same stack;
-* add/remove another item;
-* move an item elsewhere;
-* spawn entities;
-* perform unrelated side effects.
-
-For example, `CanAcceptItem` explicitly permits a hook to override acceptance. `PlayerInventory.Take` similarly accepts an integer hook override before default physical removal.
-
-Also, direct Rust delegates such as:
-
-```text
-onPreItemRemove
-onItemAddedRemoved
-slot reservation callbacks
-item-mod lifecycle methods
-```
-
-are not the same as Carbon's ordinary plugin hook dispatcher and retain their own failure behavior. `ItemContainer.Remove`, for example, invokes `onPreItemRemove` before unlinking and several delegates before finishing bookkeeping.
-
-CarbonLuau therefore guarantees:
-
-> serialization against **Luau-originated** mutations.
-
-It explicitly does **not** guarantee isolation against arbitrary trusted Carbon plugins.
-
----
-
-# 11. GiveItem decision
-
-## ACCEPT ARCHITECTURALLY
-
-Adopt:
-
-```lua
-Player:GiveItem(ShortName, Amount, Behavior?) -> boolean
-```
-
-under the PREPARE/COMMIT/VERIFY contract.
-
-Do **not** characterize it as transactional Rust inventory.
-
-Its API contract is stronger and more useful:
-
-```text
-true
-    verified physical delivery
-
-false
-    definite PREPARE rejection before inventory COMMIT
-
-error
-    host COMMIT began but CarbonLuau cannot safely establish success
-```
-
-This is Option A from the requested analysis and is the best author-facing design.
-
----
-
-# 12. Exact GiveItem public contract
-
-```lua
-local Given = Player:GiveItem("scrap", 100)
-```
-
-## Inputs
-
-`ShortName`:
-
-* D18 canonical lowercase Rust short-name rules;
-* 1–128 ASCII bytes;
-* no NUL;
-* malformed/noncanonical → programming error;
-* canonical but nonexistent item definition → controlled programming/configuration error.
-
-`Amount`:
-
-* required;
-* integer;
-* `1 <= Amount <= Int32.MaxValue`;
-* actual work additionally bounded by the placement plan.
-
-Using `Int32.MaxValue` matches the underlying host amount representation without inventing an arbitrary low gameplay cap.
-
-A huge value still normally PREPARE-rejects because the accepted inventory cannot contain it within bounded placement work.
-
-## Inventory destination
-
-"GiveItem" means:
-
-> deliver the requested physical item quantity into this exact Player's ordinary accepted top-level inventory.
-
-Accepted containers are the same conceptual inventory D18 observes:
-
-```text
-main
-belt
-wear
-```
-
-CarbonLuau does **not** guarantee a specific slot or which accepted top-level container receives an item.
-
-Excluded:
-
-* backpacks;
-* nested item containers;
-* corpses;
-* external storage;
-* world entities.
-
-The adapter must use bounded preplanned explicit slots on the qualified path,
-not automatic slot selection. The public contract remains container-neutral
-within the accepted set.
-
-## Stacking
-
-Allowed.
-
-## Multiple stacks
-
-Allowed.
-
-## Partial placement
-
-Never returned as normal success.
-
-If part of the grant lands and the rest fails:
-
-```text
-INDETERMINATE HOST FAILURE
-```
-
-not `false`.
-
-## Full inventory
-
-If PREPARE can establish it cannot fit:
-
-```lua
-false
-```
-
-without creating an Item.
-
-## Exact Player
-
-Every phase uses D11 exact connection identity.
-
-## Provisional
-
-Rejected before PREPARE/COMMIT as a controlled provisional-effect error.
-
----
-
-# 13. World-drop decision
-
-**World drop is forbidden as an implementation of `GiveItem`.**
-
-This API must never mean:
-
-```text
-give it to the player, or if that fails throw it on the floor
-```
-
-Historical D13 correctly rejected `BasePlayer.GiveItem` for exactly this reason.
-
-Current `MoveToContainer` still contains a split path that can call `Drop` when it cannot place a generated split remainder.
-
-Therefore the implementation must satisfy D13's revised G1 no-drop wording
-within I12's supported-host boundary. It cannot select or knowingly permit
-drop fallback; normal non-mutating callback acceptance/rejection remains in
-scope. Premise-invalidating external mutation is not isolated, but observed
-world delivery or uncertainty cannot be converted into InventoryOnly success.
-
-The recommended strategy is:
-
-```text
-PREPARE computes explicit bounded placement chunks
-    ↓
-each created chunk is no larger than its planned target stack/container capacity
-    ↓
-transfer through a no-swap/no-drop qualified path
-```
-
-Do not hand an oversized amount to a host path and hope its splitting behavior stays inventory-only.
-
-If the exact supported Rust build cannot provide a reliable no-world-drop path for the planned chunks:
-
-> **GiveItem implementation remains gated/deferred.**
-
-Do not weaken the public API.
-
----
-
-# 14. TakeItem decision
-
-## ACCEPT ARCHITECTURALLY
-
-The revised model actually makes `TakeItem` at least as defensible as GiveItem.
-
-Current `PlayerInventory.Take` naturally traverses:
-
-```text
-main → belt → wear
-```
-
-which matches D18's physical inventory model.
-
-Adopt:
-
-```lua
-Player:TakeItem(ShortName, Amount) -> boolean
-```
-
-with identical outcome classes:
-
-```text
-true
-    requested physical quantity removal verified
-
-false
-    PREPARE proved there was insufficient physical quantity;
-    COMMIT never began
-
-error
-    host removal began but exact final result could not be established
-```
-
-### VERIFY
-
-Require:
-
-```text
-hostReturnedAmount == requestedAmount
-AND
-physicalBefore - physicalAfter == requestedAmount
-```
-
-A plugin hook that reports success without performing removal therefore cannot produce a false CarbonLuau success.
-
-### Why this is now acceptable
-
-Original D13 treated partial removal as fatal to the API because it could not be rolled back.
-
-Under the revised contract:
-
-```text
-partial removal + later failure
-```
-
-is simply:
-
-```text
-INDETERMINATE HOST FAILURE
-```
-
-and the Luau author is not lied to.
-
-CarbonLuau does not need to restore consumed items to claim a useful, honest API.
-
----
-
-# 15. Provisional, D11 and deadline behavior
-
-## Provisional
-
-Both:
-
-```lua
-Player:GiveItem(...)
-Player:TakeItem(...)
-```
-
-are committed-only irreversible host operations.
-
-They fail from:
-
-* candidate initialization;
-* provisional module initialization;
-* provisional cross-domain call chains.
-
-A dependency cannot launder provisional state.
-
-This remains valid:
-
-```lua
-task.defer(function()
-    Player:GiveItem("scrap", 100)
-end)
-```
-
-after successful publication.
-
-Failed candidates never execute it.
-
-## D11
-
-The exact Player is revalidated:
-
-```text
-before PREPARE
-immediately before COMMIT
-during/after VERIFY where required
-```
-
-An old Player proxy never mutates a reconnect.
-
-## Deadlines
-
-The existing Luau execution deadline does not hard-preempt managed/Rust host code. That is already an I8 limitation.
-
-PREPARE→COMMIT→VERIFY should therefore execute inside one synchronous managed facade operation.
-
-Do not:
-
-```text
-COMMIT
-return to Luau
-later VERIFY
-```
-
-because a deadline or script behavior could intervene.
-
-A timeout after a completed host mutation does not roll it back.
-
-A fatal VM recovery never replays the mutation.
-
-Exactly-once remains explicitly unpromised under D9/D10.
-
----
-
-# 16. Safety and resource bounds
-
-### Short name
-
-Reuse D18:
-
-```text
-1..128 ASCII bytes
-canonical lowercase
-no NUL
-```
-
-### Amount
-
-```text
-integer
-1..2,147,483,647
-```
-
-plus the placement/removal work bound below.
-
-### Physical inventory inspection
-
-Bound:
-
-* containers inspected;
-* stacks inspected;
-* matching identities retained in the temporary snapshot.
-
-Only:
-
-```text
-main
-belt
-wear
-```
-
-No recursive nested traversal.
-
-### Placement work
-
-The canonical rule should be:
-
-> one operation may create/transfer no more item chunks than the bounded accepted inventory can physically contain.
-
-The exact numeric maximum should derive from the qualified target build's supported container-capacity envelope rather than a fabricated `64` or `1000`.
-
-Clamp modded/abnormal container capacity to a documented CarbonLuau inspection bound; exceed it → controlled failure.
-
-### Verification
-
-One fresh bounded scan.
-
-No repeated polling until state "looks right."
-
-### Mutation gate
-
-At most one synchronous in-flight inventory mutation per exact Player.
-
-No unbounded waiting queue.
-
-### Diagnostics
-
-Bounded category:
-
-```text
-inventory rejected
-inventory host failure after commit
-inventory verification mismatch
-inventory world-drop violation
-inventory resource cleanup failure
-```
-
-No raw host exception/object dump to scripts.
-
----
-
-# 17. D13 amendments
-
-## Keep
-
-Preserve these findings as canonical:
-
-1. Rust inventory operations are not globally transactional.
-2. item creation can execute lifecycle behavior before returning;
-3. insertion/stacking/splitting can publish partial mutation;
-4. cleanup is itself a host lifecycle operation;
-5. callbacks/plugins may synchronously affect operations;
-6. no universal rollback point exists;
-7. arbitrary plugin effects are not CarbonLuau-rollbackable;
-8. `BasePlayer.GiveItem`/world-drop fallback is not an acceptable implementation of inventory-only `GiveItem`;
-9. raw Item/ItemContainer internals stay hidden from Luau.
-
-Current Rust still materially supports those findings.
-
-## Amend
-
-Replace this implicit requirement:
-
-> An inventory API is unacceptable unless every post-construction failure can be transactionally rolled back and every nested host resource deterministically recovered.
-
-with:
-
-> CarbonLuau provides bounded PREPARE, explicit COMMIT classification, per-exact-Player Luau serialization and post-COMMIT VERIFY. Before COMMIT, definite rejection guarantees no CarbonLuau inventory mutation began. After COMMIT begins, CarbonLuau makes no rollback guarantee: verified success is returned only when the operation's physical postcondition is established; otherwise the operation raises an indeterminate host-failure error. Resources successfully returned to CarbonLuau remain under temporary responsibility until transfer or supported cleanup is attempted. Resources created solely inside a supported host operation that fails before returning them remain in the host failure domain.
-
-Also clarify:
-
-> Carbon plugin hook exceptions are ordinarily isolated by Carbon's hook dispatcher; plugin mutation/override behavior and direct Rust lifecycle callbacks remain relevant interference.
-
-## Supersede
-
-Supersede D13's current conclusion:
-
-> item mutation can only be reconsidered with a stronger Rust transactional API or universal safe abort adapter.
-
-That condition is unnecessarily strong.
-
-Replace it with:
-
-> item mutation is eligible when a specific operation has a bounded PREPARE path, explicit COMMIT boundary, strongest-defensible VERIFY postcondition, exact Player serialization, no forbidden fallback behavior, controlled indeterminate-failure semantics and exact target-build qualification.
-
-This reopens **GiveItem and TakeItem architecture** without erasing any historical Phase 4 evidence.
-
----
-
-# 18. D18 implications
-
-Do not modify D18 as part of this research task.
-
-A later canonical adoption should amend D18's current mutation deferral to add:
-
-```text
-Player:GiveItem(shortName, amount) -> boolean
-Player:TakeItem(shortName, amount) -> boolean
-```
-
-under revised D13.
-
-I recommend adding a separate phase rather than disturbing already-defined Player-1A through Player-1E:
-
-### Player-1F — inventory mutation
-
-Contains only:
-
-```lua
-Player:GiveItem(...)
-Player:TakeItem(...)
-```
-
-with D13 PREPARE/COMMIT/VERIFY semantics.
-
-If GiveItem's no-world-drop host gate fails while TakeItem passes, Player-1F may qualify TakeItem alone. Public symmetry is not an invariant.
-
----
-
-# 19. Roblox-like author-facing examples
-
-Normal Give:
-
-```lua
-if Player:GiveItem("scrap", 100) then
-    print("Delivered")
-else
-    print("Not enough inventory space")
-end
-```
-
-Normal Take:
-
-```lua
-if Player:TakeItem("scrap", 100) then
-    print("Payment accepted")
-else
-    print("Not enough scrap")
-end
-```
-
-Host failure remains catchable:
-
-```lua
-local Ok, Result = pcall(function()
-    return Player:GiveItem("rifle.ak", 1)
-end)
-
-if not Ok then
-    print("The host could not establish a safe final result:", Result)
-elseif not Result then
-    print("The inventory could not accept it")
-end
-```
-
-No author-facing:
-
-```lua
-Item
-ItemContainer
-ItemDefinition
-transaction handles
-rollback tokens
-container enums
-cleanup receipts
-```
-
-Rust's complexity remains behind the facade.
-
----
-
-# 20. Exact behavior still deferred/rejected
-
-Do **not** add:
-
-```lua
-Player:GetInventory()
-Player:GiveItemToContainer(...)
-Player:GiveItemAtSlot(...)
-Player:MoveItem(...)
-Player:SplitItem(...)
-Player:DropItem(...)
-Player:RemoveItemByUid(...)
-```
-
-Do not expose:
-
-```text
-Item
-ItemDefinition
-ItemContainer
-UID
-Rust container IDs
-Rust move flags
-ignoreStackLimit
-allowSwap
-```
-
-Also deferred:
-
-* nested inventory mutation;
-* backpack mutation;
-* world-drop APIs;
-* item condition/custom-data editing;
-* skins/instance data/attachments as GiveItem options;
-* transactional multi-item batches;
-* rollback/undo APIs;
-* cross-player inventory transfer.
-
-Foundation mutation remains deliberately small.
-
----
-
-# 21. Implementation phases
-
-### Inventory-M1 — deterministic transaction model
-
-Managed/model-only.
-
-Implement/test:
-
-* exact-Player mutation gate;
-* PREPARE plans;
-* phase state;
-* REJECTED/SUCCESS/INDETERMINATE outcomes;
-* fake host failure injection;
-* verification algorithms;
-* bounded snapshots.
-
-No Rust mutation yet.
-
-### Inventory-M2 — exact target-build adapter qualification
-
-Inspect current Windows/Linux target assemblies and establish:
-
-* exact Create path;
-* item creation return/ownership behavior;
-* no-drop transfer path;
-* accepted-container semantics;
-* stacking/chunk placement;
-* Take behavior;
-* cleanup behavior for returned unattached items;
-* useful verification identities/state.
-
-No public API until this passes.
-
-### Player-1F-A — TakeItem
-
-Implement Take first.
-
-It has no newly created resource and directly matches D18's main/belt/wear model.
-
-### Player-1F-B — GiveItem
-
-Implement only after no-world-drop transfer qualification.
-
-### Player-1F-C — combined lifecycle/public closure
-
-Run:
-
-* cross-addon;
-* reload;
-* provider;
-* VM recovery;
-* stress;
-* Windows/Linux live Carbon;
-* docs/API identity review.
-
----
-
-# 22. Qualification plan
-
-## Deterministic model tests
-
-For both APIs:
-
-* pre-COMMIT rejection changes nothing;
-* `true` requires VERIFY;
-* post-COMMIT host false cannot become ordinary `false`;
-* exception after COMMIT becomes indeterminate;
-* verification mismatch becomes indeterminate;
-* gate always releases;
-* no recursive same-player mutation;
-* two addons serialize;
-* different domain lifetimes cannot bypass D11/D10;
-* provisional operation cannot mutate.
-
-## GiveItem host cases
-
-Test:
-
-* empty inventory;
-* partially filled compatible stack;
-* multiple compatible stacks;
-* exact stack completion;
-* free-slot insertion;
-* full inventory → pre-COMMIT `false`;
-* non-stackable item;
-* condition-bearing item;
-* wearable/belt-main placement;
-* nested-content item;
-* held-entity-producing item;
-* item-mod-created resources;
-* invalid short name;
-* unknown canonical short name;
-* amount bounds;
-* placement-work limit;
-* disconnect before PREPARE;
-* disconnect immediately before COMMIT;
-* disconnect during COMMIT if injectable;
-* failure during creation;
-* failure after item return;
-* failure during insertion;
-* stack callback mutation;
-* CanAcceptItem rejection;
-* plugin changes same stack during callback;
-* plugin removes granted item before VERIFY;
-* plugin adds bonus same-short-name quantity;
-* cleanup hook rejection;
-* verification mismatch;
-* prohibited Drop path;
-* repeated grants.
-
-## TakeItem host cases
-
-Test:
-
-* main only;
-* belt only;
-* wear only;
-* amount split across all three;
-* multiple stacks;
-* exact depletion;
-* partial stack reduction;
-* insufficient amount → `false`;
-* `OnInventoryItemsTake` returns requested count without mutation → error;
-* hook physically removes requested amount and returns matching count → success;
-* hook removes wrong quantity → error;
-* plugin adds same item during Take → verification error;
-* mid-removal failure → indeterminate;
-* stale/disconnect scenarios;
-* repeated removals.
-
-## Callback/reentrancy
-
-Controlled Carbon plugin fixtures must:
-
-* mutate target inventory;
-* reject acceptance;
-* alter stack quantity;
-* add bonus items;
-* attempt CarbonLuau-triggering actions;
-* throw from normal Carbon hooks.
-
-Confirm normal Carbon hook exceptions are contained by Carbon and do not recursively enter Luau, while host result/physical-state changes are still detected.
-
-Direct non-Carbon delegates/item-mod paths need separate injected failure coverage because Carbon HookCaller containment does not apply to them.
-
-## Lifecycle
-
-Cover:
-
-* 100 healthy root replacements;
-* failed candidates;
-* addon replacement;
-* provider unload/reload;
-* VM fatal recovery;
-* CarbonLuau unload;
-* reconnect with same Steam ID;
-* gate/resource state returns to baseline.
-
-## Platforms
-
-Required:
-
-* current qualified Windows Rust build;
-* current qualified Linux Rust build;
-* compare relevant method semantics across platforms;
-* live Carbon.
-
-No authenticated Rust client is required merely to verify server-authoritative inventory quantity/ownership.
-
-Client evidence is required only if later API semantics make an assertion about client UI/notices/equipped-state presentation.
-
----
-
-# 23. Genuinely unresolved host-dependent gates
-
-Architecture is resolved. Only these implementation gates remain.
-
-### G1 — GiveItem no-world-drop adapter
-
-The exact target build must demonstrate D13's supported-host no-drop path under
-I12. The original M2 G1 conclusion is superseded, not restored by adopting that
-boundary. The required normal-host and separate hostile-mutation matrix is in
-[Player-1F-B](PlayerInteractionFoundation1FB.md#required-1f-b-requalification).
-
-Failure of G1:
-
-```text
-GiveItem stays deferred.
-```
-
-Do not redefine GiveItem to permit dropping.
-
-### G2 — returned-Item terminal-state observability
-
-After a successful `Create`, CarbonLuau must be able to determine enough state to classify each created Item as:
-
-```text
-accepted inventory
-consumed by successful stack merge
-still under temporary responsibility
-unexpected/indeterminate
-```
-
-If this cannot be established on the target build, GiveItem does not qualify.
-
-### G3 — target-build Take verification
-
-Confirm the current `Take` semantics and any `collect` behavior needed to perform bounded structural verification.
-
-The current generated source already strongly supports main→belt→wear sequential semantics and hook override behavior.
-
-### G4 — cleanup handling for returned unattached items
-
-Establish the supported cleanup request and exact observable state after it.
-
-CarbonLuau is **not** required to defeat a trusted plugin that deliberately vetoes cleanup. Such veto/failure remains indeterminate.
-
-### G5 — work bounds from actual container maxima
-
-Select concrete stack/placement inspection limits from the target build and qualified modded-envelope policy.
-
-These are tuning/qualification gates, not unresolved public semantics.
-
----
-
-# 24. Final verdict
-
-## READY FOR CANONICAL ADOPTION
-
-D13 should be revised.
-
-The historical evidence was valuable and should remain untouched, but the conclusion drawn from it was too strong.
-
-The canonical model should become:
-
-```text
-CarbonLuau does not promise globally atomic Rust inventory.
-
-CarbonLuau does promise:
-
-    exact-Player serialization
-    +
-    bounded pure PREPARE
-    +
-    explicit first-host-effect COMMIT boundary
-    +
-    no mutation during provisional execution
-    +
-    strongest-defensible physical VERIFY
-    +
-    false only for definite pre-COMMIT rejection
-    +
-    true only for verified success
-    +
-    controlled error for post-COMMIT uncertainty
-```
-
-Under that model:
-
-| API                              | Architecture     |
-| -------------------------------- | ---------------- |
-| `Player:GiveItem(name, amount)`  | **ACCEPT**       |
-| `Player:TakeItem(name, amount)`  | **ACCEPT**       |
-| rollback/undo                    | **REJECT**       |
-| global plugin isolation          | **NOT PROMISED** |
-| world-drop fallback for GiveItem | **FORBIDDEN**    |
-| raw Item/container exposure      | **REJECT**       |
-
-The most important change is conceptual:
-
-> **A lack of rollback no longer makes an operation unexposable. It means CarbonLuau must distinguish definite non-commit from verified success and from indeterminate post-commit failure.**
-
-That is already consistent with D10's treatment of irreversible host effects. It gives Luau authors the simple semantics the project wants without making a false claim that Rust suddenly became transactional.
+- [READY FOR CANONICAL ADOPTION](history/inventory/InventoryOwnershipFailureReassessment.md#inventoryownershipfailurereassessment-ready-for-canonical-adoption)

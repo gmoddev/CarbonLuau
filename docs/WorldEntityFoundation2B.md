@@ -16,7 +16,7 @@ qualified private completed-Spawn catalog, position adapter and traversal
 evidence. Its receipts do not qualify public Luau callback admission/conversion.
 
 Discovery-2B consumes that substrate through one simple public callback method.
-The [earlier callback proposal](WorldEntityAsyncTraversalInvestigation.md#small-public-proposal-not-an-implemented-contract)
+The [earlier callback proposal](history/world/WorldEntityAsyncTraversalInvestigation.md#worldentityasynctraversalinvestigation-small-public-proposal-not-an-implemented-contract)
 supplies callback-third/options-last ordering; this task selects the optional
 Limit field in addition to Prefab. The earlier research proposal remains
 historical evidence, including its then-unselected limits. Production bindings,

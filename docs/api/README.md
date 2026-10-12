@@ -1,32 +1,29 @@
 # CarbonLuau scripting API
 
-The latest published package is v0.5.0 with experimental scripting API
-`0.5.0-experimental`. The development scripting API is `0.7.0-experimental`;
-Workspace/Entity (introduced in 0.6.0), player lifecycle Signals and
-`Workspace.EntitySpawned`, `Workspace.EntityDestroyed` and `Workspace.EntityDied` (introduced in 0.6.5)
-are **not in published v0.5.0**.
-The development Loot declaration and `Enum.DropMode.Replace` were introduced at 0.6.5
-and are not in published v0.5.0; see [Loot](Services/Loot.md) for host gates and
-nontransactional payout limits.
-Development `Player:GetInventory()` and `PlayerInventory.ItemChanged` retain
-their `0.6.5-experimental` introductions and are not in published v0.5.0.
-API 0.7 explicitly removes the legacy Player inventory methods. Existing
-Inventory HasItem/CountItem names are retained. Use `Inventory:CountItem`, `HasItem`,
-`GiveItem(ShortName, Amount, Behavior?)` and `TakeItem(ShortName, Amount)`; there are no
-legacy aliases or GetItem/GetItems. New `PlayerInventory:GiveItem`/`PlayerInventory:TakeItem`
-methods are introduced at 0.7. See the [migration guide](Inventory-Migration.md).
-ItemChanged reports
-sampled physical Before/After/Delta observations: temporary transfers can appear,
-balanced changes can be missed, and completed-operation delivery is not promised.
-See [PlayerInventory](Types/PlayerInventory.md#itemchanged) for baselines,
-publication, drops and shared budgets.
-[Persistence Foundation 1C](../PersistenceFoundation1C.md)
-and [Foundation 2D](../PersistenceFoundation2D.md) record combined qualification;
-see [persistence](Persistence.md) for the author surface.
-The earlier gameplay/addon/GUI/Player surfaces retain their introduction versions
-through 0.4.0-experimental. Their recorded Windows/Linux, sanitizer and Carbon
-evidence, including [Foundation E](../FoundationE.md), does not qualify persistence.
-This is server-side Luau, not Roblox API compatibility.
+Published package `v0.5.0` uses experimental API `0.5.0-experimental`.
+Current development uses `0.7.0-experimental`; its newer world, gameplay, Loot and
+PlayerInventory features are not in that published package. This is local
+server-side Luau, not Roblox cloud/DataModel/replication compatibility.
+
+## Availability and migration
+
+| Introduction | Surface |
+|---|---|
+| 0.3 | Players, Player, Commands, Signals/Connections and bounded script/task/module runtime |
+| 0.4 | Addons/providers, GUI and Player spatial/health/item/inventory operations |
+| 0.5 | Local DataStoreService, Get/Set/Remove, structured Query and optional hints |
+| 0.6 development | Exact read-only Workspace/Entity and bounded asynchronous discovery |
+| 0.6.5 development | Player/Entity lifecycle Signals, PlayerInventory acquisition/reads, sampled ItemChanged and declarative Loot Replace |
+| 0.7 development | Breaking inventory migration: GiveItem/TakeItem move to PlayerInventory; legacy Player HasItem/CountItem/GiveItem/TakeItem are removed without aliases |
+
+Use [Player:GetInventory](Types/Player.md) and
+[PlayerInventory](Types/PlayerInventory.md) for CountItem, HasItem, GiveItem,
+TakeItem and sampled ItemChanged. The [migration guide](Inventory-Migration.md)
+owns the change. Existing acquisition/read/Signal introductions remain 0.6.5;
+new facade mutations are introduced at 0.7. Package version is a separate
+[release decision](../Release.md).
+
+## API reference
 
 | Implemented surface | Reference |
 |---|---|
@@ -54,91 +51,31 @@ This is server-side Luau, not Roblox API compatibility.
 | Server-driven retained GUI with qualified Foundation 2A layout, 2B typed images and 2C scrolling source | [GUI guide](Gui.md), [GUI reference](Gui-Reference.md) |
 | Experimental v0.5 persistence ([combined qualification](../PersistenceFoundation2D.md)) | [Guide and examples](Persistence.md), [DataStoreService](Services/DataStoreService.md), [DataStoreOptions](Types/DataStoreOptions.md), [DataStore](Types/DataStore.md), [DataStoreQuery](Types/DataStoreQuery.md), [DataStoreQueryResult](Types/DataStoreQueryResult.md), [PersistedValue](Types/PersistedValue.md) |
 
-Discovery-2B adds the selected development contract for
-[`Workspace:GetEntitiesInRadiusAsync`](Services/Workspace.md#getentitiesinradiusasync).
-See the [discovery guide](Discovery.md),
-[EntityDiscoveryOptions](Types/EntityDiscoveryOptions.md) and
-[runnable example](../../examples/world/discovery/init.luau). Public completion
-qualification is PASS in the [2B record](../WorldEntityFoundation2B.md).
-This surface was introduced in development API `0.6.0-experimental` and is not included
-in published package `0.5.0`.
-Combined lifecycle, scale and next-package readiness are recorded in
-[Foundation 2C](../WorldEntityFoundation2C.md).
+## Execution and safety
 
-Optional `GetDataStore` field-name hints are the Persistence-2B addition.
-`DataStore:Query` adds structured equality, inclusive range and ordered top-N
-requests with bounded, opaque keyset pagination. See the
-[Foundation 2 contract](../PersistenceFoundation2.md) for its limits.
+Methods use colon syntax. Services/proxies/contexts expose no raw Rust/Unity/CLR
+object or filesystem/SQL authority. API misuse raises controlled errors; read
+each reference for its exact absence, stale and failure behavior.
 
-Players and Commands are available beginning with API `0.3.0-experimental`.
-Addon composition and GUI are available beginning with
-`0.4.0-experimental`. They are implemented but experimental; see the evidence
-records before deploying.
-Methods use colon syntax. Services, proxies and command contexts cannot be edited.
-API misuse and failed player operations raise controlled Luau errors; catch with
-`pcall` when appropriate. Lookup absence returns nil; `IsConnected` returns false.
-No API returns a host object or transfers ownership of a Rust player to Lua.
+Callbacks enter later through bounded owner-thread admission, not inline host
+hooks. Publication, root/addon replacement and VM recovery retain exact original
+authority; no old handle silently retargets a replacement lifetime.
 
-Successful healthy reload replaces the operator-root domain inside the current VM.
-Failed candidate initialization preserves the old root, including its listeners,
-commands and queued callbacks.
-Callbacks run later through a bounded main-thread scheduler, not inline in hooks.
-Timeout may retire the entire generation under the existing one-attempt recovery
-policy. Previously delivered messages are not undone or deduplicated on recovery.
+- [Discovery](Discovery.md) is bounded asynchronous complete traversal, evaluated
+  when candidates are encountered—not an atomic world snapshot. Exact host and
+  initial-startup observer requirements apply.
+- [Persistence](Persistence.md) submits without yielding. Submission is not
+  durable success; callbacks have exact lifetime/at-most-once authority and uncertain
+  mutations are not replayed. Query is index-backed, not an unbounded scan.
+- [ItemChanged](Types/PlayerInventory.md#itemchanged) is sampled net change, not
+  causal/completed transfer tracking. Intermediate changes may appear and balanced
+  changes may be missed.
+- [Loot](Services/Loot.md) replaces only qualified destruction-time payouts;
+  it does not reclaim earlier generated world drops or promise rollback.
+- [GUI](Gui.md) remains server-driven retained presentation, not client replication.
+  Authenticated-client visual/input/reconciliation observations remain unqualified;
+  TextBox and Submitted are not implemented.
 
-```lua
-local Players = game:GetService("Players")
-Players.PlayerAdded:Connect(function(Player)
-    Player:SendMessage("Hello from CarbonLuau")
-end)
-```
-
-Player-1A adds immutable `Vector3` and the live read-only `Player.Position`;
-Player-1B adds live read-only `Player.Health` and `Player.MaxHealth`; Player-1C
-qualified `Items:Exists` and bounded physical inventory reads at the original
-0.4 identity; Player-1D qualified committed-only `Player:Teleport(Vector3)`.
-Player-1F-A/B qualified inventory removal/grants, defaulting to typed InventoryOnly.
-Current API 0.7 puts those inventory contracts on `Player:GetInventory()` as
-CountItem/HasItem/TakeItem/GiveItem. Historical records below preserve their tested names and
-versions; C4 migration qualification is separate. See the
-[Player-1A](../PlayerInteractionFoundation1A.md) and
-[Player-1B](../PlayerInteractionFoundation1B.md) and
-[Player-1C](../PlayerInteractionFoundation1C.md) and
-[Player-1D](../PlayerInteractionFoundation1D.md) and
-[Player-1F-A](../PlayerInteractionFoundation1FA.md) and
-[Player-1F-B](../PlayerInteractionFoundation1FB-Validation.md) and
-[Player-1F-C combined closure](../PlayerInteractionFoundation1FC.md) qualification records. Not implemented in
-the current scripting surface: raw inventory objects, synchronous world enumeration,
-world mutation, health mutation,
-moderation/admin mutation, networking, HTTP, filesystem APIs,
-arbitrary hooks/console execution, reflection, Roblox hierarchy/replication and
-`task.wait`. Historical Phase 4 was deferred; the implemented Player-1C/1F
-surface is qualified separately under revised D13 and
-[D18](../Invariants.md#d18--player-interaction-foundation-1).
-Teleport is available with exact-build server qualification and an explicit
-authenticated-client deferral. Inventory TakeItem retains exact-build
-PREPARE/COMMIT/VERIFY semantics; GiveItem uses a bounded complete placement plan
-and the supported-host InventoryOnly adapter.
-Revised D13 requires PREPARE/COMMIT/VERIFY and exact-Player serialization for inventory mutation;
-richer inventory mutation and raw host objects remain deferred.
-
-Addon packages use exact dependency bindings, explicit exports and the readonly
-`addon` context. They are public experimental behavior beginning with
-`0.4.0-experimental`; they are not present in published v0.3.0 artifacts.
-
-GUI Foundation 1 provides `game:GetService("Gui")`, ScreenGui, Frame and text
-controls with retained properties, immutable values, per-Player Show/Hide and
-secure Activated events. Foundation 2 adds release-qualified layout helpers,
-typed ImageSource, ImageLabel, ImageButton and retained ScrollingFrame
-configuration with client-local scroll position under the same
-`0.4.0-experimental` identity. TextBox is not implemented. Advanced styling,
-hover/focus and raw CUI remain unsupported. Authenticated-client visual, cursor, image-load,
-click-receipt and reconciliation observations remain unqualified even though
-the experimental source surface is available.
-
-Foundation 3 adds deterministic `UIGridLayout`, bounded
-`Frame.ClipsDescendants`, four project-owned `GuiFont` values, retained text
-fonts and exact-Player one-way scroll effects under the same still-unreleased
-`0.4.0-experimental` identity. Their server-side model, publication, lifecycle
-and scale behavior is qualified. Authenticated-client clipping, font rendering
-and actual scroll behavior remains explicitly unqualified.
+Read [scripting compatibility](Compatibility.md), [current contract routing](../Index.md)
+and [qualification](../qualification/README.md) before treating API availability
+as evidence for a host, client, durability or release claim.

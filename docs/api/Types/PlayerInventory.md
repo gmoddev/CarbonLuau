@@ -228,8 +228,8 @@ See [Player](Player.md), [Signal](Signal.md),
 [C1 facade qualification](../../GameplayC1-Validation.md) and
 [C2 private sampled evidence and limitations](../../GameplayC2-Validation.md),
 [C3 public sampled qualification](../../GameplayC3-Validation.md),
-[original grant qualification](../../PlayerInteractionFoundation1FB-Validation.md)
-and [combined mutation closure](../../PlayerInteractionFoundation1FC.md).
+[original grant qualification](../../qualification/PlayerInteraction.md#playerinteractionfoundation1fb-validation)
+and [combined mutation closure](../../qualification/PlayerInteraction.md#playerinteractionfoundation1fc).
 These historical receipts retain their tested names/versions; the separate C4
 migration and exact final-source qualification are pending in
 [C4 evidence](../../GameplayC4-Validation.md) and remain a release gate in

@@ -2,7 +2,7 @@
 
 Availability: experimental API `0.4.0-experimental`. This surface is in the
 qualified v0.4.0 candidate and is not part of published v0.3.0 artifacts. See
-[Foundation E](../FoundationE.md) for qualification and [addon providers](Addon-Providers.md)
+[Foundation E](../qualification/Addons.md#foundatione) for qualification and [addon providers](Addon-Providers.md)
 for package registration.
 
 ## Manifest

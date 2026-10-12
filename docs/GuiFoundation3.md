@@ -553,7 +553,7 @@ Foundation 3 is Roblox-familiar, not Roblox-equivalent:
 
 Architecture adoption itself began no implementation. GUI-3A was subsequently
 implemented as the isolated deterministic-grid slice recorded in
-[GuiFoundation3A.md](GuiFoundation3A.md); the later sequence remains gated.
+[GuiFoundation3A.md](qualification/Gui3.md#guifoundation3a); the later sequence remains gated.
 
 ### GUI-3A: schema and deterministic grid
 

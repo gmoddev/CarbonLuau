@@ -14,7 +14,7 @@ the publication of the preserved C2 implementation/evidence.
 D18 owns physical acceptance, D11 original connections, D13 nontransactional
 mutation, and D7/D10/D23 existing publication/deferred delivery. The public
 [C1 facade](GameplayC1-Validation.md) is unchanged. Preserve the
-[C/D research](GameplayCDArchitecture-Research.md), including rejected raw-hook
+[C/D research](history/gameplay/GameplayCDArchitecture-Research.md#gameplaycdarchitecture-research), including rejected raw-hook
 and intermediate-transfer interpretations.
 
 The private candidate samples opt-in exact connections on the existing owner-frame
@@ -86,7 +86,7 @@ values/keys or unbounded history are logged. Unavailable frame pump rejects dema
 
 ## Host source and negative evidence
 
-[Exact-host research](GameplayC2-HostResearch.md) records 24 selected methods per
+[Exact-host research](history/gameplay/GameplayC2-HostResearch.md#gameplayc2-hostresearch) records 24 selected methods per
 platform, direct amount writers, hook classifications, static/publicizer provenance
 and its distinction from loaded evidence. Rust build 25653776/protocol 2634.289.1;
 Windows Carbon 2.0.262.0/8a81d70, Linux 2.0.261.0/c74c4ca, Harmony 2.4.2.0.

@@ -106,7 +106,7 @@ hotload `adapter-hotload-20261002-182756` reached server startup before plugin
 load and rejected Entity baseline with an explicit restart-required diagnostic;
 the following qualified initial-batch boot is the restart path. Windows
 save-loaded restoration was observed separately
-in [startup research](WorldEntityStartupObserverInvestigation.md).
+in [startup research](history/world/WorldEntityStartupObserverInvestigation.md#worldentitystartupobserverinvestigation).
 
 The task-owned Linux host's final private fixture log under
 `/root/codex/entity1a-25653776/adapter-check/evidence/entity-private-20261002-222545/server.log`
@@ -138,10 +138,10 @@ Linux/Windows real Carbon startup and final managed/runtime regressions are
 distinct from the pure model tests. Final-source hosted Windows/Linux CI is
 recorded with the closing commit/push rather than inferred from earlier runs.
 
-The earlier [registry-continuity investigation](WorldEntityLifetimeInvestigation.md),
-[failed-Spawn probe](WorldEntitySpawnEpochProbe.md),
-[base-completion follow-up](WorldEntityCompletionFenceInvestigation.md) and
-[startup-observer investigation](WorldEntityStartupObserverInvestigation.md)
+The earlier [registry-continuity investigation](history/world/WorldEntityLifetimeInvestigation.md#worldentitylifetimeinvestigation),
+[failed-Spawn probe](history/world/WorldEntitySpawnEpochProbe.md#worldentityspawnepochprobe),
+[base-completion follow-up](history/world/WorldEntityCompletionFenceInvestigation.md#worldentitycompletionfenceinvestigation) and
+[startup-observer investigation](history/world/WorldEntityStartupObserverInvestigation.md#worldentitystartupobserverinvestigation)
 remain intact. Their negative observations were not rewritten as successes.
 
 ## Deployment and Entity-1B boundary

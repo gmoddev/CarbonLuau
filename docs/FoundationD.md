@@ -1,154 +1,43 @@
-# Foundation D — public addon modules
+# Foundation D — public addon modules — compatibility routing
 
-Foundation D implements the first Luau-facing addon composition layer on the
-qualified Foundation C graph. It is a post-v0.3.0 development feature, not part of
-the published `v0.3.0` artifacts and not an assignment of a public addon scripting
-API version.
+This stable compatibility page routes to the complete dated
+[record](qualification/Addons.md#foundationd). It is not a second contract or qualification receipt.
+For current documentation roles, use the [documentation index](Index.md).
 
-Subsequent Foundation E qualification assigns this additive surface to
-`CarbonLuau 0.4.0-experimental`; the statements below preserve Foundation D's
-status at its tested revision.
+## Original sections
 
-## Package exports
+<a id="foundation-d--public-addon-modules"></a>
 
-Archive manifests may add two schema-1 fields:
+- [Foundation D — public addon modules](qualification/Addons.md#foundationd-foundation-d--public-addon-modules)
 
-```json
-{
-  "schema": 1,
-  "id": "creator.economy",
-  "version": "1.0.0",
-  "main": "api",
-  "publicModules": ["types", "format/money"],
-  "dependencies": {
-    "required": ["creator.database"],
-    "optional": ["creator.analytics"]
-  }
-}
-```
+<a id="package-exports"></a>
 
-`main` and every `publicModules` item are canonical logical module paths without
-an extension. Each must name an existing `.luau` source in the immutable package
-snapshot. Duplicate, missing, absolute, dot-relative, traversal, backslash,
-noncanonical or over-bound declarations are rejected before registration. `main`
-is automatically public and must not also appear in `publicModules`.
+- [Package exports](qualification/Addons.md#foundationd-package-exports)
 
-`init.luau` remains the activation entrypoint. Importing a package never executes
-`init.luau`; it lazily executes only the selected module after Foundation C has
-already activated the dependency lifetime.
+<a id="resolution"></a>
 
-## Resolution
+- [Resolution](qualification/Addons.md#foundationd-resolution)
 
-Resolution is intentionally narrow:
+<a id="shared-values-and-publication"></a>
 
-```lua
-require("private/util")       -- current defining addon's private namespace
-require("@creator.economy")  -- exact dependency binding's main module
-require("@creator.economy/api") -- exact exported module
-```
+- [Shared values and publication](qualification/Addons.md#foundationd-shared-values-and-publication)
 
-Unqualified names retain the Phase 2/Foundation A behavior. Package IDs are the
-declared dependency keys, not aliases. There is no `./`, `../`, filesystem
-fallback, global search, undeclared lookup, user alias or dependency-handle
-`Require` method. `@id` raises a controlled ordinary error when the bound package
-has no `main`; `@id/path` raises one when the path is not explicitly public.
+<a id="addon-context"></a>
 
-The native resolver uses the consumer domain's immutable Foundation C binding to
-the exact target domain lifetime. It does not resolve the ID again. An absent,
-lost or replaced target therefore rejects new imports; it never redirects an old
-consumer to a replacement.
+- [Addon context](qualification/Addons.md#foundationd-addon-context)
 
-## Shared values and publication
+<a id="lifetime-behavior"></a>
 
-Public access calls the same native module loader and cache used by local access.
-The cache identity remains VM generation, defining domain lifetime and logical
-module path. No copy, proxy or RPC layer is introduced. Two consumers receive the
-same ordinary Luau value by reference, including shared mutable tables and
-closures retaining the defining module's private environment.
+- [Lifetime behavior](qualification/Addons.md#foundationd-lifetime-behavior)
 
-All existing module behavior remains unchanged: first return only, nil/no return
-becomes `true`, extra returns are ignored, successful results cache by reference,
-failures retry, cycles are controlled, depth is 32 and initialization cannot
-yield.
+<a id="identities-and-deferred-work"></a>
 
-Foundation A publication scopes also remain authoritative across a domain
-boundary. A failed first public load publishes neither its cache candidate nor
-its CarbonLuau-owned tasks/listeners, even when caught. A successful foreign load
-inside provisional addon initialization merges into that candidate and publishes
-only on candidate commit. Candidate failure discards both. Ordinary Luau memory
-mutations are not rolled back.
+- [Identities and deferred work](qualification/Addons.md#foundationd-identities-and-deferred-work)
 
-## Addon context
+<a id="qualification-surface"></a>
 
-Addon entrypoints and module environments receive a readonly `addon` table:
+- [Qualification surface](qualification/Addons.md#foundationd-qualification-surface)
 
-| Member | Behavior |
-|---|---|
-| `addon.Id` | Stable canonical package ID for the defining domain |
-| `addon.Version` | Informational manifest version for that domain lifetime |
-| `addon:IsDependencyAvailable(id)` | `true` only when this domain declared `id` and its exact binding is currently active |
+<a id="qualification-evidence"></a>
 
-Undeclared and activation-time-absent optional IDs return `false`.
-Noncanonical arguments raise a controlled error. Availability is local to the
-current addon's binding; it is not global package discovery. A method retained
-from a retired addon still fails its domain-lifetime check.
-
-## Lifetime behavior
-
-Ordinary values already returned from A1 may remain usable after A1 retirement
-while the VM survives. Captured host-backed A1 facades still fail closed. An old
-consumer cannot make a fresh import through its stale A1 binding and no value
-silently targets A2. Foundation C reconstructs eligible required consumers, which
-then bind and resolve A2. Optional consumers keep their existing domain and stale
-binding until explicitly reconstructed.
-
-## Identities and deferred work
-
-Foundation D adds native ABI `1.4` and provider protocol
-`CarbonLuau.Addons` / `1.2` with the `public-modules` capability. Package schema
-remains 1. The released gameplay scripting API remains
-`CarbonLuau 0.3.0-experimental`; the addon-capable scripting identity is still
-unassigned and these development sources are not a public addon release.
-
-Provider C# capabilities, root-to-addon imports, addons depending on root,
-version solving, multiple instances, downloads/registries, restricted exposure,
-async capabilities and Foundation E remain deferred.
-
-## Qualification surface
-
-The Foundation D fixtures cover manifest bounds, local-require regression,
-main/path imports, exact public/private visibility, shared identity and mutable
-state, defining environments, nil normalization, retry, runtime cycle/depth/yield
-guards, caught failure rollback, provisional foreign commit/rollback, A1/A2
-replacement behavior, retained pure values versus stale facades,
-`IsDependencyAvailable`, repeated replacement and Foundation A–C regressions.
-
-## Qualification evidence
-
-Foundation D was qualified on 2026-09-16 from starting commit
-`d5a17817fb0c1497cac22fbf2352196eb4444127`. The tested implementation revision
-is `2e635c3136d0cd05ee5f4520271068abcc0f864a`.
-
-- Windows: the established worker release matrix passed the MSVC Release build,
-  all four native CTest fixtures, dynamic CRT rejection, the complete managed
-  runtime/addon suite, 100 loader cycles, packaging and API documentation checks.
-- Linux: the established worker matrix passed the Ubuntu 24.04 GCC 13.3 Release
-  build, all four native CTest fixtures, the complete Mono runtime/addon suite,
-  exported-package probe and packaging checks.
-- Sanitizers: ASan, UBSan and leak detection passed all four native fixtures on
-  the Linux worker.
-- Live Carbon: the isolated Windows server passed initial public-module import,
-  addon identity and availability checks, required-loss propagation, optional
-  preservation, required-consumer reconstruction and replacement generation 2.
-  The retained optional consumer did not hot-rebind.
-- GitHub Actions: [Phase 0 through 3 run 35078222710](https://github.com/gmoddev/CarbonLuau/actions/runs/35078222710)
-  passed Windows, Ubuntu and sanitizer jobs; [Documentation run
-  35078222868](https://github.com/gmoddev/CarbonLuau/actions/runs/35078222868)
-  passed.
-
-The worker scripts retain their historical Foundation B/C names because they are
-the repository's established full-platform runners. Their Foundation D runs used
-fresh source and build directories. The live server was stopped and its fixture
-state restored after qualification. No authenticated real-client behavior is
-introduced by Foundation D, so that previously approved deferred surface remains
-outside this qualification.
+- [Qualification evidence](qualification/Addons.md#foundationd-qualification-evidence)

@@ -153,8 +153,8 @@ B3-only patch drift need not invalidate independently unchanged keyed D20 or B1.
 First install after world startup and full plugin unload/reload still need D20's
 restart; B3 cannot repair an observer gap.
 
-[Historical lifetime negatives](WorldEntityLifetimeInvestigation.md), the
-[Gameplay research](GameplayEventsArchitecture-Research.md), vetoable OnEntityKill
+[Historical lifetime negatives](history/world/WorldEntityLifetimeInvestigation.md#worldentitylifetimeinvestigation), the
+[Gameplay research](history/gameplay/GameplayEventsArchitecture-Research.md#gameplayeventsarchitecture-research), vetoable OnEntityKill
 and specialized Bradley/CH47 OnEntityDestroy findings remain intact. The collective
 observer supplies qualified success boundaries; those hooks do not become
 completion authority. Actual natural same-object pooled reuse is not newly

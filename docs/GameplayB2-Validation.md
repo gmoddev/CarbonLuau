@@ -77,7 +77,7 @@ No new scheduler, unbounded history, synchronous Luau hook or retry queue exists
 
 ## Attribution limits
 
-[Attribution research](GameplayB2-Attribution-Research.md) proves that
+[Attribution research](history/gameplay/DeathAttribution.md#gameplayb2-attribution-research) proves that
 InitiatorPlayer can dispatch virtual ToPlayer owner/controller resolution.
 Even a direct human Initiator field may already come from an indirect owner-ID
 lookup before capture. It is not universal original-shooter/placer provenance.

@@ -9,8 +9,10 @@ minimal extension bootstrap, not completed Foundation A or a usable tooling pack
 The subsequent partial Foundation A implementation encountered executable LSP
 configuration/type functions. [D19 analysis security](ToolingLanguageAnalysisSecurity.md)
 resolves that architectural stop condition with a trusted-only supervised snapshot
-profile. The implementation remains unqualified and its LSP startup stays disabled
-until the amended gates pass. That amendment owns the exact analysis policy;
+profile. The original attempt was stopped until those amended gates passed;
+[Foundation A completion](ToolingFoundationACompletion.md) now records qualified
+trusted Windows/Linux supervised analysis. [Foundation B completion](ToolingFoundationBCompletion.md)
+owns subsequent preview integration. The amendment still owns analysis policy;
 historical non-execution wording applies to StaticInspection, not all type analysis.
 
 ## Provenance and precedence

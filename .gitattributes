@@ -7,4 +7,6 @@ generated/* text eol=lf
 api/*.json text eol=lf
 tooling/*.json text eol=lf
 # Preserve intentional Markdown hard breaks in the supplied architecture evidence.
-docs/design/CarbonLuau_VSCode_Tooling_Architecture.md whitespace=-blank-at-eol
+docs/history/tooling/CarbonLuau_VSCode_Tooling_Architecture.md whitespace=-blank-at-eol
+# Historical originals retain intentional Markdown hard breaks and source formatting.
+docs/history/** whitespace=-blank-at-eol

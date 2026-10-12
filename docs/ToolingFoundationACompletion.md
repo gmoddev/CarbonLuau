@@ -1,7 +1,7 @@
 # Tooling Foundation A implementation and qualification
 
 Recorded 2026-09-21. This is the completion record for the resumed implementation,
-separate from [the historical stopped attempt](ToolingFoundationAValidation.md).
+separate from [the historical stopped attempt](history/tooling/AnalysisHistory.md#toolingfoundationavalidation).
 [D19](ToolingLanguageAnalysisSecurity.md) remains the security policy owner.
 Verdict: **FOUNDATION A IMPLEMENTED — WINDOWS/LINUX QUALIFIED; macOS STATIC-ONLY**.
 macOS is explicitly static-only at the user's direction, with no execution

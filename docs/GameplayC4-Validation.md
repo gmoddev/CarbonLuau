@@ -165,7 +165,7 @@ hosted checks/documentation deployment are verified at publication separately;
 the production bytes are those of the tested implementation revision above.
 
 Historical [C1](GameplayC1-Validation.md), [C2](GameplayC2-Validation.md),
-[C3](GameplayC3-Validation.md), and [Player-1F-C](PlayerInteractionFoundation1FC.md)
+[C3](GameplayC3-Validation.md), and [Player-1F-C](qualification/PlayerInteraction.md#playerinteractionfoundation1fc)
 remain evidence for their recorded revisions, not proof of this migration.
 
 No release/tag or unrelated Gameplay phase is authorized. C4's migration gate is

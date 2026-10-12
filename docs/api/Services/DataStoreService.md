@@ -1,7 +1,7 @@
 # DataStoreService
 
 Since API `0.5.0-experimental`. **Experimental; 1B implemented and qualified within
-recorded scope.** The [1B record](../../PersistenceFoundation1B.md) owns evidence
+recorded scope.** The [1B record](../../qualification/Persistence1B.md#persistencefoundation1b) owns evidence
 and limits; [1C](../../PersistenceFoundation1C.md) owns combined qualification.
 The service is included in the experimental v0.5.0 package. No persistence
 exists in historical 0.4 API artifacts, and preview provides no storage backend.

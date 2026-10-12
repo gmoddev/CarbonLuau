@@ -1,105 +1,26 @@
-# Inventory-M2 exact-build adapter validation
+# Inventory-M2: retained exact-build evidence
 
-**Date:** 2026-09-21  
-**Current disposition:** **Historical G1 PASS conclusion SUPERSEDED;
-G1 supported-host requalification is now recorded by Player-1F-B. G2-G5 evidence retained.**
-The original phase reported G1-G5 PASS before either public mutation existed.
-TakeItem was subsequently implemented and qualified by Player-1F-A and remains
-unchanged. GiveItem's subsequent implementation is recorded in
-[Player-1F-B validation](PlayerInteractionFoundation1FB-Validation.md); this historical record changes no identity.
+The original G1 PASS conclusion is superseded and is not restored by this page.
+G2–G5 evidence remains part of the inventory qualification basis. The complete
+[original record](history/inventory/InventoryMutationM2Validation.md#inventorymutationm2validation)
+preserves its prior G1 argument, raw fixtures and adoption chronology.
 
-**Player-1F-B follow-up and policy adoption (2026-09-21):** Original M2 G1
-proof was incomplete: mutable acceptance occurs before a split/drop decision.
-The later investigation failed G1 under the previous whole-process guarantee;
-CarbonLuau cannot isolate arbitrary trusted mutation across that callback.
-[I12](Invariants.md#i12--trusted-in-process-host-interference) now places that
-external mutation outside semantic isolation, not outside result verification.
-This does not restore the old PASS. The explicit-slot/no-swap/no-ignoreStackLimit
-adapter required requalification under the supported-host model and
-[Player-1F-B gate](PlayerInteractionFoundation1FB.md#required-1f-b-requalification)
-before implementation resumed. That later evidence is linked above; historical
-observations below are preserved.
+[I12/D13](invariants/Runtime.md) and [D18](invariants/Player.md) remain canonical.
+Supported-host GiveItem requalification and TakeItem implementation are in the
+[Player ledger](qualification/PlayerInteraction.md); [C4](GameplayC4-Validation.md)
+owns the current PlayerInventory migration. This page changes no contract or pin.
 
-## Scope and provenance
+## Retained scope
 
-The vanilla Rust Dedicated Server was downloaded anonymously from Steam app
-`258550`, public branch, following Facepunch's
-[server installation documentation](https://wiki.facepunch.com/rust/Creating-a-server).
-SteamRE DepotDownloader `3.4.0` was used after SteamCMD's bootstrap CDN returned
-HTTP 403 in this environment. The resulting target is the already selected
-Steam build `25353106`.
+These observations are for Rust build `25353106` and Carbon `2.0.259` on the
+original qualified Windows/Linux assemblies, not universal future-host proof.
+The [original provenance table](history/inventory/InventoryMutationM2Validation.md#inventorymutationm2validation-scope-and-provenance)
+retains depot manifests, assembly hashes/MVIDs and the independent static/live split.
+Requalification after the callback-to-split/drop finding is separate from this data.
 
-| Artifact | Depot / manifest | SHA-256 | MVID |
-|---|---|---|---|
-| Windows `Assembly-CSharp.dll` | `258551` / `7816298056519226227` | `87a02eef432e3312c32cfc947937b5b526d1c4425df8c07193779389398d1a9a` | `9d6ca77d-5a88-476c-8795-38b08e1c03a0` |
-| Linux `Assembly-CSharp.dll` | `258552` / `3352454092778561960` | `22a20500e30ebebd9c648bcac199cd7bc5e37af524b0b64cf9a4c74eb857d01b` | `fb72291d-03c0-4d66-834b-1439625b5c80` |
-| shared content | `258554` / `4408100835840826754` | n/a | n/a |
-
-The Linux hash is identical to the target already recorded by
-[PlayerInteractionFoundation1C.md](PlayerInteractionFoundation1C.md). Carbon
-Windows/Linux release `2.0.259`, protocol `2026.09.03.0`, commit
-`21063e8490adf412101bcc7d1cfe9d6280f61e80`, was downloaded from the official
-[Carbon production release](https://github.com/CarbonCommunity/Carbon/releases/tag/production_build).
-
-ILSpy command-line `8.2.0.7535` was used only in the external build directory.
-No decompiled Facepunch source, vendor assembly or Carbon package is stored in
-the repository. This record contains independently written semantic findings
-and reproducible structural assertions only.
-
-## Static evidence
-
-The historical D13 checker still passes unchanged:
-
-```text
-[CarbonLuau:D13] Identical selected Windows/Linux bodies and visibility: 32
-[CarbonLuau:D13] Structural checks passed: 106.
-```
-
-The additive [Test-InventoryMutationAdapterEvidence.ps1](../tools/Test-InventoryMutationAdapterEvidence.ps1)
-compares the mutation adapter surface across the exact Windows/Linux assemblies
-and checks the required signatures, observable state, control-flow ordering,
-cleanup route and capacities:
-
-```text
-[CarbonLuau:InventoryM2] Static adapter evidence passed: 92 checks.
-```
-
-The selected Windows/Linux method bodies and visibility are identical for
-`ItemManager.Create`, `Item.MoveToContainer`, `Item.SetParent`, `Item.Remove`,
-`Item.IsRemoved`, `Item.IsValid`, `Item.GetWorldEntity`,
-`ItemContainer.Insert`, `ItemContainer.Take`, `PlayerInventory.ServerInit` and
-`PlayerInventory.Take`.
-
-## Historical adapter evidence and current qualification limits
-
-### G1 — historical PASS superseded; later requalification recorded separately
-
-The general `PlayerInventory.GiveItem`, `BasePlayer.GiveItem` and unconstrained
-`Item.MoveToContainer` paths are not qualified. `MoveToContainer` still has an
-oversized-container-stack split branch that may call `Drop`.
-
-The originally proposed qualified path was narrower:
-
-1. PREPARE scans only `containerMain`, `containerBelt` and `containerWear`.
-2. PREPARE selects every exact target slot and chunk amount without invoking
-   `CanAcceptItem` or another callback-capable host method.
-3. A merge chunk is no larger than the observed free space in its exact target
-   stack. An empty-slot chunk is no larger than the item stack limit and any
-   positive target `maxStackSize`.
-4. COMMIT creates one planned chunk and calls
-   `MoveToContainer(Container, Slot, AllowStack, false, Player, false)`.
-5. The adapter never passes target slot `-1`, never enables
-   `ignoreStackLimit`, never enables swap and never supplies an amount that can
-   enter the oversized split/drop branch under the qualified baseline. The
-   original argument did not account for a callback changing this premise.
-
-For an exact compatible stack, the inspected path adds the bounded amount,
-decrements the source, migrates ownership, removes the exhausted source and
-returns `true`. For a planned empty slot, it checks acceptance, detaches any old
-world/container state and assigns the selected parent. Neither qualified branch
-calls `Drop` when its premises hold. That conditional observation is not the
-complete revised G1 proof. A host `false` or exception after creation is an indeterminate
-post-COMMIT outcome, not ordinary `false`.
+The G2–G5 sections below retain the original wording and evidence. Historical
+fixture G1 markers remain explicitly historical; they do not qualify a current
+no-drop adapter under arbitrary external mutation.
 
 ### G2 — returned-Item observability: PASS
 
@@ -198,3 +119,27 @@ G1 fixture outcomes remain evidence, not a new supported-host G1 PASS.
 TakeItem remains independently qualified. GiveItem's revised
 Player-1F-B requalification and implementation are linked above. PREPARE/COMMIT/VERIFY,
 false/true/indeterminate and nontransactional host semantics are unchanged.
+
+## Historical section links
+
+These compatibility anchors route to the dated original, not a current gate.
+
+<a id="inventory-m2-exact-build-adapter-validation"></a>
+
+- [Inventory-M2 exact-build adapter validation](history/inventory/InventoryMutationM2Validation.md#inventorymutationm2validation-inventory-m2-exact-build-adapter-validation)
+
+<a id="scope-and-provenance"></a>
+
+- [Scope and provenance](history/inventory/InventoryMutationM2Validation.md#inventorymutationm2validation-scope-and-provenance)
+
+<a id="static-evidence"></a>
+
+- [Static evidence](history/inventory/InventoryMutationM2Validation.md#inventorymutationm2validation-static-evidence)
+
+<a id="historical-adapter-evidence-and-current-qualification-limits"></a>
+
+- [Historical adapter evidence and current qualification limits](history/inventory/InventoryMutationM2Validation.md#inventorymutationm2validation-historical-adapter-evidence-and-current-qualification-limits)
+
+<a id="g1--historical-pass-superseded-later-requalification-recorded-separately"></a>
+
+- [G1 — historical PASS superseded; later requalification recorded separately](history/inventory/InventoryMutationM2Validation.md#inventorymutationm2validation-g1--historical-pass-superseded-later-requalification-recorded-separately)

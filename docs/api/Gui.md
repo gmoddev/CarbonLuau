@@ -3,7 +3,7 @@
 Availability: experimental API `0.4.0-experimental`.
 
 The additive Foundation 2 and Foundation 3 surfaces below are included in the
-still-unreleased package `0.4.0` and API `0.4.0-experimental`. The Foundation 3
+published package `0.4.0` and API `0.4.0-experimental`. The Foundation 3
 server-side model, publication, lifecycle and scale behavior is qualified.
 Authenticated-client clipping, font rendering and actual scroll behavior remains
 explicitly unqualified. `TextBox` and `Submitted` are not implemented because

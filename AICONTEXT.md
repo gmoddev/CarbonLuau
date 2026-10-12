@@ -1,425 +1,108 @@
-# CarbonLuau AI and contributor policy
+# CarbonLuau contributor policy
 
-This document owns contribution workflow and prompt construction. It applies to CarbonLuau only. Phase 0's accepted source baseline is `a88f2eb`; read the current checkout and [validation record](docs/Phase0-Validation.md) before relying on that baseline. Phase 1 implementation and qualification are documented in [Phase1.md](docs/Phase1.md) and [Phase1-Validation.md](docs/Phase1-Validation.md). Phase 2 is documented in [Phase2.md](docs/Phase2.md), [Phase2-Validation.md](docs/Phase2-Validation.md) and invariant D9. The authorized Phase 3 facade, approved provisional-effect policy and qualification status are in [Phase3.md](docs/Phase3.md), [Phase3-Validation.md](docs/Phase3-Validation.md) and D10–D12. Script authors start at the [public API reference](docs/api/README.md). Revised D13 owns inventory ownership/failure semantics, D18 owns Player Interaction Foundation 1, and D20 owns the read-only World/Entity Foundation 1 architecture; their implemented or design-only status is routed below.
+This is the contributor entry point for CarbonLuau. It owns workflow and task
+scope, not a second runtime/API contract. Start here, then read the relevant
+canonical rules and qualification records in the [documentation index](docs/Index.md).
 
 ## Authority and reading order
 
-| Question | Canonical owner |
+1. Read this policy and [Invariants](docs/Invariants.md): I1–I12 and the decision
+   register apply to all work. Read the delegated canonical detail for the
+   affected runtime, Player, GUI, World/Entity, persistence, tooling or gameplay
+   boundary. Delegated pages are part of the register, not competing proposals.
+2. Read [Compatibility](docs/Compatibility.md) and its delegated
+   [qualification policy](docs/qualification/Policy.md). Select checks by the
+   changed boundary; do not infer live-host evidence from compile/model tests.
+3. Read the affected current contract and source-qualified phase receipts below.
+   API authors start at the [public reference](docs/api/README.md).
+4. Consult [history](docs/history/README.md) only for the relevant rationale,
+   rejected approach or adoption record. A historical BLOCKED verdict is not a
+   new gate; a historical PASS is not proof of changed source or a different host.
+
+If a request, document, implementation or upstream fact conflicts, identify the
+rule owner and preserve accepted semantics while investigating. Stop the affected
+change if it requires an unauthorized amendment. Do not manufacture certainty by
+restating a proposal as a rule or broadening a receipt's tested scope.
+
+## Current routing
+
+| Boundary | Canonical contract / implementation and evidence |
 |---|---|
-| How to scope work and construct prompts | This document |
-| Official editor tooling ownership, contracts and security | [D19 in Invariants.md](docs/Invariants.md#d19--official-editor-tooling) and [ToolingBaseline.md](docs/ToolingBaseline.md) |
-| Tooling Foundation A implementation design and later routing | [ToolingFoundationA.md](docs/ToolingFoundationA.md) |
-| Tooling Foundation A implementation, platform qualification and Foundation B handoff | [ToolingFoundationACompletion.md](docs/ToolingFoundationACompletion.md) |
-| Tooling Foundation B preview implementation, scoped determinism and Foundation C interface | [ToolingFoundationB.md](docs/ToolingFoundationB.md) |
-| Tooling Foundation B qualification, delivery revisions and platform limits | [ToolingFoundationBCompletion.md](docs/ToolingFoundationBCompletion.md) |
-| Language-analysis execution, Workspace Trust, process limits and Foundation A security handoff | [D19 analysis security amendment](docs/ToolingLanguageAnalysisSecurity.md) and [investigation evidence](docs/ToolingLanguageAnalysisSecurityEvidence.md) |
-| Product purpose, architecture, trust, ownership, ABI, threading, lifecycle and resource rules | [Invariants.md](docs/Invariants.md) |
-| Provisional/open/deferred decisions and implementation gates | [Decision register in Invariants.md](docs/Invariants.md#decision-register) |
-| Canonical GUI Foundation 1 semantics | [D15 in Invariants.md](docs/Invariants.md#d15--gui-foundation-1-retained-presentation-model) |
-| GUI Foundation 1 rationale and implementation guidance | [GuiFoundation1.md](docs/GuiFoundation1.md) |
-| GUI Foundation 1A internal substrate and evidence | [GuiFoundation1A.md](docs/GuiFoundation1A.md) |
-| GUI Foundation 1B retained runtime and evidence | [GuiFoundation1B.md](docs/GuiFoundation1B.md) |
-| GUI Foundation 1C presentation/CUI projection and evidence | [GuiFoundation1C.md](docs/GuiFoundation1C.md) |
-| GUI Foundation 1D synchronization/reconciliation and evidence | [GuiFoundation1D.md](docs/GuiFoundation1D.md) |
-| GUI Foundation 1E secure Activated ingress and evidence | [GuiFoundation1E.md](docs/GuiFoundation1E.md) |
-| GUI Foundation 1F lifecycle/runtime closure and evidence | [GuiFoundation1F.md](docs/GuiFoundation1F.md) |
-| GUI Foundation 1G public closure, identity and evidence | [GuiFoundation1G.md](docs/GuiFoundation1G.md) |
-| Canonical GUI Foundation 2 additive semantics | [D16 in Invariants.md](docs/Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls) |
-| GUI Foundation 2 rationale, surface matrices and implementation guidance | [GuiFoundation2.md](docs/GuiFoundation2.md) |
-| GUI Foundation 2A deterministic layout implementation and evidence | [GuiFoundation2A.md](docs/GuiFoundation2A.md) |
-| GUI Foundation 2B typed-image implementation and evidence | [GuiFoundation2B.md](docs/GuiFoundation2B.md) |
-| GUI Foundation 2C scrolling implementation and evidence | [GuiFoundation2C.md](docs/GuiFoundation2C.md) |
-| GUI Foundation 2E lifecycle and rich-control closure | [GuiFoundation2E.md](docs/GuiFoundation2E.md) |
-| GUI Foundation 2F public qualification and release-candidate closure | [GuiFoundation2F.md](docs/GuiFoundation2F.md) |
-| Canonical GUI Foundation 3 additive semantics | [D17 in Invariants.md](docs/Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent) |
-| GUI Foundation 3 rationale, surface matrices, implementation guidance and qualification gates | [GuiFoundation3.md](docs/GuiFoundation3.md) |
-| GUI Foundation 3A deterministic-grid implementation and evidence | [GuiFoundation3A.md](docs/GuiFoundation3A.md) |
-| GUI Foundation 3B clipping implementation and evidence | [GuiFoundation3B.md](docs/GuiFoundation3B.md) |
-| GUI Foundation 3C retained-font implementation and evidence | [GuiFoundation3C.md](docs/GuiFoundation3C.md) |
-| GUI Foundation 3D Presentation-scroll-effect implementation and evidence | [GuiFoundation3D.md](docs/GuiFoundation3D.md) |
-| GUI Foundation 3E lifecycle, scale, compatibility and release-candidate closure | [GuiFoundation3E.md](docs/GuiFoundation3E.md) |
-| Canonical Player Interaction Foundation 1 semantics | [D18 in Invariants.md](docs/Invariants.md#d18--player-interaction-foundation-1) |
-| Player Interaction Foundation 1 rationale, host evidence, phases and qualification gates | [PlayerInteractionFoundation1.md](docs/PlayerInteractionFoundation1.md) |
-| Player Interaction Foundation 1A Vector3/Position implementation and evidence | [PlayerInteractionFoundation1A.md](docs/PlayerInteractionFoundation1A.md) |
-| Player Interaction Foundation 1B Health/MaxHealth implementation and evidence | [PlayerInteractionFoundation1B.md](docs/PlayerInteractionFoundation1B.md) |
-| Player Interaction Foundation 1C Items/inventory observation implementation and evidence | [PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md) |
-| Player Interaction Foundation 1D Teleport implementation and qualification | [PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md) |
-| Player Interaction Foundation 1F-A TakeItem implementation and qualification | [PlayerInteractionFoundation1FA.md](docs/PlayerInteractionFoundation1FA.md) |
-| Player Interaction Foundation 1F-B GiveItem implementation and historical investigation | [PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md), [qualification](docs/PlayerInteractionFoundation1FB-Validation.md) |
-| Player Interaction Foundation 1F-C combined closure and cold-module mutation correction | [PlayerInteractionFoundation1FC.md](docs/PlayerInteractionFoundation1FC.md) |
-| Canonical World/Entity Foundation 1 semantics | [D20 in Invariants.md](docs/Invariants.md#d20--worldentity-foundation-1) |
-| World/Entity Foundation 1 rationale, host evidence, phase routing and qualification gates | [WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) |
-| Entity-1A qualified private startup-observed Spawn-epoch substrate, exact target and Entity-1B handoff | [WorldEntityFoundation1A-Validation.md](docs/WorldEntityFoundation1A-Validation.md) |
-| Entity-1B exact keyed read-only Workspace/Entity runtime qualification and Entity-1C handoff | [WorldEntityFoundation1B-Validation.md](docs/WorldEntityFoundation1B-Validation.md) |
-| Entity-1C combined lifecycle, scale, public API metadata, tooling, compatibility, and Foundation 1 closure | [WorldEntityFoundation1C.md](docs/WorldEntityFoundation1C.md) |
-| World/Entity Foundation 2 private bounded async traversal QUALIFIED | [WorldEntityFoundation2A.md](docs/WorldEntityFoundation2A.md) owns completed-Spawn fixed-slot membership, private birth watermark, exact lifetime validation, hash-pinned bounded no-wait TRS observations, numeric policy and Windows/Linux qualification. [WorldEntityFoundation2.md](docs/WorldEntityFoundation2.md) routes preserved negative catalog/movement/guarded-getter/native-history/position-alternative research. D20/I12 separate hard lifetime/memory/resource safety, CarbonLuau-owned ordering and trusted external observation races. Private 2A introduced no public binding; the qualified 2B public phase is routed below. |
-| Discovery-2B PASS: public bounded radius API | [WorldEntityFoundation2B.md](docs/WorldEntityFoundation2B.md) owns `Workspace:GetEntitiesInRadiusAsync`, fixed native callback reservations, exact result conversion at fresh callback admission, public argument/retirement/expiry gates, metadata and tooling. Windows/Linux live and real-VM, sanitizer, lifecycle, stress and hosted checks PASS. The separate final combined closure is owned by Foundation 2C below. |
-| World/Entity Foundation 2 final closure and v0.6.0 readiness | [WorldEntityFoundation2C.md](docs/WorldEntityFoundation2C.md) owns the combined lifecycle/provider/publication, maximum-catalog, security, final hosted qualification and release handoff. [Planned release notes](docs/releases/0.6.0.md) describe the next experimental package; no tag or release is authorized by closure. |
-| Gameplay Foundation A implementation and qualification | [D23](docs/Invariants.md#d23--gameplay-a-player-lifecycle-signals) owns the qualified observation contract; [GameplayFoundationA-Validation.md](docs/GameplayFoundationA-Validation.md) owns exact-host proof, public dispatcher/resource tests, negative findings and current completion gates. The [supplied architecture](docs/GameplayEventsArchitecture-Research.md) remains research. Development API is user-selected `0.6.5-experimental`; published package remains v0.5.0, with no new release/tag authority. |
-| Historical blocked Entity lifetime investigation and negative evidence | [WorldEntityFoundation1A.md](docs/WorldEntityFoundation1A.md) and [WorldEntityLifetimeInvestigation.md](docs/WorldEntityLifetimeInvestigation.md) |
-| Gameplay B1 EntitySpawned implementation and qualification | [GameplayB1-Validation.md](docs/GameplayB1-Validation.md) owns completion-source, exact-lifetime admission, global event bounds, lifecycle/platform evidence and B2 handoff. D20 remains Entity identity/topology owner; Gameplay A's owned Signal/scheduler/publication path is reused. API stays `0.6.5-experimental`; no release/tag or later B phase authority. |
-| Gameplay B2 EntityDied and source-specific attribution | [GameplayB2-Validation.md](docs/GameplayB2-Validation.md) owns the full effective terminal-death fences, exact original-incarnation historical contexts, source-specific original D11 melee attribution, episode reset, platform/lifecycle/fault evidence and final gate status. [Attribution research](docs/GameplayB2-Attribution-Research.md) preserves rejected owner/account inference. D20/D23 own the additive semantics; API remains `0.6.5-experimental`, with no release/tag authority. |
-| Gameplay B3 EntityDestroyed implementation and qualification | [GameplayB3-Validation.md](docs/GameplayB3-Validation.md) owns collective successful world-removal/pool-admission/native-destruction proof, original-incarnation immutable snapshots, independent three-target removal topology, shared event/watch bounds and current completion gates. D20 owns the additive contract; Gameplay A/B1 transport is reused. API stays `0.6.5-experimental`; no EntityDied/B2 or release/tag authority. |
-| Historical Spawn-prefix and base-completion counterexamples; startup observer investigation | [WorldEntitySpawnEpochProbe.md](docs/WorldEntitySpawnEpochProbe.md), [WorldEntityCompletionFenceInvestigation.md](docs/WorldEntityCompletionFenceInvestigation.md) and [WorldEntityStartupObserverInvestigation.md](docs/WorldEntityStartupObserverInvestigation.md) |
-| Canonical Persistence Foundation 1 architecture (resolved; private 1A qualified) | [D21 in Invariants.md](docs/Invariants.md#d21--persistence-foundation-1) and [PersistenceFoundation1.md](docs/PersistenceFoundation1.md) |
-| Persistence design source evidence, consistency review and qualification limits | [PersistenceFoundation1-Validation.md](docs/PersistenceFoundation1-Validation.md) |
-| Persistence-1A private backend/codec/namespace/queue substrate PASS; WAL rejection and supported recovery qualified; no public API qualified by 1A | [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md); historical DELETE and physical-proof negative evidence preserved |
-| Persistence-1B public facade/admission implemented and qualified within recorded scope; experimental API 0.5.0-experimental | [PersistenceFoundation1B.md](docs/PersistenceFoundation1B.md); D12 owns the assignment and [Release.md](docs/Release.md) the separate development package mapping. |
-| Persistence-1C combined lifecycle/platform/public-readiness closure | [PersistenceFoundation1C.md](docs/PersistenceFoundation1C.md); exact final status, correction, live evidence and hosted-CI gate. No package publication authority. |
-| Canonical Persistence Foundation 2 structured Query architecture; private 2A and public 2B/2C implemented | [D22 in Invariants.md](docs/Invariants.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query) and [PersistenceFoundation2.md](docs/PersistenceFoundation2.md); required Field with Equals or inclusive Min/Max, automatic preparation and optional Indexes string-list hints. Authors manage no schemas, versions or migrations. [Final correction audit](docs/PersistenceFoundation2-Validation.md) records design scope; [2A evidence](docs/PersistenceFoundation2A.md) routes primary-Ready/deferred derived admission, final hosted qualification and historical negative results. D21 remains durability/storage owner. |
-| Persistence physical-allocation investigation and adopted operational-budget amendment, qualification condition closed by 1A | [Investigation](docs/PersistencePhysicalAllocationInvestigation.md) and [adopted D21 amendment](docs/PersistencePhysicalD21Amendment-Proposed.md); 1,280 MiB is an operational safety budget/qualification target/diagnostic threshold, not a hard physical invariant |
-| Persistence-2A capacity correction | [D21](docs/Invariants.md#d21--persistence-foundation-1) separates hard logical ceilings, hard database/journal file extents and qualified operational filesystem allocation. Unused logical quota does not reserve physical admission. [2A](docs/PersistenceFoundation2A.md) owns the one-DB, Foundation 1 primary layout and its qualified private 1-GiB DB / 1,075,904,512-byte journal / 2,560-MiB operational budget; [single-DB](docs/PersistenceSingleDbBoundInvestigation.md) and [split](docs/PersistenceCandidateBSplitProof.md) proof attempts remain historical, not active architecture. |
-| Persistence-2B PASS: optional hints, private automatic demand and waiter qualification | [PersistenceFoundation2B.md](docs/PersistenceFoundation2B.md); public `GetDataStore(Name, Options?)` supplies optional preparation hints. |
-| Persistence-2C public structured Query implementation and qualification | [PersistenceFoundation2C.md](docs/PersistenceFoundation2C.md); the public `DataStore:Query`/result/cursor contract consumes the 2A/2B substrate. Combined Foundation 2 closure remains 2D. |
-| Persistence-2D PASS; Foundation 2 qualified | [PersistenceFoundation2D.md](docs/PersistenceFoundation2D.md); combines 2A/2B/2C crash, concurrency, lifecycle, platform and live Carbon results without changing D21/D22. Release publication remains a separate gate. |
-| Persistence durability follow-up: approved PERSIST path, platform probes and adoption record | [PersistenceDurabilityInvestigation.md](docs/PersistenceDurabilityInvestigation.md) and [approved D21 amendment](docs/PersistenceD21Amendment-Proposed.md) |
-| Revised D13 inventory ownership/failure rationale and target-build gates | [InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md) |
-| Inventory-M2 exact-build evidence; G1 conclusion superseded, G2-G5 retained | [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md) |
-| Supported environments, API/version policy and required validation | [Compatibility.md](docs/Compatibility.md) |
-| Phase scope, planned API examples and initial configuration candidates | [First-version design](docs/CarbonLuau_FirstVersion_Design.md), especially sections 3 and 31 |
-| What Phase 0 actually proved | [Phase0-Validation.md](docs/Phase0-Validation.md) |
-| Phase 0 build/deployment commands | [Phase0.md](docs/Phase0.md) |
-| Phase 1 execution/ABI contract and evidence | [Phase1.md](docs/Phase1.md), [Phase1-Validation.md](docs/Phase1-Validation.md) |
+| Runtime ownership, deadlines, modules, publication, recovery and Player identity | [Runtime details](docs/invariants/Runtime.md); [Phase 0](docs/Phase0.md), [Phase 1](docs/Phase1.md), [Phase 2](docs/Phase2.md), [Phase 3](docs/Phase3.md), [Phase 5](docs/Phase5.md), with their dated validation records |
+| Addons/providers, dependencies, exports, fairness, invariant owners and isolated compiler | D4/D5/D7/D9/D10/D14 in [Runtime](docs/invariants/Runtime.md); [A–G ledger](docs/qualification/Addons.md) |
+| GUI retained state, projection, layout, images, scrolling, grids, clipping and fonts | [D15–D17](docs/invariants/Gui.md); [GUI 1](docs/GuiFoundation1.md), [2](docs/GuiFoundation2.md), [3](docs/GuiFoundation3.md); [1 ledger](docs/qualification/Gui1.md), [2 ledger](docs/qualification/Gui2.md), [3 ledger](docs/qualification/Gui3.md) |
+| Player spatial/health/item observation and inventory mutation | D11/D13 in [Runtime](docs/invariants/Runtime.md), [D18](docs/invariants/Player.md); [current Player foundation](docs/PlayerInteractionFoundation1.md), [phase ledger](docs/qualification/PlayerInteraction.md), [retained M2 scope](docs/InventoryMutationM2Validation.md) |
+| Current PlayerInventory acquisition, sampled ItemChanged and breaking migration | [C1](docs/GameplayC1-Validation.md), [C2 evidence](docs/GameplayC2-Validation.md), [C3](docs/GameplayC3-Validation.md), [C4](docs/GameplayC4-Validation.md); [migration](docs/api/Inventory-Migration.md) |
+| Exact Entity lifetime, startup observer and read-only lookup | [D20](docs/invariants/WorldEntity.md); [Foundation 1](docs/WorldEntityFoundation1.md), [1A](docs/WorldEntityFoundation1A-Validation.md), [1B](docs/WorldEntityFoundation1B-Validation.md), [1C](docs/WorldEntityFoundation1C.md) |
+| Completed-Spawn catalog and bounded asynchronous complete discovery | [Foundation 2](docs/WorldEntityFoundation2.md), [private 2A](docs/WorldEntityFoundation2A.md), [public 2B](docs/WorldEntityFoundation2B.md), [combined 2C](docs/WorldEntityFoundation2C.md) |
+| Local persistence, durability, codec, quotas, callback authority and capacity | [D21](docs/invariants/Persistence.md#d21--persistence-foundation-1), [Foundation 1](docs/PersistenceFoundation1.md), [1A](docs/PersistenceFoundation1A.md), [1B ledger](docs/qualification/Persistence1B.md), [1C](docs/PersistenceFoundation1C.md) |
+| Structured Query, automatic derived indexes, optional hints and bounded cursors | [D22](docs/invariants/Persistence.md#d22--persistence-foundation-2--bounded-derived-indexes-and-query), [Foundation 2](docs/PersistenceFoundation2.md), [2A](docs/PersistenceFoundation2A.md), [2B](docs/PersistenceFoundation2B.md), [2C](docs/PersistenceFoundation2C.md), [2D](docs/PersistenceFoundation2D.md) |
+| Official editor tooling, canonical metadata, trusted analysis and preview | [D19](docs/invariants/Tooling.md), [baseline](docs/ToolingBaseline.md), [contracts](docs/ToolingContracts.md), [analysis security](docs/ToolingLanguageAnalysisSecurity.md), [A completion](docs/ToolingFoundationACompletion.md), [B completion](docs/ToolingFoundationBCompletion.md), [deferred roadmap](docs/design/CarbonLuau_VSCode_Tooling_Architecture.md) |
+| Player and Entity lifecycle Signals | [D23](docs/invariants/Gameplay.md) and [D20](docs/invariants/WorldEntity.md); [A](docs/GameplayFoundationA-Validation.md), [B1](docs/GameplayB1-Validation.md), [B2](docs/GameplayB2-Validation.md), [B3](docs/GameplayB3-Validation.md) |
+| Declarative Loot Replace | [D23](docs/invariants/Gameplay.md); [private D2A](docs/GameplayD2A-Validation.md), [public D3](docs/GameplayD3-Validation.md) |
+| Package/API/ABI/provider/schema/Luau identities and publication | [D12](docs/invariants/Runtime.md#d12--scripting-and-protocol-identity), [release.json](release.json), [Release](docs/Release.md), [Installation](docs/Installation.md) |
 
-Read this policy, Invariants and Compatibility before implementation; then read the current phase evidence and only the design sections and source needed for the task. The original design remains the accepted phase plan, not a claim that its future features exist. Runtime invariants apply when their owning feature is implemented. Do not implement a later feature simply to satisfy its future invariant now.
-
-The user approved the original D13 closure on 2026-09-14, deferring the Phase 4
-item convenience surface from v0.1. Revised D13 preserves the historical facts
-that Rust inventory is nontransactional and lacks universal rollback, but
-supersedes categorical mutation deferral with a per-operation
-PREPARE/COMMIT/VERIFY model. D18 now architecturally accepts bounded read-only
-item observation plus implementation-gated `Player:GiveItem` and `TakeItem`.
-Preserve [Phase4.md](docs/Phase4.md),
-[Phase4-Validation.md](docs/Phase4-Validation.md) and the historical structural
-checker as evidence. Inventory-M2 historically reported revised D13 gates
-G1-G5 PASS on Rust build `25353106` plus Carbon `2.0.259`, as
-recorded in [InventoryMutationM2Validation.md](docs/InventoryMutationM2Validation.md).
-Player-1F-A uses that qualification for the narrow public TakeItem adapter;
-Player-1F-B adds separately requalified GiveItem InventoryOnly. Broader mutation
-remains unimplemented.
-The Player-1F-B follow-up found an uncovered callback-to-split/drop path on the
-same pinned build, superseding the incomplete G1 conclusion. I12 now owns the
-general trusted in-process interference boundary; D13/D18 adopt that scope and
-the intended `GiveItem(ShortName, Amount, Behavior?)` shape with InventoryOnly
-default. The historical investigation and subsequent supported-host G1
-requalification are recorded in [PlayerInteractionFoundation1FB.md](docs/PlayerInteractionFoundation1FB.md)
-and [its validation record](docs/PlayerInteractionFoundation1FB-Validation.md).
-Phase 5 hardening/qualification is complete within its recorded controlled-host
-envelope in [Phase5.md](docs/Phase5.md) and
-[Phase5-Validation.md](docs/Phase5-Validation.md). Authenticated real-client
-qualification is explicitly deferred, non-gating and unqualified; that decision
-is not evidence of network delivery or a support claim. No inventory-mutation
-runtime/API addition is authorized outside separately scoped Inventory-M and
-Player-1F work.
-The release-candidate identity and reproducibility procedure are owned by
-[release.json](release.json) and [Release.md](docs/Release.md). Public setup starts
-at [Installation.md](docs/Installation.md); release preparation must not reinterpret
-the first-version roadmap label as a second package version or weaken recorded
-qualification limits.
-
-If documents, code, a task request or upstream evidence conflict, identify the conflict and its rule owner. Preserve accepted decisions while investigating. Stop the affected implementation if it would require silently weakening a rule or making an unsupported architectural decision; report the evidence and proposed resolution. Do not expand documentation to manufacture certainty. An explicit user-approved design change must also update its canonical document.
+The development API is `0.7.0-experimental`; the latest published package is
+`v0.5.0`. C4 removed Player HasItem/CountItem/GiveItem/TakeItem without aliases;
+use PlayerInventory. Earlier introduction versions and source receipts remain
+historical facts, not permission to restore removed bindings. API assignment,
+subsystem readiness and package/tag publication are separate decisions.
 
 ## Working rules
 
-Gameplay C4 migrates all inventory operations to PlayerInventory and removes the
-legacy Player CountItem/HasItem/GiveItem/TakeItem bindings by explicit user decision.
-[C4 qualification](docs/GameplayC4-Validation.md) owns current implementation,
-migration and gate status. D12 assigns breaking development API 0.7.0-experimental;
-prior 0.6.5 evidence/introductions remain historical. D11/D13/D18 and C3 sampled
-ItemChanged semantics remain authoritative. No new scanner, Item object, global
-inventory service, release/tag or unrelated gameplay phase is authorized.
+- Scope work as investigation, design, implementation, review or validation.
+  A phase receipt or planned feature does not authorize another phase. Keep
+  unrelated refactors and deferred APIs out of the change.
+- Modify CarbonLuau only unless explicitly authorized otherwise. Do not edit
+  Carbon, Rust, Gargantuan or vendored Luau incidentally. Inspect exact host/source
+  boundaries and requalify affected adapters when host or patch topology changes.
+- Preserve user changes and other worktrees. Use `apply_patch` and CodexLock;
+  do not bypass claims, reset unrelated work or delete user-owned qualification data.
+- Use PascalCase for project-owned identifiers. Preserve required upstream/OS/API
+  spellings and the stated `self = setmetatable(...)` exception. Prefer GetFolder /
+  GetObj over GetOrCreate names. Use `[System:SubSystem]` logs, for example
+  `[CarbonLuau:Native]`, without sensitive values or unbounded histories.
+- Use headless/hidden helpers and servers: no error dialogs or focus stealing.
+  Default sustained builds/servers to DockerPC/dockerbox through the authorized
+  profile, with bounded parallelism, cached dependencies and task-owned files
+  under `C:\Sandbox\Codex` (or the explicitly approved task override). Linux
+  workers/containers follow their authorized infrastructure policy; do not
+  silently move heavy workloads onto the controlling PC or alter host security.
+- Keep credentials in existing profile helpers, never source/logs/artifacts.
+  Production deployment is not permission to install failure fixtures or modify
+  unrelated services, files, ports or host policy.
+- Treat published support, authenticated-client observations, live Carbon,
+  models, native/managed tests and CI as distinct evidence. Preserve negative
+  findings and unchanged valid receipts; rerun affected checks on final source.
+  Do not claim Shockbyte full-runtime, macOS server, power-loss or client behavior
+  beyond the explicitly recorded qualification envelope.
+- Keep architecture/ownership/publication/resource rules at their canonical
+  owner. New accepted rules update that owner and routing; they do not become
+  duplicate prompt policy. No docs-only API or hand-maintained type-definition
+  authority: metadata follows production bindings and the canonical generator.
+- Keep D21 logical quotas, hard file extents and operational allocated-block
+  budgets distinct. Preserve DELETE/EXTRA, allocation-proof, WAL and abandoned
+  layout negatives; no logical-quota promise of guaranteed physical admission.
+- Preserve D20 initial-startup observer continuity, exact lifetime/non-retargeting
+  and qualified bounded reads. Failed Spawn/current flags are not lifetime proof.
+  Discovery is encounter-time, not an atomic snapshot; trusted observation races
+  never authorize memory unsafety, unsupported structural mutation or unbounded work.
+- Preserve sampled ItemChanged semantics, exact-connection inventory ownership,
+  D13 PREPARE/COMMIT/VERIFY and strict destruction-time Loot payout scope. Source
+  observation is not transaction completion, rollback, replay or attribution by ID.
 
-Gameplay C1's Player-owned read-only inventory facade is routed through
-[GameplayC1-Validation.md](docs/GameplayC1-Validation.md) and D18. It reuses the
-existing scanner and exact connection/publication/domain authority. C2 introduced
-no public quantity Signals. [C2 evidence](docs/GameplayC2-Validation.md) records
-the private sampled candidate, not public completed-operation Signal qualification.
-The separately authorized C3 public sampled `PlayerInventory.ItemChanged` surface
-and combined qualification are routed through [GameplayC3-Validation.md](docs/GameplayC3-Validation.md).
-This does not authorize ItemAdded/ItemRemoved or reinterpret C2's negative evidence.
-Qualified private Gameplay D2A and the separately
-authorized public D3 phase are routed below. The supplied
-[C/D research](docs/GameplayCDArchitecture-Research.md) preserves static evidence
-and records the user override to future `Enum.DropMode` rather than `Loot.DropMode`.
+## Task handoff
 
-The separately authorized private Gameplay D2A investigation is routed through
-[GameplayD2A-Validation.md](docs/GameplayD2A-Validation.md); the supplied
-[D0 report](docs/GameplayD0Architecture-Research.md) remains static evidence.
-Host mechanism qualification precedes private rule/adapter adoption; D23 now
-routes the narrow private implementation, its measured host envelope and final
-qualification status. No public Loot API, C2/B2 addition or release authority
-follows from this work. D3 must qualify its own Luau binding/metadata later.
-
-Gameplay D3's public `Loot:RegisterDropRule(Prefab, Enum.DropMode.Replace, Drops)`
-binding, exact typed enum, raw bounded declaration conversion and platform/API/
-tooling closure are owned by [GameplayD3-Validation.md](docs/GameplayD3-Validation.md).
-D23 owns the additive semantics. Do not reopen D2A's host architecture without
-a demonstrated defect; public qualification is distinct from its private PASS.
-No C2/B2, additional mode/prefab, release/tag or identity bump is authorized.
-
-Post-v0.3.0 addon architecture is canonically owned by the addon amendments in
-[Invariants.md](docs/Invariants.md), including D14. The
-[addon design proposal](docs/CarbonLuau_Addon_Decisions_and_Invariants.md) and
-[design validation](docs/Addon-Design-Validation.md) are supporting design/review
-evidence and do not override the canonical register. Foundation A authorizes only
-the internal shared-VM/domain primitives recorded in
-[FoundationA.md](docs/FoundationA.md). Foundation B's experimental managed-provider
-registration, bounded package transport and lifecycle implementation is recorded in
-[FoundationB.md](docs/FoundationB.md). Foundation C's bounded dependency graph,
-exact lifetime binding, loss/restoration and dependency-aware replacement behavior
-is recorded in [FoundationC.md](docs/FoundationC.md). Foundation D's explicit
-exports, exact-bound package-qualified imports and addon context are recorded in
-[FoundationD.md](docs/FoundationD.md). Foundation E's scale, fairness, lifecycle,
-parser and public-identity closure is recorded in [FoundationE.md](docs/FoundationE.md).
-It assigns `0.4.0-experimental` to the qualified addon surface but does not
-authorize provider-defined capabilities, root imports or package/version solving.
-Foundation F's behavior-preserving invariant-owner decomposition and current
-implementation routing are recorded in [FoundationF.md](docs/FoundationF.md).
-Foundation G's isolated pinned compiler, deadline, protocol, deployment and
-qualification scope are recorded in [FoundationG.md](docs/FoundationG.md).
-It does not authorize unrelated post-v0.4 features.
-GUI Foundation 1 architecture is canonically owned by D15 in
-[Invariants.md](docs/Invariants.md#d15--gui-foundation-1-retained-presentation-model).
-[GuiFoundation1.md](docs/GuiFoundation1.md) is the supporting design and
-implementation-guidance record; it does not override D15 or by itself prove an
-implementation phase. Future GUI phases must preserve that public model and stop rather
-than invent conflicting semantics. Foundation 1G completed implementation,
-available qualification and release planning and assigns GUI to D12's existing
-unreleased `0.4.0-experimental` identity. Authenticated-client observations
-remain unqualified and non-gating.
-The internal descriptors, limit snapshot, Carbon-independent render/backend
-contracts and deterministic mock backend implemented by GUI Foundation 1A are
-recorded in [GuiFoundation1A.md](docs/GuiFoundation1A.md). They do not authorize
-public GUI bindings, retained-object behavior, presentations or CUI rendering.
-GUI Foundation 1B's retained objects, immutable value userdata, ownership,
-tree lifecycle, GUI Signals and D7/D10 publication journal are recorded in
-[GuiFoundation1B.md](docs/GuiFoundation1B.md). They do not authorize
-presentations, client rendering/event ingress or a GUI-capable release identity.
-GUI Foundation 1C's internal presentations, public ScreenGui visibility methods,
-full retained-tree compilation and production Rust CUI projection are recorded
-in [GuiFoundation1C.md](docs/GuiFoundation1C.md).
-GUI Foundation 1D's revisioned dirty synchronization, bounded fair GUI flush,
-Rust CUI property patches, structural reconciliation and newest-state failure
-convergence are recorded in [GuiFoundation1D.md](docs/GuiFoundation1D.md). It
-does not by itself authorize client action ingress or a GUI-capable release
-identity. GUI Foundation 1E's private client command, opaque presentation-bound
-actions, exact Player validation, bounded admission and pre-entry stale-work
-suppression are recorded in [GuiFoundation1E.md](docs/GuiFoundation1E.md). It
-does not assign a GUI-capable release identity or authorize later GUI features.
-GUI Foundation 1F's replacement, recovery, teardown, backend-retry, bounded
-diagnostic and leak/stress closure is recorded in
-[GuiFoundation1F.md](docs/GuiFoundation1F.md). Authenticated-client rendering,
-reconciliation and click evidence plus GUI release planning were left to
-Foundation 1G; Foundation 1F itself authorized no new GUI surface or identity.
-GUI Foundation 1G assigns the already-unreleased package `0.4.0` and scripting
-API `0.4.0-experimental` to the complete D15 GUI surface, records the public
-documentation/examples and closes available non-authenticated qualification in
-[GuiFoundation1G.md](docs/GuiFoundation1G.md). Authenticated-client visual,
-cursor, click-receipt and reconciliation behavior remains unqualified but is
-explicitly non-gating. Do not reinterpret API availability as evidence for
-those client-observed outcomes or as independent authorization to implement GUI
-Foundation 2 outside D16 and an explicitly scoped implementation phase.
-GUI Foundation 2 architecture is canonically owned by D16 in
-[Invariants.md](docs/Invariants.md#d16--gui-foundation-2-deterministic-layout-and-rich-controls).
-[GuiFoundation2.md](docs/GuiFoundation2.md) is supporting rationale, exact
-surface guidance, implementation sequencing and qualification planning; it does
-not override D16 or prove implementation. D16 is additive to D15, assigns no
-release identity and authorizes no production surface until the applicable
-GUI-2A through GUI-2F work is implemented and qualified. Exact supported
-single-line text preservation is a TextBox qualification gate: defer TextBox if
-the current authenticated client/host path cannot preserve it, rather than
-weakening or normalizing the contract.
-GUI Foundation 2A implements only D16's deterministic layout slice: `LayoutOrder`,
-`UIListLayout`, `UIPadding`, affine projection and bounded layout dirty
-synchronization. Its implementation and qualification record is
-[GuiFoundation2A.md](docs/GuiFoundation2A.md). It does not assign a Foundation 2
-release identity or authorize scrolling, images, TextBox, typed input or later
-GUI-2B through GUI-2F work.
-GUI Foundation 2B implements only D16's typed-image slice: immutable
-`ImageSource`, `ImageLabel`, `ImageButton`, bounded image projection and
-`ImageButton.Activated` through the existing secure action ingress. Its
-implementation and qualification record is [GuiFoundation2B.md](docs/GuiFoundation2B.md).
-It assigns no Foundation 2 release identity and does not authorize later work.
-GUI Foundation 2C implements only D16's scrolling slice: retained
-`ScrollingFrame` configuration, Presentation-local client scroll state, bounded
-private viewport/content projection and Foundation 2 layout/image composition.
-Its implementation and qualification record is [GuiFoundation2C.md](docs/GuiFoundation2C.md).
-It assigns no Foundation 2 release identity and does not authorize TextBox,
-typed text ingress or later GUI-2D through GUI-2F work.
-GUI Foundation 2E closes D15/D16 lifecycle, shared-view, cross-domain,
-replacement, recovery, provider, publication and failure behavior for the
-implemented GUI-2A through GUI-2C surface. Its evidence is recorded in
-[GuiFoundation2E.md](docs/GuiFoundation2E.md). The GUI-2D host gate failed on
-the inspected Rust build, so `TextBox` and typed text ingress remain explicitly
-deferred and unimplemented. At completion, GUI-2E assigned no Foundation 2
-release identity and did not itself authorize GUI-2F or Foundation 3 work.
-GUI Foundation 2F assigns the implemented deterministic-layout, typed-image and
-retained-scrolling subset to the existing unreleased package `0.4.0` and
-scripting API `0.4.0-experimental`. Its public documentation, examples,
-compatibility audit, scale evidence and release preparation are recorded in
-[GuiFoundation2F.md](docs/GuiFoundation2F.md). `TextBox` and `Submitted` remain
-deferred and unimplemented. Authenticated-client image, click, scrolling and
-clipping observations remain explicitly unqualified and are not implied by the
-experimental identity. GUI-2F authorizes no Foundation 3 work.
-GUI Foundation 3 architecture is canonically owned by D17 in
-[Invariants.md](docs/Invariants.md#d17---gui-foundation-3-deterministic-grids-clipping-fonts-and-presentation-scroll-intent).
-[GuiFoundation3.md](docs/GuiFoundation3.md) is supporting rationale, exact
-surface guidance, implementation sequencing and qualification planning; it does
-not override D17, prove implementation or assign a release identity. D17 is
-additive to D15/D16 and authorizes only explicitly scoped GUI-3A through GUI-3E
-implementation work. `TextBox` remains deferred under D16 and is not reopened.
-GUI Foundation 3A implements only D17's deterministic `UIGridLayout` slice:
-retained descriptors, list-or-grid exclusivity, affine direct-child projection,
-retained Position/Size authority restoration and bounded dirty synchronization.
-Its implementation and qualification record is
-[GuiFoundation3A.md](docs/GuiFoundation3A.md). It assigns no Foundation 3
-release identity and authorizes no clipping, font, scroll-effect or GUI-3B+
-work.
-GUI Foundation 3B implements only D17's bounded `Frame.ClipsDescendants`
-slice: private projection-only mask nodes, effective depth accounting with
-ScrollingFrame, retained-geometry interaction eligibility, structural action
-reconciliation and atomic projection-bound validation. Its implementation and
-qualification record is [GuiFoundation3B.md](docs/GuiFoundation3B.md).
-The feature is IMPLEMENTED / CLIENT-UNQUALIFIED pending D17's mandatory
-authenticated-client visual and hit-region supplement. It assigns no Foundation
-3 release identity and authorizes no GuiFont, ScrollTo or GUI-3C+ work.
-GUI Foundation 3C implements only D17's immutable `GuiFont`, retained
-`TextLabel.Font`/`TextButton.Font`, backend mapping and patch-synchronization
-slice. Its implementation and qualification record is
-[GuiFoundation3C.md](docs/GuiFoundation3C.md). The feature is IMPLEMENTED /
-CLIENT-UNQUALIFIED pending D17's mandatory authenticated-client font-rendering
-supplement. It assigns no Foundation 3 release identity and authorizes no
-ScrollTo or GUI-3D+ work.
-GUI Foundation 3D implements only D17's exact-Player, bounded latest-wins
-`ScrollingFrame:ScrollTo`, `ScrollToTop` and `ScrollToBottom` Presentation
-effects, publication specialization, backend mapping, retry and lifecycle
-integration. Its implementation and qualification record is
-[GuiFoundation3D.md](docs/GuiFoundation3D.md). The feature is IMPLEMENTED /
-CLIENT-UNQUALIFIED pending D17's mandatory authenticated-client scroll
-supplement. GUI Foundation 3E closes combined interaction, shared-view,
-cross-domain, replacement, recovery, publication, scale, compatibility and
-release-candidate qualification for the implemented D17 surface. Its evidence
-is recorded in [GuiFoundation3E.md](docs/GuiFoundation3E.md). The additive
-surface remains in the still-unreleased package `0.4.0` and scripting API
-`0.4.0-experimental`; its client-observed gates and Windows native/local gate
-remain explicitly unqualified. GUI-3E authorizes no Foundation 4 or TextBox work.
-
-Player Interaction Foundation 1 architecture is canonically owned by D18 in
-[Invariants.md](docs/Invariants.md#d18--player-interaction-foundation-1).
-[PlayerInteractionFoundation1.md](docs/PlayerInteractionFoundation1.md) is the
-supporting rationale, host-evidence, implementation-sequencing and qualification
-record; it does not override D18, prove implementation or assign a release
-identity. The revised D13 rationale and mutation gates are in
-[InventoryOwnershipFailureReassessment.md](docs/InventoryOwnershipFailureReassessment.md).
-D18 authorizes only explicitly scoped future Player-1A through Player-1F and
-Inventory-M work. Player-1A is `Vector3` plus Position; Player-1B is read-only
-Health/MaxHealth; Player-1C is bounded item identity and physical inventory
-observation; Player-1D is committed-only Teleport with exact-host and
-authenticated-client gates; Player-1E is combined read-only/spatial closure.
-Inventory-M1 owns the deterministic model without Rust mutation; Inventory-M2
-retains G2-G5 exact target-build evidence while G1's supported-host requalification
-under I12 is recorded by Player-1F-B; Player-1F-A owns TakeItem,
-Player-1F-B owns GiveItem, and Player-1F-C owns combined mutation closure.
-TakeItem is implemented by Player-1F-A and GiveItem InventoryOnly by Player-1F-B; they
-qualify independently.
-Player-1A implements immutable `Vector3` and read-only `Player.Position` as
-recorded in [PlayerInteractionFoundation1A.md](docs/PlayerInteractionFoundation1A.md).
-Player-1B implements read-only `Player.Health` and `Player.MaxHealth` as recorded
-in [PlayerInteractionFoundation1B.md](docs/PlayerInteractionFoundation1B.md).
-Player-1C implements the `Items` existence service plus bounded physical
-`Player:CountItem` and `Player:HasItem` as recorded in
-[PlayerInteractionFoundation1C.md](docs/PlayerInteractionFoundation1C.md).
-Player-1D implements committed-only `Player:Teleport(Vector3)` as recorded in
-[PlayerInteractionFoundation1D.md](docs/PlayerInteractionFoundation1D.md).
-Player-1F-A implements committed-only verified `Player:TakeItem` as recorded in
-[PlayerInteractionFoundation1FA.md](docs/PlayerInteractionFoundation1FA.md).
-The exact-build server adapter is qualified; authenticated-client convergence
-remains unqualified. The separate Player-1F-B qualification is linked above;
-neither API authorizes Player-1F-C closure or other gameplay APIs.
-
-
-World/Entity Foundation 1 architecture is canonically owned by D20 in
-[Invariants.md](docs/Invariants.md#d20--worldentity-foundation-1).
-[WorldEntityFoundation1.md](docs/WorldEntityFoundation1.md) is the supporting
-host-evidence, rationale, exact-lifetime, phase-routing and qualification record.
-D20's **private Entity-1A lifetime gate is closed** only for the exact
-Windows/Linux host targets and initial-startup deployment recorded in
-[Entity-1A validation](docs/WorldEntityFoundation1A-Validation.md). The
-qualified Carbon AutoPatch observer must precede world restoration; first-time
-hotload or full plugin unload/reload cannot requalify in the same server process
-and requires restart. Preserve the older negative evidence: actual pooled
-BaseEntity reuse was not demonstrated on the tested prefab. No public
-`Workspace` or `Entity` API was part of Entity-1A. [Entity-1B validation](docs/WorldEntityFoundation1B-Validation.md)
-records the implemented exact keyed, read-only `Workspace:GetEntityById` plus
-`Entity.Id`, `Entity.Prefab` and `Entity.Position` runtime on those hosts. It is
-assigned to the development scripting API `0.6.0-experimental` by Entity-1C,
-with canonical metadata, definitions, and public documentation routed through
-[Entity-1C](docs/WorldEntityFoundation1C.md). Package `0.5.0` remains the last
-published release; no Entity release/tag follows from that API assignment.
-Whole-world enumeration, prefab
-filtering, additional spatial queries, additional lifecycle Signals, Spawn,
-Destroy and specialized entity capabilities require later explicit scoped work.
-Qualified async discovery, Gameplay B1's `Workspace.EntitySpawned` and
-Gameplay B3's snapshot-only `Workspace.EntityDestroyed` are
-additive D20 amendments routed above, not implicit Foundation 1 availability.
-Entity-1A/1B made no package/ABI/provider/schema/
-Luau identity change; the 1C API assignment is separate.
-
-Persistence Foundation 1 is the next runtime foundation under
-[D21](docs/Invariants.md#d21--persistence-foundation-1). Its
-[design](docs/PersistenceFoundation1.md) selects private root/addon namespaces,
-callback-based non-yielding storage and a bounded private SQLite worker;
-[design validation](docs/PersistenceFoundation1-Validation.md) is not runtime
-qualification. Separately scoped Persistence-1A/1B/1C work must implement and
-qualify it. The private 1A substrate is **PASS within its recorded qualification
-scope** in [PersistenceFoundation1A.md](docs/PersistenceFoundation1A.md), with no
-public persistence API. The user explicitly approved and adopted the
-[physical-budget amendment](docs/PersistencePhysicalD21Amendment-Proposed.md) on
-2026-09-23, conditional on scoped startup/profile qualification. Hard 16-MiB
-namespace / 256-MiB global logical quotas and SQLite page/file-length bounds
-remain; 1,280 MiB is an operational safety budget, qualification target and
-diagnostic threshold, not a hard physical invariant. No breach observed is
-empirical evidence, not a theorem. The WAL startup rejection fix is mandatory,
-including page-1 restoration through hot-journal recovery, before unsupported
-conversion or WAL/SHM creation; 1A implements and qualifies this while preserving
-supported recovery. D21 is resolved,
-not another architecture investigation. Preserve historical DELETE and
-physical-allocation negative evidence. The later explicit authorization starts
-[1B](docs/PersistenceFoundation1B.md), implemented and qualified within its recorded
-scope, including [implementation-source CI](docs/PersistenceFoundation1B-Validation.md#final-implementation-source-hosted-ci).
-Persistence-1C combined closure and its exact current verdict are recorded in
-[PersistenceFoundation1C.md](docs/PersistenceFoundation1C.md). The user assigned
-persistence API `0.5.0-experimental` under D12; it is not retroactive 0.4
-availability. [Persistence-2D](docs/PersistenceFoundation2D.md) records the
-separate combined PASS and [Release.md](docs/Release.md) owns the v0.5.0
-experimental package mapping. Original design adoption alone did not authorize
-publication; the release gate was separately authorized and qualified. Entity
-work remains gated;
-persistence does not weaken Entity identity or serialize Player/Entity facades.
-
-- Identify whether the request is investigation, design, implementation, review or validation. Stay within its modification authority and current phase; keep unrelated refactors out.
-- Modify only CarbonLuau unless explicitly authorized otherwise. Do not edit Carbon, Rust, Gargantuan, or casually change vendored Luau. Read upstream sources to resolve assumptions; prefer documented/public adaptation APIs.
-- Use PascalCase for project-owned identifiers by default. Preserve required OS/upstream names and accepted public API spellings; `self = setmetatable(...)` is the stated local exception. Use `GetFolder`/`GetObj`, not `GetOrCreateFolder`/`GetOrCreateObj`.
-- Use `[System:SubSystem]` logging, e.g. `[CarbonLuau:Native]`, with concise relevant diagnostics. Prevent task processes from showing error dialogs or stealing focus; use headless/hidden server and helper launches.
-- Preserve user changes and concurrent work. Use `apply_patch` and the available CodexLock workflow; do not bypass another task's claims.
-- Run native builds and test servers on `DockerPC` through the authorized Windows profile connection. Keep worker host files under `C:\Sandbox\Codex`, bound resource use, reuse caches, and leave unrelated workloads alone. Use Linux containers on that host for Linux tests. Do not silently move sustained builds or servers to the controlling PC.
-- Keep credentials in their existing profile helpers, out of code/logs/artifacts. Deployment and destructive fixture tests have different scopes: production uploads never authorize replacing live libraries with failure fixtures or modifying host policy.
-- Select validation through Compatibility.md. Preserve valid previous evidence; rerun affected checks after implementation changes. Report source revision, results, environment, remaining uncertainty and any persistent task processes.
-- Add durable accepted rules to their canonical owner and link them from task notes. Do not duplicate them across prompts or create parallel policy documents.
-
-## Prompt construction
-
-A task prompt supplies the delta, not the architecture. Specify objective, task kind, permitted repository/paths, current revision/evidence, exclusions and stop conditions. Route to this policy and canonical phase criteria; use the smallest authoritative context. State prior evidence with its limits, prescribe order only where dependencies or test attribution require it, and do not optimize for a desired verdict. Unresolved choices belong in the decision register, not hidden prompt assumptions.
+Provide the objective/task class, current source/evidence, allowed paths and
+change, exclusions, routed contract, genuinely new checks and stop conditions.
+Report final source, qualification scope, remaining uncertainty and persistent
+task processes. A handoff supplies the delta; do not duplicate the architecture.
 
 ```text
-Task: <phase and concrete outcome>; mode: <design/implementation/review/validation>.
-Scope: CarbonLuau at <revision>; permitted changes: <paths/components>.
-Read AICONTEXT.md and its canonical architecture, compatibility and phase references.
-Established evidence: <link and applicable limits>.
-Change: <task-specific delta>; exclude <later phases/unrelated work>.
-Validate: <canonical fixture/criteria links plus only genuinely new requirements>.
-Stop and report if <task-specific blocker> or an accepted invariant must change.
-Report changes, final-source evidence, unresolved decisions and verdict.
+Task: <phase and outcome>; mode: <design/implementation/review/validation>.
+Scope: CarbonLuau at <source>; permitted changes: <paths/components>.
+Read AICONTEXT, canonical rules, compatibility and relevant phase evidence.
+Change: <specific delta>; exclude <later phases and unrelated work>.
+Validate: <routed criteria plus new requirements>; stop on <contract conflict>.
+Report: final source, results/environment, uncertainty and repository state.
 ```
-
-For a Phase 1 prompt, route to the design's Phase 1 scope and the [Phase 1 evidence contract](docs/Compatibility.md#phase-1-evidence-contract). Do not request a complete scheduler, gameplay bindings, or the rest of v0.1 as part of the execution core.

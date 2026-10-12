@@ -3,8 +3,8 @@
 Status: **GAMEPLAY-D2A PASS — PRIVATE STRICT REPLACE QUALIFIED**.
 Starting main: `35701d5c7986f863550c2d92300d48fa2793d44d`.
 
-The supplied [D0 research](GameplayD0Architecture-Research.md) and preserved
-[C/D research](GameplayCDArchitecture-Research.md) are evidence, not implemented
+The supplied [D0 research](history/gameplay/GameplayD0Architecture-Research.md#gameplayd0architecture-research) and preserved
+[C/D research](history/gameplay/GameplayCDArchitecture-Research.md#gameplaycdarchitecture-research) are evidence, not implemented
 Loot APIs. The authorized phase first proves one exact prefab on the qualified
 Windows/Linux hosts, then conditionally implements private D1/D2A only.
 `Enum.DropMode` remains the future naming direction. No public Loot service,

@@ -10,7 +10,7 @@ gate.
 
 Foundation 3's `UIGridLayout`, `Frame.ClipsDescendants`, `GuiFont`, retained
 TextLabel/TextButton `Font`, and exact-Player `ScrollingFrame:ScrollTo`,
-`ScrollToTop` and `ScrollToBottom` are included in the still-unreleased package
+`ScrollToTop` and `ScrollToBottom` are included in the published package
 `0.4.0` and scripting API `0.4.0-experimental`. Their server-side model,
 publication, lifecycle and scale behavior is qualified. Authenticated-client
 clipping visuals and hit regions, rendering of all four fonts, and actual scroll

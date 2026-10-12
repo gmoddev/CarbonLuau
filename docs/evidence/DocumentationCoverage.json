@@ -1,0 +1,2018 @@
+{
+  "Baseline": "cdda6d1ea450ee6b0f436841c056f7c00c022044",
+  "Spans": [
+    {
+      "Source": "docs/Addon-Design-Validation.md",
+      "Destination": "docs/history/design/Addon-Design-Validation.md",
+      "Prefix": "addon-design-validation",
+      "Kind": "Historical",
+      "SourceTextSha256": "5201e9829fe6a24cd69ff44dbcac1d4c8f927753b95e12f867550539f4f1a065",
+      "SourceBlob": "099b7bc59d0ab99e2cb6fc512b3cdef9183f724a",
+      "SemanticSha256": "017f3ad77b7defb6c4695855edcd9cb08e9ed531e85009d2c137dc02fd66feab",
+      "ExternalUrlsSha256": "c7bc78b8f441b8a75c96e71e221a288b033359fb128874de9bac434e01f5963f"
+    },
+    {
+      "Source": "docs/CarbonLuau_Addon_Decisions_and_Invariants.md",
+      "Destination": "docs/history/design/CarbonLuau_Addon_Decisions_and_Invariants.md",
+      "Prefix": "carbonluau_addon_decisions_and_invariants",
+      "Kind": "Historical",
+      "SourceTextSha256": "ca7f01858103af3ffce8e94a19f34f926f45f402c1451eda8e518819c342532d",
+      "SourceBlob": "c97a020a76e37620d0f2a4f0bc8cdd7b855321ac",
+      "SemanticSha256": "6ed35b7d904a32ecef07cebba3cc4de678ed436cbed03b23c37bdaed9a5bd154",
+      "ExternalUrlsSha256": "1fc48d58116b7b42f6fe12605a74e35f438d2e006dd1eee859f7ba5a4a55d68d"
+    },
+    {
+      "Source": "docs/GameplayB2-Attribution-Research.md",
+      "Destination": "docs/history/gameplay/DeathAttribution.md",
+      "Prefix": "gameplayb2-attribution-research",
+      "Kind": "Historical",
+      "SourceTextSha256": "46434b72e2719eb79479b1974c233c319ac7eb429832a2a8a3e027fd9eac6754",
+      "SourceBlob": "eaff38da6addc7769ec30426393b896cee8a2f73",
+      "SemanticSha256": "239cb229a85f96ba2c57a83d7c5b701dcf09233a2bcc53dad790e5da51df7971",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GameplayB2-NpcEpisodeReset-Research.md",
+      "Destination": "docs/history/gameplay/DeathAttribution.md",
+      "Prefix": "gameplayb2-npcepisodereset-research",
+      "Kind": "Historical",
+      "SourceTextSha256": "38dc2e975a0eff50957c0e80bc962a08fec27ca8332b75ccec9235221c66af79",
+      "SourceBlob": "4536b68ec3fc21fe1acfe38227849ce128ce6be7",
+      "SemanticSha256": "583dc2ea4e20a6b3a28c97c8f7334375251ccec05a4f83a568c6498abf478f1c",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GameplayC2-HostResearch.md",
+      "Destination": "docs/history/gameplay/GameplayC2-HostResearch.md",
+      "Prefix": "gameplayc2-hostresearch",
+      "Kind": "Historical",
+      "SourceTextSha256": "37355ac6f7f716fbb5d7b309aa990a30872904cc8818a69f3416016132f8466a",
+      "SourceBlob": "2c120cc7066aa7e5385c7f5a158a2833518ffbce",
+      "SemanticSha256": "208c3cca7c49adc8432f1dcd104a7e65b199d394e4f29233768aecc41e458835",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GameplayCDArchitecture-Research.md",
+      "Destination": "docs/history/gameplay/GameplayCDArchitecture-Research.md",
+      "Prefix": "gameplaycdarchitecture-research",
+      "Kind": "Historical",
+      "SourceTextSha256": "80338622a83a7e7e0b57bc00eef9469f4e476a98d4a4eb18fbc715f64ded0d3c",
+      "SourceBlob": "16efa2f5f71a321b26a77c07702863b0e92b431e",
+      "SemanticSha256": "975157786db50c31490e57c7ac542e56150f6a6767605566f21d51c9cf0afafa",
+      "ExternalUrlsSha256": "e1e5ddf03601a6acc30023c8e4f589b7ca1ff6ddb493acfe236dee460aa5907a"
+    },
+    {
+      "Source": "docs/GameplayD0Architecture-Research.md",
+      "Destination": "docs/history/gameplay/GameplayD0Architecture-Research.md",
+      "Prefix": "gameplayd0architecture-research",
+      "Kind": "Historical",
+      "SourceTextSha256": "70af6d69452811bed3f1c98f0fa5940ed5526a80562dad2df09895ece4bf7037",
+      "SourceBlob": "c914fd728fa31bb3fe321cf3ad01a32b6087b126",
+      "SemanticSha256": "4277b1342492701d68e3ba44dd65bcf6e7835904bbc34bdc6f0b8a1eaa911bf7",
+      "ExternalUrlsSha256": "69d5141bfc5287e68687227ececb8fcc9598d7a7e98fe6b58f8e0ae9ffb64c09"
+    },
+    {
+      "Source": "docs/GameplayEventsArchitecture-Research.md",
+      "Destination": "docs/history/gameplay/GameplayEventsArchitecture-Research.md",
+      "Prefix": "gameplayeventsarchitecture-research",
+      "Kind": "Historical",
+      "SourceTextSha256": "e35d5cda31ff2c490289bb2d0ab60b97abd23e68e1f14f427567cd5abe9afb24",
+      "SourceBlob": "da2d5be63b565ecd8cfbbc56c87bea4560a6cd9b",
+      "SemanticSha256": "9e38a7307c41044f4a072d77d274cfefc55256b3963668edffe94be595281c47",
+      "ExternalUrlsSha256": "6615d9034e495b741ffcb336eaa0fb5780289672feefa32d1a9714852832b5e1"
+    },
+    {
+      "Source": "docs/HistoryCuration-FullHistory-Validation.md",
+      "Destination": "docs/history/maintenance/HistoryCuration-FullHistory-Validation.md",
+      "Prefix": "historycuration-fullhistory-validation",
+      "Kind": "Historical",
+      "SourceTextSha256": "d2999e8fe72b6f4dd883389d80b792318d5c8adee1c2a0ecca199c32d61a78c1",
+      "SourceBlob": "2b8946d0f2b5b75b20bd585e5ae83efa656ac481",
+      "SemanticSha256": "00b317a545e6c02b181dd0519d64e25758172634494d39bd6b0965eb71bbfb49",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/HistoryCuration-Validation.md",
+      "Destination": "docs/history/maintenance/HistoryCuration-Validation.md",
+      "Prefix": "historycuration-validation",
+      "Kind": "Historical",
+      "SourceTextSha256": "84995c4b44d07a30f9ef8199b7b6956de226fd6e5b29d21820ec1bb1c8c60060",
+      "SourceBlob": "e41e6cca716d0ea20fa97a1664b08db309ef0063",
+      "SemanticSha256": "d17087a1fc240142985ff437def7915d2fa3ec052d56006b7cc07ead95f2bdf7",
+      "ExternalUrlsSha256": "cfe936d8ab24e9318e4f902992aa82c8f2db4d04c903145cb077a0c5f5e9ba4e"
+    },
+    {
+      "Source": "docs/PersistenceCandidateBSplitProof.md",
+      "Destination": "docs/history/persistence/PersistenceCandidateBSplitProof.md",
+      "Prefix": "persistencecandidatebsplitproof",
+      "Kind": "Historical",
+      "SourceTextSha256": "cab7d665f2fbb7569e666c68de0a2314a9bafd3ecc6c010eb51a63915686f759",
+      "SourceBlob": "b9cca3f6a4f2f9f9bbaedab34e2e7322adcb2da1",
+      "SemanticSha256": "ee67a7304470262fd76e693e90c61025f5d409522b4cc055665e889ee101c662",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PersistenceD21Amendment-Proposed.md",
+      "Destination": "docs/history/persistence/Durability.md",
+      "Prefix": "persistenced21amendment-proposed",
+      "Kind": "Historical",
+      "SourceTextSha256": "dda74f7ec064debbeb489596961e70a0b28c2b504af9003c911df6c14dfed658",
+      "SourceBlob": "7505c9b097c387d4aaf3abe102622d61e8b7c72e",
+      "SemanticSha256": "9025b0982948f625cadac969405b8993da0857f04120198c03dda9802d87f6b3",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PersistenceDurabilityInvestigation.md",
+      "Destination": "docs/history/persistence/Durability.md",
+      "Prefix": "persistencedurabilityinvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "45eedd527122e1bcc3f259d1c1093872173aa6eab7d3dcdb10ab0768e3c73523",
+      "SourceBlob": "0d580bdf490cee666a8ccef7ed20e7c6838167e1",
+      "SemanticSha256": "4ec2976169a90ec9eadf7382dda14d1e2ed99648355152182f80fd468683edba",
+      "ExternalUrlsSha256": "5f5b7de77c5e9b992366f6c92165f430310bb85ef9209e4306096dab7a270840"
+    },
+    {
+      "Source": "docs/PersistenceFoundation1-Validation.md",
+      "Destination": "docs/history/persistence/PersistenceFoundation1-Validation.md",
+      "Prefix": "persistencefoundation1-validation",
+      "Kind": "Historical",
+      "SourceTextSha256": "ae4a625b5f860e77955481a0574ecf4c94c023531472559a6fd3040d7bedca8c",
+      "SourceBlob": "58af2f88a2b658f780f8135d1889e32d21d96b3a",
+      "SemanticSha256": "ea154ea5f3b7b4d92465fc3d69776c37eebd7d7a04e30f9a81740b3ad1080146",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PersistenceFoundation2-Validation.md",
+      "Destination": "docs/history/persistence/PersistenceFoundation2-Validation.md",
+      "Prefix": "persistencefoundation2-validation",
+      "Kind": "Historical",
+      "SourceTextSha256": "7c644d8c354afea73c9b7c793a1c3700641f68aa22e8d98bb58645b1a46b1c90",
+      "SourceBlob": "d123c6737fb2d977e60fa7870a66d711dc0343ce",
+      "SemanticSha256": "348ca82cf8dfa84eb50547444fc1a7b6295f87d155c604d9b517fd6fc38a4d02",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PersistencePhysicalAllocationInvestigation.md",
+      "Destination": "docs/history/persistence/PhysicalAllocation.md",
+      "Prefix": "persistencephysicalallocationinvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "d07cd3beb6ed621b12719e646d5c5c868a49d9d94429e55e10f9e72b47874fdb",
+      "SourceBlob": "b30133b4c6a6f9928d209f10adcc59cedb355bf7",
+      "SemanticSha256": "a70a6f4aef8318fa5bbb755b255f1b5f5908679f60ff7925312a1012021dfa91",
+      "ExternalUrlsSha256": "d132438bf3e62509daebeac7036912c6507a74961729d862324d0469d560d400"
+    },
+    {
+      "Source": "docs/PersistencePhysicalD21Amendment-Proposed.md",
+      "Destination": "docs/history/persistence/PhysicalAllocation.md",
+      "Prefix": "persistencephysicald21amendment-proposed",
+      "Kind": "Historical",
+      "SourceTextSha256": "3730ef28bfe617d0a14a76379b6f25197d613e92354b26b011bb25bb3f96e05d",
+      "SourceBlob": "488b2046c2562970f85c6082f77a5013342de2f7",
+      "SemanticSha256": "7ddc797dfb278064469b9dff33c5be8bebb299e89a640dc77900f75b1489ef1a",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PersistenceSingleDbBoundInvestigation.md",
+      "Destination": "docs/history/persistence/PersistenceSingleDbBoundInvestigation.md",
+      "Prefix": "persistencesingledbboundinvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "f7f1828deca523f2a639e54125e14f4d6fb6da64a9d434e35ea63fcc1a7f2328",
+      "SourceBlob": "5238270c4f873babb4c54d6e3fac5f4dbd7e3d6b",
+      "SemanticSha256": "d2407090200ffe28e85a861367d4e8e3f86de787046b6a54890a89ca75ce55a3",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Phase4-Validation.md",
+      "Destination": "docs/history/inventory/Phase4-Validation.md",
+      "Prefix": "phase4-validation",
+      "Kind": "Historical",
+      "SourceTextSha256": "80faa5b01fa9703dae1e76dd89fb268435b9a0c351c869a2a814bca5a383805f",
+      "SourceBlob": "fe5bd7b15d455324f493f3a7b00eca14d2daf2b1",
+      "SemanticSha256": "9bf7d39f3db58e59d1e075c114df8bc9049c0a5fcc8953281d5b99a1131fb1f7",
+      "ExternalUrlsSha256": "b246d258b1408a2975a3d2f6f13c94d73de74c6a51f8ccd7a97b6c1116c2d124"
+    },
+    {
+      "Source": "docs/Phase4.md",
+      "Destination": "docs/history/inventory/Phase4.md",
+      "Prefix": "phase4",
+      "Kind": "Historical",
+      "SourceTextSha256": "630216b72edb01318a37d5b507920aaccdb287ef54773a0e2ddffc2ff0326456",
+      "SourceBlob": "1eb133e177f646e4a2751817cf6031f67bfb0963",
+      "SemanticSha256": "af3660e693055061df0e28ef4911b5a931a3847713974aae68e61531379f27d2",
+      "ExternalUrlsSha256": "b246d258b1408a2975a3d2f6f13c94d73de74c6a51f8ccd7a97b6c1116c2d124"
+    },
+    {
+      "Source": "docs/ToolingBaselineValidation.md",
+      "Destination": "docs/history/tooling/AnalysisHistory.md",
+      "Prefix": "toolingbaselinevalidation",
+      "Kind": "Historical",
+      "SourceTextSha256": "eb693e9fa2eded3593235a8e841030d007813c111b9dea18e7cc3f43a9bda97b",
+      "SourceBlob": "ac907e7cb8abd26116cc992e9c3a5b511ef7b572",
+      "SemanticSha256": "3735db02be302c98cfe45e73b0fcd1b8aa601a51a781053c967e8466779b66a6",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/ToolingFoundationAValidation.md",
+      "Destination": "docs/history/tooling/AnalysisHistory.md",
+      "Prefix": "toolingfoundationavalidation",
+      "Kind": "Historical",
+      "SourceTextSha256": "591b6108875e78353d544d5442efaea300eb0aabbd6a8429d174fe5563e2a898",
+      "SourceBlob": "79eea2cb15b0d86f2a47aa7429372db5f04633ce",
+      "SemanticSha256": "b9cf303c378000a435354b88dfd0b6f3d26de5f4e56a27055a7488a6b451379e",
+      "ExternalUrlsSha256": "c5e4f9378181ac3c84d62fc40388aa4e06217b09be73ee8d2e481b195c20c76f"
+    },
+    {
+      "Source": "docs/ToolingLanguageAnalysisSecurityEvidence.md",
+      "Destination": "docs/history/tooling/AnalysisHistory.md",
+      "Prefix": "toolinglanguageanalysissecurityevidence",
+      "Kind": "Historical",
+      "SourceTextSha256": "24aa7ef6afb53cf476097fd79597cfe3ee9030a782bf0d419c4e03b408e3d7b3",
+      "SourceBlob": "1d0b7bcaa5feac8d12a62a395d802873ba1c071c",
+      "SemanticSha256": "35a85fe16732c360806b49a18434e05c27e4df64da39fb9345d3cb447dda53fe",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/WorldEntityAsyncTraversalInvestigation.md",
+      "Destination": "docs/history/world/WorldEntityAsyncTraversalInvestigation.md",
+      "Prefix": "worldentityasynctraversalinvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "58edc03614ba525981932289393ccbb5f0e6bfc79f67540195d01c5d7c9399ad",
+      "SourceBlob": "86bcc7e49c001bbde9ebfee9e3116a34913eb4f1",
+      "SemanticSha256": "a8324789706fe4b9d753a4e0ede3f50be7bc890372f3dfd2e6da9c4c91d4779d",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/WorldEntityCatalogInvestigation.md",
+      "Destination": "docs/history/world/WorldEntityCatalogInvestigation.md",
+      "Prefix": "worldentitycataloginvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "a2d37bed18fe7d9b8fa9d96961afb7379a2cc4f9eef5cfae88a0e9b822483719",
+      "SourceBlob": "6846a9ff62587482679df9ade26213ab31832f3c",
+      "SemanticSha256": "7f997e4fd9ae0cd79e9c42a71482193e97f84abcf5f016a1d65ebed2dc4162a7",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/WorldEntityCompletionFenceInvestigation.md",
+      "Destination": "docs/history/world/WorldEntityCompletionFenceInvestigation.md",
+      "Prefix": "worldentitycompletionfenceinvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "3f30f944650e7ffa9b105b4211bf5e5bbeb8fa9825670999a57eec26ce25b25c",
+      "SourceBlob": "80deb76072a2d8ebea42af8ce7aa7bdf2721435c",
+      "SemanticSha256": "098f433e39bc3bceba562a302830d87ba8d6f72c90af906006206db61c7036b5",
+      "ExternalUrlsSha256": "8de81e61a0c256d44d8757eb5c871fd730d64ed59c775579182a70b6ec5499bb"
+    },
+    {
+      "Source": "docs/WorldEntityDiscoveryMovementInvestigation.md",
+      "Destination": "docs/history/world/WorldEntityDiscoveryMovementInvestigation.md",
+      "Prefix": "worldentitydiscoverymovementinvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "99ae5eae6f98c42ae8304faa2af75284f890996f7fab10568b24fb128c06a5e5",
+      "SourceBlob": "f5493193f0da108aec8df8854119b3d0a00d8e6e",
+      "SemanticSha256": "3051ea5407f971c29d7d7d7c2af4ee6e0b17420396d84de3ede9735dc0aa0f13",
+      "ExternalUrlsSha256": "ea43cf100bf102966b5c56b8eafdeba41653ad87190464f2f680af57f0ba908b"
+    },
+    {
+      "Source": "docs/WorldEntityFoundation1A.md",
+      "Destination": "docs/history/world/WorldEntityFoundation1A.md",
+      "Prefix": "worldentityfoundation1a",
+      "Kind": "Historical",
+      "SourceTextSha256": "f1c9ce3717146a758c27d1a9254a4f0ac1b1d230afaf99cc2aac355a45c6a033",
+      "SourceBlob": "0911cf2daf6e068399d9f81a19c6d33cbfdfd910",
+      "SemanticSha256": "cea0e3b02e0cb6da73d03ee922c707b1bf155a9bf0b51d714e3fd97fdf6aa1da",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/WorldEntityLifetimeInvestigation.md",
+      "Destination": "docs/history/world/WorldEntityLifetimeInvestigation.md",
+      "Prefix": "worldentitylifetimeinvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "aa293f733929ecbe7b0432194e276f880f40d23bf529f1cad513466f5471f096",
+      "SourceBlob": "6f11b4547a360b1e9c64e73eaab6c05bac211a1b",
+      "SemanticSha256": "f23135d3887fc76d13589b35ed04c2d3491ce0e763f81b0b1627b9e211169c76",
+      "ExternalUrlsSha256": "e0e46a94293c74fbfe04479afaa6ea4e55235eddeb0c4b7ad7e6b30014457118"
+    },
+    {
+      "Source": "docs/WorldEntityPositionAlternativesInvestigation.md",
+      "Destination": "docs/history/world/WorldEntityPositionAlternativesInvestigation.md",
+      "Prefix": "worldentitypositionalternativesinvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "f2ca4611ab58c8b915fdbb83449d4ea6b32c4b73a97b4db78a5edf5d665e101e",
+      "SourceBlob": "a983262d27346452fd2af0934881456aad76db55",
+      "SemanticSha256": "eb24be0cefe3598beb48e8e1cd684f02e91251b2097bef49fccb0daeb7d503b1",
+      "ExternalUrlsSha256": "591e74e7754f8bbba48b0c1e4eb200991801d9a6f5c2fe466885be9f2b5a4d31"
+    },
+    {
+      "Source": "docs/WorldEntityPositionOrderingInvestigation.md",
+      "Destination": "docs/history/world/WorldEntityPositionOrderingInvestigation.md",
+      "Prefix": "worldentitypositionorderinginvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "88c5cefdcb2665ea57aec9b8635e01fc92443127c6fadbb8accddffaea0372b5",
+      "SourceBlob": "b14f67410a6cc971d47525ff04c37fef1e4f6521",
+      "SemanticSha256": "9b9f938eac4e9f28a7876eeba483b1ab1657d116e7d4b9e61a2d60da612ce1ca",
+      "ExternalUrlsSha256": "4ef9bc86a4c08fc2460f8ea61d71d0399dc88561f9b1a8ab526aefda406f6c20"
+    },
+    {
+      "Source": "docs/WorldEntitySpawnEpochProbe.md",
+      "Destination": "docs/history/world/WorldEntitySpawnEpochProbe.md",
+      "Prefix": "worldentityspawnepochprobe",
+      "Kind": "Historical",
+      "SourceTextSha256": "d12f654c1a263b04ecb12764c7f2f2b9c9698133c9638fa550420bb15e3ba234",
+      "SourceBlob": "fde3ffc728604d1a5ab1e94e2f76e78d68b31fef",
+      "SemanticSha256": "4261242b240471ccfe7bc2fe28f6514477fa05ee23c3ab32f1a05bf7cd8355d1",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/WorldEntityStartupObserverInvestigation.md",
+      "Destination": "docs/history/world/WorldEntityStartupObserverInvestigation.md",
+      "Prefix": "worldentitystartupobserverinvestigation",
+      "Kind": "Historical",
+      "SourceTextSha256": "aabf8ee6ea926d7510f916a7a5276292f89d1c140243c72c763daf102e79ede1",
+      "SourceBlob": "ce48e3afc2a8a04ffafd26d047a4aec4a9bf39ec",
+      "SemanticSha256": "74ac6e055e26bef39039b89db1cfc81fb59bd6b1855846e66027808848ef3ccd",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation1A.md",
+      "Destination": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1a",
+      "Kind": "Qualification",
+      "SourceTextSha256": "b6a0c29dbd67dc2188565b289319d1ed4229446e5f213108ebf80e058950aa92",
+      "SourceBlob": "5a9b91ef1ca023970ce236a99f1d6943e752a690",
+      "SemanticSha256": "1381ae297f6e77283d62261f394071b429afc4eaad415a2fa2761046b35b09a0",
+      "ExternalUrlsSha256": "a399c422519cfc5bf85f3d98dde357cf0674abcaee53c8ac866eaa87ea3bc1e0"
+    },
+    {
+      "Source": "docs/GuiFoundation1B.md",
+      "Destination": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1b",
+      "Kind": "Qualification",
+      "SourceTextSha256": "10f7e2e8336edf1819d26bd52425f77a335b507cf7acfb82e09520ecf0928a33",
+      "SourceBlob": "98acc662fbce401a25e2ea3e3411942451ad499a",
+      "SemanticSha256": "95c252a0592da48824779f4af428f7140d08f74e2fbad6cfef6b337e257b018d",
+      "ExternalUrlsSha256": "a0718d97b711c32b19898db5dc1875626046e44165c68bd3affad1600eafa351"
+    },
+    {
+      "Source": "docs/GuiFoundation1C.md",
+      "Destination": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1c",
+      "Kind": "Qualification",
+      "SourceTextSha256": "adf7a5c95540254445bd4478a1f1ded29218d261439299d020399949e158d210",
+      "SourceBlob": "22dec4f69ce8621dd6281db387f0a1d0c5309332",
+      "SemanticSha256": "40ceb182cc76f84fcf19da426338ac8a4ee3d1dc9d6857a63130e58df71df48a",
+      "ExternalUrlsSha256": "c56fe30463161533963621846f7ecccb10239a8a463157b77f77955f86aa7a67"
+    },
+    {
+      "Source": "docs/GuiFoundation1D.md",
+      "Destination": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1d",
+      "Kind": "Qualification",
+      "SourceTextSha256": "897ab9aa11b5a62e9422525cd3f5a2671fb7fe7169c5ca6f9ff439f6ba143ed6",
+      "SourceBlob": "3214bf72b9c56c62ecce332894721b4b4753b0e0",
+      "SemanticSha256": "94430b8a17d111d3036b3d64b6ba69adba975052a1a1ea68413b987858628a72",
+      "ExternalUrlsSha256": "f2860f49c32f3792b269f2bd54652d7195680a8d81dbbc7e3d9e5e1224f6cb5a"
+    },
+    {
+      "Source": "docs/GuiFoundation1E.md",
+      "Destination": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1e",
+      "Kind": "Qualification",
+      "SourceTextSha256": "bec5d6a2d32d8b435d69514417c0a893485080179a82e2ea80fc80c34bc74f71",
+      "SourceBlob": "e82d4c68708e37df46a44e23ccdb20d3d35f8a05",
+      "SemanticSha256": "87fb6cbc6e70f0f01789141f491805f60240ae72b2398b6eda326055e7fc9614",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation1F.md",
+      "Destination": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1f",
+      "Kind": "Qualification",
+      "SourceTextSha256": "3f5aeed5ff0419eb60080bfe55204277712837d416cf05a96d1ea0efe20eadf2",
+      "SourceBlob": "aaffbedf70b2ec75ce5fa68d060b3590bf035bcb",
+      "SemanticSha256": "779e7464b5615e1696f462b2d5e356a95a793cd55464109cb547dca26dcbcc32",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation1G.md",
+      "Destination": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1g",
+      "Kind": "Qualification",
+      "SourceTextSha256": "1c69d8b08a454accdf6c6b5da1e71e6a3d75ea33b3526b4ab200e9bb1a0c32ce",
+      "SourceBlob": "f4e4698788316bbf029607fedaa066728a219b17",
+      "SemanticSha256": "0aea34bd04e87c3eeb1c0c9f8ae1fc02ed4f89ec8165a1a8b97643e788c1d83c",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation2A.md",
+      "Destination": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2a",
+      "Kind": "Qualification",
+      "SourceTextSha256": "cfaedbfcce05d83428e3b09d1bbca93f16d1e6abbab7c24ea20ddc3f72ee92c8",
+      "SourceBlob": "9ce2eab0340a156bd31989d668f33df70a58f1e8",
+      "SemanticSha256": "3b896774d8ad6904f149f8defd5e5d61d5065307bb8d3238aa43ed973a39c782",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation2B.md",
+      "Destination": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2b",
+      "Kind": "Qualification",
+      "SourceTextSha256": "4fb349633372f532b9755059c641040797bd7f2b31952c69e3065e40233c9db2",
+      "SourceBlob": "f66c36b72c351e627ae9700a3938260c68ec2340",
+      "SemanticSha256": "c2ec3dcfcf6faca5772ba480b7cdb09f7f67049d0b43f8b0ebb14bfafcb440e7",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation2C.md",
+      "Destination": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2c",
+      "Kind": "Qualification",
+      "SourceTextSha256": "8b42cb2b9298815836e778be70fa8180f3f7fab15082688085d740e786cb4d56",
+      "SourceBlob": "889fc8630ec37a368517e8f9da4f1fbe8ca37b71",
+      "SemanticSha256": "5f325a7e685fb8fab4fb7cb8e71ed1aa773c1b795292de93a53da5d15de42644",
+      "ExternalUrlsSha256": "b6befd6553c1f6778603fa2a808941f7784e699d74074d76c14cb4f0be67dba8"
+    },
+    {
+      "Source": "docs/GuiFoundation2E.md",
+      "Destination": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2e",
+      "Kind": "Qualification",
+      "SourceTextSha256": "47e115e05ccf548c134c9b7858fea7e5bb08c6b38689847ca60151c912ab9698",
+      "SourceBlob": "74d2413f6a52efaf238bba1bc27d6d37df1eb20a",
+      "SemanticSha256": "390dca7cb8e6ae8fb0268c17eb3258e82f3a0da946d4e14ff160f6ecb30359db",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation2F.md",
+      "Destination": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2f",
+      "Kind": "Qualification",
+      "SourceTextSha256": "97b8d6000667991e4d8f7a75323ea03d7929cbd29fc2bd2b8b3cb62ec5548376",
+      "SourceBlob": "0b9cc92a373462bd135076361630672a7b1ec7a8",
+      "SemanticSha256": "38d1a4ba3e720739fc2924ac7ccdcbc7feda953d23c2d15ba8b044639da63b3a",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation3A.md",
+      "Destination": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3a",
+      "Kind": "Qualification",
+      "SourceTextSha256": "33ae6886271aa33e588262880a128e2332f4b0d791f16384c26e883db4300e6e",
+      "SourceBlob": "6d1db9eb40af3a8a6e631b9408ae9163d38981ff",
+      "SemanticSha256": "5372e137759a5231479846aa59331b17701762f73ec76163ebeb421c53f5ce7f",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation3B.md",
+      "Destination": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3b",
+      "Kind": "Qualification",
+      "SourceTextSha256": "365af873c2aa80a6251b1e1c613c7562d5bd6c3707a66c9bdbc2ed8f516e2f79",
+      "SourceBlob": "d462819b2f4e0238ac06008911482e71041c1ea7",
+      "SemanticSha256": "f264b94e859b43a0aa2bfac4db439bbb06335328931a33224236a78582add412",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/GuiFoundation3C.md",
+      "Destination": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3c",
+      "Kind": "Qualification",
+      "SourceTextSha256": "a3f398ed25ce713cbd2746cc8b3e63c650ae07006ede10decefde5f0b98bb6f9",
+      "SourceBlob": "7348a1bca56e39b74bb9ca94196ddc687199a157",
+      "SemanticSha256": "80a0bb80a68f1663f768df0ccbee6d324005d9b4f162e45932f0bfbc5b24bd07",
+      "ExternalUrlsSha256": "695655fca3091e8251b82e118101e93e68e79d9dea73af8f2697a5233627dc90"
+    },
+    {
+      "Source": "docs/GuiFoundation3D.md",
+      "Destination": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3d",
+      "Kind": "Qualification",
+      "SourceTextSha256": "37ce38fc133e33f61954f15dfb318e3ddc72bd631405f50644c0fb14ecc1db5e",
+      "SourceBlob": "07affbf934eef1fb4dfaac106bd62c0a98b0b8a6",
+      "SemanticSha256": "527b9134f16116efa894282825963867054f55afbd746f5825a91d92e9f85105",
+      "ExternalUrlsSha256": "7d6074cc3f825700b513d92c0144d6b1437f6d6fcc8c1bfd8a8233b593600181"
+    },
+    {
+      "Source": "docs/GuiFoundation3E.md",
+      "Destination": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3e",
+      "Kind": "Qualification",
+      "SourceTextSha256": "ea04409f0a08c1e52c6aa4c445678ae8894fa4832546034aff669efe19be89fb",
+      "SourceBlob": "0a17f33e71090393c073ad19ec5c50a0eebf19bf",
+      "SemanticSha256": "058082748277f5df4a5b93d9d4d7573589680433c4017837fd18be68c480338f",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/FoundationA.md",
+      "Destination": "docs/qualification/Addons.md",
+      "Prefix": "foundationa",
+      "Kind": "Qualification",
+      "SourceTextSha256": "3f60dc2790a79c06c6b0715c800d0939254418d44caa85cf04b01c3b1aa75e39",
+      "SourceBlob": "fa2bdb6ea202dda669c804299df39bee03ce9bfb",
+      "SemanticSha256": "fcd32d4761d138a2e3e11ba12e416cdb904a4f89499e55d47462c8e585dee50e",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/FoundationB.md",
+      "Destination": "docs/qualification/Addons.md",
+      "Prefix": "foundationb",
+      "Kind": "Qualification",
+      "SourceTextSha256": "e3e68ea542b8ae22ee0f4227f551cd10d0227e80820ce0c1bf268e3cc73a30a7",
+      "SourceBlob": "ac209652238279ecec968e83f57834944acb79f3",
+      "SemanticSha256": "fef2ff1230faa0f6ed31b2cec33feed47e9392ef6725ba1549943bb9447517ba",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/FoundationC.md",
+      "Destination": "docs/qualification/Addons.md",
+      "Prefix": "foundationc",
+      "Kind": "Qualification",
+      "SourceTextSha256": "b74aed1c6488629519c01ba9316b9a3297f0933196672de6ddf3241fd1acc9bb",
+      "SourceBlob": "40040a0dafd516fef442f12178ddf201831d77bd",
+      "SemanticSha256": "43e8a9fd80818363452ee37fea36c678dc4c2532b0afb434080c08cacb07210f",
+      "ExternalUrlsSha256": "a95d3e686c0f039a99bbec14ee12bce377848c9d4e13399015966e31ae55e21d"
+    },
+    {
+      "Source": "docs/FoundationD.md",
+      "Destination": "docs/qualification/Addons.md",
+      "Prefix": "foundationd",
+      "Kind": "Qualification",
+      "SourceTextSha256": "30b4cd06f30156d83da370225d19acb04a6fc6ded3973f85450ffecf2d30249b",
+      "SourceBlob": "782fafbd293c933d5c5eb14d4879a98c02ada706",
+      "SemanticSha256": "46a6d1d4a4a975341c54d5a9eb8c8c2ced59b5ee851dcab7e5085c2c589233da",
+      "ExternalUrlsSha256": "708202bbd09aa257d8c54a12009bf75909419338e4ab5e0228eaeed2f8259106"
+    },
+    {
+      "Source": "docs/FoundationE.md",
+      "Destination": "docs/qualification/Addons.md",
+      "Prefix": "foundatione",
+      "Kind": "Qualification",
+      "SourceTextSha256": "69bb9be1d67ff35bdc8fa2a181e17a19fc2d5c1c988653aea19b65e24bb2cc12",
+      "SourceBlob": "d52c83b9c51882e5b3ae26f828a573a0c882bdf0",
+      "SemanticSha256": "049079cd2abbfd2c570627a0dfde82af37a9ade12f9e09896dfadbf87aa54c8b",
+      "ExternalUrlsSha256": "50abd417dd596862b27011d67ac39a8bc4735dd37d07391c40dc79a346600c95"
+    },
+    {
+      "Source": "docs/FoundationF.md",
+      "Destination": "docs/qualification/Addons.md",
+      "Prefix": "foundationf",
+      "Kind": "Qualification",
+      "SourceTextSha256": "afc33d17113951c1d080e8169ce257ceca691fcd57c5148bba248856ee44ecb1",
+      "SourceBlob": "fcc8f994031ad1618954308b3b2eee40fe837d02",
+      "SemanticSha256": "89ebc087076200344fbee9f3bf70f2e7e9dec55dcffd1339d4c22bc67f1777e0",
+      "ExternalUrlsSha256": "82e93949575129561b540ca5fd1c0e000bba07a574a5cf34cf9f65e049ec9bd2"
+    },
+    {
+      "Source": "docs/FoundationG.md",
+      "Destination": "docs/qualification/Addons.md",
+      "Prefix": "foundationg",
+      "Kind": "Qualification",
+      "SourceTextSha256": "e7c5560c8c88fa99fd2c3d9a73644084e3bce31139bde7ca7ddbefa293f80bec",
+      "SourceBlob": "a099a12f72942c2a783f78d5d645484c9b10454b",
+      "SemanticSha256": "3223f23c86d21130eb3f2faa6e67375a9f7eaf2d342deb1a10679fb787134159",
+      "ExternalUrlsSha256": "8a9dd3e3fb1e497f9bd41a14e49a05347c1f6c14dcb0fd8823b6737128fe217b"
+    },
+    {
+      "Source": "docs/PlayerInteractionFoundation1A.md",
+      "Destination": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1a",
+      "Kind": "Qualification",
+      "SourceTextSha256": "dc894a3ee8fdc03261102540e9405728f7fefa29bae01965b4e885ce453ef338",
+      "SourceBlob": "7155002ecc38574866b9d6ffc355d44a80184d7d",
+      "SemanticSha256": "698d89c782e521696f02d20670d6b0ff8e124df8c4d372b08f6b0a4856f4fee5",
+      "ExternalUrlsSha256": "4bd1be677ed4320c17444442c524454921d3ff745d56eb830c948421765a4f56"
+    },
+    {
+      "Source": "docs/PlayerInteractionFoundation1B.md",
+      "Destination": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1b",
+      "Kind": "Qualification",
+      "SourceTextSha256": "78aaf2a8b5c6b41322c3d9815a5d6b208e720e53b21b0366eecd3154d921634a",
+      "SourceBlob": "69269f8337c6e8f6184c70121f15d1e406bf6ce7",
+      "SemanticSha256": "c9bbbd1b87740d4c2d0fe51e9d23efeb044adaf90d6a091bb6f2c6f47e93ddf2",
+      "ExternalUrlsSha256": "5288f6ba7681406fceae5d2c9a3aee90fe396b42e1ee6356db9ae88f9dc2a575"
+    },
+    {
+      "Source": "docs/PlayerInteractionFoundation1C.md",
+      "Destination": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1c",
+      "Kind": "Qualification",
+      "SourceTextSha256": "c22ba5876e810b69f58dfbd291d59bf693bb64215fd1fff49729d30777f930a1",
+      "SourceBlob": "826a0de7ab15b69203a2dfee532a9ffe334b4c91",
+      "SemanticSha256": "80c76e819cddf03e32280c4850c0482c17275ab436ebf5b3b9d80b0b1cc62de4",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PlayerInteractionFoundation1D.md",
+      "Destination": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1d",
+      "Kind": "Qualification",
+      "SourceTextSha256": "9fee9c4f8f396e5c2b3ebcd972a4e61a640673d9b1f50b9ffdb510e37bdfec44",
+      "SourceBlob": "98e695051a71d5324e0fe8b2faaa305588323b54",
+      "SemanticSha256": "1ef7d14537f90a8aec40d43ba97e61ab1089e3ebe422187e7d7345f5db3209eb",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PlayerInteractionFoundation1FA.md",
+      "Destination": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1fa",
+      "Kind": "Qualification",
+      "SourceTextSha256": "ebe90c9fd0249fab1e1853bb4a00cbc105c42ba1354920bd2d51e6934080515d",
+      "SourceBlob": "325872ac0bd80a849dde1c5c7b30ae97bc3fbb9f",
+      "SemanticSha256": "654b2a8a0caa21d16b23ecf54a68c97df8b43bebf5d9d2a989c45a495c939769",
+      "ExternalUrlsSha256": "2f6375d8fd85a9c0eafe9f5045a132db454df25154f2bf71474c30e88fb2bb53"
+    },
+    {
+      "Source": "docs/PlayerInteractionFoundation1FB.md",
+      "Destination": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1fb",
+      "Kind": "Qualification",
+      "SourceTextSha256": "1a1f718999b82feb14ee7df6f148de10ef2d9557caa8f0c824409c14cb6a20f6",
+      "SourceBlob": "4246e56ec1464ade7b95957bc057f208e866eebc",
+      "SemanticSha256": "3381e6c71110d0c88784bb8e9c04589602e4e5c88b93f1aaee976492bc02eb38",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PlayerInteractionFoundation1FB-Validation.md",
+      "Destination": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1fb-validation",
+      "Kind": "Qualification",
+      "SourceTextSha256": "bfbd8f81b74c2765c78314cc82dfebecd5679af8e0f868973ecc90e3edd58d1f",
+      "SourceBlob": "200667198f069c6b879a9a2616683b5c35de49cf",
+      "SemanticSha256": "a929644a139e6fab22a45799c019f78a918f8b8b1109f2c3724a9b34f2a29cf7",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PlayerInteractionFoundation1FC.md",
+      "Destination": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1fc",
+      "Kind": "Qualification",
+      "SourceTextSha256": "3205840c44b2b47b9cfd84298c98baf9f36c17495ab85eaba14897fab3d8d0ea",
+      "SourceBlob": "e4d47fd997d35db64d81c46d6e256fc9e510abd6",
+      "SemanticSha256": "e8a762663378cd584935e33fd133688a0fa97f5e83d9a345de3e69772c82c6e9",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PersistenceFoundation1B.md",
+      "Destination": "docs/qualification/Persistence1B.md",
+      "Prefix": "persistencefoundation1b",
+      "Kind": "Qualification",
+      "SourceTextSha256": "e63933e670926980b0a839d052b2a7293299bde15ee371b4683fce3406fb7714",
+      "SourceBlob": "31525b5782f42333171b8683c2f9cc98144bd068",
+      "SemanticSha256": "a1bfd425234f66a590a50169e86641c852b0c0cc1ade66a569028874cf6f2b0d",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/PersistenceFoundation1B-Validation.md",
+      "Destination": "docs/qualification/Persistence1B.md",
+      "Prefix": "persistencefoundation1b-validation",
+      "Kind": "Qualification",
+      "SourceTextSha256": "a05f08ade2744483ec7d8df12f5d1413f778d194153de032d61d3fe729e3353e",
+      "SourceBlob": "1e728b9806d2788453ad9447eff95d8a9a6f2cc5",
+      "SemanticSha256": "adffaa2788085ba466f618d40b5b700a120c2c78bf958c5d78a5315b282a4dd1",
+      "ExternalUrlsSha256": "baeeb8d3ee8f431cd49fd654334f782129c59635371bc5dcaf606b793ca8d08b"
+    },
+    {
+      "Source": "docs/CarbonLuau_FirstVersion_Design.md",
+      "Destination": "docs/history/design/CarbonLuau_FirstVersion_Design.md",
+      "Prefix": "carbonluau_firstversion_design",
+      "Kind": "Mixed original",
+      "SourceTextSha256": "7497ef8a688fa56bd6e97a93f7e8039a75d5cd5efeb77452e846f7f697d59da0",
+      "SourceBlob": "7ebfacdec5ca54d2d4842295978435f002de018a",
+      "SemanticSha256": "024c0585eb7e6fe03530be28726e068f5c2e4fad4b54ec1bc1a2a5d78539507b",
+      "ExternalUrlsSha256": "5b5eca6423b69c358c90cfb95668b9cd95a858235705a2042ec590dd2aba613b"
+    },
+    {
+      "Source": "docs/InventoryMutationM2Validation.md",
+      "Destination": "docs/history/inventory/InventoryMutationM2Validation.md",
+      "Prefix": "inventorymutationm2validation",
+      "Kind": "Mixed original",
+      "SourceTextSha256": "9078d6dcef21d8f695c1fa495244dd28b1e752f0d107c32e16e92824b7feb7c7",
+      "SourceBlob": "da02a3ea3e81eea81fa9bb871782cfc53c5cf06b",
+      "SemanticSha256": "71beeb19222088f266338c08bf1f9e620cf4017be02d061e268cf6fa0f68e6f7",
+      "ExternalUrlsSha256": "fab9c4dcaeffec472a7c3868ab10783191caea638d2931606d4ba88d257d9117"
+    },
+    {
+      "Source": "docs/InventoryOwnershipFailureReassessment.md",
+      "Destination": "docs/history/inventory/InventoryOwnershipFailureReassessment.md",
+      "Prefix": "inventoryownershipfailurereassessment",
+      "Kind": "Mixed original",
+      "SourceTextSha256": "8956a7c4def110a35ff473160c300fd00afdb222ee82a100992061d1a2283041",
+      "SourceBlob": "846eb49a76b51b6b9a4b0cb137b518dc55187bfa",
+      "SemanticSha256": "1b46b01d601d48c99cbaf8fda13ab5e3b95bc7bf9c1ab53b7edf04d46f8b6491",
+      "ExternalUrlsSha256": "69b633dab1a4ae0a24cc1fb934fafe5c5961ba0618a3ac90fd8744a21ecc23b1"
+    },
+    {
+      "Source": "docs/PlayerInteractionFoundation1.md",
+      "Destination": "docs/history/design/PlayerInteractionFoundation1.md",
+      "Prefix": "playerinteractionfoundation1",
+      "Kind": "Mixed original",
+      "SourceTextSha256": "43ce38a66110dc54ee358dc2dbc4a748370c91f810039ca3e09a9b507289c1da",
+      "SourceBlob": "e2fe29b7a656b77b51fcc183baa3a80e0c863e1d",
+      "SemanticSha256": "053a2c9aecca22a7e5829a13c837a2ce17f05a62237c2b875d0a59ee9730215f",
+      "ExternalUrlsSha256": "a867c2dcfbeee6b47c6d09a7f3c54cd0e26887043941472525deb892b06b586b"
+    },
+    {
+      "Source": "docs/WorldEntityFoundation1.md",
+      "Destination": "docs/history/world/WorldEntityFoundation1.md",
+      "Prefix": "worldentityfoundation1",
+      "Kind": "Mixed original",
+      "SourceTextSha256": "d9c8f0ff64c408b7e588ae40fd6537d155179dff04af7f26e72adfa482747fd1",
+      "SourceBlob": "c3d8de01a075a80f11f194775d264f7374d03046",
+      "SemanticSha256": "84485ceceb7324d671444f3aef6b9306f7a6a328a6d67f7b8a0a01c4964e1791",
+      "ExternalUrlsSha256": "de0fd3522d6081e74f63278bb16ce445e6f6f17cea910b5f853b19268ac95ba7"
+    },
+    {
+      "Source": "docs/WorldEntityFoundation2.md",
+      "Destination": "docs/history/world/WorldEntityFoundation2.md",
+      "Prefix": "worldentityfoundation2",
+      "Kind": "Mixed original",
+      "SourceTextSha256": "fc02882d45dd846da16275665325613e793f34d350c75ce47cfec41127edf67f",
+      "SourceBlob": "0ddac259290f8d345a57bf4ffe25f54a999e90e3",
+      "SemanticSha256": "ea7d50174f3afd08fbf5919a393aef1560bd5cdc5fddfb7c9995026ec5a4c63f",
+      "ExternalUrlsSha256": "9103f2ae1b5451ff88b6a0ed56e709e4734b309d48404f036e3cbfae54ead9a4"
+    },
+    {
+      "Source": "docs/WorldEntityObservationBoundaryInvestigation.md",
+      "Destination": "docs/history/world/WorldEntityObservationBoundaryInvestigation.md",
+      "Prefix": "worldentityobservationboundaryinvestigation",
+      "Kind": "Mixed original",
+      "SourceTextSha256": "98b21e2dc030985a50fd35b1dbe552c32f8f21010c2a9f5a88ae7be0649ea3a2",
+      "SourceBlob": "ea38bf3ab39bbd7a8be9c31ee0cebe9f5a9bac23",
+      "SemanticSha256": "7e29420219d679d211b14a4ba3ce775402338a2df5e242257b67f16bc0705515",
+      "ExternalUrlsSha256": "5bd4a8ec8759573d057e3639b08024f78a42c2b82a53ef2200f1d96245f05bf1"
+    },
+    {
+      "Source": "docs/design/CarbonLuau_VSCode_Tooling_Architecture.md",
+      "Destination": "docs/history/tooling/CarbonLuau_VSCode_Tooling_Architecture.md",
+      "Prefix": "carbonluau-vscode-tooling-architecture",
+      "Kind": "Mixed original",
+      "SourceTextSha256": "73d1c8f02422c3fb20632a293e6dd6d2223b160f7c923eebcfb1005b97406480",
+      "SourceBlob": "0659f14165098785e351554731fc7a537ab6c8d5",
+      "SemanticSha256": "784e732a254ff720c8a20deb8e991c34353e4c9f12fc970ed5d5071471fe45da",
+      "ExternalUrlsSha256": "95406b93e0006fe376d5fe54a2dcc6b0557999752d9883ac2cf1c75ad6cdad49"
+    },
+    {
+      "Source": "docs/PersistenceFoundation1A.md",
+      "Destination": "docs/history/persistence/PersistenceFoundation1A-Attempts.md",
+      "Prefix": "historical-attempts",
+      "Kind": "Mixed tail",
+      "SourceTextSha256": "30e01e9492d540fcae736966d5bdaed910c986c587050f51af001006b2cc174a",
+      "SourceBlob": "ecfb732c964ffd223b9409b469d6b6122ce8723d",
+      "SemanticSha256": "edc5bdf9b844c61808332058fcd5cc3b7be4c4f8c347a82acf4bca7d96c4fd92",
+      "ExternalUrlsSha256": "79590c692411aee7c7d4a76ca93eeca7f38b8f0fd12fa7662c464d154d8b2283"
+    },
+    {
+      "Source": "docs/PersistenceFoundation2A.md",
+      "Destination": "docs/history/persistence/PersistenceFoundation2A-Attempts.md",
+      "Prefix": "historical-attempts",
+      "Kind": "Mixed tail",
+      "SourceTextSha256": "b4fe999cd421636d89744762b31f700cba2b513f296a6de69d6c80bf4be82631",
+      "SourceBlob": "d8829014fcb4a71bd44cf2fdd25705921e2a7328",
+      "SemanticSha256": "8d37c30758ac5e57918fb827ea89117a14e8508fcc05ce40253c14b2e2c5d086",
+      "ExternalUrlsSha256": "acb36f9187e04608b3700ab5d99570ed4bccc0939d8dcea3de50cd72f3971b96"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Tooling.md",
+      "Prefix": null,
+      "Kind": "Normative D19",
+      "SourceTextSha256": "6d7ae04057c6db4cf71df59acb820cbf4c70a2e0dd71e033cf1e791523438495",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "dba570ed690cf5e7f06fa48cd8bdd1115156744602cdf9639ca2a69e566c71f0",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/WorldEntity.md",
+      "Prefix": null,
+      "Kind": "Normative D20",
+      "SourceTextSha256": "2f08ac880900916eb5ffd5d162c6de57397778bb68a8180834afbab140ceadd7",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "5c7496984c258ade761bad9e4d2be4a05b422b9ea099cf2df3a073cdcaaabd18",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Persistence.md",
+      "Prefix": null,
+      "Kind": "Normative D21",
+      "SourceTextSha256": "f484b2ab43279b7b2090a806927103bb63a4bece69d8c815e896b6df3125f746",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "ab38aba483b3ed13d765c1abd8cc852278f73775befaed5bd8fd455675e68125",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Persistence.md",
+      "Prefix": null,
+      "Kind": "Normative D22",
+      "SourceTextSha256": "b5d425fa61f3cd28959f7fee054f2141d627fe4ed8ed00f73db788fe5160a974",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "4e692cce099aa66cd34d2b22f450dc56fb8f1dd93fd2280b0e5f05957f1d56a1",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D2",
+      "SourceTextSha256": "2eca3b4c04bf504248cf1a31514cd09366048f67dfde1ffc1576f8bdba80f7ad",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "6dfb202e7e298d98dd7f95e9de3319138372e32821c414a96589e60e11e5c137",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D4",
+      "SourceTextSha256": "3848b6f0fdaa8b715684ab53d1648e3a7cf45b049d0072d463fa9d10e5627f1a",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "7cd9cedd6431bf5a4eb3438cd576fb15a36fc86e54a95c8a8e6a732ae5f72a74",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D5",
+      "SourceTextSha256": "0de60ceb16d5e3730b94d80394cb6924bff33728d5c93630232ae9149d7ff513",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "c025914ed855601d7e7ff07098d9a14db5875e0210cd1136c7453aa6907fbd13",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D7",
+      "SourceTextSha256": "8ae5aa53b4ff3838ee4ad7c4301eab4fd85d4f86294874b7b10692d6332fefd8",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "1ae7065d7508c4848b86806fd78a0841675bf48bd340b484db6895d3f0cae295",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D9",
+      "SourceTextSha256": "b5c297a7d59256bb3d9bfa02f3fce4e948fdb88b50358d01c3bcab7d25a5e91e",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "c9efbb13cad156bea4c11a4f94f7899d86ff7a01ebd8dd653f5ed81193610a82",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D10",
+      "SourceTextSha256": "cd6a5688bc4d5f06cda3f6bd77f37ef61acf7d33cb660c7b6ceb981245a6e51c",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "ad60c9aec2e2c461c85b739de0091fbbdf836606ba51e2d35e6f1c8b9854a520",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D11",
+      "SourceTextSha256": "ada4ce853913538b0e563357bb1e4f921fc37129d532f5c048b67c06bb3c566b",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "69a23307015871e59d441cb94fcc2f6c3220a2758328296478da4df6f5973634",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D12",
+      "SourceTextSha256": "6660781c55052631ee35784e330e9f41103d4cd724e0f2cc1a10fd6bc244b852",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "f2f94c5899ba41749ae64191497a19187ed2dbf32f8e834cc340e6d28ce9e0e8",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D13",
+      "SourceTextSha256": "974f051adb7fb6727367945a2aa5ff188173561e6135d7cacc08943b58a60f0a",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "bed76bb6ea5c5cfab36e9f5d8b6b569f742612878ec048e579c54a67b89414b3",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Runtime.md",
+      "Prefix": null,
+      "Kind": "Normative D14",
+      "SourceTextSha256": "7feb2f260776873b430ab1724c0a060bff13266729522be9ae5920dd27bce54a",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "68979f6db644a0d7a752a71f01bac70e1ad07c88c64bd2382b95f35f8f187452",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Gui.md",
+      "Prefix": null,
+      "Kind": "Normative D15",
+      "SourceTextSha256": "69107db23b985c6cf867c1a3f5b4c741925e79ab2759c58fadbb894addec8d3e",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "a90d69393b194bc544c8aed05e56a159a7d520eaa61a38b01f4aabcaee8b0813",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Gui.md",
+      "Prefix": null,
+      "Kind": "Normative D16",
+      "SourceTextSha256": "c3acbd39b8e84d0844802b1337e2ade9069c9c9cfe137bd0b02820c21e73df90",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "e77aa251af87179ca14e4bdfb295856646579e68bce0784f70de596fcf1e40d0",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Gui.md",
+      "Prefix": null,
+      "Kind": "Normative D17",
+      "SourceTextSha256": "35bc914c0528e5fceafe7d210718273d7ae636b68d4b639ce49773ee696a853b",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "e7de9ebe4453e131b03cd6cc6719daf152405b991bd85c3412eba4d3940969dc",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Player.md",
+      "Prefix": null,
+      "Kind": "Normative D18",
+      "SourceTextSha256": "7b4fa169b30d4e0385f21a6693af3afdc16028860fa87f9c2704eb2b0842c16f",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "a70cd9eef6e18d3ec48eaab50dc682238e01dbc02ca1f85078f70367f181a846",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Invariants.md",
+      "Destination": "docs/invariants/Gameplay.md",
+      "Prefix": null,
+      "Kind": "Normative D23",
+      "SourceTextSha256": "36e68e5a0354548483e422ca1c67b606713bf18f2d449cbe8a409fb7094942dc",
+      "SourceBlob": "845c53e0245db69363e5e05196416d2e297f48d7",
+      "SemanticSha256": "2b38b28f8e033ac721c574566837f5f010dbbd680b7e7b9964f6761564125161",
+      "ExternalUrlsSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Source": "docs/Compatibility.md",
+      "Destination": "docs/qualification/Policy.md",
+      "Prefix": null,
+      "Kind": "Normative validation criteria",
+      "SourceTextSha256": "cf7947868a68f700c5aa9f1a10e6a9751e2ff63fe4f64d8530a651d21df4f14a",
+      "SourceBlob": "6e93748934f2b3c69b5c28ca02758a03457972b0",
+      "SemanticSha256": "f96e4a42f5f1ac2ae3dfccc28f0378facaedad1ad180f39402ecaa68b091e224",
+      "ExternalUrlsSha256": "07495094886e95dcf3d5ba972376bfb8cfc2642a9f5c1afa360bf0648134c455"
+    }
+  ],
+  "OriginalDocuments": [
+    {
+      "Path": "docs/Addon-Design-Validation.md",
+      "Blob": "099b7bc59d0ab99e2cb6fc512b3cdef9183f724a"
+    },
+    {
+      "Path": "docs/CarbonLuau_Addon_Decisions_and_Invariants.md",
+      "Blob": "c97a020a76e37620d0f2a4f0bc8cdd7b855321ac"
+    },
+    {
+      "Path": "docs/CarbonLuau_FirstVersion_Design.md",
+      "Blob": "7ebfacdec5ca54d2d4842295978435f002de018a"
+    },
+    {
+      "Path": "docs/Compatibility.md",
+      "Blob": "6e93748934f2b3c69b5c28ca02758a03457972b0"
+    },
+    {
+      "Path": "docs/FoundationA.md",
+      "Blob": "fa2bdb6ea202dda669c804299df39bee03ce9bfb"
+    },
+    {
+      "Path": "docs/FoundationB.md",
+      "Blob": "ac209652238279ecec968e83f57834944acb79f3"
+    },
+    {
+      "Path": "docs/FoundationC.md",
+      "Blob": "40040a0dafd516fef442f12178ddf201831d77bd"
+    },
+    {
+      "Path": "docs/FoundationD.md",
+      "Blob": "782fafbd293c933d5c5eb14d4879a98c02ada706"
+    },
+    {
+      "Path": "docs/FoundationE-Checkpoint.md",
+      "Blob": "a3bc960280374f7618a44ea9a1146152adffe1c7"
+    },
+    {
+      "Path": "docs/FoundationE.md",
+      "Blob": "d52c83b9c51882e5b3ae26f828a573a0c882bdf0"
+    },
+    {
+      "Path": "docs/FoundationF.md",
+      "Blob": "fcc8f994031ad1618954308b3b2eee40fe837d02"
+    },
+    {
+      "Path": "docs/FoundationG.md",
+      "Blob": "a099a12f72942c2a783f78d5d645484c9b10454b"
+    },
+    {
+      "Path": "docs/GameplayB1-Validation.md",
+      "Blob": "1abc29ef270ee9455fc7bee79faa5f3f232254d0"
+    },
+    {
+      "Path": "docs/GameplayB2-Attribution-Research.md",
+      "Blob": "eaff38da6addc7769ec30426393b896cee8a2f73"
+    },
+    {
+      "Path": "docs/GameplayB2-NpcEpisodeReset-Research.md",
+      "Blob": "4536b68ec3fc21fe1acfe38227849ce128ce6be7"
+    },
+    {
+      "Path": "docs/GameplayB2-Validation.md",
+      "Blob": "aba900f2ad77d3a4256e27cc66048eef788e22ca"
+    },
+    {
+      "Path": "docs/GameplayB3-Validation.md",
+      "Blob": "a88a7879c494df856f2f89e3a13441a4db24dd9a"
+    },
+    {
+      "Path": "docs/GameplayC1-Validation.md",
+      "Blob": "d773adc0d1ac156de4ec9397140186415f2e04ae"
+    },
+    {
+      "Path": "docs/GameplayC2-HostResearch.md",
+      "Blob": "2c120cc7066aa7e5385c7f5a158a2833518ffbce"
+    },
+    {
+      "Path": "docs/GameplayC2-Validation.md",
+      "Blob": "7537e8493a4c1dac08c9192b6f5a94f1cde02d6f"
+    },
+    {
+      "Path": "docs/GameplayC3-Validation.md",
+      "Blob": "9d7dec050b42b942c9dcdae904c5ee9cbb4a795d"
+    },
+    {
+      "Path": "docs/GameplayC4-Validation.md",
+      "Blob": "55f0277b13260edcbcba10519af3069495ced929"
+    },
+    {
+      "Path": "docs/GameplayCDArchitecture-Research.md",
+      "Blob": "16efa2f5f71a321b26a77c07702863b0e92b431e"
+    },
+    {
+      "Path": "docs/GameplayD0Architecture-Research.md",
+      "Blob": "c914fd728fa31bb3fe321cf3ad01a32b6087b126"
+    },
+    {
+      "Path": "docs/GameplayD2A-Validation.md",
+      "Blob": "29d0cef31fe0d3ae3e9ac61063b123a7cf5a7c15"
+    },
+    {
+      "Path": "docs/GameplayD3-Validation.md",
+      "Blob": "80e5f19fa7b188e3cd293e1e22a17b57426eb9ed"
+    },
+    {
+      "Path": "docs/GameplayEventsArchitecture-Research.md",
+      "Blob": "da2d5be63b565ecd8cfbbc56c87bea4560a6cd9b"
+    },
+    {
+      "Path": "docs/GameplayFoundationA-Validation.md",
+      "Blob": "91fa29ba35c829c83ec74acef6c4974a0b461a1a"
+    },
+    {
+      "Path": "docs/GuiFoundation1.md",
+      "Blob": "de8042c6ce8389e8f2fc8569333d7b08fb64d47f"
+    },
+    {
+      "Path": "docs/GuiFoundation1A.md",
+      "Blob": "5a9b91ef1ca023970ce236a99f1d6943e752a690"
+    },
+    {
+      "Path": "docs/GuiFoundation1B.md",
+      "Blob": "98acc662fbce401a25e2ea3e3411942451ad499a"
+    },
+    {
+      "Path": "docs/GuiFoundation1C.md",
+      "Blob": "22dec4f69ce8621dd6281db387f0a1d0c5309332"
+    },
+    {
+      "Path": "docs/GuiFoundation1D-Checkpoint.md",
+      "Blob": "ca61e621d3ac2c102adfb083b52b6c3f1621e4c6"
+    },
+    {
+      "Path": "docs/GuiFoundation1D.md",
+      "Blob": "3214bf72b9c56c62ecce332894721b4b4753b0e0"
+    },
+    {
+      "Path": "docs/GuiFoundation1E.md",
+      "Blob": "e82d4c68708e37df46a44e23ccdb20d3d35f8a05"
+    },
+    {
+      "Path": "docs/GuiFoundation1F.md",
+      "Blob": "aaffbedf70b2ec75ce5fa68d060b3590bf035bcb"
+    },
+    {
+      "Path": "docs/GuiFoundation1G.md",
+      "Blob": "f4e4698788316bbf029607fedaa066728a219b17"
+    },
+    {
+      "Path": "docs/GuiFoundation2.md",
+      "Blob": "9d5ab327b2a48a5230176ecaf6be976302b56287"
+    },
+    {
+      "Path": "docs/GuiFoundation2A.md",
+      "Blob": "9ce2eab0340a156bd31989d668f33df70a58f1e8"
+    },
+    {
+      "Path": "docs/GuiFoundation2B.md",
+      "Blob": "f66c36b72c351e627ae9700a3938260c68ec2340"
+    },
+    {
+      "Path": "docs/GuiFoundation2C.md",
+      "Blob": "889fc8630ec37a368517e8f9da4f1fbe8ca37b71"
+    },
+    {
+      "Path": "docs/GuiFoundation2E.md",
+      "Blob": "74d2413f6a52efaf238bba1bc27d6d37df1eb20a"
+    },
+    {
+      "Path": "docs/GuiFoundation2F.md",
+      "Blob": "0b9cc92a373462bd135076361630672a7b1ec7a8"
+    },
+    {
+      "Path": "docs/GuiFoundation3.md",
+      "Blob": "900858e25dbaaa52d985fc34445c01d994cee392"
+    },
+    {
+      "Path": "docs/GuiFoundation3A.md",
+      "Blob": "6d1db9eb40af3a8a6e631b9408ae9163d38981ff"
+    },
+    {
+      "Path": "docs/GuiFoundation3B.md",
+      "Blob": "d462819b2f4e0238ac06008911482e71041c1ea7"
+    },
+    {
+      "Path": "docs/GuiFoundation3C.md",
+      "Blob": "7348a1bca56e39b74bb9ca94196ddc687199a157"
+    },
+    {
+      "Path": "docs/GuiFoundation3D.md",
+      "Blob": "07affbf934eef1fb4dfaac106bd62c0a98b0b8a6"
+    },
+    {
+      "Path": "docs/GuiFoundation3E.md",
+      "Blob": "0a17f33e71090393c073ad19ec5c50a0eebf19bf"
+    },
+    {
+      "Path": "docs/HistoryCuration-FullHistory-Validation.md",
+      "Blob": "2b8946d0f2b5b75b20bd585e5ae83efa656ac481"
+    },
+    {
+      "Path": "docs/HistoryCuration-Validation.md",
+      "Blob": "e41e6cca716d0ea20fa97a1664b08db309ef0063"
+    },
+    {
+      "Path": "docs/Home.md",
+      "Blob": "3b0a32e049751f6267dc0193bab220ab37013601"
+    },
+    {
+      "Path": "docs/Installation.md",
+      "Blob": "05d4bf8518b25f1c6741a513554e40719c47a55c"
+    },
+    {
+      "Path": "docs/Invariants.md",
+      "Blob": "845c53e0245db69363e5e05196416d2e297f48d7"
+    },
+    {
+      "Path": "docs/InventoryMutationM2Validation.md",
+      "Blob": "da02a3ea3e81eea81fa9bb871782cfc53c5cf06b"
+    },
+    {
+      "Path": "docs/InventoryOwnershipFailureReassessment.md",
+      "Blob": "846eb49a76b51b6b9a4b0cb137b518dc55187bfa"
+    },
+    {
+      "Path": "docs/PersistenceCandidateBSplitProof.md",
+      "Blob": "b9cca3f6a4f2f9f9bbaedab34e2e7322adcb2da1"
+    },
+    {
+      "Path": "docs/PersistenceD21Amendment-Proposed.md",
+      "Blob": "7505c9b097c387d4aaf3abe102622d61e8b7c72e"
+    },
+    {
+      "Path": "docs/PersistenceDurabilityInvestigation.md",
+      "Blob": "0d580bdf490cee666a8ccef7ed20e7c6838167e1"
+    },
+    {
+      "Path": "docs/PersistenceFoundation1-Validation.md",
+      "Blob": "58af2f88a2b658f780f8135d1889e32d21d96b3a"
+    },
+    {
+      "Path": "docs/PersistenceFoundation1.md",
+      "Blob": "9d02dae8c4eb16aef8c570b2983cda74c32bb5f5"
+    },
+    {
+      "Path": "docs/PersistenceFoundation1A.md",
+      "Blob": "ecfb732c964ffd223b9409b469d6b6122ce8723d"
+    },
+    {
+      "Path": "docs/PersistenceFoundation1B-Validation.md",
+      "Blob": "1e728b9806d2788453ad9447eff95d8a9a6f2cc5"
+    },
+    {
+      "Path": "docs/PersistenceFoundation1B.md",
+      "Blob": "31525b5782f42333171b8683c2f9cc98144bd068"
+    },
+    {
+      "Path": "docs/PersistenceFoundation1C.md",
+      "Blob": "cb756fb61c3d243a0e53b421699d40d79d0da080"
+    },
+    {
+      "Path": "docs/PersistenceFoundation2-Validation.md",
+      "Blob": "d123c6737fb2d977e60fa7870a66d711dc0343ce"
+    },
+    {
+      "Path": "docs/PersistenceFoundation2.md",
+      "Blob": "b0a2ea6a06160b2d03241d85dd889f413227c50e"
+    },
+    {
+      "Path": "docs/PersistenceFoundation2A.md",
+      "Blob": "d8829014fcb4a71bd44cf2fdd25705921e2a7328"
+    },
+    {
+      "Path": "docs/PersistenceFoundation2B.md",
+      "Blob": "db91ee9c7bfcabe763f0821e3e1047007c80f090"
+    },
+    {
+      "Path": "docs/PersistenceFoundation2C.md",
+      "Blob": "006aac9c6a209a65c6fbf010f0c9957c05633a6e"
+    },
+    {
+      "Path": "docs/PersistenceFoundation2D.md",
+      "Blob": "21615bc64cbcaf41d32191acac315266c55fa984"
+    },
+    {
+      "Path": "docs/PersistencePhysicalAllocationInvestigation.md",
+      "Blob": "b30133b4c6a6f9928d209f10adcc59cedb355bf7"
+    },
+    {
+      "Path": "docs/PersistencePhysicalD21Amendment-Proposed.md",
+      "Blob": "488b2046c2562970f85c6082f77a5013342de2f7"
+    },
+    {
+      "Path": "docs/PersistenceSingleDbBoundInvestigation.md",
+      "Blob": "5238270c4f873babb4c54d6e3fac5f4dbd7e3d6b"
+    },
+    {
+      "Path": "docs/Phase0-Validation.md",
+      "Blob": "e454afd294e666a638fe1b9d49ff0016fbe8c05c"
+    },
+    {
+      "Path": "docs/Phase0.md",
+      "Blob": "e08da0fad75213360612f2d1e5563c4c12076c6b"
+    },
+    {
+      "Path": "docs/Phase1-Validation.md",
+      "Blob": "2d09e52d7249d25e1bfe4ff7bbf8c51d4ca6e4f1"
+    },
+    {
+      "Path": "docs/Phase1.md",
+      "Blob": "e32a304a1b20a27ca93aecf8fd2dd4987daa89d9"
+    },
+    {
+      "Path": "docs/Phase2-Validation.md",
+      "Blob": "71f99fca06eee1b704e6234b557af2576bd9e631"
+    },
+    {
+      "Path": "docs/Phase2.md",
+      "Blob": "c823f2489619b0eba53568a7fed717389ee189ea"
+    },
+    {
+      "Path": "docs/Phase3-Validation.md",
+      "Blob": "4ab71296e7f7c117a945498c956036d32756c24e"
+    },
+    {
+      "Path": "docs/Phase3.md",
+      "Blob": "ee84d978c8f890569dbe8cf6b13688d647f8f67f"
+    },
+    {
+      "Path": "docs/Phase4-Validation.md",
+      "Blob": "fe5bd7b15d455324f493f3a7b00eca14d2daf2b1"
+    },
+    {
+      "Path": "docs/Phase4.md",
+      "Blob": "1eb133e177f646e4a2751817cf6031f67bfb0963"
+    },
+    {
+      "Path": "docs/Phase5-Validation.md",
+      "Blob": "c34cd7994b5b85a04196a73bad2d7264b122c8ba"
+    },
+    {
+      "Path": "docs/Phase5.md",
+      "Blob": "3ebb87632f3e007b3d92ca5ba28680e134387be4"
+    },
+    {
+      "Path": "docs/PlayerInteractionFoundation1.md",
+      "Blob": "e2fe29b7a656b77b51fcc183baa3a80e0c863e1d"
+    },
+    {
+      "Path": "docs/PlayerInteractionFoundation1A.md",
+      "Blob": "7155002ecc38574866b9d6ffc355d44a80184d7d"
+    },
+    {
+      "Path": "docs/PlayerInteractionFoundation1B.md",
+      "Blob": "69269f8337c6e8f6184c70121f15d1e406bf6ce7"
+    },
+    {
+      "Path": "docs/PlayerInteractionFoundation1C.md",
+      "Blob": "826a0de7ab15b69203a2dfee532a9ffe334b4c91"
+    },
+    {
+      "Path": "docs/PlayerInteractionFoundation1D.md",
+      "Blob": "98e695051a71d5324e0fe8b2faaa305588323b54"
+    },
+    {
+      "Path": "docs/PlayerInteractionFoundation1FA.md",
+      "Blob": "325872ac0bd80a849dde1c5c7b30ae97bc3fbb9f"
+    },
+    {
+      "Path": "docs/PlayerInteractionFoundation1FB-Validation.md",
+      "Blob": "200667198f069c6b879a9a2616683b5c35de49cf"
+    },
+    {
+      "Path": "docs/PlayerInteractionFoundation1FB.md",
+      "Blob": "4246e56ec1464ade7b95957bc057f208e866eebc"
+    },
+    {
+      "Path": "docs/PlayerInteractionFoundation1FC.md",
+      "Blob": "e4d47fd997d35db64d81c46d6e256fc9e510abd6"
+    },
+    {
+      "Path": "docs/Release.md",
+      "Blob": "e80566e92e8c504e28227110fbbc1b2d691568c6"
+    },
+    {
+      "Path": "docs/ToolingBaseline.md",
+      "Blob": "5f491708c7db292d5c0182c5a8b81ae3912fc829"
+    },
+    {
+      "Path": "docs/ToolingBaselineValidation.md",
+      "Blob": "ac907e7cb8abd26116cc992e9c3a5b511ef7b572"
+    },
+    {
+      "Path": "docs/ToolingContracts.md",
+      "Blob": "71a4ba802041ee6cad0f99bf0acc0fc3033b3cfe"
+    },
+    {
+      "Path": "docs/ToolingFoundationA.md",
+      "Blob": "93f9e82bcf92b1838d36348e58e40e5339107990"
+    },
+    {
+      "Path": "docs/ToolingFoundationACompletion.md",
+      "Blob": "716b294dd47239f31ebbac02081c5db11676d652"
+    },
+    {
+      "Path": "docs/ToolingFoundationAValidation.md",
+      "Blob": "79eea2cb15b0d86f2a47aa7429372db5f04633ce"
+    },
+    {
+      "Path": "docs/ToolingFoundationB.md",
+      "Blob": "7ab0dc3e4727e3313fa3d078f028a7a5d4e3f48f"
+    },
+    {
+      "Path": "docs/ToolingFoundationBCompletion.md",
+      "Blob": "cf1e0688e1a33c3745692cdaaf6f27206859ee30"
+    },
+    {
+      "Path": "docs/ToolingLanguageAnalysisSecurity.md",
+      "Blob": "9e0cfefca00724b68e7bbf95813595197768b011"
+    },
+    {
+      "Path": "docs/ToolingLanguageAnalysisSecurityEvidence.md",
+      "Blob": "1d0b7bcaa5feac8d12a62a395d802873ba1c071c"
+    },
+    {
+      "Path": "docs/WorldEntityAsyncTraversalInvestigation.md",
+      "Blob": "86bcc7e49c001bbde9ebfee9e3116a34913eb4f1"
+    },
+    {
+      "Path": "docs/WorldEntityCatalogInvestigation.md",
+      "Blob": "6846a9ff62587482679df9ade26213ab31832f3c"
+    },
+    {
+      "Path": "docs/WorldEntityCompletionFenceInvestigation.md",
+      "Blob": "80deb76072a2d8ebea42af8ce7aa7bdf2721435c"
+    },
+    {
+      "Path": "docs/WorldEntityDiscoveryMovementInvestigation.md",
+      "Blob": "f5493193f0da108aec8df8854119b3d0a00d8e6e"
+    },
+    {
+      "Path": "docs/WorldEntityFoundation1.md",
+      "Blob": "c3d8de01a075a80f11f194775d264f7374d03046"
+    },
+    {
+      "Path": "docs/WorldEntityFoundation1A-Validation.md",
+      "Blob": "2552bd9f59dfa710a45b14053810d14d62be9045"
+    },
+    {
+      "Path": "docs/WorldEntityFoundation1A.md",
+      "Blob": "0911cf2daf6e068399d9f81a19c6d33cbfdfd910"
+    },
+    {
+      "Path": "docs/WorldEntityFoundation1B-Validation.md",
+      "Blob": "48a4142ee76c066bd843dffce46f39920f69eda2"
+    },
+    {
+      "Path": "docs/WorldEntityFoundation1C.md",
+      "Blob": "3d3683dd0a3a658a11965bd3e78fc45f97d03891"
+    },
+    {
+      "Path": "docs/WorldEntityFoundation2.md",
+      "Blob": "0ddac259290f8d345a57bf4ffe25f54a999e90e3"
+    },
+    {
+      "Path": "docs/WorldEntityFoundation2A.md",
+      "Blob": "3dedb3e0ae0ce871c949fefca6606e98a383b487"
+    },
+    {
+      "Path": "docs/WorldEntityFoundation2B.md",
+      "Blob": "2165c63ef32f698f909acd98ff5bba1501706d88"
+    },
+    {
+      "Path": "docs/WorldEntityFoundation2C.md",
+      "Blob": "c56f0a03df6c78bc26407df7bd19da0439e0cee0"
+    },
+    {
+      "Path": "docs/WorldEntityLifetimeInvestigation.md",
+      "Blob": "6f11b4547a360b1e9c64e73eaab6c05bac211a1b"
+    },
+    {
+      "Path": "docs/WorldEntityObservationBoundaryInvestigation.md",
+      "Blob": "ea38bf3ab39bbd7a8be9c31ee0cebe9f5a9bac23"
+    },
+    {
+      "Path": "docs/WorldEntityPositionAlternativesInvestigation.md",
+      "Blob": "a983262d27346452fd2af0934881456aad76db55"
+    },
+    {
+      "Path": "docs/WorldEntityPositionOrderingInvestigation.md",
+      "Blob": "b14f67410a6cc971d47525ff04c37fef1e4f6521"
+    },
+    {
+      "Path": "docs/WorldEntitySpawnEpochProbe.md",
+      "Blob": "fde3ffc728604d1a5ab1e94e2f76e78d68b31fef"
+    },
+    {
+      "Path": "docs/WorldEntityStartupObserverInvestigation.md",
+      "Blob": "ce48e3afc2a8a04ffafd26d047a4aec4a9bf39ec"
+    },
+    {
+      "Path": "docs/_sidebar.md",
+      "Blob": "a8d1be94ba5ad397c23cfc525aecf5f82fbb8292"
+    },
+    {
+      "Path": "docs/api/Addon-Providers.md",
+      "Blob": "a165e2bbb6c75ca587f3c91966c36ce1b427fadd"
+    },
+    {
+      "Path": "docs/api/Addons.md",
+      "Blob": "4f6c6431c708fc2942bfd37e426220ce470dfd65"
+    },
+    {
+      "Path": "docs/api/Compatibility.md",
+      "Blob": "940d7b4f4469efe4ff508c54dd349194515d3664"
+    },
+    {
+      "Path": "docs/api/Discovery.md",
+      "Blob": "53eec1a6a9f16b3e889b2faa316e400601190de5"
+    },
+    {
+      "Path": "docs/api/Globals.md",
+      "Blob": "34f91dd4741eb1e65be41bc419ea1de7c76e200c"
+    },
+    {
+      "Path": "docs/api/Gui-Reference.md",
+      "Blob": "7dae21629839fdb39eabb5ddb770ff97643b59cd"
+    },
+    {
+      "Path": "docs/api/Gui.md",
+      "Blob": "dfe1df35df6d30fdd5965e65b4a788ec43738e04"
+    },
+    {
+      "Path": "docs/api/Inventory-Migration.md",
+      "Blob": "5a726de1a3032a0bd2af8a489ec08e97541459c0"
+    },
+    {
+      "Path": "docs/api/Persistence.md",
+      "Blob": "880e33cac36c72d38de4c618d1d85573db0a1b5b"
+    },
+    {
+      "Path": "docs/api/Player-Examples.md",
+      "Blob": "5d37f611cea373521c676f8e9cf40e497812c5c3"
+    },
+    {
+      "Path": "docs/api/README.md",
+      "Blob": "c8453bc67be62b0426c7c20008b2c7a417768a88"
+    },
+    {
+      "Path": "docs/api/Services/Commands.md",
+      "Blob": "ebffa5f9215aef3263f0d314217aab96a6753f40"
+    },
+    {
+      "Path": "docs/api/Services/DataStoreService.md",
+      "Blob": "0c9b7f92086e026d1f268611a7ab980e4e4100dc"
+    },
+    {
+      "Path": "docs/api/Services/Items.md",
+      "Blob": "21dacb80ea3be66ff332c0874dc88808ffa9afe4"
+    },
+    {
+      "Path": "docs/api/Services/Loot.md",
+      "Blob": "e605fff6753bebbe113feff70da8982601c8b7ee"
+    },
+    {
+      "Path": "docs/api/Services/Players.md",
+      "Blob": "d9b0cd26cf1f2fb88ca8dd737688e350af7b3625"
+    },
+    {
+      "Path": "docs/api/Services/Workspace.md",
+      "Blob": "73db76bc0bbd77c0e49045d38da41c4ffcabb4a2"
+    },
+    {
+      "Path": "docs/api/Types/CommandContext.md",
+      "Blob": "fcce25e1f4e1dbd16484d2b7e25285b21d8c92ac"
+    },
+    {
+      "Path": "docs/api/Types/Connection.md",
+      "Blob": "20b56a886640c610ff43f4bd12aebf3158b3f69e"
+    },
+    {
+      "Path": "docs/api/Types/DataStore.md",
+      "Blob": "bc62b7265497d7be3035096693ca7f9d00344351"
+    },
+    {
+      "Path": "docs/api/Types/DataStoreOptions.md",
+      "Blob": "86d506c331641e890b17e16c8178c2498ab4bdab"
+    },
+    {
+      "Path": "docs/api/Types/DataStoreQuery.md",
+      "Blob": "d4fa9d36ee092b14b16c8febc047874fd22264bc"
+    },
+    {
+      "Path": "docs/api/Types/DataStoreQueryResult.md",
+      "Blob": "43ee5b1148a59e683d3b1cff477270708c0d0a6f"
+    },
+    {
+      "Path": "docs/api/Types/DropMode.md",
+      "Blob": "d4812427bebb9a35e2401b82d3513a830bcfe6f2"
+    },
+    {
+      "Path": "docs/api/Types/Entity.md",
+      "Blob": "6571bc137e01ee2d4899da63e2630d7ca0f5b945"
+    },
+    {
+      "Path": "docs/api/Types/EntityDeathContext.md",
+      "Blob": "9777bb43ffd478b3a3cf81f75e84ac1968ef4f32"
+    },
+    {
+      "Path": "docs/api/Types/EntityDestroyedContext.md",
+      "Blob": "febb2e91a7a6fb587d1134f93b7383b2fb45dce3"
+    },
+    {
+      "Path": "docs/api/Types/EntityDiscoveryOptions.md",
+      "Blob": "879b4ef4af54a7dd21e637b3eb2650cc1a570f3f"
+    },
+    {
+      "Path": "docs/api/Types/Enum.md",
+      "Blob": "1a383b7d9ae43872d761f5222bf22cbc15934403"
+    },
+    {
+      "Path": "docs/api/Types/GiveItemBehavior.md",
+      "Blob": "951aaa2b3c641f9413fc3927956a97523bce6c43"
+    },
+    {
+      "Path": "docs/api/Types/InventoryChangeContext.md",
+      "Blob": "e032d4d16f6030f22e6b90b587293b282ee84779"
+    },
+    {
+      "Path": "docs/api/Types/LootDropEntry.md",
+      "Blob": "8143ba4b1f9003f31292d3c952468524cb6d95c3"
+    },
+    {
+      "Path": "docs/api/Types/PersistedValue.md",
+      "Blob": "bdc69c16ce7a93a4eae73db14bd96cc09437b74c"
+    },
+    {
+      "Path": "docs/api/Types/Player.md",
+      "Blob": "5c59d6021a2bd27ac153172a1372741fa4ff86a5"
+    },
+    {
+      "Path": "docs/api/Types/PlayerDeathContext.md",
+      "Blob": "675a94a1ec566371003b17ca4d9a92c795ad8506"
+    },
+    {
+      "Path": "docs/api/Types/PlayerInventory.md",
+      "Blob": "03494a9279dbd5a66ae25f013ba6770eaea81696"
+    },
+    {
+      "Path": "docs/api/Types/PlayerSpawnContext.md",
+      "Blob": "31e64fb360ffbbbcfdb10ce6e36685aac469dbb5"
+    },
+    {
+      "Path": "docs/api/Types/Signal.md",
+      "Blob": "9a445436b14624193b918dff21fac4fdf6df5d2d"
+    },
+    {
+      "Path": "docs/api/Types/Vector3.md",
+      "Blob": "0b1aa3dee230253cf6fd48ab06d5a70108807eda"
+    },
+    {
+      "Path": "docs/api/World-Examples.md",
+      "Blob": "610fdba1c94c07844e285cfc877339497a007cb8"
+    },
+    {
+      "Path": "docs/design/CarbonLuau_VSCode_Tooling_Architecture.md",
+      "Blob": "0659f14165098785e351554731fc7a537ab6c8d5"
+    },
+    {
+      "Path": "docs/releases/0.3.0.md",
+      "Blob": "68cb948c7a658fb4721726f4b874c934643ace83"
+    },
+    {
+      "Path": "docs/releases/0.4.0.md",
+      "Blob": "a80f49223dea72210354466170eeac5aaee07b71"
+    },
+    {
+      "Path": "docs/releases/0.5.0.md",
+      "Blob": "a6f812740ef7d6b7c1c3bbe94ddbcd4bb8af5198"
+    },
+    {
+      "Path": "docs/releases/0.6.0.md",
+      "Blob": "ca5b744d3827d6a50ee63cecd7f870461fcba3b7"
+    }
+  ],
+  "Targets": {
+    "docs/Addon-Design-Validation.md": {
+      "Path": "docs/history/design/Addon-Design-Validation.md",
+      "Prefix": "addon-design-validation"
+    },
+    "docs/CarbonLuau_Addon_Decisions_and_Invariants.md": {
+      "Path": "docs/history/design/CarbonLuau_Addon_Decisions_and_Invariants.md",
+      "Prefix": "carbonluau_addon_decisions_and_invariants"
+    },
+    "docs/GameplayB2-Attribution-Research.md": {
+      "Path": "docs/history/gameplay/DeathAttribution.md",
+      "Prefix": "gameplayb2-attribution-research"
+    },
+    "docs/GameplayB2-NpcEpisodeReset-Research.md": {
+      "Path": "docs/history/gameplay/DeathAttribution.md",
+      "Prefix": "gameplayb2-npcepisodereset-research"
+    },
+    "docs/GameplayC2-HostResearch.md": {
+      "Path": "docs/history/gameplay/GameplayC2-HostResearch.md",
+      "Prefix": "gameplayc2-hostresearch"
+    },
+    "docs/GameplayCDArchitecture-Research.md": {
+      "Path": "docs/history/gameplay/GameplayCDArchitecture-Research.md",
+      "Prefix": "gameplaycdarchitecture-research"
+    },
+    "docs/GameplayD0Architecture-Research.md": {
+      "Path": "docs/history/gameplay/GameplayD0Architecture-Research.md",
+      "Prefix": "gameplayd0architecture-research"
+    },
+    "docs/GameplayEventsArchitecture-Research.md": {
+      "Path": "docs/history/gameplay/GameplayEventsArchitecture-Research.md",
+      "Prefix": "gameplayeventsarchitecture-research"
+    },
+    "docs/HistoryCuration-FullHistory-Validation.md": {
+      "Path": "docs/history/maintenance/HistoryCuration-FullHistory-Validation.md",
+      "Prefix": "historycuration-fullhistory-validation"
+    },
+    "docs/HistoryCuration-Validation.md": {
+      "Path": "docs/history/maintenance/HistoryCuration-Validation.md",
+      "Prefix": "historycuration-validation"
+    },
+    "docs/PersistenceCandidateBSplitProof.md": {
+      "Path": "docs/history/persistence/PersistenceCandidateBSplitProof.md",
+      "Prefix": "persistencecandidatebsplitproof"
+    },
+    "docs/PersistenceD21Amendment-Proposed.md": {
+      "Path": "docs/history/persistence/Durability.md",
+      "Prefix": "persistenced21amendment-proposed"
+    },
+    "docs/PersistenceDurabilityInvestigation.md": {
+      "Path": "docs/history/persistence/Durability.md",
+      "Prefix": "persistencedurabilityinvestigation"
+    },
+    "docs/PersistenceFoundation1-Validation.md": {
+      "Path": "docs/history/persistence/PersistenceFoundation1-Validation.md",
+      "Prefix": "persistencefoundation1-validation"
+    },
+    "docs/PersistenceFoundation2-Validation.md": {
+      "Path": "docs/history/persistence/PersistenceFoundation2-Validation.md",
+      "Prefix": "persistencefoundation2-validation"
+    },
+    "docs/PersistencePhysicalAllocationInvestigation.md": {
+      "Path": "docs/history/persistence/PhysicalAllocation.md",
+      "Prefix": "persistencephysicalallocationinvestigation"
+    },
+    "docs/PersistencePhysicalD21Amendment-Proposed.md": {
+      "Path": "docs/history/persistence/PhysicalAllocation.md",
+      "Prefix": "persistencephysicald21amendment-proposed"
+    },
+    "docs/PersistenceSingleDbBoundInvestigation.md": {
+      "Path": "docs/history/persistence/PersistenceSingleDbBoundInvestigation.md",
+      "Prefix": "persistencesingledbboundinvestigation"
+    },
+    "docs/Phase4-Validation.md": {
+      "Path": "docs/history/inventory/Phase4-Validation.md",
+      "Prefix": "phase4-validation"
+    },
+    "docs/Phase4.md": {
+      "Path": "docs/history/inventory/Phase4.md",
+      "Prefix": "phase4"
+    },
+    "docs/ToolingBaselineValidation.md": {
+      "Path": "docs/history/tooling/AnalysisHistory.md",
+      "Prefix": "toolingbaselinevalidation"
+    },
+    "docs/ToolingFoundationAValidation.md": {
+      "Path": "docs/history/tooling/AnalysisHistory.md",
+      "Prefix": "toolingfoundationavalidation"
+    },
+    "docs/ToolingLanguageAnalysisSecurityEvidence.md": {
+      "Path": "docs/history/tooling/AnalysisHistory.md",
+      "Prefix": "toolinglanguageanalysissecurityevidence"
+    },
+    "docs/WorldEntityAsyncTraversalInvestigation.md": {
+      "Path": "docs/history/world/WorldEntityAsyncTraversalInvestigation.md",
+      "Prefix": "worldentityasynctraversalinvestigation"
+    },
+    "docs/WorldEntityCatalogInvestigation.md": {
+      "Path": "docs/history/world/WorldEntityCatalogInvestigation.md",
+      "Prefix": "worldentitycataloginvestigation"
+    },
+    "docs/WorldEntityCompletionFenceInvestigation.md": {
+      "Path": "docs/history/world/WorldEntityCompletionFenceInvestigation.md",
+      "Prefix": "worldentitycompletionfenceinvestigation"
+    },
+    "docs/WorldEntityDiscoveryMovementInvestigation.md": {
+      "Path": "docs/history/world/WorldEntityDiscoveryMovementInvestigation.md",
+      "Prefix": "worldentitydiscoverymovementinvestigation"
+    },
+    "docs/WorldEntityFoundation1A.md": {
+      "Path": "docs/history/world/WorldEntityFoundation1A.md",
+      "Prefix": "worldentityfoundation1a"
+    },
+    "docs/WorldEntityLifetimeInvestigation.md": {
+      "Path": "docs/history/world/WorldEntityLifetimeInvestigation.md",
+      "Prefix": "worldentitylifetimeinvestigation"
+    },
+    "docs/WorldEntityPositionAlternativesInvestigation.md": {
+      "Path": "docs/history/world/WorldEntityPositionAlternativesInvestigation.md",
+      "Prefix": "worldentitypositionalternativesinvestigation"
+    },
+    "docs/WorldEntityPositionOrderingInvestigation.md": {
+      "Path": "docs/history/world/WorldEntityPositionOrderingInvestigation.md",
+      "Prefix": "worldentitypositionorderinginvestigation"
+    },
+    "docs/WorldEntitySpawnEpochProbe.md": {
+      "Path": "docs/history/world/WorldEntitySpawnEpochProbe.md",
+      "Prefix": "worldentityspawnepochprobe"
+    },
+    "docs/WorldEntityStartupObserverInvestigation.md": {
+      "Path": "docs/history/world/WorldEntityStartupObserverInvestigation.md",
+      "Prefix": "worldentitystartupobserverinvestigation"
+    },
+    "docs/GuiFoundation1A.md": {
+      "Path": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1a"
+    },
+    "docs/GuiFoundation1B.md": {
+      "Path": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1b"
+    },
+    "docs/GuiFoundation1C.md": {
+      "Path": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1c"
+    },
+    "docs/GuiFoundation1D.md": {
+      "Path": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1d"
+    },
+    "docs/GuiFoundation1E.md": {
+      "Path": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1e"
+    },
+    "docs/GuiFoundation1F.md": {
+      "Path": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1f"
+    },
+    "docs/GuiFoundation1G.md": {
+      "Path": "docs/qualification/Gui1.md",
+      "Prefix": "guifoundation1g"
+    },
+    "docs/GuiFoundation2A.md": {
+      "Path": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2a"
+    },
+    "docs/GuiFoundation2B.md": {
+      "Path": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2b"
+    },
+    "docs/GuiFoundation2C.md": {
+      "Path": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2c"
+    },
+    "docs/GuiFoundation2E.md": {
+      "Path": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2e"
+    },
+    "docs/GuiFoundation2F.md": {
+      "Path": "docs/qualification/Gui2.md",
+      "Prefix": "guifoundation2f"
+    },
+    "docs/GuiFoundation3A.md": {
+      "Path": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3a"
+    },
+    "docs/GuiFoundation3B.md": {
+      "Path": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3b"
+    },
+    "docs/GuiFoundation3C.md": {
+      "Path": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3c"
+    },
+    "docs/GuiFoundation3D.md": {
+      "Path": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3d"
+    },
+    "docs/GuiFoundation3E.md": {
+      "Path": "docs/qualification/Gui3.md",
+      "Prefix": "guifoundation3e"
+    },
+    "docs/FoundationA.md": {
+      "Path": "docs/qualification/Addons.md",
+      "Prefix": "foundationa"
+    },
+    "docs/FoundationB.md": {
+      "Path": "docs/qualification/Addons.md",
+      "Prefix": "foundationb"
+    },
+    "docs/FoundationC.md": {
+      "Path": "docs/qualification/Addons.md",
+      "Prefix": "foundationc"
+    },
+    "docs/FoundationD.md": {
+      "Path": "docs/qualification/Addons.md",
+      "Prefix": "foundationd"
+    },
+    "docs/FoundationE.md": {
+      "Path": "docs/qualification/Addons.md",
+      "Prefix": "foundatione"
+    },
+    "docs/FoundationF.md": {
+      "Path": "docs/qualification/Addons.md",
+      "Prefix": "foundationf"
+    },
+    "docs/FoundationG.md": {
+      "Path": "docs/qualification/Addons.md",
+      "Prefix": "foundationg"
+    },
+    "docs/PlayerInteractionFoundation1A.md": {
+      "Path": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1a"
+    },
+    "docs/PlayerInteractionFoundation1B.md": {
+      "Path": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1b"
+    },
+    "docs/PlayerInteractionFoundation1C.md": {
+      "Path": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1c"
+    },
+    "docs/PlayerInteractionFoundation1D.md": {
+      "Path": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1d"
+    },
+    "docs/PlayerInteractionFoundation1FA.md": {
+      "Path": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1fa"
+    },
+    "docs/PlayerInteractionFoundation1FB.md": {
+      "Path": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1fb"
+    },
+    "docs/PlayerInteractionFoundation1FB-Validation.md": {
+      "Path": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1fb-validation"
+    },
+    "docs/PlayerInteractionFoundation1FC.md": {
+      "Path": "docs/qualification/PlayerInteraction.md",
+      "Prefix": "playerinteractionfoundation1fc"
+    },
+    "docs/PersistenceFoundation1B.md": {
+      "Path": "docs/qualification/Persistence1B.md",
+      "Prefix": "persistencefoundation1b"
+    },
+    "docs/PersistenceFoundation1B-Validation.md": {
+      "Path": "docs/qualification/Persistence1B.md",
+      "Prefix": "persistencefoundation1b-validation"
+    },
+    "docs/CarbonLuau_FirstVersion_Design.md": {
+      "Path": "docs/history/design/CarbonLuau_FirstVersion_Design.md",
+      "Prefix": "carbonluau_firstversion_design"
+    },
+    "docs/InventoryMutationM2Validation.md": {
+      "Path": "docs/history/inventory/InventoryMutationM2Validation.md",
+      "Prefix": "inventorymutationm2validation"
+    },
+    "docs/InventoryOwnershipFailureReassessment.md": {
+      "Path": "docs/history/inventory/InventoryOwnershipFailureReassessment.md",
+      "Prefix": "inventoryownershipfailurereassessment"
+    },
+    "docs/PlayerInteractionFoundation1.md": {
+      "Path": "docs/history/design/PlayerInteractionFoundation1.md",
+      "Prefix": "playerinteractionfoundation1"
+    },
+    "docs/WorldEntityFoundation1.md": {
+      "Path": "docs/history/world/WorldEntityFoundation1.md",
+      "Prefix": "worldentityfoundation1"
+    },
+    "docs/WorldEntityFoundation2.md": {
+      "Path": "docs/history/world/WorldEntityFoundation2.md",
+      "Prefix": "worldentityfoundation2"
+    },
+    "docs/WorldEntityObservationBoundaryInvestigation.md": {
+      "Path": "docs/history/world/WorldEntityObservationBoundaryInvestigation.md",
+      "Prefix": "worldentityobservationboundaryinvestigation"
+    },
+    "docs/design/CarbonLuau_VSCode_Tooling_Architecture.md": {
+      "Path": "docs/history/tooling/CarbonLuau_VSCode_Tooling_Architecture.md",
+      "Prefix": "carbonluau-vscode-tooling-architecture"
+    },
+    "docs/PersistenceFoundation1A.md": {
+      "Path": "docs/history/persistence/PersistenceFoundation1A-Attempts.md",
+      "Prefix": "historical-attempts"
+    },
+    "docs/PersistenceFoundation2A.md": {
+      "Path": "docs/history/persistence/PersistenceFoundation2A-Attempts.md",
+      "Prefix": "historical-attempts"
+    }
+  },
+  "Deleted": [
+    "docs/FoundationE-Checkpoint.md",
+    "docs/GuiFoundation1D-Checkpoint.md"
+  ],
+  "ProtectedGlobalRulesSemanticSha256": "3c14869855ee5fcc3a50e980b2136b27198890c30e61b506c5a0a49957435e64",
+  "BaselinePublicApiPaths": [
+    "docs/api/Addon-Providers.md",
+    "docs/api/Addons.md",
+    "docs/api/Compatibility.md",
+    "docs/api/Discovery.md",
+    "docs/api/Globals.md",
+    "docs/api/Gui-Reference.md",
+    "docs/api/Gui.md",
+    "docs/api/Inventory-Migration.md",
+    "docs/api/Persistence.md",
+    "docs/api/Player-Examples.md",
+    "docs/api/README.md",
+    "docs/api/Services/Commands.md",
+    "docs/api/Services/DataStoreService.md",
+    "docs/api/Services/Items.md",
+    "docs/api/Services/Loot.md",
+    "docs/api/Services/Players.md",
+    "docs/api/Services/Workspace.md",
+    "docs/api/Types/CommandContext.md",
+    "docs/api/Types/Connection.md",
+    "docs/api/Types/DataStore.md",
+    "docs/api/Types/DataStoreOptions.md",
+    "docs/api/Types/DataStoreQuery.md",
+    "docs/api/Types/DataStoreQueryResult.md",
+    "docs/api/Types/DropMode.md",
+    "docs/api/Types/Entity.md",
+    "docs/api/Types/EntityDeathContext.md",
+    "docs/api/Types/EntityDestroyedContext.md",
+    "docs/api/Types/EntityDiscoveryOptions.md",
+    "docs/api/Types/Enum.md",
+    "docs/api/Types/GiveItemBehavior.md",
+    "docs/api/Types/InventoryChangeContext.md",
+    "docs/api/Types/LootDropEntry.md",
+    "docs/api/Types/PersistedValue.md",
+    "docs/api/Types/Player.md",
+    "docs/api/Types/PlayerDeathContext.md",
+    "docs/api/Types/PlayerInventory.md",
+    "docs/api/Types/PlayerSpawnContext.md",
+    "docs/api/Types/Signal.md",
+    "docs/api/Types/Vector3.md",
+    "docs/api/World-Examples.md"
+  ]
+}

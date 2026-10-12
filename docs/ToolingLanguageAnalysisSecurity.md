@@ -476,7 +476,7 @@ use task-owned adversarial fixtures with independent harness limits.
 | Feature fidelity | Definitions, overloads, type functions, requires and every URI/range map preserve results | Pending amended profile | Pending amended profile | Pending |
 
 The eight architecture probes used exact upstream Windows/Linux assets, recorded
-in [evidence](ToolingLanguageAnalysisSecurityEvidence.md). Linux probes ran inside
+in [evidence](history/tooling/AnalysisHistory.md#toolinglanguageanalysissecurityevidence). Linux probes ran inside
 a task test container with network disabled, 1 CPU and 512 MiB; those harness
 controls are **not** the shipped extension's sandbox. No macOS host was available
 for this investigation. Shipping each target requires its pending gates; static

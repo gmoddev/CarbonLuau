@@ -14,7 +14,7 @@ experimental prerelease. [Combined 1C qualification](../PersistenceFoundation1C.
 records Foundation 1 evidence and platform limits; [combined 2D qualification](../PersistenceFoundation2D.md)
 records Query and derived-index closure. ABI 1.5 is required by the additive
 completion ingress. [Release mapping](../Release.md)
-and [the 1B record](../PersistenceFoundation1B.md) separate identity from evidence.
+and [the 1B record](../qualification/Persistence1B.md#persistencefoundation1b) separate identity from evidence.
 Existing APIs keep their historical introduction versions and qualification.
 
 C4 explicitly removes the Player HasItem/CountItem/GiveItem/TakeItem methods,
@@ -109,33 +109,33 @@ Player-1A adds immutable `Vector3` and read-only `Player.Position` under the
 existing `0.4.0-experimental` identity. Components and vector arithmetic remain
 inside the finite System.Single range; Position is one bounded exact-connection
 host lookup and one root world-position read. See the
-[Player-1A qualification record](../PlayerInteractionFoundation1A.md).
+[Player-1A qualification record](../qualification/PlayerInteraction.md#playerinteractionfoundation1a).
 
 Player-1B adds read-only `Player.Health` and `Player.MaxHealth` under that same
 identity. Each access performs one exact-connection lookup and one direct live
 host read. Finite results are preserved independently without clamping; stale
 connections and non-finite host values raise controlled errors. See the
-[Player-1B qualification record](../PlayerInteractionFoundation1B.md).
+[Player-1B qualification record](../qualification/PlayerInteraction.md#playerinteractionfoundation1b).
 
 Player-1C adds the domain-bound `Items` service with `Exists`, plus bounded
 physical inventory reads under the same historical identity. In current API 0.7,
 these are `Player:GetInventory():CountItem` and `Player:GetInventory():HasItem`.
 The scanner reads only direct main, belt and wear entries, rejects more than 128
 entries before returning any answer, and never uses hook-virtualized count APIs.
-See the [Player-1C qualification record](../PlayerInteractionFoundation1C.md).
+See the [Player-1C qualification record](../qualification/PlayerInteraction.md#playerinteractionfoundation1c).
 
 Player-1D adds committed-only `Player:Teleport(Vector3)` under the same
 identity. It preserves D11 exact-connection identity, sleeping state and the
 D10 provisional-effect boundary. The exact-build server adapter is qualified,
 but authenticated-client convergence remains unqualified. See the
-[Player-1D qualification record](../PlayerInteractionFoundation1D.md).
+[Player-1D qualification record](../qualification/PlayerInteraction.md#playerinteractionfoundation1d).
 
 Revised D13 and
 [D18](../Invariants.md#d18--player-interaction-foundation-1) approve bounded
 read-only item observation implemented by Player-1C, plus the mutations originally
 qualified by Player-1F-A/B. C4 exposes them as `Inventory:GiveItem` and `Inventory:TakeItem`.
 TakeItem reuses the exact Inventory-M2 adapter; GiveItem reuses the
-[requalified supported-host path](../PlayerInteractionFoundation1FB-Validation.md).
+[requalified supported-host path](../qualification/PlayerInteraction.md#playerinteractionfoundation1fb-validation).
 The historical blanket M2 G1 conclusion remains superseded.
 `Inventory:GiveItem(ShortName, Amount, Behavior?)` defaults to the sole typed member
 `GiveItemBehavior.InventoryOnly`.
@@ -147,7 +147,7 @@ explicit breaking change at API 0.7, with physical behavior preserved and no
 package or native ABI change. Historical Player-1F evidence retains its names
 and source attribution; C4 requires separate qualification.
 
-[Player-1F-C](../PlayerInteractionFoundation1FC.md) records the correction of a
+[Player-1F-C](../qualification/PlayerInteraction.md#playerinteractionfoundation1fc) records the correction of a
 cold-module mutation bug in `9b27ba5` and combined closure. Provisional outer
 admission **or** active first-load publication forbids committed-only mutation,
 including nested/public/shared calls. Cached exports called later by committed

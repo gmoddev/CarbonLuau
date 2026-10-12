@@ -32,7 +32,7 @@ and remote HEAD matched at implementation-source closure. Test servers and
 qualification containers were stopped; caches/receipts remain recoverable.
 
 [D23](Invariants.md#d23--gameplay-a-player-lifecycle-signals) owns the resolved
-observation contract. The [supplied architecture](GameplayEventsArchitecture-Research.md)
+observation contract. The [supplied architecture](history/gameplay/GameplayEventsArchitecture-Research.md#gameplayeventsarchitecture-research)
 remains supporting research; later events/policies are not adopted wholesale.
 
 ## Implemented public surface

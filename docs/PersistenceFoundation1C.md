@@ -13,7 +13,7 @@ This record owns combined qualification, not a second persistence contract.
 [D21](Invariants.md#d21--persistence-foundation-1) and
 [PersistenceFoundation1.md](PersistenceFoundation1.md) own architecture/signatures;
 [1A](PersistenceFoundation1A.md) owns backend/codec/worker/durability;
-[1B validation](PersistenceFoundation1B-Validation.md) owns public admission and
+[1B validation](qualification/Persistence1B.md#persistencefoundation1b-validation) owns public admission and
 completion evidence. Historical negative evidence in those records is preserved.
 
 | Identity | Value |
@@ -54,7 +54,7 @@ The hash-synchronized worker source is
 its older Git HEAD is **not** the tested source identity. Initial local bundles
 honestly report `uncommitted-working-tree`. Native/compiler/storage source is
 unchanged from 1B; reused binary hashes are exactly the six hashes in
-[1B provenance](PersistenceFoundation1B-Validation.md#provenance-and-identity).
+[1B provenance](qualification/Persistence1B.md#persistencefoundation1b-validation-provenance-and-identity).
 The new managed source package used for both live platforms has SHA-256
 `6b95f23e572b726698027ab67564a3e87fc56d8a82365859e352443762396282`.
 Logs/artifacts are under the worker's respective

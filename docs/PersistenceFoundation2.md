@@ -11,7 +11,7 @@ records the passing combined closure.
 Foundation 1 qualified baseline: 034f28f81c64e0f135ec882fb05de4ef7f33fcf7.
 Initial D22 documentation baseline: ee208831efc5647dab553b5f9d0524e7e2e83353.
 Reviewed/superseded correction baseline: `97bc514fb94a3739ab9fbad91c04c2d40a9c3534`.
-[Correction evidence](PersistenceFoundation2-Validation.md) records the final
+[Correction evidence](history/persistence/PersistenceFoundation2-Validation.md#persistencefoundation2-validation) records the final
 consistency review, private-bound corrections and documentation gates.
 
 This document is the detailed authority for

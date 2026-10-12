@@ -1,9 +1,9 @@
 name: Tooling baseline contracts
 on:
   push:
-    paths: ['api/**', 'docs/Tooling*.md', 'tools/Test-ToolingContracts.ps1', '.github/workflows/tooling-baseline.yml']
+    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', '.github/workflows/tooling-baseline.yml']
   pull_request:
-    paths: ['api/**', 'docs/Tooling*.md', 'tools/Test-ToolingContracts.ps1', '.github/workflows/tooling-baseline.yml']
+    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', '.github/workflows/tooling-baseline.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify documentation coverage, canonical rules and fragments
+        run: python tools/Test-Documents.py
       - name: Validate API contract schema fixtures
         shell: pwsh
         run: ./tools/Test-ToolingContracts.ps1

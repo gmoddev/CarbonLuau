@@ -118,7 +118,7 @@ Start with [AICONTEXT.md](AICONTEXT.md) for the contributor workflow and canonic
 rules. [Release preparation](docs/Release.md) covers reproducible builds and the
 separate publication gate. The qualification records in `docs/` keep both passing
 tests and earlier failed approaches available for review.
-The [history audit](docs/HistoryCuration-Validation.md) records the unreleased
+The [history audit](docs/history/maintenance/HistoryCuration-Validation.md#historycuration-validation) records the unreleased
 squash and scoped email cleanup without changing published releases.
 
 AI tools are used during development. The project's architecture, requirements,
