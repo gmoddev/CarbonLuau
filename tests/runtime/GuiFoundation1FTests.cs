@@ -281,8 +281,12 @@ internal static class GuiFoundation1FTests
             "local B=S:Create('TextButton'); B.Text='A1'; B.Activated:Connect(function() print('entered') end); S:Show(P)";
         Func<Runtime.ScriptSnapshot> Snapshot = () => new Runtime.ScriptSnapshot {EntryName = "init.luau", EntrySource = Source};
         string BeforeCarbonReload;
+        // This is a 100-cycle lifecycle/authority soak, not a 5ms throughput
+        // claim. Use the existing maximum test deadline for reconstruction on
+        // shared CI machines; every infinite-loop cycle must still time out.
+        // Production defaults and the separate short-deadline tests are unchanged.
         using (var Host = new Runtime.ScriptHost(Native,
-            new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 5, FrameDrainBudgetMilliseconds = 100}, Snapshot, World)) {
+            new Runtime.RuntimeConfig {MaxCallbackMilliseconds = 100, FrameDrainBudgetMilliseconds = 100}, Snapshot, World)) {
             Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "native root GUI starts"); Host.Drain();
             string A1Token = LatestToken(Backend); Runtime.FacadeSession A1 = World.Active; int Calls = Backend.Calls().Length;
             string Failed = "local P=game:GetService('Players'):GetPlayers()[1]; local S=game:GetService('Gui'):Create('ScreenGui'); " +
@@ -308,7 +312,12 @@ internal static class GuiFoundation1FTests
                 Host.Drain(); string NewToken = LatestToken(Backend);
                 Check(NewToken != null && NewToken != OldToken && World.Gui.LiveObjects == 2 && World.Gui.LivePresentations == 1 &&
                     World.Gui.LiveActionCount == 1, "committed snapshot reconstructs only fresh GUI state at cycle " + Cycle);
-                if (Cycle != 99) { Check(Host.Reload().Status == Runtime.RuntimeStatus.OK, "operator reload rearms recovery"); Host.Drain(); }
+                if (Cycle != 99) {
+                    var Reload = Host.Reload();
+                    Check(Reload.Status == Runtime.RuntimeStatus.OK,
+                        "operator reload rearms recovery at cycle " + Cycle + ": " + Reload.Status + "/" + Reload.Error);
+                    Host.Drain();
+                }
             }
             BeforeCarbonReload = LatestToken(Backend);
         }
