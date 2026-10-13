@@ -352,3 +352,9 @@ upgrade policy and change-based test selection; historical results remain dated.
 <a id="phase-0-consistency-review"></a>
 
 - [Phase 0 consistency review](qualification/Policy.md#phase-0-consistency-review)
+
+The current post-release [Gameplay D6 qualification](GameplayD6-Validation.md)
+extends the two qualified barrel targets to one exact owner per prefab, with
+two rules globally and per domain. Whole owner sets publish atomically, and both
+targets share the existing physical producer budgets. D4/D5 receipts retain their
+historical single-rule scope; published v0.7.0 remains immutable.

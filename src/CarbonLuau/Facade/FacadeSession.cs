@@ -63,16 +63,19 @@ namespace Carbon.Plugins
             public void CommitAddon(FacadeSession Previous, FacadeSession Next)
             {
                 Players.CheckOwner();
-                if (Next != null && Next.HasLootRule && Previous != null &&
+                if (Previous != null &&
                     (!Addons.ContainsKey(Previous.DomainLifetimeId) || !Object.ReferenceEquals(Addons[Previous.DomainLifetimeId], Previous)))
                     throw new FacadeException("stale outgoing addon loot rule owner");
+                FacadeSession Published;
+                if (Next != null && Addons.TryGetValue(Next.DomainLifetimeId, out Published) &&
+                    !Object.ReferenceEquals(Published, Previous))
+                    throw new FacadeException("duplicate active addon domain");
                 PreflightLootRules(Previous, Next);
                 Registrar.Publish(Previous, Next);
                 if (Previous != null) {
                     Addons.Remove(Previous.DomainLifetimeId); Previous.Active = false; Previous.Disposed = true; Previous.Clear();
                 }
                 if (Next != null) {
-                    if (Addons.ContainsKey(Next.DomainLifetimeId)) throw new FacadeException("duplicate active addon domain");
                     Addons.Add(Next.DomainLifetimeId, Next); Next.Active = true;
                 }
                 PublicationVersion++; InvalidateGameplayDemand();
@@ -81,8 +84,10 @@ namespace Carbon.Plugins
             public void Retire(FacadeSession Value)
             {
                 Players.CheckOwner();
+                FacadeSession Published;
                 if (Active == Value) Commit(null);
-                else if (Value != null && Addons.ContainsKey(Value.DomainLifetimeId)) CommitAddon(Value, null);
+                else if (Value != null && Addons.TryGetValue(Value.DomainLifetimeId, out Published) &&
+                    Object.ReferenceEquals(Published, Value)) CommitAddon(Value, null);
                 if (Value != null) { Value.Active = false; Value.Disposed = true; Value.Clear(); }
             }
             public bool IsActive(FacadeSession Value)
@@ -354,6 +359,7 @@ namespace Carbon.Plugins
                 RootPublication.Retired = true;
                 foreach (PublicationCheckpoint Checkpoint in Publications) Checkpoint.Witness.Retired = true;
                 Pending.Clear(); Listeners.Clear(); Commands.Clear(); LootRules.Clear(); Publications.Clear();
+                World.ReleaseLootSession(this);
                 EntityWitnesses.Clear(); ClearStorageHints(); Gui.Dispose();
                 FirstPublication = null; GameplayDiedListeners = GameplaySpawnedListeners = GameplayEntitySpawnedListeners = GameplayEntityDestroyedListeners = 0;
                 GameplayEntityDiedListeners = 0;
@@ -432,6 +438,7 @@ namespace Carbon.Plugins
                     Listeners.Clear(); foreach (var Item in Checkpoint.Listeners) Listeners.Add(Item.Key, Item.Value);
                     Commands.Clear(); foreach (var Item in Checkpoint.Commands) Commands.Add(Item.Key, Item.Value);
                     LootRules = Checkpoint.LootRules;
+                    if (!HasLootRule) World.ReleaseLootSession(this);
                     if (Publications.Count == 0) FirstPublication = null;
                     RefreshGameplayListeners();
                     PruneInventoryListeners();

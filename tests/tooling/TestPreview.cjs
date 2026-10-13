@@ -221,6 +221,7 @@ function FixtureSource(Operations) {
             ['game:GetService("Loot"):RegisterDropRule("assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab", Enum.DropMode.Replace, {})', 'UnsupportedPreviewApi'],
             ['game:GetService("Loot"):RegisterDropRule("assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab", Enum.DropMode.Replace, {})', 'UnsupportedPreviewApi'],
             ['game:GetService("Loot"):RegisterDropRule("assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab", Enum.DropMode.Replace, {{Item="wood", Min=50, Max=100}, {Item="scrap", Min=5, Max=12}})', 'UnsupportedPreviewApi'],
+            ['local Loot=game:GetService("Loot"); Loot:RegisterDropRule("assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab", Enum.DropMode.Replace, {{Item="scrap",Min=5,Max=12}}); Loot:RegisterDropRule("assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab", Enum.DropMode.Replace, {{Item="wood",Min=50,Max=100}})', 'UnsupportedPreviewApi'],
             ['game:GetService("DataStoreService"):GetDataStore("Preview"):GetAsync("Key", function() error("storage callback must not run") end)', 'UnsupportedPreviewApi'],
             ['game:GetService("DataStoreService"):GetDataStore("Preview"):SetAsync("Key", true, function() error("storage callback must not run") end)', 'UnsupportedPreviewApi'],
             ['game:GetService("DataStoreService"):GetDataStore("Preview"):RemoveAsync("Key", function() error("storage callback must not run") end)', 'UnsupportedPreviewApi'],

@@ -101,6 +101,7 @@ internal static class LootPublicTests
         public void Dispose()
         {
             Host.Dispose(); None();
+            Check(World.LootRetainedSessionCount == 0, "all committed/staged Loot retention released");
             Check(World.Sessions().Count == 0 && !World.HasWork && World.Gui.LiveRegistryCount == 0,
                 "public fixture teardown clears domain state");
         }
@@ -150,6 +151,7 @@ internal static class LootPublicTests
         Availability(Native); RootReplacement(Native); AddonOwnership(Native); ScaleAndRecovery(Native);
         ProfileDeclarations(Native); ProfilePublication(Native); ProfileRootReplacement(Native); ProfileAddonOwnership(Native);
         ItemDeclarations(Native);
+        RegistryDeclarations(Native);
         Check(Native.LiveVmCount == 0, "all real VM fixtures released");
         Console.WriteLine("[CarbonLuau:LootPublic] PASS pinned VM declarations, raw-table validation, enum identity, publication, conflicts, lifecycle, recovery and 100 addons; synthetic host only");
     }
@@ -165,6 +167,94 @@ internal static class LootPublicTests
         Check(!Value.World.TryLootRule(Prefab, out Owner, out Rule) && Owner == null && Rule == null,
             "nonmatching public profile clears both selection outputs");
     }
+    private static string DualDeclaration(int First, int Second)
+    { return Declaration(First) + Declaration(Prefab2, Second); }
+
+    private static void RegistryDeclarations(Runtime.NativeRuntime Native)
+    {
+        using (var Value = new Fixture(Native)) {
+            Value.Modules["first"] = Declaration(5) + "return true";
+            Value.Modules["second"] = Declaration(Prefab2, 50) + "return true";
+            Value.Modules["badsecond"] = "require('second'); error('failed second parent')";
+            Value.Load("require('first'); assert(not pcall(require,'badsecond')); require('second')");
+            var Old = Value.World.Active;
+            var First = ProfileSelected(Value, Runtime.LootRulePolicy.Prefab, Old);
+            var Second = ProfileSelected(Value, Barrel2, Old);
+            EntryIs(First, 0, "scrap", 5, 5); EntryIs(Second, 0, "scrap", 50, 50);
+            Check(Value.World.LootRetainedSessionCount == 1, "two committed rules share one exact owner reservation");
+            int Lookups = Value.Lookups;
+            Value.Execute(Setup + "for _,P in {" + Prefab + "," + Prefab2 + "} do " +
+                "assert(not pcall(function() Loot:RegisterDropRule(P,Mode,{}) end)) end");
+            Check(Value.Lookups == Lookups, "committed dual owner cannot redeclare either target");
+            Value.ObserveLookup = () => {
+                Check(Object.ReferenceEquals(ProfileSelected(Value, Runtime.LootRulePolicy.Prefab, Old), First) &&
+                    Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Old), Second), "whole old set remains visible during candidate initialization");
+            };
+            var Failed = Value.Reload(DualDeclaration(8, 80) + "error('failed dual root')");
+            Check(Failed.Status != Runtime.RuntimeStatus.OK && Value.World.Active == Old &&
+                Value.World.LootRetainedSessionCount == 1, "failed dual candidate releases staging and preserves both old rules");
+            Value.Registrar.Fail = true; Failed = Value.Reload(DualDeclaration(9, 90)); Value.Registrar.Fail = false;
+            Check(Failed.Status != Runtime.RuntimeStatus.OK && Value.World.Active == Old &&
+                Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Old), Second), "failed registrar cannot publish half a dual set");
+            Value.Load(DualDeclaration(7, 70)); Value.ObserveLookup = null;
+            var Next = Value.World.Active;
+            Check(Old.Disposed && !Old.HasLootRule && Value.World.LootRetainedSessionCount == 1,
+                "healthy whole-set replacement retires only exact outgoing owner");
+            EntryIs(ProfileSelected(Value, Runtime.LootRulePolicy.Prefab, Next), 0, "scrap", 7, 7);
+            EntryIs(ProfileSelected(Value, Barrel2, Next), 0, "scrap", 70, 70);
+            Failed = Value.Reload(DualDeclaration(8, 80) + "local T=table.create(10000000,true)");
+            Check(Failed.Status != Runtime.RuntimeStatus.OK, "real VM allocation exhaustion cannot publish a candidate rule set");
+            if (Failed.Retired) {
+                Check(Next.Disposed && Value.World.LootRetainedSessionCount == 0, "fatal allocation failure retires all old and staged authority");
+                Value.Load(DualDeclaration(7, 70));
+            } else {
+                Check(Value.World.Active == Next && Value.World.LootRetainedSessionCount == 1,
+                    "contained allocation failure preserves both exact committed rules and releases candidate retention");
+                EntryIs(ProfileSelected(Value, Barrel2, Next), 0, "scrap", 70, 70);
+            }
+            Value.Load(Setup + "local A=table.create(8); local B=table.create(8); for Index=1,8 do " +
+                "A[Index]={Item='scrap',Min=1000,Max=1000}; B[Index]={Item='wood',Min=1000,Max=1000} end; " +
+                "Loot:RegisterDropRule(" + Prefab + ",Mode,A); Loot:RegisterDropRule(" + Prefab2 + ",Mode,B); table.clear(A); table.clear(B)");
+            var MaximumFirst = ProfileSelected(Value, Runtime.LootRulePolicy.Prefab, Value.World.Active);
+            var MaximumSecond = ProfileSelected(Value, Barrel2, Value.World.Active);
+            Check(MaximumFirst.Count == 8 && MaximumSecond.Count == 8 && MaximumFirst.MaximumTotal == 8000 && MaximumSecond.MaximumTotal == 8000,
+                "two declarations retain independent per-rule limits, not a larger physical occurrence budget");
+            Value.Load(Declaration(6));
+            Nonmatching(Value, Barrel2, Value.World.Active, Value.Selected(Value.World.Active));
+            Check(First.Entry(0).Max == 5 && Second.Entry(0).Max == 50, "omission withdraws a key without retargeting old descriptors");
+            using (var Registry = new Runtime.AddonRegistry(Value.Host, Native.HostLifetimeId)) {
+                object Provider = new object(), OtherProvider = new object();
+                string Token = Add(Registry, Provider, Package("registryowner", Declaration(Prefab2, 100)), "Active");
+                var Root = Value.World.Active; var RootRule = Value.Selected(Root);
+                Runtime.FacadeSession Addon; var AddonRule = Value.Selected(Barrel2, out Addon);
+                var Conflict = Value.Reload(DualDeclaration(10, 200));
+                Check(Conflict.Status != Runtime.RuntimeStatus.OK && Value.World.Active == Root &&
+                    Object.ReferenceEquals(Value.Selected(Root), RootRule) &&
+                    Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Addon), AddonRule), "one conflicting key rejects entire root set before publication");
+                int Calls = Value.Registrar.Calls;
+                Add(Registry, OtherProvider, Package("registryforeign", DualDeclaration(11, 210)), "Failed");
+                Check(Value.Registrar.Calls == Calls && Value.World.LootRetainedSessionCount == 2,
+                    "foreign dual candidate conflict leaves both owners and no staging reservation");
+                Value.Load(Declaration(12)); EntryIs(ProfileSelected(Value, Barrel2, Addon), 0, "scrap", 100, 100);
+                Replace(Registry, Provider, Token, Package("registryowner", Declaration(Prefab2, 120), "2.0.0"));
+                Runtime.FacadeSession Replacement; var Replaced = Value.Selected(Barrel2, out Replacement);
+                Check(Addon.Disposed && !Addon.HasLootRule && Replacement != Addon, "addon replacement retires its own key only");
+                EntryIs(Value.Selected(Value.World.Active), 0, "scrap", 12, 12); EntryIs(Replaced, 0, "scrap", 120, 120);
+                Check(Registry.UnloadProvider(Provider) == 1 && Replacement.Disposed, "provider unload withdraws exact addon owner");
+                EntryIs(Value.Selected(Value.World.Active), 0, "scrap", 12, 12);
+                Nonmatching(Value, Barrel2, Value.World.Active, Value.Selected(Value.World.Active));
+                Registry.UnloadProvider(OtherProvider);
+            }
+            Value.Load(DualDeclaration(13, 130)); var BeforeRecovery = Value.World.Active; long Vm = Value.Host.VmGenerationId;
+            var Fatal = Value.Host.Execute("loot.registry.timeout", "while true do end");
+            Check(Fatal.Status == Runtime.RuntimeStatus.TIMEOUT && BeforeRecovery.Disposed && Value.Host.VmGenerationId != Vm,
+                "fatal recovery retires entire dual owner without preserving stale authority");
+            EntryIs(ProfileSelected(Value, Runtime.LootRulePolicy.Prefab, Value.World.Active), 0, "scrap", 13, 13);
+            EntryIs(ProfileSelected(Value, Barrel2, Value.World.Active), 0, "scrap", 130, 130);
+            Check(Value.World.LootRetainedSessionCount == 1 && Drain(Value.Host) == "", "dual reconstruction has one fresh owner and no payout replay");
+        }
+    }
+
     private static void ItemDeclarations(Runtime.NativeRuntime Native)
     {
         foreach (string Profile in new[] { Prefab, Prefab2 })
@@ -227,10 +317,10 @@ internal static class LootPublicTests
             Value.ObserveLookup = Value.None;
             Value.Load(Setup + "local Drops={{Item='metal.fragments',Min=3,Max=7}}; S.Drops=Drops; " +
                 "assert(select('#',Loot:RegisterDropRule(" + Prefab2 + ",Mode,Drops))==0); " +
-                "assert(not pcall(function() " + Register + "end)); Drops[1].Item='wood'; Drops[1].Max=99; table.clear(Drops)");
+                "assert(not pcall(function() Loot:RegisterDropRule(" + Prefab2 + ",Mode,{" + Entry + "}) end)); Drops[1].Item='wood'; Drops[1].Max=99; table.clear(Drops)");
             Runtime.FacadeSession Owner = Value.World.Active; Runtime.LootDropRule Snapshot = ProfileSelected(Value, Barrel2, Owner);
             Check(Value.Lookups == 1 && Snapshot.Count == 1 && Snapshot.MaximumTotal == 7,
-                "barrel-2 copies its declaration and different-prefab duplicate rejects before lookup");
+                "barrel-2 copies its declaration and same-prefab duplicate rejects before lookup");
             EntryIs(Snapshot, 0, "metal.fragments", 3, 7);
             foreach (string Name in new[] { Runtime.LootRulePolicy.Prefab, Barrel2.ToUpperInvariant(), Barrel2 + "extra", null })
                 Nonmatching(Value, Name, Owner, Snapshot);
@@ -310,18 +400,26 @@ internal static class LootPublicTests
             using (var Registry = new Runtime.AddonRegistry(Value.Host, Native.HostLifetimeId)) {
                 object Provider = new object(), OtherProvider = new object();
                 var Root = Value.World.Active; var RootRule = Value.Selected(Root); int Calls = Value.Registrar.Calls;
-                string Collision = Add(Registry, OtherProvider, Package("lootprofilecollision", Declaration(Prefab2, 3)), "Failed");
-                Check(Value.Registrar.Calls == Calls && Value.Host.DomainCount == 1 && Object.ReferenceEquals(Value.Selected(Root), RootRule),
-                    "different-prefab foreign addon still conflicts before publication");
-                Nonmatching(Value, Barrel2, Root, RootRule);
+                string Other = Add(Registry, OtherProvider, Package("lootprofiledisjoint", Declaration(Prefab2, 3)), "Active");
+                Runtime.FacadeSession Disjoint; var DisjointRule = Value.Selected(Barrel2, out Disjoint);
+                Check(Value.Host.DomainCount == 2 && Disjoint != Root && DisjointRule.Entry(0).Max == 3,
+                    "different-prefab root/addon ownership is independent");
+                Calls = Value.Registrar.Calls;
+                string Collision = Add(Registry, OtherProvider, Package("lootprofilecollision", Declaration(3)), "Failed");
+                Check(Value.Registrar.Calls == Calls && Value.Host.DomainCount == 2 && Object.ReferenceEquals(Value.Selected(Root), RootRule) &&
+                    Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Disjoint), DisjointRule),
+                    "same-prefab foreign addon conflicts before publication without disturbing either owner");
                 Check(Registry.Unregister(OtherProvider, Collision)[0] == "OK", "profile collision registration removed");
+                Check(Registry.Unregister(OtherProvider, Other)[0] == "OK" && Disjoint.Disposed,
+                    "disjoint owner withdrawal leaves root rule intact");
+                Nonmatching(Value, Barrel2, Root, RootRule);
                 Value.Load("return true"); Value.None();
                 string Token = Add(Registry, Provider, Package("lootprofileowner", Declaration(Prefab2, 4)), "Active");
                 Runtime.FacadeSession Owner; var OldRule = Value.Selected(Barrel2, out Owner); Calls = Value.Registrar.Calls;
-                Add(Registry, OtherProvider, Package("lootprofileforeign", Declaration(6)), "Failed");
-                Runtime.ExecutionResult Conflict = Value.Reload(Declaration(7));
+                Add(Registry, OtherProvider, Package("lootprofileforeign", Declaration(Prefab2, 6)), "Failed");
+                Runtime.ExecutionResult Conflict = Value.Reload(Declaration(Prefab2, 7));
                 Check(Conflict.Status != Runtime.RuntimeStatus.OK && Value.Registrar.Calls == Calls &&
-                    Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Owner), OldRule), "different-prefab addon/addon and addon/root conflicts preserve incumbent");
+                    Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Owner), OldRule), "same-prefab addon/addon and addon/root conflicts preserve incumbent");
                 Value.Source = "return true";
                 Replace(Registry, Provider, Token, Package("lootprofileowner", Declaration(9) + "error('failed profile addon')", "2.0.0"));
                 Check(Status(Registry, Provider, Token, "Active")[5].Contains("replacement failed") && !Owner.Disposed &&
@@ -707,7 +805,7 @@ internal static class LootPublicTests
                 var Tokens = new List<string>();
                 for (int Index = 0; Index < 100; Index++) {
                     string Id = "lootstress" + Index.ToString("D3", CultureInfo.InvariantCulture);
-                    string Source = Index == 0 ? Declaration(3) : EnumChecks() +
+                    string Source = Index == 0 ? Declaration(3) : Index == 1 ? Declaration(Prefab2, 4) : EnumChecks() +
                         "; task.defer(function() local Loot=game:GetService('Loot'); assert(not pcall(function() Loot:RegisterDropRule(" +
                         Prefab + ",Enum.DropMode.Replace,{}) end)) end)";
                     string[] Result = Registry.RegisterArchive(Providers[Index / 25], Package(Id, Source));
@@ -718,11 +816,14 @@ internal static class LootPublicTests
                 Check(Registry.Count == 100 && Value.Host.DomainCount == 101 && Native.LiveVmCount == 1 && Value.World.Sessions().Count == 101,
                     "one actual VM contains root plus 100 addon domains");
                 Runtime.FacadeSession Owner; Runtime.LootDropRule Rule = Value.Selected(out Owner);
-                Check(Drain(Value.Host) == "", "99 addon callbacks reject post-publication declarations without effects");
+                Runtime.FacadeSession SecondOwner; var SecondRule = Value.Selected(Barrel2, out SecondOwner);
+                Check(Owner != SecondOwner, "100-addon population retains independent exact owners for the two prefabs");
+                Check(Drain(Value.Host) == "", "98 addon callbacks reject post-publication declarations without effects");
                 for (int Index = 0; Index < 100; Index++)
                     Check(Object.ReferenceEquals(Value.Selected(Owner), Rule), "bounded selection retains one snapshot across real addon population");
                 int Rules = 0; foreach (Runtime.FacadeSession Session in Value.World.Sessions()) if (Session.HasLootRule) Rules++;
-                Check(Rules == 1 && Value.Host.VmMemoryBytes <= Value.Host.VmMemoryLimitBytes, "single committed owner within VM memory cap");
+                Check(Rules == 2 && Value.World.LootRetainedSessionCount == 2 && Value.Host.VmMemoryBytes <= Value.Host.VmMemoryLimitBytes,
+                    "two committed owners retain shared VM memory and global publication bounds");
                 long Vm = Value.Host.VmGenerationId;
                 Runtime.ExecutionResult Fatal = Value.Host.Execute("loot.scale.timeout", "while true do end");
                 Check(Fatal.Status == Runtime.RuntimeStatus.TIMEOUT && Value.Host.Ready && Value.Host.VmGenerationId != Vm &&
@@ -730,9 +831,13 @@ internal static class LootPublicTests
                 Value.None(); Activate(Registry);
                 for (int Index = 0; Index < 100; Index++) Status(Registry, Providers[Index / 25], Tokens[Index], "Active");
                 Runtime.FacadeSession Reconstructed; Runtime.LootDropRule ReconstructedRule = Value.Selected(out Reconstructed);
+                Runtime.FacadeSession SecondReconstructed; var SecondReconstructedRule = Value.Selected(Barrel2, out SecondReconstructed);
                 Check(Reconstructed != Owner && ReconstructedRule != Rule && Value.Host.DomainCount == 101 && Native.LiveVmCount == 1,
                     "all 100 live registrations reconstruct into fresh exact authority");
                 EntryIs(ReconstructedRule, 0, "scrap", 3, 3); EntryIs(Rule, 0, "scrap", 3, 3); Drain(Value.Host);
+                Check(SecondReconstructed != SecondOwner && SecondReconstructedRule != SecondRule && SecondOwner.Disposed,
+                    "second prefab reconstructs into its own fresh exact domain");
+                EntryIs(SecondReconstructedRule, 0, "scrap", 4, 4);
                 Check(Value.Host.Recoveries == 1, "addon reconstruction never rearms global recovery allowance");
                 foreach (object Provider in Providers) Check(Registry.UnloadProvider(Provider) == 25, "each provider retires 25 actual addons");
                 Value.None(); Check(Registry.Count == 0 && Value.Host.DomainCount == 1 && !Value.Host.HasWork,

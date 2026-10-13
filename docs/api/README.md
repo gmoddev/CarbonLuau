@@ -9,14 +9,15 @@ server-side Luau, not Roblox cloud/DataModel/replication compatibility.
 
 Current post-release development adds [D4's barrel-2 target](../GameplayD4-Validation.md)
 under the same Loot signature and identities. It is not in published v0.7.0
-assets; use the qualified D4 build. One global rule remains, not one per prefab.
+assets; use the qualified D4 build. D4/D5 retained one global rule.
 
 [D5](../GameplayD5-Validation.md) adds only `wood` to the replacement item
 allowlist, alongside scrap and metal.fragments. Use the
 [wood example](../../examples/scripts/loot-replace-wood.luau) in a D5 build;
 published v0.7.0 does not include it. Signatures, identities and budgets remain
-unchanged. Independent per-prefab ownership is a
-[deferred D6 proposal](../design/GameplayD6-PrefabRuleRegistry.md).
+unchanged. [D6](../GameplayD6-Validation.md) permits one owner per prefab and two
+rules globally/per domain, using complete owner-set publication and unchanged
+shared producer bounds. See the [dual-barrel example](../../examples/scripts/loot-replace-both-barrels.luau).
 
 ## Availability and migration
 

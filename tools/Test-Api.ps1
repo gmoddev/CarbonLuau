@@ -26,7 +26,7 @@ function Test-D3Documents {
     foreach ($Claim in @('Loot:RegisterDropRule(Prefab: string, Mode: DropMode, Drops: {LootDropEntry}): ()',
         'Exactly three arguments','during initialization','stages a rule','returns no values',
         'assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab','zero through eight',
-        'scrap','metal.fragments','0 <= Min <= Max <= 1000','8000','One rule is allowed globally',
+        'scrap','metal.fragments','0 <= Min <= Max <= 1000','8000','one active owner per qualified prefab','two rules globally',
         'eight world payouts','eight','events per actual server frame','one event in flight',
         'earlier fill/generation','Before commit','leaves vanilla','After commit',
         'partial payout','no vanilla fallback','replay or compensation','restart','source gates')) {
@@ -67,6 +67,13 @@ function Test-D3Documents {
     if (!$LootReference.Contains('Gameplay D5 build') -or !$LootReference.Contains('`wood`') -or
         !$EntryReference.Contains('Gameplay D5 build') -or !$EntryReference.Contains('`wood`')) {
         throw 'D5 qualified item/reference or immutable release scope drift'
+    }
+    $DualExample = Get-Content -Raw -LiteralPath (Join-Path $Root 'examples/scripts/loot-replace-both-barrels.luau')
+    if ([regex]::Matches($DualExample, 'Loot:RegisterDropRule\(').Count -ne 2 -or
+        !$DualExample.Contains('loot-barrel-1.prefab') -or !$DualExample.Contains('loot-barrel-2.prefab') -or
+        !$DualExample.Contains('Gameplay D6') -or !$LootReference.Contains('390') -or
+        !$LootReference.Contains('omit a rule') -or !$LootReference.Contains('Repeated registration')) {
+        throw 'D6 per-prefab publication/retention/example contract drift'
     }
 }
 function Test-D3Capacity([string]$Bootstrap, [string]$Facade) {

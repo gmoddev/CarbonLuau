@@ -1,5 +1,10 @@
 # Gameplay D6 — bounded per-prefab Loot registry proposal
 
+Scope note: this is the preserved D5-era proposal, not current registry status.
+The separately authorized [D6 qualification](../GameplayD6-Validation.md) owns
+the implementation and exact source/host evidence; original deferred findings
+below retain their historical scope.
+
 Status: **DEFERRED; NOT IMPLEMENTED OR QUALIFIED**.
 This is the optional registry investigation requested with Gameplay D5. D5 retains
 one global rule and one rule per domain; item expansion does not require a registry

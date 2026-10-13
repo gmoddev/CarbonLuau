@@ -1,5 +1,7 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures, [switch]$IncludeInventoryNetFixtures, [switch]$IncludeInventoryChangedFixtures, [switch]$IncludeD2Research, [switch]$IncludeD2Fixtures, [switch]$IncludeD3Fixtures, [switch]$IncludeB2Fixtures, [switch]$IncludeD4Fixtures, [switch]$IncludeD5Fixtures, [switch]$D5ProbeOnly)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures, [switch]$IncludeInventoryNetFixtures, [switch]$IncludeInventoryChangedFixtures, [switch]$IncludeD2Research, [switch]$IncludeD2Fixtures, [switch]$IncludeD3Fixtures, [switch]$IncludeB2Fixtures, [switch]$IncludeD4Fixtures, [switch]$IncludeD5Fixtures, [switch]$D5ProbeOnly, [switch]$IncludeD6Fixtures)
 $ErrorActionPreference = 'Stop'
+if ($IncludeD6Fixtures -and $D5ProbeOnly) { throw '[CarbonLuau:Package] D6 registry requires full public qualification' }
+if ($IncludeD6Fixtures) { $IncludeD5Fixtures = $true }
 if ($D5ProbeOnly -and !$IncludeD5Fixtures) { throw '[CarbonLuau:Package] D5 probe requires explicit D5 fixtures' }
 if ($IncludeD5Fixtures) { $IncludeD4Fixtures = $true }
 if ($IncludeD4Fixtures) { $IncludeD3Fixtures = $true }
@@ -123,6 +125,9 @@ try {
                 try { $Writer.Write('namespace Carbon.Plugins { public partial class CarbonLuau { partial void SelectLootItemProbe(ref bool ProbeOnly) { ProbeOnly = true; } } }') }
                 finally { $Writer.Dispose() }
             }
+        }
+        if ($IncludeD6Fixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.LootRegistryFixtures.cs') 'CarbonLuau.LootRegistryFixtures.cs'
         }
         if ($IncludeB2Fixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityDiedFixtures.cs') 'CarbonLuau.EntityDiedFixtures.cs'

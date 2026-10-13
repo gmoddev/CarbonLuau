@@ -80,8 +80,9 @@ only the exact second autospawn barrel. It preserves the offline report as
 historical scope/evidence and does not expand the immutable v0.7.0 artifacts.
 
 [Gameplay D5](GameplayD5-Validation.md) owns the subsequent item-expansion
-qualification status. The optional per-prefab registry remains a separate
-[deferred D6 proposal](design/GameplayD6-PrefabRuleRegistry.md).
+qualification status. [Gameplay D6](GameplayD6-Validation.md) owns subsequent
+per-prefab registry qualification; the [D6 proposal](design/GameplayD6-PrefabRuleRegistry.md)
+retains its original D5 deferred scope.
 
 [Consolidation receipt](Documentation-Consolidation.md) records the approved
 cleanup, coverage/URL/test consumers and qualification. Do not introduce duplicate

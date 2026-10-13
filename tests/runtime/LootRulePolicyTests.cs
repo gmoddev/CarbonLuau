@@ -9,12 +9,13 @@ internal static class LootRulePolicyTests
     private const string Barrel2 = "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab";
     private sealed class Registrar : Runtime.ICommandRegistrar
     {
-        internal bool Fail;
+        internal bool Fail, AllocationFault;
         internal int Calls;
         internal Action ObservePublication;
         public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next)
         {
             Calls++; if (ObservePublication != null) ObservePublication();
+            if (AllocationFault) throw new OutOfMemoryException("fixture registrar allocation failure");
             if (Fail) throw new InvalidOperationException("fixture publication failure");
         }
     }
@@ -77,9 +78,10 @@ internal static class LootRulePolicyTests
     }
     private static void Invalid(Fixture Value, string Prefab, Runtime.LootDropEntry[] Entries)
     {
-        var Session = Value.Session();
+        var Session = Value.Session(); int Retained = Value.World.LootRetainedSessionCount;
         Reject(() => Session.StageLootRule(Prefab, Entries), "invalid descriptor");
-        Check(!Session.HasLootRule, "invalid input stages no descriptor");
+        Check(!Session.HasLootRule && Value.World.LootRetainedSessionCount == Retained,
+            "invalid input stages no descriptor and leaks no retained owner");
         Value.World.Retire(Session);
     }
     private static string Host(Runtime.FacadeSession Session, uint Code, byte[] Bytes, bool Success,
@@ -104,10 +106,12 @@ internal static class LootRulePolicyTests
     { Host(Session, Code, new byte[0], true); }
     private static void InvalidHost(Fixture Value, params string[] Fields)
     {
-        var Session = Value.Session(); int Lookups = Value.Lookups, Calls = Value.Registrar.Calls;
+        var Session = Value.Session(); int Lookups = Value.Lookups, Calls = Value.Registrar.Calls,
+            Retained = Value.World.LootRetainedSessionCount;
         string Error = Host(Session, 42, Runtime.FacadePolicy.Pack(Fields), false);
         Check(Error.Length != 0 && Error != "host operation failed", "curated managed declaration error");
-        Check(!Session.HasLootRule && Value.Lookups == Lookups && Value.Registrar.Calls == Calls,
+        Check(!Session.HasLootRule && Value.Lookups == Lookups && Value.Registrar.Calls == Calls &&
+            Value.World.LootRetainedSessionCount == Retained,
             "malformed host declaration stages nothing and performs no lookup/publication");
         // A catchable invalid declaration must leave the candidate usable.
         Declare(Session, "scrap\t0\t1"); Check(Session.HasLootRule, "valid declaration after controlled rejection");
@@ -216,7 +220,8 @@ internal static class LootRulePolicyTests
             new Runtime.ItemDirectory(Name => { ChangedSession.Clear(); return new object(); }));
         ChangedWorld.LootAvailable = () => true; ChangedSession = new Runtime.FacadeSession(ChangedWorld, 7, 99, 32);
         Declare(ChangedSession, "scrap\t0\t1", false);
-        Check(!ChangedSession.HasLootRule, "resolver cannot retain stale staging authority after clear");
+        Check(!ChangedSession.HasLootRule && ChangedWorld.LootRetainedSessionCount == 0,
+            "resolver cannot retain stale staging authority or reservation after clear");
         ChangedWorld.Retire(ChangedSession);
     }
 
@@ -226,7 +231,9 @@ internal static class LootRulePolicyTests
         ManagedBoundaryValidation(); ManagedBoundaryOwnership();
         ProfileValidation(); ProfilePublication(); ProfileReplacement();
         ItemValidation();
-        Console.WriteLine("[CarbonLuau:LootPolicy] PASS immutable descriptor, managed declaration boundary, publication, conflicts, source gating and teardown model; no host mutation");
+        RegistryPublication(); RegistryRollback(); RegistryRetention(); RegistryCorruption(); RegistryStaleRetirement();
+        RegistryCandidateIdentity();
+        Console.WriteLine("[CarbonLuau:LootPolicy] PASS immutable descriptors, bounded per-prefab registry, atomic publication, ownership, checkpoint retention, managed boundary and teardown model; no host mutation");
     }
     private static void Nonmatching(Fixture Value, string Prefab, Runtime.FacadeSession Incumbent, Runtime.LootDropRule Snapshot)
     {
@@ -236,8 +243,9 @@ internal static class LootRulePolicyTests
     }
     private static void ProfileValidation()
     {
-        Check(Runtime.LootRulePolicy.GlobalRules == 1 && Runtime.LootRulePolicy.DomainRules == 1,
-            "additional prefab preserves one global rule and one rule per domain");
+        Check(Runtime.LootRulePolicy.GlobalRules == 2 && Runtime.LootRulePolicy.DomainRules == 2 &&
+            Runtime.LootRulePolicy.RetainedRuleSessions == 3 && Runtime.LootRulePolicy.RetainedRules == 6,
+            "two qualified keys with one owner per key and bounded retained candidates");
         Check(Runtime.LootRulePolicy.Prefab == "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab",
             "backward-compatible first prefab constant remains unchanged");
         var Value = new Fixture();
@@ -265,8 +273,8 @@ internal static class LootRulePolicyTests
         var Input = Drops(4); var Session = Value.Session();
         Session.StageLootRule(Barrel2, Input); Input[0] = new Runtime.LootDropEntry("wood", 99, 99);
         int Before = Value.Lookups;
-        Reject(() => Session.StageLootRule(Runtime.LootRulePolicy.Prefab, Drops()), "different prefab still consumes same domain slot");
-        Check(Value.Lookups == Before, "different-prefab duplicate rejected before definition resolver");
+        Reject(() => Session.StageLootRule(Barrel2, Drops()), "same prefab duplicate is rejected deterministically");
+        Check(Value.Lookups == Before, "same-prefab duplicate rejected before definition resolver");
         Value.None(); Value.World.Commit(Session);
         var Snapshot = Value.Selected(Barrel2, Session);
         Check(Snapshot.Entry(0).Item == "scrap" && Snapshot.Entry(0).Max == 4 && Snapshot.MaximumTotal == 4,
@@ -314,21 +322,23 @@ internal static class LootRulePolicyTests
         Nonmatching(Value, Barrel2, Root, Original); Value.Registrar.Fail = false;
         Value.World.Commit(Candidate); Value.Registrar.ObservePublication = null; Value.World.Retire(Root);
         var Second = Value.Selected(Barrel2, Candidate); Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Candidate, Second);
-        var Foreign = Value.Session(); Stage(Foreign); int Calls = Value.Registrar.Calls;
-        Reject(() => Value.World.PreflightLootRules(null, Foreign), "different prefab foreign owner exceeds global capacity");
-        Reject(() => Value.World.CommitAddon(null, Foreign), "different prefab root/addon collision");
-        Check(Value.Registrar.Calls == Calls && Object.ReferenceEquals(Value.Selected(Barrel2, Candidate), Second),
-            "foreign profile conflicts before registrar publication");
-        Value.World.Retire(Candidate); Value.World.CommitAddon(null, Foreign);
+        var Foreign = Value.Session(); Stage(Foreign);
+        Value.World.PreflightLootRules(null, Foreign); Value.World.CommitAddon(null, Foreign);
+        Check(Object.ReferenceEquals(Value.Selected(Barrel2, Candidate), Second) && Value.Selected(Foreign) != null,
+            "disjoint root and addon owners publish independent exact profiles");
+        Value.World.Retire(Candidate);
         var Next = Value.Session(); Next.StageLootRule(Barrel2, Drops(8));
         Value.World.PreflightLootRules(Foreign, Next); Value.World.CommitAddon(Foreign, Next);
         Check(Foreign.Disposed && !Foreign.HasLootRule && Value.Selected(Barrel2, Next).Entry(0).Max == 8,
             "exact outgoing addon may switch profiles atomically");
         Nonmatching(Value, Runtime.LootRulePolicy.Prefab, Next, Value.Selected(Barrel2, Next));
-        var Incoming = Value.Session(); Stage(Incoming); Calls = Value.Registrar.Calls;
-        Reject(() => Value.World.Commit(Incoming), "different prefab addon/root collision");
-        Reject(() => Value.World.CommitAddon(null, Incoming), "different prefab addon/addon collision");
-        Check(Value.Registrar.Calls == Calls, "cross-profile addon conflicts have no registrar effect");
+        var Incoming = Value.Session(); Stage(Incoming); Value.World.Commit(Incoming);
+        Check(Value.Selected(Incoming) != null && Value.Selected(Barrel2, Next) != null,
+            "disjoint addon and root profiles remain independently selectable");
+        var Conflict = Value.Session(); Conflict.StageLootRule(Barrel2, Drops()); int Calls = Value.Registrar.Calls;
+        Reject(() => Value.World.CommitAddon(null, Conflict), "same-profile addon conflict");
+        Check(Value.Registrar.Calls == Calls, "same-profile conflict has no registrar effect");
+        Value.World.Retire(Conflict);
         Value.World.Retire(Incoming); Value.World.Retire(Next); Value.None();
         Check(Original.Prefab == Runtime.LootRulePolicy.Prefab && Second.Prefab == Barrel2 && Second.Entry(0).Max == 7,
             "captured outgoing descriptors never retarget between profiles");
@@ -351,6 +361,224 @@ internal static class LootRulePolicyTests
                 "wood maximum retains existing cardinality and outgoing ownership");
             Value.World.Retire(Next); Value.None();
         }
+    }
+
+    private static SortedDictionary<string, Runtime.LootDropRule> RuleMap(Runtime.FacadeSession Session)
+    {
+        // Test-only trusted-state corruption and checkpoint identity inspection.
+        return (SortedDictionary<string, Runtime.LootDropRule>)typeof(Runtime.FacadeSession)
+            .GetField("LootRules", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Session);
+    }
+    private static void StageBoth(Runtime.FacadeSession Session, int First = 3, int Second = 5)
+    {
+        Stage(Session, Drops(First)); Session.StageLootRule(Barrel2, Drops(Second));
+    }
+    private static void RegistryPublication()
+    {
+        var Value = new Fixture(); var Root = Value.Session();
+        var FirstInput = Drops(3); var SecondInput = new[] { new Runtime.LootDropEntry("wood", 50, 100) };
+        Root.StageLootRule(Runtime.LootRulePolicy.Prefab, FirstInput); Root.StageLootRule(Barrel2, SecondInput);
+        FirstInput[0] = new Runtime.LootDropEntry("stones", 0, 0);
+        SecondInput[0] = new Runtime.LootDropEntry("stones", 0, 0);
+        Check(Value.World.LootRetainedSessionCount == 1 && Root.CandidateLootMask() == 3,
+            "two copied rules retain one candidate owner");
+        int Lookups = Value.Lookups;
+        Reject(() => Stage(Root), "duplicate first key");
+        Reject(() => Root.StageLootRule(Barrel2, Drops()), "duplicate second key");
+        Check(Value.Lookups == Lookups && Root.CandidateLootMask() == 3, "duplicates perform no resolver work or mutation");
+        Value.None(); Value.World.Commit(Root);
+        var First = Value.Selected(Root); var Second = Value.Selected(Barrel2, Root);
+        Check(First.Entry(0).Max == 3 && Second.Entry(0).Item == "wood" && Second.Entry(0).Max == 100,
+            "caller edits cannot change either published descriptor");
+
+        var Both = Value.Session(); StageBoth(Both, 7, 9);
+        Value.Registrar.ObservePublication = () => {
+            Check(Object.ReferenceEquals(Value.Selected(Root), First) &&
+                Object.ReferenceEquals(Value.Selected(Barrel2, Root), Second) &&
+                Both.PublishedLootRule(Runtime.LootRulePolicy.Prefab) == null && Both.PublishedLootRule(Barrel2) == null,
+                "registrar observes complete previous set and no provisional candidate visibility");
+        };
+        Value.Registrar.AllocationFault = true;
+        try { Value.World.Commit(Both); throw new Exception("dual registrar publication must fail"); }
+        catch (OutOfMemoryException) { }
+        Check(Root.Active && !Both.Active && Value.World.LootRetainedSessionCount == 2 &&
+            Object.ReferenceEquals(Value.Selected(Root), First) && Object.ReferenceEquals(Value.Selected(Barrel2, Root), Second),
+            "allocation-style registrar failure preserves both old descriptors and candidate cleanup ownership");
+        Value.Registrar.AllocationFault = false; Value.World.Commit(Both); Value.Registrar.ObservePublication = null;
+        Value.World.Retire(Root);
+        Check(Value.Selected(Both).Entry(0).Max == 7 && Value.Selected(Barrel2, Both).Entry(0).Max == 9,
+            "same owner replaces both keys as one complete published set");
+        var OnlyFirst = Value.Session(); Stage(OnlyFirst, Drops(11));
+        Value.World.Commit(OnlyFirst); Value.World.Retire(Both);
+        Nonmatching(Value, Barrel2, OnlyFirst, Value.Selected(OnlyFirst));
+        Check(Value.World.LootRetainedSessionCount == 1, "omitted second key withdraws only outgoing owner demand");
+
+        var Addon = Value.Session(); Addon.StageLootRule(Barrel2, Drops(13)); Value.World.CommitAddon(null, Addon);
+        var RootSnapshot = Value.Selected(OnlyFirst); var AddonSnapshot = Value.Selected(Barrel2, Addon);
+        var Conflict = Value.Session(); StageBoth(Conflict, 17, 19); int Calls = Value.Registrar.Calls;
+        Reject(() => Value.World.PreflightLootRules(OnlyFirst, Conflict), "full root candidate overlaps foreign second owner");
+        Reject(() => Value.World.Commit(Conflict), "full root candidate rechecks foreign second conflict");
+        Check(Value.Registrar.Calls == Calls && OnlyFirst.Active && Addon.Active && !Conflict.Active &&
+            Object.ReferenceEquals(Value.Selected(OnlyFirst), RootSnapshot) &&
+            Object.ReferenceEquals(Value.Selected(Barrel2, Addon), AddonSnapshot),
+            "one conflicting key publishes neither candidate key and disturbs neither independent owner");
+        Value.World.Retire(Conflict);
+        var Impostor = new Runtime.FacadeSession(Value.World, Addon.VmGenerationId, Addon.DomainLifetimeId, 32);
+        var AddonNext = Value.Session(); AddonNext.StageLootRule(Barrel2, Drops(23));
+        Reject(() => Value.World.PreflightLootRules(Impostor, AddonNext), "same numeric identity cannot exclude real foreign owner");
+        Calls = Value.Registrar.Calls;
+        Value.World.Retire(Impostor);
+        var Stale = new Runtime.FacadeSession(Value.World, Addon.VmGenerationId - 1, Addon.DomainLifetimeId, 32);
+        Value.World.Retire(Stale);
+        Check(Impostor.Disposed && Stale.Disposed && Addon.Active && !Addon.Disposed &&
+            Value.Registrar.Calls == Calls && Value.World.LootRetainedSessionCount == 3 &&
+            Object.ReferenceEquals(Value.Selected(Barrel2, Addon), AddonSnapshot),
+            "stale generation and numeric aliases retire only themselves without withdrawing real addon or its charge");
+        Value.World.CommitAddon(Addon, AddonNext);
+        Check(Addon.Disposed && !Addon.HasLootRule && Value.Selected(Barrel2, AddonNext).Entry(0).Max == 23 &&
+            Object.ReferenceEquals(Value.Selected(OnlyFirst), RootSnapshot), "addon replacement preserves disjoint root owner");
+        Value.World.Retire(OnlyFirst);
+        Check(!OnlyFirst.HasLootRule && Object.ReferenceEquals(Value.Selected(Barrel2, AddonNext),
+            AddonNext.PublishedLootRule(Barrel2)), "root retirement removes only root-owned key");
+        var AddonBoth = Value.Session(); StageBoth(AddonBoth, 29, 31);
+        Value.World.CommitAddon(AddonNext, AddonBoth);
+        Check(AddonNext.Disposed && Value.Selected(AddonBoth).Entry(0).Max == 29 &&
+            Value.Selected(Barrel2, AddonBoth).Entry(0).Max == 31, "addon may own both keys after foreign retirement");
+        var AddonSubset = Value.Session(); AddonSubset.StageLootRule(Barrel2, Drops(37));
+        Value.World.CommitAddon(AddonBoth, AddonSubset);
+        Nonmatching(Value, Runtime.LootRulePolicy.Prefab, AddonSubset, Value.Selected(Barrel2, AddonSubset));
+        Reject(() => Stage(AddonBoth), "retired dual owner cannot restage either key");
+        Value.World.Retire(AddonSubset); Value.None();
+        Check(Value.World.LootRetainedSessionCount == 0 && First.Entry(0).Max == 3 && Second.Entry(0).Max == 100,
+            "independent withdrawal converges while previously captured descriptors stay immutable");
+    }
+    private static void RegistryRollback()
+    {
+        var Value = new Fixture(); var Session = Value.Session();
+        Publication(Session, 10); Stage(Session, Drops(3)); var First = RuleMap(Session)[Runtime.LootRulePolicy.Prefab];
+        Publication(Session, 10); Session.StageLootRule(Barrel2, Drops(5)); Publication(Session, 12);
+        Check(Session.CandidateLootMask() == 1 && Object.ReferenceEquals(RuleMap(Session)[Runtime.LootRulePolicy.Prefab], First) &&
+            Value.World.LootRetainedSessionCount == 1, "caught nested second-key failure restores exact parent subset and charge");
+        Publication(Session, 10); Session.StageLootRule(Barrel2, Drops(7)); Publication(Session, 11);
+        Check(Session.CandidateLootMask() == 3, "nested success merges second key into parent staged set");
+        Publication(Session, 12);
+        Check(!Session.HasLootRule && Value.World.LootRetainedSessionCount == 0,
+            "outer failure removes both nested-success descriptors and releases retained owner slot");
+
+        var Maximum = new Runtime.LootDropEntry[8];
+        for (int Index = 0; Index < Maximum.Length; Index++) Maximum[Index] = new Runtime.LootDropEntry("wood", 1000, 1000);
+        Session.StageLootRule(Runtime.LootRulePolicy.Prefab, Maximum); Session.StageLootRule(Barrel2, Maximum);
+        var FirstMaximum = RuleMap(Session)[Runtime.LootRulePolicy.Prefab]; var SecondMaximum = RuleMap(Session)[Barrel2];
+        Check(FirstMaximum.Count == 8 && SecondMaximum.Count == 8 && FirstMaximum.MaximumTotal == 8000 &&
+            SecondMaximum.MaximumTotal == 8000, "maximum combined payload is two immutable eight-entry descriptors");
+        for (int Index = 0; Index < 64; Index++) Publication(Session, 10);
+        Reject(() => Publication(Session, 10), "checkpoint hard depth remains 64 with two rules");
+        var Checkpoints = (System.Collections.IEnumerable)typeof(Runtime.FacadeSession)
+            .GetField("Publications", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Session);
+        int Count = 0;
+        foreach (object Checkpoint in Checkpoints) {
+            var Snapshot = (SortedDictionary<string, Runtime.LootDropRule>)Checkpoint.GetType().GetField("LootRules").GetValue(Checkpoint);
+            Check(Snapshot.Count == 2 && Object.ReferenceEquals(Snapshot[Runtime.LootRulePolicy.Prefab], FirstMaximum) &&
+                Object.ReferenceEquals(Snapshot[Barrel2], SecondMaximum), "every checkpoint shares exact immutable descriptor identities");
+            Count++;
+        }
+        Check(Count == 64 && Value.World.LootRetainedSessionCount == 1, "checkpoint snapshots do not multiply charged owners or descriptor copies");
+        for (int Index = 0; Index < 64; Index++) Publication(Session, 12);
+        Check(Session.CandidateLootMask() == 3 && Object.ReferenceEquals(RuleMap(Session)[Runtime.LootRulePolicy.Prefab], FirstMaximum) &&
+            Object.ReferenceEquals(RuleMap(Session)[Barrel2], SecondMaximum), "all 64 rollbacks preserve original complete root initialization set");
+        Value.World.Retire(Session);
+        Check(Value.World.LootRetainedSessionCount == 0, "maximum checkpoint retirement releases all registry authority");
+    }
+    private static void RegistryRetention()
+    {
+        var Value = new Fixture(); var First = Value.Session(); var Second = Value.Session(); var Third = Value.Session();
+        StageBoth(First); StageBoth(Second); StageBoth(Third);
+        Check(Value.World.LootRetainedSessionCount == 3, "three retained initialization sessions own at most six descriptors");
+        var Beyond = Value.Session(); int Lookups = Value.Lookups;
+        Reject(() => Stage(Beyond), "fourth rule-retaining candidate rejected before resolution");
+        Check(Value.Lookups == Lookups && !Beyond.HasLootRule && Value.World.LootRetainedSessionCount == 3,
+            "retained capacity rejection retains nothing and performs no item lookup");
+        Value.World.Retire(Third); Value.MissingItem = true;
+        Reject(() => Stage(Beyond), "failed resolver validation releases newly reserved owner slot");
+        Check(!Beyond.HasLootRule && Value.World.LootRetainedSessionCount == 2, "failed first stage leaves no reservation leak");
+        Value.MissingItem = false; Publication(Beyond, 10); StageBoth(Beyond); Publication(Beyond, 12);
+        Check(!Beyond.HasLootRule && Value.World.LootRetainedSessionCount == 2, "two-rule rollback releases reserved slot");
+        Stage(Beyond); Value.MissingItem = true;
+        Reject(() => Beyond.StageLootRule(Barrel2, Drops()), "failed second stage preserves first-key owner reservation");
+        Check(Beyond.CandidateLootMask() == 1 && Value.World.LootRetainedSessionCount == 3,
+            "failed second stage neither discards valid first descriptor nor double-charges owner");
+        Beyond.Clear(); Check(Value.World.LootRetainedSessionCount == 2, "Clear releases retained staging owner exactly once");
+        Reject(() => Stage(Beyond), "cleared reservation owner remains stale");
+        Value.World.Retire(Beyond); Value.World.Retire(First); Value.World.Retire(Second);
+        Check(Value.World.LootRetainedSessionCount == 0, "failed-stage, rollback, Clear and retirement converge to zero charge");
+    }
+    private static void RegistryCorruption()
+    {
+        var Value = new Fixture(); var Root = Value.Session(); Stage(Root); Value.World.Commit(Root);
+        var First = Value.Selected(Root);
+        var Addon = Value.Session(); Value.World.CommitAddon(null, Addon);
+        Value.World.ReserveLootSession(Addon); RuleMap(Addon).Add(Runtime.LootRulePolicy.Prefab, First);
+        Value.None();
+        var Candidate = Value.Session(); Candidate.StageLootRule(Barrel2, Drops());
+        Reject(() => Value.World.PreflightLootRules(null, Candidate), "equivocal committed first key fails disjoint candidate preflight");
+        RuleMap(Addon).Clear(); Value.World.ReleaseLootSession(Addon);
+        Check(Object.ReferenceEquals(Value.Selected(Root), First),
+            "trusted corruption removal restores exact original selection without fabricated winner");
+        Nonmatching(Value, Barrel2, Root, First);
+        var Rules = RuleMap(Candidate); var Original = Rules[Barrel2];
+        Rules[Barrel2] = new Runtime.LootDropRule(Runtime.LootRulePolicy.Prefab, Drops(), 2);
+        Reject(() => Candidate.CandidateLootMask(), "candidate key/descriptor mismatch");
+        Reject(() => Value.World.PreflightLootRules(Root, Candidate), "invalid complete candidate mask rejected before publication");
+        Rules[Barrel2] = Original;
+        RuleMap(Root)[Runtime.LootRulePolicy.Prefab] = null; Value.None();
+        Reject(() => Value.World.PreflightLootRules(null, Candidate), "invalid committed mask rejects otherwise matching candidate");
+        RuleMap(Root)[Runtime.LootRulePolicy.Prefab] = First;
+        Value.World.Retire(Candidate); Value.World.Retire(Addon); Value.World.Retire(Root);
+        Check(Value.World.LootRetainedSessionCount == 0, "test-only corruption fixtures restore charge and cleanup exact owners");
+    }
+    private static void RegistryStaleRetirement()
+    {
+        var Value = new Fixture(); var Addon = Value.Session(); StageBoth(Addon, 41, 43); Value.World.CommitAddon(null, Addon);
+        var First = Value.Selected(Addon); var Second = Value.Selected(Barrel2, Addon);
+        var Alias = new Runtime.FacadeSession(Value.World, Addon.VmGenerationId, Addon.DomainLifetimeId, 32);
+        StageBoth(Alias, 47, 53);
+        var Candidate = Value.Session(); StageBoth(Candidate, 59, 61);
+        int Calls = Value.Registrar.Calls;
+        Check(Value.World.LootRetainedSessionCount == 3, "real owner, stale alias staging and pending candidate have separate charges");
+        Reject(() => Value.World.CommitAddon(Alias, null), "numeric alias cannot withdraw active addon");
+        var Stale = new Runtime.FacadeSession(Value.World, Addon.VmGenerationId - 1, Addon.DomainLifetimeId, 32);
+        Reject(() => Value.World.CommitAddon(Stale, null), "rule-free stale generation cannot withdraw active addon");
+        Value.World.Retire(Alias); Value.World.Retire(Stale);
+        Check(Alias.Disposed && !Alias.HasLootRule && Stale.Disposed && Addon.Active && !Addon.Disposed &&
+            Value.World.LootRetainedSessionCount == 2 && Value.Registrar.Calls == Calls &&
+            Object.ReferenceEquals(Value.Selected(Addon), First) && Object.ReferenceEquals(Value.Selected(Barrel2, Addon), Second) &&
+            Candidate.CandidateLootMask() == 3, "alias retirement clears only alias staging and preserves both real owner rules and pending candidate");
+        Value.World.Retire(Candidate); Value.World.Retire(Addon); Value.None();
+        Check(Value.World.LootRetainedSessionCount == 0, "exact-owner withdrawal releases final charge after stale aliases are cleared");
+    }
+    private static void RegistryCandidateIdentity()
+    {
+        var Value = new Fixture(); var Previous = Value.Session(); Stage(Previous, Drops(3)); Value.World.CommitAddon(null, Previous);
+        var Foreign = Value.Session(); Foreign.StageLootRule(Barrel2, Drops(5)); Value.World.CommitAddon(null, Foreign);
+        var First = Value.Selected(Previous); var Second = Value.Selected(Barrel2, Foreign);
+        var Collision = new Runtime.FacadeSession(Value.World, Foreign.VmGenerationId, Foreign.DomainLifetimeId, 32);
+        Stage(Collision, Drops(7)); int Calls = Value.Registrar.Calls;
+        // Prefab preflight alone permits this disjoint resulting set; numeric
+        // candidate identity must reject before registrar publication or removal.
+        Value.World.PreflightLootRules(Previous, Collision);
+        Reject(() => Value.World.CommitAddon(Previous, Collision), "candidate ID belongs to a distinct committed foreign addon");
+        Check(Value.Registrar.Calls == Calls && Previous.Active && !Previous.Disposed && Foreign.Active && !Foreign.Disposed &&
+            !Collision.Active && Collision.HasLootRule && Value.World.LootRetainedSessionCount == 3 &&
+            Object.ReferenceEquals(Value.Selected(Previous), First) && Object.ReferenceEquals(Value.Selected(Barrel2, Foreign), Second),
+            "candidate domain collision has no partial publication, outgoing retirement, foreign drift or reservation loss");
+        Value.World.Retire(Collision);
+        var SameOutgoingId = new Runtime.FacadeSession(Value.World, Previous.VmGenerationId, Previous.DomainLifetimeId, 32);
+        Stage(SameOutgoingId, Drops(11)); Value.World.CommitAddon(Previous, SameOutgoingId);
+        Check(Previous.Disposed && !Previous.HasLootRule && Value.Selected(SameOutgoingId).Entry(0).Max == 11 &&
+            Object.ReferenceEquals(Value.Selected(Barrel2, Foreign), Second) && Value.World.LootRetainedSessionCount == 2,
+            "managed same-outgoing-ID replacement preserves exact reference authority and disjoint foreign owner");
+        Value.World.Retire(SameOutgoingId); Value.World.Retire(Foreign); Value.None();
+        Check(Value.World.LootRetainedSessionCount == 0, "candidate identity controls release all staging and exact-owner charges");
     }
 
     private static void Validation()
@@ -408,7 +636,7 @@ internal static class LootRulePolicyTests
         var Input = Drops(4); Session.StageLootRule(Runtime.LootRulePolicy.Prefab, Input);
         Input[0] = new Runtime.LootDropEntry("wood", 99, 99);
         Publication(Session, 10);
-        Reject(() => Session.StageLootRule(Runtime.LootRulePolicy.Prefab, Drops()), "one staged rule per domain");
+        Reject(() => Session.StageLootRule(Runtime.LootRulePolicy.Prefab, Drops()), "one staged rule per prefab per domain");
         Publication(Session, 12); Publication(Session, 11);
         Value.None(); Value.World.PreflightLootRules(null, Session); Value.World.Commit(Session);
         var Selected = Value.Selected(Session); Check(Selected.Entry(0).Max == 4, "staged array copied immediately");
@@ -456,8 +684,10 @@ internal static class LootRulePolicyTests
         Value.World.Retire(Replacement); Value.World.CommitAddon(null, Addon); Value.Selected(Addon);
         var OtherAddon = Value.Session(); Stage(OtherAddon);
         Reject(() => Value.World.CommitAddon(null, OtherAddon), "addon/addon collision");
+        Value.World.Retire(OtherAddon);
         var IncomingRoot = Value.Session(); Stage(IncomingRoot);
         Reject(() => Value.World.Commit(IncomingRoot), "addon/root collision");
+        Value.World.Retire(IncomingRoot);
         var NextAddon = Value.Session(); Stage(NextAddon, Drops(6));
         var Impostor = new Runtime.FacadeSession(Value.World, Addon.VmGenerationId, Addon.DomainLifetimeId, 32);
         Reject(() => Value.World.PreflightLootRules(Impostor, NextAddon), "numeric domain identity cannot exclude exact owner");
@@ -465,6 +695,8 @@ internal static class LootRulePolicyTests
         Value.World.PreflightLootRules(Addon, NextAddon); Value.World.CommitAddon(Addon, NextAddon);
         Check(Addon.Disposed && !Addon.HasLootRule && Value.Selected(NextAddon).Entry(0).Max == 6, "addon replacement clears previous mapping");
         Value.World.Retire(NextAddon); Value.None();
+        IncomingRoot = Value.Session(); Stage(IncomingRoot);
+        OtherAddon = Value.Session(); Stage(OtherAddon);
         Value.World.PreflightLootRules(null, IncomingRoot);
         Value.World.CommitAddon(null, OtherAddon);
         Reject(() => Value.World.Commit(IncomingRoot), "commit rechecks state changed since preflight");
@@ -503,7 +735,9 @@ internal static class LootRulePolicyTests
         Changed.LootAvailable = () => true;
         var ChangedSession = new Runtime.FacadeSession(Changed, 9, 10, 32); Publication(ChangedSession, 10);
         Reject(() => ChangedSession.StageLootRule(Runtime.LootRulePolicy.Prefab, Drops()), "source changed during validation");
-        Check(!ChangedSession.HasLootRule, "failed source revalidation stages nothing"); Publication(ChangedSession, 12); Changed.Retire(ChangedSession);
+        Check(!ChangedSession.HasLootRule && Changed.LootRetainedSessionCount == 0,
+            "failed source revalidation stages nothing and releases reserved owner");
+        Publication(ChangedSession, 12); Changed.Retire(ChangedSession);
     }
     private static void BoundsAndTeardown()
     {

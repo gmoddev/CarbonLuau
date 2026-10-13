@@ -24,6 +24,7 @@ Parser.add_argument("--entity-death", action="store_true")
 Parser.add_argument("--barrel2", action="store_true")
 Parser.add_argument("--loot-items", action="store_true")
 Parser.add_argument("--loot-item-probe-only", action="store_true")
+Parser.add_argument("--loot-registry", action="store_true")
 
 
 def Hash(Path):
@@ -36,6 +37,10 @@ def Hash(Path):
 
 def Main():
     Args = Parser.parse_args()
+    if Args.loot_registry and Args.loot_item_probe_only:
+        raise RuntimeError("D6 registry requires full public qualification")
+    if Args.loot_registry:
+        Args.loot_items = True
     if Args.loot_item_probe_only and not Args.loot_items:
         raise RuntimeError("D5 probe requires LootItems qualification selection")
     if Args.loot_items:
@@ -83,6 +88,8 @@ def Main():
             raise RuntimeError("D5 fixture selection mismatch")
         if ("CarbonLuau.LootItemProbeFixtures.cs" in Names) != Args.loot_item_probe_only:
             raise RuntimeError("D5 probe selection mismatch")
+        if ("CarbonLuau.LootRegistryFixtures.cs" in Names) != Args.loot_registry:
+            raise RuntimeError("D6 registry selection mismatch")
     InputHashes = {}
     for Target, Source, Name in Inputs:
         if Source == Target.resolve():
@@ -145,6 +152,8 @@ def Main():
             raise RuntimeError("Barrel-2 physical matrix receipt missing: " + str(Log))
         if Args.loot_items and not Args.loot_item_probe_only and "[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix" not in Content:
             raise RuntimeError("D5 physical item matrix receipt missing: " + str(Log))
+        if Args.loot_registry and "[CarbonLuau:LootFixture] PASS D6 bounded per-prefab registry" not in Content:
+            raise RuntimeError("D6 registry matrix receipt missing: " + str(Log))
         if Args.entity_death and ("[CarbonLuau:EntityDiedFixture] PASS bounded public transport and actual RPC source" not in Content or
                 "[CarbonLuau:EntityMeleeFixture] PASS actual RPC source/terminal proof and cleanup" not in Content or
                 "[CarbonLuau:EntityMeleeFixture] FAIL" in Content or "[CarbonLuau:EntityMeleeFixture] CLEANUP FAIL" in Content):

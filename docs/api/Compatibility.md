@@ -16,7 +16,16 @@ Post-release [Gameplay D5](../GameplayD5-Validation.md) adds only `wood`, with
 the exact pinned definition and ordinary Item/world ownership path. Scrap and
 metal.fragments, both D4 prefab paths, one global/domain rule and all existing
 entry/amount/frame/retention limits remain. Published v0.7.0 includes neither
-wood nor barrel-2. A future per-prefab registry remains separately scoped D6.
+wood nor barrel-2. The historical D4/D5 one-global-rule scope remains unchanged.
+
+[Gameplay D6](../GameplayD6-Validation.md) qualifies one active owner per prefab,
+two rules globally and per domain. Different domains can own disjoint targets;
+candidate sets publish together and omission withdraws only the outgoing owner's
+omitted key. Duplicate registration/same-prefab conflicts reject deterministically.
+All per-rule and shared physical budgets remain; managed staging is bounded at
+three rule-bearing sessions, six descriptors and 390 snapshot/map references.
+The one in-flight frame's borrowed rule and validation temporaries are separately
+bounded. No new item/prefab/mode or version identity is introduced.
 
 Earlier published package v0.5.0 uses API `0.5.0-experimental`.
 The development API identity is `CarbonLuau 0.7.0-experimental`, status `Experimental`;

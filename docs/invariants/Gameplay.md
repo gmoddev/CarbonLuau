@@ -179,3 +179,31 @@ shared unchanged. Independent per-prefab ownership is the separately deferred
 prefabs, modes, generic transactions and attribution are outside D5. Published
 v0.7.0 tag/assets and package/API/ABI/provider/schema/Luau identities are unchanged.
 
+## Gameplay D6 — bounded per-prefab registry
+
+The separately authorized [D6 record](../GameplayD6-Validation.md) supersedes
+D4/D5's historical one-global-rule publication limit. The two qualified prefab
+keys each have at most one exact active owner; there are at most two committed
+rules globally and two distinct rules per domain. Duplicate declarations reject
+before item lookup, and foreign conflicts occur only on overlapping keys.
+
+Publication replaces an owner's complete staged set atomically. Omission withdraws
+that owner's key; failed publication retains its previous complete set. Retirement
+requires the exact outgoing session reference and cannot withdraw another owner.
+Caught module rollback restores the earlier staged set; fatal VM retirement
+invalidates all old owners. Physical payouts are neither replayed nor compensated.
+
+At most three rule-bearing facade sessions retain at most six immutable descriptor
+identities / 48 entries, including candidates and outgoing lifetimes. Existing
+64-level checkpoints share these identities: current and checkpoint maps in the
+three charged sessions retain at most 195 maps / 390 dictionary entries. Empty
+maps in rule-free facades use the existing domain/publication bounds. One physical frame may separately borrow
+one descriptor, and serialized validation may temporarily retain one descriptor.
+These object/payload bounds do not assert a CLR allocator or process RSS limit.
+
+The two targets share eight admitted occurrences per actual Unity frame and one
+in-flight frame. Existing per-rule entry/amount/transport/table limits, eight-world
+occurrence limit, 129-session inspection bound, exact prefab/item allowlists,
+three interception targets and D13/D20/D23/I12 contracts remain unchanged.
+No release, tag, new item, prefab, mode, attribution or gameplay API follows.
+

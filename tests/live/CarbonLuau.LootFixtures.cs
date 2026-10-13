@@ -30,6 +30,9 @@ namespace Carbon.Plugins
         private bool LootFixturePublic;
         private bool LootFixtureBarrel2;
         private bool LootFixtureItems, LootFixtureItemProbeOnly, LootFixtureItemProbeDone;
+        private bool LootFixtureRegistry, LootFixtureRegistryDone;
+        private string LootFixtureSecondPrefab = LootRulePolicy.SecondPrefab;
+        private LootDropEntry[] LootFixtureSecondEntries;
         private string LootFixturePrefab = LootRulePolicy.Prefab;
         private int LootFixtureBudgetFrame = -1, LootFixtureBudgetWaits;
         private bool LootFixtureModuleRollback;
@@ -45,6 +48,10 @@ namespace Carbon.Plugins
         partial void SelectLootItemProbe(ref bool ProbeOnly);
         partial void RunLootItemProbe();
         partial void RunLootItemCases();
+        partial void SelectLootRegistryQualification(ref bool Registry);
+        partial void PopulateLootRegistryModules(ScriptSnapshot Snapshot);
+        partial void RunLootRegistryStep();
+        partial void ObserveLootRegistryFrame(LootPayoutFrame Frame);
         private int LootFixtureStep;
         private bool LootFixtureInitialPayoutDone;
         private int LootFixtureEventWaits;
@@ -91,6 +98,7 @@ namespace Carbon.Plugins
         partial void LootFixtureCompleted(LootPayoutFrame Frame, bool Success)
         {
             LootFixtureReceipts++; if (Success) LootFixtureSuccesses++;
+            ObserveLootRegistryFrame(Frame);
             BarrelResearchCheck(ReferenceEquals(Frame.Source, BarrelResearchCurrent.Source), "private original source receipt");
             int Worlds = 0;
             for (int Index = 0; Index < Frame.Rule.Count; Index++) {
@@ -126,6 +134,7 @@ namespace Carbon.Plugins
                     EntityStartupQualified && LootAvailable(), "isolated qualified private source ready");
                 SelectPublicLootQualification(ref LootFixturePublic);
                 SelectLootItemQualification(ref LootFixtureItems);
+                SelectLootRegistryQualification(ref LootFixtureRegistry);
                 SelectLootItemProbe(ref LootFixtureItemProbeOnly);
                 if (LootFixtureBarrel2) {
                     BarrelResearchCheck(LootFixturePublic, "D4 requires the actual public declaration fixture");
@@ -141,11 +150,14 @@ namespace Carbon.Plugins
                 PrepareEntityDeathFixture();
                 if (Addons != null) { Addons.Dispose(); Addons = null; }
                 Host.Dispose();
+                if (LootFixtureRegistry) BarrelResearchCheck(Gameplay.LootRetainedSessionCount == 0,
+                    "D6 old host disposal releases retained rule owners before new fixture host");
                 Host = new ScriptHost(Native, new RuntimeConfig { MaxCallbackMilliseconds = 100 }, () => {
                     var Snapshot = new ScriptSnapshot { EntryName = "init.luau", EntrySource = (LootFixtureModuleRollback ? "" : LootFixtureDeclaration()) + LootFixtureSource };
                     Snapshot.Modules.Add("state", "return {}");
                     Snapshot.Modules.Add("failed", "error('failed publication fixture')");
                     Snapshot.Modules.Add("stagedfailed", LootFixtureDeclaration() + "error('failed staged loot module')");
+                    PopulateLootRegistryModules(Snapshot);
                     return Snapshot;
                 }, Gameplay);
                 LootFixtureCreateMethod = typeof(ItemManager).GetMethod("Create", BindingFlags.Static | BindingFlags.Public,
@@ -187,6 +199,9 @@ namespace Carbon.Plugins
         {
             try {
                 int Needed = LootFixtureStep == 25 ? 6 : LootFixtureStep == 24 ? 5 : LootFixtureStep == 18 ? 2 : 1;
+                if (LootFixtureRegistry && LootFixtureStep >= 26)
+                    Needed = LootFixtureStep == 27 || LootFixtureStep == 33 ? 8 : LootFixtureStep >= 38 && LootFixtureStep <= 40 ? 4 :
+                        LootFixtureStep == 43 ? 3 : LootFixtureStep == 28 || LootFixtureStep == 29 || LootFixtureStep == 31 ? 1 : 2;
                 if (LootFixtureBarrel2 && (LootFixtureBudgetFrame == Time.frameCount ||
                     LootFrameNumber == Time.frameCount && LootFrameUsed > LootRulePolicy.PerFrame - Needed)) {
                     BarrelResearchCheck(++LootFixtureBudgetWaits <= 16, "D4 bounded wait for next actual frame after exhaustion");
@@ -355,29 +370,44 @@ namespace Carbon.Plugins
                 } else if (LootFixtureStep == 24 || LootFixtureStep == 25) {
                     RunLootItemCases();
                     if (LootFixtureStep == 25) {
+                        if (!LootFixtureRegistry) {
+                            LootFixtureBudgetFrame = Time.frameCount; LootFixtureBudgetWaits = 0;
+                            NextTick(FinishLootItemMatrix); return;
+                        }
+                    }
+                } else if (LootFixtureRegistry && LootFixtureStep >= 26) {
+                    RunLootRegistryStep();
+                    if (LootFixtureRegistryDone) {
                         LootFixtureBudgetFrame = Time.frameCount; LootFixtureBudgetWaits = 0;
                         NextTick(FinishLootItemMatrix); return;
                     }
+                    LootFixtureBudgetFrame = Time.frameCount;
                 }
                 LootFixtureStep++; NextTick(RunLootQualificationStep);
             } catch (Exception Error) { EndLootQualification(Error); }
         }
         private string LootFixtureDeclaration()
         {
-            if (!LootFixturePublic || LootFixtureEntries == null) return "";
+            if (!LootFixturePublic) return "";
+            return LootFixtureSingleDeclaration(LootFixturePrefab, LootFixtureEntries) +
+                LootFixtureSingleDeclaration(LootFixtureSecondPrefab, LootFixtureSecondEntries);
+        }
+        private string LootFixtureSingleDeclaration(string Prefab, LootDropEntry[] Entries)
+        {
+            if (Entries == null) return "";
             var Source = new StringBuilder("local L=game:GetService('Loot'); assert(table.isfrozen(Enum) and table.isfrozen(Enum.DropMode)); assert(type(Enum.DropMode.Replace)=='userdata' and tostring(Enum.DropMode.Replace)=='DropMode.Replace'); local D={");
-            foreach (var Entry in LootFixtureEntries)
+            foreach (var Entry in Entries)
                 Source.Append("{Item='").Append(Entry.Item).Append("',Min=").Append(Entry.Min).Append(",Max=").Append(Entry.Max).Append("},");
-            Source.Append("}; L:RegisterDropRule('").Append(LootFixturePrefab).Append("',Enum.DropMode.Replace,D); if D[1] then D[1].Item='invalid'; D[1].Min=999; D[1].Max=0 end; table.clear(D); ");
+            Source.Append("}; L:RegisterDropRule('").Append(Prefab).Append("',Enum.DropMode.Replace,D); if D[1] then D[1].Item='invalid'; D[1].Min=999; D[1].Max=0 end; table.clear(D); ");
             return Source.ToString();
         }
-        private byte[] LootFixturePackage(string Id, string Source)
+        private byte[] LootFixturePackage(string Id, string Source, bool Declaration = true, string Version = "1.0.0")
         {
             using (var Bytes = new MemoryStream()) {
                 using (var Zip = new ZipArchive(Bytes, ZipArchiveMode.Create, true)) {
                     using (var Writer = new StreamWriter(Zip.CreateEntry("addon.json").Open()))
-                        Writer.Write("{\"schema\":1,\"id\":\"" + Id + "\",\"version\":\"1.0.0\"}");
-                    using (var Writer = new StreamWriter(Zip.CreateEntry("init.luau").Open())) Writer.Write(LootFixtureDeclaration() + Source);
+                        Writer.Write("{\"schema\":1,\"id\":\"" + Id + "\",\"version\":\"" + Version + "\"}");
+                    using (var Writer = new StreamWriter(Zip.CreateEntry("init.luau").Open())) Writer.Write((Declaration ? LootFixtureDeclaration() : "") + Source);
                 }
                 return Bytes.ToArray();
             }
@@ -441,7 +471,7 @@ namespace Carbon.Plugins
                     BarrelResearchCheck(++LootFixtureBudgetWaits <= 16, "D5 bounded actual-frame continuation before B2 regressions");
                     NextTick(FinishLootItemMatrix); return;
                 }
-                Puts("[CarbonLuau:LootFixture] D5_B2_CONTINUE previous_frame=" + LootFixtureBudgetFrame +
+                Puts("[CarbonLuau:LootFixture] " + (LootFixtureRegistry ? "D6_B2_CONTINUE" : "D5_B2_CONTINUE") + " previous_frame=" + LootFixtureBudgetFrame +
                     " current_frame=" + Time.frameCount + " loot_frame=" + LootFrameNumber + " prior_used=" + LootFrameUsed +
                     " production_budget_reset=false fresh_actual_frame=true");
                 FinishLootFixtureMatrix();
@@ -580,16 +610,22 @@ namespace Carbon.Plugins
                     string[] Registered = Addons.RegisterArchive(LootFixtureProvider, LootFixturePackage("d4conflict" + RegisteredCount, "return true"));
                     BarrelResearchCheck(Registered[0] == "OK", "D4 conflicting provider snapshot registration");
                     RegisteredCount++;
-                    BarrelResearchCheck(Addons.ProcessOne() && Addons.Status(LootFixtureProvider, Registered[1])[2] == "Failed" &&
-                        ReferenceEquals(Gameplay.Active, Old) && Old.PublishedLootRule().Prefab == LootRulePolicy.SecondPrefab,
-                        "D4 same/disjoint prefab foreign publication conflicts under one global owner");
+                    bool Same = Prefab == LootRulePolicy.SecondPrefab;
+                    BarrelResearchCheck(Addons.ProcessOne() && Addons.Status(LootFixtureProvider, Registered[1])[2] == (Same ? "Failed" : "Active") &&
+                        ReferenceEquals(Gameplay.Active, Old) && Old.PublishedLootRule(LootRulePolicy.SecondPrefab).Prefab == LootRulePolicy.SecondPrefab,
+                        "same-prefab foreign conflict and disjoint owner coexistence preserve incumbent");
+                    if (!Same) {
+                        FacadeSession Owner; LootDropRule Rule;
+                        BarrelResearchCheck(Gameplay.TryLootRule(Prefab, out Owner, out Rule) && !ReferenceEquals(Owner, Old),
+                            "disjoint addon owns only its exact qualified profile");
+                    }
                 }
             } finally {
                 LootFixturePrefab = LootRulePolicy.SecondPrefab;
-                BarrelResearchCheck(Addons.UnloadProvider(LootFixtureProvider) == RegisteredCount, "D4 failed provider registrations retire");
+                BarrelResearchCheck(Addons.UnloadProvider(LootFixtureProvider) == RegisteredCount, "failed/active provider registrations retire independently");
             }
             LootFixturePayout("d4_foreign_conflicts_old_rule", 2, true);
-            Puts("[CarbonLuau:LootFixture] PASS D4 same/disjoint foreign profile conflict preserves sole committed owner");
+            Puts("[CarbonLuau:LootFixture] PASS same-prefab foreign conflict, disjoint coexistence and provider retirement preserve incumbent");
         }
         private void LootFixtureRejectedSources()
         {
@@ -702,7 +738,7 @@ namespace Carbon.Plugins
             LootFixtureModuleRollback = true;
             LootFixtureSource = "assert(not pcall(function() require('stagedfailed') end))";
             try {
-                BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK && Gameplay.Active.PublishedLootRule() == null,
+                BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK && Gameplay.Active.PublishedLootRule(LootFixturePrefab) == null,
                     "D4 caught failed nested module discards its staged public rule");
                 LootFixtureVanilla(BarrelResearchCreate("d4_caught_module_no_rule", BarrelResearchMode.Vanilla, BarrelResearchPosition, true));
             } finally {
@@ -889,7 +925,7 @@ namespace Carbon.Plugins
             bool Clean = false;
             if (Error != null) PrintError("[CarbonLuau:LootFixture] FAIL " + Error);
             try {
-                LootFixtureEntries = null; LootFixtureInjectSpawn = false; BarrelResearchVeto = false;
+                LootFixtureEntries = LootFixtureSecondEntries = null; LootFixtureInjectSpawn = false; BarrelResearchVeto = false;
                 LootFixtureCreateFault = 0;
                 LootFixtureMutateAmount = LootFixtureForceBag = false;
                 LootFixtureBagCase = null;
@@ -898,7 +934,10 @@ namespace Carbon.Plugins
                     LootFixtureFaultPatches.Unpatch(LootFixtureCreateMethod, HarmonyPatchType.All, LootFixtureFaultPatches.Id);
                 BarrelResearchCleanup();
                 LootFixtureBag = null;
+                var PreviousWorld = Gameplay;
                 ReleaseNative();
+                if (LootFixtureRegistry) BarrelResearchCheck(PreviousWorld != null && PreviousWorld.LootRetainedSessionCount == 0,
+                    "D6 native/host release converges original world rule-owner retention to zero");
                 BarrelResearchCheck(LootCurrent == null && BarrelResearchLedgerCount == 0, "private resources converge");
                 Clean = true;
             } catch (Exception Failure) { PrintError("[CarbonLuau:LootFixture] CLEANUP_FAIL " + Failure); }
@@ -912,6 +951,8 @@ namespace Carbon.Plugins
                     ? "[CarbonLuau:LootFixture] PASS D5 item probe definition/mods, fresh actual Item/world reciprocal completed-Spawn and exact cleanup; public wood remains unqualified"
                     : LootFixtureDone ? "[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix, both profiles, exact ownership/failure/budgets and cleanup"
                     : "[CarbonLuau:LootFixture] D5 incomplete matrix");
+            if (Error == null && Clean && LootFixtureRegistryDone && LootFixtureDone)
+                Puts("[CarbonLuau:LootFixture] PASS D6 bounded per-prefab registry physical/publication/independent ownership/shared budget/failure matrix and cleanup");
             ConsoleSystem.Run(ConsoleSystem.Option.Server, "quit");
         }
     }

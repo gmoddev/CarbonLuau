@@ -50,17 +50,36 @@ slots. These storage limits do not increase the logical limit of eight drop
 entries or the three fields in each entry. Create a fresh small table instead
 of reusing a large preallocated table.
 
-One rule is allowed globally across the root and all addons, with at most one
-per domain. A successful replacement can replace its exact outgoing owner's
-rule. A failed candidate preserves the prior rule. Retirement removes the
-owner's rule from future selection; registration and reload do not replay
-earlier destruction events.
+Current post-release [Gameplay D6 builds](../../GameplayD6-Validation.md) allow
+one active owner per qualified prefab, two rules globally and at most two rules
+per domain. One root/addon may own both targets, or separate domains may own one
+each. Repeated registration of the same prefab by one candidate raises a
+controlled error before definition lookup, even when the entries are identical.
+A foreign committed owner conflicts only for an overlapping prefab.
 
-The one-rule limit is shared across both prefabs, not one rule per prefab. Choose
-one target. A healthy same-owner replacement may change that target; unrelated
-owners cannot publish another rule even for the other barrel. Barrels that do
-not match the selected rule keep their vanilla destruction payouts. Switching
-profiles within a server frame does not reset the shared producer budget.
+Initialization stages the owner's complete set. Successful generation replacement
+publishes that set together: redeclare every rule to retain, omit a rule to
+withdraw it. Failed argument/module/candidate/publication paths never partly
+publish a set; caught module failure restores the earlier staged set. Healthy
+failed replacement preserves the prior committed owner set. A caught rejected
+declaration leaves earlier valid declarations staged; the complete successfully
+initialized set is what publishes. Fatal VM retirement
+still invalidates every domain under the existing recovery contract.
+
+Retirement/provider unload withdraws only the retired domain's exact owned keys;
+other owners remain. Registration/reconstruction never replays destruction.
+An unregistered target remains vanilla. Both targets share the existing producer
+budget; replacing rules or switching owners never resets its actual-frame use.
+Published v0.7.0 retains its original one-global-rule contract; D4/D5 development
+receipts likewise retain their historical single-rule scope.
+
+Registry staging has an additional fixed retention bound: at most three
+rule-bearing facade sessions (committed owners plus pending initialization), six
+distinct immutable descriptors and 390 map/checkpoint reference slots across
+the existing 64 publication levels. Snapshots share descriptors rather than
+copying entries. The one physical frame may separately borrow one descriptor;
+validation has bounded temporary arrays. These are managed retention bounds,
+not a whole-process memory cap. See the D6 record for the full accounting.
 
 Replace applies only to eligible, qualified destruction-time stored, bonus and
 bag payouts. It does not change earlier fill/generation or reclaim items
@@ -87,7 +106,9 @@ See the [initialization example](../../../examples/scripts/loot-replace.luau)
 included in the package's scripts directory; use it as the root `init.luau`
 on the qualified exact host.
 For barrel-2, use the separate [D4 example](../../../examples/scripts/loot-replace-barrel-2.luau)
-instead of installing both examples. The ordinary barrels use individual drops;
+as a standalone root. For both targets in one root, use the
+[D6 example](../../../examples/scripts/loot-replace-both-barrels.luau) on a qualified
+D6 development build. The ordinary barrels use individual drops;
 the alternate bag branch was tested with a controlled exact-source selector
 override, not advertised as natural barrel-2 behavior.
 See also the [Enum namespace](../Types/Enum.md).

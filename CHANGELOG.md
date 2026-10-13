@@ -4,6 +4,11 @@ All notable public changes to CarbonLuau are recorded here.
 
 ## Post-v0.7.0 development — no new release
 
+- [Gameplay D6](docs/GameplayD6-Validation.md) permits one active owner per
+  qualified prefab, two rules globally/per domain, whole owner-set publication,
+  independent withdrawal and deterministic conflicts. Shared physical budgets
+  remain unchanged; candidate/checkpoint retention has an explicit hard bound.
+
 - [Gameplay D4](docs/GameplayD4-Validation.md) adds the exact autospawn
   `loot-barrel-2.prefab` target to strict Loot Replace, alongside barrel-1.
   Descriptors retain their declared target; nonmatching barrels remain vanilla.
