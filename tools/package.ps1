@@ -1,5 +1,8 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures, [switch]$IncludeInventoryNetFixtures, [switch]$IncludeInventoryChangedFixtures, [switch]$IncludeD2Research, [switch]$IncludeD2Fixtures, [switch]$IncludeD3Fixtures, [switch]$IncludeB2Fixtures, [switch]$IncludeD4Fixtures, [switch]$IncludeD5Fixtures, [switch]$D5ProbeOnly, [switch]$IncludeD6Fixtures)
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\dist'), [switch]$IncludePhase1Fixtures, [switch]$IncludePhase3Fixtures, [switch]$IncludePhase5Fixtures, [switch]$IncludeFoundationEFixtures, [switch]$IncludePlayer1FBFixtures, [switch]$IncludeEntity1AFixtures, [switch]$IncludeEntity1BFixtures, [switch]$IncludeDiscoveryFixtures, [switch]$IncludeDiscovery2BFixtures, [switch]$IncludeGameplayHostProofFixtures, [switch]$IncludeGameplayPublicFixtures, [switch]$IncludeEntitySpawnFixtures, [switch]$IncludeEntityDestroyResearch, [switch]$IncludeEntityDestroyedFixtures, [switch]$IncludeC1Fixtures, [switch]$IncludeInventoryNetFixtures, [switch]$IncludeInventoryChangedFixtures, [switch]$IncludeD2Research, [switch]$IncludeD2Fixtures, [switch]$IncludeD3Fixtures, [switch]$IncludeB2Fixtures, [switch]$IncludeD4Fixtures, [switch]$IncludeD5Fixtures, [switch]$D5ProbeOnly, [switch]$IncludeD6Fixtures, [switch]$IncludeD7Fixtures, [switch]$D7ProbeOnly)
 $ErrorActionPreference = 'Stop'
+if ($D7ProbeOnly -and !$IncludeD7Fixtures) { throw '[CarbonLuau:Package] D7 probe requires explicit D7 fixtures' }
+if ($IncludeD7Fixtures -and $D5ProbeOnly) { throw '[CarbonLuau:Package] Select the D7 probe exclusively' }
+if ($IncludeD7Fixtures) { $IncludeD6Fixtures = $true }
 if ($IncludeD6Fixtures -and $D5ProbeOnly) { throw '[CarbonLuau:Package] D6 registry requires full public qualification' }
 if ($IncludeD6Fixtures) { $IncludeD5Fixtures = $true }
 if ($D5ProbeOnly -and !$IncludeD5Fixtures) { throw '[CarbonLuau:Package] D5 probe requires explicit D5 fixtures' }
@@ -128,6 +131,16 @@ try {
         }
         if ($IncludeD6Fixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.LootRegistryFixtures.cs') 'CarbonLuau.LootRegistryFixtures.cs'
+        }
+        if ($IncludeD7Fixtures) {
+            Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.LootAdditionalItemFixtures.cs') 'CarbonLuau.LootAdditionalItemFixtures.cs'
+            if ($D7ProbeOnly) {
+                $Entry = $Archive.CreateEntry('CarbonLuau.LootAdditionalItemProbeFixtures.cs', [IO.Compression.CompressionLevel]::Optimal)
+                $Entry.LastWriteTime = [DateTimeOffset]::Parse('2000-01-01T00:00:00Z')
+                $Writer = [IO.StreamWriter]::new($Entry.Open(), [Text.UTF8Encoding]::new($false))
+                try { $Writer.Write('namespace Carbon.Plugins { public partial class CarbonLuau { partial void SelectLootAdditionalProbe(ref bool ProbeOnly) { ProbeOnly = true; } } }') }
+                finally { $Writer.Dispose() }
+            }
         }
         if ($IncludeB2Fixtures) {
             Add-DeterministicEntry $Archive (Join-Path $PSScriptRoot '../tests/live/CarbonLuau.EntityDiedFixtures.cs') 'CarbonLuau.EntityDiedFixtures.cs'

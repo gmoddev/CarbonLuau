@@ -82,7 +82,7 @@ namespace Carbon.Plugins
                 for (int Index = 0; Index < Input.Length; Index++) {
                     LootDropEntry Value = Input[Index];
                     FacadePolicy.ItemShortName(Value.Item);
-                    if (Value.Item != "scrap" && Value.Item != "metal.fragments" && Value.Item != "wood")
+                    if (Value.Item != "scrap" && Value.Item != "metal.fragments" && Value.Item != "wood" && Value.Item != "stones")
                         throw new FacadeException("unsupported loot rule item");
                     if (Value.Min < 0 || Value.Max < Value.Min || Value.Max > MaximumAmount)
                         throw new FacadeException("loot rule amounts must be integers from 0 through 1000 with Min <= Max");

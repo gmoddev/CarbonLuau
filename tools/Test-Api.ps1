@@ -26,7 +26,7 @@ function Test-D3Documents {
     foreach ($Claim in @('Loot:RegisterDropRule(Prefab: string, Mode: DropMode, Drops: {LootDropEntry}): ()',
         'Exactly three arguments','during initialization','stages a rule','returns no values',
         'assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab','zero through eight',
-        'scrap','metal.fragments','0 <= Min <= Max <= 1000','8000','one active owner per qualified prefab','two rules globally',
+        'scrap','metal.fragments','stones','0 <= Min <= Max <= 1000','8000','one active owner per qualified prefab','two rules globally',
         'eight world payouts','eight','events per actual server frame','one event in flight',
         'earlier fill/generation','Before commit','leaves vanilla','After commit',
         'partial payout','no vanilla fallback','replay or compensation','restart','source gates')) {
@@ -74,6 +74,15 @@ function Test-D3Documents {
         !$DualExample.Contains('Gameplay D6') -or !$LootReference.Contains('390') -or
         !$LootReference.Contains('omit a rule') -or !$LootReference.Contains('Repeated registration')) {
         throw 'D6 per-prefab publication/retention/example contract drift'
+    }
+    $StonesExample = Get-Content -Raw -LiteralPath (Join-Path $Root 'examples/scripts/loot-replace-stones.luau')
+    foreach ($Claim in @('Gameplay D7','Item = "stones", Min = 50, Max = 250','Item = "wood", Min = 50, Max = 100',
+        'Loot:RegisterDropRule(Prefab, Enum.DropMode.Replace, Drops)','Published v0.7.0 does not support stones')) {
+        if (!$StonesExample.Contains($Claim)) { throw "D7 stones example contract missing: $Claim" }
+    }
+    if (!$LootReference.Contains('Gameplay D7 build') -or !$EntryReference.Contains('Gameplay D7 build') -or
+        !$LootReference.Contains('-2099697608') -or !$LootReference.Contains('stackable 1000')) {
+        throw 'D7 finite item reference or immutable release scope drift'
     }
 }
 function Test-D3Capacity([string]$Bootstrap, [string]$Facade) {

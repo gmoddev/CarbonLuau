@@ -32,10 +32,13 @@ case variants and other barrel paths are not accepted.
 Drops is a plain dense array of zero through eight
 [LootDropEntry](../Types/LootDropEntry.md) records. An empty array requests no
 custom payout. Each record has exactly Item, Min and Max; Item is `scrap`,
-`metal.fragments` or `wood`. Wood requires the post-v0.7.0
+`metal.fragments`, `wood` or `stones`. Wood requires the post-v0.7.0
 [Gameplay D5 build](../../GameplayD5-Validation.md); published v0.7.0 still
 supports only scrap and metal.fragments. The pinned wood definition is
-`-151838493`, stackable 1000. The adapter creates one original Item/world per
+`-151838493`, stackable 1000. Stones requires the
+[Gameplay D7 build](../../GameplayD7-Validation.md), with pinned definition
+`-2099697608`, stackable 1000, no condition or special initialization and the
+ordinary dropped-world path. Published v0.7.0 does not include stones. The adapter creates one original Item/world per
 nonzero entry and does not split oversized amounts or configure fuel, condition,
 skins, contents or held entities. Min and Max are finite integers with
 `0 <= Min <= Max <= 1000`; the sum of Max across entries cannot exceed 8000.
@@ -111,4 +114,7 @@ as a standalone root. For both targets in one root, use the
 D6 development build. The ordinary barrels use individual drops;
 the alternate bag branch was tested with a controlled exact-source selector
 override, not advertised as natural barrel-2 behavior.
+For stones mixed with wood, use the [D7 example](../../../examples/scripts/loot-replace-stones.luau)
+on a qualified D7 development build. Both qualified barrel targets and D6's
+independent ownership/shared budgets apply unchanged.
 See also the [Enum namespace](../Types/Enum.md).

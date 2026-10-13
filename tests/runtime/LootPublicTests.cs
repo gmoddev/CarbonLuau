@@ -49,7 +49,7 @@ internal static class LootPublicTests
             World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Registrar,
                 new Runtime.ItemDirectory(Name => {
                     Lookups++; if (ObserveLookup != null) ObserveLookup();
-                    return !MissingItem && (Name == "scrap" || Name == "metal.fragments" || Name == "wood") ? new object() : null;
+                    return !MissingItem && (Name == "scrap" || Name == "metal.fragments" || Name == "wood" || Name == "stones") ? new object() : null;
                 }));
             World.LootAvailable = () => SourceAvailable;
             Host = new Runtime.ScriptHost(Native, new Runtime.RuntimeConfig {
@@ -152,6 +152,7 @@ internal static class LootPublicTests
         ProfileDeclarations(Native); ProfilePublication(Native); ProfileRootReplacement(Native); ProfileAddonOwnership(Native);
         ItemDeclarations(Native);
         RegistryDeclarations(Native);
+        AdditionalItemDeclarations(Native);
         Check(Native.LiveVmCount == 0, "all real VM fixtures released");
         Console.WriteLine("[CarbonLuau:LootPublic] PASS pinned VM declarations, raw-table validation, enum identity, publication, conflicts, lifecycle, recovery and 100 addons; synthetic host only");
     }
@@ -255,6 +256,100 @@ internal static class LootPublicTests
         }
     }
 
+    private static string StonesDeclaration(string Profile, int Amount)
+    {
+        string Number = Amount.ToString(CultureInfo.InvariantCulture);
+        return Setup + "Loot:RegisterDropRule(" + Profile + ",Mode,{{Item='stones',Min=" + Number + ",Max=" + Number + "}}); ";
+    }
+    private static void AdditionalItemDeclarations(Runtime.NativeRuntime Native)
+    {
+        foreach (string Profile in new[] { Prefab, Prefab2 })
+        using (var Value = new Fixture(Native)) {
+            string Name = Profile == Prefab ? Runtime.LootRulePolicy.Prefab : Barrel2;
+            Value.ObserveLookup = Value.None;
+            Value.Load(Setup + "local Drops={{Item='stones',Min=50,Max=250},{Item='wood',Min=50,Max=100}," +
+                "{Item='scrap',Min=5,Max=12},{Item='metal.fragments',Min=10,Max=25}}; " +
+                "Loot:RegisterDropRule(" + Profile + ",Mode,Drops); Drops[1].Item='wood'; table.clear(Drops)");
+            var Owner = Value.World.Active; var Snapshot = ProfileSelected(Value, Name, Owner);
+            EntryIs(Snapshot, 0, "stones", 50, 250); EntryIs(Snapshot, 1, "wood", 50, 100);
+            EntryIs(Snapshot, 2, "scrap", 5, 12); EntryIs(Snapshot, 3, "metal.fragments", 10, 25);
+            Check(Snapshot.Count == 4 && Snapshot.MaximumTotal == 387 && Value.Lookups == 4,
+                "D7 mixed four-definition copied public descriptor on each qualified profile");
+            Value.ObserveLookup = null;
+            foreach (int Amount in new[] {0, 1, 1000}) {
+                Value.Load(StonesDeclaration(Profile, Amount));
+                EntryIs(ProfileSelected(Value, Name, Value.World.Active), 0, "stones", Amount, Amount);
+            }
+            Value.Load(Setup + "local Record=table.freeze({Item='stones',Min=0,Max=1000}); " +
+                "Loot:RegisterDropRule(" + Profile + ",Mode,{Record,Record,Record,Record,Record,Record,Record,Record})");
+            Owner = Value.World.Active; Snapshot = ProfileSelected(Value, Name, Owner);
+            Check(Snapshot.Count == 8 && Snapshot.MaximumTotal == 8000, "D7 maximum public descriptor preserves existing budgets");
+            for (int Index = 0; Index < 8; Index++) EntryIs(Snapshot, Index, "stones", 0, 1000);
+            foreach (string Bad in new[] {
+                "{{Item='stones',Min=0,Max=1001}}",
+                "(function() local T={}; for Index=1,9 do T[Index]={Item='stones',Min=0,Max=0} end; return T end)()"}) {
+                int Lookups = Value.Lookups;
+                var Failed = Value.Reload(Setup + "Loot:RegisterDropRule(" + Profile + ",Mode," + Bad + ")");
+                Check(Failed.Status != Runtime.RuntimeStatus.OK && Value.Lookups == Lookups &&
+                    Object.ReferenceEquals(ProfileSelected(Value, Name, Owner), Snapshot) && Value.World.LootRetainedSessionCount == 1,
+                    "D7 invalid amount/cardinality rejects before lookup and preserves incumbent");
+            }
+            Value.MissingItem = true;
+            var Missing = Value.Reload(StonesDeclaration(Profile, 1)); Value.MissingItem = false;
+            Check(Missing.Status != Runtime.RuntimeStatus.OK && Object.ReferenceEquals(ProfileSelected(Value, Name, Owner), Snapshot),
+                "D7 missing definition does not replace the current exact owner");
+        }
+        using (var Value = new Fixture(Native)) {
+            string Both = StonesDeclaration(Prefab, 50) + StonesDeclaration(Prefab2, 250);
+            Value.Load(Both); var Root = Value.World.Active;
+            var First = ProfileSelected(Value, Runtime.LootRulePolicy.Prefab, Root);
+            var Second = ProfileSelected(Value, Barrel2, Root);
+            Value.Registrar.Fail = true;
+            var Failed = Value.Reload(StonesDeclaration(Prefab, 60) + StonesDeclaration(Prefab2, 260)); Value.Registrar.Fail = false;
+            Check(Failed.Status != Runtime.RuntimeStatus.OK && Value.World.Active == Root &&
+                Object.ReferenceEquals(ProfileSelected(Value, Runtime.LootRulePolicy.Prefab, Root), First) &&
+                Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Root), Second) && Value.World.LootRetainedSessionCount == 1,
+                "D7 failed whole-owner publication preserves both exact committed rules");
+            Failed = Value.Reload(StonesDeclaration(Prefab, 60) + StonesDeclaration(Prefab2, 260) + "local T=table.create(10000000,true)");
+            Check(Failed.Status != Runtime.RuntimeStatus.OK, "D7 real VM allocation exhaustion cannot publish candidate descriptors");
+            if (Failed.Retired) {
+                Check(Root.Disposed && Value.World.LootRetainedSessionCount == 0, "D7 fatal allocation retirement clears both old and staged owners");
+                Value.None();
+            } else Check(Value.World.Active == Root && Object.ReferenceEquals(ProfileSelected(Value, Runtime.LootRulePolicy.Prefab, Root), First) &&
+                Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Root), Second) && Value.World.LootRetainedSessionCount == 1,
+                "D7 contained allocation error preserves complete prior owner set");
+            Value.Load(StonesDeclaration(Prefab, 50));
+            using (var Registry = new Runtime.AddonRegistry(Value.Host, Native.HostLifetimeId)) {
+                object Provider = new object(), OtherProvider = new object();
+                string Token = Add(Registry, Provider, Package("stonesowner", StonesDeclaration(Prefab2, 250)), "Active");
+                Root = Value.World.Active; First = Value.Selected(Root);
+                Runtime.FacadeSession Addon; Second = Value.Selected(Barrel2, out Addon);
+                Failed = Value.Reload(Both);
+                Check(Failed.Status != Runtime.RuntimeStatus.OK && Value.World.Active == Root &&
+                    Object.ReferenceEquals(Value.Selected(Root), First) && Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Addon), Second),
+                    "D7 overlapping dual candidate preserves independent owners");
+                Add(Registry, OtherProvider, Package("stonesforeign", Both), "Failed");
+                Replace(Registry, Provider, Token, Package("stonesowner", StonesDeclaration(Prefab2, 260) + "error('D7 failed replacement')", "2.0.0"));
+                Check(Status(Registry, Provider, Token, "Active")[5].Contains("replacement failed") &&
+                    Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Addon), Second), "D7 failed addon replacement preserves incumbent");
+                Value.Load(StonesDeclaration(Prefab, 60));
+                Check(Object.ReferenceEquals(ProfileSelected(Value, Barrel2, Addon), Second), "D7 root replacement does not retarget foreign slot");
+                Replace(Registry, Provider, Token, Package("stonesowner", StonesDeclaration(Prefab2, 260), "3.0.0"));
+                Runtime.FacadeSession Replacement; var Current = Value.Selected(Barrel2, out Replacement);
+                Check(Addon.Disposed && Replacement != Addon, "D7 addon replacement retires only its original owner");
+                EntryIs(Value.Selected(Value.World.Active), 0, "stones", 60, 60); EntryIs(Current, 0, "stones", 260, 260);
+                Check(Registry.UnloadProvider(Provider) == 1 && Replacement.Disposed, "D7 provider unload withdraws exact addon key");
+                Nonmatching(Value, Barrel2, Value.World.Active, Value.Selected(Value.World.Active));
+                Registry.UnloadProvider(OtherProvider);
+            }
+            Value.Load(Both); Root = Value.World.Active; long Vm = Value.Host.VmGenerationId;
+            var Fatal = Value.Host.Execute("loot.stones.timeout", "while true do end");
+            Check(Fatal.Status == Runtime.RuntimeStatus.TIMEOUT && Root.Disposed && Value.Host.VmGenerationId != Vm &&
+                Value.World.LootRetainedSessionCount == 1 && Drain(Value.Host) == "", "D7 fatal VM recovery reconstructs fresh dual owner without replay");
+            EntryIs(Value.Selected(Value.World.Active), 0, "stones", 50, 50);
+            EntryIs(ProfileSelected(Value, Barrel2, Value.World.Active), 0, "stones", 250, 250);
+        }
+    }
     private static void ItemDeclarations(Runtime.NativeRuntime Native)
     {
         foreach (string Profile in new[] { Prefab, Prefab2 })
@@ -304,7 +399,7 @@ internal static class LootPublicTests
                 "'assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-3.prefab'" })
                 Code.Append("assert(not pcall(function() Loot:RegisterDropRule(").Append(Name).Append(",Mode,{").Append(Entry).Append("}) end)); ");
             foreach (string Drops in new[] {
-                "{" + Entry + ",{Item='stones',Min=0,Max=1}}",
+                "{" + Entry + ",{Item='sulfur',Min=0,Max=1}}",
                 "{" + Entry + ",{Item='Scrap',Min=0,Max=1}}",
                 "{" + Entry + ",{Item='scrap\\0',Min=0,Max=1}}",
                 "{" + Entry + ",{Item='scráp',Min=0,Max=1}}",
@@ -514,7 +609,7 @@ internal static class LootPublicTests
             "{{item='scrap',Min=0,Max=1}}", "{{Item='scrap',Min=0,Max=1,Callback=Touch}}",
             "{{Item='scrap',Min=0,Max=1,Self=Cycle}}",
             "(function() local T={}; for Index=1,9 do T[Index]={Item='scrap',Min=0,Max=0} end; return T end)()"}) Drops(Text);
-        foreach (string Item in new[] {"'stones'", "'Wood'", "'wood.extra'", "'wood\\0'", "'Scrap'", "' metal.fragments'", "'scrap\\0'", "'scráp'", "''", "string.rep('x',129)",
+        foreach (string Item in new[] {"'sulfur'", "'Stones'", "'stones.extra'", "' stones'", "'stones\\0'", "'Wood'", "'wood.extra'", "'wood\\0'", "'Scrap'", "' metal.fragments'", "'scrap\\0'", "'scráp'", "''", "string.rep('x',129)",
             "42", "true", "{}", "Mode", "Touch"}) Drops("{{Item=" + Item + ",Min=0,Max=1}}");
         foreach (string Number in new[] {"nil", "'1'", "true", "{}", "Touch", "Mode", "-1", "1001", "0.5", "math.huge", "-math.huge", "0/0", "9007199254740992"}) {
             Drops("{{Item='scrap',Min=" + Number + ",Max=1000}}");
@@ -543,7 +638,7 @@ internal static class LootPublicTests
                 "all malformed calls fail before host resolution, staging, subscriptions or deferred effects");
             Value.Execute("assert(require('state').Touched==0)");
             // A rejected call does not poison the inactive session's one-rule slot.
-            Value.Load(Setup + "assert(not pcall(function() Loot:RegisterDropRule(" + Prefab + ",Mode,{{Item='stones',Min=0,Max=1}}) end)); " + Register);
+            Value.Load(Setup + "assert(not pcall(function() Loot:RegisterDropRule(" + Prefab + ",Mode,{{Item='sulfur',Min=0,Max=1}}) end)); " + Register);
             EntryIs(Value.Selected(Value.World.Active), 0, "scrap", 1, 2);
         }
     }
@@ -805,7 +900,7 @@ internal static class LootPublicTests
                 var Tokens = new List<string>();
                 for (int Index = 0; Index < 100; Index++) {
                     string Id = "lootstress" + Index.ToString("D3", CultureInfo.InvariantCulture);
-                    string Source = Index == 0 ? Declaration(3) : Index == 1 ? Declaration(Prefab2, 4) : EnumChecks() +
+                    string Source = Index == 0 ? StonesDeclaration(Prefab, 3) : Index == 1 ? StonesDeclaration(Prefab2, 4) : EnumChecks() +
                         "; task.defer(function() local Loot=game:GetService('Loot'); assert(not pcall(function() Loot:RegisterDropRule(" +
                         Prefab + ",Enum.DropMode.Replace,{}) end)) end)";
                     string[] Result = Registry.RegisterArchive(Providers[Index / 25], Package(Id, Source));
@@ -834,10 +929,10 @@ internal static class LootPublicTests
                 Runtime.FacadeSession SecondReconstructed; var SecondReconstructedRule = Value.Selected(Barrel2, out SecondReconstructed);
                 Check(Reconstructed != Owner && ReconstructedRule != Rule && Value.Host.DomainCount == 101 && Native.LiveVmCount == 1,
                     "all 100 live registrations reconstruct into fresh exact authority");
-                EntryIs(ReconstructedRule, 0, "scrap", 3, 3); EntryIs(Rule, 0, "scrap", 3, 3); Drain(Value.Host);
+                EntryIs(ReconstructedRule, 0, "stones", 3, 3); EntryIs(Rule, 0, "stones", 3, 3); Drain(Value.Host);
                 Check(SecondReconstructed != SecondOwner && SecondReconstructedRule != SecondRule && SecondOwner.Disposed,
                     "second prefab reconstructs into its own fresh exact domain");
-                EntryIs(SecondReconstructedRule, 0, "scrap", 4, 4);
+                EntryIs(SecondReconstructedRule, 0, "stones", 4, 4);
                 Check(Value.Host.Recoveries == 1, "addon reconstruction never rearms global recovery allowance");
                 foreach (object Provider in Providers) Check(Registry.UnloadProvider(Provider) == 25, "each provider retires 25 actual addons");
                 Value.None(); Check(Registry.Count == 0 && Value.Host.DomainCount == 1 && !Value.Host.HasWork,

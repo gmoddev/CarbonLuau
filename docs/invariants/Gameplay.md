@@ -207,3 +207,23 @@ occurrence limit, 129-session inspection bound, exact prefab/item allowlists,
 three interception targets and D13/D20/D23/I12 contracts remain unchanged.
 No release, tag, new item, prefab, mode, attribution or gameplay API follows.
 
+## Gameplay D7 — additional simple item definition
+
+The separately authorized [D7 record](../GameplayD7-Validation.md) adds only
+`stones` / `-2099697608`, stackable 1000, to the finite Loot item allowlist.
+Both pinned hosts prove ordinary generic dropped worlds, original Item/UID/
+reciprocal ownership, completed Spawn authority and exact cleanup. Its XP/tax
+mods inherit empty creation/world/removal callbacks; fresh scalar defaults have
+no skin, condition, fuel, contents, instanceData or held entity. No special
+public initialization or associated entity is introduced.
+
+The only production changes are the existing declaration and managed item
+allowlist checks. D6's exact per-prefab owners, two-rule global/domain caps,
+atomic whole-owner publication, conflict/retirement/recovery and hard graph
+bounds remain unchanged. Stones is shorter than the existing longest item name,
+so no retained string/work bound increases. All entry/amount/world/frame/table/
+transport limits, three-target adapter, D13/D20/D23/I12 and strict no-fallback/
+no-rollback/no-replay/no-compensation semantics remain. The actual definition's
+stack limit is still checked before COMMIT. Other definitions remain rejected;
+published v0.7.0 tag/assets and all version identities remain unchanged.
+

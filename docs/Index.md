@@ -84,6 +84,9 @@ qualification status. [Gameplay D6](GameplayD6-Validation.md) owns subsequent
 per-prefab registry qualification; the [D6 proposal](design/GameplayD6-PrefabRuleRegistry.md)
 retains its original D5 deferred scope.
 
+[Gameplay D7](GameplayD7-Validation.md) owns the subsequent additional simple
+Loot item qualification, preserving the D6 registry and existing host adapter.
+
 [Consolidation receipt](Documentation-Consolidation.md) records the approved
 cleanup, coverage/URL/test consumers and qualification. Do not introduce duplicate
 authority, erase negative results, rewrite old publication identities, or use

@@ -139,11 +139,11 @@ namespace Carbon.Plugins
                         Old.PublishedLootRule(Prefab).Prefab == Prefab && Old.PublishedLootRule(Prefab).Entry(0).Max == 1000,
                         "D5 invalid wood 1001 declaration preserves exact old owner and descriptor before COMMIT");
                 } finally { LootFixtureEntries = new[] { new LootDropEntry("wood", 1000, 1000) }; }
-                LootFixtureEntries = new[] { new LootDropEntry("stones", 1, 1) };
+                LootFixtureEntries = new[] { new LootDropEntry("sulfur", 1, 1) };
                 try {
                     BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.RUNTIME_ERROR && ReferenceEquals(Gameplay.Active, Old) &&
                         Old.PublishedLootRule(Prefab).Prefab == Prefab && Old.PublishedLootRule(Prefab).Entry(0).Item == "wood",
-                        "D5 unsupported stones declaration preserves exact old wood owner and descriptor");
+                        "D5 unsupported sulfur declaration preserves exact old wood owner and descriptor");
                 } finally { LootFixtureEntries = new[] { new LootDropEntry("wood", 1000, 1000) }; }
                 LootFixtureEntries = new LootDropEntry[LootRulePolicy.Entries];
                 for (int Index = 0; Index < LootFixtureEntries.Length; Index++) LootFixtureEntries[Index] = new LootDropEntry("wood", 1000, 1000);

@@ -27,6 +27,13 @@ three rule-bearing sessions, six descriptors and 390 snapshot/map references.
 The one in-flight frame's borrowed rule and validation temporaries are separately
 bounded. No new item/prefab/mode or version identity is introduced.
 
+[Gameplay D7](../GameplayD7-Validation.md) additionally qualifies only `stones`
+(`-2099697608`, stackable 1000) on both existing targets. The supported names are
+scrap, metal.fragments, wood and stones. D6 ownership, atomic whole-owner sets,
+retirement and all entry/amount/frame/staging/table limits remain unchanged.
+Other definitions remain rejected; published v0.7.0 and version identities are
+unchanged. There is no new release, tag, mode, prefab or public initialization API.
+
 Earlier published package v0.5.0 uses API `0.5.0-experimental`.
 The development API identity is `CarbonLuau 0.7.0-experimental`, status `Experimental`;
 the newer Workspace/Entity, gameplay and PlayerInventory surface is not in published v0.5.0.

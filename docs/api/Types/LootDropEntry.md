@@ -7,9 +7,12 @@ This is an ordinary input table alias, with no constructor or host capability:
 export type LootDropEntry = {Item: string, Min: number, Max: number}
 ```
 
-Item is `scrap`, `metal.fragments` or `wood`. Wood requires the post-v0.7.0
+Item is `scrap`, `metal.fragments`, `wood` or `stones`. Wood requires the post-v0.7.0
 [Gameplay D5 build](../../GameplayD5-Validation.md); published v0.7.0 supports
-only scrap and metal.fragments. Min and Max are inclusive finite integer
+only scrap and metal.fragments. Stones requires the
+[Gameplay D7 build](../../GameplayD7-Validation.md); its pinned definition is
+`-2099697608`, stackable 1000. Published v0.7.0 does not include it.
+Min and Max are inclusive finite integer
 bounds, with `0 <= Min <= Max <= 1000`. All three fields are required;
 extra fields and metatables are rejected. Min = Max selects a fixed quantity;
 zero is allowed.

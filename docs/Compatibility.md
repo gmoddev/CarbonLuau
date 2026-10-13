@@ -358,3 +358,7 @@ extends the two qualified barrel targets to one exact owner per prefab, with
 two rules globally and per domain. Whole owner sets publish atomically, and both
 targets share the existing physical producer budgets. D4/D5 receipts retain their
 historical single-rule scope; published v0.7.0 remains immutable.
+
+[Gameplay D7](GameplayD7-Validation.md) additionally qualifies only the simple
+`stones` definition on the two existing targets. It preserves the D6 registry,
+all shared resource/ownership/failure contracts and immutable published assets.

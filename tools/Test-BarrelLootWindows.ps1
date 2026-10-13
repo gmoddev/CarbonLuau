@@ -13,16 +13,21 @@ param(
     [switch]$LootItems,
     [switch]$LootItemProbeOnly,
     [switch]$LootRegistry,
+    [switch]$LootAdditionalItems,
+    [switch]$D7ProbeOnly,
     [switch]$RunCoordinated
 )
 $ErrorActionPreference = 'Stop'
+if ($D7ProbeOnly -and !$LootAdditionalItems) { throw 'D7 probe requires LootAdditionalItems qualification selection' }
+if ($LootAdditionalItems -and $LootItemProbeOnly) { throw 'Select the D7 probe exclusively' }
+if ($LootAdditionalItems) { $LootRegistry = $true }
 if ($LootRegistry -and $LootItemProbeOnly) { throw 'D6 registry requires full public qualification' }
 if ($LootRegistry) { $LootItems = $true }
 if ($LootItemProbeOnly -and !$LootItems) { throw 'D5 probe requires LootItems qualification selection' }
 if ($LootItems) { $Barrel2 = $Public = $Qualification = $true }
 $Prefix = '[CarbonLuau:BarrelLootResearchRunner]'
 $FixtureMarker = if ($Qualification) { '[CarbonLuau:LootFixture]' } else { '[CarbonLuau:BarrelLootResearch]' }
-$PassMarker = if ($LootItemProbeOnly) { 'PASS D5 item probe' } elseif ($Public) { 'PASS public qualification' } elseif ($Qualification) { 'PASS private qualification' } else { 'PASS mechanism' }
+$PassMarker = if ($D7ProbeOnly) { 'PASS D7 stones probe' } elseif ($LootItemProbeOnly) { 'PASS D5 item probe' } elseif ($Public) { 'PASS public qualification' } elseif ($Qualification) { 'PASS private qualification' } else { 'PASS mechanism' }
 if ($Public -and !$Qualification) { throw 'Public qualification requires the established D2A fixture substrate' }
 if ($EntityDeath -and !$Public) { throw 'Entity death qualification requires the public fixture substrate' }
 if ($Barrel2 -and !$Public) { throw 'Barrel-2 qualification requires the public fixture substrate' }
@@ -72,6 +77,8 @@ try {
     if (($Names -contains 'CarbonLuau.LootItemFixtures.cs') -ne [bool]$LootItems) { throw "$Prefix D5 fixture selection mismatch" }
     if (($Names -contains 'CarbonLuau.LootItemProbeFixtures.cs') -ne [bool]$LootItemProbeOnly) { throw "$Prefix D5 probe selection mismatch" }
     if (($Names -contains 'CarbonLuau.LootRegistryFixtures.cs') -ne [bool]$LootRegistry) { throw "$Prefix D6 registry selection mismatch" }
+    if (($Names -contains 'CarbonLuau.LootAdditionalItemFixtures.cs') -ne [bool]$LootAdditionalItems) { throw "$Prefix D7 fixture selection mismatch" }
+    if (($Names -contains 'CarbonLuau.LootAdditionalItemProbeFixtures.cs') -ne [bool]$D7ProbeOnly) { throw "$Prefix D7 probe selection mismatch" }
 } finally { $Archive.Dispose() }
 $Inputs = @(
     [pscustomobject]@{Target=$Package; Source=$PackageSource; Name='package.cszip'},
@@ -153,9 +160,10 @@ try {
     foreach ($Marker in $Required) {
         if (!$Content.Contains($FixtureMarker + ' ' + $Marker)) { throw "$Prefix Missing receipt '$Marker': $Log" }
     }
-    if ($Barrel2 -and !$LootItemProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS barrel-2')) { throw "$Prefix Barrel-2 physical matrix receipt missing: $Log" }
-    if ($LootItems -and !$LootItemProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix')) { throw "$Prefix D5 physical item matrix receipt missing: $Log" }
-    if ($LootRegistry -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D6 bounded per-prefab registry')) { throw "$Prefix D6 registry matrix receipt missing: $Log" }
+    if ($Barrel2 -and !$LootItemProbeOnly -and !$D7ProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS barrel-2')) { throw "$Prefix Barrel-2 physical matrix receipt missing: $Log" }
+    if ($LootItems -and !$LootItemProbeOnly -and !$D7ProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix')) { throw "$Prefix D5 physical item matrix receipt missing: $Log" }
+    if ($LootRegistry -and !$D7ProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D6 bounded per-prefab registry')) { throw "$Prefix D6 registry matrix receipt missing: $Log" }
+    if ($LootAdditionalItems -and !$D7ProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D7 stones full public')) { throw "$Prefix D7 public stones matrix receipt missing: $Log" }
     if ($EntityDeath -and (!$Content.Contains('[CarbonLuau:EntityDiedFixture] PASS bounded public transport and actual RPC source') -or
         !$Content.Contains('[CarbonLuau:EntityMeleeFixture] PASS actual RPC source/terminal proof and cleanup') -or
         $Content -match '\[CarbonLuau:(EntityDiedFixture|EntityMeleeFixture)\] (FAIL|CLEANUP FAIL)')) { throw "$Prefix Entity death receipt missing/failed: $Log" }

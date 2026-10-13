@@ -130,8 +130,9 @@ internal static class LootRulePolicyTests
         foreach (string Descriptor in new[] {
             "\t", "scrap", "scrap\t0", "scrap\t0\t1\t", "scrap\t0\t1\tmetal.fragments",
             "scrap\t0\t1\tmetal.fragments\t0", "\t0\t1", "scrap\t\t1", "scrap\t0\t",
-            "scrap\t1\t0", "stones\t0\t1", "Wood\t0\t1", "Scrap\t0\t1", " scrap\t0\t1", "scráp\t0\t1",
-            "metal.fragments.extra\t0\t1", "scrap\n\t0\t1", "scrap\0\t0\t1", "scrap\t0\t1\tstones\t0\t1",
+            "scrap\t1\t0", "cloth\t0\t1", "Stones\t0\t1", " stones\t0\t1", "stones.extra\t0\t1", "stones\0\t0\t1",
+            "Wood\t0\t1", "Scrap\t0\t1", " scrap\t0\t1", "scráp\t0\t1",
+            "metal.fragments.extra\t0\t1", "scrap\n\t0\t1", "scrap\0\t0\t1", "scrap\t0\t1\tcloth\t0\t1",
             new string('x', 1025), new string('x', 1024), new string('é', 513),
             new string('é', 512), new string('\t', 24), new string('\t', 1024) })
             InvalidHost(Value, Prefab, Descriptor);
@@ -230,7 +231,7 @@ internal static class LootRulePolicyTests
         Validation(); PublicationAndOwnership(); NoRulePreflight(); ConflictsAndReplacement(); SourceAndRegistrar(); BoundsAndTeardown();
         ManagedBoundaryValidation(); ManagedBoundaryOwnership();
         ProfileValidation(); ProfilePublication(); ProfileReplacement();
-        ItemValidation();
+        ItemValidation(); AdditionalItemValidation();
         RegistryPublication(); RegistryRollback(); RegistryRetention(); RegistryCorruption(); RegistryStaleRetirement();
         RegistryCandidateIdentity();
         Console.WriteLine("[CarbonLuau:LootPolicy] PASS immutable descriptors, bounded per-prefab registry, atomic publication, ownership, checkpoint retention, managed boundary and teardown model; no host mutation");
@@ -262,12 +263,12 @@ internal static class LootRulePolicyTests
             // Embedded NUL is checked above as a managed string; it is a wire delimiter here.
             InvalidHost(Value, Prefab, "scrap\t0\t1");
         }
-        foreach (string Item in new[] { "stones", "Wood", "Scrap", " scrap", "scrap\0", "scráp", "", null }) {
+        foreach (string Item in new[] { "cloth", "Stones", "stones.extra", "stones\0", "Wood", "Scrap", " scrap", "scrap\0", "scráp", "", null }) {
             int Lookups = Value.Lookups;
             Invalid(Value, Barrel2, new[] { new Runtime.LootDropEntry("scrap", 0, 1), new Runtime.LootDropEntry(Item, 0, 1) });
             Check(Value.Lookups == Lookups, "late unsupported item rejected before any definition resolver");
         }
-        foreach (string Descriptor in new[] { "scrap\t0\t1\tstones\t0\t1", "scrap\t0\t1\tScrap\t0\t1",
+        foreach (string Descriptor in new[] { "scrap\t0\t1\tcloth\t0\t1", "scrap\t0\t1\tScrap\t0\t1",
             "scrap\t0\t1\tmetal.fragments\t2\t1", "scrap\t0\t1\tmetal.fragments\t0\t1001" })
             InvalidHost(Value, Barrel2, Descriptor);
         var Input = Drops(4); var Session = Value.Session();
@@ -360,6 +361,58 @@ internal static class LootRulePolicyTests
             Check(Value.Selected(Prefab, Next).MaximumTotal == 8000 && Session.Disposed,
                 "wood maximum retains existing cardinality and outgoing ownership");
             Value.World.Retire(Next); Value.None();
+        }
+    }
+
+    private static void AdditionalItemValidation()
+    {
+        foreach (string Prefab in new[] { Runtime.LootRulePolicy.Prefab, Barrel2 }) {
+            string Other = Prefab == Barrel2 ? Runtime.LootRulePolicy.Prefab : Barrel2;
+            var Value = new Fixture(); var Session = Value.Session();
+            var Input = new[] { new Runtime.LootDropEntry("stones", 50, 250),
+                new Runtime.LootDropEntry("wood", 50, 100), new Runtime.LootDropEntry("scrap", 5, 12),
+                new Runtime.LootDropEntry("metal.fragments", 10, 25) };
+            Session.StageLootRule(Prefab, Input);
+            Input[0] = new Runtime.LootDropEntry("cloth", 0, 0);
+            var Maximum = new Runtime.LootDropEntry[8];
+            for (int Index = 0; Index < Maximum.Length; Index++) Maximum[Index] = new Runtime.LootDropEntry("stones", 1000, 1000);
+            Session.StageLootRule(Other, Maximum); Maximum[7] = new Runtime.LootDropEntry("cloth", 0, 0);
+            Value.None(); Value.World.Commit(Session);
+            var First = Value.Selected(Prefab, Session); var Second = Value.Selected(Other, Session);
+            Check(First.Count == 4 && First.MaximumTotal == 387 && First.Entry(0).Item == "stones" &&
+                First.Entry(0).Min == 50 && First.Entry(0).Max == 250 && First.Entry(1).Item == "wood" &&
+                First.Entry(2).Item == "scrap" && First.Entry(3).Item == "metal.fragments" && Value.Lookups == 12,
+                "four supported definitions preserve copied immutable mixed descriptors on both profiles");
+            Check(Second.Count == 8 && Second.MaximumTotal == 8000 && Second.Entry(7).Item == "stones" &&
+                Second.Entry(7).Min == 1000 && Second.Entry(7).Max == 1000,
+                "stones repeated maximum preserves eight entries and unchanged 8000 bound");
+            var Candidate = Value.Session();
+            int Lookups = Value.Lookups, Retained = Value.World.LootRetainedSessionCount;
+            foreach (string Item in new[] { "cloth", "sulfur", "Stones", "STONES", " stones", "stones ", "stones.extra", "stones\0" })
+                Reject(() => Candidate.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry("stones", 1, 1),
+                    new Runtime.LootDropEntry(Item, 1, 1) }), "unsupported late definition after stones");
+            Reject(() => Candidate.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry("stones", 0, 1001) }), "stones 1001 bound");
+            Reject(() => Candidate.StageLootRule(Prefab, new Runtime.LootDropEntry[9]), "stones ninth entry bound");
+            Check(Value.Lookups == Lookups && Value.World.LootRetainedSessionCount == Retained && !Candidate.HasLootRule,
+                "invalid stones declarations perform no resolver work and retain no candidate charge");
+            Value.MissingItem = true;
+            Reject(() => Candidate.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry("stones", 1, 1) }), "missing stones definition");
+            Value.MissingItem = false;
+            Check(!Candidate.HasLootRule && Object.ReferenceEquals(Value.Selected(Prefab, Session), First) &&
+                Object.ReferenceEquals(Value.Selected(Other, Session), Second), "missing definition preserves both exact committed descriptors");
+            Host(Candidate, 42, Runtime.FacadePolicy.Pack(Prefab, "stones\t0\t0"), true);
+            Host(Candidate, 42, Runtime.FacadePolicy.Pack(Other, ""), true);
+            Value.Registrar.AllocationFault = true;
+            try { Value.World.Commit(Candidate); throw new Exception("registrar must fail"); }
+            catch (OutOfMemoryException) { }
+            Check(!Candidate.Active && Object.ReferenceEquals(Value.Selected(Prefab, Session), First) &&
+                Object.ReferenceEquals(Value.Selected(Other, Session), Second), "failed stones replacement preserves both old rules and owner");
+            Value.Registrar.AllocationFault = false; Value.World.Commit(Candidate); Value.World.Retire(Session);
+            Check(Value.Selected(Prefab, Candidate).Count == 1 && Value.Selected(Prefab, Candidate).MaximumTotal == 0 &&
+                Value.Selected(Other, Candidate).Count == 0 && Session.Disposed,
+                "all-zero stones and empty replacement remain explicit independently selectable rules");
+            Value.World.Retire(Candidate); Value.None();
+            Check(Value.World.LootRetainedSessionCount == 0, "additional item controls release exact staging and published owners");
         }
     }
 
@@ -591,7 +644,7 @@ internal static class LootRulePolicyTests
         Invalid(Value, Prefab + "extra", Drops()); Invalid(Value, Prefab.ToUpperInvariant(), Drops());
         Invalid(Value, null, Drops()); Invalid(Value, Prefab, null);
         Invalid(Value, Prefab, new Runtime.LootDropEntry[9]);
-        foreach (string Item in new[] { "Scrap", "Wood", "stones", "wood.extra", "wood\0", "metal.fragments.extra", " scrap", "scrap\0", "scráp", "" , null })
+        foreach (string Item in new[] { "Scrap", "Wood", "cloth", "Stones", "stones.extra", "wood.extra", "wood\0", "metal.fragments.extra", " scrap", "scrap\0", "scráp", "" , null })
             Invalid(Value, Prefab, new[] { new Runtime.LootDropEntry(Item, 0, 1) });
         foreach (var Entry in new[] {
             new Runtime.LootDropEntry("scrap", -1, 0), new Runtime.LootDropEntry("scrap", 3, 2),

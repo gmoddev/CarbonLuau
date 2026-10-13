@@ -4,6 +4,10 @@ All notable public changes to CarbonLuau are recorded here.
 
 ## Post-v0.7.0 development — no new release
 
+- [Gameplay D7](docs/GameplayD7-Validation.md) adds only `stones` to the finite
+  scrap/metal.fragments/wood Loot allowlist on both qualified barrels. D6's
+  independent ownership, atomic sets and all shared resource/failure limits remain.
+
 - [Gameplay D6](docs/GameplayD6-Validation.md) permits one active owner per
   qualified prefab, two rules globally/per domain, whole owner-set publication,
   independent withdrawal and deterministic conflicts. Shared physical budgets

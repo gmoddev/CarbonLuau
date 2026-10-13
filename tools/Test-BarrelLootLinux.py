@@ -25,6 +25,8 @@ Parser.add_argument("--barrel2", action="store_true")
 Parser.add_argument("--loot-items", action="store_true")
 Parser.add_argument("--loot-item-probe-only", action="store_true")
 Parser.add_argument("--loot-registry", action="store_true")
+Parser.add_argument("--loot-additional-items", action="store_true")
+Parser.add_argument("--d7-probe-only", action="store_true")
 
 
 def Hash(Path):
@@ -37,6 +39,12 @@ def Hash(Path):
 
 def Main():
     Args = Parser.parse_args()
+    if Args.d7_probe_only and not Args.loot_additional_items:
+        raise RuntimeError("D7 probe requires LootAdditionalItems qualification selection")
+    if Args.loot_additional_items and Args.loot_item_probe_only:
+        raise RuntimeError("Select the D7 probe exclusively")
+    if Args.loot_additional_items:
+        Args.loot_registry = True
     if Args.loot_registry and Args.loot_item_probe_only:
         raise RuntimeError("D6 registry requires full public qualification")
     if Args.loot_registry:
@@ -52,7 +60,7 @@ def Main():
         raise RuntimeError("Entity death qualification requires the public fixture substrate")
     if Args.barrel2 and not Args.public:
         raise RuntimeError("Barrel-2 qualification requires the public fixture substrate")
-    PassMarker = "PASS D5 item probe" if Args.loot_item_probe_only else "PASS public qualification" if Args.public else "PASS private qualification" if Args.qualification else "PASS mechanism"
+    PassMarker = "PASS D7 stones probe" if Args.d7_probe_only else "PASS D5 item probe" if Args.loot_item_probe_only else "PASS public qualification" if Args.public else "PASS private qualification" if Args.qualification else "PASS mechanism"
     Work = pathlib.Path(Args.work).resolve()
     if Work != pathlib.Path("/root/codex/world-movement-20261003"):
         raise RuntimeError("Expected established task-owned Linux server")
@@ -90,6 +98,10 @@ def Main():
             raise RuntimeError("D5 probe selection mismatch")
         if ("CarbonLuau.LootRegistryFixtures.cs" in Names) != Args.loot_registry:
             raise RuntimeError("D6 registry selection mismatch")
+        if ("CarbonLuau.LootAdditionalItemFixtures.cs" in Names) != Args.loot_additional_items:
+            raise RuntimeError("D7 fixture selection mismatch")
+        if ("CarbonLuau.LootAdditionalItemProbeFixtures.cs" in Names) != Args.d7_probe_only:
+            raise RuntimeError("D7 probe selection mismatch")
     InputHashes = {}
     for Target, Source, Name in Inputs:
         if Source == Target.resolve():
@@ -148,12 +160,14 @@ def Main():
         Markers = (PassMarker,)
         if any(FixtureMarker + " " + Marker not in Content for Marker in Markers) or "[CarbonLuau:BarrelLootResearch] FAIL" in Content or "[CarbonLuau:LootFixture] FAIL" in Content or "[CarbonLuau:LootFixture] CLEANUP_FAIL" in Content or "[CarbonLuau:EntityLifetime] Private startup observer qualified" not in Content:
             raise RuntimeError("Missing/failed qualification receipts: " + str(Log))
-        if Args.barrel2 and not Args.loot_item_probe_only and "[CarbonLuau:LootFixture] PASS barrel-2" not in Content:
+        if Args.barrel2 and not Args.loot_item_probe_only and not Args.d7_probe_only and "[CarbonLuau:LootFixture] PASS barrel-2" not in Content:
             raise RuntimeError("Barrel-2 physical matrix receipt missing: " + str(Log))
-        if Args.loot_items and not Args.loot_item_probe_only and "[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix" not in Content:
+        if Args.loot_items and not Args.loot_item_probe_only and not Args.d7_probe_only and "[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix" not in Content:
             raise RuntimeError("D5 physical item matrix receipt missing: " + str(Log))
-        if Args.loot_registry and "[CarbonLuau:LootFixture] PASS D6 bounded per-prefab registry" not in Content:
+        if Args.loot_registry and not Args.d7_probe_only and "[CarbonLuau:LootFixture] PASS D6 bounded per-prefab registry" not in Content:
             raise RuntimeError("D6 registry matrix receipt missing: " + str(Log))
+        if Args.loot_additional_items and not Args.d7_probe_only and "[CarbonLuau:LootFixture] PASS D7 stones full public" not in Content:
+            raise RuntimeError("D7 public stones matrix receipt missing: " + str(Log))
         if Args.entity_death and ("[CarbonLuau:EntityDiedFixture] PASS bounded public transport and actual RPC source" not in Content or
                 "[CarbonLuau:EntityMeleeFixture] PASS actual RPC source/terminal proof and cleanup" not in Content or
                 "[CarbonLuau:EntityMeleeFixture] FAIL" in Content or "[CarbonLuau:EntityMeleeFixture] CLEANUP FAIL" in Content):

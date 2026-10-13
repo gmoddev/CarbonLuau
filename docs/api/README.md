@@ -19,6 +19,11 @@ unchanged. [D6](../GameplayD6-Validation.md) permits one owner per prefab and tw
 rules globally/per domain, using complete owner-set publication and unchanged
 shared producer bounds. See the [dual-barrel example](../../examples/scripts/loot-replace-both-barrels.luau).
 
+[D7](../GameplayD7-Validation.md) adds only `stones` to the four-name finite Loot
+allowlist, preserving D6's registry and physical budgets. Use the
+[stones/wood example](../../examples/scripts/loot-replace-stones.luau) in a qualified
+D7 development build; published v0.7.0 does not include this capability.
+
 ## Availability and migration
 
 | Introduction | Surface |

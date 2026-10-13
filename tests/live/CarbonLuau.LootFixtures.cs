@@ -31,6 +31,7 @@ namespace Carbon.Plugins
         private bool LootFixtureBarrel2;
         private bool LootFixtureItems, LootFixtureItemProbeOnly, LootFixtureItemProbeDone;
         private bool LootFixtureRegistry, LootFixtureRegistryDone;
+        private bool LootFixtureAdditionalItems, LootFixtureAdditionalProbeOnly, LootFixtureAdditionalProbeDone, LootFixtureAdditionalDone;
         private string LootFixtureSecondPrefab = LootRulePolicy.SecondPrefab;
         private LootDropEntry[] LootFixtureSecondEntries;
         private string LootFixturePrefab = LootRulePolicy.Prefab;
@@ -52,6 +53,11 @@ namespace Carbon.Plugins
         partial void PopulateLootRegistryModules(ScriptSnapshot Snapshot);
         partial void RunLootRegistryStep();
         partial void ObserveLootRegistryFrame(LootPayoutFrame Frame);
+        partial void SelectLootAdditionalItems(ref bool Items, ref bool ProbeOnly);
+        partial void SelectLootAdditionalProbe(ref bool ProbeOnly);
+        partial void RunLootAdditionalProbe();
+        partial void RunLootAdditionalStep();
+        partial void GetLootAdditionalBudget(ref int Needed);
         private int LootFixtureStep;
         private bool LootFixtureInitialPayoutDone;
         private int LootFixtureEventWaits;
@@ -136,6 +142,8 @@ namespace Carbon.Plugins
                 SelectLootItemQualification(ref LootFixtureItems);
                 SelectLootRegistryQualification(ref LootFixtureRegistry);
                 SelectLootItemProbe(ref LootFixtureItemProbeOnly);
+                SelectLootAdditionalItems(ref LootFixtureAdditionalItems, ref LootFixtureAdditionalProbeOnly);
+                SelectLootAdditionalProbe(ref LootFixtureAdditionalProbeOnly);
                 if (LootFixtureBarrel2) {
                     BarrelResearchCheck(LootFixturePublic, "D4 requires the actual public declaration fixture");
                     LootFixturePrefab = LootRulePolicy.SecondPrefab;
@@ -146,6 +154,11 @@ namespace Carbon.Plugins
                     BarrelResearchCheck(LootFixturePublic && LootFixtureBarrel2, "D5 requires existing public D4 substrate");
                     RunLootItemProbe();
                     if (LootFixtureItemProbeOnly) { EndLootQualification(null); return; }
+                }
+                if (LootFixtureAdditionalItems) {
+                    BarrelResearchCheck(LootFixtureItems && LootFixtureRegistry, "D7 requires unchanged D5/D6 substrate");
+                    RunLootAdditionalProbe();
+                    if (LootFixtureAdditionalProbeOnly) { EndLootQualification(null); return; }
                 }
                 PrepareEntityDeathFixture();
                 if (Addons != null) { Addons.Dispose(); Addons = null; }
@@ -202,6 +215,7 @@ namespace Carbon.Plugins
                 if (LootFixtureRegistry && LootFixtureStep >= 26)
                     Needed = LootFixtureStep == 27 || LootFixtureStep == 33 ? 8 : LootFixtureStep >= 38 && LootFixtureStep <= 40 ? 4 :
                         LootFixtureStep == 43 ? 3 : LootFixtureStep == 28 || LootFixtureStep == 29 || LootFixtureStep == 31 ? 1 : 2;
+                GetLootAdditionalBudget(ref Needed);
                 if (LootFixtureBarrel2 && (LootFixtureBudgetFrame == Time.frameCount ||
                     LootFrameNumber == Time.frameCount && LootFrameUsed > LootRulePolicy.PerFrame - Needed)) {
                     BarrelResearchCheck(++LootFixtureBudgetWaits <= 16, "D4 bounded wait for next actual frame after exhaustion");
@@ -375,9 +389,16 @@ namespace Carbon.Plugins
                             NextTick(FinishLootItemMatrix); return;
                         }
                     }
+                } else if (LootFixtureAdditionalItems && LootFixtureStep >= 44) {
+                    RunLootAdditionalStep();
+                    if (LootFixtureAdditionalDone) {
+                        LootFixtureBudgetFrame = Time.frameCount; LootFixtureBudgetWaits = 0;
+                        NextTick(FinishLootItemMatrix); return;
+                    }
+                    LootFixtureBudgetFrame = Time.frameCount;
                 } else if (LootFixtureRegistry && LootFixtureStep >= 26) {
                     RunLootRegistryStep();
-                    if (LootFixtureRegistryDone) {
+                    if (LootFixtureRegistryDone && !LootFixtureAdditionalItems) {
                         LootFixtureBudgetFrame = Time.frameCount; LootFixtureBudgetWaits = 0;
                         NextTick(FinishLootItemMatrix); return;
                     }
@@ -781,7 +802,7 @@ namespace Carbon.Plugins
                 " returned=" + (__result != null) + " destroy_percent=" + __3 + " target=" + Owner.LootFixtureBagMethod);
             BarrelResearchCheck(__result != null && Owner.LootFixtureBagReturns == 1, "one actual original-container Drop bag return");
         }
-        private void LootFixtureControlledBag()
+        private void LootFixtureControlledBag(LootDropEntry[] Replacement = null)
         {
             // The plain asset's real selector is constant true. This override is
             // limited to one original fixture source and proves a controlled IL
@@ -829,7 +850,7 @@ namespace Carbon.Plugins
                     Puts("[CarbonLuau:LootFixture] PASS D4 controlled bag baseline bag_returns=1 stored=" + Case.StoredCount +
                         " provenance=actual_ItemContainer.Drop_return natural_bag_branch=false");
                 });
-                LootFixtureEntries = TwoLootEntries();
+                LootFixtureEntries = Replacement ?? TwoLootEntries();
                 BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.OK, "D4 public rule restored for controlled bag suppression");
                 LootFixtureBagIsolated(() => {
                     var Case = BarrelResearchCreate("d4_controlled_bag_replaced", BarrelResearchMode.Vanilla, BarrelResearchPosition, true);
@@ -953,6 +974,10 @@ namespace Carbon.Plugins
                     : "[CarbonLuau:LootFixture] D5 incomplete matrix");
             if (Error == null && Clean && LootFixtureRegistryDone && LootFixtureDone)
                 Puts("[CarbonLuau:LootFixture] PASS D6 bounded per-prefab registry physical/publication/independent ownership/shared budget/failure matrix and cleanup");
+            if (Error == null && Clean && LootFixtureAdditionalProbeDone && LootFixtureAdditionalProbeOnly)
+                Puts("[CarbonLuau:LootFixture] PASS D7 stones probe definition/mod/property/Create/Drop original ItemUID/world reciprocal completed-Spawn and exact cleanup; public stones remains unqualified");
+            if (Error == null && Clean && LootFixtureAdditionalDone && LootFixtureDone)
+                Puts("[CarbonLuau:LootFixture] PASS D7 stones full public both-prefab independent-owner matrix, failures/suppression/shared budgets and zero retained resources");
             ConsoleSystem.Run(ConsoleSystem.Option.Server, "quit");
         }
     }
