@@ -1,6 +1,6 @@
 # Gameplay D6 — bounded per-prefab Loot registry qualification
 
-Status: **LOCAL IMPLEMENTATION/QUALIFICATION PASS; HOSTED CI PENDING**.
+Status: **GAMEPLAY-D6 PASS — PER-PREFAB LOOT REGISTRY QUALIFIED**.
 Starting main: `1f334addad235454fb2499cec00063e2b7d70b8e`.
 Date: 2026-10-13. [D2A](GameplayD2A-Validation.md),
 [D3](GameplayD3-Validation.md), [D4](GameplayD4-Validation.md),
@@ -326,15 +326,63 @@ All 183 prior borrowed-clone file hashes and UID/GID/modes restore; cleanup dige
 is `2fdd77ff2d81f485debb12e7b947c03adfe86bd9c3c617e3c81fe4f84ab7ba52`.
 No Rust process or task container remains after final Linux tests.
 
+Complete Linux manifest is
+`/root/codex/gameplay-d6-20261013/Linux-Qualification-Manifest.json`, SHA256
+`6d9f915ec0676b120e06465b7770740aebb7e2eb38c4972458f82d07f221b4cd`.
+Final policy/public model log
+`2573fdcc91910be789277835ed0197403bdc6628ef8d318f47aa4613dd0bf5d2`,
+full real-VM/Persistence-1C log
+`0a38bfed38b2925c07d2aa94b56a45a63ff9d76a1c519a0fb018fc07f4c033bf`,
+and private worker/lost-ack/loader log
+`35abd71f9b74ce99326f0776e329a322be1696203019e7f39f5d547363db00d6`
+are attributed to the final guarded source. The 1C mixed workload took 163897 ms;
+full combined log spans are not presented as per-step benchmarks.
+
+Linux native library/compiler/storage SHA256 respectively:
+`df36d6cc21f3600a60ded6a5e82fe69941f1edbbd9352fcd4f857ea10bf99778`,
+`884844c07b3c3f2b7c7e8aabb018399db3a80b0ae91879e877f81f40a1774d92`,
+`ccff9dbb308cabaee8d1ddd4fb9ca2b86f3f3b8fca646bf8709490058d88cc54`.
+RuntimeTests assembly is
+`0eb5efca5b04d5d75be85f52c491859998592b076c55446e7cb6abdc15969c4a`.
+The persistence runner's own cleanup receipt is
+`ff062fb6f78d73b25d7d9eebb7a4a3f2ea5f66863354fbf5d21b2c5646d3df65`;
+the separate borrowed-clone restore receipt is the 183-file digest above.
+Final Linux audit confirms zero Rust/task-container/runner/borrow leases,
+all seven shared installed hashes restored and all eight protected containers
+unchanged. No unrelated server or workload is modified.
+
 ## Hosted closure and source attribution
 
 All local final guarded-source native/managed/real-VM, 100-addon fairness, live
 D6 and Gameplay A–D/C4, GUI/persistence, metadata/type/drift/preview, 72 examples,
 sanitizers, deterministic development packaging and clean installation gates
-above are complete. Hosted core/tooling/contracts/documentation workflows will
-be attributed to the exact committed source after they complete. No pending
-check counts as PASS; no authenticated-client, macOS-server,
+above are complete. Implementation/tests/evidence candidate and hosted tested
+source is `604c82374a91c0c2fc5d975a408139a738b5538f`.
+
+- [Core 38393211798](https://github.com/gmoddev/CarbonLuau/actions/runs/38393211798):
+  PASS Windows/Linux native, managed/real-VM, new Loot ownership/publication/
+  retention/alias/fault/recovery tests, 100-addon fairness, gameplay/inventory/
+  GUI/persistence lifecycle/scale/lost-ack/loader, deterministic packages and
+  clean installation of 72 examples. ASan/UBSan/leak/lifecycle/fault job PASS.
+- [Tooling 38393211802](https://github.com/gmoddev/CarbonLuau/actions/runs/38393211802):
+  PASS Windows/Linux/macOS developer tooling, metadata/type/drift/schema and
+  preview contracts, including explicit dual-rule UnsupportedPreviewApi behavior.
+- [Contracts 38393211902](https://github.com/gmoddev/CarbonLuau/actions/runs/38393211902):
+  PASS canonical documents, retained evidence, schema, links and release-audit
+  negative fixtures.
+- [Documentation 38393211879](https://github.com/gmoddev/CarbonLuau/actions/runs/38393211879):
+  PASS candidate documentation deployment.
+
+All candidate jobs PASS on their first attempts; there is no failed/cancelled
+candidate job or CI rerun. Preserved managed/host negatives above are not relabeled.
+No source, assertion or deadline change obtains these hosted results. No
+authenticated-client, macOS-server,
 Shockbyte full-runtime, arbitrary host-upgrade or power-loss claim follows.
+
+The subsequent evidence-only closure changes only this record, preserving all
+executable inputs and reusing these exact-host/live receipts under Compatibility's
+documentation-only policy. Its own final-main workflows and exact SHA are checked
+separately and supplied in the completion report; no pending check counts as PASS.
 
 Published v0.7.0 tag object `7c7d36f648a5506efd07c1b6d6bcf4b94d3f7d2b` and all
 six uploaded asset digests are rechecked unchanged. No release/tag, version bump,
