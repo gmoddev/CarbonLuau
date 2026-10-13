@@ -1,6 +1,6 @@
 # Gameplay D7 — additional Loot item qualification
 
-Status: **LOCAL QUALIFICATION PASS; FINAL-SOURCE HOSTED CI PENDING**.
+Status: **PASS — ADDITIONAL LOOT ITEMS QUALIFIED**.
 Starting main: `ee944d206e0e7af40e25333716054e8a16590ad2`.
 Date: 2026-10-13. [D2A](GameplayD2A-Validation.md),
 [D3](GameplayD3-Validation.md), [D4](GameplayD4-Validation.md),
@@ -350,11 +350,52 @@ Unchanged supervisor retry PASS with the task-only init reaper: eleven hostile
 modes, external time/memory bounds, protocol, cancellation, EOF shutdown and
 real-preview recovery; zero orphan assertion failures, persisted exit 0 in
 7.85 seconds. Receipt `tooling-supervisor-init-linux.log` in the Linux task root.
+SHA256 `2ac3eac8aa0de2e0a2c055dabbec7373300375ac7c9015faa22101efa5efc722`.
 All requested local Linux gates now PASS. Final-source hosted CI remains required.
+
+Linux final manifest
+`/root/codex/gameplay-d7-20261013/Linux-Qualification-Manifest.json`, SHA256
+`9de27b884e6fb2a0a6a677579b5103a4f5cb8944a43900ce256a59023ab29d69`.
+`Source-Input-Manifest.json` in the same root covers 1921 baseline/final-tar
+files, SHA256 `c1d36a425429e49ce3c30153d737fb6062f89f5762de28085c1108001d14bd0f`.
+Local archived full logs/receipts are `Linux-Evidence.tgz`, SHA256
+`0866a9bfdeecf75afbc8039a1fd3be156ceaa791dd39fe6ef9f41683299ceebd`.
+Final audit: no owned RustDedicated process, task containers or leases; all
+eight protected container ID/name/image tuples unchanged. Both borrowed
+restorations reproduce all 183 hashes and UID/GID/modes. Test servers and prior
+installed inputs are restored; no live host workload remains outstanding.
 
 Recommended next phase: separately qualify one additional simple vanilla
 definition, such as sulfur, through the same bounded adapter and both exact
 hosts. This phase does not authorize it or expand the registry.
+
+## Hosted source closure
+
+Implementation/tests/API/examples/evidence commit:
+`97f383b42f2c90ac05a7d7275a31e30e0db33004`. All four exact-source hosted
+workflows PASS on their first attempt with no retries or relaxed assertions:
+
+- [Core validation 38472218408](https://github.com/gmoddev/CarbonLuau/actions/runs/38472218408):
+  Windows/Linux native, managed policy/public real-VM, allocation/recovery,
+  full runtime/persistence, loader/private worker, sanitizer, examples,
+  deterministic development packaging and clean installation.
+- [Tooling 38472218398](https://github.com/gmoddev/CarbonLuau/actions/runs/38472218398):
+  Windows/Linux/macOS SDK10, metadata/types/drift, independent worker, actual
+  preview goldens, stones UnsupportedPreviewApi and hostile supervisor tests.
+- [Contracts 38472218407](https://github.com/gmoddev/CarbonLuau/actions/runs/38472218407):
+  schema, documentation/invariants/fragments, release audit negative fixtures
+  and relocated offline document navigation.
+- [Documentation 38472218491](https://github.com/gmoddev/CarbonLuau/actions/runs/38472218491):
+  generated reference build and deployment.
+
+This closure changes only this ledger: adds final local manifests, diagnosed
+supervisor retry and hosted receipts. All executable/test/metadata/example inputs
+remain byte-identical to the tested implementation. Its pushed final SHA is
+independently subjected to all four workflows before the final user verdict;
+no pending closure workflow is counted as PASS. This avoids embedding a commit's
+own unknowable hash in its source. Main is synchronized with the remote, tracked
+files are clean, and the pre-existing `.codexlock` and
+`derived-369547800317500/` are preserved. No release or tag is created.
 
 Read-only GitHub release inspection confirms published v0.7.0 tag object
 `7c7d36f648a5506efd07c1b6d6bcf4b94d3f7d2b` and all six asset digests unchanged
