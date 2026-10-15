@@ -10,7 +10,7 @@ both repositories and preserves the unresolved inventory CI failure below.
 |---|---|
 | Canonical API/tooling dependency | CarbonLuau `fff095f57cc53b5f4acf3d45e3ba033ba499c319` |
 | Development scripting API | `0.7.5-experimental` |
-| Extension implementation | `75a04af22c5bade39a8513eef6bed00d795e576b` |
+| Extension implementation | `34c435bf7c6c846f84982357fad567f1d449dd62` |
 | Extension package | `0.0.1`, private candidate, unchanged |
 | Tooling pack format/profile | `0.4.0-rc.1`, unchanged; not the scripting API version |
 | Runtime package / published tag | `0.7.0` / `v0.7.0`, immutable |
@@ -132,8 +132,26 @@ macOS arm64 builds/checks/package remain static-only.
 
 Reproducibility means repeat pack assembly from identical qualified compiler
 outputs and repeat VSIX builds on each platform; it does not claim cross-platform
-Deflate or independent compiler/toolchain byte identity. CI artifacts are private
+Deflate or independent compiler/toolchain byte identity. CI artifacts are
 development candidates, not release/Marketplace/Open VSX publications.
 
 Final commits, run IDs, results and artifact hashes will be recorded after these
 gates complete. The recommendation remains HOLD for the inventory blocker.
+
+## Retained synchronization attempt
+
+The first runtime candidate `17ba1ccb9c908a13c4fdec6fe5d314c99ddf6f11` failed
+its Linux catalog editor test in
+[job 116688561569](https://github.com/gmoddev/CarbonLuau/actions/runs/38812393517/job/116688561569).
+The newly strict extension correctly rejected a runtime candidate pack whose
+SemanticRevision differed from its packaged fff095f source pin; completion was
+empty and the diagnostic was `Incompatible CarbonLuau tooling pack.` The test
+fixture now pins its copied editor to the actual current runtime candidate,
+asserting exact pack revision and API first. It does not relabel the pack or
+change the extension repository's qualified shipping dependency. All completion
+assertions, admission checks and deadlines remain intact.
+Raw job log is retained at
+`C:/Sandbox/Codex/CrossRepoReadiness20261015/Runtime-Tooling-Linux-negative.log`,
+SHA256 `890c9567be575a8dc1e74cfe2c79c31edb03ac451030b9251d0e204253e70562`.
+The original result.json/vscode.log are retained in that directory's
+Runtime-Editor-Negative subdirectory and the job's catalog-d9-editor artifact.

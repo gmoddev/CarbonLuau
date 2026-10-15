@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: gmoddev/carbonluau-vscode
-          ref: 75a04af22c5bade39a8513eef6bed00d795e576b
+          ref: 34c435bf7c6c846f84982357fad567f1d449dd62
           path: build/catalog-editor-extension
           persist-credentials: false
       - name: Qualify exact catalog completion in actual VS Code
@@ -61,6 +61,19 @@ jobs:
           npm --prefix build/catalog-editor-extension ci --no-audit --no-fund
           npm --prefix build/catalog-editor-extension run build
           cp -a build/extension-pack/tooling build/catalog-editor-extension/tooling
+          # Pair this isolated test fixture truthfully with this runtime candidate.
+          # The extension's shipping source pin and the pack identity stay intact.
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          Root = Path('build/catalog-editor-extension')
+          Source = json.loads((Root / 'tooling-source.json').read_text())
+          Pack = json.loads((Root / 'tooling/linux-x64/pack.json').read_text())
+          assert Pack['SemanticRevision'] == os.environ['GITHUB_SHA']
+          assert Pack['ApiVersion'] == Source['ScriptingApi']
+          Source['Revision'] = Pack['SemanticRevision']
+          (Root / 'tooling-source.json').write_text(json.dumps(Source, indent=2) + '\n')
+          PY
           xvfb-run -a node tests/tooling/catalog-vscode/Run.cjs build/catalog-editor-extension "$RUNNER_TEMP/catalog-d9-editor" generated/catalog-symbols.json
       - name: Retain actual editor receipt
         if: always() && runner.os == 'Linux'
