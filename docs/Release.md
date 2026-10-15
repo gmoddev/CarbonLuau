@@ -25,6 +25,16 @@ These are separate identities. The 2026-10-11 user decision authorizes the full
 and archive branches remain unchanged; use forward commits, never a main rewrite.
 Earlier development bundles named v0.5.0 must not replace published v0.5.0 assets.
 
+## Post-v0.7.0 development readiness
+
+The published release scope below is historical. Development API
+`0.7.5-experimental` adds the D4–D8 Loot expansion and D9 string catalogs;
+it does not change published v0.7.0 assets. The separate editor candidate is
+synchronized through its exact canonical tooling source pin. See the
+[cross-repository readiness report](CrossRepo-ReleaseReadiness.md) for platform
+qualification, reproducibility and the unresolved inventory CI release gate.
+No next package version, release, tag or editor publication is assigned here.
+
 ## Gameplay A–D release readiness
 
 The [release record](Release-0.7.0-Validation.md) owns combined qualification.

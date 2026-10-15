@@ -659,7 +659,13 @@ internal static class InventoryNetObservationTests
                     var Result = Host.Execute("inventory-net", Code);
                     Check(Result.Status == Runtime.RuntimeStatus.OK, "real VM: " + Code + ": " + Result.Error);
                 };
+                var ReloadWatch = System.Diagnostics.Stopwatch.StartNew();
                 var Reload = Host.Reload();
+                ReloadWatch.Stop();
+                Console.WriteLine("[CarbonLuau:InventoryNetTest] RELOAD_OBSERVATION status=" + Reload.Status +
+                    " scans=" + Player.Scans + " watches=" + Value.Samples.WatchCount +
+                    " elapsedMs=" + ReloadWatch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) +
+                    " error=" + Reload.Error);
                 Check(Reload.Status == Runtime.RuntimeStatus.OK && Player.Scans == 0 && Value.Samples.WatchCount == 0,
                     "old PlayerInventory acquisition still scan/watch free: status=" + Reload.Status +
                     " scans=" + Player.Scans + " watches=" + Value.Samples.WatchCount + " error=" + Reload.Error);
