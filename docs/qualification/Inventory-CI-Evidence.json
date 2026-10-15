@@ -1,0 +1,1507 @@
+{
+  "SchemaVersion": 1,
+  "Date": "2026-10-15",
+  "StartingRevision": "c0152238a7a10941806e06e931ed70eba975daa9",
+  "CorrectionRevision": "24599a534cffeeb9c7ce8dac6780a39d94ee0e5c",
+  "Disposition": "SHARED_STATUS_DEFECT_CORRECTED_HISTORICAL_INVENTORY_HOLD_RETAINED",
+  "HistoricalCauseEstablished": false,
+  "Original": {
+    "Revision": "bc73ee9077dc69f13ce8359f7edc5ed451143dc4",
+    "Run": 38708449523,
+    "Job": 116333604423,
+    "Bytes": 65131,
+    "Log": "C:/Sandbox/Codex/D8Control20261015/CI-bc73ee9-Windows-failed.log",
+    "Sha256": "e6387c375980279a66ae641f292bc26cd66b97cb0f3d202179fd76855aa7f7d9",
+    "Missing": [
+      "Reload.Status",
+      "Player.Scans",
+      "WatchCount",
+      "Reload.Error"
+    ]
+  },
+  "QualifiedCorrection": "Checked native initialization statuses survive managed root/addon/RuntimeHost catch paths; compiler TIMEOUT remains distinct from execution retirement",
+  "Regression": {
+    "WindowsOldSource": "Windows/regression-before.log",
+    "LinuxOldSource": "Linux/logs-2/regression-before.log",
+    "OldSourceExpectedFailure": "INTERNAL_ERROR instead of native bootstrap TIMEOUT, zero scans/watches and zero VMs",
+    "CorrectedFreshSuitesEachPlatform": 3,
+    "WindowsCorrected": [
+      "Windows/after-init-1.log",
+      "Windows/after-init-2.log",
+      "Windows/after-init-3.log"
+    ],
+    "LinuxCorrected": [
+      "Linux/logs-2/init-1.log",
+      "Linux/logs-2/init-2.log",
+      "Linux/logs-2/init-3.log"
+    ],
+    "Modes": [
+      "real hanging compiler bootstrap",
+      "entry syntax",
+      "module syntax",
+      "entry runtime error",
+      "fatal entry deadline"
+    ],
+    "OneShotAbiRefusals": [
+      "root facade TIMEOUT",
+      "addon facade MEMORY_LIMIT",
+      "RuntimeHost VM creation MEMORY_LIMIT"
+    ],
+    "Lifecycle": [
+      "first-init zero resources",
+      "explicit recovery after fault removal",
+      "sample baseline/change",
+      "failed replacement retains owner/watch",
+      "successful replacement retires demand",
+      "final zero VMs/demands/watches/pending"
+    ]
+  },
+  "SchedulingExperiment": {
+    "FixtureRevision": "c0152238a7a10941806e06e931ed70eba975daa9",
+    "OriginalFixtureGitBlobUnchangedApartFromAlreadyQualifiedDiagnostic": true,
+    "Method": "process-local affinity one logical CPU; normal priority; 0/1/2/4 CPU-bound threads; unchanged child fixture/native/deadlines; no unrelated process changes",
+    "OriginalAssertionReproduced": true,
+    "ObservedCauses": [
+      "bootstrap compiler deadline",
+      "entry execution deadline"
+    ],
+    "AdditionalNegative": "scheduled-4-4 finally compiler-file deletion UnauthorizedAccessException after recorded bootstrap TIMEOUT",
+    "HistoricalAttribution": "NOT_ESTABLISHED",
+    "Results": [
+      {
+        "Log": "Windows/scheduled-0-1.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 86.037
+      },
+      {
+        "Log": "Windows/scheduled-0-2.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 84.35
+      },
+      {
+        "Log": "Windows/scheduled-0-3.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 95.609
+      },
+      {
+        "Log": "Windows/scheduled-0-4.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 102.828
+      },
+      {
+        "Log": "Windows/scheduled-0-5.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 129.591
+      },
+      {
+        "Log": "Windows/scheduled-1-1.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 335.548
+      },
+      {
+        "Log": "Windows/scheduled-1-2.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 306.721
+      },
+      {
+        "Log": "Windows/scheduled-1-3.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 334.213
+      },
+      {
+        "Log": "Windows/scheduled-1-4.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 308.509
+      },
+      {
+        "Log": "Windows/scheduled-1-5.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 331.391
+      },
+      {
+        "Log": "Windows/scheduled-2-1.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 664.493
+      },
+      {
+        "Log": "Windows/scheduled-2-2.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 736.184
+      },
+      {
+        "Log": "Windows/scheduled-2-3.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 605.163
+      },
+      {
+        "Log": "Windows/scheduled-2-4.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 570.811
+      },
+      {
+        "Log": "Windows/scheduled-2-5.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 671.845
+      },
+      {
+        "Log": "Windows/scheduled-4-1.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 854.292
+      },
+      {
+        "Log": "Windows/scheduled-4-2.log",
+        "Status": "INTERNAL_ERROR",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 1533.441
+      },
+      {
+        "Log": "Windows/scheduled-4-3.log",
+        "Status": "INTERNAL_ERROR",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 1219.818
+      },
+      {
+        "Log": "Windows/scheduled-4-4.log",
+        "Status": "INTERNAL_ERROR",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 1455.846
+      },
+      {
+        "Log": "Windows/scheduled-4-5.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 859.5
+      },
+      {
+        "Log": "Windows/scheduled-4-6.log",
+        "Status": "INTERNAL_ERROR",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 1196.501
+      },
+      {
+        "Log": "Windows/scheduled-4-7.log",
+        "Status": "TIMEOUT",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 1192.478
+      }
+    ]
+  },
+  "FreshProcesses": {
+    "WindowsBeforeCorrection": [
+      {
+        "Log": "Windows/fresh-1.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 84.411
+      },
+      {
+        "Log": "Windows/fresh-10.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 82.634
+      },
+      {
+        "Log": "Windows/fresh-11.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 77.162
+      },
+      {
+        "Log": "Windows/fresh-12.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 84.595
+      },
+      {
+        "Log": "Windows/fresh-13.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 74.795
+      },
+      {
+        "Log": "Windows/fresh-14.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 81.955
+      },
+      {
+        "Log": "Windows/fresh-15.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 79.023
+      },
+      {
+        "Log": "Windows/fresh-16.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 77.504
+      },
+      {
+        "Log": "Windows/fresh-17.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 74.221
+      },
+      {
+        "Log": "Windows/fresh-18.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 77.849
+      },
+      {
+        "Log": "Windows/fresh-19.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 80.128
+      },
+      {
+        "Log": "Windows/fresh-2.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 78.619
+      },
+      {
+        "Log": "Windows/fresh-20.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 84.975
+      },
+      {
+        "Log": "Windows/fresh-3.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 82.962
+      },
+      {
+        "Log": "Windows/fresh-4.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 82.45
+      },
+      {
+        "Log": "Windows/fresh-5.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 75.482
+      },
+      {
+        "Log": "Windows/fresh-6.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 75.647
+      },
+      {
+        "Log": "Windows/fresh-7.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 82.568
+      },
+      {
+        "Log": "Windows/fresh-8.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 80.42
+      },
+      {
+        "Log": "Windows/fresh-9.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 79.392
+      }
+    ],
+    "WindowsAfterCorrection": [
+      {
+        "Log": "Windows/after-fresh-1.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 86.729
+      },
+      {
+        "Log": "Windows/after-fresh-10.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 81.255
+      },
+      {
+        "Log": "Windows/after-fresh-11.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 83.432
+      },
+      {
+        "Log": "Windows/after-fresh-12.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 81.877
+      },
+      {
+        "Log": "Windows/after-fresh-13.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 81.674
+      },
+      {
+        "Log": "Windows/after-fresh-14.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 89.156
+      },
+      {
+        "Log": "Windows/after-fresh-15.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 82.248
+      },
+      {
+        "Log": "Windows/after-fresh-16.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 82.638
+      },
+      {
+        "Log": "Windows/after-fresh-17.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 78.286
+      },
+      {
+        "Log": "Windows/after-fresh-18.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 77.972
+      },
+      {
+        "Log": "Windows/after-fresh-19.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 79.137
+      },
+      {
+        "Log": "Windows/after-fresh-2.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 87.246
+      },
+      {
+        "Log": "Windows/after-fresh-20.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 83.117
+      },
+      {
+        "Log": "Windows/after-fresh-3.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 83.581
+      },
+      {
+        "Log": "Windows/after-fresh-4.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 82.644
+      },
+      {
+        "Log": "Windows/after-fresh-5.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 80.672
+      },
+      {
+        "Log": "Windows/after-fresh-6.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 87.653
+      },
+      {
+        "Log": "Windows/after-fresh-7.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 80.498
+      },
+      {
+        "Log": "Windows/after-fresh-8.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 81.943
+      },
+      {
+        "Log": "Windows/after-fresh-9.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 82.204
+      }
+    ],
+    "LinuxAfterCorrection": [
+      {
+        "Log": "Linux/logs-2/fresh-1.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 11.986
+      },
+      {
+        "Log": "Linux/logs-2/fresh-10.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 12.878
+      },
+      {
+        "Log": "Linux/logs-2/fresh-11.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 14.693
+      },
+      {
+        "Log": "Linux/logs-2/fresh-12.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 13.107
+      },
+      {
+        "Log": "Linux/logs-2/fresh-13.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 15.259
+      },
+      {
+        "Log": "Linux/logs-2/fresh-14.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 16.314
+      },
+      {
+        "Log": "Linux/logs-2/fresh-15.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 13.958
+      },
+      {
+        "Log": "Linux/logs-2/fresh-16.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 14.882
+      },
+      {
+        "Log": "Linux/logs-2/fresh-17.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 12.677
+      },
+      {
+        "Log": "Linux/logs-2/fresh-18.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 12.221
+      },
+      {
+        "Log": "Linux/logs-2/fresh-19.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 11.249
+      },
+      {
+        "Log": "Linux/logs-2/fresh-2.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 14.163
+      },
+      {
+        "Log": "Linux/logs-2/fresh-20.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 13.555
+      },
+      {
+        "Log": "Linux/logs-2/fresh-3.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 16.257
+      },
+      {
+        "Log": "Linux/logs-2/fresh-4.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 12.394
+      },
+      {
+        "Log": "Linux/logs-2/fresh-5.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 13.927
+      },
+      {
+        "Log": "Linux/logs-2/fresh-6.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 12.702
+      },
+      {
+        "Log": "Linux/logs-2/fresh-7.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 16.339
+      },
+      {
+        "Log": "Linux/logs-2/fresh-8.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 14.89
+      },
+      {
+        "Log": "Linux/logs-2/fresh-9.log",
+        "Status": "OK",
+        "Scans": 0,
+        "Watches": 0,
+        "ReloadMilliseconds": 13.206
+      }
+    ]
+  },
+  "LimitsChanged": false,
+  "OriginalSuccessAssertionChanged": false,
+  "RetryWarmupOrDeadlineRelaxationAdded": false,
+  "NativeChanged": false,
+  "GameplayInventorySemanticsChanged": false,
+  "PinnedNativeReuse": {
+    "WindowsNativeSha256": "56b2c019578622c7a2e6dbe4e16af15a3f87e839b83ab07b5e08ce8709c4e843",
+    "WindowsCompilerSha256": "43932f2e928fc66b9759176bb3ca4c280055180c85ae488b43408129d5515a98",
+    "LinuxNativeSha256": "f8a72fae6ad6a9dc9419a2eee544f00d0c63901a25aa6940f913729c81d263dd",
+    "Qualification": "docs/qualification/CatalogD9-Evidence.json"
+  },
+  "EffectiveLimits": {
+    "DefaultHeapMiB": 64,
+    "HeapClampMiB": [
+      16,
+      256
+    ],
+    "DefaultCallbackMs": 3,
+    "CallbackClampMs": [
+      1,
+      100
+    ],
+    "FixtureCallbackMs": 100,
+    "CompilerWallMs": 1000,
+    "CompilerProcessMiB": 256,
+    "CompilerSourceBytes": 65536,
+    "CompilerResponseBytes": 1048576,
+    "QueueClamp": 4096,
+    "FrameBudgetMs": 5,
+    "FrameBudgetClampMs": [
+      1,
+      20
+    ]
+  },
+  "NegativeAttempts": [
+    "expected old-source regressions",
+    "controlled bootstrap/execution timeouts and finally cleanup error",
+    "Windows C# UTF-8 source argument compile error (test-after-build.log)",
+    "Linux read-only NuGet mount setup rejection (tool transcript f58546; initial build log overwritten before retention)",
+    "Linux logs/init-1.log old assembly retained by incremental timestamps; corrected task-owned managed Rebuild in logs-2",
+    "Windows first scheduling driver stops on child stderr; subsequent independent probes retain both streams"
+  ],
+  "SourceHashes": [
+    {
+      "Path": "src/CarbonLuau/Runtime/NativeRuntime.cs",
+      "GitBlobSha256": "e62df635d63187a2311ae4f7955551c59b811da9776a93542c70666f0e81a349"
+    },
+    {
+      "Path": "src/CarbonLuau/Runtime/RuntimeHost.cs",
+      "GitBlobSha256": "91aba4ecf6d3acdf561570aaa22abbb0aafe21655a5d13f7ce43167c34682af8"
+    },
+    {
+      "Path": "src/CarbonLuau/Scripts/ScriptHost.cs",
+      "GitBlobSha256": "afde03b8841e03051ef0bcbc2bc335cab6d77a4b2cc0a9211083385ffed3de99"
+    },
+    {
+      "Path": "src/CarbonLuau/Addons/AddonActivation.cs",
+      "GitBlobSha256": "f92df576086f5597ce65a907f8f78eaa6d7c549c5edc668673959f4144a1ff1c"
+    },
+    {
+      "Path": "tests/runtime/InventoryNetObservationTests.cs",
+      "GitBlobSha256": "19e1737ae0989862b994b588ce4526e7948bd71a1fc3c5c8bc4cc46686e4c39a"
+    },
+    {
+      "Path": "tests/runtime/InventoryInitializationTests.cs",
+      "GitBlobSha256": "9fdd54e333053820d195fb451818da3aca4bbd1aa31ccee406c6d21dc2d1d65a"
+    },
+    {
+      "Path": "tests/runtime/Program.cs",
+      "GitBlobSha256": "859dae2754b4818c0025b64585e96347665289c4c9ad377b4fb5779683213cf7"
+    },
+    {
+      "Path": ".github/workflows/phase0.yml",
+      "GitBlobSha256": "dfb07b2f5c3ffdf02f44a49c8b240536d40bf26fe822914084a19af978d87253"
+    }
+  ],
+  "RawEvidenceRoot": "C:/Sandbox/Codex/InventoryCi20261015",
+  "RawFiles": [
+    {
+      "Path": "Windows/after-fresh-1.log",
+      "Bytes": 1094,
+      "Sha256": "2b57b356f5c1404119cf805b7afcb80bfce52acfc98900358d2136d6085a44df"
+    },
+    {
+      "Path": "Windows/after-fresh-10.log",
+      "Bytes": 1094,
+      "Sha256": "ba73344c9c6a59b0fe90b40b37960a436c943ad8359c122df46e7fd6e79e2bb4"
+    },
+    {
+      "Path": "Windows/after-fresh-11.log",
+      "Bytes": 1094,
+      "Sha256": "45fef3e5567ce810ebfe7fcdbcc6294e5f594da020f56964e4d3b5bfdd6d7405"
+    },
+    {
+      "Path": "Windows/after-fresh-12.log",
+      "Bytes": 1094,
+      "Sha256": "4fdd4195d94988ec77b49f192cb2d2c6606b345b06165678c754ec96dcbcd281"
+    },
+    {
+      "Path": "Windows/after-fresh-13.log",
+      "Bytes": 1094,
+      "Sha256": "e00177ceeb0bb74f1730a8e9754493c7eb5a9699ac411372777821d192a26c61"
+    },
+    {
+      "Path": "Windows/after-fresh-14.log",
+      "Bytes": 1094,
+      "Sha256": "b82664e8b3fd6471906d49d2d6bfdbc80c977efdbe4152170b68595d2898cdf0"
+    },
+    {
+      "Path": "Windows/after-fresh-15.log",
+      "Bytes": 1094,
+      "Sha256": "16a943cc4fbf8cd623f5e6ee2e426e1ac96f2134c44ef67427afff4d6750ae35"
+    },
+    {
+      "Path": "Windows/after-fresh-16.log",
+      "Bytes": 1094,
+      "Sha256": "7d8e1d16c9e536e05f5e8e92f88250ed0273d0ff39d301cef612963f873e85a7"
+    },
+    {
+      "Path": "Windows/after-fresh-17.log",
+      "Bytes": 1094,
+      "Sha256": "e7faf5bd45a341476f7dd943aaf41b68cf829e7e66ccbb7c9b11917c0700e94b"
+    },
+    {
+      "Path": "Windows/after-fresh-18.log",
+      "Bytes": 1094,
+      "Sha256": "addbf3334aa40bd2a07d91aff47a4ae624cdd942d2b936f77b0147058d5b964e"
+    },
+    {
+      "Path": "Windows/after-fresh-19.log",
+      "Bytes": 1094,
+      "Sha256": "71797462ab6080f9420f00de8e875c9e3ffaf5859fa33231567655a59878cd71"
+    },
+    {
+      "Path": "Windows/after-fresh-2.log",
+      "Bytes": 1094,
+      "Sha256": "da800cf445eebe90dcfaaad39e2e65fb0412e17db4c3b3b5a3275ba5bf4d357b"
+    },
+    {
+      "Path": "Windows/after-fresh-20.log",
+      "Bytes": 1094,
+      "Sha256": "327ecc8e5d1707889e1a7282da36ef9f9f051948b55d3e9c891b277fc21e7a07"
+    },
+    {
+      "Path": "Windows/after-fresh-3.log",
+      "Bytes": 1094,
+      "Sha256": "cc2359804e050e7bb71f0a327e1d2313f7818e2bb3d0c89f3b246b226f4e4aca"
+    },
+    {
+      "Path": "Windows/after-fresh-4.log",
+      "Bytes": 1094,
+      "Sha256": "62607e13064410d04a7ff1b885b6c3a9b227a4ea407cdd9c18b0a251a1a20903"
+    },
+    {
+      "Path": "Windows/after-fresh-5.log",
+      "Bytes": 1094,
+      "Sha256": "dc5aa90079ecbd4df1a8e18d0921a610a2ebe725af148a88d7bc24e3783eabe8"
+    },
+    {
+      "Path": "Windows/after-fresh-6.log",
+      "Bytes": 1094,
+      "Sha256": "aa1cc1e81cd3de40aa3843e93274e36d06681779cefc4b7451bd50bba941970a"
+    },
+    {
+      "Path": "Windows/after-fresh-7.log",
+      "Bytes": 1094,
+      "Sha256": "489bb4ee48477ddae36133289741a90d25fcb8e0aa406dde4c4b9263c39fb9c0"
+    },
+    {
+      "Path": "Windows/after-fresh-8.log",
+      "Bytes": 1094,
+      "Sha256": "cbbb66b00586ed00de9feab1beb3d7f68b1771d16d86de27ad3aad12575b1153"
+    },
+    {
+      "Path": "Windows/after-fresh-9.log",
+      "Bytes": 1094,
+      "Sha256": "69172770750d90628e5072b18497c2ed884c7e57b25c53fc7b80f692dd724271"
+    },
+    {
+      "Path": "Windows/after-init-1.log",
+      "Bytes": 2762,
+      "Sha256": "7ad96d444e9d5d0b5c18e6fc632fa99e4156e66d7048ff10c0496c5864ef9e32"
+    },
+    {
+      "Path": "Windows/after-init-2.log",
+      "Bytes": 2762,
+      "Sha256": "b5a569a36637c845ba58232dc21338a693f3bbbafbc69055325fd43d596e80aa"
+    },
+    {
+      "Path": "Windows/after-init-3.log",
+      "Bytes": 2762,
+      "Sha256": "12e2ed64258edcffdbd6813e9d00e7c1c8c3089be2685b307966ad8965d09b08"
+    },
+    {
+      "Path": "Windows/cleanup-quarantine.json",
+      "Bytes": 664,
+      "Sha256": "7dfd569ec5e29196590e6cb5f1e16ef0392774ca03ba86ac5121aa60c7dc1441"
+    },
+    {
+      "Path": "Windows/fresh-1.log",
+      "Bytes": 1094,
+      "Sha256": "63f68d65b55daa9edb7edb8df96a60a01589f22eaf7fc10d1a024911531f4908"
+    },
+    {
+      "Path": "Windows/fresh-10.log",
+      "Bytes": 1094,
+      "Sha256": "9b7850594def4698ace1170dcc4e53810668806d8fb973dee85fe9504fdaf546"
+    },
+    {
+      "Path": "Windows/fresh-11.log",
+      "Bytes": 1094,
+      "Sha256": "1233486bf6d8cf61ad0615be21afac35e885bfeede3ff767d27a30b663668dfd"
+    },
+    {
+      "Path": "Windows/fresh-12.log",
+      "Bytes": 1094,
+      "Sha256": "2e6c243dc5aadc79652f340f097f6322199bcb7204c12db3a76b5315b98ca643"
+    },
+    {
+      "Path": "Windows/fresh-13.log",
+      "Bytes": 1094,
+      "Sha256": "87527de5cb4048545f98447d05f5cddf67e3c8f638a2e287973b9f8bba9254c5"
+    },
+    {
+      "Path": "Windows/fresh-14.log",
+      "Bytes": 1094,
+      "Sha256": "3add1c2896d06b6618a69b688de146fceedb5ec59a496f69b3e1af956ca7000a"
+    },
+    {
+      "Path": "Windows/fresh-15.log",
+      "Bytes": 1094,
+      "Sha256": "f1a8e2b99105cec44d51fcf25d7a4e93d8ceac2124fe017f3b3724b5c592744c"
+    },
+    {
+      "Path": "Windows/fresh-16.log",
+      "Bytes": 1094,
+      "Sha256": "9ea58ae0f81af38e406b9c72a962a5125bf7e41d36ca88e85f63b6aefa410b72"
+    },
+    {
+      "Path": "Windows/fresh-17.log",
+      "Bytes": 1094,
+      "Sha256": "fa64acad0dbda56c8731ece7b99bf9dd96758a83eb511614b1be3b21b13b47f0"
+    },
+    {
+      "Path": "Windows/fresh-18.log",
+      "Bytes": 1094,
+      "Sha256": "2b3c232aa38f00d7a0fc6551bd5269c95d332a8b642d23c2b406635acd1aa787"
+    },
+    {
+      "Path": "Windows/fresh-19.log",
+      "Bytes": 1094,
+      "Sha256": "d4325ca6d06b697d722ce9d5888cb66832192abd633c62384e301acf4d49b281"
+    },
+    {
+      "Path": "Windows/fresh-2.log",
+      "Bytes": 1094,
+      "Sha256": "9fe1bf0c7d7f422f57ecf61a51e12d937c860566968d70e7a03dac2227e0a53f"
+    },
+    {
+      "Path": "Windows/fresh-20.log",
+      "Bytes": 1094,
+      "Sha256": "4b2a25ebc4b482a8a5f9b085ba319e79901f49515f9e3d99a70524fbd8609246"
+    },
+    {
+      "Path": "Windows/fresh-3.log",
+      "Bytes": 1094,
+      "Sha256": "30d817736b508831c063fc9440e8cc0ff9e4f5d1dc35fe3d98bb1bda3288110b"
+    },
+    {
+      "Path": "Windows/fresh-4.log",
+      "Bytes": 1094,
+      "Sha256": "ce44eb9582685bfceb3b3129715e5a57531530591670fea45b7c9be14515671e"
+    },
+    {
+      "Path": "Windows/fresh-5.log",
+      "Bytes": 1094,
+      "Sha256": "c4cc521557c61215e62cff7cfa0e1a68654b4d3813bef28a7369d2d1e4cb2632"
+    },
+    {
+      "Path": "Windows/fresh-6.log",
+      "Bytes": 1094,
+      "Sha256": "af965cd585652e0b6323fa6e01433211b3b3079913a39d7732b8ed309d775202"
+    },
+    {
+      "Path": "Windows/fresh-7.log",
+      "Bytes": 1094,
+      "Sha256": "9f679b3e952bede754245c45d896f221e89742d762ad1ed8adc92dbca7413c48"
+    },
+    {
+      "Path": "Windows/fresh-8.log",
+      "Bytes": 1094,
+      "Sha256": "2e7bc779def275b64ae277b2b6afa9fe74d5eb1027d6edaa0e93c6358a012050"
+    },
+    {
+      "Path": "Windows/fresh-9.log",
+      "Bytes": 1094,
+      "Sha256": "c3a6e00466e61f4c714b6509618be9ceee4bf979ae1b3a7eade07607de763c32"
+    },
+    {
+      "Path": "Windows/fresh-results.jsonl",
+      "Bytes": 2581,
+      "Sha256": "b120df6fad011dbd2c677c95eeddabe53784a964b420b8f21121ad138f2b7abb"
+    },
+    {
+      "Path": "Windows/regression-after.log",
+      "Bytes": 2762,
+      "Sha256": "f0890d6a4569bcfe6eee1e9870a34d0e2a8fed0f049454afad897f6b18da6ab6"
+    },
+    {
+      "Path": "Windows/regression-before.log",
+      "Bytes": 2526,
+      "Sha256": "1a140662fdcff870d2d1e9e51d24abf62bb43105847dfe272b8841e21354f65e"
+    },
+    {
+      "Path": "Windows/scheduled-0-1.log",
+      "Bytes": 1198,
+      "Sha256": "b56441e8ac91c7733c8dd8c9e275317f76956428825f0f29cb16647b901fafb9"
+    },
+    {
+      "Path": "Windows/scheduled-0-2.log",
+      "Bytes": 1198,
+      "Sha256": "5e4c184fac9f4c6040bc2a1052d916b8b2cc7d88ee06528e474d46ba053f2f71"
+    },
+    {
+      "Path": "Windows/scheduled-0-3.log",
+      "Bytes": 1198,
+      "Sha256": "bd00211b9767fba9b306bdf44876a1291389626a90286b06eca96deac9609f65"
+    },
+    {
+      "Path": "Windows/scheduled-0-4.log",
+      "Bytes": 1200,
+      "Sha256": "7c87f9d0b36f59010318a0fab1233461052105e730976386a535504197d53a33"
+    },
+    {
+      "Path": "Windows/scheduled-0-5.log",
+      "Bytes": 1200,
+      "Sha256": "040da9279f8af82ed4c4c4e8f9ae67c7761df90747e8a5e51d6d5f88632e3a72"
+    },
+    {
+      "Path": "Windows/scheduled-1-1.log",
+      "Bytes": 1202,
+      "Sha256": "c962adf0c160cc9ca2214b83c5b2694459ab63c1f313f40ca626856811829503"
+    },
+    {
+      "Path": "Windows/scheduled-1-2.log",
+      "Bytes": 1202,
+      "Sha256": "44e67d68e4e23ccb4595dc985d5fe07ffdcccfe1e7132067e44df36244ea4f81"
+    },
+    {
+      "Path": "Windows/scheduled-1-3.log",
+      "Bytes": 1202,
+      "Sha256": "8bdf80147f537b14f674171a008adabcc5e05aa9d7753f9fe4152cdbb99400c2"
+    },
+    {
+      "Path": "Windows/scheduled-1-4.log",
+      "Bytes": 1202,
+      "Sha256": "91be271fc25fee308239b56a039e8739cbcacb01ee93ff3f5742105d9dfe671f"
+    },
+    {
+      "Path": "Windows/scheduled-1-5.log",
+      "Bytes": 1202,
+      "Sha256": "1adcd369e4fb34c54fcee48825b63d4bc50b60d327155869825bcbda62b4ff8b"
+    },
+    {
+      "Path": "Windows/scheduled-2-1.log",
+      "Bytes": 1202,
+      "Sha256": "c43cc6bfa354f97f26ab3ea1d00c71f3962d388d3078fda88d064d7afe85c1a5"
+    },
+    {
+      "Path": "Windows/scheduled-2-2.log",
+      "Bytes": 1202,
+      "Sha256": "fd0df1f323d85477da4e9c8231f40effe7f4e655c7217118f8251b6f42d9b174"
+    },
+    {
+      "Path": "Windows/scheduled-2-3.log",
+      "Bytes": 1202,
+      "Sha256": "a832a9b839ca654b26bfbab0c82984233fba1e94178aad9a22e6a7a02b94afb8"
+    },
+    {
+      "Path": "Windows/scheduled-2-4.log",
+      "Bytes": 1202,
+      "Sha256": "8a72640ba974e008fa87025349cec91f2afe0ab7f742cfe7cec701c2ae51d567"
+    },
+    {
+      "Path": "Windows/scheduled-2-5.log",
+      "Bytes": 1202,
+      "Sha256": "b0aa013d58719834805e3500dc4254bc2acd8b53e6628e962f2664f7aab7baa6"
+    },
+    {
+      "Path": "Windows/scheduled-4-1.log",
+      "Bytes": 1204,
+      "Sha256": "3468d49f7149eb669ab22e44de8b0f85a3431d1c21626c855db94b501a7eaace"
+    },
+    {
+      "Path": "Windows/scheduled-4-2.log",
+      "Bytes": 810,
+      "Sha256": "13a41db79b003685130ea8f2ed514a20b27e2bbd28194f570094e54bad8157b4"
+    },
+    {
+      "Path": "Windows/scheduled-4-3.log",
+      "Bytes": 2598,
+      "Sha256": "b9f9d3ff08334b5b2f68c352c40dac892a43b25438216cbde77dcb05044229a0"
+    },
+    {
+      "Path": "Windows/scheduled-4-4.log",
+      "Bytes": 2226,
+      "Sha256": "de804b35522b477664369966b50f60071ab92acb5a3edcea657c9a435dab412a"
+    },
+    {
+      "Path": "Windows/scheduled-4-5.log",
+      "Bytes": 1204,
+      "Sha256": "22b029dd3c7589cddcbc0d6fb2a805f848930acb1a1dd6bfe2dbb602fde6065e"
+    },
+    {
+      "Path": "Windows/scheduled-4-6.log",
+      "Bytes": 2598,
+      "Sha256": "6eb633b557ee45e1d9e2c05d1af683496b0ea8b64e778ec31ff00e4d5bff867d"
+    },
+    {
+      "Path": "Windows/scheduled-4-7.log",
+      "Bytes": 2726,
+      "Sha256": "497c24776ae5c555adf92579ca50c6410dd5cad91659f3615d3930b439555a39"
+    },
+    {
+      "Path": "Windows/test-after-build-2.log",
+      "Bytes": 492,
+      "Sha256": "154eb31f9b6b474655f2e65e7137cac303d731fac6c74e7ecc05666f7796622b"
+    },
+    {
+      "Path": "Windows/test-after-build.log",
+      "Bytes": 1404,
+      "Sha256": "0132dc7b85bf934e5f6c0dce375fcf080bcafad1ac92683ba8b4ff8d7b3ff545"
+    },
+    {
+      "Path": "Windows/test-before-build.log",
+      "Bytes": 492,
+      "Sha256": "0c750921328f09e626eaebbac26f9ed463a39cdc65a32cea6abb0f94fbe83e2f"
+    },
+    {
+      "Path": "Windows/test-final-build.log",
+      "Bytes": 492,
+      "Sha256": "2a8589ab2b6f625cb112665a3948cd38d3e828b4a08515a48f3a6b5f2282920f"
+    },
+    {
+      "Path": "Linux/logs/after-build.log",
+      "Bytes": 205,
+      "Sha256": "1a7bb6e78d10bd844cbe9063ba3c955fa4e1550a22d9666bdc1558b76233a6c7"
+    },
+    {
+      "Path": "Linux/logs/before-build.log",
+      "Bytes": 235,
+      "Sha256": "6b4984c05b241b1b55fb381902733ec587c3c629ae8c935160a919508534e118"
+    },
+    {
+      "Path": "Linux/logs/init-1.log",
+      "Bytes": 780,
+      "Sha256": "8c0a40c95d7ed2a5e0618a0eed29f98618696afb9d47d550f9374ea0a42d28e3"
+    },
+    {
+      "Path": "Linux/logs/regression-before.log",
+      "Bytes": 780,
+      "Sha256": "d5a57648ae51dd4f5188281d50286046301dd70b2f678acdd9365ece608a2f14"
+    },
+    {
+      "Path": "Linux/logs-2/after-build.log",
+      "Bytes": 205,
+      "Sha256": "617c606731317f1974d5b1e9cc9f88fee3369edc06e09ea150de6d487be3d0c5"
+    },
+    {
+      "Path": "Linux/logs-2/before-build.log",
+      "Bytes": 235,
+      "Sha256": "1e25c43bbd33b02d6fdb469e6ff62521b9b911caa91a70d59f90166644114f57"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-1.log",
+      "Bytes": 543,
+      "Sha256": "7ecc75176eaacab321159811ef371f6ed17d2fa37866e1aac7584cc759a9e880"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-10.log",
+      "Bytes": 543,
+      "Sha256": "f67cf9e6023b32977f8d46e636579ebda7c323819e9db9a95978e7cb08815a70"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-11.log",
+      "Bytes": 543,
+      "Sha256": "ae9cb8925b8d66b0a8bd69eb68e7e3edb41da11ca830df525ca7eff13a91a189"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-12.log",
+      "Bytes": 543,
+      "Sha256": "cbee47a176bed1923f399d29375b7fb85917bbbbda9b9b68fce0ac505588fccb"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-13.log",
+      "Bytes": 543,
+      "Sha256": "147035bed65be407345e9bd5d4f81f58296ddecf6ffedd1313fd8ff0105cc222"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-14.log",
+      "Bytes": 543,
+      "Sha256": "ad683effb69e876debe952a4c8cb1991f09eebea44da65b7ab97e3e662581489"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-15.log",
+      "Bytes": 543,
+      "Sha256": "31db944943b6f39beaa0223636489e360c243c9c7a904ec9b588aad698136dd2"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-16.log",
+      "Bytes": 543,
+      "Sha256": "1c73230fc5d75b963b91048ab795cf41efc4496bd564166743759880303f6430"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-17.log",
+      "Bytes": 543,
+      "Sha256": "99b71f268644fc45da5aded864a318fc5a1e7cea0be0a7ef0d3616dd6dde2cc4"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-18.log",
+      "Bytes": 543,
+      "Sha256": "868f94914a7f6ba79ef797fb90983100a448c0c13237c83181feb6744a311176"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-19.log",
+      "Bytes": 543,
+      "Sha256": "3212125852ffdd736beb1bd386a42f880da0fd2a87a4acb8eaa0b32981a6f61c"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-2.log",
+      "Bytes": 543,
+      "Sha256": "e6c7e893ab903035d69e294e4d2102b07e4107d509954228c41c78cdb6941666"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-20.log",
+      "Bytes": 543,
+      "Sha256": "1f33ca40e59cc22728c58f46cc0ee4d04b8ee3e6a2116d8a1b6714105d5da122"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-3.log",
+      "Bytes": 543,
+      "Sha256": "d4d098c766de8549c51ea5006fd43a3b7ea9ef097b4639fcd5579f8fd7884b2a"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-4.log",
+      "Bytes": 543,
+      "Sha256": "d3cba62e18723ae8ce47fd4fe506bebceda9d41c959b4879e459d35e1b3bb940"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-5.log",
+      "Bytes": 543,
+      "Sha256": "5fc51472cec085f49674b8780e85aa966b11fc94b8f6575992d233a8a300a8e5"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-6.log",
+      "Bytes": 543,
+      "Sha256": "f00e8e3849f755075bf77ca48be2d60bef522b0a7bf548055cdca5728b96826e"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-7.log",
+      "Bytes": 543,
+      "Sha256": "256acb174d66fd4323ec6b90ecf1ab4351324a79584b52bea0b76d09e658131f"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-8.log",
+      "Bytes": 543,
+      "Sha256": "c310a592325a3c3f83eb50d994dcf4c1129aa3ff54c3fc8a1719ec3e79062493"
+    },
+    {
+      "Path": "Linux/logs-2/fresh-9.log",
+      "Bytes": 543,
+      "Sha256": "7ff6640f216cca07dd4a1cf79851f38fabc7a32e1c4dc2c7800c9eae28cd9f85"
+    },
+    {
+      "Path": "Linux/logs-2/hashes.txt",
+      "Bytes": 2274,
+      "Sha256": "8b508ac7d0cfe5c1c88557e3e7cee819f0f8ea47a600f5d509d1e4de1e0ec2af"
+    },
+    {
+      "Path": "Linux/logs-2/init-1.log",
+      "Bytes": 1363,
+      "Sha256": "058c02090d3ae39c19eb294fabeba0d6cc9bee7d3300960ec745dc29ed6628e8"
+    },
+    {
+      "Path": "Linux/logs-2/init-2.log",
+      "Bytes": 1363,
+      "Sha256": "ccc8463396151b0831710497dde9a2d921a52a04e69e499ed17fece080ccc2a9"
+    },
+    {
+      "Path": "Linux/logs-2/init-3.log",
+      "Bytes": 1363,
+      "Sha256": "b92c7faa6c6afb3947a29b62df679b4ec75503355afc616f11b3e03d8e9cb6cb"
+    },
+    {
+      "Path": "Linux/logs-2/native-hashes.txt",
+      "Bytes": 286,
+      "Sha256": "68859db6ba708413ac36ff57ae1ccded046551680cd18a7c59a458c66064a838"
+    },
+    {
+      "Path": "Linux/logs-2/regression-before.log",
+      "Bytes": 780,
+      "Sha256": "8b5c9cd914feb85dace56c013143e441d3f9ee6387c2987461aa5fb03cde3a70"
+    },
+    {
+      "Path": "SchedulingProbe-Initial.cs",
+      "Bytes": 2280,
+      "Sha256": "d6cad269972f7f90a9fd930cb062044f77866f5f014da88df1211b61cb9dd6da"
+    },
+    {
+      "Path": "SchedulingProbe.cs",
+      "Bytes": 2274,
+      "Sha256": "16a3f9164912a741f87ea5eae8cb196c857ad3a85236fcbacd6b5f3d288cc14c"
+    },
+    {
+      "Path": "Run-Linux.sh",
+      "Bytes": 1721,
+      "Sha256": "b65d2baca810daa0053b7367d171d57c7723bf0cfd3c60e38a904b30fbf07be1"
+    },
+    {
+      "Path": "delta.tar",
+      "Bytes": 140800,
+      "Sha256": "f9de24124541fcedc63458eccc23936768b5540e6cefddb84475f9684bea1620"
+    },
+    {
+      "Path": "Make-Evidence.py",
+      "Bytes": 9904,
+      "Sha256": "bb8ebec905c8253a54ab6306afa65cbd3431a06c2d756b795299408f386d9b6c"
+    },
+    {
+      "Path": "Verify-Bundles.py",
+      "Bytes": 3104,
+      "Sha256": "9d253f36c2b6a88498bc59057c088e701dd502623e9b57df842b4d5c48f4b79c"
+    },
+    {
+      "Path": "Implementation-CI.json",
+      "Bytes": 52393,
+      "Sha256": "d4f140b4f2739da74b3ccd72108b6db6f206fb9c66bb664792e3e6bea1e196c0"
+    },
+    {
+      "Path": "Implementation-Runtime.log",
+      "Bytes": 631815,
+      "Sha256": "fc562556f887ac19ada4b1828ebd88793067fec65c63155c01121e9ffae9faba"
+    },
+    {
+      "Path": "Implementation-Tooling.log",
+      "Bytes": 276670,
+      "Sha256": "a2e47a87ecf3a8c0d83ce4ce98aae07c3ffcacd679cc09bfefb88ad160a1f7e2"
+    },
+    {
+      "Path": "Implementation-Bundles-Receipt.json",
+      "Bytes": 2340,
+      "Sha256": "1befbf1dd8ab3d4c273dd1bd502197d6202e89e61cad847c1c3878437bc6f904"
+    },
+    {
+      "Path": "Published-Release.json",
+      "Bytes": 1172,
+      "Sha256": "e7f332955c3e506b46662beb8d21d0be92e281eb90131f35d01d25d22b83e278"
+    }
+  ],
+  "UnchangedHistoricalMechanismBlobs": [
+    {
+      "Path": "src/CarbonLuau/Runtime/NativeRuntime.cs",
+      "OriginalAndStartingGitBlob": "28698672cacb6d76ecb757d3286cc402eeee368c"
+    },
+    {
+      "Path": "src/CarbonLuau/Scripts/ScriptHost.cs",
+      "OriginalAndStartingGitBlob": "8f0bcf33b8e1778e7386fb6d72c1bb475b75a9c6"
+    },
+    {
+      "Path": "src/CarbonLuau/Scripts/RuntimeDomain.cs",
+      "OriginalAndStartingGitBlob": "0bc73038f3f5950d72281a9552ae7aa7fd2879d4"
+    },
+    {
+      "Path": "src/CarbonLuau/Facade/FacadeSession.cs",
+      "OriginalAndStartingGitBlob": "fc065e83ba74afc0eeb2712a2d13b2fb4d2b517b"
+    },
+    {
+      "Path": "native/src/Runtime.cpp",
+      "OriginalAndStartingGitBlob": "6af847a461ae175a7da33e98707490880f6272c5"
+    },
+    {
+      "Path": "native/src/scripts/Compiler.cpp",
+      "OriginalAndStartingGitBlob": "815d6bb2574ea852b2060956904bba1e081a8ea1"
+    },
+    {
+      "Path": "native/src/runtime/Deadline.cpp",
+      "OriginalAndStartingGitBlob": "261b25411b6274e34a59c5ba85ff131340055b42"
+    }
+  ],
+  "HostedCI": [
+    {
+      "Id": 38821450187,
+      "HeadSha": "24599a534cffeeb9c7ce8dac6780a39d94ee0e5c",
+      "Name": "CarbonLuau validation",
+      "Conclusion": "success",
+      "Url": "https://github.com/gmoddev/CarbonLuau/actions/runs/38821450187",
+      "Jobs": [
+        {
+          "Id": 116718721845,
+          "Name": "sanitizers",
+          "Conclusion": "success"
+        },
+        {
+          "Id": 116718722323,
+          "Name": "probe (ubuntu-24.04)",
+          "Conclusion": "success"
+        },
+        {
+          "Id": 116718722363,
+          "Name": "probe (windows-latest)",
+          "Conclusion": "success"
+        }
+      ]
+    },
+    {
+      "Id": 38821450163,
+      "HeadSha": "24599a534cffeeb9c7ce8dac6780a39d94ee0e5c",
+      "Name": "Tooling Foundations A and B",
+      "Conclusion": "success",
+      "Url": "https://github.com/gmoddev/CarbonLuau/actions/runs/38821450163",
+      "Jobs": [
+        {
+          "Id": 116718738205,
+          "Name": "tooling (macos-latest)",
+          "Conclusion": "success"
+        },
+        {
+          "Id": 116718738318,
+          "Name": "tooling (ubuntu-24.04)",
+          "Conclusion": "success"
+        },
+        {
+          "Id": 116718738331,
+          "Name": "tooling (windows-latest)",
+          "Conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "CandidateBundles": [
+    {
+      "Platform": "Windows",
+      "Source": "24599a534cffeeb9c7ce8dac6780a39d94ee0e5c",
+      "Rid": "win-x64",
+      "SourceAndApiVerified": true,
+      "ChangedManagedSourcesVerified": true,
+      "PrivateTestSeamsExcluded": true,
+      "Components": {
+        "packageSha256": "carbon/plugins/CarbonLuau.cszip",
+        "nativeSha256": "carbon/data/CarbonLuau/native/win-x64/carbonluau_native.dll",
+        "compilerSha256": "carbon/data/CarbonLuau/native/win-x64/carbonluau_compiler.exe",
+        "storageSha256": "carbon/data/CarbonLuau/native/win-x64/carbonluau_storage.exe"
+      },
+      "Files": [
+        {
+          "Name": "CarbonLuau-v0.7.0-win-x64.provenance.json",
+          "Bytes": 1017,
+          "Sha256": "c16ee9bebe19d4da769860630b986ea909dbaeb93452170385efac9a79f83dee"
+        },
+        {
+          "Name": "CarbonLuau-v0.7.0-win-x64.sha256",
+          "Bytes": 96,
+          "Sha256": "cbe2b62d11841109f4ffb124ef30b6cfeb0c3645c1f95f7e6639421bc185faf4"
+        },
+        {
+          "Name": "CarbonLuau-v0.7.0-win-x64.zip",
+          "Bytes": 1983780,
+          "Sha256": "6c1d6200317d95557f689d34ca133f5dd5c776e2b9bea3448c92cbccb95b6c21"
+        }
+      ]
+    },
+    {
+      "Platform": "Linux",
+      "Source": "24599a534cffeeb9c7ce8dac6780a39d94ee0e5c",
+      "Rid": "linux-x64",
+      "SourceAndApiVerified": true,
+      "ChangedManagedSourcesVerified": true,
+      "PrivateTestSeamsExcluded": true,
+      "Components": {
+        "packageSha256": "carbon/plugins/CarbonLuau.cszip",
+        "nativeSha256": "carbon/data/CarbonLuau/native/linux-x64/libcarbonluau_native.so",
+        "compilerSha256": "carbon/data/CarbonLuau/native/linux-x64/carbonluau_compiler",
+        "storageSha256": "carbon/data/CarbonLuau/native/linux-x64/carbonluau_storage"
+      },
+      "Files": [
+        {
+          "Name": "CarbonLuau-v0.7.0-linux-x64.provenance.json",
+          "Bytes": 995,
+          "Sha256": "e4e69ed62c753c3bad68fd14cebaed80474729d5177afc976d14660fbef21df5"
+        },
+        {
+          "Name": "CarbonLuau-v0.7.0-linux-x64.sha256",
+          "Bytes": 98,
+          "Sha256": "eb4217f152905ef47c509a0bdd3713839db4f2b09d7a7fcb26d1517eef7775cb"
+        },
+        {
+          "Name": "CarbonLuau-v0.7.0-linux-x64.zip",
+          "Bytes": 2008562,
+          "Sha256": "b581d09c399fced895eb9afecc67ae0734bbc3caef0c9d39460655b5ea0fbf3a"
+        }
+      ]
+    }
+  ],
+  "FinalSourceClosure": "The documentation/evidence commit receives exact-source CI before delivery; its SHA and run links are reported in final delivery.",
+  "PublishedV070Changed": false,
+  "ReleaseTagOrVsixPublished": false,
+  "EditorRepositoryChanged": false,
+  "PublishedVerification": {
+    "assets": [
+      {
+        "digest": "sha256:3c9304d5d444285a88b11f0c5d63acb7b14e2df3e692ea8834928771d959190b",
+        "id": 632622627,
+        "name": "CarbonLuau-v0.7.0-linux-x64.provenance.json",
+        "updated_at": "2026-10-12T04:10:28Z"
+      },
+      {
+        "digest": "sha256:1fd633e17e2da5177687dad1a85c23b6e51753bd9f1fa842d8b212658adf0658",
+        "id": 632622613,
+        "name": "CarbonLuau-v0.7.0-linux-x64.sha256",
+        "updated_at": "2026-10-12T04:10:27Z"
+      },
+      {
+        "digest": "sha256:ed3ad4cf9937e628ea14661ce4a2e2c8b0ed61b372b250fab9753a357c846a48",
+        "id": 632622604,
+        "name": "CarbonLuau-v0.7.0-linux-x64.zip",
+        "updated_at": "2026-10-12T04:10:30Z"
+      },
+      {
+        "digest": "sha256:b84a24592153fdf11346d4b50b59dc4f8f01ed2e3dbb30da4c3b9ac7f1ef06fa",
+        "id": 632622609,
+        "name": "CarbonLuau-v0.7.0-win-x64.provenance.json",
+        "updated_at": "2026-10-12T04:10:27Z"
+      },
+      {
+        "digest": "sha256:3381c34efa14c44aa938869341f9824429cd56cc8568ac6a062ce74a35ecc39a",
+        "id": 632622601,
+        "name": "CarbonLuau-v0.7.0-win-x64.sha256",
+        "updated_at": "2026-10-12T04:10:27Z"
+      },
+      {
+        "digest": "sha256:64b3fcfe0e7652325f6405e811bb6e2a9a92fc979ebfb7abf9bcb9c55a91e7d9",
+        "id": 632622602,
+        "name": "CarbonLuau-v0.7.0-win-x64.zip",
+        "updated_at": "2026-10-12T04:10:30Z"
+      }
+    ],
+    "id": 410150414,
+    "published_at": "2026-10-12T04:10:30Z",
+    "tag_name": "v0.7.0"
+  },
+  "LiveCarbonRerun": false,
+  "HostScope": "No Rust server change; existing exact D8/D9 physical evidence retained; VM/managed correction qualified separately"
+}

@@ -13,6 +13,7 @@ delivery.
 | Canonical API/tooling dependency | CarbonLuau `fff095f57cc53b5f4acf3d45e3ba033ba499c319` |
 | Development scripting API | `0.7.5-experimental` |
 | Runtime audit/diagnostic implementation | `18104098b6fa6b8298787eddff83873dec44a29b` |
+| Shared initialization status correction | `24599a534cffeeb9c7ce8dac6780a39d94ee0e5c` |
 | Extension implementation | `c2d3ac9ad27af3c7fe97447ea73bd1ab91d4649d` |
 | Final editor source pinned by runtime CI | `838ed27c6a627a5e4030f9e64f8744c590842a97` |
 | Extension package | `0.0.1`, private candidate, unchanged |
@@ -99,6 +100,16 @@ static-only; macOS x64 execution/artifact support remains unqualified. Native
 process controls are not a portable filesystem/network sandbox claim.
 
 ## Inventory CI investigation and negative evidence
+
+The [follow-up investigation](Inventory-CI-Investigation.md) at correction
+`24599a534cffeeb9c7ce8dac6780a39d94ee0e5c` reproduces this assertion under
+controlled Windows scheduling: bootstrap compiler TIMEOUT, zero scans/watches,
+before the entry timer, plus a distinct execution TIMEOUT at the same assertion.
+It corrects shared managed initialization's loss of the
+native failure status and adds Windows/Linux old-source failing regressions and
+failure/lifecycle coverage. This identifies a mechanism and a diagnostic defect;
+it does not uniquely attribute the historical job. **The inventory HOLD remains.**
+The dated observations and original negative below remain historical evidence.
 
 The original D8 failure is retained at
 [Windows job 116333604423](https://github.com/gmoddev/CarbonLuau/actions/runs/38708449523/job/116333604423),

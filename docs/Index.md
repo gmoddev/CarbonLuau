@@ -15,6 +15,8 @@ does not create another contract or qualification receipt.
 - [Development runtime/editor readiness](CrossRepo-ReleaseReadiness.md): API
   `0.7.5-experimental`, synchronized official editor and outstanding release gates.
   Current development API `0.7.5-experimental` adds [Item/Prefab catalogs](api/Catalogs.md).
+- [Inventory CI investigation](Inventory-CI-Investigation.md): bootstrap timeout
+  reproduction, shared status correction and retained historical release HOLD.
 - Published release notes: [0.3](releases/0.3.0.md), [0.4](releases/0.4.0.md),
   [0.5](releases/0.5.0.md). [Planned 0.6 notes](releases/0.6.0.md) remain explicitly
   unpublished scope/number planning; package identity need not match API identity.

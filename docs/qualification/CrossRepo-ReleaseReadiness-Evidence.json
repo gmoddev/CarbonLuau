@@ -126,6 +126,10 @@
   },
   "Inventory": {
     "Disposition": "UNRESOLVED_RELEASE_BLOCKER",
+    "FollowUpReport": "docs/Inventory-CI-Investigation.md",
+    "FollowUpEvidence": "docs/qualification/Inventory-CI-Evidence.json",
+    "FollowUpCorrection": "24599a534cffeeb9c7ce8dac6780a39d94ee0e5c",
+    "FollowUpScope": "Shared native initialization status loss corrected; controlled bootstrap and execution timeouts reproduced; historical attribution remains unresolved",
     "OriginalRun": 38708449523,
     "OriginalJob": 116333604423,
     "OriginalLogSha256": "e6387c375980279a66ae641f292bc26cd66b97cb0f3d202179fd76855aa7f7d9",
