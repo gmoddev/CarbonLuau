@@ -1,8 +1,10 @@
 # Runtime and editor development readiness
 
-Date: 2026-10-15. Status: candidate qualification in progress. No release verdict
-is inferred from the earlier runtime-only CATALOG-D9 PASS. This assessment covers
-both repositories and preserves the unresolved inventory CI failure below.
+Date: 2026-10-15. Status: runtime/editor implementation qualified; experimental
+publication held for the unresolved inventory CI failure below. No release
+verdict is inferred from the earlier runtime-only CATALOG-D9 PASS. This assessment
+covers both repositories; final documentation commits require their own CI before
+delivery.
 
 ## Identities and compatibility
 
@@ -10,7 +12,9 @@ both repositories and preserves the unresolved inventory CI failure below.
 |---|---|
 | Canonical API/tooling dependency | CarbonLuau `fff095f57cc53b5f4acf3d45e3ba033ba499c319` |
 | Development scripting API | `0.7.5-experimental` |
-| Extension implementation | `34c435bf7c6c846f84982357fad567f1d449dd62` |
+| Runtime audit/diagnostic implementation | `18104098b6fa6b8298787eddff83873dec44a29b` |
+| Extension implementation | `c2d3ac9ad27af3c7fe97447ea73bd1ab91d4649d` |
+| Final editor source pinned by runtime CI | `838ed27c6a627a5e4030f9e64f8744c590842a97` |
 | Extension package | `0.0.1`, private candidate, unchanged |
 | Tooling pack format/profile | `0.4.0-rc.1`, unchanged; not the scripting API version |
 | Runtime package / published tag | `0.7.0` / `v0.7.0`, immutable |
@@ -35,6 +39,15 @@ atomic complete-owner publication; [D7](GameplayD7-Validation.md) added stones;
 stack-modifier admission. [D9](CatalogD9-Validation.md) added 221 Item constants
 and Prefab.Loot.Barrel1/Barrel2 as frozen ordinary canonical strings, once per VM
 generation. Other validators retain their own capability scope.
+
+Unchanged D9 memory/lifecycle evidence at the qualified canonical dependency:
+30,696 bytes for native catalog construction, two retained VM references, and
+24,552-byte typical paired D8/D9 VM delta (allocator-page effects are recorded in
+D9). The representative 100-addon managed fixture used 8,625,384 bytes under the
+existing 64-MiB heap. All 28 actual initialization-allocation failure prefixes
+clean up to zero bytes. Healthy replacement shares the frozen tables; recovery
+constructs a fresh generation. This synchronization changes none of those paths;
+current native/VM regressions recheck the same bounds, not a new memory allowance.
 
 Exact supported prefabs remain:
 
@@ -119,24 +132,81 @@ requirement; it does not establish readiness to publish.
 
 ## Qualification and artifact evidence
 
-Pending final committed-source runs in both repositories. Runtime CI covers
-Windows/Linux native/managed/real-VM, sanitizers, allocation/lifecycle/fairness,
-inventory/gameplay/persistence regressions, generators/metadata/examples,
-packaging and docs. The editor matrix builds pinned canonical tooling and checks
-unit/security/real-tooling integration, two fresh pack assemblies, two independent
-vsce/prepublish builds and deterministic normalized VSIX contents. Actual Windows
-and Linux VS Code tests install each candidate into a clean profile/extensions
-directory, then exercise Restricted Mode, Trust grant/reopen/revocation, language
-providers, GUI, process recovery, catalog search/completion/hover/typos and cleanup.
-macOS arm64 builds/checks/package remain static-only.
+Runtime implementation 18104098b6fa6b8298787eddff83873dec44a29b passes all four
+hosted workflows:
+[runtime and sanitizers](https://github.com/gmoddev/CarbonLuau/actions/runs/38813149842),
+[tooling](https://github.com/gmoddev/CarbonLuau/actions/runs/38813149926),
+[baseline contracts](https://github.com/gmoddev/CarbonLuau/actions/runs/38813149928)
+and [documentation](https://github.com/gmoddev/CarbonLuau/actions/runs/38813149861).
+Windows has 23 native tests, Linux 24, and ASan/UBSan/leak checking 24, all PASS.
+Managed/real-VM, allocation faults, 100-addon fairness, GUI, inventory, gameplay,
+persistence, tooling/generators/metadata, deterministic packaging and clean
+installation pass. Each clean Windows/Linux bundle compiles all 75 examples and
+executes the GUI/Player fixtures before teardown. The new inventory diagnostic
+records OK/zero scans/zero watches, Windows 60.423 ms and Linux 17.243 ms; these
+whole-reload observations do not identify the historical failure's mechanism.
+
+Editor implementation c2d3ac9ad27af3c7fe97447ea73bd1ab91d4649d passes
+[its complete matrix](https://github.com/gmoddev/carbonluau-vscode/actions/runs/38814564532).
+Windows/Linux each pass all 48 unit/security/real-tooling checks, zero skips.
+macOS arm64 passes 35 with 13 deliberately unsupported execution-profile checks
+skipped. Each platform repeats canonical pack assembly in a fresh directory and
+runs two independent vsce/prepublish builds before deterministic ZIP normalization.
+All payloads are identical within each repeat pair.
+
+Actual Windows/Linux VS Code 1.95.3 tests install the candidate into a clean
+profile/extensions directory, then pass Restricted Mode, Trust grant/reopen/
+revocation, language providers, GUI, process recovery and cleanup. Catalog
+receipts prove exact canonical and symbol queries, copied constants, unchanged
+source, 221/2 completion, literal/capability hover, misspelled-field diagnostics,
+picker cancellation and old-API rejection/recovery. The shipped new example
+typechecks. Runtime CI independently verifies all 221/2 completions in root entry,
+root module, addon entry and addon module. No optional raw-string rewrite action
+is claimed. macOS stays static-only with no actual editor installation or
+executable analysis claim.
+
+The [runtime evidence ledger](qualification/CrossRepo-ReleaseReadiness-Evidence.json)
+records exact source dependencies, all four workflow/job identities, six runtime
+candidate artifact hashes, canonical source hashes, seven raw receipt hashes and
+immutable published-release identities. The editor's
+[evidence ledger](https://github.com/gmoddev/carbonluau-vscode/blob/838ed27c6a627a5e4030f9e64f8744c590842a97/docs/qualification/ReleaseReadiness-Evidence.json)
+records all three implementation VSIX hashes/build IDs and 41 raw receipt hashes.
+Every canonical API metadata, tooling metadata, definition, doc and symbol file
+matches the qualified authoritative runtime bytes; every packaged payload hash
+is verified. The [editor report](https://github.com/gmoddev/carbonluau-vscode/blob/838ed27c6a627a5e4030f9e64f8744c590842a97/docs/ReleaseReadiness.md)
+also retains both failed UI-driver attempts and the isolated successful Linux
+development fixture. Neither driver correction changes an assertion or deadline.
 
 Reproducibility means repeat pack assembly from identical qualified compiler
 outputs and repeat VSIX builds on each platform; it does not claim cross-platform
 Deflate or independent compiler/toolchain byte identity. CI artifacts are
 development candidates, not release/Marketplace/Open VSX publications.
 
-Final commits, run IDs, results and artifact hashes will be recorded after these
-gates complete. The recommendation remains HOLD for the inventory blocker.
+This evidence closure changes documentation and the exact editor test pin only.
+The runtime source containing this report and editor
+838ed27c6a627a5e4030f9e64f8744c590842a97 must both receive their own exact-source
+CI before delivery. Final delivery records those tested SHAs and immutable run
+links; match workflow headSha rather than an advanced main badge. Implementation
+artifact hashes above belong to their stated source, and final closure artifacts
+have their own provenance/checksums.
+
+Published tag object 7c7d36f648a5506efd07c1b6d6bcf4b94d3f7d2b still peels to
+dabb872094f74e60d75de099379d198fb63a6bf8. Release 410150414 and all six asset
+IDs, digests and update times equal the retained published baseline. CI candidate
+bundles bearing the old package filename are not those immutable published assets.
+No release/tag, Marketplace/Open VSX or public VSIX publication occurs here, and
+no next package version is selected. No Rust server is changed by this task;
+D8/D9 exact pinned Windows Carbon 2.0.262/8a81d70 and Linux Carbon 2.0.261/c74c4ca
+physical evidence and restored-server receipts are retained. The temporary Linux
+editor container exits zero and is removed; all eight protected containers remain
+unchanged. The focused Windows fixture leaves no owned runtime/compiler process.
+
+Recommendation: **HOLD the next experimental publication** until the historical
+inventory initialization failure is explained with evidence and any necessary
+fix is qualified. Then assign the candidate package identities explicitly under
+D12 and complete the existing publisher/licensing/attestation/platform
+distribution gates before separately authorized publication. No additional
+gameplay investigation or Loot expansion is needed to resolve this audit blocker.
 
 ## Retained synchronization attempt
 

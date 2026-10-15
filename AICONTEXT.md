@@ -42,6 +42,7 @@ restating a proposal as a rule or broadening a receipt's tested scope.
 | Declarative Loot Replace | [D23](docs/invariants/Gameplay.md); [private D2A](docs/GameplayD2A-Validation.md), [public D3](docs/GameplayD3-Validation.md), [barrel-2 D4](docs/GameplayD4-Validation.md), [items D5](docs/GameplayD5-Validation.md), [per-prefab registry D6](docs/GameplayD6-Validation.md), [additional items D7](docs/GameplayD7-Validation.md), [bulk items D8](docs/GameplayD8-Validation.md) |
 | Immutable Item/Prefab string catalogs | [D12 identity](docs/invariants/Runtime.md#d12-current-catalog-identity-assignment), [reference](docs/api/Catalogs.md), [CATALOG-D9 qualification](docs/CatalogD9-Validation.md) |
 | Package/API/ABI/provider/schema/Luau identities and publication | [D12](docs/invariants/Runtime.md#d12--scripting-and-protocol-identity), [release.json](release.json), [Release](docs/Release.md), [Installation](docs/Installation.md) |
+| Current development runtime/editor synchronization and release gates | [Cross-repository readiness](docs/CrossRepo-ReleaseReadiness.md); separate official editor's tooling-source.json pins the qualified canonical API source |
 
 The current development package/API mapping is `0.7.0` / `0.7.5-experimental`.
 CATALOG-D9 introduces generated immutable Item/Prefab string namespaces under

@@ -1,0 +1,279 @@
+{
+  "SchemaVersion": 1,
+  "Date": "2026-10-15",
+  "RuntimeImplementationRevision": "18104098b6fa6b8298787eddff83873dec44a29b",
+  "EditorImplementationRevision": "c2d3ac9ad27af3c7fe97447ea73bd1ab91d4649d",
+  "EditorFinalSource": "838ed27c6a627a5e4030f9e64f8744c590842a97",
+  "CanonicalToolingDependency": "fff095f57cc53b5f4acf3d45e3ba033ba499c319",
+  "ApiVersion": "0.7.5-experimental",
+  "RuntimeCI": [
+    {
+      "Id": 38813149842,
+      "Url": "https://github.com/gmoddev/CarbonLuau/actions/runs/38813149842",
+      "HeadSha": "18104098b6fa6b8298787eddff83873dec44a29b",
+      "Conclusion": "success",
+      "Jobs": [
+        {
+          "Id": 116691128936,
+          "Name": "probe (windows-latest)",
+          "Conclusion": "success"
+        },
+        {
+          "Id": 116691129313,
+          "Name": "sanitizers",
+          "Conclusion": "success"
+        },
+        {
+          "Id": 116691129765,
+          "Name": "probe (ubuntu-24.04)",
+          "Conclusion": "success"
+        }
+      ]
+    },
+    {
+      "Id": 38813149926,
+      "Url": "https://github.com/gmoddev/CarbonLuau/actions/runs/38813149926",
+      "HeadSha": "18104098b6fa6b8298787eddff83873dec44a29b",
+      "Conclusion": "success",
+      "Jobs": [
+        {
+          "Id": 116691128868,
+          "Name": "tooling (ubuntu-24.04)",
+          "Conclusion": "success"
+        },
+        {
+          "Id": 116691129035,
+          "Name": "tooling (windows-latest)",
+          "Conclusion": "success"
+        },
+        {
+          "Id": 116691129193,
+          "Name": "tooling (macos-latest)",
+          "Conclusion": "success"
+        }
+      ]
+    },
+    {
+      "Id": 38813149928,
+      "Url": "https://github.com/gmoddev/CarbonLuau/actions/runs/38813149928",
+      "HeadSha": "18104098b6fa6b8298787eddff83873dec44a29b",
+      "Conclusion": "success",
+      "Jobs": [
+        {
+          "Id": 116691128541,
+          "Name": "contracts",
+          "Conclusion": "success"
+        }
+      ]
+    },
+    {
+      "Id": 38813149861,
+      "Url": "https://github.com/gmoddev/CarbonLuau/actions/runs/38813149861",
+      "HeadSha": "18104098b6fa6b8298787eddff83873dec44a29b",
+      "Conclusion": "success",
+      "Jobs": [
+        {
+          "Id": 116691128484,
+          "Name": "deploy",
+          "Conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "ProductionChangesSinceQualifiedDependency": [],
+  "Catalog": {
+    "Items": 221,
+    "Prefabs": [
+      {
+        "Group": "Loot",
+        "Symbol": "Barrel1",
+        "Path": "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab",
+        "Id": 966676416,
+        "Capabilities": [
+          "Loot.Replace"
+        ]
+      },
+      {
+        "Group": "Loot",
+        "Symbol": "Barrel2",
+        "Path": "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab",
+        "Id": 555882409,
+        "Capabilities": [
+          "Loot.Replace"
+        ]
+      }
+    ],
+    "Fingerprint": "419eeabd336aab199aa23a4537976ee404d838664928dabda77ddcecb538c528"
+  },
+  "SourceHashes": {
+    "api/loot-items.pinned.json": "a0c7a40dfce177a8bcbf841316dc51dd5a366b6304522e86f030e539d5fead15",
+    "generated/catalog-symbols.json": "7039cced8a50a833da2d038f8ae92e195995fe7e04a3f4c8758f8c8a2cfb87b2",
+    "generated/carbonluau.d.luau": "eb331d44c04a18dd71daa80bea58b18d80847a326ea9969150861efd254ce660",
+    "api/carbonluau-api.json": "187e64f184ff3961057613056f22d531d6d351022b5f21033c431b1e922fab7f",
+    "src/CarbonLuau/CarbonLuau.Loot.Carbon.cs": "08ddc4454242e1af09ecc30fb948cf8a1f264a89111023d239a808e1dd494004",
+    "tests/runtime/InventoryNetObservationTests.cs": "fd5d082cb397697d514eec8a0beb03c4942bc339557bcc596b0e185e6073d4ed"
+  },
+  "EditorEvidenceSha256": "0ebac9debf45563106dfad256be8d3a670f2032217faae61e7fd1370978a57bb",
+  "NativeTests": {
+    "Windows": 23,
+    "Linux": 24,
+    "Sanitizers": 24
+  },
+  "CleanRuntimeInstall": {
+    "Windows": "PASS",
+    "Linux": "PASS",
+    "CompiledExamplesEach": 75
+  },
+  "Inventory": {
+    "Disposition": "UNRESOLVED_RELEASE_BLOCKER",
+    "OriginalRun": 38708449523,
+    "OriginalJob": 116333604423,
+    "OriginalLogSha256": "e6387c375980279a66ae641f292bc26cd66b97cb0f3d202179fd76855aa7f7d9",
+    "OriginalMissingValues": [
+      "Reload.Status",
+      "Player.Scans",
+      "WatchCount",
+      "Reload.Error"
+    ],
+    "CurrentWindows": {
+      "Status": "OK",
+      "Scans": 0,
+      "Watches": 0,
+      "ElapsedMs": 60.423
+    },
+    "CurrentLinux": {
+      "Status": "OK",
+      "Scans": 0,
+      "Watches": 0,
+      "ElapsedMs": 17.243
+    },
+    "AssertionOrDeadlineChanged": false,
+    "RetryOrWarmupAdded": false,
+    "HistoricalCauseEstablished": false
+  },
+  "PublishedReleaseUnchanged": {
+    "id": 410150414,
+    "tag_name": "v0.7.0",
+    "published_at": "2026-10-12T04:10:30Z",
+    "assets": [
+      {
+        "digest": "sha256:3c9304d5d444285a88b11f0c5d63acb7b14e2df3e692ea8834928771d959190b",
+        "id": 632622627,
+        "name": "CarbonLuau-v0.7.0-linux-x64.provenance.json",
+        "updated_at": "2026-10-12T04:10:28Z"
+      },
+      {
+        "digest": "sha256:1fd633e17e2da5177687dad1a85c23b6e51753bd9f1fa842d8b212658adf0658",
+        "id": 632622613,
+        "name": "CarbonLuau-v0.7.0-linux-x64.sha256",
+        "updated_at": "2026-10-12T04:10:27Z"
+      },
+      {
+        "digest": "sha256:ed3ad4cf9937e628ea14661ce4a2e2c8b0ed61b372b250fab9753a357c846a48",
+        "id": 632622604,
+        "name": "CarbonLuau-v0.7.0-linux-x64.zip",
+        "updated_at": "2026-10-12T04:10:30Z"
+      },
+      {
+        "digest": "sha256:b84a24592153fdf11346d4b50b59dc4f8f01ed2e3dbb30da4c3b9ac7f1ef06fa",
+        "id": 632622609,
+        "name": "CarbonLuau-v0.7.0-win-x64.provenance.json",
+        "updated_at": "2026-10-12T04:10:27Z"
+      },
+      {
+        "digest": "sha256:3381c34efa14c44aa938869341f9824429cd56cc8568ac6a062ce74a35ecc39a",
+        "id": 632622601,
+        "name": "CarbonLuau-v0.7.0-win-x64.sha256",
+        "updated_at": "2026-10-12T04:10:27Z"
+      },
+      {
+        "digest": "sha256:64b3fcfe0e7652325f6405e811bb6e2a9a92fc979ebfb7abf9bcb9c55a91e7d9",
+        "id": 632622602,
+        "name": "CarbonLuau-v0.7.0-win-x64.zip",
+        "updated_at": "2026-10-12T04:10:30Z"
+      }
+    ]
+  },
+  "CandidateArtifacts": [
+    {
+      "Platform": "Windows",
+      "File": "CarbonLuau-v0.7.0-win-x64.provenance.json",
+      "Sha256": "21122af93b888858b484b1938b7d2890fb8359c927d9289839fef5a63e1676e2",
+      "Bytes": 1017,
+      "Scope": "CI development candidate; not the immutable published same-version asset"
+    },
+    {
+      "Platform": "Windows",
+      "File": "CarbonLuau-v0.7.0-win-x64.sha256",
+      "Sha256": "710970417368faeae91cb75b79ff6d36fd42408eeef23c8246d4f2ecf9dde851",
+      "Bytes": 96,
+      "Scope": "CI development candidate; not the immutable published same-version asset"
+    },
+    {
+      "Platform": "Windows",
+      "File": "CarbonLuau-v0.7.0-win-x64.zip",
+      "Sha256": "9cbeccaac838098c8de8324ea411ff187fef9d6466b4a10ada11b19bb2e9a3db",
+      "Bytes": 1983586,
+      "Scope": "CI development candidate; not the immutable published same-version asset"
+    },
+    {
+      "Platform": "Linux",
+      "File": "CarbonLuau-v0.7.0-linux-x64.provenance.json",
+      "Sha256": "49fd140aeaa340700c478d4611a1b7343be60b38c983567bd47a9d090f35c801",
+      "Bytes": 995,
+      "Scope": "CI development candidate; not the immutable published same-version asset"
+    },
+    {
+      "Platform": "Linux",
+      "File": "CarbonLuau-v0.7.0-linux-x64.sha256",
+      "Sha256": "23c2a313c268fd4260cdcc234e92fb4f3874ae2c77a12171d4accdc002c9e67f",
+      "Bytes": 98,
+      "Scope": "CI development candidate; not the immutable published same-version asset"
+    },
+    {
+      "Platform": "Linux",
+      "File": "CarbonLuau-v0.7.0-linux-x64.zip",
+      "Sha256": "658e5c2cde78ead7767f6afe905880a0b2583f4166ecf6498ed0fedbbe0491fe",
+      "Bytes": 2008373,
+      "Scope": "CI development candidate; not the immutable published same-version asset"
+    }
+  ],
+  "RawReceipts": [
+    {
+      "Path": "Runtime-1810409-Full.log",
+      "Sha256": "10b217c634514433b714d9cf042d46d386e94b48adc793fe354c970f3e4693d1",
+      "Bytes": 624035
+    },
+    {
+      "Path": "Runtime-1810409-Tooling.log",
+      "Sha256": "575d4b9ccc4e36a9ec64523527314580b21c69b4ff940db3e20f9d3d0fbe05f9",
+      "Bytes": 276664
+    },
+    {
+      "Path": "inventory.log",
+      "Sha256": "35e229da825703c91da49ae698cc27cd07a82857acbe82d9590fa7a379b6854a",
+      "Bytes": 1094
+    },
+    {
+      "Path": "inventory-receipt.json",
+      "Sha256": "bd3ee6181b60f2314f50cbd7a35a20afdce9505421588920c6cc53df08f11e40",
+      "Bytes": 618
+    },
+    {
+      "Path": "Runtime-Tooling-Linux-negative.log",
+      "Sha256": "890c9567be575a8dc1e74cfe2c79c31edb03ac451030b9251d0e204253e70562",
+      "Bytes": 69731
+    },
+    {
+      "Path": "Runtime-1810409-Editor/result.json",
+      "Sha256": "d2624d7723f7ca0ab664eeecefe3441d6064467745fc8edbb4aed923840313c1",
+      "Bytes": 6250
+    },
+    {
+      "Path": "Runtime-1810409-Editor/vscode.log",
+      "Sha256": "93ee16e5ae3347c00796ce75aeacb73f254c102c2db159190c3607ec6bedf739",
+      "Bytes": 2232
+    }
+  ],
+  "FinalSourceClosure": "The commit containing this evidence and the pinned final editor commit receive exact-source CI before delivery; final SHAs/run links are reported in delivery. No release/tag or publication."
+}

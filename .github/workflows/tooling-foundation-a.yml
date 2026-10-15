@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: gmoddev/carbonluau-vscode
-          ref: 34c435bf7c6c846f84982357fad567f1d449dd62
+          ref: 838ed27c6a627a5e4030f9e64f8744c590842a97
           path: build/catalog-editor-extension
           persist-credentials: false
       - name: Qualify exact catalog completion in actual VS Code

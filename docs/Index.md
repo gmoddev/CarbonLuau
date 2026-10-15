@@ -12,6 +12,8 @@ does not create another contract or qualification receipt.
   [host support/validation selection](Compatibility.md).
 - [Release identities and readiness](Release.md): published package `v0.7.0`, API
   `0.7.0-experimental`, with [release qualification](Release-0.7.0-Validation.md).
+- [Development runtime/editor readiness](CrossRepo-ReleaseReadiness.md): API
+  `0.7.5-experimental`, synchronized official editor and outstanding release gates.
   Current development API `0.7.5-experimental` adds [Item/Prefab catalogs](api/Catalogs.md).
 - Published release notes: [0.3](releases/0.3.0.md), [0.4](releases/0.4.0.md),
   [0.5](releases/0.5.0.md). [Planned 0.6 notes](releases/0.6.0.md) remain explicitly
