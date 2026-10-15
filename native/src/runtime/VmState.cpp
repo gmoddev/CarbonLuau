@@ -2,6 +2,48 @@
 #include <charconv>
 
 namespace CarbonLuau::Runtime {
+#ifdef CARBONLUAU_TESTING
+bool TestCatalogFingerprintMismatch = false;
+#endif
+namespace {
+#include "generated/CatalogData.inc"
+static_assert(sizeof(CatalogFingerprint) == 65);
+static_assert(sizeof(CatalogItems) / sizeof(CatalogItems[0]) <= 512);
+
+void InitializeCatalogs(lua_State* State)
+{
+    bool Mismatch = std::strcmp(CatalogFingerprint, CatalogIdentity()) != 0;
+#ifdef CARBONLUAU_TESTING
+    Mismatch = Mismatch || TestCatalogFingerprintMismatch;
+#endif
+    if (Mismatch) luaL_error(State, "catalog data fingerprint mismatch");
+    Vm& Runtime = *static_cast<Vm*>(lua_callbacks(State)->userdata);
+#ifdef CARBONLUAU_TESTING
+    uint64_t Before = Runtime.Used;
+#endif
+    lua_createtable(State, 0, int(sizeof(CatalogItems) / sizeof(CatalogItems[0])));
+    for (const auto& Row : CatalogItems) {
+        lua_pushstring(State, Row[1]); lua_setfield(State, -2, Row[0]);
+    }
+    lua_setreadonly(State, -1, true);
+    Runtime.ItemCatalog = lua_ref(State, -1);
+    lua_setglobal(State, "Item");
+    lua_createtable(State, 0, 1);
+    lua_createtable(State, 0, 2);
+    for (const auto& Row : CatalogPrefabs) {
+        lua_pushstring(State, Row[1]); lua_setfield(State, -2, Row[0]);
+    }
+    lua_setreadonly(State, -1, true);
+    lua_setfield(State, -2, "Loot");
+    lua_setreadonly(State, -1, true);
+    Runtime.PrefabCatalog = lua_ref(State, -1);
+    lua_setglobal(State, "Prefab");
+#ifdef CARBONLUAU_TESTING
+    Runtime.CatalogBytes = Runtime.Used - Before;
+#endif
+}
+}
+
 Vm::~Vm()
 {
     if (State) {
@@ -24,6 +66,8 @@ Vm::~Vm()
         Domains.clear();
         if (GuiValueEqual != LUA_NOREF) lua_unref(State, GuiValueEqual);
         if (EntityIdentities != LUA_NOREF) lua_unref(State, EntityIdentities);
+        if (ItemCatalog != LUA_NOREF) lua_unref(State, ItemCatalog);
+        if (PrefabCatalog != LUA_NOREF) lua_unref(State, PrefabCatalog);
         if (Reference != LUA_NOREF) lua_unref(State, Reference);
         lua_close(State);
     }
@@ -240,6 +284,7 @@ int Initialize(lua_State* State)
     lua_getglobal(State, "math"); lua_getfield(State, -1, "randomseed");
     lua_pushinteger(State, 0); lua_call(State, 1, 0); lua_pop(State, 1);
 #endif
+    InitializeCatalogs(State);
     luaL_sandbox(State);
     return 0;
 }
@@ -252,6 +297,8 @@ void Retire(Vm& Runtime)
     Runtime.ThreadId = 0;
     Runtime.ThreadDomain = nullptr;
     Runtime.Reference = LUA_NOREF;
+    Runtime.ItemCatalog = LUA_NOREF;
+    Runtime.PrefabCatalog = LUA_NOREF;
     Runtime.Resumable = false;
     Runtime.Admission = nullptr;
     Runtime.Publication = nullptr;

@@ -2,7 +2,7 @@
   "SchemaVersion": 1,
   "Api": {
     "Name": "CarbonLuau",
-    "Version": "0.7.0-experimental",
+    "Version": "0.7.5-experimental",
     "Status": "Experimental"
   },
   "Types": [
@@ -360,6 +360,18 @@
       "Representation": "Record"
     },
     {
+      "Id": "Item",
+      "Name": "Item",
+      "Kind": "Global",
+      "Summary": "Frozen canonical string catalog; identity grants no host authority. D8-qualified Loot capability only.",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Pure"
+    },
+    {
       "Id": "Items",
       "Name": "Items",
       "Kind": "Service",
@@ -472,6 +484,31 @@
         "Qualification": "Experimental"
       },
       "Preview": "Unavailable"
+    },
+    {
+      "Id": "Prefab",
+      "Name": "Prefab",
+      "Kind": "Global",
+      "Summary": "Frozen canonical string catalog; identity grants no host authority. D8-qualified Loot capability only.",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Pure"
+    },
+    {
+      "Id": "PrefabLoot",
+      "Name": "PrefabLoot",
+      "Kind": "Value",
+      "Summary": "Frozen canonical string catalog; identity grants no host authority. D8-qualified Loot capability only.",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "Preview": "Pure",
+      "Representation": "Record"
     },
     {
       "Id": "ScreenGui",
@@ -1829,7 +1866,7 @@
         "Implemented": true,
         "Qualification": "Experimental"
       },
-      "ValueType": "\"0.7.0-experimental\"",
+      "ValueType": "\"0.7.5-experimental\"",
       "Writable": false
     },
     {
@@ -4046,6 +4083,3321 @@
       "Writable": false
     },
     {
+      "Id": "Item.AmmoPaintball",
+      "Name": "AmmoPaintball",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ammo.paintball; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ammo.paintball\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.AmmoPistol",
+      "Name": "AmmoPistol",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ammo.pistol; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ammo.pistol\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.AmmoPistolHv",
+      "Name": "AmmoPistolHv",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ammo.pistol.hv; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ammo.pistol.hv\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.AmmoRifle",
+      "Name": "AmmoRifle",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ammo.rifle; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ammo.rifle\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.AmmoRifleHv",
+      "Name": "AmmoRifleHv",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ammo.rifle.hv; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ammo.rifle.hv\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.AmmoRocketHv",
+      "Name": "AmmoRocketHv",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ammo.rocket.hv; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ammo.rocket.hv\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.AmmoRocketSam",
+      "Name": "AmmoRocketSam",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ammo.rocket.sam; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ammo.rocket.sam\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.AmmoShotgun",
+      "Name": "AmmoShotgun",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ammo.shotgun; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ammo.shotgun\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Antiradpills",
+      "Name": "Antiradpills",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string antiradpills; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"antiradpills\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.AppleSpoiled",
+      "Name": "AppleSpoiled",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string apple.spoiled; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"apple.spoiled\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ArrowBone",
+      "Name": "ArrowBone",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string arrow.bone; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"arrow.bone\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ArrowFire",
+      "Name": "ArrowFire",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string arrow.fire; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"arrow.fire\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ArrowHv",
+      "Name": "ArrowHv",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string arrow.hv; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"arrow.hv\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ArrowWooden",
+      "Name": "ArrowWooden",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string arrow.wooden; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"arrow.wooden\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.AttireNesthat",
+      "Name": "AttireNesthat",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string attire.nesthat; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"attire.nesthat\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Ball",
+      "Name": "Ball",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ball; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ball\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Barrelcostume",
+      "Name": "Barrelcostume",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string barrelcostume; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"barrelcostume\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BatterySmall",
+      "Name": "BatterySmall",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string battery.small; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"battery.small\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BduPants",
+      "Name": "BduPants",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string bdu.pants; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"bdu.pants\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BduShirt",
+      "Name": "BduShirt",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string bdu.shirt; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"bdu.shirt\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BearmeatBurned",
+      "Name": "BearmeatBurned",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string bearmeat.burned; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"bearmeat.burned\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Bicycle",
+      "Name": "Bicycle",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string bicycle; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"bicycle\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Bleach",
+      "Name": "Bleach",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string bleach; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"bleach\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Blood",
+      "Name": "Blood",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string blood; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"blood\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Bluedogtags",
+      "Name": "Bluedogtags",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string bluedogtags; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"bluedogtags\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Blueidtag",
+      "Name": "Blueidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string blueidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"blueidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Blueprintbase",
+      "Name": "Blueprintbase",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string blueprintbase; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"blueprintbase\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BoneFragments",
+      "Name": "BoneFragments",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string bone.fragments; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"bone.fragments\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BootsFrog",
+      "Name": "BootsFrog",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string boots.frog; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"boots.frog\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BottleVodka",
+      "Name": "BottleVodka",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string bottle.vodka; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"bottle.vodka\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BreadLoaf",
+      "Name": "BreadLoaf",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string bread.loaf; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"bread.loaf\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BurlapGloves",
+      "Name": "BurlapGloves",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string burlap.gloves; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"burlap.gloves\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BurlapHeadwrap",
+      "Name": "BurlapHeadwrap",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string burlap.headwrap; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"burlap.headwrap\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BurlapShirt",
+      "Name": "BurlapShirt",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string burlap.shirt; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"burlap.shirt\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BurlapShoes",
+      "Name": "BurlapShoes",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string burlap.shoes; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"burlap.shoes\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.BurlapTrousers",
+      "Name": "BurlapTrousers",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string burlap.trousers; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"burlap.trousers\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Caboose",
+      "Name": "Caboose",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string caboose; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"caboose\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.CanBeans",
+      "Name": "CanBeans",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string can.beans; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"can.beans\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.CanBeansEmpty",
+      "Name": "CanBeansEmpty",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string can.beans.empty; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"can.beans.empty\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.CanTuna",
+      "Name": "CanTuna",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string can.tuna; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"can.tuna\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.CanTunaEmpty",
+      "Name": "CanTunaEmpty",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string can.tuna.empty; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"can.tuna.empty\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Candycane",
+      "Name": "Candycane",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string candycane; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"candycane\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Cannonball",
+      "Name": "Cannonball",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string cannonball; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"cannonball\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Captainslog",
+      "Name": "Captainslog",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string captainslog; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"captainslog\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Charcoal",
+      "Name": "Charcoal",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string charcoal; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"charcoal\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ChickenBurned",
+      "Name": "ChickenBurned",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string chicken.burned; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"chicken.burned\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ChickenSpoiled",
+      "Name": "ChickenSpoiled",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string chicken.spoiled; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"chicken.spoiled\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Chocolate",
+      "Name": "Chocolate",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string chocolate; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"chocolate\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ClatterHelmet",
+      "Name": "ClatterHelmet",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string clatter.helmet; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"clatter.helmet\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Cloth",
+      "Name": "Cloth",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string cloth; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"cloth\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Coal",
+      "Name": "Coal",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string coal; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"coal\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Coconut",
+      "Name": "Coconut",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string coconut; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"coconut\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Coolingtea",
+      "Name": "Coolingtea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string coolingtea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"coolingtea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Cratecostume",
+      "Name": "Cratecostume",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string cratecostume; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"cratecostume\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.CrudeOil",
+      "Name": "CrudeOil",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string crude.oil; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"crude.oil\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.DartRadiation",
+      "Name": "DartRadiation",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string dart.radiation; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"dart.radiation\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.DartScatter",
+      "Name": "DartScatter",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string dart.scatter; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"dart.scatter\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.DartWood",
+      "Name": "DartWood",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string dart.wood; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"dart.wood\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.DeermeatBurned",
+      "Name": "DeermeatBurned",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string deermeat.burned; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"deermeat.burned\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.DieselBarrel",
+      "Name": "DieselBarrel",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string diesel_barrel; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"diesel_barrel\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.DivingFins",
+      "Name": "DivingFins",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string diving.fins; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"diving.fins\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.DivingMask",
+      "Name": "DivingMask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string diving.mask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"diving.mask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.DivingWetsuit",
+      "Name": "DivingWetsuit",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string diving.wetsuit; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"diving.wetsuit\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Documents",
+      "Name": "Documents",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string documents; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"documents\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Dogtagneutral",
+      "Name": "Dogtagneutral",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string dogtagneutral; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"dogtagneutral\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.DoorKey",
+      "Name": "DoorKey",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string door.key; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"door.key\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Draculacape",
+      "Name": "Draculacape",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string draculacape; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"draculacape\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Draculamask",
+      "Name": "Draculamask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string draculamask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"draculamask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Ducttape",
+      "Name": "Ducttape",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ducttape; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ducttape\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.EasterGoldegg",
+      "Name": "EasterGoldegg",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string easter.goldegg; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"easter.goldegg\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Explosives",
+      "Name": "Explosives",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string explosives; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"explosives\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FatAnimal",
+      "Name": "FatAnimal",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fat.animal; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fat.animal\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Fertilizer",
+      "Name": "Fertilizer",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fertilizer; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fertilizer\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishAnchovy",
+      "Name": "FishAnchovy",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fish.anchovy; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fish.anchovy\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishCatfish",
+      "Name": "FishCatfish",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fish.catfish; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fish.catfish\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishHerring",
+      "Name": "FishHerring",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fish.herring; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fish.herring\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishMinnows",
+      "Name": "FishMinnows",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fish.minnows; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fish.minnows\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishSalmon",
+      "Name": "FishSalmon",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fish.salmon; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fish.salmon\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishSardine",
+      "Name": "FishSardine",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fish.sardine; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fish.sardine\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishSmallshark",
+      "Name": "FishSmallshark",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fish.smallshark; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fish.smallshark\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishSpoiled",
+      "Name": "FishSpoiled",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fish.spoiled; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fish.spoiled\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishTroutsmall",
+      "Name": "FishTroutsmall",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fish.troutsmall; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fish.troutsmall\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.FishingTackle",
+      "Name": "FishingTackle",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string fishing.tackle; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"fishing.tackle\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Gears",
+      "Name": "Gears",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string gears; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"gears\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Ghostsheet",
+      "Name": "Ghostsheet",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ghostsheet; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ghostsheet\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Gingerbreadsuit",
+      "Name": "Gingerbreadsuit",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string gingerbreadsuit; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"gingerbreadsuit\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Glue",
+      "Name": "Glue",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string glue; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"glue\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Granolabar",
+      "Name": "Granolabar",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string granolabar; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"granolabar\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Grayidtag",
+      "Name": "Grayidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string grayidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"grayidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Greenidtag",
+      "Name": "Greenidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string greenidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"greenidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Grub",
+      "Name": "Grub",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string grub; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"grub\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Gunpowder",
+      "Name": "Gunpowder",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string gunpowder; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"gunpowder\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Hab",
+      "Name": "Hab",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hab; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hab\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HalloweenCandy",
+      "Name": "HalloweenCandy",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string halloween.candy; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"halloween.candy\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Harvestingtea",
+      "Name": "Harvestingtea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string harvestingtea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"harvestingtea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatBeenie",
+      "Name": "HatBeenie",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.beenie; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.beenie\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatBoonie",
+      "Name": "HatBoonie",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.boonie; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.boonie\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatBunnyhat",
+      "Name": "HatBunnyhat",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.bunnyhat; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.bunnyhat\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatCap",
+      "Name": "HatCap",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.cap; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.cap\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatDragonmask",
+      "Name": "HatDragonmask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.dragonmask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.dragonmask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatHorsemask",
+      "Name": "HatHorsemask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.horsemask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.horsemask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatOxmask",
+      "Name": "HatOxmask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.oxmask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.oxmask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatRabbitmask",
+      "Name": "HatRabbitmask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.rabbitmask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.rabbitmask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatRatmask",
+      "Name": "HatRatmask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.ratmask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.ratmask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatSnakemask",
+      "Name": "HatSnakemask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.snakemask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.snakemask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatTigermask",
+      "Name": "HatTigermask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.tigermask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.tigermask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatWellipets",
+      "Name": "HatWellipets",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.wellipets; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.wellipets\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HatWolf",
+      "Name": "HatWolf",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hat.wolf; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hat.wolf\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Healingtea",
+      "Name": "Healingtea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string healingtea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"healingtea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HealingteaPure",
+      "Name": "HealingteaPure",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string healingtea.pure; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"healingtea.pure\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Honey",
+      "Name": "Honey",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string honey; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"honey\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Honeycomb",
+      "Name": "Honeycomb",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string honeycomb; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"honeycomb\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Hoodie",
+      "Name": "Hoodie",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hoodie; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hoodie\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Horse",
+      "Name": "Horse",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string horse; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"horse\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Horsedung",
+      "Name": "Horsedung",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string horsedung; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"horsedung\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.HqMetalOre",
+      "Name": "HqMetalOre",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string hq.metal.ore; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"hq.metal.ore\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.JacketSnow",
+      "Name": "JacketSnow",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string jacket.snow; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"jacket.snow\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.JarPickle",
+      "Name": "JarPickle",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string jar.pickle; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"jar.pickle\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Kickgems",
+      "Name": "Kickgems",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string kickgems; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"kickgems\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Largemedkit",
+      "Name": "Largemedkit",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string largemedkit; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"largemedkit\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Lavenderidtag",
+      "Name": "Lavenderidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string lavenderidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"lavenderidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Leather",
+      "Name": "Leather",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string leather; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"leather\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Locomotive",
+      "Name": "Locomotive",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string locomotive; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"locomotive\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Lowgradefuel",
+      "Name": "Lowgradefuel",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string lowgradefuel; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"lowgradefuel\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.MaskBalaclava",
+      "Name": "MaskBalaclava",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string mask.balaclava; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"mask.balaclava\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.MaskBandana",
+      "Name": "MaskBandana",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string mask.bandana; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"mask.bandana\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Maxhealthtea",
+      "Name": "Maxhealthtea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string maxhealthtea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"maxhealthtea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.MetalFragments",
+      "Name": "MetalFragments",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string metal.fragments; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"metal.fragments\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.MetalOre",
+      "Name": "MetalOre",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string metal.ore; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"metal.ore\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.MetalRefined",
+      "Name": "MetalRefined",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string metal.refined; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"metal.refined\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Metalblade",
+      "Name": "Metalblade",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string metalblade; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"metalblade\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Metalpipe",
+      "Name": "Metalpipe",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string metalpipe; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"metalpipe\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Metalspring",
+      "Name": "Metalspring",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string metalspring; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"metalspring\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Minicopter",
+      "Name": "Minicopter",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string minicopter; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"minicopter\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Mintidtag",
+      "Name": "Mintidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string mintidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"mintidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Mlrs",
+      "Name": "Mlrs",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string mlrs; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"mlrs\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Motorbike",
+      "Name": "Motorbike",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string motorbike; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"motorbike\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.MrspiceCan",
+      "Name": "MrspiceCan",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string mrspice.can; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"mrspice.can\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Mummymask",
+      "Name": "Mummymask",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string mummymask; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"mummymask\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.N2ModuleCar",
+      "Name": "N2ModuleCar",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string 2module.car; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"2module.car\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.N3ModuleCar",
+      "Name": "N3ModuleCar",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string 3module.car; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"3module.car\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.N4ModuleCar",
+      "Name": "N4ModuleCar",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string 4module.car; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"4module.car\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Note",
+      "Name": "Note",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string note; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"note\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Nucleus",
+      "Name": "Nucleus",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string nucleus; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"nucleus\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Orangeidtag",
+      "Name": "Orangeidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string orangeidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"orangeidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Orchid",
+      "Name": "Orchid",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string orchid; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"orchid\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Oretea",
+      "Name": "Oretea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string oretea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"oretea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.OreteaAdvanced",
+      "Name": "OreteaAdvanced",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string oretea.advanced; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"oretea.advanced\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.OreteaPure",
+      "Name": "OreteaPure",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string oretea.pure; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"oretea.pure\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Pants",
+      "Name": "Pants",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string pants; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"pants\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.PantsShorts",
+      "Name": "PantsShorts",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string pants.shorts; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"pants.shorts\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Paper",
+      "Name": "Paper",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string paper; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"paper\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Partyhat",
+      "Name": "Partyhat",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string partyhat; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"partyhat\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Pinkidtag",
+      "Name": "Pinkidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string pinkidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"pinkidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Plantfiber",
+      "Name": "Plantfiber",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string plantfiber; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"plantfiber\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Prisonerhood",
+      "Name": "Prisonerhood",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string prisonerhood; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"prisonerhood\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Propanetank",
+      "Name": "Propanetank",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string propanetank; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"propanetank\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Ptboat",
+      "Name": "Ptboat",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string ptboat; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"ptboat\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Purecoolingtea",
+      "Name": "Purecoolingtea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string purecoolingtea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"purecoolingtea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Purewarmingtea",
+      "Name": "Purewarmingtea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string purewarmingtea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"purewarmingtea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Purpleidtag",
+      "Name": "Purpleidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string purpleidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"purpleidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Reddogtags",
+      "Name": "Reddogtags",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string reddogtags; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"reddogtags\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Redidtag",
+      "Name": "Redidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string redidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"redidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Researchpaper",
+      "Name": "Researchpaper",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string researchpaper; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"researchpaper\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Rhib",
+      "Name": "Rhib",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string rhib; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"rhib\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Riflebody",
+      "Name": "Riflebody",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string riflebody; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"riflebody\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.RoadsignGloves",
+      "Name": "RoadsignGloves",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string roadsign.gloves; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"roadsign.gloves\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Roadsigns",
+      "Name": "Roadsigns",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string roadsigns; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"roadsigns\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Rope",
+      "Name": "Rope",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string rope; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"rope\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Rose",
+      "Name": "Rose",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string rose; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"rose\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Santabeard",
+      "Name": "Santabeard",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string santabeard; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"santabeard\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Santahat",
+      "Name": "Santahat",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string santahat; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"santahat\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ScarecrowSuit",
+      "Name": "ScarecrowSuit",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string scarecrow.suit; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"scarecrow.suit\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Scarecrowhead",
+      "Name": "Scarecrowhead",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string scarecrowhead; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"scarecrowhead\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Scrap",
+      "Name": "Scrap",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string scrap; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"scrap\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Scraptea",
+      "Name": "Scraptea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string scraptea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"scraptea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ScrapteaPure",
+      "Name": "ScrapteaPure",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string scraptea.pure; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"scraptea.pure\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Sedan",
+      "Name": "Sedan",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string sedan; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"sedan\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Semibody",
+      "Name": "Semibody",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string semibody; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"semibody\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Sewingkit",
+      "Name": "Sewingkit",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string sewingkit; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"sewingkit\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Sheetmetal",
+      "Name": "Sheetmetal",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string sheetmetal; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"sheetmetal\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ShirtCollared",
+      "Name": "ShirtCollared",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string shirt.collared; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"shirt.collared\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ShirtTanktop",
+      "Name": "ShirtTanktop",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string shirt.tanktop; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"shirt.tanktop\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.ShoesBoots",
+      "Name": "ShoesBoots",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string shoes.boots; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"shoes.boots\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.SkullHuman",
+      "Name": "SkullHuman",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string skull.human; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"skull.human\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.SkullWolf",
+      "Name": "SkullWolf",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string skull.wolf; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"skull.wolf\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Smgbody",
+      "Name": "Smgbody",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string smgbody; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"smgbody\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Snowmobile",
+      "Name": "Snowmobile",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string snowmobile; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"snowmobile\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.SpeargunSpear",
+      "Name": "SpeargunSpear",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string speargun.spear; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"speargun.spear\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.SpoiledProduce",
+      "Name": "SpoiledProduce",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string spoiled.produce; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"spoiled.produce\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Spraycandecal",
+      "Name": "Spraycandecal",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string spraycandecal; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"spraycandecal\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Sticks",
+      "Name": "Sticks",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string sticks; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"sticks\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Stones",
+      "Name": "Stones",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string stones; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"stones\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Submarineduo",
+      "Name": "Submarineduo",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string submarineduo; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"submarineduo\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Submarinesolo",
+      "Name": "Submarinesolo",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string submarinesolo; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"submarinesolo\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Sulfur",
+      "Name": "Sulfur",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string sulfur; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"sulfur\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.SulfurOre",
+      "Name": "SulfurOre",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string sulfur.ore; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"sulfur.ore\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Sunflower",
+      "Name": "Sunflower",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string sunflower; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"sunflower\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Supertea",
+      "Name": "Supertea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string supertea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"supertea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.TacticalGloves",
+      "Name": "TacticalGloves",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string tactical.gloves; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"tactical.gloves\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Tarp",
+      "Name": "Tarp",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string tarp; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"tarp\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Techparts",
+      "Name": "Techparts",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string techparts; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"techparts\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Trike",
+      "Name": "Trike",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string trike; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"trike\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Tshirt",
+      "Name": "Tshirt",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string tshirt; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"tshirt\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.TshirtLong",
+      "Name": "TshirtLong",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string tshirt.long; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"tshirt.long\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.TwitchHeadset",
+      "Name": "TwitchHeadset",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string twitch.headset; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"twitch.headset\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.VenomSnake",
+      "Name": "VenomSnake",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string venom.snake; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"venom.snake\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Wagon",
+      "Name": "Wagon",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string wagon; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"wagon\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Walkietalkie",
+      "Name": "Walkietalkie",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string walkietalkie; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"walkietalkie\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.WallpaperWall",
+      "Name": "WallpaperWall",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string wallpaper.wall; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"wallpaper.wall\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Warmingtea",
+      "Name": "Warmingtea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string warmingtea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"warmingtea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Wheat",
+      "Name": "Wheat",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string wheat; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"wheat\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Whiteidtag",
+      "Name": "Whiteidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string whiteidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"whiteidtag\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.WolfmeatBurned",
+      "Name": "WolfmeatBurned",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string wolfmeat.burned; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"wolfmeat.burned\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Wood",
+      "Name": "Wood",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string wood; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"wood\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Woodtea",
+      "Name": "Woodtea",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string woodtea; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"woodtea\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.WoodteaPure",
+      "Name": "WoodteaPure",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string woodtea.pure; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"woodtea.pure\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Wool",
+      "Name": "Wool",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string wool; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"wool\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Workcart",
+      "Name": "Workcart",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string workcart; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"workcart\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Worm",
+      "Name": "Worm",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string worm; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"worm\"",
+      "Writable": false
+    },
+    {
+      "Id": "Item.Yellowidtag",
+      "Name": "Yellowidtag",
+      "OwnerId": "Item",
+      "Kind": "Singleton",
+      "Summary": "Canonical string yellowidtag; D8-qualified Loot item. Other operations retain their own validators.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"yellowidtag\"",
+      "Writable": false
+    },
+    {
       "Id": "Items.Exists",
       "Name": "Exists",
       "OwnerId": "Items",
@@ -4688,6 +8040,51 @@
           "Returns": []
         }
       ]
+    },
+    {
+      "Id": "Prefab.Loot",
+      "Name": "Loot",
+      "OwnerId": "Prefab",
+      "Kind": "Property",
+      "Summary": "Frozen qualified Loot source paths; grants no spawn or mutation authority.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "PrefabLoot",
+      "Writable": false
+    },
+    {
+      "Id": "PrefabLoot.Barrel1",
+      "Name": "Barrel1",
+      "OwnerId": "PrefabLoot",
+      "Kind": "Property",
+      "Summary": "Canonical path assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab; qualified Loot.Replace source. Existing admission remains authoritative.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab\"",
+      "Writable": false
+    },
+    {
+      "Id": "PrefabLoot.Barrel2",
+      "Name": "Barrel2",
+      "OwnerId": "PrefabLoot",
+      "Kind": "Property",
+      "Summary": "Canonical path assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab; qualified Loot.Replace source. Existing admission remains authoritative.",
+      "Preview": "Pure",
+      "Availability": {
+        "SinceApi": "0.7.5-experimental",
+        "Implemented": true,
+        "Qualification": "Experimental"
+      },
+      "ValueType": "\"assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab\"",
+      "Writable": false
     },
     {
       "Id": "ScreenGui.ClassName",

@@ -6,9 +6,11 @@ string[] Args = Environment.GetCommandLineArgs().Skip(1).ToArray();
 string Root = Path.GetFullPath(Args.Length == 0 ? "../.." : Args[0]);
 string Bootstrap = File.ReadAllText(Path.Combine(Root, "scripts/bootstrap.luau")).Replace("\r\n", "\n");
 string Native = (File.ReadAllText(Path.Combine(Root, "native/src/scripts/ModuleLoader.cpp")) + "\n" +
-    File.ReadAllText(Path.Combine(Root, "native/src/facade/PersistenceFacade.cpp"))).Replace("\r\n", "\n");
+    File.ReadAllText(Path.Combine(Root, "native/src/facade/PersistenceFacade.cpp")) + "\n" +
+    File.ReadAllText(Path.Combine(Root, "native/src/runtime/generated/CatalogData.inc"))).Replace("\r\n", "\n");
 JObject Release = JObject.Parse(File.ReadAllText(Path.Combine(Root, "release.json")));
 JObject Catalog = ApiCatalog.Build(Bootstrap, Release, Native);
+ScriptCatalogTests.Run(Root, Catalog, Bootstrap, Release, Native);
 void Check(bool Value, string Message) { if (!Value) throw new Exception(Message); }
 void Reject(Action Action, string Message) { try { Action(); } catch (InvalidOperationException) { return; } throw new Exception(Message); }
 string Definitions = ApiArtifacts.Definitions(Catalog);
@@ -145,8 +147,10 @@ foreach (JObject Declaration in ((JArray)Catalog["Types"]!).Concat((JArray)Catal
     bool Loot = new[] { "Enum", "DropMode", "Loot", "LootDropEntry" }.Contains((string?)Declaration["Id"]) ||
         new[] { "Enum", "DropMode", "Loot" }.Contains((string?)Declaration["OwnerId"]);
     bool InventoryMutation = new[] { "PlayerInventory.GiveItem", "PlayerInventory.TakeItem" }.Contains((string?)Declaration["Id"]);
+    bool ScriptCatalog = new[] { "Item", "Prefab", "PrefabLoot" }.Contains((string?)Declaration["Id"]) ||
+        new[] { "Item", "Prefab", "PrefabLoot" }.Contains((string?)Declaration["OwnerId"]);
     Version Since = Version.Parse(((string)Declaration["Availability"]!["SinceApi"]!).Split('-')[0]);
-    Check(InventoryMutation ? Since == new Version(0, 7, 0) : GameplayA || Loot ? Since == new Version(0, 6, 5) : Entity ? Since == new Version(0, 6, 0) :
+    Check(ScriptCatalog ? Since == new Version(0, 7, 5) : InventoryMutation ? Since == new Version(0, 7, 0) : GameplayA || Loot ? Since == new Version(0, 6, 5) : Entity ? Since == new Version(0, 6, 0) :
         Persistence ? Since == new Version(0, 5, 0) : Since <= new Version(0, 4, 0), "historical introduction version changed");
     if (Persistence) Check((string)Declaration["Availability"]!["Qualification"]! == "Experimental" &&
         (string)Declaration["Preview"]! == "Unavailable", "persistence qualification/preview drift");

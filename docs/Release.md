@@ -1,6 +1,6 @@
 # Release identity and reproducibility
 
-CarbonLuau v0.7.0 is the experimental package for the complete current API,
+CarbonLuau v0.7.0 is the experimental package for the complete `0.7.0-experimental` API,
 including the breaking PlayerInventory migration. It is not the earlier
 World-only 0.6 backport. [Release notes](releases/0.7.0.md) describe its scope;
 [qualification](Release-0.7.0-Validation.md) owns exact source/hosts, measured
@@ -11,7 +11,8 @@ results, preserved failures and final publication gates.
 | Identity | Value |
 |---|---|
 | Package / annotated tag | `0.7.0` / `v0.7.0` |
-| Scripting API | `CarbonLuau 0.7.0-experimental` |
+| Published v0.7.0 scripting API | `CarbonLuau 0.7.0-experimental` |
+| Current development scripting API | `CarbonLuau 0.7.5-experimental` (CATALOG-D9; no new release/tag) |
 | API / GitHub release status | `Experimental` / prerelease, not stable |
 | Native ABI | `1.5` |
 | Provider protocol / addon schema | `CarbonLuau.Addons` / `1.2`; schema `1` |

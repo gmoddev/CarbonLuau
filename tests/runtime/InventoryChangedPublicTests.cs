@@ -160,7 +160,7 @@ internal static class InventoryChangedPublicTests
     {
         using (var Value = new Fixture(Native, Acquire + "S.Count=0")) {
             Check(Value.Player.Scans == 0 && Value.World.InventorySamples.WatchCount == 0, "acquisition without scans or watches");
-            Value.Execute(State + "assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(type(S.I.GiveItem)=='function' and type(S.I.TakeItem)=='function')");
+            Value.Execute(State + "assert(game.ApiVersion=='0.7.5-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(type(S.I.GiveItem)=='function' and type(S.I.TakeItem)=='function')");
             Value.Execute(State + "local Current=S.P:GetInventory(); assert(Current==S.P:GetInventory()); assert(S.I:CountItem('scrap')==Current:CountItem('scrap') and S.I:CountItem('scrap')==3 and S.P:GetInventory():CountItem('scrap')==3); " +
                 "assert(S.I:HasItem('scrap',3) and not S.I:HasItem('scrap',4)); assert(not pcall(function() S.I.ItemChanged=1 end)); " +
                 "local Signal=S.I.ItemChanged; assert(Signal==S.I.ItemChanged); assert(not pcall(function() Signal.X=1 end)); " +

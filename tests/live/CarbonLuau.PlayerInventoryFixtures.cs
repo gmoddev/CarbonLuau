@@ -27,7 +27,7 @@ namespace Carbon.Plugins
                 },Gameplay);
                 if(Host.Reload().Status!=RuntimeStatus.OK) throw new Exception("C1 root load");
                 Action<string> Run=Code=>{var Result=Host.Execute("c1.live",Code);if(Result.Status!=RuntimeStatus.OK)throw new Exception(Result.Error);};
-                Run("local S=require('state'); assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(S.I:CountItem('scrap')==0); assert(not S.I:HasItem('c1.unknown'))");
+                Run("local S=require('state'); assert(game.ApiVersion=='0.7.5-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(S.I:CountItem('scrap')==0); assert(not S.I:HasItem('c1.unknown'))");
                 Run("local I=require('state').I; assert(not I:TakeItem('scrap',1) and not I:TakeItem('c1.unknown',1)); for _,B in {true,false,'InventoryOnly',Enum.DropMode.Replace,{},1} do assert(not pcall(function() I:GiveItem('scrap',1,B) end)) end; assert(not I:GiveItem('scrap',2147483647)); assert(I:CountItem('scrap')==0)");
                 Run("local S=require('state'); assert(S.I:GiveItem('scrap',1)); assert(S.I:GiveItem('scrap',2,GiveItemBehavior.InventoryOnly)); assert(S.I:CountItem('scrap')==3); assert(S.I:HasItem('scrap') and S.I:HasItem('scrap',3) and not S.I:HasItem('scrap',4)); assert(S.I:TakeItem('scrap',1)); assert(S.I:CountItem('scrap')==2)");
                 ItemDefinition Scrap=ItemManager.FindItemDefinition("scrap");

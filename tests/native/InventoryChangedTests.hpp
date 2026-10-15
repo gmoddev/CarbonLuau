@@ -353,7 +353,7 @@ static void Migration()
     const char* Cold = "local I=require('state').Inventory; for _,M in {'GiveItem','TakeItem'} do local Ok,Error=pcall(function() I[M](I,'scrap',1) end); "
         "assert(not Ok and string.find(Error,'requires a committed domain',1,true)) end; return true";
     Fixture F("State.Contexts[#State.Contexts+1]=Context", Cold);
-    F.Run("local S=require('state'); local I=S.Inventory; assert(game.ApiVersion=='0.7.0-experimental'); "
+    F.Run("local S=require('state'); local I=S.Inventory; assert(game.ApiVersion=='0.7.5-experimental'); "
         "for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.Player[K]==nil) end; "
         "assert(I:GiveItem('scrap',2)); assert(I:GiveItem('scrap',3,GiveItemBehavior.InventoryOnly)); "
         "assert(I:GiveItem('scrap',1,nil)); assert(I:CountItem('scrap')==6 and I:HasItem('scrap') and I:HasItem('scrap',6)); "

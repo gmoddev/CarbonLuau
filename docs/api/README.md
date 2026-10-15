@@ -3,7 +3,9 @@
 Package [v0.7.0](../releases/0.7.0.md) uses the complete experimental API
 `0.7.0-experimental`; [qualification](../Release-0.7.0-Validation.md) records
 the exact tested host and publication envelope. Earlier v0.5.0 uses API 0.5.0.
-Current `main` retains `0.7.0-experimental`. The world, gameplay, Loot and
+Current `main` uses development API `0.7.5-experimental`, adding the
+[Item and Prefab catalogs](Catalogs.md). Published v0.7.0 remains unchanged.
+The world, gameplay, Loot and
 PlayerInventory features are included in v0.7.0, but not in v0.5.0. This is local
 server-side Luau, not Roblox cloud/DataModel/replication compatibility.
 

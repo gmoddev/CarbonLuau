@@ -28,7 +28,8 @@ param(
     [switch]$ArtifactReadyApproved,
     [switch]$ControlledFixturePlanApproved,
     [switch]$NamespaceRestartSupplement,
-    [switch]$Query2DSupplement
+    [switch]$Query2DSupplement,
+    [switch]$CatalogD9Supplement
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -68,8 +69,8 @@ foreach ($InputPath in @($Package,$NativeLibrary,$CompilerWorker,$StorageWorker,
     }
 }
 $Release = Get-Content -LiteralPath $ReleaseMetadata -Raw | ConvertFrom-Json
-if ($Release.packageVersion -ne '0.7.0' -or $Release.apiVersion -ne '0.7.0-experimental' -or $Release.nativeAbi -ne '1.5') {
-    throw '[CarbonLuau:Persistence1BWorker] Expected release identity: package 0.7.0, API 0.7.0-experimental, ABI 1.5'
+if ($Release.packageVersion -ne '0.7.0' -or $Release.apiVersion -ne '0.7.5-experimental' -or $Release.nativeAbi -ne '1.5') {
+    throw '[CarbonLuau:Persistence1BWorker] Expected release identity: package 0.7.0, API 0.7.5-experimental, ABI 1.5'
 }
 $ExpectedIdentities = @(
     "CarbonLuau package: $($Release.packageVersion)",
@@ -167,10 +168,10 @@ function Wait-Log([int]$Offset, [string]$Expected, [int]$Seconds = 45) {
     throw "[CarbonLuau:Persistence1BWorker] Missing current-phase marker: $Expected"
 }
 
-function Send-Rcon([string]$Command) {
+function Send-Rcon([string]$Command, [string]$ExpectedMessage = '') {
     [IO.File]::AppendAllText((Join-Path $RunDirectory 'rcon-stages.log'), ([DateTime]::UtcNow.ToString('o') + " send $Command`n"))
     try {
-        $Reply = (& "$PSScriptRoot\Rcon.ps1" -Port $Port -SecretPath $SecretPath -Command $Command -Socket $Connection -KeepOpen) | ConvertFrom-Json
+        $Reply = (& "$PSScriptRoot\Rcon.ps1" -Port $Port -SecretPath $SecretPath -Command $Command -ExpectedMessage $ExpectedMessage -Socket $Connection -KeepOpen) | ConvertFrom-Json
         [IO.File]::AppendAllText((Join-Path $RunDirectory 'rcon-stages.log'), ([DateTime]::UtcNow.ToString('o') + " received $Command`n"))
         return $Reply.Message
     } catch { throw "[CarbonLuau:Persistence1BWorker] RCON command '$Command' failed (details suppressed to protect secret)" }
@@ -380,7 +381,8 @@ try {
     Copy-Item -LiteralPath $StorageWorker -Destination (Join-Path $NativeDirectory 'carbonluau_storage.exe')
     # Production default budgets. Arm scripts only after storage Ready is observed.
     [IO.File]::WriteAllText($Targets[2].Target, '{"Enabled":true,"MaxVmMemoryMiB":64,"MaxCallbackMilliseconds":3,"ScriptRoot":"scripts","EntryScript":"init.luau","ModuleRoot":"modules","FrameDrainBudgetMilliseconds":5,"MaxQueuedCallbacks":4096}')
-    [IO.File]::WriteAllText((Join-Path $Server 'carbon\data\CarbonLuau\scripts\init.luau'), 'return true')
+    $InitialSource = if ($CatalogD9Supplement) { "assert(Item.Scrap=='scrap' and Item.MetalFragments=='metal.fragments' and Item.Wood=='wood' and type(Prefab.Loot.Barrel1)=='string'); print('[CarbonLuau:CatalogD9] PASS Startup'); return true" } else { 'return true' }
+    [IO.File]::WriteAllText((Join-Path $Server 'carbon\data\CarbonLuau\scripts\init.luau'), $InitialSource)
     $Secret = [Guid]::NewGuid().ToString('N')
     [IO.File]::WriteAllText($SecretPath, $Secret)
     $ServerProcess = Start-OwnedServer
@@ -390,6 +392,7 @@ try {
     catch { throw '[CarbonLuau:Persistence1BWorker] RCON connect failed (details suppressed)' }
     $Phase = 'InitialReadiness'
     $InitialStatus = Wait-Ready
+    if ($CatalogD9Supplement) { Wait-Log 0 '[CarbonLuau:CatalogD9] PASS Startup' }
     $InitialStatus | Set-Content -LiteralPath (Join-Path $RunDirectory 'initial-status.txt')
     if (@(Get-OwnedHelpers | Where-Object Name -eq 'carbonluau_storage.exe').Count -ne 1) {
         throw '[CarbonLuau:Persistence1BWorker] Expected one owned production storage worker'
@@ -407,6 +410,14 @@ try {
             throw '[CarbonLuau:Persistence2DLive] Query reload failed'
         }
         Wait-Log $Offset '[CarbonLuau:Persistence2DLive] PASS Query2D' 120
+    }
+    if ($CatalogD9Supplement) {
+        $Phase = 'CatalogD9'
+        [IO.File]::WriteAllText((Join-Path $Server 'carbon\data\CarbonLuau\scripts\init.luau'), $InitialSource)
+        if (!(Send-Rcon 'carbonluau.reload' 'reload OK').Contains('reload OK')) { throw '[CarbonLuau:CatalogD9] idle root publication failed' }
+        $Offset = (Read-ServerLog).Length
+        if (!(Send-Rcon 'carbonluau.catalogd9' 'CATALOG-D9 PASS').Contains('CATALOG-D9 PASS')) { throw '[CarbonLuau:CatalogD9] live matrix failed' }
+        Wait-Log $Offset '[CarbonLuau:CatalogD9] PASS root/addon/module visibility'
     }
     if ($NamespaceRestartSupplement) {
         $Phase = 'SeedAddonPair'

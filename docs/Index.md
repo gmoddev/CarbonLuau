@@ -10,8 +10,9 @@ does not create another contract or qualification receipt.
 - [Home](Home.md), [Installation](Installation.md), [public API](api/README.md).
 - [Scripting compatibility/limits](api/Compatibility.md) and
   [host support/validation selection](Compatibility.md).
-- [Release identities and readiness](Release.md): package `v0.7.0`, API
+- [Release identities and readiness](Release.md): published package `v0.7.0`, API
   `0.7.0-experimental`, with [release qualification](Release-0.7.0-Validation.md).
+  Current development API `0.7.5-experimental` adds [Item/Prefab catalogs](api/Catalogs.md).
 - Published release notes: [0.3](releases/0.3.0.md), [0.4](releases/0.4.0.md),
   [0.5](releases/0.5.0.md). [Planned 0.6 notes](releases/0.6.0.md) remain explicitly
   unpublished scope/number planning; package identity need not match API identity.
@@ -90,6 +91,10 @@ Loot item qualification, preserving the D6 registry and existing host adapter.
 [Gameplay D8](GameplayD8-Validation.md) owns the bulk item qualification and
 complete registry/exclusion receipts. Its [finite public list](api/LootItems.md)
 records every enabled ID and stack limit under the unchanged D6 bounds.
+
+[CATALOG-D9](CatalogD9-Validation.md) qualifies the generated immutable
+[Item/Prefab string catalogs](api/Catalogs.md), shared VM lifecycle, metadata
+and actual editor completion under development API `0.7.5-experimental`.
 
 [Consolidation receipt](Documentation-Consolidation.md) records the approved
 cleanup, coverage/URL/test consumers and qualification. Do not introduce duplicate

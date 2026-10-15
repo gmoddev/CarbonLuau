@@ -43,6 +43,14 @@ facade GiveItem/TakeItem are introduced at 0.7.0 and included in package/tag
 owns the current platform/lifecycle and release-readiness disposition; historical
 C1–C3 evidence describes its actual earlier API, not current legacy availability.
 
+CATALOG-D9 adds immutable `Item` and `Prefab` string globals under the explicit
+user-selected development API identity `0.7.5-experimental`. Existing SinceApi
+introductions and the published v0.7.0 API remain unchanged. This assignment
+changes no native ABI, provider/schema, host adapter or gameplay authority;
+the [catalog reference](api/Catalogs.md) and [qualification](CatalogD9-Validation.md)
+define its finite data, runtime lifecycle and tooling evidence. It authorizes
+no new release/tag or modification of published assets.
+
 Developer tooling is separate from the production server support table above.
 [ToolingBaseline.md](ToolingBaseline.md) owns its independent extension, protocol,
 pack, metadata, preview-plan, tooling-native and LSP identities, developer-platform

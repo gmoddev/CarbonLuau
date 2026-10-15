@@ -34,7 +34,7 @@ for File in Args.publish.iterdir():
     if File.is_file() and File.suffix != ".pdb":
         shutil.copyfile(File, Target / File.name)
         Files[File.name] = None
-for File in [Args.analysis, Args.launcher, Root / "generated/carbonluau.d.luau", Root / "generated/carbonluau-docs.json"]:
+for File in [Args.analysis, Args.launcher, Root / "generated/carbonluau.d.luau", Root / "generated/carbonluau-docs.json", Root / "generated/catalog-symbols.json"]:
     shutil.copyfile(File, Target / File.name)
     Files[File.name] = None
 for File, Name in [(Root / "LICENSE", "CarbonLuau-LICENSE.txt"),

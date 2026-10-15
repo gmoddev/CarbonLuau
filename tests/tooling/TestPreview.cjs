@@ -74,8 +74,17 @@ function FixtureSource(Operations) {
         Assert(!Initialized.Error, JSON.stringify(Initialized));
         const Metadata = await Request('getMetadata').Promise;
         Assert(!Metadata.Error, JSON.stringify(Metadata));
-        Assert.equal(Metadata.Result.Catalog.Api.Version, '0.7.0-experimental');
+        Assert.equal(Metadata.Result.Catalog.Api.Version, '0.7.5-experimental');
         const Members = Metadata.Result.Catalog.Members;
+        const CatalogSymbols = JSON.parse(Fs.readFileSync(Path.join(PackRoot, 'catalog-symbols.json'), 'utf8'));
+        Assert.equal(CatalogSymbols.Items.length, 221);
+        const CatalogSource = CatalogSymbols.Items.map(Row => `assert(Item.${Row.Symbol}==${JSON.stringify(Row.Name)})`).join('\n') +
+            '\nassert(Prefab.Loot.Barrel1=="assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab")' +
+            '\nassert(Prefab.Loot.Barrel2=="assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab")' +
+            '\nassert(not pcall(function() rawset(Item,"Scrap","bad") end))' +
+            '\nassert(not pcall(function() Prefab.Loot={} end))' +
+            '\nassert(type(ImageSource.Item)=="function")\n' + Source;
+        Assert(!(await Request('preview', Params(CatalogSource)).Promise).Error, 'Pure catalog constants must work in actual contained preview');
         Assert.deepEqual(Members.filter(Member => Member.OwnerId === 'PlayerInventory').map(Member => Member.Id).sort(),
             ['CountItem', 'GiveItem', 'HasItem', 'ItemChanged', 'TakeItem'].map(Name => 'PlayerInventory.' + Name));
         for (const Name of ['CountItem', 'HasItem', 'GiveItem', 'TakeItem'])

@@ -9,12 +9,19 @@ not modify the shared facade or grant host authority.
 |---|---|---|
 | `game:GetService(Name)` | string -> Players, Commands, Gui, Items, Workspace, DataStoreService or Loot | Exact case-sensitive names. Workspace was introduced at API 0.6, Loot at 0.6.5; both are included in v0.7.0 but not v0.5.0. |
 | `game.ApiName` | read-only string | `CarbonLuau` |
-| `game.ApiVersion` | read-only string | Published/current identity: `0.7.0-experimental` |
+| `game.ApiVersion` | read-only string | Development `0.7.5-experimental`; published v0.7.0 retains `0.7.0-experimental` |
 | `game.ApiStatus` | read-only string | `Experimental` |
 
 Wrong receiver, non-string service name or unknown service raises a Luau error.
 No permission is required for discovery or version inspection. A service exists
 only in its owning generation; there is no cross-reload state preservation.
+
+Development API `0.7.5-experimental` also introduces frozen ordinary-string
+[Item and Prefab catalogs](Catalogs.md): 221 flat `Item` constants and exactly
+`Prefab.Loot.Barrel1` / `Prefab.Loot.Barrel2`. They are shared immutable data
+per VM generation; script-owned environments may shadow their own binding.
+`Item` is distinct from the existing host-facing `Items` service. Catalog access
+does not authorize an operation or broaden any validator or physical support.
 
 `Vector3` is also a frozen global constructor table beginning with
 `0.4.0-experimental`. See the [Vector3 reference](Types/Vector3.md).

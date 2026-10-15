@@ -32,7 +32,7 @@ namespace CarbonLuau.Core
                 if (Members.Any(Value => NamespaceEnum(Value, Types, Members) == Name)) continue;
                 var Static = Members.Where(Value => (string)Value["OwnerId"] == Name &&
                     ((string)Value["Kind"] == "Constructor" || (string)Value["Kind"] == "Singleton" ||
-                        NamespaceEnum(Value, Types, Members) != null)).ToArray();
+                        NamespaceEnum(Value, Types, Members) != null || NamespaceProperty(Value, Types))).ToArray();
                 if (Static.Length == 0) continue;
                 string Global = Name == "Task" ? "task" : Name;
                 Result.Append("declare ").Append(Global).Append(": {\n");
@@ -40,7 +40,7 @@ namespace CarbonLuau.Core
                     Result.Append("    read ").Append((string)Member["Name"]).Append(": ");
                     string Enum = NamespaceEnum(Member, Types, Members);
                     if (Enum != null) Result.Append(NamespaceType(Enum, Members));
-                    else if ((string)Member["Kind"] == "Singleton") Result.Append((string)Member["ValueType"]);
+                    else if ((string)Member["Kind"] == "Singleton" || NamespaceProperty(Member, Types)) Result.Append((string)Member["ValueType"]);
                     else Result.Append(FunctionType((JObject)Member["Signatures"][0]));
                     Result.Append(",\n");
                 }
@@ -53,6 +53,8 @@ namespace CarbonLuau.Core
             ISet<string> Written, StringBuilder Result)
         {
             if (!Written.Add(Name)) return;
+            if ((string)Types[Name]["Kind"] == "Global" && Members.Where(Value => (string)Value["OwnerId"] == Name)
+                .All(Value => (string)Value["Kind"] == "Singleton" || NamespaceProperty(Value, Types))) return;
             if ((string)Types[Name]["Availability"]["Qualification"] == "WorkInProgress")
                 Result.Append("-- WORK IN PROGRESS / UNQUALIFIED; introduction version is not qualification.\n");
             if ((string)Types[Name]["Representation"] == "Alias") {
@@ -130,6 +132,14 @@ namespace CarbonLuau.Core
                 !Members.Any(Value => (string)Value["OwnerId"] == ValueType && (string)Value["Kind"] == "Singleton")) return null;
             return ValueType;
         }
+        private static bool NamespaceProperty(JObject Member, IDictionary<string, JObject> Types)
+        {
+            string Target = (string)Member["ValueType"];
+            return (string)Member["Kind"] == "Property" && (bool?)Member["Writable"] == false &&
+                (string)Types[(string)Member["OwnerId"]]["Kind"] == "Global" && Target != null &&
+                Types.ContainsKey(Target) && (string)Types[Target]["Kind"] == "Value" &&
+                (string)Types[Target]["Representation"] == "Record";
+        }
         private static string NamespaceType(string Enum, IList<JObject> Members)
         {
             return "{" + String.Join(", ", Members.Where(Value => (string)Value["OwnerId"] == Enum &&
@@ -152,7 +162,7 @@ namespace CarbonLuau.Core
                 }
                 Result["@carbonluau/" + (Static ? "global/" : "globaltype/") +
                     ((string)Member["OwnerId"] == "Task" ? "task." + (string)Member["Name"] : (string)Member["Id"])] = new JObject { ["documentation"] = (string)Member["Summary"] };
-                if (NamespaceEnum(Member, Types, Members) != null)
+                if (NamespaceEnum(Member, Types, Members) != null || NamespaceProperty(Member, Types))
                     Result["@carbonluau/global/" + (string)Member["Id"]] = new JObject { ["documentation"] = (string)Member["Summary"] };
             }
             return Result;

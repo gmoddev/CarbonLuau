@@ -1,6 +1,11 @@
 # Scripting compatibility and limits
 
-The v0.7.0 package contains the complete current API
+Current development API `0.7.5-experimental` introduces the generated
+[Item and Prefab string catalogs](Catalogs.md). Existing API introduction
+versions remain unchanged. Package/tag v0.7.0 is immutable and contains neither
+new global. The catalogs confer no new host authority or physical support.
+
+The v0.7.0 package contains the complete published API
 `0.7.0-experimental`; see [release qualification](../Release-0.7.0-Validation.md).
 Its package identity supersedes earlier phase-local 0.5 development holds,
 not historical API introduction versions or published artifacts.

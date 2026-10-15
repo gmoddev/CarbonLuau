@@ -1,0 +1,911 @@
+{
+  "SymbolAlgorithmVersion": 1,
+  "ItemsSha256": "37688a539718d8f80879b66bc88e9594bf90c37cf4d23f7425ac6813f45a47e8",
+  "PrefabsSha256": "78048e4ad7fe6ad92e3a13976a8639d25b1c008d72132a28336f2e87a23c5a46",
+  "Items": [
+    {
+      "Name": "2module.car",
+      "Symbol": "N2ModuleCar"
+    },
+    {
+      "Name": "3module.car",
+      "Symbol": "N3ModuleCar"
+    },
+    {
+      "Name": "4module.car",
+      "Symbol": "N4ModuleCar"
+    },
+    {
+      "Name": "ammo.paintball",
+      "Symbol": "AmmoPaintball"
+    },
+    {
+      "Name": "ammo.pistol",
+      "Symbol": "AmmoPistol"
+    },
+    {
+      "Name": "ammo.pistol.hv",
+      "Symbol": "AmmoPistolHv"
+    },
+    {
+      "Name": "ammo.rifle",
+      "Symbol": "AmmoRifle"
+    },
+    {
+      "Name": "ammo.rifle.hv",
+      "Symbol": "AmmoRifleHv"
+    },
+    {
+      "Name": "ammo.rocket.hv",
+      "Symbol": "AmmoRocketHv"
+    },
+    {
+      "Name": "ammo.rocket.sam",
+      "Symbol": "AmmoRocketSam"
+    },
+    {
+      "Name": "ammo.shotgun",
+      "Symbol": "AmmoShotgun"
+    },
+    {
+      "Name": "antiradpills",
+      "Symbol": "Antiradpills"
+    },
+    {
+      "Name": "apple.spoiled",
+      "Symbol": "AppleSpoiled"
+    },
+    {
+      "Name": "arrow.bone",
+      "Symbol": "ArrowBone"
+    },
+    {
+      "Name": "arrow.fire",
+      "Symbol": "ArrowFire"
+    },
+    {
+      "Name": "arrow.hv",
+      "Symbol": "ArrowHv"
+    },
+    {
+      "Name": "arrow.wooden",
+      "Symbol": "ArrowWooden"
+    },
+    {
+      "Name": "attire.nesthat",
+      "Symbol": "AttireNesthat"
+    },
+    {
+      "Name": "ball",
+      "Symbol": "Ball"
+    },
+    {
+      "Name": "barrelcostume",
+      "Symbol": "Barrelcostume"
+    },
+    {
+      "Name": "battery.small",
+      "Symbol": "BatterySmall"
+    },
+    {
+      "Name": "bdu.pants",
+      "Symbol": "BduPants"
+    },
+    {
+      "Name": "bdu.shirt",
+      "Symbol": "BduShirt"
+    },
+    {
+      "Name": "bearmeat.burned",
+      "Symbol": "BearmeatBurned"
+    },
+    {
+      "Name": "bicycle",
+      "Symbol": "Bicycle"
+    },
+    {
+      "Name": "bleach",
+      "Symbol": "Bleach"
+    },
+    {
+      "Name": "blood",
+      "Symbol": "Blood"
+    },
+    {
+      "Name": "bluedogtags",
+      "Symbol": "Bluedogtags"
+    },
+    {
+      "Name": "blueidtag",
+      "Symbol": "Blueidtag"
+    },
+    {
+      "Name": "blueprintbase",
+      "Symbol": "Blueprintbase"
+    },
+    {
+      "Name": "bone.fragments",
+      "Symbol": "BoneFragments"
+    },
+    {
+      "Name": "boots.frog",
+      "Symbol": "BootsFrog"
+    },
+    {
+      "Name": "bottle.vodka",
+      "Symbol": "BottleVodka"
+    },
+    {
+      "Name": "bread.loaf",
+      "Symbol": "BreadLoaf"
+    },
+    {
+      "Name": "burlap.gloves",
+      "Symbol": "BurlapGloves"
+    },
+    {
+      "Name": "burlap.headwrap",
+      "Symbol": "BurlapHeadwrap"
+    },
+    {
+      "Name": "burlap.shirt",
+      "Symbol": "BurlapShirt"
+    },
+    {
+      "Name": "burlap.shoes",
+      "Symbol": "BurlapShoes"
+    },
+    {
+      "Name": "burlap.trousers",
+      "Symbol": "BurlapTrousers"
+    },
+    {
+      "Name": "caboose",
+      "Symbol": "Caboose"
+    },
+    {
+      "Name": "can.beans",
+      "Symbol": "CanBeans"
+    },
+    {
+      "Name": "can.beans.empty",
+      "Symbol": "CanBeansEmpty"
+    },
+    {
+      "Name": "can.tuna",
+      "Symbol": "CanTuna"
+    },
+    {
+      "Name": "can.tuna.empty",
+      "Symbol": "CanTunaEmpty"
+    },
+    {
+      "Name": "candycane",
+      "Symbol": "Candycane"
+    },
+    {
+      "Name": "cannonball",
+      "Symbol": "Cannonball"
+    },
+    {
+      "Name": "captainslog",
+      "Symbol": "Captainslog"
+    },
+    {
+      "Name": "charcoal",
+      "Symbol": "Charcoal"
+    },
+    {
+      "Name": "chicken.burned",
+      "Symbol": "ChickenBurned"
+    },
+    {
+      "Name": "chicken.spoiled",
+      "Symbol": "ChickenSpoiled"
+    },
+    {
+      "Name": "chocolate",
+      "Symbol": "Chocolate"
+    },
+    {
+      "Name": "clatter.helmet",
+      "Symbol": "ClatterHelmet"
+    },
+    {
+      "Name": "cloth",
+      "Symbol": "Cloth"
+    },
+    {
+      "Name": "coal",
+      "Symbol": "Coal"
+    },
+    {
+      "Name": "coconut",
+      "Symbol": "Coconut"
+    },
+    {
+      "Name": "coolingtea",
+      "Symbol": "Coolingtea"
+    },
+    {
+      "Name": "cratecostume",
+      "Symbol": "Cratecostume"
+    },
+    {
+      "Name": "crude.oil",
+      "Symbol": "CrudeOil"
+    },
+    {
+      "Name": "dart.radiation",
+      "Symbol": "DartRadiation"
+    },
+    {
+      "Name": "dart.scatter",
+      "Symbol": "DartScatter"
+    },
+    {
+      "Name": "dart.wood",
+      "Symbol": "DartWood"
+    },
+    {
+      "Name": "deermeat.burned",
+      "Symbol": "DeermeatBurned"
+    },
+    {
+      "Name": "diesel_barrel",
+      "Symbol": "DieselBarrel"
+    },
+    {
+      "Name": "diving.fins",
+      "Symbol": "DivingFins"
+    },
+    {
+      "Name": "diving.mask",
+      "Symbol": "DivingMask"
+    },
+    {
+      "Name": "diving.wetsuit",
+      "Symbol": "DivingWetsuit"
+    },
+    {
+      "Name": "documents",
+      "Symbol": "Documents"
+    },
+    {
+      "Name": "dogtagneutral",
+      "Symbol": "Dogtagneutral"
+    },
+    {
+      "Name": "door.key",
+      "Symbol": "DoorKey"
+    },
+    {
+      "Name": "draculacape",
+      "Symbol": "Draculacape"
+    },
+    {
+      "Name": "draculamask",
+      "Symbol": "Draculamask"
+    },
+    {
+      "Name": "ducttape",
+      "Symbol": "Ducttape"
+    },
+    {
+      "Name": "easter.goldegg",
+      "Symbol": "EasterGoldegg"
+    },
+    {
+      "Name": "explosives",
+      "Symbol": "Explosives"
+    },
+    {
+      "Name": "fat.animal",
+      "Symbol": "FatAnimal"
+    },
+    {
+      "Name": "fertilizer",
+      "Symbol": "Fertilizer"
+    },
+    {
+      "Name": "fish.anchovy",
+      "Symbol": "FishAnchovy"
+    },
+    {
+      "Name": "fish.catfish",
+      "Symbol": "FishCatfish"
+    },
+    {
+      "Name": "fish.herring",
+      "Symbol": "FishHerring"
+    },
+    {
+      "Name": "fish.minnows",
+      "Symbol": "FishMinnows"
+    },
+    {
+      "Name": "fish.salmon",
+      "Symbol": "FishSalmon"
+    },
+    {
+      "Name": "fish.sardine",
+      "Symbol": "FishSardine"
+    },
+    {
+      "Name": "fish.smallshark",
+      "Symbol": "FishSmallshark"
+    },
+    {
+      "Name": "fish.spoiled",
+      "Symbol": "FishSpoiled"
+    },
+    {
+      "Name": "fish.troutsmall",
+      "Symbol": "FishTroutsmall"
+    },
+    {
+      "Name": "fishing.tackle",
+      "Symbol": "FishingTackle"
+    },
+    {
+      "Name": "gears",
+      "Symbol": "Gears"
+    },
+    {
+      "Name": "ghostsheet",
+      "Symbol": "Ghostsheet"
+    },
+    {
+      "Name": "gingerbreadsuit",
+      "Symbol": "Gingerbreadsuit"
+    },
+    {
+      "Name": "glue",
+      "Symbol": "Glue"
+    },
+    {
+      "Name": "granolabar",
+      "Symbol": "Granolabar"
+    },
+    {
+      "Name": "grayidtag",
+      "Symbol": "Grayidtag"
+    },
+    {
+      "Name": "greenidtag",
+      "Symbol": "Greenidtag"
+    },
+    {
+      "Name": "grub",
+      "Symbol": "Grub"
+    },
+    {
+      "Name": "gunpowder",
+      "Symbol": "Gunpowder"
+    },
+    {
+      "Name": "hab",
+      "Symbol": "Hab"
+    },
+    {
+      "Name": "halloween.candy",
+      "Symbol": "HalloweenCandy"
+    },
+    {
+      "Name": "harvestingtea",
+      "Symbol": "Harvestingtea"
+    },
+    {
+      "Name": "hat.beenie",
+      "Symbol": "HatBeenie"
+    },
+    {
+      "Name": "hat.boonie",
+      "Symbol": "HatBoonie"
+    },
+    {
+      "Name": "hat.bunnyhat",
+      "Symbol": "HatBunnyhat"
+    },
+    {
+      "Name": "hat.cap",
+      "Symbol": "HatCap"
+    },
+    {
+      "Name": "hat.dragonmask",
+      "Symbol": "HatDragonmask"
+    },
+    {
+      "Name": "hat.horsemask",
+      "Symbol": "HatHorsemask"
+    },
+    {
+      "Name": "hat.oxmask",
+      "Symbol": "HatOxmask"
+    },
+    {
+      "Name": "hat.rabbitmask",
+      "Symbol": "HatRabbitmask"
+    },
+    {
+      "Name": "hat.ratmask",
+      "Symbol": "HatRatmask"
+    },
+    {
+      "Name": "hat.snakemask",
+      "Symbol": "HatSnakemask"
+    },
+    {
+      "Name": "hat.tigermask",
+      "Symbol": "HatTigermask"
+    },
+    {
+      "Name": "hat.wellipets",
+      "Symbol": "HatWellipets"
+    },
+    {
+      "Name": "hat.wolf",
+      "Symbol": "HatWolf"
+    },
+    {
+      "Name": "healingtea",
+      "Symbol": "Healingtea"
+    },
+    {
+      "Name": "healingtea.pure",
+      "Symbol": "HealingteaPure"
+    },
+    {
+      "Name": "honey",
+      "Symbol": "Honey"
+    },
+    {
+      "Name": "honeycomb",
+      "Symbol": "Honeycomb"
+    },
+    {
+      "Name": "hoodie",
+      "Symbol": "Hoodie"
+    },
+    {
+      "Name": "horse",
+      "Symbol": "Horse"
+    },
+    {
+      "Name": "horsedung",
+      "Symbol": "Horsedung"
+    },
+    {
+      "Name": "hq.metal.ore",
+      "Symbol": "HqMetalOre"
+    },
+    {
+      "Name": "jacket.snow",
+      "Symbol": "JacketSnow"
+    },
+    {
+      "Name": "jar.pickle",
+      "Symbol": "JarPickle"
+    },
+    {
+      "Name": "kickgems",
+      "Symbol": "Kickgems"
+    },
+    {
+      "Name": "largemedkit",
+      "Symbol": "Largemedkit"
+    },
+    {
+      "Name": "lavenderidtag",
+      "Symbol": "Lavenderidtag"
+    },
+    {
+      "Name": "leather",
+      "Symbol": "Leather"
+    },
+    {
+      "Name": "locomotive",
+      "Symbol": "Locomotive"
+    },
+    {
+      "Name": "lowgradefuel",
+      "Symbol": "Lowgradefuel"
+    },
+    {
+      "Name": "mask.balaclava",
+      "Symbol": "MaskBalaclava"
+    },
+    {
+      "Name": "mask.bandana",
+      "Symbol": "MaskBandana"
+    },
+    {
+      "Name": "maxhealthtea",
+      "Symbol": "Maxhealthtea"
+    },
+    {
+      "Name": "metal.fragments",
+      "Symbol": "MetalFragments"
+    },
+    {
+      "Name": "metal.ore",
+      "Symbol": "MetalOre"
+    },
+    {
+      "Name": "metal.refined",
+      "Symbol": "MetalRefined"
+    },
+    {
+      "Name": "metalblade",
+      "Symbol": "Metalblade"
+    },
+    {
+      "Name": "metalpipe",
+      "Symbol": "Metalpipe"
+    },
+    {
+      "Name": "metalspring",
+      "Symbol": "Metalspring"
+    },
+    {
+      "Name": "minicopter",
+      "Symbol": "Minicopter"
+    },
+    {
+      "Name": "mintidtag",
+      "Symbol": "Mintidtag"
+    },
+    {
+      "Name": "mlrs",
+      "Symbol": "Mlrs"
+    },
+    {
+      "Name": "motorbike",
+      "Symbol": "Motorbike"
+    },
+    {
+      "Name": "mrspice.can",
+      "Symbol": "MrspiceCan"
+    },
+    {
+      "Name": "mummymask",
+      "Symbol": "Mummymask"
+    },
+    {
+      "Name": "note",
+      "Symbol": "Note"
+    },
+    {
+      "Name": "nucleus",
+      "Symbol": "Nucleus"
+    },
+    {
+      "Name": "orangeidtag",
+      "Symbol": "Orangeidtag"
+    },
+    {
+      "Name": "orchid",
+      "Symbol": "Orchid"
+    },
+    {
+      "Name": "oretea",
+      "Symbol": "Oretea"
+    },
+    {
+      "Name": "oretea.advanced",
+      "Symbol": "OreteaAdvanced"
+    },
+    {
+      "Name": "oretea.pure",
+      "Symbol": "OreteaPure"
+    },
+    {
+      "Name": "pants",
+      "Symbol": "Pants"
+    },
+    {
+      "Name": "pants.shorts",
+      "Symbol": "PantsShorts"
+    },
+    {
+      "Name": "paper",
+      "Symbol": "Paper"
+    },
+    {
+      "Name": "partyhat",
+      "Symbol": "Partyhat"
+    },
+    {
+      "Name": "pinkidtag",
+      "Symbol": "Pinkidtag"
+    },
+    {
+      "Name": "plantfiber",
+      "Symbol": "Plantfiber"
+    },
+    {
+      "Name": "prisonerhood",
+      "Symbol": "Prisonerhood"
+    },
+    {
+      "Name": "propanetank",
+      "Symbol": "Propanetank"
+    },
+    {
+      "Name": "ptboat",
+      "Symbol": "Ptboat"
+    },
+    {
+      "Name": "purecoolingtea",
+      "Symbol": "Purecoolingtea"
+    },
+    {
+      "Name": "purewarmingtea",
+      "Symbol": "Purewarmingtea"
+    },
+    {
+      "Name": "purpleidtag",
+      "Symbol": "Purpleidtag"
+    },
+    {
+      "Name": "reddogtags",
+      "Symbol": "Reddogtags"
+    },
+    {
+      "Name": "redidtag",
+      "Symbol": "Redidtag"
+    },
+    {
+      "Name": "researchpaper",
+      "Symbol": "Researchpaper"
+    },
+    {
+      "Name": "rhib",
+      "Symbol": "Rhib"
+    },
+    {
+      "Name": "riflebody",
+      "Symbol": "Riflebody"
+    },
+    {
+      "Name": "roadsign.gloves",
+      "Symbol": "RoadsignGloves"
+    },
+    {
+      "Name": "roadsigns",
+      "Symbol": "Roadsigns"
+    },
+    {
+      "Name": "rope",
+      "Symbol": "Rope"
+    },
+    {
+      "Name": "rose",
+      "Symbol": "Rose"
+    },
+    {
+      "Name": "santabeard",
+      "Symbol": "Santabeard"
+    },
+    {
+      "Name": "santahat",
+      "Symbol": "Santahat"
+    },
+    {
+      "Name": "scarecrow.suit",
+      "Symbol": "ScarecrowSuit"
+    },
+    {
+      "Name": "scarecrowhead",
+      "Symbol": "Scarecrowhead"
+    },
+    {
+      "Name": "scrap",
+      "Symbol": "Scrap"
+    },
+    {
+      "Name": "scraptea",
+      "Symbol": "Scraptea"
+    },
+    {
+      "Name": "scraptea.pure",
+      "Symbol": "ScrapteaPure"
+    },
+    {
+      "Name": "sedan",
+      "Symbol": "Sedan"
+    },
+    {
+      "Name": "semibody",
+      "Symbol": "Semibody"
+    },
+    {
+      "Name": "sewingkit",
+      "Symbol": "Sewingkit"
+    },
+    {
+      "Name": "sheetmetal",
+      "Symbol": "Sheetmetal"
+    },
+    {
+      "Name": "shirt.collared",
+      "Symbol": "ShirtCollared"
+    },
+    {
+      "Name": "shirt.tanktop",
+      "Symbol": "ShirtTanktop"
+    },
+    {
+      "Name": "shoes.boots",
+      "Symbol": "ShoesBoots"
+    },
+    {
+      "Name": "skull.human",
+      "Symbol": "SkullHuman"
+    },
+    {
+      "Name": "skull.wolf",
+      "Symbol": "SkullWolf"
+    },
+    {
+      "Name": "smgbody",
+      "Symbol": "Smgbody"
+    },
+    {
+      "Name": "snowmobile",
+      "Symbol": "Snowmobile"
+    },
+    {
+      "Name": "speargun.spear",
+      "Symbol": "SpeargunSpear"
+    },
+    {
+      "Name": "spoiled.produce",
+      "Symbol": "SpoiledProduce"
+    },
+    {
+      "Name": "spraycandecal",
+      "Symbol": "Spraycandecal"
+    },
+    {
+      "Name": "sticks",
+      "Symbol": "Sticks"
+    },
+    {
+      "Name": "stones",
+      "Symbol": "Stones"
+    },
+    {
+      "Name": "submarineduo",
+      "Symbol": "Submarineduo"
+    },
+    {
+      "Name": "submarinesolo",
+      "Symbol": "Submarinesolo"
+    },
+    {
+      "Name": "sulfur",
+      "Symbol": "Sulfur"
+    },
+    {
+      "Name": "sulfur.ore",
+      "Symbol": "SulfurOre"
+    },
+    {
+      "Name": "sunflower",
+      "Symbol": "Sunflower"
+    },
+    {
+      "Name": "supertea",
+      "Symbol": "Supertea"
+    },
+    {
+      "Name": "tactical.gloves",
+      "Symbol": "TacticalGloves"
+    },
+    {
+      "Name": "tarp",
+      "Symbol": "Tarp"
+    },
+    {
+      "Name": "techparts",
+      "Symbol": "Techparts"
+    },
+    {
+      "Name": "trike",
+      "Symbol": "Trike"
+    },
+    {
+      "Name": "tshirt",
+      "Symbol": "Tshirt"
+    },
+    {
+      "Name": "tshirt.long",
+      "Symbol": "TshirtLong"
+    },
+    {
+      "Name": "twitch.headset",
+      "Symbol": "TwitchHeadset"
+    },
+    {
+      "Name": "venom.snake",
+      "Symbol": "VenomSnake"
+    },
+    {
+      "Name": "wagon",
+      "Symbol": "Wagon"
+    },
+    {
+      "Name": "walkietalkie",
+      "Symbol": "Walkietalkie"
+    },
+    {
+      "Name": "wallpaper.wall",
+      "Symbol": "WallpaperWall"
+    },
+    {
+      "Name": "warmingtea",
+      "Symbol": "Warmingtea"
+    },
+    {
+      "Name": "wheat",
+      "Symbol": "Wheat"
+    },
+    {
+      "Name": "whiteidtag",
+      "Symbol": "Whiteidtag"
+    },
+    {
+      "Name": "wolfmeat.burned",
+      "Symbol": "WolfmeatBurned"
+    },
+    {
+      "Name": "wood",
+      "Symbol": "Wood"
+    },
+    {
+      "Name": "woodtea",
+      "Symbol": "Woodtea"
+    },
+    {
+      "Name": "woodtea.pure",
+      "Symbol": "WoodteaPure"
+    },
+    {
+      "Name": "wool",
+      "Symbol": "Wool"
+    },
+    {
+      "Name": "workcart",
+      "Symbol": "Workcart"
+    },
+    {
+      "Name": "worm",
+      "Symbol": "Worm"
+    },
+    {
+      "Name": "yellowidtag",
+      "Symbol": "Yellowidtag"
+    }
+  ],
+  "Prefabs": [
+    {
+      "Group": "Loot",
+      "Symbol": "Barrel1",
+      "Path": "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab",
+      "Id": 966676416,
+      "Capabilities": [
+        "Loot.Replace"
+      ]
+    },
+    {
+      "Group": "Loot",
+      "Symbol": "Barrel2",
+      "Path": "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab",
+      "Id": 555882409,
+      "Capabilities": [
+        "Loot.Replace"
+      ]
+    }
+  ]
+}

@@ -7,6 +7,7 @@
 #include "GameplayPublicationTests.hpp"
 #include "GameplayEventTests.hpp"
 #include "InventoryChangedTests.hpp"
+#include "CatalogTests.hpp"
 
 using namespace CarbonLuau::Runtime;
 
@@ -64,6 +65,7 @@ int main(int ArgumentCount, char** Arguments)
     Allocate(&Budget, Pointer, 128, 0);
     Check(!Budget.Used && !TestLiveBytes, "free accounting");
     ClVmConfig Config{16 * MiB};
+    CarbonLuau::CatalogTests::Run();
     int Failed = 0;
     for (int Position = 0; Position < 256; ++Position) {
         TestAllocationFailureAfter = Position;

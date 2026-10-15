@@ -33,7 +33,8 @@ internal static class Program
         var Release = JObject.Parse(File.ReadAllText(Path.Combine(Root, "release.json")));
         string Source = File.ReadAllText(Path.Combine(Root, "scripts", "bootstrap.luau"));
         string Native = File.ReadAllText(Path.Combine(Root, "native", "src", "scripts", "ModuleLoader.cpp")) + "\n" +
-            File.ReadAllText(Path.Combine(Root, "native", "src", "facade", "PersistenceFacade.cpp"));
+            File.ReadAllText(Path.Combine(Root, "native", "src", "facade", "PersistenceFacade.cpp")) + "\n" +
+            File.ReadAllText(Path.Combine(Root, "native", "src", "runtime", "generated", "CatalogData.inc"));
         JObject Catalog = ApiCatalog.Build(Source, Release, Native);
         var Outputs = new SortedDictionary<string, string>(StringComparer.Ordinal) {
             ["api/carbonluau-api.json"] = Json(Catalog),
@@ -41,6 +42,7 @@ internal static class Program
             ["generated/carbonluau-docs.json"] = Json(ApiArtifacts.Documentation(Catalog)),
             ["generated/tooling-metadata.json"] = Json(new JObject { ["SchemaVersion"] = 1, ["Api"] = Catalog["Api"]!.DeepClone(),
                 ["PackageSchema"] = Release["packageSchema"]!.DeepClone(), ["RuntimeLuauRevision"] = Release["luauRevision"]!.DeepClone(),
+                ["CatalogSha256"] = ApiCatalog.ScriptCatalogFingerprint,
                 ["Limits"] = ApiCatalog.Limits() })
         };
         foreach (var Output in Outputs) {

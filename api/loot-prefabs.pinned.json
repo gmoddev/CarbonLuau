@@ -1,0 +1,20 @@
+{
+  "SchemaVersion": 1,
+  "SourceQualification": "GameplayD6/ee944d2",
+  "Prefabs": [
+    {
+      "Group": "Loot",
+      "Symbol": "Barrel1",
+      "Path": "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab",
+      "Id": 966676416,
+      "Capabilities": ["Loot.Replace"]
+    },
+    {
+      "Group": "Loot",
+      "Symbol": "Barrel2",
+      "Path": "assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab",
+      "Id": 555882409,
+      "Capabilities": ["Loot.Replace"]
+    }
+  ]
+}

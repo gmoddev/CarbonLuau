@@ -143,8 +143,18 @@ struct Vm {
     std::string* GameplayInFlightPayload = nullptr;
     int GuiValueEqual = LUA_NOREF;
     int EntityIdentities = LUA_NOREF;
+    // Immutable shared string namespaces, owned by this VM generation.
+    int ItemCatalog = LUA_NOREF, PrefabCatalog = LUA_NOREF;
+#ifdef CARBONLUAU_TESTING
+    uint64_t CatalogBytes = 0;
+#endif
     ~Vm();
 };
+
+const char* CatalogIdentity();
+#ifdef CARBONLUAU_TESTING
+extern bool TestCatalogFingerprintMismatch;
+#endif
 
 extern std::recursive_mutex RegistryMutex;
 extern std::array<std::unique_ptr<Vm>, 32> Registry;

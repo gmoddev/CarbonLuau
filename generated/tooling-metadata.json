@@ -2,11 +2,12 @@
   "SchemaVersion": 1,
   "Api": {
     "Name": "CarbonLuau",
-    "Version": "0.7.0-experimental",
+    "Version": "0.7.5-experimental",
     "Status": "Experimental"
   },
   "PackageSchema": 1,
   "RuntimeLuauRevision": "c6b830185af962c82003f86784e2fe036357c830",
+  "CatalogSha256": "419eeabd336aab199aa23a4537976ee404d838664928dabda77ddcecb538c528",
   "Limits": {
     "Addon.ArchiveBytes": 4194304,
     "Addon.ExpandedBytes": 8388608,

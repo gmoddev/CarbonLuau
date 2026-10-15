@@ -327,7 +327,7 @@ $ServiceReference = Get-Content -Raw -LiteralPath (Join-Path $Root 'docs/api/Ser
 $Catalog = Get-Content -Raw -LiteralPath (Join-Path $Root 'api/carbonluau-api.json') | ConvertFrom-Json
 $Definitions = Get-Content -Raw -LiteralPath (Join-Path $Root 'generated/carbonluau.d.luau')
 Test-D3Metadata $Catalog $Definitions $Bootstrap
-if ($Catalog.Api.Version -cne '0.7.0-experimental' -or $Release.apiVersion -cne '0.7.0-experimental' -or
+if ($Catalog.Api.Version -cne '0.7.5-experimental' -or $Release.apiVersion -cne '0.7.5-experimental' -or
     $Release.packageVersion -cne '0.7.0') { throw 'Inventory migration API/package identity differs' }
 $InventoryMembers = @($Catalog.Members | Where-Object { $_.OwnerId -ceq 'PlayerInventory' } | Sort-Object Id)
 $ExpectedInventoryMembers = @('PlayerInventory.CountItem','PlayerInventory.GiveItem','PlayerInventory.HasItem',
@@ -400,6 +400,12 @@ foreach ($Declaration in @($Catalog.Types) + @($Catalog.Members)) {
         }
     } elseif ($Declaration.Id -cin $LootTypes -or $Declaration.OwnerId -cin $LootTypes) {
         # Exact D3 identity and per-declaration preview were audited above.
+    } elseif ($Declaration.Id -cin @('Item','Prefab','PrefabLoot') -or $Declaration.OwnerId -cin @('Item','Prefab','PrefabLoot')) {
+        if ($Declaration.Availability.SinceApi -cne '0.7.5-experimental' -or
+            !$Declaration.Availability.Implemented -or $Declaration.Availability.Qualification -cne 'Experimental' -or
+            $Declaration.Preview -cne 'Pure' -or $Declaration.Writable) {
+            throw "CATALOG-D9 introduction/qualification/readonly/Pure contract differs: $($Declaration.Id)"
+        }
     } elseif ([version]($Declaration.Availability.SinceApi -split '-')[0] -gt [version]'0.4.0') {
         throw "Historical introduction version advanced: $($Declaration.Id)"
     }

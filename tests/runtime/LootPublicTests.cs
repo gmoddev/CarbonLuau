@@ -147,6 +147,7 @@ internal static class LootPublicTests
 
     internal static void RunNative(Runtime.NativeRuntime Native)
     {
+        CatalogDeclarations(Native);
         ValidDeclarations(Native); InvalidDeclarations(Native); BackingCapacity(Native); Publication(Native);
         Availability(Native); RootReplacement(Native); AddonOwnership(Native); ScaleAndRecovery(Native);
         ProfileDeclarations(Native); ProfilePublication(Native); ProfileRootReplacement(Native); ProfileAddonOwnership(Native);
@@ -156,6 +157,25 @@ internal static class LootPublicTests
         BulkItemDeclarations(Native);
         Check(Native.LiveVmCount == 0, "all real VM fixtures released");
         Console.WriteLine("[CarbonLuau:LootPublic] PASS pinned VM declarations, raw-table validation, enum identity, publication, conflicts, lifecycle, recovery and 100 addons; synthetic host only");
+    }
+
+    private static void CatalogDeclarations(Runtime.NativeRuntime Native)
+    {
+        using (var Value = new Fixture(Native)) {
+            Value.Load("local Loot=game:GetService('Loot'); assert(type(Item.Scrap)=='string'); " +
+                "Loot:RegisterDropRule(Prefab.Loot.Barrel1,Enum.DropMode.Replace,{{Item=Item.Scrap,Min=5,Max=12},{Item='wood',Min=50,Max=100}}); " +
+                "Loot:RegisterDropRule(Prefab.Loot.Barrel2,Enum.DropMode.Replace,{{Item=Item.MetalFragments,Min=10,Max=25}})");
+            var First = Value.Selected(Value.World.Active);
+            var Second = ProfileSelected(Value, Barrel2, Value.World.Active);
+            EntryIs(First, 0, "scrap", 5, 12); EntryIs(First, 1, "wood", 50, 100);
+            EntryIs(Second, 0, "metal.fragments", 10, 25);
+            Value.Load("local Loot=game:GetService('Loot'); " +
+                "Loot:RegisterDropRule('assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab',Enum.DropMode.Replace,{{Item='scrap',Min=5,Max=12},{Item=Item.Wood,Min=50,Max=100}}); " +
+                "Loot:RegisterDropRule('assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab',Enum.DropMode.Replace,{{Item='metal.fragments',Min=10,Max=25}})");
+            First = Value.Selected(Value.World.Active); Second = ProfileSelected(Value, Barrel2, Value.World.Active);
+            EntryIs(First, 0, "scrap", 5, 12); EntryIs(First, 1, "wood", 50, 100); EntryIs(Second, 0, "metal.fragments", 10, 25);
+            Console.WriteLine("[CarbonLuau:CatalogLoot] PASS constant/literal parity through unchanged two-prefab public declaration and publication");
+        }
     }
 
     private static Runtime.LootDropRule ProfileSelected(Fixture Value, string Prefab, Runtime.FacadeSession Expected)

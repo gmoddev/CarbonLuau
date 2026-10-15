@@ -27,11 +27,15 @@ replacement API. These features require the qualified host/startup configuration
 ## Pick your version
 
 **v0.7.0 experimental:** [release page](https://github.com/gmoddev/CarbonLuau/releases/tag/v0.7.0).
-It includes the complete current API: persistence, world discovery, gameplay,
+It includes the complete `0.7.0-experimental` API: persistence, world discovery, gameplay,
 inventory, addons, loot replacement, and GUI.
 Start here if you want a published package rather than a development build.
 
-**Runtime identity:** package `0.7.0`, scripting API `0.7.0-experimental`.
+**Published runtime identity:** package `0.7.0`, scripting API `0.7.0-experimental`.
+Current `main` uses development API `0.7.5-experimental`, adding generated
+[Item and Prefab string catalogs](docs/api/Catalogs.md) over the
+[221 D8-qualified items](docs/api/LootItems.md) and two qualified barrels.
+Published v0.7.0 assets are unchanged; no new release or tag is implied.
 See the [release notes](docs/releases/0.7.0.md) and
 [qualification record](docs/Release-0.7.0-Validation.md). Check [compatibility](docs/api/Compatibility.md) before mixing
 runtime, script, or editor versions.

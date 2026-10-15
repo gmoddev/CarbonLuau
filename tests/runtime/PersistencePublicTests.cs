@@ -155,7 +155,7 @@ local S=D:GetDataStore('Players')
  for _,Name in {'Path','SQL','NamespaceId','UpdateAsync','Name','Close'} do
  local OK,V=pcall(function() return S[Name] end); assert(not OK or V==nil)
 end
-assert(game.ApiVersion=='0.7.0-experimental')
+assert(game.ApiVersion=='0.7.5-experimental')
 local function Bad(F) assert(not pcall(F)) end
 Bad(function() D:GetDataStore('Players','spoofed-namespace') end)
 Bad(function() D.NamespaceId='spoofed-namespace' end)
@@ -193,11 +193,13 @@ print('validation-done')
 S:GetAsync('absent',function(V,E) assert(V==nil and E==nil); print('missing-done') end)
 local V={Coins=10, Flags={true,false}, Empty={}, Text='é 雪 \\ \"" \t\n', Alias={}}
 V.Copy=V.Alias
+V.Catalog=Item.Scrap; V.Prefab=Prefab.Loot.Barrel1
 S:SetAsync('snapshot',V,function(Saved,E)
  assert(Saved==true and E==nil)
  S:GetAsync('snapshot',function(Read,E2)
   assert(E2==nil and Read.Coins==10 and Read.Flags[2]==false and Read.Text=='é 雪 \\ \"" \t\n')
   assert(Read.Alias~=Read.Copy)
+  assert(Read.Catalog=='scrap' and type(Read.Catalog)=='string' and Read.Prefab==Prefab.Loot.Barrel1)
   Read.Coins=55
   S:GetAsync('snapshot',function(Again,E3) assert(E3==nil and Again.Coins==10 and Again~=Read); print('snapshot-done') end)
  end)

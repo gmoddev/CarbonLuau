@@ -13,6 +13,7 @@ namespace CarbonLuau.Core
         // Legacy declarations and GUI descriptors were introduced by the 0.4
         // candidate (or their explicit earlier SinceApi), not by today's release.
         private const string LegacyApiVersion = "0.4.0-experimental";
+        public static string ScriptCatalogFingerprint { get { return CatalogData.Fingerprint; } }
         public static JObject Build(string Bootstrap, JObject Release, string NativeBindings)
         {
             var Types = new SortedDictionary<string, JObject>(StringComparer.Ordinal);
@@ -149,6 +150,7 @@ namespace CarbonLuau.Core
                     (Class.CreationScope & (Service ? Gui.GuiCreationScope.GuiService : Gui.GuiCreationScope.GuiObject)) != 0)
                     .Select(Class => NamedSignature("ClassName", "\"" + Class.Name + "\"", Class.Name)));
             }
+            AppendScriptCatalog(Types, Members, NativeBindings);
             var Catalog = new JObject { ["SchemaVersion"] = 1,
                 ["Api"] = new JObject { ["Name"] = Release["apiName"].DeepClone(), ["Version"] = ApiVersion, ["Status"] = Release["apiStatus"].DeepClone() },
                 ["Types"] = new JArray(Types.Values), ["Members"] = new JArray(Members.Values),
@@ -159,6 +161,42 @@ namespace CarbonLuau.Core
             }
             Validate(Catalog);
             return Catalog;
+        }
+        private static void AppendScriptCatalog(IDictionary<string, JObject> Types, IDictionary<string, JObject> Members, string NativeBindings)
+        {
+            string Native = NativeBindings.Replace("\r\n", "\n");
+            foreach (var Data in new[] { new { Name = "Items", Rows = CatalogData.Items }, new { Name = "Prefabs", Rows = CatalogData.Prefabs } }) {
+                string Array = "constexpr const char* Catalog" + Data.Name + "[][2] = {\n" +
+                    String.Concat(Data.Rows.Select(Row => "    {\"" + Row[0] + "\", \"" + Row[1] + "\"},\n")) + "};";
+                if (Native.IndexOf(Array, StringComparison.Ordinal) < 0 || Native.IndexOf(Array, StringComparison.Ordinal) != Native.LastIndexOf(Array, StringComparison.Ordinal))
+                    throw new InvalidOperationException("native catalog dataset differs from generated Core records");
+            }
+            foreach (string Binding in new[] {
+                "// Catalog SHA256: " + CatalogData.Fingerprint,
+                "constexpr char CatalogFingerprint[] = \"" + CatalogData.Fingerprint + "\";",
+                "const char* CatalogIdentity() { return \"" + CatalogData.Fingerprint + "\"; }",
+                "    lua_getref(State, Runtime.ItemCatalog); lua_setglobal(State, \"Item\");",
+                "    lua_getref(State, Runtime.PrefabCatalog); lua_setglobal(State, \"Prefab\");" })
+                if (Native.Split('\n').Count(Line => Line == Binding) != 1)
+                    throw new InvalidOperationException("native catalog registration/data drift: " + Binding);
+            const string Since = "0.7.5-experimental";
+            foreach (string Name in new[] { "Item", "Prefab", "PrefabLoot" }) {
+                var Type = TypeRecord(Name, Name == "PrefabLoot" ? "Value" : "Global",
+                    "Frozen canonical string catalog; identity grants no host authority. D8-qualified Loot capability only.", Since);
+                Type["Preview"] = "Pure";
+                if (Name == "PrefabLoot") Type["Representation"] = "Record";
+                Types.Add(Name, Type);
+            }
+            foreach (string[] Row in CatalogData.Items)
+                Add(Members, MemberRecord(new JObject { ["Owner"] = "Item", ["Name"] = Row[0], ["Kind"] = "Singleton",
+                    ["ValueType"] = "\"" + Row[1] + "\"", ["Preview"] = "Pure",
+                    ["Summary"] = "Canonical string " + Row[1] + "; D8-qualified Loot item. Other operations retain their own validators." }, Since));
+            Add(Members, MemberRecord(new JObject { ["Owner"] = "Prefab", ["Name"] = "Loot", ["Kind"] = "Property",
+                ["ValueType"] = "PrefabLoot", ["Preview"] = "Pure", ["Summary"] = "Frozen qualified Loot source paths; grants no spawn or mutation authority." }, Since));
+            foreach (string[] Row in CatalogData.Prefabs)
+                Add(Members, MemberRecord(new JObject { ["Owner"] = "PrefabLoot", ["Name"] = Row[0], ["Kind"] = "Property",
+                    ["ValueType"] = "\"" + Row[1] + "\"", ["Preview"] = "Pure",
+                    ["Summary"] = "Canonical path " + Row[1] + "; qualified Loot.Replace source. Existing admission remains authoritative." }, Since));
         }
         public static void Validate(JObject Catalog)
         {

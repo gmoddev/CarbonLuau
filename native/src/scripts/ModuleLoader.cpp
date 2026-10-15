@@ -180,9 +180,14 @@ int Schedule(lua_State* State)
     }
     return 0;
 }
+// Catalog SHA256: 419eeabd336aab199aa23a4537976ee404d838664928dabda77ddcecb538c528
+const char* CatalogIdentity() { return "419eeabd336aab199aa23a4537976ee404d838664928dabda77ddcecb538c528"; }
 void InstallDomainBindings(lua_State* State, Domain& Owner)
 {
     lua_setreadonly(State, LUA_GLOBALSINDEX, false);
+    Vm& Runtime = *static_cast<Vm*>(lua_callbacks(State)->userdata);
+    lua_getref(State, Runtime.ItemCatalog); lua_setglobal(State, "Item");
+    lua_getref(State, Runtime.PrefabCatalog); lua_setglobal(State, "Prefab");
     lua_pushlightuserdata(State, &Owner); lua_pushcclosure(State, RequireModule, "require", 1); lua_setglobal(State, "require");
     lua_newtable(State);
     for (const char* Name : {"spawn", "defer", "delay"}) {

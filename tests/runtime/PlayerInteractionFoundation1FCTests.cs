@@ -151,7 +151,7 @@ internal static class PlayerInteractionFoundation1FCTests
         var World = new Runtime.FacadeWorld(Players,new Registrar(),new Runtime.ItemDirectory(Name => Name == "scrap" ? Value.Definition : null));
         const string State = "local S=require('state'); ";
         const string Acquire = State + "S.P=game:GetService('Players'):GetPlayers()[1]; S.I=S.P:GetInventory(); ";
-        const string Absent = "assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; ";
+        const string Absent = "assert(game.ApiVersion=='0.7.5-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; ";
         const string Block = "for _,M in {'GiveItem','TakeItem'} do local Ok,Error=pcall(function() S.I[M](S.I,'scrap',1) end); assert(not Ok and string.find(Error,'requires a committed domain',1,true)) end; ";
         string Source = Acquire + Absent + Block;
         Func<Runtime.ScriptSnapshot> Snapshot = () => {

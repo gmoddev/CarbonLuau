@@ -1,0 +1,932 @@
+{
+  "SchemaVersion": 1,
+  "BaseCommit": "27c46d7a5f2493014878d239f7d3a7bb6689cd07",
+  "DevelopmentApi": "0.7.5-experimental",
+  "PublishedTag": "v0.7.0",
+  "PublishedTagObject": "7c7d36f648a5506efd07c1b6d6bcf4b94d3f7d2b",
+  "PublishedTagCommit": "dabb872094f74e60d75de099379d198fb63a6bf8",
+  "CatalogFingerprint": "419eeabd336aab199aa23a4537976ee404d838664928dabda77ddcecb538c528",
+  "ItemFields": 221,
+  "PrefabGroups": 1,
+  "PrefabFields": 2,
+  "SourceScope": "Changed compiled/runtime/generated inputs; unchanged source derives from BaseCommit. Documentation, generator tests and CI are separately checked on the final commit.",
+  "Inputs": [
+    {
+      "Path": "api/carbonluau-api.json",
+      "SHA256": "187e64f184ff3961057613056f22d531d6d351022b5f21033c431b1e922fab7f"
+    },
+    {
+      "Path": "api/loot-prefabs.pinned.json",
+      "SHA256": "c3524f9a44cfebd812f57130d4d525e71573502ca62f8e22ff124cf9760fc50e"
+    },
+    {
+      "Path": "generated/carbonluau-docs.json",
+      "SHA256": "ad74fe30ac31611a53b2b00dd6d79ede6f4547c72ab19208354ea370ae23fff7"
+    },
+    {
+      "Path": "generated/carbonluau.d.luau",
+      "SHA256": "eb331d44c04a18dd71daa80bea58b18d80847a326ea9969150861efd254ce660"
+    },
+    {
+      "Path": "generated/catalog-symbols.json",
+      "SHA256": "7039cced8a50a833da2d038f8ae92e195995fe7e04a3f4c8758f8c8a2cfb87b2"
+    },
+    {
+      "Path": "generated/tooling-metadata.json",
+      "SHA256": "9fb76ef1e36d891d2dd6def00f4ed0ea62ccb08e1f9456a036a4a86ab519cb7f"
+    },
+    {
+      "Path": "native/src/runtime/RuntimeInternal.hpp",
+      "SHA256": "d73d47e43faf7166c02716722dfaf18e7b1733d0c4966bc2fde53526de96c885"
+    },
+    {
+      "Path": "native/src/runtime/VmState.cpp",
+      "SHA256": "cfd57cc821efec3a849f72b32470342d27791a849715b85b0b532d9f3e607022"
+    },
+    {
+      "Path": "native/src/runtime/generated/CatalogData.inc",
+      "SHA256": "016df3dac01af6f532591573af2f7b349377b3460b52ab9326c7db83a4ff57c7"
+    },
+    {
+      "Path": "native/src/scripts/ModuleLoader.cpp",
+      "SHA256": "6769f037547c93637aa567e4de396cbb830e47d2feb1a1ab43f778cc6a483fbd"
+    },
+    {
+      "Path": "release.json",
+      "SHA256": "83597bdbdbc62b29bbe26ab49026781b02d8d42c64717aceed51bc1a65384423"
+    },
+    {
+      "Path": "scripts/bootstrap.luau",
+      "SHA256": "531ff41bdfbad37b1713efb281f367845721d056bdc7846549da0eb79d067199"
+    },
+    {
+      "Path": "src/CarbonLuau.Core/Api/ApiArtifacts.cs",
+      "SHA256": "32f4cf895ead5b8e56a8a5939514b44b757e9b7ec83c5370cbb7982315a550d2"
+    },
+    {
+      "Path": "src/CarbonLuau.Core/Api/ApiCatalog.cs",
+      "SHA256": "249f5cfd3854f532e6fb6f63900bab8f6267aa9bded640c2c726a9514ed05710"
+    },
+    {
+      "Path": "src/CarbonLuau.Core/Api/CatalogData.g.cs",
+      "SHA256": "56c15c743046dce9964d437df21c3384c9391542217040f330fe1ce6e1c6bde4"
+    },
+    {
+      "Path": "src/CarbonLuau.Tooling/Program.cs",
+      "SHA256": "5fa6807988ff7f141e12c291d1c7844fe0fba9727c7b6ee7583139ed038649ae"
+    },
+    {
+      "Path": "src/CarbonLuau/Facade/FacadePolicy.cs",
+      "SHA256": "131277d40a921af63fdd460008fe6194a8f8facb2f1f3412201bfe2785bf4e45"
+    },
+    {
+      "Path": "tests/live/CarbonLuau.CatalogD9Fixtures.cs",
+      "SHA256": "5afce188f82ff16eb7a33888ddc08e88482224b224fff5b9eacdfbab7ca0c5c6"
+    },
+    {
+      "Path": "tests/live/CarbonLuau.InventoryChangedPublicFixtures.cs",
+      "SHA256": "1af31f37eb2abb4ebfb972cbd291922e1d4e674b538b52f361f10659e1e40a69"
+    },
+    {
+      "Path": "tests/live/CarbonLuau.PlayerInventoryFixtures.cs",
+      "SHA256": "dc5eab41fe11b9a13031aa4c088aa1cf43b111f4b6847b728000db2799a56a0b"
+    },
+    {
+      "Path": "tests/native/CatalogTests.hpp",
+      "SHA256": "cc854a1533afc6adf0a5cd1fe5a4d1d750d1ac12d1f5cdeb1dca8806351a3e16"
+    },
+    {
+      "Path": "tests/native/InventoryChangedTests.hpp",
+      "SHA256": "4f922812c0254bc30a4816d29ae5d8c84ae6561af4517dac1958d9be2e4031fc"
+    },
+    {
+      "Path": "tests/native/RuntimeFaultTests.cpp",
+      "SHA256": "b651c74ee06c6f9107956e446cbc48531d29796866b71d00750d9f263835e758"
+    },
+    {
+      "Path": "tests/runtime/CatalogMemoryTests.cs",
+      "SHA256": "4d07d01f10117d9c5143cf641333ba32671f34fe03face6d1c7035a8acc6cf38"
+    },
+    {
+      "Path": "tests/runtime/FacadeTests.cs",
+      "SHA256": "eb0da5d354824dc50cdaf6e8b0ae7392837362a87eec61f953b667b1888de5d5"
+    },
+    {
+      "Path": "tests/runtime/GameplayC1Tests.cs",
+      "SHA256": "e6dd56952be5b60646d82d1626ea3d3308190bf41a5f9ffa31c7a57c70532722"
+    },
+    {
+      "Path": "tests/runtime/InventoryChangedPublicTests.cs",
+      "SHA256": "528a9f8e7db237e6744f936a22a9670abd7058d394c70ec9fb1c61c4f34dce26"
+    },
+    {
+      "Path": "tests/runtime/InventoryNetObservationTests.cs",
+      "SHA256": "07b136b17ec886b77a9cf8f09bd493fc4898356b68c7547b019adf1db7a62017"
+    },
+    {
+      "Path": "tests/runtime/LootPublicTests.cs",
+      "SHA256": "a728f3603ae972029753bbcab44f0e10c56ce9ad9b8740a14c2d9b36b737752f"
+    },
+    {
+      "Path": "tests/runtime/PersistencePublicTests.cs",
+      "SHA256": "2ce42b2ea696bc449a7c8a7a3628c9159caf9b0f7336709f8554ea6c6582d80d"
+    },
+    {
+      "Path": "tests/runtime/PlayerInteractionFoundation1FCTests.cs",
+      "SHA256": "0f1f291f1794dbb8b4aa7a991b713e784f4eebd46d794977a07d62daf41c946b"
+    },
+    {
+      "Path": "tests/runtime/Program.cs",
+      "SHA256": "d7e00901a3c1ed51a4b5a497f726b44d444f2e2b7bcc0fde3a5b399cc128552c"
+    },
+    {
+      "Path": "tests/tooling/InventoryChangedTypes.cs",
+      "SHA256": "9ab8d93c6692202b8b190f579e516a131da636f7c000d18e0b641406be44978c"
+    },
+    {
+      "Path": "tests/tooling/Program.cs",
+      "SHA256": "af1344d436ce3e2a78d86c468078a589d94575d115bc1b76a5eee2c0fa84a20c"
+    },
+    {
+      "Path": "tests/tooling/ScriptCatalogTests.cs",
+      "SHA256": "ff9dc12e191f32928a32f2c08fea80eaad030bfc366c891b585d417dea81ecdd"
+    }
+  ],
+  "UnchangedPhysicalSources": [
+    {
+      "Path": "api/loot-items.pinned.json",
+      "SHA256": "a0c7a40dfce177a8bcbf841316dc51dd5a366b6304522e86f030e539d5fead15"
+    },
+    {
+      "Path": "src/CarbonLuau/CarbonLuau.Loot.Carbon.cs",
+      "SHA256": "08ddc4454242e1af09ecc30fb948cf8a1f264a89111023d239a808e1dd494004"
+    },
+    {
+      "Path": "src/CarbonLuau/Facade/LootRulePolicy.cs",
+      "SHA256": "19a176f5d7afd3aa53986f0ea6b5dc0cf7ed9d0f3cec57be03893d7a799d184e"
+    }
+  ],
+  "Artifacts": [
+    {
+      "Platform": "Windows",
+      "Name": "carbonluau_compiler.exe",
+      "SHA256": "43932f2e928fc66b9759176bb3ca4c280055180c85ae488b43408129d5515a98"
+    },
+    {
+      "Platform": "Windows",
+      "Name": "carbonluau_native.dll",
+      "SHA256": "56b2c019578622c7a2e6dbe4e16af15a3f87e839b83ab07b5e08ce8709c4e843"
+    },
+    {
+      "Platform": "Windows",
+      "Name": "carbonluau_storage.exe",
+      "SHA256": "32b37bc3083fab2b57f7a28448433344fd9c435406745d76fd0aebcb9d762a83"
+    },
+    {
+      "Platform": "Linux",
+      "Name": "carbonluau_compiler",
+      "SHA256": "884844c07b3c3f2b7c7e8aabb018399db3a80b0ae91879e877f81f40a1774d92"
+    },
+    {
+      "Platform": "Linux",
+      "Name": "carbonluau_storage",
+      "SHA256": "ccff9dbb308cabaee8d1ddd4fb9ca2b86f3f3b8fca646bf8709490058d88cc54"
+    },
+    {
+      "Platform": "Linux",
+      "Name": "libcarbonluau_native.so",
+      "SHA256": "f8a72fae6ad6a9dc9419a2eee544f00d0c63901a25aa6940f913729c81d263dd"
+    }
+  ],
+  "Receipts": [
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/memory-final.log",
+      "Bytes": 6558,
+      "SHA256": "76fa7aeac415b4b60b8401c6ff365f5f0e1cee7f418b8d639f8f4e27fb4b7fdf"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/native-guard-final-result.json",
+      "Bytes": 129,
+      "SHA256": "a4e8c4b0bfdf71300dc157370a22329477b8be75dc1956873af60b97c8844a4b"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/native-guard-final.log",
+      "Bytes": 17826,
+      "SHA256": "aedc03f063c2fc39b44d8d0b2979e57f1411af120b28fe5d9e7da83059a54ed5"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/native-initial-result.json",
+      "Bytes": 311,
+      "SHA256": "8767ec4c714534242c1d9fdc88daca3d0f5c554d6e5eccc1e83b8f98404d3831"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/native-initial.log",
+      "Bytes": 37598,
+      "SHA256": "33a0e0b1147b23547e45d61e51fd4a32f72bc613a2c0fd0ce5273a2b39ee5639"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/native-r2-result.json",
+      "Bytes": 120,
+      "SHA256": "36eb4510105da26e0e35c72fbb47d4f1b5f10ac172fb04f4a539898d922159a5"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/native-r2.log",
+      "Bytes": 18058,
+      "SHA256": "2eea71a54e7d039490742e1950963c04f07ab9d70f4fd0949c3b2b42be2fae9e"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/runtime-initial.log",
+      "Bytes": 18058,
+      "SHA256": "57dabcbeef2617d90b51f939573d40be13cdc74174bcacb3fe0e402505a3f21e"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/runtime-r2-result.json",
+      "Bytes": 210,
+      "SHA256": "b8bb434b436e004d067ffc7c77ad13b2eb5d4870fc1cf34679a1694bbce86f3e"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/CarbonLuauCatalogD9/runtime-r2.log",
+      "Bytes": 53394,
+      "SHA256": "8971c1259015685979fba88a656d18fd6a4ef0b6f4bcbbebd9c14960256cce49"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071254-a9ed8dc5/console-error.log",
+      "Bytes": 0,
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071254-a9ed8dc5/console.log",
+      "Bytes": 15057,
+      "SHA256": "8b9f6f7b4450afbb14b61a65ffc488dad7d33c7b8da622c007d347f6dccd72b9"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071254-a9ed8dc5/environment.json",
+      "Bytes": 239,
+      "SHA256": "8be9afb9004733b1f7a6ddaad65a1eb028a10686b05161d70a065dab1af958a6"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071254-a9ed8dc5/host-quit-identity.json",
+      "Bytes": 264,
+      "SHA256": "48aa240661c254cbe68cbdb5f2596f9608e013043e794c780d3f7cd6e43c9f32"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071254-a9ed8dc5/input-sha256.json",
+      "Bytes": 1712,
+      "SHA256": "16c8b8b4de26c066b4ea37cdac47b49a1c900da2b39f78859d1d315313b32216"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071254-a9ed8dc5/primary-failure.json",
+      "Bytes": 105,
+      "SHA256": "c63d40b8647bf43858fe86d63f489d92f2cea624bce37944b8f6d648cc20fb7f"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071254-a9ed8dc5/rcon-stages.log",
+      "Bytes": 406,
+      "SHA256": "a01c5b48245c3b743fbc9a6912db5dd1ce6770133c39edc9fb20f3601426af26"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071254-a9ed8dc5/release.json",
+      "Bytes": 378,
+      "SHA256": "83597bdbdbc62b29bbe26ab49026781b02d8d42c64717aceed51bc1a65384423"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071254-a9ed8dc5/server.log",
+      "Bytes": 19450,
+      "SHA256": "34646de13314df07539299edf1347fa4f9ea8445faabdff27323b812b7b0f519"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/console-error.log",
+      "Bytes": 0,
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/console-restart-error.log",
+      "Bytes": 0,
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/console-restart.log",
+      "Bytes": 15257,
+      "SHA256": "950a1e3a266dca97e55706ee09c20eb8f054c853f02918ebca097d4adfb7cbc2"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/console.log",
+      "Bytes": 16326,
+      "SHA256": "161157db53a23d17b8914fb32f812edda89a61d0ae00f5d8883d90f02867b8e1"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/environment.json",
+      "Bytes": 239,
+      "SHA256": "8be9afb9004733b1f7a6ddaad65a1eb028a10686b05161d70a065dab1af958a6"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/first-server-exit.json",
+      "Bytes": 343,
+      "SHA256": "94f5bd4bda0e40b892bb633b8c47db4a9a4dd58b1ce7d5799b31eef3a06004c3"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/host-quit-identity.json",
+      "Bytes": 264,
+      "SHA256": "48aa240661c254cbe68cbdb5f2596f9608e013043e794c780d3f7cd6e43c9f32"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/input-sha256.json",
+      "Bytes": 1712,
+      "SHA256": "ee23d76f26ade13f03f6e538098ab71d0f71b173ea7d9380388291affa95101b"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/rcon-stages.log",
+      "Bytes": 1612,
+      "SHA256": "f0bf075f5acae90fd4409fbeb84de1915fa49baf60d016c8dd1c7b6ff3b36dc7"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/release.json",
+      "Bytes": 378,
+      "SHA256": "83597bdbdbc62b29bbe26ab49026781b02d8d42c64717aceed51bc1a65384423"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/restart-proof.json",
+      "Bytes": 921,
+      "SHA256": "7cfffc891154a1f26c893cc593374b04a58cdd799e1a9d207904d797534334c5"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/server-restart.log",
+      "Bytes": 19661,
+      "SHA256": "6e670ef82a3a6de51a0450c465be74ec2a53cadbafbb3e8058f2416ddfa2b45b"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-071819-0c583c15/server.log",
+      "Bytes": 20585,
+      "SHA256": "a157aac3ce1b437b9a94cf4f68eb033cc46d8730307f1a5adc3f608852c52a7c"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072231-d6bf67a7/console-error.log",
+      "Bytes": 0,
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072231-d6bf67a7/console.log",
+      "Bytes": 16739,
+      "SHA256": "43614e69ba63f1bb456b819b882001caf06a381543d28d1e70b41961ecb5b1d1"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072231-d6bf67a7/environment.json",
+      "Bytes": 264,
+      "SHA256": "f8d7aced9dc61378ccf138b2bc0026b75edba40c0dde49959d0425b9b024bb72"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072231-d6bf67a7/host-quit-identity.json",
+      "Bytes": 264,
+      "SHA256": "48aa240661c254cbe68cbdb5f2596f9608e013043e794c780d3f7cd6e43c9f32"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072231-d6bf67a7/input-sha256.json",
+      "Bytes": 1712,
+      "SHA256": "ee23d76f26ade13f03f6e538098ab71d0f71b173ea7d9380388291affa95101b"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072231-d6bf67a7/primary-failure.json",
+      "Bytes": 149,
+      "SHA256": "52e31b0940e0385d9447f42daeb312012f0c32d455854e349eb4ac9679c52398"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072231-d6bf67a7/rcon-stages.log",
+      "Bytes": 962,
+      "SHA256": "679763e793a248443a7285e19c94896e172722e5a9e22e4b9c46578fd7e8f2ff"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072231-d6bf67a7/release.json",
+      "Bytes": 378,
+      "SHA256": "83597bdbdbc62b29bbe26ab49026781b02d8d42c64717aceed51bc1a65384423"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072231-d6bf67a7/server.log",
+      "Bytes": 20857,
+      "SHA256": "7c1fb606e945450f92fbcbc016fbbac664f027872d0520f809e020977a4f4f34"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/console-error.log",
+      "Bytes": 0,
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/console-restart-error.log",
+      "Bytes": 0,
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/console-restart.log",
+      "Bytes": 15398,
+      "SHA256": "105c6be32e059b6d78b5e8bbf5134e0d5bd4bc6ddffec98490280e6c349ea29e"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/console.log",
+      "Bytes": 16633,
+      "SHA256": "bf19e576e7b412a983c4ca55585e86abd9da5b9eb80b53b80a1b2c747e60a916"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/environment.json",
+      "Bytes": 239,
+      "SHA256": "8be9afb9004733b1f7a6ddaad65a1eb028a10686b05161d70a065dab1af958a6"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/first-server-exit.json",
+      "Bytes": 344,
+      "SHA256": "44e05eef20d14bf6ce23b54342b2da13cd337c7ce1e69571e3a7e48a27de315e"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/host-quit-identity.json",
+      "Bytes": 264,
+      "SHA256": "48aa240661c254cbe68cbdb5f2596f9608e013043e794c780d3f7cd6e43c9f32"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/input-sha256.json",
+      "Bytes": 1712,
+      "SHA256": "ee23d76f26ade13f03f6e538098ab71d0f71b173ea7d9380388291affa95101b"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/rcon-stages.log",
+      "Bytes": 1612,
+      "SHA256": "a3d54d1475d071c2ab6eb637b522fb5a5fce283b1301dfc8fafc709bda1fc45e"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/release.json",
+      "Bytes": 378,
+      "SHA256": "83597bdbdbc62b29bbe26ab49026781b02d8d42c64717aceed51bc1a65384423"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/restart-proof.json",
+      "Bytes": 922,
+      "SHA256": "58d34957957217d109482fa5988c9bb370473540fbe903ff831ae8e121831637"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/server-restart.log",
+      "Bytes": 19757,
+      "SHA256": "6fd4fca30be5d54b4f81f6cf2032f559f26970782261f4a2ddf19618f98f57f6"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072530-5c440f65/server.log",
+      "Bytes": 20890,
+      "SHA256": "3c57b3409fb841bcdc490fab648d1b4a9f1ed79b1119f86cb342bfab57d5ce9c"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072821-27b277a6/console-error.log",
+      "Bytes": 0,
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072821-27b277a6/console.log",
+      "Bytes": 24226,
+      "SHA256": "00f84eadea1035d35a648f845cbeee234e81d8ef4f6eeb4523027ce97de220c6"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072821-27b277a6/environment.json",
+      "Bytes": 264,
+      "SHA256": "f8d7aced9dc61378ccf138b2bc0026b75edba40c0dde49959d0425b9b024bb72"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072821-27b277a6/input-sha256.json",
+      "Bytes": 1712,
+      "SHA256": "ee23d76f26ade13f03f6e538098ab71d0f71b173ea7d9380388291affa95101b"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072821-27b277a6/rcon-stages.log",
+      "Bytes": 2054,
+      "SHA256": "c628c2582f89cb7d3e244a74b8cec160fd74bd799634ff83b8da9a97f19071ca"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072821-27b277a6/release.json",
+      "Bytes": 378,
+      "SHA256": "83597bdbdbc62b29bbe26ab49026781b02d8d42c64717aceed51bc1a65384423"
+    },
+    {
+      "Platform": "Windows",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Windows/persistence1b-20261015-072821-27b277a6/server.log",
+      "Bytes": 27917,
+      "SHA256": "e13a78fd9611c0c238d0666e54875a2009261fa887e8839ab9ae3c033ca7405a"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-112314/cleanup.json",
+      "Bytes": 51,
+      "SHA256": "ff062fb6f78d73b25d7d9eebb7a4a3f2ea5f66863354fbf5d21b2c5646d3df65"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-112314/console-1.log",
+      "Bytes": 3412,
+      "SHA256": "5d41320a6ede615b407b356e9ad881d54568e0839956dea8f75e059dd0659e73"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-112314/console-2.log",
+      "Bytes": 3312,
+      "SHA256": "c557b445c510c2252f43b7fdb6bb61d934720100f4c95050fede2c6ab08043da"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-112314/inputs.json",
+      "Bytes": 699,
+      "SHA256": "47bf2412f3b6240cf4d1c344b9501b1b5f0935bfbba83b186c1ba8d5fa8681ca"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-112314/receipt.json",
+      "Bytes": 596,
+      "SHA256": "3e3f43b99ebf1f0f6c5bbf56f7ad956030d36be935a7e943d3f3651e4b428bbe"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-112314/server-1.log",
+      "Bytes": 25619,
+      "SHA256": "a2c08f2274141025576e835d8572a9432b97e86e58fe47a7935008e0936fc962"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-112314/server-2.log",
+      "Bytes": 18622,
+      "SHA256": "7c5708b62b2d0c01d13e253e2f396677597f6e4b9012e0cabd31171d209dfb76"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-113628/cleanup.json",
+      "Bytes": 51,
+      "SHA256": "ff062fb6f78d73b25d7d9eebb7a4a3f2ea5f66863354fbf5d21b2c5646d3df65"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-113628/console-1.log",
+      "Bytes": 3412,
+      "SHA256": "eade5174691d1a0e1ec40567cb05533a16f4c499c0a313b8b17fe0657814c8fe"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-113628/console-2.log",
+      "Bytes": 3312,
+      "SHA256": "d41bf842fb79d54b2ccde5a0898f3cdac770ff749c611d237ef8721b02de1fa6"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-113628/inputs.json",
+      "Bytes": 699,
+      "SHA256": "47bf2412f3b6240cf4d1c344b9501b1b5f0935bfbba83b186c1ba8d5fa8681ca"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-113628/receipt.json",
+      "Bytes": 596,
+      "SHA256": "db20eeb343ff1654e6286edc6f2b5651f98aa994b17b58328f3b63b68abb5fc8"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-113628/server-1.log",
+      "Bytes": 26114,
+      "SHA256": "a44e8aa932fe6cff1502d4caeb9c9a23f94eb9e2d298f8311546f4e19bbd2a82"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/linux-live-2d-20261015-113628/server-2.log",
+      "Bytes": 18811,
+      "SHA256": "6dfa30146ff89c62e0c4ec6fdd59d3a2443d89a5d18cf03a82ba6ab4be4581fe"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/asan-final.log",
+      "Bytes": 9746,
+      "SHA256": "4610bce9329a11b1a825f359ffcb55c1d18136e8032f223a3aa746d59d1ba64e"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/asan-r2.log",
+      "Bytes": 795,
+      "SHA256": "ec42c56396e0e23a83c25ccc3f196123a54ab035d19c41d08323774aea2d2f41"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/asan-r3.log",
+      "Bytes": 9881,
+      "SHA256": "5e1e3f19537590485535c07a34b29e504ae7519e02ace34866eca195912100ea"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/install-final.log",
+      "Bytes": 1616,
+      "SHA256": "d73c7ce4174337a715ce9226cee41a8db9a0c09743af7b320e2316b72969fb63"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/live-linux-pinned-r2.log",
+      "Bytes": 224,
+      "SHA256": "7be31e8ff5005a7105316e34a2411e42e66cdece16c065df6a93b6db297d28fd"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/live-linux-pinned.log",
+      "Bytes": 414,
+      "SHA256": "22c78d496679e05415884380f6af300c68789e31afe78b329363d86c7afd8b5b"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/live-linux-r1.log",
+      "Bytes": 224,
+      "SHA256": "0abdc80d60b69442a2bae96a99616e4820b8f942d89cfe28a1fbe5d18b066c54"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/memory-final.log",
+      "Bytes": 3112,
+      "SHA256": "011dfb0b79c49624e2162948f4142e240935879ab91beba31aa08a85f5244a0f"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/metadata-initial.log",
+      "Bytes": 525,
+      "SHA256": "1dde34d9fda8409ec3993607cb3c3a45d418c09343ec52f5a5bf25358146dfe7"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/metadata-r2.log",
+      "Bytes": 246,
+      "SHA256": "83a97f8b7eebb6d10885087b30d0594c59cf43bcb9340511374a2de86f77f18c"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/metadata-r3.log",
+      "Bytes": 525,
+      "SHA256": "1dde34d9fda8409ec3993607cb3c3a45d418c09343ec52f5a5bf25358146dfe7"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/native-cache-build.log",
+      "Bytes": 8005,
+      "SHA256": "2cd579deca1651fe144973254c65458df10eb5f82e0a5bea35cc93453aa08783"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/native-focused-r2.log",
+      "Bytes": 4580,
+      "SHA256": "54127fb0d21fdc150567f9e6a0c6ec60ee62e787772bd73766a588d8a2a86b68"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/native-focused.log",
+      "Bytes": 1862,
+      "SHA256": "27af193bcd8e9c1ff4b300550538365e1d865f12d0ce2be498a97948b218c738"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/native-guard-final.log",
+      "Bytes": 8197,
+      "SHA256": "fe113e736f02d7c3c651e4bb024760f8eb67ba59ddd5ecd4bcdc47a0165e9bf8"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/native-initial.log",
+      "Bytes": 8005,
+      "SHA256": "eaab6e7d50037f28e9ef06c20f25f0ec7c912621e4aa233e7c8f4507c9eed94c"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/native-r3.log",
+      "Bytes": 5060,
+      "SHA256": "e9ad1ef588adb4d94cbee6f9fe9800f6b7e973476f5799f763ef935431ce1dbc"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/runtime-initial.log",
+      "Bytes": 275,
+      "SHA256": "e5955c15fc8c760437b0221984f0cdd29c5df7e459c475acf46180a6cb86b2a7"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/runtime-r2.log",
+      "Bytes": 9076,
+      "SHA256": "e85aeae2d46da440470b59e6b919c31c41853ae60b5dc704e26b68afc88be5d5"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/runtime-r3.log",
+      "Bytes": 29613,
+      "SHA256": "93b6df65c1a33c59cdbeec72e4e4dfcbcf876675331ec14bd733c1e54325aeab"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/tooling-guard-final.log",
+      "Bytes": 2736,
+      "SHA256": "0faeee606fc18813b97c4e3f6712c489fb2588d61d922987aaddd1d3135cc866"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/tooling-initial.log",
+      "Bytes": 1043,
+      "SHA256": "bcecf60714db0c17a29518ad7425653981c484b60e9cf35704be8a5b1295c8bc"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/tooling-pack-final.log",
+      "Bytes": 2905,
+      "SHA256": "16e360cf30a39582c16980e7e7e3f163fcc06774ee760b1cbdf89df5a5d8772d"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/tooling-pack.log",
+      "Bytes": 103,
+      "SHA256": "c9d74105af138deff8e0f1b75f1c5ee2e440ab4a9dd9d29aaa5eb99af2ca0ef9"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/tooling-publish.log",
+      "Bytes": 952,
+      "SHA256": "67bdc23a4d4b878bfc6e0a480b610f4ce86b3b469c533e12d2a8151582ae72c5"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/tooling-r2.log",
+      "Bytes": 1261,
+      "SHA256": "fca4c84fd4211e29504af2023f716486363a778966a08a6bc0e865c265692f7f"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/vscode-r1.log",
+      "Bytes": 134,
+      "SHA256": "48f299f6b0f914df51a67d5af948602f7b4d0ffa3de8a2e31944ce1dc5fbc241"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/vscode-r2.log",
+      "Bytes": 1839,
+      "SHA256": "d069bf89e617c43838b8974bcae2e05ae9cd213c245a20cb3d4a46f51391f140"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/vscode-r3.log",
+      "Bytes": 1902,
+      "SHA256": "cbe9ab41a80e52b7daa5a64d7b3313f6b85ba8ece598f5fb309676af1a63eb69"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/vscode-r4.log",
+      "Bytes": 6150,
+      "SHA256": "68684f26eeb68d957b60b3aa17faebcd84ac59cf64e0e47423dd941c960e7d1c"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/vscode-r5.log",
+      "Bytes": 6252,
+      "SHA256": "dc3e2816db59a3aa672b1dd6a457f1ce8200ddf5a6fc7bddba9d1a2420a467ef"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/vscode-r6.log",
+      "Bytes": 5737,
+      "SHA256": "1dd2532cd56d259b8d78e0285fb939e6f19d3b8dc52b8f15cfb47edddefcc206"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/vscode-r7.log",
+      "Bytes": 5764,
+      "SHA256": "ce6fb050baeac90c5c8c293694e02a719a8cbd51fe8ce3778bcc2585be471921"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/logs/vscode-r8.log",
+      "Bytes": 1649,
+      "SHA256": "015d6a0b2e0bc4ec8602df4dbdaec533784dc934b56cbb01a7a2321c4bb4c328"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/vscode-r8/apt.log",
+      "Bytes": 18556,
+      "SHA256": "6ff38e4fa7530f0b216684085f5eca2836aa465484542a43c7e71110dc883a72"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/vscode-r8/result.json",
+      "Bytes": 6250,
+      "SHA256": "d2624d7723f7ca0ab664eeecefe3441d6064467745fc8edbb4aed923840313c1"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/vscode-r8/vscode.log",
+      "Bytes": 3517,
+      "SHA256": "211c2134c95e25acd6ea489625c6e5578c4647ad190028c3d1e3bd3a75346464"
+    },
+    {
+      "Platform": "Linux",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Evidence-Linux/vscode-r8/xvfb.log",
+      "Bytes": 2348,
+      "SHA256": "b987a262609a3720f450ab6815ed90b2069dd47b7b012959ca19c325aebf5d55"
+    },
+    {
+      "Platform": "Controller",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Memory-Linux.json",
+      "Bytes": 3107,
+      "SHA256": "bce779c77d24bd3396e04ce5924916482502ae162f8f80325dbd38cb5cdb0f7a"
+    },
+    {
+      "Platform": "Controller",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Memory-Windows.log",
+      "Bytes": 6558,
+      "SHA256": "76fa7aeac415b4b60b8401c6ff365f5f0e1cee7f418b8d639f8f4e27fb4b7fdf"
+    },
+    {
+      "Platform": "Controller",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Memory-Windows-Result.json",
+      "Bytes": 244,
+      "SHA256": "65e7cfbc4a0ecc965359914751213f27e53ee1defff3282f75feaa1bf1a631d9"
+    },
+    {
+      "Platform": "Controller",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Outer-Windows-Restart.json",
+      "Bytes": 1306,
+      "SHA256": "87f57a54a5244facb479ddfbe73e9433d4086f0242d32cdd6614c135896a742f"
+    },
+    {
+      "Platform": "Controller",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Outer-Windows-Query.json",
+      "Bytes": 1306,
+      "SHA256": "87f57a54a5244facb479ddfbe73e9433d4086f0242d32cdd6614c135896a742f"
+    },
+    {
+      "Platform": "Controller",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Package-Windows.log",
+      "Bytes": 233,
+      "SHA256": "eac47251f2d9908a1a8c0aaa0b8e7c253beb2e526262e7f6f10c291c735aa3f0"
+    },
+    {
+      "Platform": "Controller",
+      "RetainedCopy": "C:/Sandbox/Codex/CatalogD9Control20261015/Package-Linux.log",
+      "Bytes": 235,
+      "SHA256": "d367a3f74c66f9aaaff2420e594c21892c1295a1efdd208094a71c852f5f9cc2"
+    }
+  ],
+  "Live": {
+    "WindowsPinnedRestart": "D:/Sandbox/Codex/Entity1AStartup/catalog-d9-evidence/persistence1b-20261015-072530-5c440f65",
+    "WindowsPinnedQuery": "D:/Sandbox/Codex/Entity1AStartup/catalog-d9-evidence/persistence1b-20261015-072821-27b277a6",
+    "LinuxPinned": "/root/codex/catalog-d9-20261015/linux-live-2d-20261015-113628",
+    "LinuxRestoration": "/root/codex/catalog-d9-20261015/persistence-borrow-20261015-073627/cleanup.json",
+    "LinuxSupplementalDifferentCarbon": "/root/codex/catalog-d9-20261015/linux-live-2d-20261015-112314",
+    "LinuxPinnedAssetMountNegative": "/root/codex/catalog-d9-20261015/linux-live-2d-20261015-113357"
+  },
+  "HostedCI": "Pending exact committed-source closure; raw local/live receipts do not substitute for final-source CI."
+}

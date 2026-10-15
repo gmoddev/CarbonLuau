@@ -3,7 +3,7 @@
   "tag": "v0.7.0",
   "packageVersion": "0.7.0",
   "apiName": "CarbonLuau",
-  "apiVersion": "0.7.0-experimental",
+  "apiVersion": "0.7.5-experimental",
   "apiStatus": "Experimental",
   "nativeAbi": "1.5",
   "providerProtocolName": "CarbonLuau.Addons",

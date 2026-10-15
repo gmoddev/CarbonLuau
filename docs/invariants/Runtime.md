@@ -122,6 +122,17 @@ A domain-bound facade retains bounded identity snapshots and opaque project toke
 
 <!-- END RECORD Invariants.md -->
 
+### D12 current catalog identity assignment
+
+On 2026-10-15 the user assigned CATALOG-D9's additive `Item` and `Prefab`
+immutable string globals to development scripting API `0.7.5-experimental`.
+Only these new declarations receive that SinceApi; all existing introduction
+versions remain historical. Package/release/tag `0.7.0`/`v0.7.0`, native ABI
+`1.5`, provider `1.2`, schema `1` and the Luau pin remain unchanged. Published
+v0.7.0 has API `0.7.0-experimental` without catalogs. There is no release/tag
+authorization. Catalog strings grant no gameplay authority, and do not alter
+existing validators, publication, recovery, lifetimes or resource limits.
+
 <!-- BEGIN RECORD Invariants.md -->
 
 #### D12 — scripting and protocol identity

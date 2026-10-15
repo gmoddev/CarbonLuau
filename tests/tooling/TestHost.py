@@ -80,7 +80,7 @@ class HostTests(unittest.TestCase):
         self.assertEqual((Code, Error, len(Values)), (0, b"", 3))
         self.assertEqual(Values[0]["Result"]["RuntimeLuauRevision"], "c6b830185af962c82003f86784e2fe036357c830")
         Catalog = Values[1]["Result"]["Catalog"]
-        self.assertEqual(Catalog["Api"]["Version"], "0.7.0-experimental")
+        self.assertEqual(Catalog["Api"]["Version"], "0.7.5-experimental")
         Members = {Member["Id"]: Member for Member in Catalog["Members"]}
         self.assertEqual({Id for Id, Member in Members.items() if Member["OwnerId"] == "PlayerInventory"},
                          {"PlayerInventory." + Name for Name in ("CountItem", "HasItem", "GiveItem", "TakeItem", "ItemChanged")})

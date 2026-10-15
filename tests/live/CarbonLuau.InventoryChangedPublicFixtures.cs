@@ -277,7 +277,7 @@ namespace Carbon.Plugins
                 },Gameplay);
                 C3Check(Host.Reload().Status==RuntimeStatus.OK, "real public root load");
                 C3Registry=new AddonRegistry(Host,Native.HostLifetimeId);
-                C3Run(C3State+"assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(type(S.I.GiveItem)=='function' and type(S.I.TakeItem)=='function')");
+                C3Run(C3State+"assert(game.ApiVersion=='0.7.5-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(type(S.I.GiveItem)=='function' and type(S.I.TakeItem)=='function')");
                 C3Run(C3State+"local Current=S.P:GetInventory(); assert(Current==S.P:GetInventory()); assert(Current:CountItem('scrap')==S.I:CountItem('scrap')); assert(not pcall(function() S.I.ItemChanged=1 end)); local T=S.I.ItemChanged; "+
                     "assert(not pcall(function() T.X=1 end)); for _,K in {'ItemAdded','ItemRemoved'} do assert(not pcall(function() return S.I[K] end)) end");
                 Item First=null, Split=null, Clothing=null;

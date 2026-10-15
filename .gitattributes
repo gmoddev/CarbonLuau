@@ -4,6 +4,7 @@
 *.h text eol=lf
 *.yml text eol=lf
 generated/* text eol=lf
+native/src/runtime/generated/* text eol=lf
 api/*.json text eol=lf
 tooling/*.json text eol=lf
 # Preserve intentional Markdown hard breaks in the supplied architecture evidence.

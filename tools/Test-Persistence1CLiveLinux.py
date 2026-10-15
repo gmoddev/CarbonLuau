@@ -15,6 +15,8 @@ import uuid
 import websocket
 
 Extended2D = os.environ.get('CARBONLUAU_PERSISTENCE_2D') == '1'
+CatalogD9 = os.environ.get('CARBONLUAU_CATALOG_D9') == '1'
+CatalogStartup = "assert(Item.Scrap=='scrap' and Item.MetalFragments=='metal.fragments' and Item.Wood=='wood' and type(Prefab.Loot.Barrel1)=='string'); print('[CarbonLuau:CatalogD9] PASS Startup'); return true"
 Root = Path(os.environ.get('CARBONLUAU_LIVE_ROOT', '/data/1c-server'))
 Source = Path('/src')
 Build = Path(os.environ.get('CARBONLUAU_LIVE_BUILD', '/build/production-linux'))
@@ -59,7 +61,7 @@ def WaitLog(Offset, Marker, Seconds=60):
     raise RuntimeError('missing marker: ' + Marker)
 
 
-def Send(Command):
+def Send(Command, ExpectedMessage=''):
     global Identifier
     Identifier += 1
     Socket.send(json.dumps({'Identifier': Identifier, 'Message': Command,
@@ -68,7 +70,9 @@ def Send(Command):
     while time.monotonic() < End:
         Reply = json.loads(Socket.recv())
         if Reply.get('Identifier') == Identifier:
-            return Reply.get('Message', '')
+            Message = Reply.get('Message', '')
+            if not ExpectedMessage or ExpectedMessage in Message:
+                return Message
     raise RuntimeError('RCON reply deadline')
 
 
@@ -77,7 +81,7 @@ def Ready():
     while time.monotonic() < End:
         Status = Send('carbonluau.status')
         if 'CarbonLuau: ready' in Status and '[CarbonLuau:Persistence] ready=True' in Status:
-            assert '0.7.0-experimental' in Status and 'CarbonLuau package: 0.7.0' in Status and 'Native ABI: 1.5 OK' in Status
+            assert '0.7.5-experimental' in Status and 'CarbonLuau package: 0.7.0' in Status and 'Native ABI: 1.5 OK' in Status
             (Run / (Stage + '-status.txt')).write_text(Status)
             return
         time.sleep(0.5)
@@ -100,6 +104,8 @@ def Start(Index):
             '+rcon.web', '1', '+rcon.password', Secret]
     Server = subprocess.Popen(Args, cwd=Root, stdout=Output, stderr=subprocess.STDOUT, start_new_session=True)
     WaitLog(0, 'Server startup complete', 600)
+    if CatalogD9 and Index == 1:
+        WaitLog(0, '[CarbonLuau:CatalogD9] PASS Startup')
     Socket = websocket.create_connection('ws://127.0.0.1:' + str(Port + 1) + '/' + Secret, timeout=15)
     Ready()
 
@@ -185,7 +191,7 @@ try:
     Manifest = Root / 'steamapps/appmanifest_258550.acf'
     if Manifest.is_file():
         shutil.copy2(Manifest, Run / 'rust-manifest.acf')
-    (Scripts / 'init.luau').write_text('return true')
+    (Scripts / 'init.luau').write_text(CatalogStartup if CatalogD9 else 'return true')
     Stage = 'first-start'
     Start(1)
     Stage = 'root-seed'
@@ -209,6 +215,13 @@ S:SetAsync('Retained',V,function(OK,E)
 end)
 V.Owner='changed after submission'
 """, 'PASS RootSeed')
+    if CatalogD9:
+        Stage = 'catalog-d9'
+        (Scripts / 'init.luau').write_text(CatalogStartup)
+        assert 'reload OK' in Send('carbonluau.reload', 'reload OK')
+        Offset = len(ReadLog())
+        assert 'CATALOG-D9 PASS' in Send('carbonluau.catalogd9', 'CATALOG-D9 PASS'), 'CATALOG-D9 live matrix failed'
+        WaitLog(Offset, '[CarbonLuau:CatalogD9] PASS root/addon/module visibility')
     Stage = 'addon-seed'
     Pair(True)
     if Extended2D:

@@ -25,6 +25,8 @@ jobs:
         run: |
           python tools/Generate-LootItems.py --check
           python tools/Test-LootItems.py
+          python tools/Generate-Catalog.py --check
+          python tools/Test-Catalog.py
           python tools/Test-LootBatch.py
           python tools/Test-LootPackageManifest.py
           python tools/Test-LootRunnerReceipts.py
@@ -43,6 +45,32 @@ jobs:
           ./tools/Test-Api.ps1
           ./tools/Test-Architecture.ps1
           ./tools/Test-Release.ps1
+      - name: Checkout pinned official editor for catalog integration
+        if: runner.os == 'Linux'
+        uses: actions/checkout@v4
+        with:
+          repository: gmoddev/carbonluau-vscode
+          ref: a4ca6d635819f95b249d17a8a978906b6f188485
+          path: build/catalog-editor-extension
+          persist-credentials: false
+      - name: Qualify exact catalog completion in actual VS Code
+        if: runner.os == 'Linux'
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          npm --prefix build/catalog-editor-extension ci --no-audit --no-fund
+          npm --prefix build/catalog-editor-extension run build
+          cp -a build/extension-pack/tooling build/catalog-editor-extension/tooling
+          xvfb-run -a node tests/tooling/catalog-vscode/Run.cjs build/catalog-editor-extension "$RUNNER_TEMP/catalog-d9-editor" generated/catalog-symbols.json
+      - name: Retain actual editor receipt
+        if: always() && runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-d9-editor
+          path: |
+            ${{ runner.temp }}/catalog-d9-editor/result.json
+            ${{ runner.temp }}/catalog-d9-editor/vscode.log
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: tooling-development-${{ matrix.os }}

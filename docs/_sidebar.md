@@ -12,6 +12,8 @@
 - API
   - [Overview](api/README.md)
   - [Globals](api/Globals.md)
+  - [Item and Prefab catalogs](api/Catalogs.md)
+  - [CATALOG-D9 qualification](CatalogD9-Validation.md)
   - [Players](api/Services/Players.md)
   - [Commands](api/Services/Commands.md)
   - [Items](api/Services/Items.md)

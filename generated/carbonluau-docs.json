@@ -434,6 +434,669 @@
   "@carbonluau/globaltype/InventoryChangeContext.Item": {
     "documentation": "Canonical item shortname from the accepted physical observations."
   },
+  "@carbonluau/global/Item.AmmoPaintball": {
+    "documentation": "Canonical string ammo.paintball; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.AmmoPistol": {
+    "documentation": "Canonical string ammo.pistol; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.AmmoPistolHv": {
+    "documentation": "Canonical string ammo.pistol.hv; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.AmmoRifle": {
+    "documentation": "Canonical string ammo.rifle; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.AmmoRifleHv": {
+    "documentation": "Canonical string ammo.rifle.hv; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.AmmoRocketHv": {
+    "documentation": "Canonical string ammo.rocket.hv; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.AmmoRocketSam": {
+    "documentation": "Canonical string ammo.rocket.sam; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.AmmoShotgun": {
+    "documentation": "Canonical string ammo.shotgun; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Antiradpills": {
+    "documentation": "Canonical string antiradpills; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.AppleSpoiled": {
+    "documentation": "Canonical string apple.spoiled; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ArrowBone": {
+    "documentation": "Canonical string arrow.bone; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ArrowFire": {
+    "documentation": "Canonical string arrow.fire; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ArrowHv": {
+    "documentation": "Canonical string arrow.hv; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ArrowWooden": {
+    "documentation": "Canonical string arrow.wooden; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.AttireNesthat": {
+    "documentation": "Canonical string attire.nesthat; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Ball": {
+    "documentation": "Canonical string ball; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Barrelcostume": {
+    "documentation": "Canonical string barrelcostume; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BatterySmall": {
+    "documentation": "Canonical string battery.small; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BduPants": {
+    "documentation": "Canonical string bdu.pants; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BduShirt": {
+    "documentation": "Canonical string bdu.shirt; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BearmeatBurned": {
+    "documentation": "Canonical string bearmeat.burned; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Bicycle": {
+    "documentation": "Canonical string bicycle; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Bleach": {
+    "documentation": "Canonical string bleach; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Blood": {
+    "documentation": "Canonical string blood; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Bluedogtags": {
+    "documentation": "Canonical string bluedogtags; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Blueidtag": {
+    "documentation": "Canonical string blueidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Blueprintbase": {
+    "documentation": "Canonical string blueprintbase; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BoneFragments": {
+    "documentation": "Canonical string bone.fragments; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BootsFrog": {
+    "documentation": "Canonical string boots.frog; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BottleVodka": {
+    "documentation": "Canonical string bottle.vodka; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BreadLoaf": {
+    "documentation": "Canonical string bread.loaf; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BurlapGloves": {
+    "documentation": "Canonical string burlap.gloves; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BurlapHeadwrap": {
+    "documentation": "Canonical string burlap.headwrap; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BurlapShirt": {
+    "documentation": "Canonical string burlap.shirt; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BurlapShoes": {
+    "documentation": "Canonical string burlap.shoes; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.BurlapTrousers": {
+    "documentation": "Canonical string burlap.trousers; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Caboose": {
+    "documentation": "Canonical string caboose; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.CanBeans": {
+    "documentation": "Canonical string can.beans; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.CanBeansEmpty": {
+    "documentation": "Canonical string can.beans.empty; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.CanTuna": {
+    "documentation": "Canonical string can.tuna; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.CanTunaEmpty": {
+    "documentation": "Canonical string can.tuna.empty; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Candycane": {
+    "documentation": "Canonical string candycane; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Cannonball": {
+    "documentation": "Canonical string cannonball; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Captainslog": {
+    "documentation": "Canonical string captainslog; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Charcoal": {
+    "documentation": "Canonical string charcoal; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ChickenBurned": {
+    "documentation": "Canonical string chicken.burned; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ChickenSpoiled": {
+    "documentation": "Canonical string chicken.spoiled; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Chocolate": {
+    "documentation": "Canonical string chocolate; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ClatterHelmet": {
+    "documentation": "Canonical string clatter.helmet; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Cloth": {
+    "documentation": "Canonical string cloth; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Coal": {
+    "documentation": "Canonical string coal; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Coconut": {
+    "documentation": "Canonical string coconut; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Coolingtea": {
+    "documentation": "Canonical string coolingtea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Cratecostume": {
+    "documentation": "Canonical string cratecostume; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.CrudeOil": {
+    "documentation": "Canonical string crude.oil; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.DartRadiation": {
+    "documentation": "Canonical string dart.radiation; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.DartScatter": {
+    "documentation": "Canonical string dart.scatter; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.DartWood": {
+    "documentation": "Canonical string dart.wood; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.DeermeatBurned": {
+    "documentation": "Canonical string deermeat.burned; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.DieselBarrel": {
+    "documentation": "Canonical string diesel_barrel; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.DivingFins": {
+    "documentation": "Canonical string diving.fins; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.DivingMask": {
+    "documentation": "Canonical string diving.mask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.DivingWetsuit": {
+    "documentation": "Canonical string diving.wetsuit; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Documents": {
+    "documentation": "Canonical string documents; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Dogtagneutral": {
+    "documentation": "Canonical string dogtagneutral; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.DoorKey": {
+    "documentation": "Canonical string door.key; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Draculacape": {
+    "documentation": "Canonical string draculacape; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Draculamask": {
+    "documentation": "Canonical string draculamask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Ducttape": {
+    "documentation": "Canonical string ducttape; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.EasterGoldegg": {
+    "documentation": "Canonical string easter.goldegg; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Explosives": {
+    "documentation": "Canonical string explosives; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FatAnimal": {
+    "documentation": "Canonical string fat.animal; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Fertilizer": {
+    "documentation": "Canonical string fertilizer; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishAnchovy": {
+    "documentation": "Canonical string fish.anchovy; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishCatfish": {
+    "documentation": "Canonical string fish.catfish; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishHerring": {
+    "documentation": "Canonical string fish.herring; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishMinnows": {
+    "documentation": "Canonical string fish.minnows; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishSalmon": {
+    "documentation": "Canonical string fish.salmon; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishSardine": {
+    "documentation": "Canonical string fish.sardine; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishSmallshark": {
+    "documentation": "Canonical string fish.smallshark; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishSpoiled": {
+    "documentation": "Canonical string fish.spoiled; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishTroutsmall": {
+    "documentation": "Canonical string fish.troutsmall; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.FishingTackle": {
+    "documentation": "Canonical string fishing.tackle; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Gears": {
+    "documentation": "Canonical string gears; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Ghostsheet": {
+    "documentation": "Canonical string ghostsheet; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Gingerbreadsuit": {
+    "documentation": "Canonical string gingerbreadsuit; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Glue": {
+    "documentation": "Canonical string glue; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Granolabar": {
+    "documentation": "Canonical string granolabar; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Grayidtag": {
+    "documentation": "Canonical string grayidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Greenidtag": {
+    "documentation": "Canonical string greenidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Grub": {
+    "documentation": "Canonical string grub; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Gunpowder": {
+    "documentation": "Canonical string gunpowder; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Hab": {
+    "documentation": "Canonical string hab; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HalloweenCandy": {
+    "documentation": "Canonical string halloween.candy; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Harvestingtea": {
+    "documentation": "Canonical string harvestingtea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatBeenie": {
+    "documentation": "Canonical string hat.beenie; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatBoonie": {
+    "documentation": "Canonical string hat.boonie; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatBunnyhat": {
+    "documentation": "Canonical string hat.bunnyhat; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatCap": {
+    "documentation": "Canonical string hat.cap; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatDragonmask": {
+    "documentation": "Canonical string hat.dragonmask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatHorsemask": {
+    "documentation": "Canonical string hat.horsemask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatOxmask": {
+    "documentation": "Canonical string hat.oxmask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatRabbitmask": {
+    "documentation": "Canonical string hat.rabbitmask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatRatmask": {
+    "documentation": "Canonical string hat.ratmask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatSnakemask": {
+    "documentation": "Canonical string hat.snakemask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatTigermask": {
+    "documentation": "Canonical string hat.tigermask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatWellipets": {
+    "documentation": "Canonical string hat.wellipets; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HatWolf": {
+    "documentation": "Canonical string hat.wolf; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Healingtea": {
+    "documentation": "Canonical string healingtea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HealingteaPure": {
+    "documentation": "Canonical string healingtea.pure; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Honey": {
+    "documentation": "Canonical string honey; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Honeycomb": {
+    "documentation": "Canonical string honeycomb; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Hoodie": {
+    "documentation": "Canonical string hoodie; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Horse": {
+    "documentation": "Canonical string horse; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Horsedung": {
+    "documentation": "Canonical string horsedung; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.HqMetalOre": {
+    "documentation": "Canonical string hq.metal.ore; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.JacketSnow": {
+    "documentation": "Canonical string jacket.snow; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.JarPickle": {
+    "documentation": "Canonical string jar.pickle; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Kickgems": {
+    "documentation": "Canonical string kickgems; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Largemedkit": {
+    "documentation": "Canonical string largemedkit; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Lavenderidtag": {
+    "documentation": "Canonical string lavenderidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Leather": {
+    "documentation": "Canonical string leather; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Locomotive": {
+    "documentation": "Canonical string locomotive; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Lowgradefuel": {
+    "documentation": "Canonical string lowgradefuel; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.MaskBalaclava": {
+    "documentation": "Canonical string mask.balaclava; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.MaskBandana": {
+    "documentation": "Canonical string mask.bandana; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Maxhealthtea": {
+    "documentation": "Canonical string maxhealthtea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.MetalFragments": {
+    "documentation": "Canonical string metal.fragments; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.MetalOre": {
+    "documentation": "Canonical string metal.ore; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.MetalRefined": {
+    "documentation": "Canonical string metal.refined; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Metalblade": {
+    "documentation": "Canonical string metalblade; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Metalpipe": {
+    "documentation": "Canonical string metalpipe; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Metalspring": {
+    "documentation": "Canonical string metalspring; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Minicopter": {
+    "documentation": "Canonical string minicopter; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Mintidtag": {
+    "documentation": "Canonical string mintidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Mlrs": {
+    "documentation": "Canonical string mlrs; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Motorbike": {
+    "documentation": "Canonical string motorbike; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.MrspiceCan": {
+    "documentation": "Canonical string mrspice.can; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Mummymask": {
+    "documentation": "Canonical string mummymask; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.N2ModuleCar": {
+    "documentation": "Canonical string 2module.car; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.N3ModuleCar": {
+    "documentation": "Canonical string 3module.car; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.N4ModuleCar": {
+    "documentation": "Canonical string 4module.car; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Note": {
+    "documentation": "Canonical string note; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Nucleus": {
+    "documentation": "Canonical string nucleus; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Orangeidtag": {
+    "documentation": "Canonical string orangeidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Orchid": {
+    "documentation": "Canonical string orchid; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Oretea": {
+    "documentation": "Canonical string oretea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.OreteaAdvanced": {
+    "documentation": "Canonical string oretea.advanced; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.OreteaPure": {
+    "documentation": "Canonical string oretea.pure; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Pants": {
+    "documentation": "Canonical string pants; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.PantsShorts": {
+    "documentation": "Canonical string pants.shorts; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Paper": {
+    "documentation": "Canonical string paper; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Partyhat": {
+    "documentation": "Canonical string partyhat; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Pinkidtag": {
+    "documentation": "Canonical string pinkidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Plantfiber": {
+    "documentation": "Canonical string plantfiber; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Prisonerhood": {
+    "documentation": "Canonical string prisonerhood; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Propanetank": {
+    "documentation": "Canonical string propanetank; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Ptboat": {
+    "documentation": "Canonical string ptboat; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Purecoolingtea": {
+    "documentation": "Canonical string purecoolingtea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Purewarmingtea": {
+    "documentation": "Canonical string purewarmingtea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Purpleidtag": {
+    "documentation": "Canonical string purpleidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Reddogtags": {
+    "documentation": "Canonical string reddogtags; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Redidtag": {
+    "documentation": "Canonical string redidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Researchpaper": {
+    "documentation": "Canonical string researchpaper; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Rhib": {
+    "documentation": "Canonical string rhib; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Riflebody": {
+    "documentation": "Canonical string riflebody; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.RoadsignGloves": {
+    "documentation": "Canonical string roadsign.gloves; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Roadsigns": {
+    "documentation": "Canonical string roadsigns; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Rope": {
+    "documentation": "Canonical string rope; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Rose": {
+    "documentation": "Canonical string rose; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Santabeard": {
+    "documentation": "Canonical string santabeard; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Santahat": {
+    "documentation": "Canonical string santahat; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ScarecrowSuit": {
+    "documentation": "Canonical string scarecrow.suit; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Scarecrowhead": {
+    "documentation": "Canonical string scarecrowhead; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Scrap": {
+    "documentation": "Canonical string scrap; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Scraptea": {
+    "documentation": "Canonical string scraptea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ScrapteaPure": {
+    "documentation": "Canonical string scraptea.pure; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Sedan": {
+    "documentation": "Canonical string sedan; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Semibody": {
+    "documentation": "Canonical string semibody; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Sewingkit": {
+    "documentation": "Canonical string sewingkit; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Sheetmetal": {
+    "documentation": "Canonical string sheetmetal; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ShirtCollared": {
+    "documentation": "Canonical string shirt.collared; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ShirtTanktop": {
+    "documentation": "Canonical string shirt.tanktop; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.ShoesBoots": {
+    "documentation": "Canonical string shoes.boots; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.SkullHuman": {
+    "documentation": "Canonical string skull.human; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.SkullWolf": {
+    "documentation": "Canonical string skull.wolf; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Smgbody": {
+    "documentation": "Canonical string smgbody; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Snowmobile": {
+    "documentation": "Canonical string snowmobile; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.SpeargunSpear": {
+    "documentation": "Canonical string speargun.spear; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.SpoiledProduce": {
+    "documentation": "Canonical string spoiled.produce; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Spraycandecal": {
+    "documentation": "Canonical string spraycandecal; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Sticks": {
+    "documentation": "Canonical string sticks; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Stones": {
+    "documentation": "Canonical string stones; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Submarineduo": {
+    "documentation": "Canonical string submarineduo; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Submarinesolo": {
+    "documentation": "Canonical string submarinesolo; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Sulfur": {
+    "documentation": "Canonical string sulfur; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.SulfurOre": {
+    "documentation": "Canonical string sulfur.ore; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Sunflower": {
+    "documentation": "Canonical string sunflower; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Supertea": {
+    "documentation": "Canonical string supertea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.TacticalGloves": {
+    "documentation": "Canonical string tactical.gloves; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Tarp": {
+    "documentation": "Canonical string tarp; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Techparts": {
+    "documentation": "Canonical string techparts; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Trike": {
+    "documentation": "Canonical string trike; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Tshirt": {
+    "documentation": "Canonical string tshirt; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.TshirtLong": {
+    "documentation": "Canonical string tshirt.long; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.TwitchHeadset": {
+    "documentation": "Canonical string twitch.headset; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.VenomSnake": {
+    "documentation": "Canonical string venom.snake; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Wagon": {
+    "documentation": "Canonical string wagon; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Walkietalkie": {
+    "documentation": "Canonical string walkietalkie; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.WallpaperWall": {
+    "documentation": "Canonical string wallpaper.wall; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Warmingtea": {
+    "documentation": "Canonical string warmingtea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Wheat": {
+    "documentation": "Canonical string wheat; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Whiteidtag": {
+    "documentation": "Canonical string whiteidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.WolfmeatBurned": {
+    "documentation": "Canonical string wolfmeat.burned; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Wood": {
+    "documentation": "Canonical string wood; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Woodtea": {
+    "documentation": "Canonical string woodtea; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.WoodteaPure": {
+    "documentation": "Canonical string woodtea.pure; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Wool": {
+    "documentation": "Canonical string wool; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Workcart": {
+    "documentation": "Canonical string workcart; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Worm": {
+    "documentation": "Canonical string worm; D8-qualified Loot item. Other operations retain their own validators."
+  },
+  "@carbonluau/global/Item.Yellowidtag": {
+    "documentation": "Canonical string yellowidtag; D8-qualified Loot item. Other operations retain their own validators."
+  },
   "@carbonluau/globaltype/Items.Exists": {
     "documentation": "Check whether a canonical item short name exists."
   },
@@ -514,6 +1177,18 @@
   },
   "@carbonluau/globaltype/Players.PlayerSpawned": {
     "documentation": "Completed eligible initial activation or full respawn; no wake/reconnect/revive or history replay."
+  },
+  "@carbonluau/globaltype/Prefab.Loot": {
+    "documentation": "Frozen qualified Loot source paths; grants no spawn or mutation authority."
+  },
+  "@carbonluau/global/Prefab.Loot": {
+    "documentation": "Frozen qualified Loot source paths; grants no spawn or mutation authority."
+  },
+  "@carbonluau/globaltype/PrefabLoot.Barrel1": {
+    "documentation": "Canonical path assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-1.prefab; qualified Loot.Replace source. Existing admission remains authoritative."
+  },
+  "@carbonluau/globaltype/PrefabLoot.Barrel2": {
+    "documentation": "Canonical path assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-2.prefab; qualified Loot.Replace source. Existing admission remains authoritative."
   },
   "@carbonluau/globaltype/ScreenGui.ClassName": {
     "documentation": "Retained ClassName."

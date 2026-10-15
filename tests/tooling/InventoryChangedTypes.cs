@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 internal static class InventoryChangedTypes
 {
     private const string SinceApi = "0.6.5-experimental";
-    private const string CurrentApi = "0.7.0-experimental";
+    private const string CurrentApi = "0.7.5-experimental";
     private const string ContextId = "InventoryChangeContext";
     private const string SignalId = "PlayerInventory.ItemChanged";
     private static void Check(bool Value, string Message)
@@ -76,7 +76,7 @@ internal static class InventoryChangedTypes
         Signature(Member(Catalog, "PlayerInventory.CountItem"), "Method", new[] { "ShortName" }, new[] { "string" }, new[] { "number" });
         Signature(Member(Catalog, "PlayerInventory.HasItem"), "Method", new[] { "ShortName", "Amount" }, new[] { "string", "number?" }, new[] { "boolean" });
         foreach (string Id in new[] { "PlayerInventory.GiveItem", "PlayerInventory.TakeItem" })
-            Availability(Member(Catalog, Id), "HostMutation", CurrentApi, "ClientUnqualified");
+            Availability(Member(Catalog, Id), "HostMutation", "0.7.0-experimental", "ClientUnqualified");
         Signature(Member(Catalog, "PlayerInventory.GiveItem"), "Method", new[] { "ShortName", "Amount", "Behavior" },
             new[] { "string", "number", "GiveItemBehavior?" }, new[] { "boolean" });
         Signature(Member(Catalog, "PlayerInventory.TakeItem"), "Method", new[] { "ShortName", "Amount" },

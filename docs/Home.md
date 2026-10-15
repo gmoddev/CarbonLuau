@@ -10,7 +10,7 @@ Rust servers. Start with [installation](Installation.md), then the
 |---|---|
 | `v0.7.0` experimental | Complete current API `0.7.0-experimental` ([notes](releases/0.7.0.md), [qualification](Release-0.7.0-Validation.md)) |
 | Earlier `v0.5.0` | Experimental API `0.5.0-experimental`: runtime, addons, Player gameplay, GUI, local persistence and structured Query |
-| Current `main` | API `0.7.0-experimental`; [post-release D4](GameplayD4-Validation.md) additionally qualifies barrel-2. Published v0.7.0 remains barrel-1 only |
+| Current `main` | Development API `0.7.5-experimental`; [Item/Prefab catalogs](api/Catalogs.md), [221 D8-qualified items](api/LootItems.md) and both qualified barrels. Published v0.7.0 remains unchanged |
 
 The newer features included in v0.7.0 are not retroactively in v0.5.0. C4 removed the four legacy
 Player inventory methods: use `Player:GetInventory()` and the
