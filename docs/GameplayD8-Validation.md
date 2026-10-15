@@ -905,9 +905,11 @@ exact source:
 - [Documentation 38706533245](https://github.com/gmoddev/CarbonLuau/actions/runs/38706533245):
   generated reference build and deployment.
 
-This closure adds only final hosted receipts to this report. Executable source,
-API/generated metadata, examples, fixtures and the three generated qualification
-artifacts remain byte-identical to that tested implementation. The closing
+The first evidence closure, `bc73ee9077dc69f13ce8359f7edc5ed451143dc4`,
+changes only this report. Its CI negative and the resulting diagnostic-only
+runtime-test change are retained below. Production source, API/generated
+metadata, examples, live fixtures and the three qualification artifacts remain
+byte-identical to the tested implementation. The closing diagnostic/evidence
 commit is independently subjected to all four workflows on its own SHA before
 the final verdict; the final response records that SHA and its workflow links.
 No pending job is counted as PASS.
@@ -919,3 +921,30 @@ Read-only GitHub inspection confirms immutable published v0.7.0 tag object
 `7c7d36f648a5506efd07c1b6d6bcf4b94d3f7d2b` and all six release-asset
 content digests unchanged from the [D7 closure](GameplayD7-Validation.md#hosted-source-closure).
 No release, tag or version-identity change is made.
+
+### Retained closing-source CI negative
+
+The first evidence-only closure's Windows core job fails its existing
+`Private sampled inventory candidate (Windows)` step. The exact
+[failed job 116333604423](https://github.com/gmoddev/CarbonLuau/actions/runs/38708449523/job/116333604423)
+reports `old PlayerInventory acquisition still scan/watch free` at
+InventoryNetObservationTests.RealVm. The downloaded 65,131-byte raw job log
+`C:/Sandbox/Codex/D8Control20261015/CI-bc73ee9-Windows-failed.log` has SHA256
+`e6387c375980279a66ae641f292bc26cd66b97cb0f3d202179fd76855aa7f7d9`.
+That assertion combines successful Host.Reload with zero scans and zero watches;
+the original message records none of those values. Its output cannot identify
+which predicate failed. The original failure's cause remains unknown.
+
+The test now captures the same single Reload result and includes its status,
+error and the two counters in the assertion message. Its three success
+predicates, execution/compiler deadlines and resource limits are unchanged;
+there is no automatic retry or warm-up added to the test. Focused remote
+Windows investigation passes the original test and six fresh diagnostic
+processes (0.484–0.505 seconds), establishing OK/zero scans/zero watches for
+those runs. These positive runs do not explain or replace the earlier negative.
+The local receipt `C:/Sandbox/Codex/D8Windows20261015/CiInventoryInvestigation/Focused-Results.json`
+has SHA256 `42fec079a2c0a46e78ebb35742acd2ab37175d7a49ef89d823fa503eedf37d85`
+and records each process's exit code, duration and raw-log hash.
+No timeout, cold-start or inventory defect is asserted without evidence.
+The diagnostic-only source and updated report then receive the full hosted
+matrix on their final commit; a pending or failed workflow is not a final PASS.

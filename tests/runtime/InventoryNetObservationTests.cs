@@ -659,8 +659,10 @@ internal static class InventoryNetObservationTests
                     var Result = Host.Execute("inventory-net", Code);
                     Check(Result.Status == Runtime.RuntimeStatus.OK, "real VM: " + Code + ": " + Result.Error);
                 };
-                Check(Host.Reload().Status == Runtime.RuntimeStatus.OK && Player.Scans == 0 && Value.Samples.WatchCount == 0,
-                    "old PlayerInventory acquisition still scan/watch free");
+                var Reload = Host.Reload();
+                Check(Reload.Status == Runtime.RuntimeStatus.OK && Player.Scans == 0 && Value.Samples.WatchCount == 0,
+                    "old PlayerInventory acquisition still scan/watch free: status=" + Reload.Status +
+                    " scans=" + Player.Scans + " watches=" + Value.Samples.WatchCount + " error=" + Reload.Error);
                 Check(Runtime.PhysicalInventoryObservation.Count(Player.Source(),Scrap)==3 &&
                     Runtime.PhysicalInventoryObservation.Has(Player.Source(),Scrap,3),"qualified backend read parity");
                 Run("local S=require('state'); assert(game.ApiVersion=='0.7.0-experimental'); for _,K in {'CountItem','HasItem','GiveItem','TakeItem'} do assert(S.P[K]==nil) end; assert(S.I:CountItem('scrap')==3 and S.I:HasItem('scrap',3)); assert(not S.I:HasItem('scrap',4)); assert(S.I:CountItem('missing')==0); assert(not S.I:HasItem('missing')); assert(game:GetService('Items'):Exists('scrap')); assert(not game:GetService('Items'):Exists('missing')); assert(not pcall(function() S.I.X=1 end)); for _,K in {'ItemAdded','ItemRemoved','Changed','Signal'} do assert(not pcall(function() return S.I[K] end)) end; assert(type(S.I.GiveItem)=='function' and type(S.I.TakeItem)=='function' and type(S.I.ItemChanged.Connect)=='function')");
