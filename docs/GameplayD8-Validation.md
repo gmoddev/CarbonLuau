@@ -1,6 +1,6 @@
 # Gameplay D8 — bulk Loot item qualification
 
-Status: **LOCAL QUALIFICATION PASS; FINAL-SOURCE HOSTED CI REQUIRED FOR CLOSURE**.
+Status: **PASS WITHIN THE RECORDED PINNED-HOST SCOPE**.
 Starting main: `0afea7dcb5f8e7f3d8c22a6b184be1cc015d7e25`.
 Date: 2026-10-15. [D2A](GameplayD2A-Validation.md),
 [D3](GameplayD3-Validation.md), [D4](GameplayD4-Validation.md),
@@ -885,3 +885,37 @@ Recommended next phase: separately investigate the longer canonical item names
 excluded by the retained fifteen-character/1122-code-unit descriptor budget.
 Any larger name envelope requires its own bounded retention and host qualification;
 this phase does not authorize that change or another prefab.
+
+## Hosted source closure
+
+Implementation, tests, API, examples and complete evidence commit:
+`3650dc06b1b37663eaec09bb040402830edfc2fd`. All four workflows PASS on that
+exact source:
+
+- [Core validation 38706533335](https://github.com/gmoddev/CarbonLuau/actions/runs/38706533335):
+  Windows/Linux native and managed/real-VM, lifecycle/scale/persistence,
+  allocation and failure recovery, Linux sanitizers, all 74 examples,
+  deterministic development packaging and clean installation.
+- [Tooling 38706533275](https://github.com/gmoddev/CarbonLuau/actions/runs/38706533275):
+  Windows/Linux/macOS SDK10, finite manifest/receipt/profile/ledger gates,
+  generated metadata/types, preview goldens and hostile supervisor checks.
+- [Contracts 38706533341](https://github.com/gmoddev/CarbonLuau/actions/runs/38706533341):
+  finite public projection, schemas, documentation/rules/fragments,
+  read-only release negative fixtures and relocated document navigation.
+- [Documentation 38706533245](https://github.com/gmoddev/CarbonLuau/actions/runs/38706533245):
+  generated reference build and deployment.
+
+This closure adds only final hosted receipts to this report. Executable source,
+API/generated metadata, examples, fixtures and the three generated qualification
+artifacts remain byte-identical to that tested implementation. The closing
+commit is independently subjected to all four workflows on its own SHA before
+the final verdict; the final response records that SHA and its workflow links.
+No pending job is counted as PASS.
+
+Main is synchronized and tracked files are clean. The pre-existing `.codexlock`
+and `derived-369547800317500/` remain untouched. Both hosts and borrowed test
+servers are restored, with no owned processes, containers or leases left.
+Read-only GitHub inspection confirms immutable published v0.7.0 tag object
+`7c7d36f648a5506efd07c1b6d6bcf4b94d3f7d2b` and all six release-asset
+content digests unchanged from the [D7 closure](GameplayD7-Validation.md#hosted-source-closure).
+No release, tag or version-identity change is made.
