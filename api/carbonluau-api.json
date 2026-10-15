@@ -4078,7 +4078,7 @@
       "Name": "RegisterDropRule",
       "OwnerId": "Loot",
       "Kind": "Method",
-      "Summary": "Initialization-only copied declaration for qualified barrel-1 or barrel-2 with scrap, metal.fragments, wood or stones. One owner per prefab, two rules globally and per domain; whole owner set stages until successful publication. Dense zero-to-eight entry array per rule; shared producer bounds. No immediate gameplay mutation or durable payout-success result.",
+      "Summary": "Initialization-only copied declaration for qualified barrel-1 or barrel-2 and finite pinned Loot items. One owner per prefab, two rules globally and per domain; whole owner set stages until successful publication. Dense zero-to-eight entry array per rule; shared producer bounds. No immediate gameplay mutation or durable payout-success result.",
       "Preview": "HostMutation",
       "Availability": {
         "SinceApi": "0.6.5-experimental",

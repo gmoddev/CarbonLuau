@@ -31,16 +31,27 @@ case variants and other barrel paths are not accepted.
 
 Drops is a plain dense array of zero through eight
 [LootDropEntry](../Types/LootDropEntry.md) records. An empty array requests no
-custom payout. Each record has exactly Item, Min and Max; Item is `scrap`,
-`metal.fragments`, `wood` or `stones`. Wood requires the post-v0.7.0
-[Gameplay D5 build](../../GameplayD5-Validation.md); published v0.7.0 still
-supports only scrap and metal.fragments. The pinned wood definition is
-`-151838493`, stackable 1000. Stones requires the
-[Gameplay D7 build](../../GameplayD7-Validation.md), with pinned definition
-`-2099697608`, stackable 1000, no condition or special initialization and the
-ordinary dropped-world path. Published v0.7.0 does not include stones. The adapter creates one original Item/world per
-nonzero entry and does not split oversized amounts or configure fuel, condition,
-skins, contents or held entities. Min and Max are finite integers with
+custom payout. Each record has exactly Item, Min and Max. Item is an exact
+canonical name in the [finite pinned Loot item list](../LootItems.md), which
+records every qualified ID and stack limit. The post-v0.7.0
+[Gameplay D8 build](../../GameplayD8-Validation.md) supports 221 definitions,
+including scrap, metal.fragments, wood and stones. Published v0.7.0 remains
+limited to scrap and metal.fragments on barrel-1. The
+[Gameplay D5 build](../../GameplayD5-Validation.md) introduced `wood`;
+the [Gameplay D7 build](../../GameplayD7-Validation.md) introduced `stones`
+with pinned definition `-2099697608`, stackable 1000. Both remain supported.
+
+The adapter creates one original Item/world per nonzero entry, using the
+definition's defaults. It does not split oversized amounts or configure fuel,
+condition, skins, contents or held entities. Max must also fit the actual
+current definition's stackable field during PREPARE and immediately before
+COMMIT; an oversized rule leaves that occurrence vanilla, without clamping.
+The item table records vanilla limits. On modified servers, OnMaxStackable and
+container policies can differ from this field: physical drops do not normalize
+to those inventory limits. See the qualified
+[stack modifier matrix](../../GameplayD8-Validation.md#stack-modifier-compatibility-matrix)
+for increases, decreases, runtime changes and callback interference. Compatibility
+with arbitrary third-party plugins is not implied. Min and Max are finite integers with
 `0 <= Min <= Max <= 1000`; the sum of Max across entries cannot exceed 8000.
 Arrays and entries cannot have metatables, holes or extra keys. Later changes
 to the input tables do not change the copied rule.
@@ -117,4 +128,7 @@ override, not advertised as natural barrel-2 behavior.
 For stones mixed with wood, use the [D7 example](../../../examples/scripts/loot-replace-stones.luau)
 on a qualified D7 development build. Both qualified barrel targets and D6's
 independent ownership/shared budgets apply unchanged.
+For mixed resources, components and materials, use the
+[D8 bulk example](../../../examples/scripts/loot-replace-bulk.luau) as a standalone
+root in a qualified D8 development build. Its two rules publish together.
 See also the [Enum namespace](../Types/Enum.md).

@@ -196,10 +196,10 @@ namespace Carbon.Plugins
                 LootAdditionalRoot();
                 var Old = Gameplay.Active; var First = LootRegistryRule(LootRulePolicy.Prefab, Old);
                 var Second = LootRegistryRule(LootRulePolicy.SecondPrefab, Old);
-                foreach (string Item in new[] { "stones", "sulfur" }) {
+                foreach (string Item in new[] { "stones", "carbonluau.d8.invalid" }) {
                     LootFixtureEntries = new[] { new LootDropEntry(Item, Item == "stones" ? 1001 : 1, Item == "stones" ? 1001 : 1) };
                     BarrelResearchCheck(Host.Reload().Status == RuntimeStatus.RUNTIME_ERROR && ReferenceEquals(Gameplay.Active, Old),
-                        "D7 maximum1001 and unsupported sulfur reject before publication");
+                        "D7 maximum1001 and unsupported carbonluau.d8.invalid reject before publication");
                     LootRegistryRule(LootRulePolicy.Prefab, Old, First); LootRegistryRule(LootRulePolicy.SecondPrefab, Old, Second);
                 }
                 LootFixtureEntries = new[] { new LootDropEntry("stones", 1000, 1000) };

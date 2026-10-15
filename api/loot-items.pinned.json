@@ -1,0 +1,1345 @@
+{
+  "SchemaVersion": 1,
+  "HostPins": {
+    "Windows": {
+      "RustBuild": 25653776,
+      "Carbon": "2.0.262.0/8a81d70",
+      "AssemblySha256": "bb3de3439f82440280ef61b10287a70b1731adefafa30d1716220a16878376b2",
+      "Mvid": "c1c11bd1-baa1-4d85-b64e-1d4a4664d62e"
+    },
+    "Linux": {
+      "RustBuild": 25653776,
+      "Carbon": "2.0.261.0/c74c4ca",
+      "AssemblySha256": "cb2bf76bb351b17f10be1ee5b31c293eb6effed419e079f2f9d3d3e5c24d8450",
+      "Mvid": "616082a0-36f4-4680-a1ab-efc5766796cc"
+    }
+  },
+  "Definitions": [
+    {
+      "Name": "2module.car",
+      "Id": -866121090,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "3module.car",
+      "Id": -831725027,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "4module.car",
+      "Id": -935322684,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ammo.paintball",
+      "Id": 385645417,
+      "Stack": 128,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ammo.pistol",
+      "Id": 785728077,
+      "Stack": 128,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ammo.pistol.hv",
+      "Id": -1691396643,
+      "Stack": 128,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ammo.rifle",
+      "Id": -1211166256,
+      "Stack": 128,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ammo.rifle.hv",
+      "Id": 1712070256,
+      "Stack": 128,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ammo.rocket.hv",
+      "Id": -1841918730,
+      "Stack": 3,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ammo.rocket.sam",
+      "Id": -384243979,
+      "Stack": 1000,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ammo.shotgun",
+      "Id": -1685290200,
+      "Stack": 64,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "antiradpills",
+      "Id": -1432674913,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "apple.spoiled",
+      "Id": 352130972,
+      "Stack": 1,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "arrow.bone",
+      "Id": 215754713,
+      "Stack": 64,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "arrow.fire",
+      "Id": 14241751,
+      "Stack": 64,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "arrow.hv",
+      "Id": -1023065463,
+      "Stack": 64,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "arrow.wooden",
+      "Id": -1234735557,
+      "Stack": 64,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "attire.nesthat",
+      "Id": 1081315464,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ball",
+      "Id": 405904531,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "barrelcostume",
+      "Id": -1215166612,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "battery.small",
+      "Id": 609049394,
+      "Stack": 1,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "bdu.pants",
+      "Id": 1468749025,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "bdu.shirt",
+      "Id": -2127311451,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "bearmeat.burned",
+      "Id": -989755543,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "bicycle",
+      "Id": 821588319,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "bleach",
+      "Id": 1553078977,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "blood",
+      "Id": 1776460938,
+      "Stack": 1000,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "bluedogtags",
+      "Id": 1036321299,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "blueidtag",
+      "Id": 1364514421,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "blueprintbase",
+      "Id": -996920608,
+      "Stack": 1000,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "bone.fragments",
+      "Id": 1719978075,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "boots.frog",
+      "Id": -1000573653,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "bottle.vodka",
+      "Id": 755224797,
+      "Stack": 1,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "bread.loaf",
+      "Id": 281099360,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "burlap.gloves",
+      "Id": 1366282552,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "burlap.headwrap",
+      "Id": 1877339384,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "burlap.shirt",
+      "Id": 602741290,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "burlap.shoes",
+      "Id": -761829530,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "burlap.trousers",
+      "Id": 1992974553,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "caboose",
+      "Id": 1732236518,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "can.beans",
+      "Id": -700591459,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "can.beans.empty",
+      "Id": 1655979682,
+      "Stack": 10,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "can.tuna",
+      "Id": -1941646328,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "can.tuna.empty",
+      "Id": -1557377697,
+      "Stack": 10,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "candycane",
+      "Id": 1121925526,
+      "Stack": 1,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "cannonball",
+      "Id": -411735114,
+      "Stack": 6,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "captainslog",
+      "Id": 1230691307,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "charcoal",
+      "Id": -1938052175,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "chicken.burned",
+      "Id": 1973684065,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "chicken.spoiled",
+      "Id": -751151717,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "chocolate",
+      "Id": -965336208,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "clatter.helmet",
+      "Id": 968019378,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "cloth",
+      "Id": -858312878,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "coal",
+      "Id": 204391461,
+      "Stack": 1,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "coconut",
+      "Id": -24571537,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "coolingtea",
+      "Id": -1260229965,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "cratecostume",
+      "Id": 1189981699,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "crude.oil",
+      "Id": -321733511,
+      "Stack": 500,
+      "Family": "BasicMaterial"
+    },
+    {
+      "Name": "dart.radiation",
+      "Id": -594596146,
+      "Stack": 64,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "dart.scatter",
+      "Id": 2036395619,
+      "Stack": 64,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "dart.wood",
+      "Id": -274709858,
+      "Stack": 64,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "deermeat.burned",
+      "Id": -78533081,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "diesel_barrel",
+      "Id": 1568388703,
+      "Stack": 20,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "diving.fins",
+      "Id": 296519935,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "diving.mask",
+      "Id": -113413047,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "diving.wetsuit",
+      "Id": -1101924344,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "documents",
+      "Id": -451310088,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "dogtagneutral",
+      "Id": 1223900335,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "door.key",
+      "Id": -1112793865,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "draculacape",
+      "Id": -258574361,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "draculamask",
+      "Id": 1865253052,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "ducttape",
+      "Id": 1401987718,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "easter.goldegg",
+      "Id": -1002156085,
+      "Stack": 10,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "explosives",
+      "Id": -592016202,
+      "Stack": 100,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "fat.animal",
+      "Id": -1018587433,
+      "Stack": 1000,
+      "Family": "BasicMaterial"
+    },
+    {
+      "Name": "fertilizer",
+      "Id": -930193596,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "fish.anchovy",
+      "Id": 342438846,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "fish.catfish",
+      "Id": -587989372,
+      "Stack": 5,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "fish.herring",
+      "Id": -1698937385,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "fish.minnows",
+      "Id": -542577259,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "fish.salmon",
+      "Id": -851988960,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "fish.sardine",
+      "Id": -1654233406,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "fish.smallshark",
+      "Id": -1768880890,
+      "Stack": 5,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "fish.spoiled",
+      "Id": 1130729138,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "fish.troutsmall",
+      "Id": -1878764039,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "fishing.tackle",
+      "Id": -1707425764,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "gears",
+      "Id": 479143914,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "ghostsheet",
+      "Id": -1043618880,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "gingerbreadsuit",
+      "Id": -558880549,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "glue",
+      "Id": -1899491405,
+      "Stack": 10,
+      "Family": "Component"
+    },
+    {
+      "Name": "granolabar",
+      "Id": -746030907,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "grayidtag",
+      "Id": -455286320,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "greenidtag",
+      "Id": 1762167092,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "grub",
+      "Id": -568419968,
+      "Stack": 25,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "gunpowder",
+      "Id": -265876753,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "hab",
+      "Id": 696029539,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "halloween.candy",
+      "Id": -888153050,
+      "Stack": 1000,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "harvestingtea",
+      "Id": 1516531815,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "hat.beenie",
+      "Id": 1675639563,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.boonie",
+      "Id": -23994173,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.bunnyhat",
+      "Id": 23391694,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.cap",
+      "Id": -1022661119,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.dragonmask",
+      "Id": -22883916,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.horsemask",
+      "Id": -418359052,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.oxmask",
+      "Id": 1315082560,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.rabbitmask",
+      "Id": -986782031,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.ratmask",
+      "Id": 271048478,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.snakemask",
+      "Id": -1314079879,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.tigermask",
+      "Id": 709206314,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.wellipets",
+      "Id": -507248640,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "hat.wolf",
+      "Id": -1478212975,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "healingtea",
+      "Id": -929092070,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "healingtea.pure",
+      "Id": -1677315902,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "honey",
+      "Id": 1601800933,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "honeycomb",
+      "Id": -1513203236,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "hoodie",
+      "Id": 1751045826,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "horse",
+      "Id": 82772055,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "horsedung",
+      "Id": -1579932985,
+      "Stack": 100,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "hq.metal.ore",
+      "Id": -1982036270,
+      "Stack": 100,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "jacket.snow",
+      "Id": -48090175,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "jar.pickle",
+      "Id": 286193827,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "kickgems",
+      "Id": -1622386500,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "largemedkit",
+      "Id": 254522515,
+      "Stack": 1,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "lavenderidtag",
+      "Id": 1223729384,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "leather",
+      "Id": 1381010055,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "locomotive",
+      "Id": -2027988285,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "lowgradefuel",
+      "Id": -946369541,
+      "Stack": 500,
+      "Family": "BasicMaterial"
+    },
+    {
+      "Name": "mask.balaclava",
+      "Id": -2012470695,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "mask.bandana",
+      "Id": -702051347,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "maxhealthtea",
+      "Id": -1184406448,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "metal.fragments",
+      "Id": 69511070,
+      "Stack": 1000,
+      "Family": "Baseline"
+    },
+    {
+      "Name": "metal.ore",
+      "Id": -4031221,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "metal.refined",
+      "Id": 317398316,
+      "Stack": 100,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "metalblade",
+      "Id": 1882709339,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "metalpipe",
+      "Id": 95950017,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "metalspring",
+      "Id": -1021495308,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "minicopter",
+      "Id": -1334255764,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "mintidtag",
+      "Id": 1572152877,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "mlrs",
+      "Id": -1449152644,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "motorbike",
+      "Id": -1417478274,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "mrspice.can",
+      "Id": -648077743,
+      "Stack": 1,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "mummymask",
+      "Id": 809689733,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "note",
+      "Id": 1414245162,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "nucleus",
+      "Id": -1811234677,
+      "Stack": 1,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "orangeidtag",
+      "Id": -282193997,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "orchid",
+      "Id": 734320711,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "oretea",
+      "Id": 1480022580,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "oretea.advanced",
+      "Id": 2063916636,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "oretea.pure",
+      "Id": 1729374708,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "pants",
+      "Id": 237239288,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "pants.shorts",
+      "Id": -1695367501,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "paper",
+      "Id": -1779183908,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "partyhat",
+      "Id": -575744869,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "pinkidtag",
+      "Id": 180752235,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "plantfiber",
+      "Id": -804769727,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "prisonerhood",
+      "Id": -892718768,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "propanetank",
+      "Id": -1673693549,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "ptboat",
+      "Id": 1933140008,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "purecoolingtea",
+      "Id": 1121416193,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "purewarmingtea",
+      "Id": -1476814093,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "purpleidtag",
+      "Id": -1386082991,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "reddogtags",
+      "Id": -602717596,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "redidtag",
+      "Id": 70102328,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "researchpaper",
+      "Id": -544317637,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "rhib",
+      "Id": 1394042569,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "riflebody",
+      "Id": 176787552,
+      "Stack": 10,
+      "Family": "Component"
+    },
+    {
+      "Name": "roadsign.gloves",
+      "Id": -699558439,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "roadsigns",
+      "Id": 1199391518,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "rope",
+      "Id": 1414245522,
+      "Stack": 50,
+      "Family": "Component"
+    },
+    {
+      "Name": "rose",
+      "Id": 1414245519,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "santabeard",
+      "Id": 2126889441,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "santahat",
+      "Id": -575483084,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "scarecrow.suit",
+      "Id": 273951840,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "scarecrowhead",
+      "Id": 809942731,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "scrap",
+      "Id": -932201673,
+      "Stack": 1000,
+      "Family": "Baseline"
+    },
+    {
+      "Name": "scraptea",
+      "Id": 263834859,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "scraptea.pure",
+      "Id": 2024467711,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "sedan",
+      "Id": -374457631,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "semibody",
+      "Id": 573926264,
+      "Stack": 10,
+      "Family": "Component"
+    },
+    {
+      "Name": "sewingkit",
+      "Id": 1234880403,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "sheetmetal",
+      "Id": -1994909036,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "shirt.collared",
+      "Id": -2025184684,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "shirt.tanktop",
+      "Id": 1608640313,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "shoes.boots",
+      "Id": -1549739227,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "skull.human",
+      "Id": 996293980,
+      "Stack": 1,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "skull.wolf",
+      "Id": 2048317869,
+      "Stack": 1,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "smgbody",
+      "Id": 1230323789,
+      "Stack": 10,
+      "Family": "Component"
+    },
+    {
+      "Name": "snowmobile",
+      "Id": -1364246987,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "speargun.spear",
+      "Id": -1800345240,
+      "Stack": 64,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "spoiled.produce",
+      "Id": 1184215560,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "spraycandecal",
+      "Id": -1366326648,
+      "Stack": 10,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "sticks",
+      "Id": 642482233,
+      "Stack": 100,
+      "Family": "Component"
+    },
+    {
+      "Name": "stones",
+      "Id": -2099697608,
+      "Stack": 1000,
+      "Family": "Baseline"
+    },
+    {
+      "Name": "submarineduo",
+      "Id": 1015352446,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "submarinesolo",
+      "Id": -187031121,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "sulfur",
+      "Id": -1581843485,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "sulfur.ore",
+      "Id": -1157596551,
+      "Stack": 1000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "sunflower",
+      "Id": -611118083,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "supertea",
+      "Id": -1003665711,
+      "Stack": 1,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "tactical.gloves",
+      "Id": -1108136649,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "tarp",
+      "Id": 2019042823,
+      "Stack": 20,
+      "Family": "Component"
+    },
+    {
+      "Name": "techparts",
+      "Id": 73681876,
+      "Stack": 50,
+      "Family": "Component"
+    },
+    {
+      "Name": "trike",
+      "Id": 1991794121,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "tshirt",
+      "Id": 223891266,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "tshirt.long",
+      "Id": 935692442,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "twitch.headset",
+      "Id": -1569700847,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "venom.snake",
+      "Id": -870140677,
+      "Stack": 10,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "wagon",
+      "Id": 996757362,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "walkietalkie",
+      "Id": -1416322465,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "wallpaper.wall",
+      "Id": 553967074,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "warmingtea",
+      "Id": -1142222427,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "wheat",
+      "Id": 1178325727,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "whiteidtag",
+      "Id": 22947882,
+      "Stack": 5000,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "wolfmeat.burned",
+      "Id": 1827479659,
+      "Stack": 20,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "wood",
+      "Id": -151838493,
+      "Stack": 1000,
+      "Family": "Baseline"
+    },
+    {
+      "Name": "woodtea",
+      "Id": -649128577,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "woodtea.pure",
+      "Id": -557539629,
+      "Stack": 10,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "wool",
+      "Id": 204391867,
+      "Stack": 100,
+      "Family": "RawResource"
+    },
+    {
+      "Name": "workcart",
+      "Id": -810326667,
+      "Stack": 1,
+      "Family": "Equivalent"
+    },
+    {
+      "Name": "worm",
+      "Id": 1770475779,
+      "Stack": 25,
+      "Family": "Consumable"
+    },
+    {
+      "Name": "yellowidtag",
+      "Id": 81423963,
+      "Stack": 5000,
+      "Family": "RawResource"
+    }
+  ]
+}

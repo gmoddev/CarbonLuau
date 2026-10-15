@@ -176,6 +176,13 @@ namespace Carbon.Plugins
             if (Frame.Committed) { Frame.Poisoned = true; return false; }
             if (Frame.Poisoned || !LootAvailable() || !ValidateEntity(Frame.Binding) ||
                 !ReferenceEquals(Frame.Source.inventory, Frame.Container)) return true;
+            // Trusted host callbacks can change shared definitions after PREPARE.
+            // Recheck declared maxima before suppression makes COMMIT irreversible.
+            for (int Index = 0; Index < Frame.Rule.Count; Index++) {
+                ItemDefinition Definition = Frame.Definitions[Index];
+                if (Definition == null || Definition.stackable < Frame.Rule.Entry(Index).Max ||
+                    Definition.itemMods == null || Definition.itemMods.Length > 8) return true;
+            }
             // Suppression itself begins COMMIT. Never fall back after this point.
             Frame.Committed = true;
             try {

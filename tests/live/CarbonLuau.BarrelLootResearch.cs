@@ -612,9 +612,16 @@ namespace Carbon.Plugins
         }
         private void BarrelResearchLogMethod(MethodInfo Method)
         {
-            BarrelResearchCheck(BarrelResearchMethodCount < BarrelResearchMethods.Length, "method evidence cap");
             if (Method == null) { Puts(BarrelResearchMarker + "UNMEASURED loaded_method missing/overloaded"); return; }
-            BarrelResearchMethods[BarrelResearchMethodCount++] = Method;
+            // Repeated exact-method evidence is rechecked below without retaining
+            // duplicate cleanup identities in the unchanged sixteen-slot array.
+            bool Retained = false;
+            for (int Index = 0; Index < BarrelResearchMethodCount; Index++)
+                if (Method.Equals(BarrelResearchMethods[Index])) { Retained = true; break; }
+            if (!Retained) {
+                BarrelResearchCheck(BarrelResearchMethodCount < BarrelResearchMethods.Length, "method evidence cap");
+                BarrelResearchMethods[BarrelResearchMethodCount++] = Method;
+            }
             MethodBody Body = Method.GetMethodBody();
             BarrelResearchCheck(Body != null && Body.ExceptionHandlingClauses.Count <= 16, "bounded managed body/EH");
             byte[] Bytes = Body.GetILAsByteArray();
@@ -623,7 +630,8 @@ namespace Carbon.Plugins
                 Puts(BarrelResearchMarker + "LIVE_BODY method=" + Method.DeclaringType.FullName + "." + Method +
                     " token=0x" + Method.MetadataToken.ToString("x8") + " mvid=" + Method.Module.ModuleVersionId +
                     " raw_il_bytes=" + Bytes.Length + " raw_il_sha256=" + BitConverter.ToString(Hash.ComputeHash(Bytes)).Replace("-", "").ToLowerInvariant() +
-                    " eh=" + Body.ExceptionHandlingClauses.Count + " raw_reflection_body_not_harmony_replacement=true");
+                    " eh=" + Body.ExceptionHandlingClauses.Count + " raw_reflection_body_not_harmony_replacement=true" +
+                    " exact_method_already_retained=" + Retained + " retained_unique_methods=" + BarrelResearchMethodCount + " method_cap=" + BarrelResearchMethods.Length);
             foreach (ExceptionHandlingClause Clause in Body.ExceptionHandlingClauses)
                 Puts(BarrelResearchMarker + "EH flags=" + Clause.Flags + " try=" + Clause.TryOffset + ":" + Clause.TryLength +
                     " handler=" + Clause.HandlerOffset + ":" + Clause.HandlerLength +

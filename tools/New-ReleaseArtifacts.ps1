@@ -141,6 +141,7 @@ try {
                 @{ Source = (Join-Path $Root 'docs/Installation.md'); Name = 'INSTALLATION.md' },
                 @{ Source = (Join-Path $Root "docs/releases/$($Release.releaseVersion).md"); Name = 'RELEASE-NOTES.md' },
                 @{ Source = (Join-Path $Root 'api/carbonluau-api.json'); Name = 'api/carbonluau-api.json' },
+                @{ Source = (Join-Path $Root 'api/loot-items.pinned.json'); Name = 'api/loot-items.pinned.json' },
                 @{ Source = (Join-Path $Root 'generated/carbonluau.d.luau'); Name = 'generated/carbonluau.d.luau' },
                 @{ Source = (Join-Path $Root 'docs/api/Gui.md'); Name = 'GUI.md' },
                 @{ Source = (Join-Path $Root 'docs/api/Gui-Reference.md'); Name = 'GUI-REFERENCE.md' },

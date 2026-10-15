@@ -7,15 +7,21 @@ This is an ordinary input table alias, with no constructor or host capability:
 export type LootDropEntry = {Item: string, Min: number, Max: number}
 ```
 
-Item is `scrap`, `metal.fragments`, `wood` or `stones`. Wood requires the post-v0.7.0
-[Gameplay D5 build](../../GameplayD5-Validation.md); published v0.7.0 supports
-only scrap and metal.fragments. Stones requires the
-[Gameplay D7 build](../../GameplayD7-Validation.md); its pinned definition is
-`-2099697608`, stackable 1000. Published v0.7.0 does not include it.
+Item is an exact canonical name from the [finite pinned list](../LootItems.md).
+The [Gameplay D8 development build](../../GameplayD8-Validation.md) qualifies
+221 definitions individually on both hosts. Published v0.7.0 remains limited
+to scrap and metal.fragments. The
+[Gameplay D5 build](../../GameplayD5-Validation.md) added `wood`, and the
+[Gameplay D7 build](../../GameplayD7-Validation.md) added `stones` in development.
 Min and Max are inclusive finite integer
 bounds, with `0 <= Min <= Max <= 1000`. All three fields are required;
 extra fields and metatables are rejected. Min = Max selects a fixed quantity;
-zero is allowed.
+zero is allowed. The actual definition's stack limit must also cover Max before
+COMMIT. The item list records vanilla limits; modified-server effective inventory
+limits can differ. See the
+[stack modifier matrix](../../GameplayD8-Validation.md#stack-modifier-compatibility-matrix).
+Loot does not split or clamp oversized amounts; failed pre-COMMIT premises leave
+that occurrence vanilla.
 
 [Loot:RegisterDropRule](../Services/Loot.md) accepts a plain dense array of
 zero through eight entries, indexed from 1 without holes or other keys.

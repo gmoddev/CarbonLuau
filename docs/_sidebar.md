@@ -16,6 +16,7 @@
   - [Commands](api/Services/Commands.md)
   - [Items](api/Services/Items.md)
   - [Loot](api/Services/Loot.md)
+  - [Qualified Loot items](api/LootItems.md)
   - [Enum](api/Types/Enum.md)
   - [DropMode](api/Types/DropMode.md)
   - [LootDropEntry](api/Types/LootDropEntry.md)

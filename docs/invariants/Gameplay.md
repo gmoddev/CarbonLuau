@@ -227,3 +227,35 @@ no-rollback/no-replay/no-compensation semantics remain. The actual definition's
 stack limit is still checked before COMMIT. Other definitions remain rejected;
 published v0.7.0 tag/assets and all version identities remain unchanged.
 
+## Gameplay D8 — finite bulk item qualification
+
+The separately authorized [D8 record](../GameplayD8-Validation.md) expands the
+finite item allowlist to [221 pinned definitions](../api/LootItems.md), including
+the four prior definitions. Every added identity has individual Windows/Linux
+creation, original Item/UID/world reciprocity, completed Spawn and exact cleanup
+proof plus actual public amounts and stored/bonus/controlled-bag suppression on
+both qualified barrel prefabs. Registry presence alone authorizes no definition.
+
+The host creates each definition's qualified defaults. Disabled condition may
+retain the exact dormant definition-derived scalar; qualified cooking/composting
+initialization may retain one static callback on that same Item, cleared during
+host removal. These add no independent global owner or public initialization
+surface. Future use, equip, hit, cooking and consumption behavior is outside
+Loot qualification. Nested/global-spoil state, active condition, NoDropping and
+unqualified lifecycle/ownership remain excluded with explicit reasons.
+
+Deterministic generation projects only names into the existing managed/Luau
+comparison checks. Names remain at most fifteen ASCII characters, preserving
+D6's 1122 retained descriptor UTF-16 code units. The larger fixed vocabulary
+remains under existing VM heap/deadline authority. D6 per-prefab exact ownership,
+atomic whole-owner publication/retirement and every existing numerical budget
+remain unchanged. Declared Max must fit the live definition stackable field
+at PREPARE and immediately before suppression begins COMMIT. Effective
+OnMaxStackable/container stacking policy is a separate host mechanism; Loot
+does not call it, normalize quantities or split Items. The D8 stack modifier
+matrix owns the tested compatibility envelope. Post-COMMIT callback interference
+preserves exact ownership verification and partial/indeterminate failure.
+D13/D20/D23/I12, the three interception targets and strict partial failure without
+fallback/rollback/replay/compensation remain authoritative. Other definitions
+remain rejected; published v0.7.0 and all version identities remain unchanged.
+

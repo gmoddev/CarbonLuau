@@ -15,9 +15,32 @@ param(
     [switch]$LootRegistry,
     [switch]$LootAdditionalItems,
     [switch]$D7ProbeOnly,
+    [switch]$LootBulkItems,
+    [switch]$D8DiscoveryOnly,
+    [switch]$D8ProbeOnly,
+    [switch]$D8StackGapOnly,
+    [switch]$D8StackGapFixed,
+    [switch]$LootStackItems,
+    [int]$D8StackPart = 0,
+    [string]$StackProbeDirectory,
     [switch]$RunCoordinated
 )
 $ErrorActionPreference = 'Stop'
+if ($D8StackGapOnly -and $D8StackGapFixed) { throw 'Select old-negative or fixed stack gap mode' }
+if ($D8StackGapOnly -or $D8StackGapFixed) { $LootStackItems = $true }
+if ($LootStackItems -and ($LootBulkItems -or $D7ProbeOnly -or $LootItemProbeOnly)) { throw 'Select stack qualification exclusively' }
+if ($D8StackPart -lt 0 -or $D8StackPart -gt 3) { throw 'Stack part must be0..3' }
+$StackMatrix = $LootStackItems -and !$D8StackGapOnly -and !$D8StackGapFixed
+$StackTerminal = $StackMatrix -and $D8StackPart -eq 2
+$StackSweep = $StackMatrix -and $D8StackPart -eq 3
+if (($StackMatrix -and !$StackSweep) -ne [bool]$StackProbeDirectory) { throw 'Only stack ordinary/terminal matrix requires explicit separate probe directory' }
+if ($StackTerminal -and $EntityDeath) { throw 'Terminal UID negative does not claim B2 completion' }
+if ($LootStackItems) { $LootAdditionalItems = $true }
+if (($D8DiscoveryOnly -or $D8ProbeOnly) -and !$LootBulkItems) { throw 'D8 mode requires LootBulkItems selection' }
+if ($D8DiscoveryOnly -and $D8ProbeOnly) { throw 'Select D8 discovery or physical probe mode' }
+if ($LootBulkItems -and ($D7ProbeOnly -or $LootItemProbeOnly)) { throw 'Select D8 mode exclusively' }
+if ($LootBulkItems) { $LootAdditionalItems = $true }
+$D8EarlyOnly = $D8DiscoveryOnly -or $D8ProbeOnly
 if ($D7ProbeOnly -and !$LootAdditionalItems) { throw 'D7 probe requires LootAdditionalItems qualification selection' }
 if ($LootAdditionalItems -and $LootItemProbeOnly) { throw 'Select the D7 probe exclusively' }
 if ($LootAdditionalItems) { $LootRegistry = $true }
@@ -27,7 +50,8 @@ if ($LootItemProbeOnly -and !$LootItems) { throw 'D5 probe requires LootItems qu
 if ($LootItems) { $Barrel2 = $Public = $Qualification = $true }
 $Prefix = '[CarbonLuau:BarrelLootResearchRunner]'
 $FixtureMarker = if ($Qualification) { '[CarbonLuau:LootFixture]' } else { '[CarbonLuau:BarrelLootResearch]' }
-$PassMarker = if ($D7ProbeOnly) { 'PASS D7 stones probe' } elseif ($LootItemProbeOnly) { 'PASS D5 item probe' } elseif ($Public) { 'PASS public qualification' } elseif ($Qualification) { 'PASS private qualification' } else { 'PASS mechanism' }
+$PassMarker = if ($D8DiscoveryOnly) { 'PASS D8 registry discovery' } elseif ($D8ProbeOnly) { 'PASS D8 bulk probe batch' } elseif ($D7ProbeOnly) { 'PASS D7 stones probe' } elseif ($LootItemProbeOnly) { 'PASS D5 item probe' } elseif ($Public) { 'PASS public qualification' } elseif ($Qualification) { 'PASS private qualification' } else { 'PASS mechanism' }
+if ($StackTerminal) { $PassMarker = 'D8_STACK_BATCH mode=terminal_uid completed=true cases=1 unsupported_i12=1 normal_cleanup_claim=false process_restoration_required=true' }
 if ($Public -and !$Qualification) { throw 'Public qualification requires the established D2A fixture substrate' }
 if ($EntityDeath -and !$Public) { throw 'Entity death qualification requires the public fixture substrate' }
 if ($Barrel2 -and !$Public) { throw 'Barrel-2 qualification requires the public fixture substrate' }
@@ -35,6 +59,97 @@ if ([IO.Path]::GetFullPath($Work).TrimEnd('\') -ne 'D:\Sandbox\Codex\Entity1ASta
     throw "$Prefix Expected established task-owned Windows server"
 }
 $Root = Join-Path $Work 'server'
+function Get-LootProfileFiles {
+    param([string]$ProfileRoot)
+    $ExpectedRoot = 'D:\Sandbox\Codex\Entity1AStartup\server\server\entity1a-adapter-windows'
+    $WorldFiles = @('proceduralmap.1000.13579.289.sav','proceduralmap.1000.13579.289.sav.1',
+        'proceduralmap.1000.13579.289.sav.2','proceduralmap.1000.13579.289.navmesh')
+    if ([IO.Path]::GetFullPath($ProfileRoot) -cne $ExpectedRoot -or
+        !(Test-Path -LiteralPath $ProfileRoot -PathType Container) -or
+        ((Get-Item -LiteralPath $ProfileRoot).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "$Prefix Unsafe terminal profile directory" }
+    $Ancestor = Get-Item -LiteralPath $ProfileRoot -Force; $Depth = 0
+    while ($null -ne $Ancestor) {
+        if (++$Depth -gt 16 -or ($Ancestor.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw "$Prefix Unsafe terminal profile path ancestry" }
+        $Ancestor = $Ancestor.Parent
+    }
+    $Entries = @(Get-ChildItem -LiteralPath $ProfileRoot -Force | Select-Object -First 257)
+    if ($Entries.Count -gt 256) { throw "$Prefix Terminal profile directory entry bound exceeded" }
+    $Files = @($Entries | Where-Object { $_.Name -match '\.db(?:-(?:wal|shm|journal))?$' -or $_.Name -cin $WorldFiles } | Sort-Object Name)
+    if ($Files.Count -gt 128 -or ($Files | Measure-Object Length -Sum).Sum -gt 67108864) { throw "$Prefix Terminal profile snapshot bound exceeded" }
+    foreach ($File in $Files) {
+        if (($File.Name -notmatch '^[A-Za-z0-9_.-]+\.db(?:-(?:wal|shm|journal))?$' -and $File.Name -cnotin $WorldFiles) -or
+            $File.PSIsContainer -or $File.LinkType -eq 'HardLink' -or ($File.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+            [IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($File.FullName)) -cne $ExpectedRoot) { throw "$Prefix Unsafe terminal profile snapshot target" }
+    }
+    return $Files
+}
+function Get-LootProfileMetadata {
+    param([string]$Path)
+    $File = Get-Item -LiteralPath $Path -Force
+    $Acl = Get-Acl -LiteralPath $Path
+    return [pscustomobject]@{Attributes=[int]$File.Attributes; Created=$File.CreationTimeUtc.Ticks;
+        Accessed=$File.LastAccessTimeUtc.Ticks; Written=$File.LastWriteTimeUtc.Ticks; Acl=$Acl; Sddl=$Acl.Sddl}
+}
+function Set-LootProfileMetadata {
+    param([string]$Path, $Metadata)
+    if ((Get-Acl -LiteralPath $Path).Sddl -cne $Metadata.Sddl) { Set-Acl -LiteralPath $Path -AclObject $Metadata.Acl }
+    $File = Get-Item -LiteralPath $Path -Force
+    $File.CreationTimeUtc = [DateTime]::new($Metadata.Created, [DateTimeKind]::Utc)
+    $File.LastWriteTimeUtc = [DateTime]::new($Metadata.Written, [DateTimeKind]::Utc)
+    $File.LastAccessTimeUtc = [DateTime]::new($Metadata.Accessed, [DateTimeKind]::Utc)
+    $File.Attributes = [IO.FileAttributes]$Metadata.Attributes
+    $Actual = Get-LootProfileMetadata $Path
+    foreach ($Key in @('Attributes','Created','Accessed','Written','Sddl')) {
+        if ($Actual.$Key -cne $Metadata.$Key) { throw "$Prefix Terminal profile metadata restoration mismatch: $Key" }
+    }
+}
+function Save-LootProfile {
+    param([string]$ProfileRoot, [string]$EvidenceDirectory)
+    $DirectoryMetadata = Get-LootProfileMetadata $ProfileRoot
+    $Files = @(Get-LootProfileFiles $ProfileRoot)
+    New-Item -ItemType Directory -Path $EvidenceDirectory | Out-Null
+    $Records = @{}
+    foreach ($File in $Files) {
+        $Metadata = Get-LootProfileMetadata $File.FullName
+        $Backup = Join-Path $EvidenceDirectory $File.Name
+        Copy-Item -LiteralPath $File.FullName -Destination $Backup
+        $Records[$File.Name] = [pscustomobject]@{Target=$File.FullName; Backup=$Backup;
+            Hash=(Get-FileHash -LiteralPath $Backup).Hash.ToLowerInvariant(); Bytes=$File.Length; Metadata=$Metadata}
+        Set-LootProfileMetadata $File.FullName $Metadata
+    }
+    $Public = @($Records.Keys | Sort-Object | ForEach-Object {
+        $Record = $Records[$_]
+        [ordered]@{Name=$_; SHA256=$Record.Hash; Bytes=$Record.Bytes; Attributes=$Record.Metadata.Attributes;
+            Created=$Record.Metadata.Created; Accessed=$Record.Metadata.Accessed; Written=$Record.Metadata.Written; Sddl=$Record.Metadata.Sddl}
+    })
+    $Text = ConvertTo-Json -InputObject $Public -Depth 5 -Compress
+    $Bytes = [Text.UTF8Encoding]::new($false).GetBytes($Text)
+    $Hash = [Security.Cryptography.SHA256]::Create()
+    try { $Digest = [BitConverter]::ToString($Hash.ComputeHash($Bytes)).Replace('-','').ToLowerInvariant() } finally { $Hash.Dispose() }
+    [IO.File]::WriteAllText((Join-Path $EvidenceDirectory 'profile-manifest.json'),$Text,[Text.UTF8Encoding]::new($false))
+    Set-LootProfileMetadata $ProfileRoot $DirectoryMetadata
+    return [pscustomobject]@{Root=$ProfileRoot; Files=$Records; DirectoryMetadata=$DirectoryMetadata; ManifestSHA256=$Digest}
+}
+function Restore-LootProfile {
+    param($Snapshot)
+    foreach ($File in @(Get-LootProfileFiles $Snapshot.Root)) {
+        if (!$Snapshot.Files.ContainsKey($File.Name)) { Remove-Item -LiteralPath $File.FullName -Force }
+    }
+    foreach ($Record in $Snapshot.Files.Values) {
+        if ((Test-Path -LiteralPath $Record.Target) -and (!(Test-Path -LiteralPath $Record.Target -PathType Leaf) -or
+            ((Get-Item -LiteralPath $Record.Target -Force).Attributes -band [IO.FileAttributes]::ReparsePoint))) { throw "$Prefix Unsafe terminal profile restore target" }
+        if ((Get-FileHash -LiteralPath $Record.Backup).Hash.ToLowerInvariant() -cne $Record.Hash) { throw "$Prefix Terminal profile backup changed" }
+        Copy-Item -LiteralPath $Record.Backup -Destination $Record.Target -Force
+        if ((Get-FileHash -LiteralPath $Record.Target).Hash.ToLowerInvariant() -cne $Record.Hash -or
+            (Get-Item -LiteralPath $Record.Target).Length -ne $Record.Bytes) { throw "$Prefix Terminal profile restoration bytes mismatch" }
+        Set-LootProfileMetadata $Record.Target $Record.Metadata
+    }
+    $Restored = @(Get-LootProfileFiles $Snapshot.Root)
+    if ($Restored.Count -ne $Snapshot.Files.Count -or @($Restored | Where-Object { !$Snapshot.Files.ContainsKey($_.Name) }).Count -ne 0) { throw "$Prefix Terminal profile restored file set mismatch" }
+    Set-LootProfileMetadata $Snapshot.Root $Snapshot.DirectoryMetadata
+    $Size = ($Snapshot.Files.Values | Measure-Object Bytes -Sum).Sum
+    Write-Output "$Prefix FullProfileRestored files=$($Snapshot.Files.Count) bytes=$Size file_cap=128 byte_cap=67108864 metadata=true scope=db_companions_saves_navmesh manifest_sha256=$($Snapshot.ManifestSHA256)"
+}
 $Package = Join-Path $Root 'carbon\plugins\CarbonLuau.cszip'
 $NativeDirectory = Join-Path $Root 'carbon\data\CarbonLuau\native\win-x64'
 $Native = Join-Path $NativeDirectory 'carbonluau_native.dll'
@@ -79,12 +194,29 @@ try {
     if (($Names -contains 'CarbonLuau.LootRegistryFixtures.cs') -ne [bool]$LootRegistry) { throw "$Prefix D6 registry selection mismatch" }
     if (($Names -contains 'CarbonLuau.LootAdditionalItemFixtures.cs') -ne [bool]$LootAdditionalItems) { throw "$Prefix D7 fixture selection mismatch" }
     if (($Names -contains 'CarbonLuau.LootAdditionalItemProbeFixtures.cs') -ne [bool]$D7ProbeOnly) { throw "$Prefix D7 probe selection mismatch" }
+    if (($Names -contains 'CarbonLuau.LootBulkItemFixtures.cs') -ne [bool]$LootBulkItems) { throw "$Prefix D8 fixture selection mismatch" }
+    if (($Names -contains 'CarbonLuau.LootStackFixtures.cs') -ne [bool]$LootStackItems) { throw "$Prefix D8 stack fixture selection mismatch" }
+    if (($Names -contains 'CarbonLuau.LootStackMatrixFixtures.cs') -ne [bool]($StackMatrix -and !$StackSweep) -or
+        ($Names -contains 'CarbonLuau.LootStackModeFixtures.cs') -ne [bool]$StackMatrix) { throw "$Prefix D8 stack matrix selection mismatch" }
+    if (($Names -contains 'CarbonLuau.LootFinalItemFixtures.cs') -ne [bool]$StackSweep) { throw "$Prefix D8 final sweep selection mismatch" }
+    if ($Names -contains 'CarbonLuauStackProbeA.cs' -or $Names -contains 'CarbonLuauStackProbeB.cs') { throw "$Prefix Hook probes must remain separate test plugins" }
+    if (($Names -contains 'CarbonLuau.LootBulkItemModeFixtures.cs') -ne [bool]$D8EarlyOnly) { throw "$Prefix D8 mode selection mismatch" }
+    if (($Names -contains 'CarbonLuau.LootBulkItemManifestFixtures.cs') -ne [bool]($LootBulkItems -and !$D8EarlyOnly)) { throw "$Prefix D8 public manifest selection mismatch" }
 } finally { $Archive.Dispose() }
 $Inputs = @(
     [pscustomobject]@{Target=$Package; Source=$PackageSource; Name='package.cszip'},
     [pscustomobject]@{Target=$Native; Source=$NativeSource; Name='native.dll'},
     [pscustomobject]@{Target=$Compiler; Source=$CompilerSource; Name='compiler.exe'}
 )
+$StackPreserved = @()
+if ($StackMatrix -and !$StackSweep) {
+    foreach ($Name in @('CarbonLuauStackProbeA','CarbonLuauStackProbeB')) {
+        $Source = Join-Path $StackProbeDirectory ($Name + '.cs')
+        if (!(Test-Path -LiteralPath $Source -PathType Leaf)) { throw "$Prefix Missing bounded separate stack probe: $Source" }
+        $Inputs += [pscustomobject]@{Target=(Join-Path $Root ('carbon\plugins\' + $Name + '.cs')); Source=$Source; Name=($Name + '.cs')}
+        $StackPreserved += Join-Path $Root ('carbon\configs\' + $Name + '.json')
+    }
+}
 $InputHashes = @{}
 foreach ($InputRecord in $Inputs) {
     if ([IO.Path]::GetFullPath($InputRecord.Source) -eq [IO.Path]::GetFullPath($InputRecord.Target)) {
@@ -102,12 +234,32 @@ $Evidence = Join-Path $Work ('evidence\loot-d2a-' + (Get-Date -Format 'yyyyMMdd-
 $Restorations = [Collections.Generic.List[object]]::new()
 $Server = $null
 $RestoreErrors = [Collections.Generic.List[string]]::new()
+$ProfileSnapshot = $null
 try {
     New-Item -ItemType Directory -Path $Evidence | Out-Null
+    if ($StackTerminal) {
+        $ProfileSnapshot = Save-LootProfile (Join-Path $Root 'server\entity1a-adapter-windows') (Join-Path $Evidence 'prior-terminal-profile')
+        Write-Output "$Prefix PROFILE_SNAPSHOT files=$($ProfileSnapshot.Files.Count) file_cap=128 byte_cap=67108864 manifest_sha256=$($ProfileSnapshot.ManifestSHA256)"
+    }
     foreach ($Record in $Inputs) {
         $Backup = Join-Path $Evidence ('prior-' + $Record.Name)
-        Copy-Item -LiteralPath $Record.Target -Destination $Backup
-        $Restorations.Add([pscustomobject]@{Target=$Record.Target; Backup=$Backup; Hash=(Get-FileHash -LiteralPath $Backup).Hash})
+        if (Test-Path -LiteralPath $Record.Target -PathType Leaf) {
+            Copy-Item -LiteralPath $Record.Target -Destination $Backup
+            $Restorations.Add([pscustomobject]@{Target=$Record.Target; Backup=$Backup; Hash=(Get-FileHash -LiteralPath $Backup).Hash; Absent=$false})
+        } else {
+            if (Test-Path -LiteralPath $Record.Target) { throw "$Prefix Installed target is not a file" }
+            $Restorations.Add([pscustomobject]@{Target=$Record.Target; Backup=$null; Hash=$null; Absent=$true})
+        }
+    }
+    foreach ($Target in $StackPreserved) {
+        $Backup = Join-Path $Evidence ('prior-config-' + [IO.Path]::GetFileName($Target))
+        if (Test-Path -LiteralPath $Target -PathType Leaf) {
+            Copy-Item -LiteralPath $Target -Destination $Backup
+            $Restorations.Add([pscustomobject]@{Target=$Target; Backup=$Backup; Hash=(Get-FileHash -LiteralPath $Backup).Hash; Absent=$false})
+        } else {
+            if (Test-Path -LiteralPath $Target) { throw "$Prefix Probe config target is not a file" }
+            $Restorations.Add([pscustomobject]@{Target=$Target; Backup=$null; Hash=$null; Absent=$true})
+        }
     }
     foreach ($Name in $HookNames) {
         $Target = Join-Path $Root ('carbon\managed\hooks\' + $Name)
@@ -157,13 +309,64 @@ try {
     $Content = Get-Content -Raw -LiteralPath $Log
     $Content -split "`n" | Where-Object { $_ -match 'LootFixture|EntityDiedFixture|EntityMeleeFixture|MEASURED case=|PASS mechanism|EntityLifetime|Server startup complete' }
     $Required = @($PassMarker)
+    if ($D8StackGapOnly -or $D8StackGapFixed) {
+        $StackRows = [regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_GAP item=[^\r\n]+')
+        $StackBatches = [regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_BATCH [^\r\n]+')
+        $ExpectedBatch = if ($D8StackGapOnly) { '[CarbonLuau:LootFixture] D8_STACK_BATCH mode=gap_probe completed=true cases=12 pass=0 fail=12 cleanup=0 all_pass=False' } else { '[CarbonLuau:LootFixture] D8_STACK_BATCH mode=gap_probe completed=true cases=12 pass=12 fail=0 cleanup=0 all_pass=True' }
+        $ExpectedRow = if ($D8StackGapOnly) { ' result=FAIL committed=True created=0 accepted=0 selected_delta=1 partial_delta=1 original_stored=2 vanilla_worlds=0 reason=stack_drop_after_prepare_suppresses_vanilla\z' } else { ' result=PASS committed=False created=0 accepted=0 selected_delta=1 partial_delta=0 original_stored=2 vanilla_worlds=2 reason=stack_drop_before_commit_preserves_vanilla\z' }
+        if ($StackRows.Count -ne 12 -or $StackBatches.Count -ne 1 -or
+            $StackBatches[0].Value -cne $ExpectedBatch -or
+            @($StackRows | Where-Object { $_.Value -cnotmatch $ExpectedRow }).Count -ne 0 -or
+            [regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_CLEANUP [^\r\n]+ ledger=0').Count -ne 12) {
+            throw "$Prefix Missing exact old-source stack-gap counterexample/cleanup receipts"
+        }
+        if ($D8StackGapOnly) { Write-Output "$Prefix EXPECTED_NEGATIVE D8 stack gap old-source counterexample; compatibility remains unqualified" }
+    }
+    if ($StackMatrix -and !$StackTerminal -and !$StackSweep) {
+        $StackRows = [regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_CASE [^\r\n]+')
+        $Expected = '[CarbonLuau:LootFixture] D8_STACK_BATCH mode=matrix part=' + $D8StackPart + ' completed=true cases=57 pass=57 fail=0 cleanup=0 all_pass=True'
+        if ($StackRows.Count -ne 57 -or [regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_BATCH [^\r\n]+').Count -ne 1 -or !$Content.Contains($Expected) -or
+            @($StackRows | Where-Object { $_.Value -cnotmatch (' D8_STACK_CASE part=' + $D8StackPart + ' item=[a-z0-9._-]+ phase=([0-9]|1[0-8]) case=[a-z_]+ result=PASS profiles=2 cleanup=0\z') }).Count -ne 0 -or
+            @($StackRows | ForEach-Object { $_.Value } | Select-Object -Unique).Count -ne 57) { throw "$Prefix D8 stack ordinary matrix incomplete or failed" }
+    }
+    if ($StackTerminal) {
+        if (!$Content.Contains('[CarbonLuau:LootFixture] D8_STACK_LEGACY before_terminal=true d3_d7_completed=true ledger=0 b2_terminal_claim=false') -or
+            $Content.Contains('[CarbonLuau:LootFixture] PASS public qualification')) { throw "$Prefix Terminal negative must preserve separate scope and refuse normal cleanup claim" }
+        if ([regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_TERMINAL [^\r\n]+').Count -ne 1 -or
+            $Content -cnotmatch 'D8_STACK_TERMINAL item=sulfur id=-1581843485 result=UNSUPPORTED_I12 original_uid=[1-9][0-9]* actual_uid=0 world=[1-9][0-9]* completed=true reciprocal_ref=true partial_delta=1 cleanup_failed_delta=1 max_calls=0 can_calls=0 split_calls=0 drop_calls=1 normal_cleanup_claim=false uid_restored=false authority_refreshed=false') { throw "$Prefix Missing exact terminal I12 negative" }
+    }
+    if ($StackSweep) {
+        $SweepRows = [regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_SWEEP name=[^\r\n]+')
+        $SweepPattern = '\[CarbonLuau:LootFixture\] D8_STACK_SWEEP name=([a-z0-9._-]+) id=(-?[0-9]+) stackable=([1-9][0-9]*) family=(Baseline|RawResource|Component|BasicMaterial|Consumable|Equivalent) prefab=(\S+) minimum=1 maximum=([1-9][0-9]*) result=PASS worlds=2 cleanup=0 original_uid_world_verified=true completed_spawn=true\z'
+        if ($SweepRows.Count -ne 442 -or @($SweepRows | Where-Object { $_.Value -cnotmatch $SweepPattern }).Count -ne 0 -or
+            @($SweepRows | ForEach-Object { $_.Value } | Select-Object -Unique).Count -ne 442 -or
+            [regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_SWEEP_WORLD [^\r\n]+').Count -ne 884 -or
+            [regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_SWEEP_BEGIN [^\r\n]+').Count -ne 1 -or
+            [regex]::Matches($Content, '\[CarbonLuau:LootFixture\] D8_STACK_SWEEP_BATCH [^\r\n]+').Count -ne 1 -or
+            !$Content.Contains('[CarbonLuau:LootFixture] D8_STACK_SWEEP_BATCH completed=true definitions=221 cases=442 pass=442 fail=0 cleanup=0 all_pass=True')) {
+            throw "$Prefix D8 final-source sweep incomplete, duplicated or failed"
+        }
+    }
     foreach ($Marker in $Required) {
         if (!$Content.Contains($FixtureMarker + ' ' + $Marker)) { throw "$Prefix Missing receipt '$Marker': $Log" }
     }
-    if ($Barrel2 -and !$LootItemProbeOnly -and !$D7ProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS barrel-2')) { throw "$Prefix Barrel-2 physical matrix receipt missing: $Log" }
-    if ($LootItems -and !$LootItemProbeOnly -and !$D7ProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix')) { throw "$Prefix D5 physical item matrix receipt missing: $Log" }
-    if ($LootRegistry -and !$D7ProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D6 bounded per-prefab registry')) { throw "$Prefix D6 registry matrix receipt missing: $Log" }
-    if ($LootAdditionalItems -and !$D7ProbeOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D7 stones full public')) { throw "$Prefix D7 public stones matrix receipt missing: $Log" }
+    if ($Barrel2 -and !$LootItemProbeOnly -and !$D7ProbeOnly -and !$D8EarlyOnly -and !$StackTerminal -and !$Content.Contains('[CarbonLuau:LootFixture] PASS barrel-2')) { throw "$Prefix Barrel-2 physical matrix receipt missing: $Log" }
+    if ($LootItems -and !$LootItemProbeOnly -and !$D7ProbeOnly -and !$D8EarlyOnly -and !$StackTerminal -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D5 item expansion full public wood matrix')) { throw "$Prefix D5 physical item matrix receipt missing: $Log" }
+    if ($LootRegistry -and !$D7ProbeOnly -and !$D8EarlyOnly -and !$StackTerminal -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D6 bounded per-prefab registry')) { throw "$Prefix D6 registry matrix receipt missing: $Log" }
+    if ($LootAdditionalItems -and !$D7ProbeOnly -and !$D8EarlyOnly -and !$StackTerminal -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D7 stones full public')) { throw "$Prefix D7 public stones matrix receipt missing: $Log" }
+    if ($LootBulkItems -and !$D8EarlyOnly -and !$Content.Contains('[CarbonLuau:LootFixture] PASS D8 bulk public')) { throw "$Prefix D8 public matrix receipt missing: $Log" }
+    if ($LootBulkItems -and !$D8EarlyOnly) {
+        $D8Batches = [regex]::Matches($Content, 'D8 bulk public batch offset=(\d+) count=(\d+) pass=(\d+) fail=(\d+)')
+        $D8Rows = [regex]::Matches($Content, 'D8_PUBLIC_ITEM name=(\S+) item_id=(-?\d+) stackable=(\d+) family=(\S+) result=(PASS|FAIL)(?: |\r?$)')
+        if ($D8Batches.Count -ne 1 -or [int]$D8Batches[0].Groups[2].Value -lt 1 -or [int]$D8Batches[0].Groups[2].Value -gt 32 -or
+            [int]$D8Batches[0].Groups[3].Value -ne [int]$D8Batches[0].Groups[2].Value -or [int]$D8Batches[0].Groups[4].Value -ne 0 -or
+            $D8Rows.Count -ne [int]$D8Batches[0].Groups[2].Value -or
+            [regex]::Matches($Content, '\bD8_PUBLIC_ITEM\b').Count -ne $D8Rows.Count -or
+            @($D8Rows | Where-Object { $_.Groups[5].Value -ne 'PASS' }).Count -ne 0 -or
+            @($D8Rows | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique).Count -ne $D8Rows.Count) {
+            throw "$Prefix D8 public per-item receipts incomplete, duplicated or failed: $Log"
+        }
+    }
     if ($EntityDeath -and (!$Content.Contains('[CarbonLuau:EntityDiedFixture] PASS bounded public transport and actual RPC source') -or
         !$Content.Contains('[CarbonLuau:EntityMeleeFixture] PASS actual RPC source/terminal proof and cleanup') -or
         $Content -match '\[CarbonLuau:(EntityDiedFixture|EntityMeleeFixture)\] (FAIL|CLEANUP FAIL)')) { throw "$Prefix Entity death receipt missing/failed: $Log" }
@@ -184,8 +387,17 @@ try {
         if (!$Exited) { $RestoreErrors.Add('Owned server did not exit; backups retained, loaded files not overwritten') }
     }
     if ($Exited) {
+        if ($null -ne $ProfileSnapshot) {
+            try { Restore-LootProfile $ProfileSnapshot }
+            catch { $RestoreErrors.Add('Terminal profile restoration: ' + $_.Exception.Message) }
+        }
         foreach ($Record in $Restorations) {
             try {
+                if ($Record.Absent) {
+                    if (Test-Path -LiteralPath $Record.Target -PathType Leaf) { Remove-Item -LiteralPath $Record.Target -Force }
+                    if (Test-Path -LiteralPath $Record.Target) { throw 'created probe target absence not restored' }
+                    continue
+                }
                 Copy-Item -LiteralPath $Record.Backup -Destination $Record.Target
                 if ((Get-FileHash -LiteralPath $Record.Target).Hash -ne $Record.Hash) { throw 'restoration hash mismatch' }
             } catch { $RestoreErrors.Add($Record.Target + ': ' + $_.Exception.Message) }

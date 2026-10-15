@@ -34,6 +34,17 @@ retirement and all entry/amount/frame/staging/table limits remain unchanged.
 Other definitions remain rejected; published v0.7.0 and version identities are
 unchanged. There is no new release, tag, mode, prefab or public initialization API.
 
+[Gameplay D8](../GameplayD8-Validation.md) supersedes that four-name development
+list with [221 finite qualified definitions](LootItems.md), including all prior
+items. Exact IDs, stack limits and both-host individual receipts are recorded;
+registry existence alone does not authorize another item. Max must fit both the
+0..1000 declaration bound and live definition stackable field before COMMIT.
+Effective inventory/container hook limits are separate; the
+[stack modifier matrix](../GameplayD8-Validation.md#stack-modifier-compatibility-matrix)
+defines the tested compatibility scope. D6 ownership,
+atomic whole-owner publication, all resource bounds and strict partial-failure
+semantics remain unchanged. Published v0.7.0 remains immutable.
+
 Earlier published package v0.5.0 uses API `0.5.0-experimental`.
 The development API identity is `CarbonLuau 0.7.0-experimental`, status `Experimental`;
 the newer Workspace/Entity, gameplay and PlayerInventory surface is not in published v0.5.0.

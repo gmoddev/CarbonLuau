@@ -4,6 +4,12 @@ All notable public changes to CarbonLuau are recorded here.
 
 ## Post-v0.7.0 development — no new release
 
+- [Gameplay D8](docs/GameplayD8-Validation.md) qualifies 217 additional Loot
+  definitions, for a [finite 221-item list](docs/api/LootItems.md) with pinned
+  IDs/stack limits and per-item Windows/Linux physical/public receipts. Both
+  barrel targets, the D6 registry and all resource/failure limits remain.
+  The complete ledger retains excluded definitions and failed attempts.
+
 - [Gameplay D7](docs/GameplayD7-Validation.md) adds only `stones` to the finite
   scrap/metal.fragments/wood Loot allowlist on both qualified barrels. D6's
   independent ownership, atomic sets and all shared resource/failure limits remain.

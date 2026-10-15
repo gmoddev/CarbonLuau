@@ -362,3 +362,10 @@ historical single-rule scope; published v0.7.0 remains immutable.
 [Gameplay D7](GameplayD7-Validation.md) additionally qualifies only the simple
 `stones` definition on the two existing targets. It preserves the D6 registry,
 all shared resource/ownership/failure contracts and immutable published assets.
+
+[Gameplay D8](GameplayD8-Validation.md) expands development support to the
+[finite 221-item list](api/LootItems.md), with per-definition Windows/Linux
+physical/public receipts and a complete discovery/exclusion ledger. Both barrel
+prefabs, D6 whole-owner sets and numerical budgets remain unchanged. This
+qualifies creation/drop defaults and exact cleanup, without expanding future
+use/equip APIs or unrestricted definition support. No release/tag follows.

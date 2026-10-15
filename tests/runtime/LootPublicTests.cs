@@ -49,7 +49,7 @@ internal static class LootPublicTests
             World = new Runtime.FacadeWorld(new Runtime.PlayerDirectory(Id => null), Registrar,
                 new Runtime.ItemDirectory(Name => {
                     Lookups++; if (ObserveLookup != null) ObserveLookup();
-                    return !MissingItem && (Name == "scrap" || Name == "metal.fragments" || Name == "wood" || Name == "stones") ? new object() : null;
+                    return !MissingItem && LootItemManifestTests.Contains(Name) ? new object() : null;
                 }));
             World.LootAvailable = () => SourceAvailable;
             Host = new Runtime.ScriptHost(Native, new Runtime.RuntimeConfig {
@@ -153,6 +153,7 @@ internal static class LootPublicTests
         ItemDeclarations(Native);
         RegistryDeclarations(Native);
         AdditionalItemDeclarations(Native);
+        BulkItemDeclarations(Native);
         Check(Native.LiveVmCount == 0, "all real VM fixtures released");
         Console.WriteLine("[CarbonLuau:LootPublic] PASS pinned VM declarations, raw-table validation, enum identity, publication, conflicts, lifecycle, recovery and 100 addons; synthetic host only");
     }
@@ -254,6 +255,76 @@ internal static class LootPublicTests
             EntryIs(ProfileSelected(Value, Barrel2, Value.World.Active), 0, "scrap", 130, 130);
             Check(Value.World.LootRetainedSessionCount == 1 && Drain(Value.Host) == "", "dual reconstruction has one fresh owner and no payout replay");
         }
+    }
+
+    private static string BulkDeclaration(string Profile, string Name, int Amount, int Count = 1)
+    {
+        var Entries = new string[Count];
+        string Entry = "{Item='" + Name + "',Min=" + Amount.ToString(CultureInfo.InvariantCulture) +
+            ",Max=" + Amount.ToString(CultureInfo.InvariantCulture) + "}";
+        for (int Index = 0; Index < Count; Index++) Entries[Index] = Entry;
+        return Setup + "local Drops={" + String.Join(",", Entries) + "}; Loot:RegisterDropRule(" + Profile +
+            ",Mode,Drops); if Drops[1] then Drops[1].Item='carbonluau.d8.invalid'; Drops[1].Max=0 end; table.clear(Drops); ";
+    }
+
+    private static void BulkItemDeclarations(Runtime.NativeRuntime Native)
+    {
+        using (var Value = new Fixture(Native)) {
+            foreach (var Definition in LootItemManifestTests.Definitions) {
+                int Maximum = Math.Min(1000, Definition.Stack);
+                foreach (string Profile in new[] { Prefab, Prefab2 }) {
+                    string Path = Profile == Prefab ? Runtime.LootRulePolicy.Prefab : Barrel2;
+                    foreach (int Amount in new[] { 0, 1, Maximum }) {
+                        Value.Load(BulkDeclaration(Profile, Definition.Name, Amount));
+                        Runtime.FacadeSession Owner;
+                        var Rule = Value.Selected(Path, out Owner);
+                        Check(Rule.Count == 1 && Rule.Entry(0).Item == Definition.Name && Rule.Entry(0).Min == Amount &&
+                            Rule.Entry(0).Max == Amount && Rule.MaximumTotal == Amount,
+                            "D8 every manifest name public zero/min/capped maximum copied scalars on both prefabs");
+                    }
+                    Value.Load(BulkDeclaration(Profile, Definition.Name, Maximum, 8));
+                    Runtime.FacadeSession PreviousOwner;
+                    var Previous = Value.Selected(Path, out PreviousOwner);
+                    Check(Previous.Count == 8 && Previous.MaximumTotal == Maximum * 8 && Previous.Entry(7).Item == Definition.Name,
+                        "D8 every manifest name eight repeated entries retain exact copied maximum");
+                    int Lookups = Value.Lookups;
+                    foreach (string Invalid in new[] {
+                        BulkDeclaration(Profile, Definition.Name, 1001),
+                        BulkDeclaration(Profile, Definition.Name, 1, 9),
+                        BulkDeclaration(Profile, Definition.Name.ToUpperInvariant(), 1),
+                        BulkDeclaration(Profile, "carbonluau.d8.invalid", 1) }) {
+                        var Failed = Value.Reload(Invalid);
+                        Check(Failed.Status != Runtime.RuntimeStatus.OK && Value.World.Active == PreviousOwner &&
+                            Object.ReferenceEquals(Value.Selected(Path, out PreviousOwner), Previous) && Value.Lookups == Lookups &&
+                            Value.World.LootRetainedSessionCount == 1,
+                            "D8 every-name malformed declaration preserves exact incumbent before lookup without retention charge");
+                    }
+                    Value.MissingItem = true;
+                    var Missing = Value.Reload(BulkDeclaration(Profile, Definition.Name, 1)); Value.MissingItem = false;
+                    Check(Missing.Status != Runtime.RuntimeStatus.OK && Object.ReferenceEquals(Value.Selected(Path, out PreviousOwner), Previous) &&
+                        Value.World.LootRetainedSessionCount == 1,
+                        "D8 every-name unavailable definition preserves incumbent and charge");
+                }
+            }
+            for (int Start = 0; Start < LootItemManifestTests.Definitions.Length; Start += 8) {
+                int Count = Math.Min(8, LootItemManifestTests.Definitions.Length - Start);
+                var Entries = new string[Count];
+                for (int Index = 0; Index < Count; Index++)
+                    Entries[Index] = "{Item='" + LootItemManifestTests.Definitions[Start + Index].Name + "',Min=1,Max=1}";
+                Value.Load(Setup + "Loot:RegisterDropRule(" + Prefab + ",Mode,{" + String.Join(",", Entries) + "}); " +
+                    "Loot:RegisterDropRule(" + Prefab2 + ",Mode,{" + String.Join(",", Entries) + "});");
+                Runtime.FacadeSession Owner;
+                var First = Value.Selected(Runtime.LootRulePolicy.Prefab, out Owner);
+                var Second = ProfileSelected(Value, Barrel2, Owner);
+                Check(First.Count == Count && Second.Count == Count && Value.World.LootRetainedSessionCount == 1,
+                    "D8 mixed finite manifest batches atomically publish both independent prefab descriptors");
+                for (int Index = 0; Index < Count; Index++)
+                    Check(First.Entry(Index).Item == LootItemManifestTests.Definitions[Start + Index].Name &&
+                        Second.Entry(Index).Item == First.Entry(Index).Item && First.Entry(Index).Max == 1,
+                        "D8 mixed manifest entries preserve names and order");
+            }
+        }
+        Console.WriteLine("[CarbonLuau:LootPublicTest] PASS D8 all finite manifest names on real VM: copied zero/min/max/repeated/mixed, rejection and atomic two-prefab publication");
     }
 
     private static string StonesDeclaration(string Profile, int Amount)
@@ -399,7 +470,7 @@ internal static class LootPublicTests
                 "'assets/bundled/prefabs/autospawn/resource/loot/loot-barrel-3.prefab'" })
                 Code.Append("assert(not pcall(function() Loot:RegisterDropRule(").Append(Name).Append(",Mode,{").Append(Entry).Append("}) end)); ");
             foreach (string Drops in new[] {
-                "{" + Entry + ",{Item='sulfur',Min=0,Max=1}}",
+                "{" + Entry + ",{Item='carbonluau.d8.invalid',Min=0,Max=1}}",
                 "{" + Entry + ",{Item='Scrap',Min=0,Max=1}}",
                 "{" + Entry + ",{Item='scrap\\0',Min=0,Max=1}}",
                 "{" + Entry + ",{Item='scráp',Min=0,Max=1}}",
@@ -609,7 +680,7 @@ internal static class LootPublicTests
             "{{item='scrap',Min=0,Max=1}}", "{{Item='scrap',Min=0,Max=1,Callback=Touch}}",
             "{{Item='scrap',Min=0,Max=1,Self=Cycle}}",
             "(function() local T={}; for Index=1,9 do T[Index]={Item='scrap',Min=0,Max=0} end; return T end)()"}) Drops(Text);
-        foreach (string Item in new[] {"'sulfur'", "'Stones'", "'stones.extra'", "' stones'", "'stones\\0'", "'Wood'", "'wood.extra'", "'wood\\0'", "'Scrap'", "' metal.fragments'", "'scrap\\0'", "'scráp'", "''", "string.rep('x',129)",
+        foreach (string Item in new[] {"'carbonluau.d8.invalid'", "'Stones'", "'stones.extra'", "' stones'", "'stones\\0'", "'Wood'", "'wood.extra'", "'wood\\0'", "'Scrap'", "' metal.fragments'", "'scrap\\0'", "'scráp'", "''", "string.rep('x',129)",
             "42", "true", "{}", "Mode", "Touch"}) Drops("{{Item=" + Item + ",Min=0,Max=1}}");
         foreach (string Number in new[] {"nil", "'1'", "true", "{}", "Touch", "Mode", "-1", "1001", "0.5", "math.huge", "-math.huge", "0/0", "9007199254740992"}) {
             Drops("{{Item='scrap',Min=" + Number + ",Max=1000}}");
@@ -638,7 +709,7 @@ internal static class LootPublicTests
                 "all malformed calls fail before host resolution, staging, subscriptions or deferred effects");
             Value.Execute("assert(require('state').Touched==0)");
             // A rejected call does not poison the inactive session's one-rule slot.
-            Value.Load(Setup + "assert(not pcall(function() Loot:RegisterDropRule(" + Prefab + ",Mode,{{Item='sulfur',Min=0,Max=1}}) end)); " + Register);
+            Value.Load(Setup + "assert(not pcall(function() Loot:RegisterDropRule(" + Prefab + ",Mode,{{Item='carbonluau.d8.invalid',Min=0,Max=1}}) end)); " + Register);
             EntryIs(Value.Selected(Value.World.Active), 0, "scrap", 1, 2);
         }
     }

@@ -24,6 +24,13 @@ allowlist, preserving D6's registry and physical budgets. Use the
 [stones/wood example](../../examples/scripts/loot-replace-stones.luau) in a qualified
 D7 development build; published v0.7.0 does not include this capability.
 
+[D8](../GameplayD8-Validation.md) qualifies 217 more definitions, for a finite
+[221-item list with exact IDs and stack limits](LootItems.md). The
+[bulk example](../../examples/scripts/loot-replace-bulk.luau) mixes resources,
+components and materials under the same API and D6 registry. Every enabled
+definition has individual physical and public evidence on both pinned hosts;
+other definitions remain rejected. Published v0.7.0 is unchanged.
+
 ## Availability and migration
 
 | Introduction | Surface |

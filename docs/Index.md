@@ -87,6 +87,10 @@ retains its original D5 deferred scope.
 [Gameplay D7](GameplayD7-Validation.md) owns the subsequent additional simple
 Loot item qualification, preserving the D6 registry and existing host adapter.
 
+[Gameplay D8](GameplayD8-Validation.md) owns the bulk item qualification and
+complete registry/exclusion receipts. Its [finite public list](api/LootItems.md)
+records every enabled ID and stack limit under the unchanged D6 bounds.
+
 [Consolidation receipt](Documentation-Consolidation.md) records the approved
 cleanup, coverage/URL/test consumers and qualification. Do not introduce duplicate
 authority, erase negative results, rewrite old publication identities, or use

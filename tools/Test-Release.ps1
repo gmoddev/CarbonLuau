@@ -127,6 +127,7 @@ try {
             }
             foreach ($DocumentEntry in @('GUI.md','GUI-REFERENCE.md','RELEASE-NOTES.md',
                     'api/carbonluau-api.json','generated/carbonluau.d.luau',
+                    'api/loot-items.pinned.json','docs/api/LootItems.md','examples/scripts/loot-replace-bulk.luau',
                     'docs/api/Services/Loot.md','docs/api/Types/DropMode.md','docs/api/Types/LootDropEntry.md',
                     'docs/api/Types/PlayerInventory.md','docs/api/Types/InventoryChangeContext.md',
                     'docs/api/Persistence.md','docs/api/Services/DataStoreService.md',

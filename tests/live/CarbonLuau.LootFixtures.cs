@@ -32,6 +32,8 @@ namespace Carbon.Plugins
         private bool LootFixtureItems, LootFixtureItemProbeOnly, LootFixtureItemProbeDone;
         private bool LootFixtureRegistry, LootFixtureRegistryDone;
         private bool LootFixtureAdditionalItems, LootFixtureAdditionalProbeOnly, LootFixtureAdditionalProbeDone, LootFixtureAdditionalDone;
+        private bool LootFixtureBulkItems, LootFixtureBulkDiscoveryOnly, LootFixtureBulkProbeOnly, LootFixtureBulkDone;
+        private bool LootFixtureStackItems, LootFixtureStackDone, LootFixtureStackTerminal;
         private string LootFixtureSecondPrefab = LootRulePolicy.SecondPrefab;
         private LootDropEntry[] LootFixtureSecondEntries;
         private string LootFixturePrefab = LootRulePolicy.Prefab;
@@ -58,6 +60,17 @@ namespace Carbon.Plugins
         partial void RunLootAdditionalProbe();
         partial void RunLootAdditionalStep();
         partial void GetLootAdditionalBudget(ref int Needed);
+        partial void SelectLootBulkItems(ref bool Items, ref bool DiscoveryOnly, ref bool ProbeOnly);
+        partial void BeginLootBulkDiscovery(ref bool Deferred);
+        partial void RunLootBulkStep();
+        partial void GetLootBulkBudget(ref int Needed);
+        partial void SelectLootStackItems(ref bool Items);
+        partial void RunLootStackStep();
+        partial void GetLootStackBudget(ref int Needed);
+        partial void ObserveLootStackFrame(LootPayoutFrame Frame, bool Success);
+        partial void ObserveLootStackWorld(BaseEntity World, Item Value);
+        partial void CleanupLootStack();
+        partial void SkipLootStackFrame(LootPayoutFrame Frame, bool Success, ref bool Skip);
         private int LootFixtureStep;
         private bool LootFixtureInitialPayoutDone;
         private int LootFixtureEventWaits;
@@ -92,6 +105,7 @@ namespace Carbon.Plugins
                 ReferenceEquals(LootCurrent.Items[LootCurrent.Index], Value) && Value.uid.Value == LootCurrent.Uids[LootCurrent.Index],
                 "fixture acquisition uses exact returned production Item/UID");
             BarrelResearchHold(Value, true); BarrelResearchHold(World);
+            ObserveLootStackWorld(World, Value);
             if (LootFixtureMutateAmount && LootCurrent != null && LootCurrent.Index == 1) {
                 Value.amount++;
                 Puts("[CarbonLuau:LootFixture] INTERFERENCE actual returned Item.amount changed before world initialization");
@@ -104,6 +118,8 @@ namespace Carbon.Plugins
         partial void LootFixtureCompleted(LootPayoutFrame Frame, bool Success)
         {
             LootFixtureReceipts++; if (Success) LootFixtureSuccesses++;
+            bool Skip = false; SkipLootStackFrame(Frame, Success, ref Skip); if (Skip) return;
+            ObserveLootStackFrame(Frame, Success);
             ObserveLootRegistryFrame(Frame);
             BarrelResearchCheck(ReferenceEquals(Frame.Source, BarrelResearchCurrent.Source), "private original source receipt");
             int Worlds = 0;
@@ -144,12 +160,19 @@ namespace Carbon.Plugins
                 SelectLootItemProbe(ref LootFixtureItemProbeOnly);
                 SelectLootAdditionalItems(ref LootFixtureAdditionalItems, ref LootFixtureAdditionalProbeOnly);
                 SelectLootAdditionalProbe(ref LootFixtureAdditionalProbeOnly);
+                SelectLootBulkItems(ref LootFixtureBulkItems, ref LootFixtureBulkDiscoveryOnly, ref LootFixtureBulkProbeOnly);
+                SelectLootStackItems(ref LootFixtureStackItems);
                 if (LootFixtureBarrel2) {
                     BarrelResearchCheck(LootFixturePublic, "D4 requires the actual public declaration fixture");
                     LootFixturePrefab = LootRulePolicy.SecondPrefab;
                     BarrelResearchSelectedPrefab = LootFixturePrefab;
                 }
                 Puts("[CarbonLuau:LootFixture] SELECT public=" + LootFixturePublic + " d4_barrel2=" + LootFixtureBarrel2 + " prefab=" + LootFixturePrefab);
+                if (LootFixtureBulkItems && (LootFixtureBulkDiscoveryOnly || LootFixtureBulkProbeOnly)) {
+                    bool Deferred = false; BeginLootBulkDiscovery(ref Deferred);
+                    BarrelResearchCheck(Deferred, "D8 bounded discovery continuation selected");
+                    return;
+                }
                 if (LootFixtureItems) {
                     BarrelResearchCheck(LootFixturePublic && LootFixtureBarrel2, "D5 requires existing public D4 substrate");
                     RunLootItemProbe();
@@ -216,6 +239,8 @@ namespace Carbon.Plugins
                     Needed = LootFixtureStep == 27 || LootFixtureStep == 33 ? 8 : LootFixtureStep >= 38 && LootFixtureStep <= 40 ? 4 :
                         LootFixtureStep == 43 ? 3 : LootFixtureStep == 28 || LootFixtureStep == 29 || LootFixtureStep == 31 ? 1 : 2;
                 GetLootAdditionalBudget(ref Needed);
+                GetLootBulkBudget(ref Needed);
+                GetLootStackBudget(ref Needed);
                 if (LootFixtureBarrel2 && (LootFixtureBudgetFrame == Time.frameCount ||
                     LootFrameNumber == Time.frameCount && LootFrameUsed > LootRulePolicy.PerFrame - Needed)) {
                     BarrelResearchCheck(++LootFixtureBudgetWaits <= 16, "D4 bounded wait for next actual frame after exhaustion");
@@ -389,9 +414,24 @@ namespace Carbon.Plugins
                             NextTick(FinishLootItemMatrix); return;
                         }
                     }
+                } else if (LootFixtureStackItems && LootFixtureStep >= 62) {
+                    RunLootStackStep();
+                    if (LootFixtureStackTerminal) return;
+                    if (LootFixtureStackDone) {
+                        LootFixtureBudgetFrame = Time.frameCount; LootFixtureBudgetWaits = 0;
+                        NextTick(FinishLootItemMatrix); return;
+                    }
+                    LootFixtureBudgetFrame = Time.frameCount;
+                } else if (LootFixtureBulkItems && LootFixtureStep >= 62) {
+                    RunLootBulkStep();
+                    if (LootFixtureBulkDone) {
+                        LootFixtureBudgetFrame = Time.frameCount; LootFixtureBudgetWaits = 0;
+                        NextTick(FinishLootItemMatrix); return;
+                    }
+                    LootFixtureBudgetFrame = Time.frameCount;
                 } else if (LootFixtureAdditionalItems && LootFixtureStep >= 44) {
                     RunLootAdditionalStep();
-                    if (LootFixtureAdditionalDone) {
+                    if (LootFixtureAdditionalDone && !LootFixtureBulkItems && !LootFixtureStackItems) {
                         LootFixtureBudgetFrame = Time.frameCount; LootFixtureBudgetWaits = 0;
                         NextTick(FinishLootItemMatrix); return;
                     }
@@ -943,6 +983,10 @@ namespace Carbon.Plugins
         }
         private void EndLootQualification(Exception Error)
         {
+            if (LootFixtureStackTerminal) {
+                if (Error != null) PrintError("[CarbonLuau:LootFixture] FAIL terminal UID packet " + Error);
+                ConsoleSystem.Run(ConsoleSystem.Option.Server, "quit"); return;
+            }
             bool Clean = false;
             if (Error != null) PrintError("[CarbonLuau:LootFixture] FAIL " + Error);
             try {
@@ -951,6 +995,7 @@ namespace Carbon.Plugins
                 LootFixtureMutateAmount = LootFixtureForceBag = false;
                 LootFixtureBagCase = null;
                 RemoveLootFixtureBagPatches();
+                CleanupLootStack();
                 if (LootFixtureFaultPatches != null && LootFixtureCreateMethod != null)
                     LootFixtureFaultPatches.Unpatch(LootFixtureCreateMethod, HarmonyPatchType.All, LootFixtureFaultPatches.Id);
                 BarrelResearchCleanup();

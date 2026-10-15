@@ -20,6 +20,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Check finite pinned Loot manifest generation and drift rejection
+        shell: bash
+        run: |
+          python tools/Generate-LootItems.py --check
+          python tools/Test-LootItems.py
+          python tools/Test-LootBatch.py
+          python tools/Test-LootPackageManifest.py
+          python tools/Test-LootRunnerReceipts.py
+          python tools/Test-LootStack.py
+          python tools/Test-LootStackParts.py
+          python tools/Test-LootProfileRestore.py
+          python tools/Test-LootQualification.py
+          python tools/Generate-LootQualification.py --check-public
       - name: Build independent Core, parser and tooling; check deterministic metadata
         shell: pwsh
         run: ./tools/Build-Tooling.ps1 -Extension build/extension-pack

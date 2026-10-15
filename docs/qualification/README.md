@@ -65,7 +65,9 @@ separate lifetime, public binding, traversal and combined gates.
 [C3](../GameplayC3-Validation.md), [C4](../GameplayC4-Validation.md),
 [D2A](../GameplayD2A-Validation.md), [D3](../GameplayD3-Validation.md),
 [D5 item expansion](../GameplayD5-Validation.md), [D6 registry](../GameplayD6-Validation.md),
-[D7 additional items](../GameplayD7-Validation.md).
+[D7 additional items](../GameplayD7-Validation.md),
+[D8 bulk items](../GameplayD8-Validation.md) and the
+[complete D8 item ledger](GameplayD8-Items.md).
 Sampled ItemChanged is not completed-operation observation; death is not removal;
 Loot Replace is qualified destruction payout, not retrospective collection.
 

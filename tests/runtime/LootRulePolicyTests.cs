@@ -130,9 +130,9 @@ internal static class LootRulePolicyTests
         foreach (string Descriptor in new[] {
             "\t", "scrap", "scrap\t0", "scrap\t0\t1\t", "scrap\t0\t1\tmetal.fragments",
             "scrap\t0\t1\tmetal.fragments\t0", "\t0\t1", "scrap\t\t1", "scrap\t0\t",
-            "scrap\t1\t0", "cloth\t0\t1", "Stones\t0\t1", " stones\t0\t1", "stones.extra\t0\t1", "stones\0\t0\t1",
+            "scrap\t1\t0", "carbonluau.d8.invalid\t0\t1", "Stones\t0\t1", " stones\t0\t1", "stones.extra\t0\t1", "stones\0\t0\t1",
             "Wood\t0\t1", "Scrap\t0\t1", " scrap\t0\t1", "scráp\t0\t1",
-            "metal.fragments.extra\t0\t1", "scrap\n\t0\t1", "scrap\0\t0\t1", "scrap\t0\t1\tcloth\t0\t1",
+            "metal.fragments.extra\t0\t1", "scrap\n\t0\t1", "scrap\0\t0\t1", "scrap\t0\t1\tcarbonluau.d8.invalid\t0\t1",
             new string('x', 1025), new string('x', 1024), new string('é', 513),
             new string('é', 512), new string('\t', 24), new string('\t', 1024) })
             InvalidHost(Value, Prefab, Descriptor);
@@ -231,7 +231,7 @@ internal static class LootRulePolicyTests
         Validation(); PublicationAndOwnership(); NoRulePreflight(); ConflictsAndReplacement(); SourceAndRegistrar(); BoundsAndTeardown();
         ManagedBoundaryValidation(); ManagedBoundaryOwnership();
         ProfileValidation(); ProfilePublication(); ProfileReplacement();
-        ItemValidation(); AdditionalItemValidation();
+        ItemValidation(); AdditionalItemValidation(); BulkItemValidation();
         RegistryPublication(); RegistryRollback(); RegistryRetention(); RegistryCorruption(); RegistryStaleRetirement();
         RegistryCandidateIdentity();
         Console.WriteLine("[CarbonLuau:LootPolicy] PASS immutable descriptors, bounded per-prefab registry, atomic publication, ownership, checkpoint retention, managed boundary and teardown model; no host mutation");
@@ -263,12 +263,12 @@ internal static class LootRulePolicyTests
             // Embedded NUL is checked above as a managed string; it is a wire delimiter here.
             InvalidHost(Value, Prefab, "scrap\t0\t1");
         }
-        foreach (string Item in new[] { "cloth", "Stones", "stones.extra", "stones\0", "Wood", "Scrap", " scrap", "scrap\0", "scráp", "", null }) {
+        foreach (string Item in new[] { "carbonluau.d8.invalid", "Stones", "stones.extra", "stones\0", "Wood", "Scrap", " scrap", "scrap\0", "scráp", "", null }) {
             int Lookups = Value.Lookups;
             Invalid(Value, Barrel2, new[] { new Runtime.LootDropEntry("scrap", 0, 1), new Runtime.LootDropEntry(Item, 0, 1) });
             Check(Value.Lookups == Lookups, "late unsupported item rejected before any definition resolver");
         }
-        foreach (string Descriptor in new[] { "scrap\t0\t1\tcloth\t0\t1", "scrap\t0\t1\tScrap\t0\t1",
+        foreach (string Descriptor in new[] { "scrap\t0\t1\tcarbonluau.d8.invalid\t0\t1", "scrap\t0\t1\tScrap\t0\t1",
             "scrap\t0\t1\tmetal.fragments\t2\t1", "scrap\t0\t1\tmetal.fragments\t0\t1001" })
             InvalidHost(Value, Barrel2, Descriptor);
         var Input = Drops(4); var Session = Value.Session();
@@ -388,7 +388,7 @@ internal static class LootRulePolicyTests
                 "stones repeated maximum preserves eight entries and unchanged 8000 bound");
             var Candidate = Value.Session();
             int Lookups = Value.Lookups, Retained = Value.World.LootRetainedSessionCount;
-            foreach (string Item in new[] { "cloth", "sulfur", "Stones", "STONES", " stones", "stones ", "stones.extra", "stones\0" })
+            foreach (string Item in new[] { "carbonluau.d8.invalid", "Stones", "STONES", " stones", "stones ", "stones.extra", "stones\0" })
                 Reject(() => Candidate.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry("stones", 1, 1),
                     new Runtime.LootDropEntry(Item, 1, 1) }), "unsupported late definition after stones");
             Reject(() => Candidate.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry("stones", 0, 1001) }), "stones 1001 bound");
@@ -414,6 +414,90 @@ internal static class LootRulePolicyTests
             Value.World.Retire(Candidate); Value.None();
             Check(Value.World.LootRetainedSessionCount == 0, "additional item controls release exact staging and published owners");
         }
+    }
+
+    private static void BulkItemValidation()
+    {
+        const string Unknown = "carbonluau.d8.invalid";
+        var Definitions = LootItemManifestTests.Definitions;
+        Check(Definitions.Length >= 4 && !LootItemManifestTests.Contains(Unknown), "finite manifest retains baseline definitions and excludes unknown names");
+        foreach (var Definition in Definitions)
+        foreach (string Prefab in new[] { Runtime.LootRulePolicy.Prefab, Barrel2 }) {
+            int Cap = Math.Min(Definition.Stack, Runtime.LootRulePolicy.MaximumAmount);
+            Check(Cap >= 1, "each manifest definition has a positive supported quantity");
+            string Other = Prefab == Barrel2 ? Runtime.LootRulePolicy.Prefab : Barrel2;
+            var Value = new Fixture(); var Zero = Value.Session();
+            Zero.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry(Definition.Name, 0, 0) });
+            Value.World.Commit(Zero);
+            Check(Value.Selected(Prefab, Zero).Entry(0).Item == Definition.Name && Value.Selected(Prefab, Zero).MaximumTotal == 0,
+                "every manifest definition supports an explicit zero rule on either profile");
+            var Next = Value.Session();
+            var Input = new[] { new Runtime.LootDropEntry(Definition.Name, 1, Cap) };
+            Next.StageLootRule(Prefab, Input); Input[0] = new Runtime.LootDropEntry(Unknown, 0, 0);
+            var Maximum = new Runtime.LootDropEntry[8];
+            for (int Index = 0; Index < Maximum.Length; Index++) Maximum[Index] = new Runtime.LootDropEntry(Definition.Name, Cap, Cap);
+            Next.StageLootRule(Other, Maximum); Maximum[7] = new Runtime.LootDropEntry(Unknown, 0, 0);
+            Value.World.Commit(Next); Value.World.Retire(Zero);
+            var First = Value.Selected(Prefab, Next); var Second = Value.Selected(Other, Next);
+            Check(First.Count == 1 && First.Entry(0).Item == Definition.Name && First.Entry(0).Min == 1 && First.Entry(0).Max == Cap &&
+                First.MaximumTotal == Cap && Second.Count == 8 && Second.MaximumTotal == Cap * 8 &&
+                Second.Entry(7).Item == Definition.Name && Second.Entry(7).Min == Cap && Second.Entry(7).Max == Cap,
+                "every manifest definition retains copied minimum/capped maximum and eight repeated entries without multiplying budgets");
+            var Failed = Value.Session();
+            int Lookups = Value.Lookups, Charges = Value.World.LootRetainedSessionCount;
+            Reject(() => Failed.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry(Definition.Name, 0, 1001) }), "manifest item global1001 rejection");
+            var Ninth = new Runtime.LootDropEntry[9];
+            for (int Index = 0; Index < Ninth.Length; Index++) Ninth[Index] = new Runtime.LootDropEntry(Definition.Name, 0, Cap);
+            Reject(() => Failed.StageLootRule(Prefab, Ninth), "manifest item ninth entry rejection");
+            Reject(() => Failed.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry(Definition.Name, 1, Cap),
+                new Runtime.LootDropEntry(Unknown, 1, 1) }), "manifest late unknown item rejection");
+            Check(Value.Lookups == Lookups && !Failed.HasLootRule && Value.World.LootRetainedSessionCount == Charges &&
+                Object.ReferenceEquals(Value.Selected(Prefab, Next), First) && Object.ReferenceEquals(Value.Selected(Other, Next), Second),
+                "invalid manifest declarations resolve nothing and preserve both old owners/descriptors/charges");
+            Value.MissingItem = true;
+            try { Reject(() => Failed.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry(Definition.Name, 1, Cap) }), "manifest missing definition rejection"); }
+            finally { Value.MissingItem = false; }
+            Check(Value.Lookups == Lookups + 1 && !Failed.HasLootRule && Value.World.LootRetainedSessionCount == Charges &&
+                Object.ReferenceEquals(Value.Selected(Prefab, Next), First) && Object.ReferenceEquals(Value.Selected(Other, Next), Second),
+                "missing manifest definition lookup cannot disturb either exact prior owner or retain a reservation");
+            Failed.StageLootRule(Prefab, new[] { new Runtime.LootDropEntry(Definition.Name, 1, 1) });
+            Failed.StageLootRule(Other, new[] { new Runtime.LootDropEntry(Definition.Name, 0, 0) });
+            Value.Registrar.AllocationFault = true;
+            try { Value.World.Commit(Failed); throw new Exception("registrar must fail"); }
+            catch (OutOfMemoryException) { }
+            finally { Value.Registrar.AllocationFault = false; }
+            Check(!Failed.Active && Failed.HasLootRule && Value.World.LootRetainedSessionCount == Charges + 1 &&
+                Object.ReferenceEquals(Value.Selected(Prefab, Next), First) && Object.ReferenceEquals(Value.Selected(Other, Next), Second),
+                "every manifest item failed whole-set publication preserves both exact prior descriptors and candidate accounting");
+            Value.World.Retire(Failed); Value.World.Retire(Next); Value.None();
+            Check(Value.World.LootRetainedSessionCount == 0, "every manifest item releases all candidate and committed charges");
+        }
+        var Families = new SortedDictionary<string, int>(StringComparer.Ordinal);
+        for (int Index = 0; Index < Definitions.Length; Index++)
+            if (!Families.ContainsKey(Definitions[Index].Family)) Families.Add(Definitions[Index].Family, Index);
+        Check(Families.Count >= 3, "bulk manifest represents at least the three qualified item families");
+        var Representatives = new List<int>();
+        foreach (int Index in Families.Values) { if (Representatives.Count == 8) break; Representatives.Add(Index); }
+        var Mixed = new Runtime.LootDropEntry[Representatives.Count]; int Total = 0;
+        for (int Index = 0; Index < Mixed.Length; Index++) {
+            var Definition = Definitions[Representatives[Index]];
+            int Cap = Math.Min(Definition.Stack, Runtime.LootRulePolicy.MaximumAmount);
+            Mixed[Index] = new Runtime.LootDropEntry(Definition.Name, 1, Cap); Total += Cap;
+        }
+        var Batch = new Fixture(); var Owner = Batch.Session();
+        Owner.StageLootRule(Runtime.LootRulePolicy.Prefab, Mixed); Owner.StageLootRule(Barrel2, Mixed);
+        Mixed[0] = new Runtime.LootDropEntry(Unknown, 0, 0); Batch.World.Commit(Owner);
+        foreach (string Prefab in new[] { Runtime.LootRulePolicy.Prefab, Barrel2 }) {
+            var Rule = Batch.Selected(Prefab, Owner);
+            Check(Rule.Count == Representatives.Count && Rule.MaximumTotal == Total && Total <= Runtime.LootRulePolicy.MaximumTotal,
+                "mixed-family dual rules share existing descriptor and aggregate bounds");
+            for (int Index = 0; Index < Representatives.Count; Index++)
+                Check(Rule.Entry(Index).Item == Definitions[Representatives[Index]].Name && Rule.Entry(Index).Min == 1 &&
+                    Rule.Entry(Index).Max == Math.Min(Definitions[Representatives[Index]].Stack, Runtime.LootRulePolicy.MaximumAmount),
+                    "mixed-family entries remain copied and independently ordered on both profiles");
+        }
+        Batch.World.Retire(Owner); Batch.None();
+        Check(Batch.World.LootRetainedSessionCount == 0, "mixed-family publication releases its single exact owner");
     }
 
     private static SortedDictionary<string, Runtime.LootDropRule> RuleMap(Runtime.FacadeSession Session)
@@ -644,7 +728,7 @@ internal static class LootRulePolicyTests
         Invalid(Value, Prefab + "extra", Drops()); Invalid(Value, Prefab.ToUpperInvariant(), Drops());
         Invalid(Value, null, Drops()); Invalid(Value, Prefab, null);
         Invalid(Value, Prefab, new Runtime.LootDropEntry[9]);
-        foreach (string Item in new[] { "Scrap", "Wood", "cloth", "Stones", "stones.extra", "wood.extra", "wood\0", "metal.fragments.extra", " scrap", "scrap\0", "scráp", "" , null })
+        foreach (string Item in new[] { "Scrap", "Wood", "carbonluau.d8.invalid", "Stones", "stones.extra", "wood.extra", "wood\0", "metal.fragments.extra", " scrap", "scrap\0", "scráp", "" , null })
             Invalid(Value, Prefab, new[] { new Runtime.LootDropEntry(Item, 0, 1) });
         foreach (var Entry in new[] {
             new Runtime.LootDropEntry("scrap", -1, 0), new Runtime.LootDropEntry("scrap", 3, 2),

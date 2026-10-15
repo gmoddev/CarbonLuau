@@ -1,9 +1,9 @@
 name: Tooling baseline contracts
 on:
   push:
-    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', 'tools/*Release*.py', 'tools/*Release*.ps1', '.github/workflows/tooling-baseline.yml']
+    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', 'tools/*Loot*.py', 'tools/*Release*.py', 'tools/*Release*.ps1', '.github/workflows/tooling-baseline.yml']
   pull_request:
-    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', 'tools/*Release*.py', 'tools/*Release*.ps1', '.github/workflows/tooling-baseline.yml']
+    paths: ['api/**', 'docs/**', 'AICONTEXT.md', 'README.md', 'CHANGELOG.md', '.gitattributes', 'tools/Test-ToolingContracts.ps1', 'tools/Test-Documents.py', 'tools/*Loot*.py', 'tools/*Release*.py', 'tools/*Release*.ps1', '.github/workflows/tooling-baseline.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,6 +15,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Verify pinned finite Loot names and deterministic generation
+        run: |
+          python tools/Generate-LootItems.py --check
+          python tools/Test-LootItems.py
+          python tools/Test-LootBatch.py
+          python tools/Test-LootPackageManifest.py
+          python tools/Test-LootRunnerReceipts.py
+          python tools/Test-LootStack.py
+          python tools/Test-LootStackParts.py
+          python tools/Test-LootProfileRestore.py
+          python tools/Test-LootQualification.py
+          python tools/Generate-LootQualification.py --check-public
       - name: Verify documentation coverage, canonical rules and fragments
         run: python tools/Test-Documents.py
       - name: Validate API contract schema fixtures
