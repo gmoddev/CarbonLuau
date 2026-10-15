@@ -928,5 +928,16 @@
     "LinuxSupplementalDifferentCarbon": "/root/codex/catalog-d9-20261015/linux-live-2d-20261015-112314",
     "LinuxPinnedAssetMountNegative": "/root/codex/catalog-d9-20261015/linux-live-2d-20261015-113357"
   },
-  "HostedCI": "Pending exact committed-source closure; raw local/live receipts do not substitute for final-source CI."
+  "HostedCI": {
+    "ImplementationCommit": "5f7bbcc79ddc99ffce5c56abf926e2ba1a7f1537",
+    "Runs": [
+      {"Workflow": "CarbonLuau validation", "RunId": 38729261971, "Conclusion": "success", "URL": "https://github.com/gmoddev/CarbonLuau/actions/runs/38729261971"},
+      {"Workflow": "Tooling Foundations A and B", "RunId": 38729261945, "Conclusion": "success", "URL": "https://github.com/gmoddev/CarbonLuau/actions/runs/38729261945"},
+      {"Workflow": "Tooling baseline contracts", "RunId": 38729261827, "Conclusion": "success", "URL": "https://github.com/gmoddev/CarbonLuau/actions/runs/38729261827"},
+      {"Workflow": "Documentation", "RunId": 38729261822, "Conclusion": "success", "URL": "https://github.com/gmoddev/CarbonLuau/actions/runs/38729261822"}
+    ],
+    "WorkerInputComparison": {"Windows": 35, "Linux": 35, "Differences": 0},
+    "DefinedNativeDynamicExports": {"Count": 42, "Unchanged": true},
+    "ClosurePolicy": "The evidence-only closure commit must itself pass all four workflows; its exact SHA and checks are returned in the final report. No implementation source changes follow these receipts."
+  }
 }

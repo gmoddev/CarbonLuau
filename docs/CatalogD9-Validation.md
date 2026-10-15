@@ -2,8 +2,8 @@
 
 Date: 2026-10-15. Starting `main`:
 `27c46d7a5f2493014878d239f7d3a7bb6689cd07` (Gameplay D8).
-Status: implementation, offline gates and exact Windows/Linux integration PASS;
-final-source hosted CI pending closure.
+Status: **PASS within the recorded pinned-host scope**. Implementation, offline,
+exact Windows/Linux integration and committed-source hosted CI all pass.
 This record does not authorize a release or tag.
 
 The user explicitly selected development scripting API **0.7.5-experimental**.
@@ -111,8 +111,9 @@ Native instrumentation charges 30,696 bytes during catalog construction and
 266,864 bytes for initialized VM state, with the same catalog charge at
 1/10/50/100 addons and all three generations. The representative managed
 100-addon sample is 8,625,384 bytes, below the unchanged 67,108,864-byte cap.
-Startup samples include compilation/cache/JIT effects and establish no speed
-guarantee. Exact paired timings, binary hashes, teardown and unmap evidence are
+Paired root startup samples are 108.862/62.3515 ms on Windows (D8/D9), and
+20.9383/3.9373 ms on Linux. They include compilation/cache/JIT effects and
+establish no speed guarantee. Exact timings, binary hashes, teardown and unmap evidence are
 retained in the receipts. Both paired runs deterministically unmap/remove
 their temporary native files. Live-provider retirement and full native teardown
 are separate checks.
@@ -167,7 +168,8 @@ Both platform bundles pass two-generation deterministic packaging and exact
 clean extraction/provenance checks. Actual clean installations load/unload the
 native runtime, compile all **75** bundled Luau bodies, execute GUI/Player
 fixtures and converge to zero live VMs. Windows imports reject dynamic
-host-selected MSVC CRT dependencies. API/schema/architecture/document checks
+host-selected MSVC CRT dependencies; the 42 defined native dynamic exports are
+unchanged. API/schema/architecture/document checks
 preserve all 97 historical retained spans and all existing invariant owners.
 
 The private CatalogD9 fixture is excluded from production packages. On actual
@@ -247,9 +249,45 @@ Retain failed transcripts alongside successful receipts:
 
 Raw logs, input hashes, binary identities, memory samples and restoration
 receipts are indexed by the [evidence manifest](qualification/CatalogD9-Evidence.json).
-Final-source hosted CI and synchronized-main closure are recorded below when
-complete. No macOS server, authenticated client, new physical capability,
+Committed-source hosted CI and synchronized-main closure are recorded below.
+No macOS server, authenticated client, new physical capability,
 universal stack-plugin compatibility, power-loss or new release claim follows.
 The next recommended phase is bounded catalog search/hover/quick-fix ergonomics
 using the same static metadata; new content requires its own operation-specific
 host qualification.
+
+## Committed-source closure
+
+Implementation commit **5f7bbcc79ddc99ffce5c56abf926e2ba1a7f1537** is committed
+and pushed to `main`. Every recorded compiled/generated input (35) matches the
+tested Windows and Linux worker source. A stale Windows definitions copy was
+synchronized to the official Enum-preserving output; production binaries and
+their live receipts are unaffected. Existing untracked user state is preserved.
+
+All four workflows pass on that exact implementation SHA:
+
+| Hosted gate | Result and exact receipt |
+|---|---|
+| Windows/Linux native, managed/real-VM, persistence, clean packaging/install and sanitizer matrix | [PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/38729261971) |
+| Windows/Linux/macOS metadata, generators, supervised analysis/preview and Linux actual VS Code | [PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/38729261945) |
+| Tooling baseline contracts | [PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/38729261827) |
+| Documentation, retained evidence and navigation | [PASS](https://github.com/gmoddev/CarbonLuau/actions/runs/38729261822) |
+
+The evidence-only closure commit must independently pass these same four
+workflows before the final PASS is returned; its exact tested SHA and CI links
+are supplied with the final report. This avoids a self-referential commit hash
+or an endless evidence-only commit chain. No runtime/generator/allowlist source
+changes follow the implementation receipts.
+
+The Windows fixture restores prior plugin/data/config/server-identity trees,
+historical-hook replacements, config bytes/ACL/timestamps and zero workers.
+Both Linux borrowed roots are restored, including the failed exact-host asset
+attempt, and their task leases are released. The eight protected containers
+retain their original IDs. Published tag `v0.7.0` still has tag object
+`7c7d36f648a5506efd07c1b6d6bcf4b94d3f7d2b`, peeled commit
+`dabb872094f74e60d75de099379d198fb63a6bf8`. The six original release assets retain
+their IDs/digests and October 12 timestamps. No release/tag is created.
+
+No D9 implementation or host gate remains open. A future package publication
+still requires a separate explicit release/tag decision and its package identity;
+current development API 0.7.5 does not modify the published 0.7.0 package.
