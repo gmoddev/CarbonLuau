@@ -9,6 +9,15 @@ namespace Carbon.Plugins
 {
     public partial class CarbonLuau
     {
+        // Preserve a checked native failure category across managed construction
+        // cleanup. A setup/compiler timeout is not an execution-retirement flag.
+        internal sealed class NativeOperationException : InvalidOperationException
+        {
+            internal readonly RuntimeStatus Status;
+            internal NativeOperationException(RuntimeStatus Status, string Message) : base(Message)
+            { this.Status = Status; }
+        }
+
         // Owns the loaded library and all ABI bindings. No finalizer: destruction
         // must run on the owner thread, never on the managed GC thread.
         public sealed partial class NativeRuntime : IDisposable
@@ -74,11 +83,11 @@ namespace Carbon.Plugins
             }
             private static void Require(RuntimeStatus Status)
             {
-                if (Status != RuntimeStatus.OK) throw new InvalidOperationException("native operation failed: " + Status);
+                if (Status != RuntimeStatus.OK) throw new NativeOperationException(Status, "native operation failed: " + Status);
             }
             private static void Require(RuntimeStatus Status, string Operation)
             {
-                if (Status != RuntimeStatus.OK) throw new InvalidOperationException(Operation + " failed: " + Status);
+                if (Status != RuntimeStatus.OK) throw new NativeOperationException(Status, Operation + " failed: " + Status);
             }
             public ulong Create(RuntimeConfig Config)
             {

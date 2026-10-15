@@ -51,7 +51,7 @@ namespace Carbon.Plugins
                 catch (Exception Error)
                 {
                     Reason = "replacement initialization failed";
-                    return new ExecutionResult { Status = RuntimeStatus.INTERNAL_ERROR, Error = Error.Message };
+                    return new ExecutionResult { Status = Error is NativeOperationException ? ((NativeOperationException)Error).Status : RuntimeStatus.INTERNAL_ERROR, Error = Error.Message };
                 }
                 finally { if (Candidate != null) Candidate.Dispose(); }
             }

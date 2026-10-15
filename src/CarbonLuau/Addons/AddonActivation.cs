@@ -50,7 +50,7 @@ namespace Carbon.Plugins
                     if (Previous != null) { AddonDomains.Remove(Previous.DomainLifetimeId); Previous.Dispose(); }
                     Activation.Domain = Candidate; Candidate = null; return Activation;
                 } catch (Exception Error) {
-                    Activation.Result = new ExecutionResult {Status = RuntimeStatus.INTERNAL_ERROR,
+                    Activation.Result = new ExecutionResult {Status = Error is NativeOperationException ? ((NativeOperationException)Error).Status : RuntimeStatus.INTERNAL_ERROR,
                         Error = AddonPolicy.Diagnostic(Error is InvalidOperationException ? Error.Message : "addon native initialization failed")};
                     return Activation;
                 } finally {

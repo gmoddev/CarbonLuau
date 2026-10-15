@@ -117,7 +117,7 @@ namespace Carbon.Plugins
                     LastReload = "initialization rejected"; if (Current == null) Reason = LastReload;
                     // File exceptions can contain absolute paths. Snapshot validation
                     // emits curated InvalidOperationException diagnostics only.
-                    return new ExecutionResult { Status = RuntimeStatus.INTERNAL_ERROR,
+                    return new ExecutionResult { Status = Error is NativeOperationException ? ((NativeOperationException)Error).Status : RuntimeStatus.INTERNAL_ERROR,
                         Error = Error is InvalidOperationException ? Error.Message.Substring(0, Math.Min(1024, Error.Message.Length)) : "source snapshot/native initialization failed" };
                 } finally {
                     if (Candidate != null) {

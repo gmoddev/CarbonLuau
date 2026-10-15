@@ -10,7 +10,7 @@ using Runtime = Carbon.Plugins.CarbonLuau;
 
 // Qualification of the PRIVATE sampled candidate only. These fixtures do not
 // prove Rust operation completion, host topology or public Signal delivery.
-internal static class InventoryNetObservationTests
+internal static partial class InventoryNetObservationTests
 {
     [DllImport("libc")] private static extern int chmod(string Path, int Mode);
 

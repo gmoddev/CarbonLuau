@@ -99,6 +99,12 @@ jobs:
       - name: Sampled ItemChanged public binding (Windows)
         if: runner.os == 'Windows'
         run: ./dist/runtime/RuntimeTests.exe --inventory-changed "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe"
+      - name: Inventory initialization failure isolation (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/runtime/RuntimeTests.exe --inventory-init "$pwd/build/Release/carbonluau_native.dll" "$pwd/build/Release/carbonluau_compiler.exe" "$pwd/build/Release/CompilerFixtureHang.exe"
+      - name: Inventory initialization failure isolation (Linux)
+        if: runner.os == 'Linux'
+        run: mono dist/runtime/RuntimeTests.exe --inventory-init "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler" "$PWD/build/CompilerFixtureHang"
       - name: Sampled ItemChanged public binding (Linux)
         if: runner.os == 'Linux'
         run: mono dist/runtime/RuntimeTests.exe --inventory-changed "$PWD/build/libcarbonluau_native.so" "$PWD/build/carbonluau_compiler"
