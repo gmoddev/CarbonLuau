@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Verify documentation before deployment
-        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell auto --step 1 "{0}"
+        shell: python tools/ci/Run.py --shell auto --step 1 "{0}"
         run: python tools/Test-Documents.py
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

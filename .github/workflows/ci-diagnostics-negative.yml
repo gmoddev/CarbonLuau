@@ -21,7 +21,7 @@ jobs:
       - name: Compile managed diagnostic fixture
         run: dotnet build tests/diagnostics/DiagnosticsTests.csproj -c Release -o dist/diagnostics -m:2
       - name: Intentional primary timeout plus cleanup failure
-        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell auto --step 1 "{0}"
+        shell: python tools/ci/Run.py --shell auto --step 1 "{0}"
         run: python tools/ci/Emit-Negative.py dist/diagnostics/DiagnosticsTests.exe
       - name: Collect bounded CI diagnostics
         if: always()
