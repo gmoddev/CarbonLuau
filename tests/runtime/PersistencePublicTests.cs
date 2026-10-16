@@ -61,7 +61,7 @@ internal static partial class PersistencePublicTests
             while (!Queue.Ready && End.ElapsedMilliseconds < 35000) { Worker.Tick(); Thread.Sleep(5); }
             TestDiagnostics.Observe("persistence.worker.ready", Queue.Ready ? 1 : 0, 1);
             TestDiagnostics.Observe("persistence.worker.pending", Queue.PendingCount, 0);
-            TestDiagnostics.Observe("persistence.worker.sent", Worker.RequestsSent, 0);
+            TestDiagnostics.Observe("persistence.worker.sent", Worker == null ? 0 : Worker.RequestsSent, 0);
             Check(Queue.Ready, "production worker ready: " + Status);
             WorkerReadyObservedMilliseconds = StartupObservation.Elapsed.TotalMilliseconds;
             if (Initialize) Reload();

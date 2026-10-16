@@ -16,6 +16,20 @@ SPEC.loader.exec_module(MODULE)
 
 
 class DiagnosticsTests(unittest.TestCase):
+    def test_workflow_custom_shell_paths(self):
+        for Workflow in (RUNNER.parents[2] / ".github" / "workflows").glob("*.yml"):
+            Lines = Workflow.read_text().splitlines()
+            Cwd = "."
+            for Line in Lines:
+                if Line.startswith("      - "):
+                    Cwd = "."
+                if Line.strip().startswith("working-directory:"):
+                    Cwd = Line.split(":", 1)[1].strip()
+                if Line.strip().startswith("shell: python "):
+                    self.assertNotIn("${{", Line, str(Workflow))
+                    Relative = Line.strip().split()[2]
+                    self.assertEqual((RUNNER.parents[2] / Cwd / Relative).resolve(), RUNNER.resolve(), str(Workflow))
+
     def test_assertion_helper_locations(self):
         Repository = RUNNER.parents[2]
         Seen = {"managed": 0, "native": 0}
