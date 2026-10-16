@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #include "Backend.hpp"
 #include "Query.hpp"
 #include "sqlite3.h"
@@ -9,10 +10,13 @@
 using namespace CarbonLuau::Persistence;
 namespace CarbonLuau::Persistence { void TestCheckpoint(const char*) {} }
 namespace {
-void Check(bool Good,const char* Message) { if(!Good)throw std::runtime_error(Message); }
+void Check(bool Good,const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE()) {
+    if (!Good) TestDiagnostics::Failure(File, Line); if(!Good)throw std::runtime_error(Message); }
 Deadline Until(){return Clock::now()+std::chrono::seconds(30);}
+static bool CleanupFailed = false;
 struct FixtureGuard {
     std::filesystem::path Parent,Folder;
+    bool Attempted = false;
     FixtureGuard(){
         Parent=std::filesystem::weakly_canonical(std::filesystem::temp_directory_path());
         Folder=Parent/("carbonluau-query-"+std::to_string(Clock::now().time_since_epoch().count()));
@@ -20,12 +24,16 @@ struct FixtureGuard {
             "fixture target confined");
         Check(std::filesystem::create_directory(Folder),"fresh fixture");
     }
-    ~FixtureGuard() noexcept {
-        try {
+    void Close() {
+        if (Attempted) return;
+        Attempted = true;
             if(Folder.parent_path()==Parent && Folder.filename().string().rfind("carbonluau-query-",0)==0 &&
                 std::filesystem::is_directory(Folder) && !std::filesystem::is_symlink(Folder))
                 std::filesystem::remove_all(Folder);
-        } catch(...) {}
+    }
+    ~FixtureGuard() noexcept {
+        try { Close(); }
+        catch(...) { CleanupFailed = true; TestDiagnostics::CleanupFailure(); }
     }
 };
 Value Number(double Input){Value Result;Result.Type=Kind::Number;Result.Number=Input;return Result;}
@@ -350,6 +358,8 @@ int main(){
                 QueryWire::InvalidCursor,"session secret invalidates old cursor");
         }
         CombinedWorkload();
+        Fixture.Close();
+        Check(!CleanupFailed,"nested query fixture cleanup");
         std::printf("[CarbonLuau:Persistence] Query worker tests PASS\n");return 0;
     }catch(const std::exception& Problem){std::fprintf(stderr,"[CarbonLuau:Persistence] Query worker tests failed: %s\n",Problem.what());return 1;}
 }

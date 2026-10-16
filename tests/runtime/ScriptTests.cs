@@ -8,7 +8,8 @@ using Runtime = Carbon.Plugins.CarbonLuau;
 
 internal static class ScriptTests
 {
-    private static void Check(bool Value, string Message) { if (!Value) throw new Exception("Phase 2: " + Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception("Phase 2: " + Message); }
     private static string Root, Scripts, Entry;
     private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false);
     private static void Source(string Text) { File.WriteAllText(Entry, Text, Utf8); }

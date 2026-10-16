@@ -12,8 +12,9 @@ internal static class GameplayPublicationTests
     private sealed class Registrar : Runtime.ICommandRegistrar
     { public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next) { } }
 
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("Gameplay publication: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("Gameplay publication: " + Message); }
 
     private const string State = "local S=require('state'); ";
     private const string Setup = State +

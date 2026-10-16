@@ -79,8 +79,9 @@ internal static class GameplayEventBudgetTests
             Check(Budget.PendingCount == 0 && Budget.RetainedBytes == 0, "model cleanup converges");
         }
     }
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("Gameplay event budget: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("Gameplay event budget: " + Message); }
     private static string[] Operation(Runtime.FacadeSession Owner, uint Code, params string[] Fields)
     {
         try { return (string[])typeof(Runtime.FacadeSession).GetMethod("Operation", BindingFlags.Instance | BindingFlags.NonPublic)

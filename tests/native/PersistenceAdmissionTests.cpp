@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 // White-box dispatch seam only. No persistence names enter shipped Luau globals
 // or native exports; the real conversion/completion facade belongs to 1B.
 #include "../../native/src/runtime/RuntimeInternal.hpp"
@@ -13,7 +14,8 @@ int Dispatch(lua_State* State)
     if (Allowed) { Allowed=ReserveStorage(*TestRuntime,*Owner,uint64_t(Dispatches)+1); if (Allowed) ++Dispatches; }
     lua_pushboolean(State,Allowed); return 1;
 }
-void Check(bool Good,const char* Message) { if (!Good) { std::fprintf(stderr,"[CarbonLuau:Persistence] %s\n",Message); std::exit(1); } }
+void Check(bool Good,const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE()) {
+    if (!Good) TestDiagnostics::Failure(File, Line); if (!Good) { std::fprintf(stderr,"[CarbonLuau:Persistence] %s\n",Message); std::exit(1); } }
 void Execute(ClHandle Vm,ClHandle Domain,const std::string& Source)
 {
     ClHandle Thread=0; ClResult Result{};

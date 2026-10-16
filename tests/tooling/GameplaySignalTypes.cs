@@ -4,8 +4,9 @@ using Newtonsoft.Json.Linq;
 internal static class GameplaySignalTypes
 {
     private const string CurrentApi = "0.99.0-experimental";
-    private static void Check(bool Value, string Message)
-    { if (!Value) throw new InvalidOperationException(Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new InvalidOperationException(Message); }
     private static void Reject(Action Operation, string Message)
     {
         try { Operation(); }

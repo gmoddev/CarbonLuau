@@ -28,8 +28,9 @@ internal static class InventoryChangedPublicTests
         "S.Count+=1; S.Last=C; print('changed '..C.Item..' '..C.Before..' '..C.After..' '..C.Delta) end); ";
     private const string Entry = Acquire + "S.Count=0; " + Connect;
 
-    private static void Check(bool Value, string Message)
-    { if (!Value) throw new Exception("[CarbonLuau:InventoryChangedTest] " + Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception("[CarbonLuau:InventoryChangedTest] " + Message); }
 
     private sealed class Definition
     {

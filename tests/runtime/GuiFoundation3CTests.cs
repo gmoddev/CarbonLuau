@@ -46,8 +46,9 @@ internal static class GuiFoundation3CTests
         public void Dispose() { Gui.Dispose(); }
     }
 
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("GUI Foundation 3C: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("GUI Foundation 3C: " + Message); }
     private static void Reject(Action Value, string Message)
     { bool Rejected = false; try { Value(); } catch (InvalidOperationException) { Rejected = true; } Check(Rejected, Message); }
     private static Runtime.GuiPropertyUse Descriptor(Runtime.GuiClassId ClassId, Runtime.GuiPropertyId PropertyId)

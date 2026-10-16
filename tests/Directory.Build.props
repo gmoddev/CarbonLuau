@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)shared/TestDiagnostics.cs" Link="TestDiagnostics.cs" />
+  </ItemGroup>
+</Project>

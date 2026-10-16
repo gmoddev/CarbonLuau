@@ -5,8 +5,9 @@ using Runtime = Carbon.Plugins.CarbonLuau;
 
 internal static class PlayerInteractionFoundation1CTests
 {
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("Player-1C: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("Player-1C: " + Message); }
     private static Runtime.PhysicalInventoryContainer Container(object Identity, List<Runtime.PhysicalInventoryStack> Stacks)
     {
         return new Runtime.PhysicalInventoryContainer {Identity = Identity, StackCount = Stacks.Count, Read = Index => Stacks[Index]};

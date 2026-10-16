@@ -34,7 +34,8 @@ internal static class AddonTests
         public EntrySpec(string Name, byte[] RawBytes) { this.Name = Name; this.RawBytes = RawBytes; }
     }
     private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
-    private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception("Addon foundations: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("Addon foundations: " + Message); }
     private static int TakePhysical(List<Runtime.PhysicalInventoryStack> Values, object Parent, object Definition, int Amount)
     {
         int Removed = 0;

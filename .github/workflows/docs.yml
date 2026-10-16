@@ -32,6 +32,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Verify documentation before deployment
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell auto --step 1 "{0}"
         run: python tools/Test-Documents.py
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
@@ -42,3 +43,16 @@ jobs:
       - name: Deploy documentation
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Collect bounded CI diagnostics
+        if: always()
+        env:
+          CARBONLUAU_JOB_STATUS: ${{ job.status }}
+        run: python tools/ci/Run.py --collect
+      - name: Retain bounded CI diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics-${{ github.job }}-${{ runner.os }}
+          path: ${{ runner.temp }}/carbonluau-ci-diagnostics/upload/
+          if-no-files-found: warn
+          retention-days: 14

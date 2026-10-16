@@ -35,8 +35,9 @@ internal static class StorageAsyncCompletionTests
     }
     private static readonly MethodInfo CompletionWait = typeof(Runtime.StorageProcess).GetMethod("WaitCompletion", BindingFlags.Static | BindingFlags.NonPublic);
     private static readonly MethodInfo Await = typeof(Runtime.StorageProcess).GetMethod("Await", BindingFlags.Instance | BindingFlags.NonPublic);
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception(Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception(Message); }
     private static bool WaitCompletion(IAsyncResult Operation, ulong End, Func<bool> Stopping = null)
     {
         try { return (bool)CompletionWait.Invoke(null, new object[] { Operation, End, Stopping }); }

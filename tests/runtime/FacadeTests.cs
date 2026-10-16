@@ -16,7 +16,8 @@ internal static class FacadeTests
             Active = Next;
         }
     }
-    private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception("Phase 3: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("Phase 3: " + Message); }
     private static string Drain(Runtime.ScriptHost Host)
     {
         string Logs = "";

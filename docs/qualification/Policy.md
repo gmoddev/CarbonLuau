@@ -4,6 +4,17 @@ This page contains normative detail delegated by the [canonical register](../Com
 It reorganizes existing rules; it creates no second authority or new contract.
 Existing decision/criteria text is retained; qualification remains separately scoped.
 
+## CI failure evidence
+
+Test infrastructure changes require genuine negative subprocess evidence:
+assertion/status/exception preservation, secondary cleanup, bounded records,
+isolation and secret exclusion. Failed CI jobs retain sanitized diagnostics via
+`always()` collection/upload. Intentional negative workflows remain visibly failed;
+they do not count as green release gates. Unknown failures retain unknown attribution.
+Do not replace assertions, deadlines or resource ceilings with retries, warmups,
+delays or suppression. Current scoped evidence is in
+[CI reliability hardening](../CI-Reliability-Hardening.md).
+
 <!-- BEGIN RECORD Compatibility.md -->
 
 ## Canonical Phase 0 fixture

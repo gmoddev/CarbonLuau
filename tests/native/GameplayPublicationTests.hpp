@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #pragma once
 #include "../../native/src/runtime/RuntimeInternal.hpp"
 
@@ -6,8 +7,9 @@
 namespace CarbonLuau::GameplayPublicationTests {
 using namespace CarbonLuau::Runtime;
 static uint64_t Registration;
-static void Check(bool Good, const char* Message)
+static void Check(bool Good, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Good) TestDiagnostics::Failure(File, Line);
     if (!Good) { std::fprintf(stderr, "[CarbonLuau:GameplayPublicationNative] %s\n", Message); std::exit(1); }
 }
 static uint32_t Host(uint64_t, uint32_t Operation, const char*, uint32_t,

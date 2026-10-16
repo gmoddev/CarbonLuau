@@ -91,8 +91,9 @@ internal static class EntityDiedSignalTests
             Check(PlayerLookups == 0, "historical Entity snapshots never resolve a Player");
         }
     }
-    private static void Check(bool Value, string Message)
-    { if (!Value) throw new Exception("EntityDied: " + Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception("EntityDied: " + Message); }
     private static string[] Operation(Runtime.FacadeSession Owner, uint Code, params string[] Fields)
     {
         try { return (string[])typeof(Runtime.FacadeSession).GetMethod("Operation", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -527,6 +528,7 @@ internal static class EntityDiedSignalTests
     internal static void Run(string Library, string Compiler)
     {
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauEntityDied-" + Guid.NewGuid().ToString("N"));
+        Exception DiagnosticPrimary = null;
         try {
             string Rid = Runtime.NativeLibraryLoader.GetRid(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
             string Target = Runtime.NativeLibraryLoader.GetLibraryPath(Root, Rid);
@@ -535,7 +537,8 @@ internal static class EntityDiedSignalTests
             File.Copy(Compiler, Worker);
             if (Rid == "linux-x64") Check(chmod(Worker, 493) == 0, "compiler executable mode");
             using (var Native = new Runtime.NativeRuntime(Root)) RunNative(Native);
-        } finally { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
+        } catch (Exception Error) { DiagnosticPrimary = Error; TestDiagnostics.ExceptionFailure(Error); throw; }
+        finally { TestDiagnostics.Cleanup(() => { if (Directory.Exists(Root)) Directory.Delete(Root, true); }, DiagnosticPrimary); }
     }
     internal static void RunNative(Runtime.NativeRuntime Native)
     {

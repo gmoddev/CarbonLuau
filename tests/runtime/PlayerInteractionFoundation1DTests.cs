@@ -3,8 +3,9 @@ using Runtime = Carbon.Plugins.CarbonLuau;
 
 internal static class PlayerInteractionFoundation1DTests
 {
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("Player-1D: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("Player-1D: " + Message); }
 
     private static string Reject(Action Action)
     {

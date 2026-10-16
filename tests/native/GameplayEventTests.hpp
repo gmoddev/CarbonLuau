@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #pragma once
 #include "../../native/src/runtime/RuntimeInternal.hpp"
 #include <set>
@@ -10,8 +11,9 @@ static std::set<uint64_t> Releases;
 static bool RejectGate, RejectRelease, ThrowGate;
 static unsigned Gates;
 static uint64_t NextListener;
-static void Check(bool Good, const char* Message)
+static void Check(bool Good, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Good) TestDiagnostics::Failure(File, Line);
     if (!Good) { std::fprintf(stderr, "[CarbonLuau:GameplayEventNative] %s\n", Message); std::exit(1); }
 }
 static std::string Pack(const std::vector<std::string>& Fields)

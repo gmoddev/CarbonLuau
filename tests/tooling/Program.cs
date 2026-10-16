@@ -11,7 +11,8 @@ string Native = (File.ReadAllText(Path.Combine(Root, "native/src/scripts/ModuleL
 JObject Release = JObject.Parse(File.ReadAllText(Path.Combine(Root, "release.json")));
 JObject Catalog = ApiCatalog.Build(Bootstrap, Release, Native);
 ScriptCatalogTests.Run(Root, Catalog, Bootstrap, Release, Native);
-void Check(bool Value, string Message) { if (!Value) throw new Exception(Message); }
+void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception(Message); }
 void Reject(Action Action, string Message) { try { Action(); } catch (InvalidOperationException) { return; } throw new Exception(Message); }
 string Definitions = ApiArtifacts.Definitions(Catalog);
 void CheckLootCatalog(JObject Value)

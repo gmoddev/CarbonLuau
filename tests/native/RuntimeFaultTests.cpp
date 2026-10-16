@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 // White-box executable only; no test controls are exported by the production DLL.
 #include "../../native/src/runtime/RuntimeInternal.hpp"
 #include "../../native/src/scripts/Compiler.hpp"
@@ -11,8 +12,9 @@
 
 using namespace CarbonLuau::Runtime;
 
-static void Check(bool Condition, const char* Message)
+static void Check(bool Condition, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Condition) TestDiagnostics::Failure(File, Line);
     if (!Condition) { std::fprintf(stderr, "[CarbonLuau:FaultTest] FAIL: %s\n", Message); std::exit(1); }
 }
 static unsigned FixtureRegistration = 0;

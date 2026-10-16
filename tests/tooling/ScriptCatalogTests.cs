@@ -5,7 +5,8 @@ internal static class ScriptCatalogTests
 {
     internal static void Run(string Root, JObject Catalog, string Bootstrap, JObject Release, string Native)
     {
-        void Check(bool Value, string Message) { if (!Value) throw new Exception("CATALOG-D9: " + Message); }
+        void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception("CATALOG-D9: " + Message); }
         void Reject(string Changed) {
             try { ApiCatalog.Build(Bootstrap, Release, Changed); }
             catch (InvalidOperationException) { return; }

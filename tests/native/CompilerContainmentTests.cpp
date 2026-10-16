@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #include "../../native/src/scripts/Compiler.hpp"
 #include "Luau/Compiler.h"
 
@@ -9,8 +10,9 @@
 using namespace CarbonLuau::Runtime;
 
 namespace {
-void Check(bool Condition, const char* Message)
+void Check(bool Condition, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Condition) TestDiagnostics::Failure(File, Line);
     if (!Condition) { std::fprintf(stderr, "[CarbonLuau:CompilerTest] FAIL: %s\n", Message); std::exit(1); }
 }
 

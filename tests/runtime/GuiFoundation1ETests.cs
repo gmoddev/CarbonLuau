@@ -53,7 +53,8 @@ internal static class GuiFoundation1ETests
         private string NextRegistration() { return (++Registration).ToString(); }
     }
 
-    private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception("GUI Foundation 1E: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("GUI Foundation 1E: " + Message); }
     private static Runtime.GuiRenderValue Property(Runtime.GuiRenderElement Element, Runtime.GuiRenderPropertyId Id)
     { foreach (Runtime.GuiRenderProperty Value in Element.Properties) if (Value.Id == Id) return Value.Value; return null; }
     private static string Token(Runtime.InMemoryGuiBackend Backend, string PlayerToken = null)

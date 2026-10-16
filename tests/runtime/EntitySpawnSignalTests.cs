@@ -66,8 +66,9 @@ internal static class EntitySpawnSignalTests
             throw new Runtime.FacadeException("unknown Entity property");
         }
     }
-    private static void Check(bool Value, string Message)
-    { if (!Value) throw new Exception("EntitySpawned: " + Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception("EntitySpawned: " + Message); }
     private const string State = "local S=require('state'); ";
     private const string Entry = State + "S.Count=0; local W=game:GetService('Workspace'); S.Connection=W.EntitySpawned:Connect(function(E) " +
         "S.Count+=1; S.Last=E; assert(E.Prefab=='assets/fixture.prefab' and E.Position==Vector3.new(1,2,3)); print('spawn '..E.Id) end)";

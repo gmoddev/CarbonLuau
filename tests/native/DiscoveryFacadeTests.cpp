@@ -1,11 +1,13 @@
+#include "../shared/NativeDiagnostics.hpp"
 #include "../../native/src/runtime/RuntimeInternal.hpp"
 #include "../../native/src/scripts/Compiler.hpp"
 #include <set>
 
 using namespace CarbonLuau::Runtime;
 namespace {
-void Check(bool Good, const char* Message)
+void Check(bool Good, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Good) TestDiagnostics::Failure(File, Line);
     if (!Good) { std::fprintf(stderr, "[CarbonLuau:DiscoveryTest] %s\n", Message); std::exit(1); }
 }
 struct Request { uint64_t Owner, Route; std::vector<std::string> Fields; };

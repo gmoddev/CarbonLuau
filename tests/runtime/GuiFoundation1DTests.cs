@@ -64,7 +64,8 @@ internal static class GuiFoundation1DTests
         { var Watch = Stopwatch.StartNew(); while (Watch.Elapsed.TotalMilliseconds < 3) { } }
     }
 
-    private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception("GUI Foundation 1D: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("GUI Foundation 1D: " + Message); }
     private static ulong Id(string[] Value) { return UInt64.Parse(Value[0]); }
     private static ulong Create(Runtime.GuiRetainedRegistry Gui, string ClassName, ulong Parent = 0)
     { return Id(Gui.Mutate(new[] {"create", Parent == 0 ? "" : Parent.ToString(), ClassName}, () => Guid.NewGuid().ToString("N"))); }

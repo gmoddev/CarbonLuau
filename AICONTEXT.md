@@ -44,6 +44,7 @@ restating a proposal as a rule or broadening a receipt's tested scope.
 | Package/API/ABI/provider/schema/Luau identities and publication | [D12](docs/invariants/Runtime.md#d12--scripting-and-protocol-identity), [release.json](release.json), [Release](docs/Release.md), [Installation](docs/Installation.md) |
 | Current development runtime/editor synchronization and release gates | [Cross-repository readiness](docs/CrossRepo-ReleaseReadiness.md); separate official editor's tooling-source.json pins the qualified canonical API source |
 | Inventory CI failure investigation | [Status correction and evidence](docs/Inventory-CI-Investigation.md); controlled bootstrap timeout reproduced, historical attribution/HOLD unresolved |
+| CI failure reporting and cleanup | [Reliability qualification](docs/CI-Reliability-Hardening.md); [evidence policy](docs/qualification/Policy.md#ci-failure-evidence) |
 
 The current development package/API mapping is `0.7.0` / `0.7.5-experimental`.
 CATALOG-D9 introduces generated immutable Item/Prefab string namespaces under

@@ -12,6 +12,7 @@ internal static partial class InventoryNetObservationTests
     {
         foreach (string Mode in new[] { "bootstrap-timeout", "entry-compile", "module-compile", "runtime", "entry-deadline" }) {
             string Root = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "CarbonLuauInventoryInit-" + Guid.NewGuid().ToString("N")));
+            Exception Primary = null;
             try {
                 string Rid = Runtime.NativeLibraryLoader.GetRid(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
                 string Target = Runtime.NativeLibraryLoader.GetLibraryPath(Root, Rid);
@@ -34,6 +35,12 @@ internal static partial class InventoryNetObservationTests
                     using (var Host = new Runtime.ScriptHost(Native, new Runtime.RuntimeConfig { MaxCallbackMilliseconds = 100 }, Snapshot, Value.World)) {
                         var Clock = System.Diagnostics.Stopwatch.StartNew();
                         var Failed = Host.Reload(); Clock.Stop();
+                        TestDiagnostics.Observe("init.status", (long)Failed.Status, 0, (long)Failed.Status);
+                        TestDiagnostics.Observe("init.scans", Player.Scans, 0);
+                        TestDiagnostics.Observe("init.watches", Value.Samples.WatchCount, 0);
+                        TestDiagnostics.Observe("init.demand", Value.Samples.DemandCount, 0);
+                        TestDiagnostics.Observe("init.pending", Value.Samples.PendingCount, 0);
+                        TestDiagnostics.Observe("init.liveVms", Native.LiveVmCount, 0);
                         Console.WriteLine("[CarbonLuau:InventoryInit] INJECTED mode=" + Mode + " status=" + Failed.Status +
                             " retired=" + Failed.Retired + " scans=" + Player.Scans + " watches=" + Value.Samples.WatchCount +
                             " liveVms=" + Native.LiveVmCount + " elapsedMs=" + Clock.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) +
@@ -87,12 +94,13 @@ internal static partial class InventoryNetObservationTests
                             "shared runtime initializer preserves checked VM allocation failure");
                     }
                 }
-            } finally {
+            } catch (Exception Error) { Primary = Error; TestDiagnostics.ExceptionFailure(Error); throw; }
+            finally { TestDiagnostics.Cleanup(() => {
                 string Temporary = Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
                 Check(Root.StartsWith(Temporary, StringComparison.OrdinalIgnoreCase) &&
                     Path.GetFileName(Root).StartsWith("CarbonLuauInventoryInit-", StringComparison.Ordinal), "confined initialization fixture cleanup");
                 if (Directory.Exists(Root)) Directory.Delete(Root, true);
-            }
+            }, Primary); }
         }
         Console.WriteLine("[CarbonLuau:InventoryInit] PASS five independent injected failures, status/retirement, explicit recovery, replacement, observer ownership and cleanup; not a historical-failure attribution");
     }

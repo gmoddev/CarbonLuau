@@ -9,7 +9,8 @@ using Runtime = Carbon.Plugins.CarbonLuau;
 // synthetic transport here; actual worker fencing/crashes live in ManagedTests.
 internal static class PersistenceLifecycleTests
 {
-    private static void Check(bool Value,string Message) { if(!Value) throw new Exception("Persistence lifecycle: "+Message); }
+    private static void Check(bool Value,string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if(!Value) throw new Exception("Persistence lifecycle: "+Message); }
     private static Runtime.RuntimeDomain Root(Runtime.ScriptHost Host)
     { return (Runtime.RuntimeDomain)typeof(Runtime.ScriptHost).GetField("Current",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(Host); }
     private static Runtime.RuntimeDomain Addon(Runtime.ScriptHost Host)

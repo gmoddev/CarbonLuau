@@ -17,6 +17,8 @@ does not create another contract or qualification receipt.
   Current development API `0.7.5-experimental` adds [Item/Prefab catalogs](api/Catalogs.md).
 - [Inventory CI investigation](Inventory-CI-Investigation.md): bootstrap timeout
   reproduction, shared status correction and retained historical release HOLD.
+- [CI reliability hardening](CI-Reliability-Hardening.md): bounded diagnostics,
+  first-failure preservation and negative artifact qualification.
 - Published release notes: [0.3](releases/0.3.0.md), [0.4](releases/0.4.0.md),
   [0.5](releases/0.5.0.md). [Planned 0.6 notes](releases/0.6.0.md) remain explicitly
   unpublished scope/number planning; package identity need not match API identity.

@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 // Public native facade against a bounded in-memory HostDelegate transport.
 // All envelopes use the shipped Persistence-1A codec; no substitute serializer.
 #include "../../native/src/runtime/RuntimeInternal.hpp"
@@ -7,8 +8,9 @@
 using namespace CarbonLuau::Runtime;
 namespace P = CarbonLuau::Persistence;
 namespace {
-void Check(bool Good, const char* Message)
+void Check(bool Good, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Good) TestDiagnostics::Failure(File, Line);
     if (!Good) { std::fprintf(stderr, "[CarbonLuau:PersistenceTest] %s\n", Message); std::exit(1); }
 }
 struct Request {

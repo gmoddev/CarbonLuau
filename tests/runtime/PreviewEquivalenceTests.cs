@@ -53,5 +53,6 @@ internal static class PreviewEquivalenceTests
         Console.WriteLine("[CarbonLuau:PreviewEquivalence] PASS " + Fixtures.Count + " fixtures through production retained registry, Player Presentation and compiler versus preview adapter");
     }
     private static JObject Rect(Runtime.GuiPixelRect Value) { return new JObject { ["X"] = Value.X, ["Y"] = Value.Y, ["Width"] = Value.Width, ["Height"] = Value.Height }; }
-    private static void Check(bool Value, string Message) { if (!Value) throw new Exception(Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception(Message); }
 }

@@ -107,8 +107,9 @@ internal static class LootPublicTests
         }
     }
 
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new InvalidOperationException("Loot public: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new InvalidOperationException("Loot public: " + Message); }
     private static string Declaration(int Amount)
     { return Declaration(Prefab, Amount); }
     private static string Declaration(string Prefab, int Amount)
@@ -134,6 +135,7 @@ internal static class LootPublicTests
     internal static void Run(string Library, string Compiler)
     {
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauLootPublic-" + Guid.NewGuid().ToString("N"));
+        Exception DiagnosticPrimary = null;
         try {
             string Rid = Runtime.NativeLibraryLoader.GetRid(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
             string Target = Runtime.NativeLibraryLoader.GetLibraryPath(Root, Rid);
@@ -142,7 +144,8 @@ internal static class LootPublicTests
             File.Copy(Compiler, Worker);
             if (Rid == "linux-x64") Check(chmod(Worker, 493) == 0, "compiler executable mode");
             using (var Native = new Runtime.NativeRuntime(Root)) RunNative(Native);
-        } finally { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
+        } catch (Exception Error) { DiagnosticPrimary = Error; TestDiagnostics.ExceptionFailure(Error); throw; }
+        finally { TestDiagnostics.Cleanup(() => { if (Directory.Exists(Root)) Directory.Delete(Root, true); }, DiagnosticPrimary); }
     }
 
     internal static void RunNative(Runtime.NativeRuntime Native)

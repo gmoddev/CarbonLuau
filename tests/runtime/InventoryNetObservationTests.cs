@@ -124,8 +124,9 @@ internal static partial class InventoryNetObservationTests
         }
     }
 
-    private static void Check(bool Value, string Reason)
-    { if (!Value) throw new Exception("[CarbonLuau:InventoryNetTest] " + Reason); }
+    private static void Check(bool Value, string Reason, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception("[CarbonLuau:InventoryNetTest] " + Reason); }
 
     private static void Reject<T>(Action Action, string Reason) where T : Exception
     {
@@ -662,6 +663,10 @@ internal static partial class InventoryNetObservationTests
                 var ReloadWatch = System.Diagnostics.Stopwatch.StartNew();
                 var Reload = Host.Reload();
                 ReloadWatch.Stop();
+                TestDiagnostics.Observe("inventory.reload.status", (long)Reload.Status, 0, (long)Reload.Status);
+                TestDiagnostics.Observe("inventory.reload.scans", Player.Scans, 0);
+                TestDiagnostics.Observe("inventory.reload.watches", Value.Samples.WatchCount, 0);
+                TestDiagnostics.Observe("inventory.reload.elapsedTicks", ReloadWatch.ElapsedTicks, 0);
                 Console.WriteLine("[CarbonLuau:InventoryNetTest] RELOAD_OBSERVATION status=" + Reload.Status +
                     " scans=" + Player.Scans + " watches=" + Value.Samples.WatchCount +
                     " elapsedMs=" + ReloadWatch.Elapsed.TotalMilliseconds.ToString("F3", CultureInfo.InvariantCulture) +
@@ -813,6 +818,7 @@ internal static partial class InventoryNetObservationTests
                 " reachableManagedDeltaBytes=" + (GC.GetTotalMemory(true) - BeforeBytes));
         }
         string Root = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "CarbonLuauInventoryNet-" + Guid.NewGuid().ToString("N")));
+        Exception Primary = null;
         try {
             string Rid = Runtime.NativeLibraryLoader.GetRid(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
             string Target = Runtime.NativeLibraryLoader.GetLibraryPath(Root, Rid);
@@ -822,12 +828,13 @@ internal static partial class InventoryNetObservationTests
             if (Rid == "linux-x64") Check(chmod(Worker, 493) == 0, "compiler executable mode");
             using (var Native = new Runtime.NativeRuntime(Root)) RealVm(Native);
             Console.WriteLine("[CarbonLuau:InventoryNetTest] PASS private sampled candidate: bounded snapshot/model, lifecycle, saturation, allocation faults, 10000 mixed churn cycles and real VM compatibility; completed-operation events and public Signals unqualified");
-        } finally {
+        } catch (Exception Error) { Primary = Error; TestDiagnostics.ExceptionFailure(Error); throw; }
+        finally { TestDiagnostics.Cleanup(() => {
             // Only this invocation's generated fixture directory is eligible.
             string Temporary = Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             Check(Root.StartsWith(Temporary, StringComparison.OrdinalIgnoreCase) &&
                 Path.GetFileName(Root).StartsWith("CarbonLuauInventoryNet-", StringComparison.Ordinal), "confined fixture cleanup path");
             if (Directory.Exists(Root)) Directory.Delete(Root, true);
-        }
+        }, Primary); }
     }
 }

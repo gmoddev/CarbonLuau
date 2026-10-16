@@ -11,7 +11,8 @@ using Runtime = Carbon.Plugins.CarbonLuau;
 internal static class DiscoveryPublicTests
 {
     [DllImport("libc", SetLastError = true)] private static extern int chmod(string Path, int Mode);
-    private static void Check(bool Good, string Message) { if (!Good) throw new Exception(Message); }
+    private static void Check(bool Good, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Good")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Good) TestDiagnostics.Pass(Good, Expression, File, Line); if (!Good) throw new Exception(Message); }
     private sealed class Registrar : Runtime.ICommandRegistrar
     { public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next) { } }
     private sealed class Entry
@@ -295,6 +296,7 @@ internal static class DiscoveryPublicTests
     internal static void Run(string Library, string Compiler)
     {
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauDiscovery2B-" + Guid.NewGuid().ToString("N"));
+        Exception DiagnosticPrimary = null;
         try {
             string Rid = Runtime.NativeLibraryLoader.GetRid(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
             string Target = Runtime.NativeLibraryLoader.GetLibraryPath(Root, Rid);
@@ -420,6 +422,7 @@ internal static class DiscoveryPublicTests
                 Check(Discovery.Held.Count == 0 && Native.LiveVmCount == 0, "deterministic public teardown");
             }
             Console.WriteLine("[CarbonLuau:DiscoveryPublic] PASS real VM arguments, snapshots, reserved readiness, exact Entity factory, queued staleness, publication/laundering and retirement");
-        } finally { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
+        } catch (Exception Error) { DiagnosticPrimary = Error; TestDiagnostics.ExceptionFailure(Error); throw; }
+        finally { TestDiagnostics.Cleanup(() => { if (Directory.Exists(Root)) Directory.Delete(Root, true); }, DiagnosticPrimary); }
     }
 }

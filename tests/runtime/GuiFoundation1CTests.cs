@@ -41,7 +41,8 @@ internal static class GuiFoundation1CTests
         }
     }
 
-    private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception("GUI Foundation 1C: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("GUI Foundation 1C: " + Message); }
     private static bool Near(double Left, double Right) { return Math.Abs(Left - Right) < 0.000000001; }
     private static void Reject(Action Value, string Message)
     { bool Rejected = false; try { Value(); } catch (InvalidOperationException) { Rejected = true; } Check(Rejected, Message); }

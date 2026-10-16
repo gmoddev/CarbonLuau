@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #include "Backend.hpp"
 #include "Derived.hpp"
 #include "Sortable.hpp"
@@ -13,8 +14,9 @@
 
 using namespace CarbonLuau::Persistence;
 namespace {
-void Check(bool Condition, const char* Message)
-{ if (!Condition) throw std::runtime_error(Message); }
+void Check(bool Condition, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
+{
+    if (!Condition) TestDiagnostics::Failure(File, Line); if (!Condition) throw std::runtime_error(Message); }
 Deadline Until() { return Clock::now() + std::chrono::seconds(30); }
 std::filesystem::path Fixture(const std::filesystem::path& Parent, const char* Name)
 {

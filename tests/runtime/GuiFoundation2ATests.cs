@@ -50,8 +50,9 @@ internal static class GuiFoundation2ATests
         { this.Left = Left; this.Top = Top; this.Width = Width; this.Height = Height; }
     }
 
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("GUI Foundation 2A: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("GUI Foundation 2A: " + Message); }
     private static void Reject(Action Action, string Message)
     { bool Rejected = false; try { Action(); } catch (InvalidOperationException) { Rejected = true; } Check(Rejected, Message); }
     private static bool Near(double Left, double Right) { return Math.Abs(Left - Right) < 0.000000001; }

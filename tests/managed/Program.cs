@@ -5,8 +5,9 @@ using Loader = Carbon.Plugins.CarbonLuau.NativeLibraryLoader;
 
 internal static class Program
 {
-    private static void Check(bool Condition, string Message)
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
     {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line);
         if (!Condition) throw new Exception(Message);
     }
 
@@ -28,6 +29,7 @@ internal static class Program
             if (Args.Length != 3) throw new Exception("Expected good, wrong-value and missing-symbol library paths");
             string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauTests-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(Root);
+            Exception Primary = null;
             try
             {
                 Expect(() => Loader.GetRid(PlatformID.Win32NT, Architecture.Arm64), "unsupported platform");
@@ -72,12 +74,13 @@ internal static class Program
                         Check(!File.ReadAllText("/proc/self/maps").Contains(Target), "Library still mapped after unload");
                 }
             }
-            finally { Directory.Delete(Root, true); }
+            catch (Exception Error) { Primary = Error; TestDiagnostics.ExceptionFailure(Error); throw; }
+            finally { TestDiagnostics.Cleanup(() => Directory.Delete(Root, true), Primary); }
             Console.WriteLine("[CarbonLuau:Test] PASS: platform/path checks, missing/broken/symbol/value failures, 100 managed load/unload cycles");
             return 0;
         }
         catch (Exception Error)
-        {
+        { TestDiagnostics.ExceptionFailure(Error);
             Console.Error.WriteLine("[CarbonLuau:Test] FAIL: " + Error);
             return 1;
         }

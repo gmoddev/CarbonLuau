@@ -15,8 +15,9 @@ internal static class FoundationETests
     }
 
     private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("Foundation E: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("Foundation E: " + Message); }
     private static byte[] Bytes(string Text) { return Utf8.GetBytes(Text); }
     private static void DrainRegistry(Runtime.AddonRegistry Registry, int Maximum = 256)
     {

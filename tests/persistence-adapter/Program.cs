@@ -13,7 +13,8 @@ internal static class Program
     private const string Store="local S=game:GetService('DataStoreService'):GetDataStore('Adapter'); ";
     private const string Stale="ADAPTER_STALE_CALLBACK";
     private static bool Windows { get { return Environment.OSVersion.Platform==PlatformID.Win32NT; } }
-    private static void Check(bool Value,string Message) { if (!Value) throw new InvalidOperationException(Prefix+Message); }
+    private static void Check(bool Value,string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new InvalidOperationException(Prefix+Message); }
     private static object Field(object Owner,string Name)
     { return Owner.GetType().GetField(Name,BindingFlags.Instance|BindingFlags.NonPublic).GetValue(Owner); }
     private static Runtime.StorageQueue.Request[] Reservations(Runtime.StorageQueue Queue)
@@ -202,7 +203,7 @@ internal static class Program
             RunCase(Library,Worker,Parent,false); RunCase(Library,Worker,Parent,true);
             Console.WriteLine(Prefix+"ALL PASS: Persistence-1B adapter teardown gate; host stubs, not actual Carbon scheduling or 1C qualification");
             return 0;
-        } catch (Exception Error) { Console.Error.WriteLine(Prefix+"FAIL "+Error); return 1; }
+        } catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine(Prefix+"FAIL "+Error); return 1; }
     }
     [DllImport("kernel32.dll")] private static extern uint SetErrorMode(uint Mode);
     [DllImport("kernel32.dll",CharSet=CharSet.Unicode,ExactSpelling=true)] private static extern IntPtr GetModuleHandleW(string Name);

@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 // Investigation only: transparent VFS tracing/fault injection and killed child
 // processes. Not a production VFS, storage schema, quota adapter or worker.
 #include "sqlite3.h"
@@ -31,8 +32,9 @@ std::string StopAt, Events;
 int DatabaseSyncs = 0, JournalMarkerSyncs = 0, WalSyncs = 0;
 sqlite3_int64 PeakJournalWrite = 0, PeakWalWrite = 0;
 
-void Check(bool Good, const char* Message)
+void Check(bool Good, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Good) TestDiagnostics::Failure(File, Line);
     if (!Good) throw std::runtime_error(Message);
 }
 void Point(const char* Name)

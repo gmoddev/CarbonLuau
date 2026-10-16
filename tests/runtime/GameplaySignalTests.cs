@@ -12,8 +12,9 @@ internal static class GameplaySignalTests
 {
     private sealed class Registrar : Runtime.ICommandRegistrar
     { public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next) { } }
-    private static void Check(bool Value, string Message)
-    { if (!Value) throw new InvalidOperationException("Gameplay Signals: " + Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new InvalidOperationException("Gameplay Signals: " + Message); }
     private const string VictimId = "76561190000999888", KillerId = "76561190000999889";
     private const string State = "local S=require('state'); ";
     private const string Entry = State +

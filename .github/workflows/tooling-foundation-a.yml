@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 22
       - name: Check finite pinned Loot manifest generation and drift rejection
-        shell: bash
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell bash --step 1 "{0}"
         run: |
           python tools/Generate-LootItems.py --check
           python tools/Test-LootItems.py
@@ -36,10 +36,10 @@ jobs:
           python tools/Test-LootQualification.py
           python tools/Generate-LootQualification.py --check-public
       - name: Build independent Core, parser and tooling; check deterministic metadata
-        shell: pwsh
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell pwsh --step 2 "{0}"
         run: ./tools/Build-Tooling.ps1 -Extension build/extension-pack
       - name: Validate API, architecture and server packaging isolation
-        shell: pwsh
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell pwsh --step 3 "{0}"
         run: |
           ./tools/Test-ToolingContracts.ps1
           ./tools/Test-Api.ps1
@@ -56,7 +56,7 @@ jobs:
       - name: Qualify exact catalog completion in actual VS Code
         if: runner.os == 'Linux'
         timeout-minutes: 10
-        shell: bash
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell bash --step 4 "{0}"
         run: |
           npm --prefix build/catalog-editor-extension ci --no-audit --no-fund
           npm --prefix build/catalog-editor-extension run build
@@ -89,3 +89,16 @@ jobs:
           name: tooling-development-${{ matrix.os }}
           path: build/extension-pack/tooling/
           if-no-files-found: error
+      - name: Collect bounded CI diagnostics
+        if: always()
+        env:
+          CARBONLUAU_JOB_STATUS: ${{ job.status }}
+        run: python tools/ci/Run.py --collect
+      - name: Retain bounded CI diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics-${{ github.job }}-${{ runner.os }}
+          path: ${{ runner.temp }}/carbonluau-ci-diagnostics/upload/
+          if-no-files-found: warn
+          retention-days: 14

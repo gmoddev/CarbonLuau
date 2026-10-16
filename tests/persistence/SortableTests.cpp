@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #include "Sortable.hpp"
 #include <algorithm>
 #include <cmath>
@@ -7,8 +8,9 @@
 
 using namespace CarbonLuau::Persistence;
 namespace {
-void Check(bool Condition, const char* Message)
+void Check(bool Condition, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Condition) TestDiagnostics::Failure(File, Line);
     if (!Condition) throw std::runtime_error(Message);
 }
 template<class F> void Reject(F Action)

@@ -153,5 +153,7 @@ int main()
     try{
         const auto Root=std::filesystem::absolute(std::filesystem::current_path()/("derived-plans-"+std::to_string(Clock::now().time_since_epoch().count())));
         Check(std::filesystem::create_directory(Root),"fresh plan root");Plans(Root);return 0;
-    }catch(const std::exception& Problem){std::fprintf(stderr,"[CarbonLuau:Persistence] Derived plan failure: %s\n",Problem.what());return 1;}
+    }catch(const std::exception& Problem){
+        if (const auto* Controlled = dynamic_cast<const Failure*>(&Problem)) TestDiagnostics::PersistenceFailure(unsigned(Controlled->Code));
+        std::fprintf(stderr,"[CarbonLuau:Persistence] Derived plan failure: %s\n",Problem.what());return 1;}
 }

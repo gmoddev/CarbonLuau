@@ -585,6 +585,7 @@ int main(int Count, char** Arguments)
         std::puts("[CarbonLuau:Persistence] Derived crash tests PASS; process-crash evidence only; fixtures retained");
         return 0;
     } catch (const std::exception& Problem) {
+        if (const auto* Controlled = dynamic_cast<const Failure*>(&Problem)) TestDiagnostics::PersistenceFailure(unsigned(Controlled->Code));
         std::fprintf(stderr, "[CarbonLuau:Persistence] Derived crash tests failed: %s\n", Problem.what());
         return 1;
     }

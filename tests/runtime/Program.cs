@@ -6,52 +6,53 @@ using Runtime = Carbon.Plugins.CarbonLuau;
 
 internal static class Program
 {
-    private static void Check(bool Condition, string Message) { if (!Condition) throw new Exception(Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception(Message); }
     private static int Main(string[] Args)
     {
         if (Args.Length == 4 && Args[0] == "--inventory-init") {
             try { InventoryNetObservationTests.RunInitialization(Args[1], Args[2], Args[3]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:InventoryInit] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:InventoryInit] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 4 && Args[0] == "--catalog-memory") {
             try { CatalogMemoryTests.Run(Args[1], Args[2], Args[3]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:CatalogMemory] FAIL " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:CatalogMemory] FAIL " + Error); return 1; }
         }
         if (Args.Length == 4 && Args[0] == "--release-combined") {
             try {
                 PersistencePublicTests.RunStandalone(Args[1], Args[2], Args[3], CombinedOnly: true);
                 return 0;
-            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ReleaseCombined] FAIL: " + Error); return 1; }
+            } catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ReleaseCombined] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 3 && Args[0] == "--inventory-changed") {
             try { InventoryChangedPublicTests.Run(Args[1], Args[2]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:InventoryChanged] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:InventoryChanged] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 3 && Args[0] == "--inventory-net") {
             try { InventoryNetObservationTests.Run(Args[1], Args[2]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:InventoryNet] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:InventoryNet] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 3 && Args[0] == "--entitydied") {
             try { EntityDiedSignalTests.Run(Args[1], Args[2]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:EntityDied] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:EntityDied] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 1 && Args[0] == "--storageasync") {
             try { StorageAsyncCompletionTests.Run(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:StorageAsync] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:StorageAsync] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 1 && Args[0] == "--lootpolicy") {
             try { LootRulePolicyTests.Run(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:LootPolicy] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:LootPolicy] FAIL: " + Error); return 1; }
         }
         if (Args.Length > 0 && Args[0] == "--lootpublic") {
             try {
                 Check(Args.Length == 3, "usage: --lootpublic <native library> <compiler worker>");
                 LootPublicTests.Run(Args[1], Args[2]); return 0;
-            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:LootPublic] FAIL: " + Error); return 1; }
+            } catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:LootPublic] FAIL: " + Error); return 1; }
         }
         if (Args.Length==3 && Args[0]=="--gameplayc1") {
             try { GameplayC1Tests.Run(Args[1],Args[2]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:GameplayC1] FAIL: "+Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:GameplayC1] FAIL: "+Error); return 1; }
         }
         if (Args.Length == 2 && Args[0] == "--entitydestroyed") {
             try { using(var Native=new Runtime.NativeRuntime(Args[1])) EntityDestroyedSignalTests.RunNative(Native); return 0; }
@@ -69,133 +70,134 @@ internal static class Program
                     else GameplayDependencySignalTests.RunNative(Native);
                 }
                 return 0;
-            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:Gameplay] FAIL: " + Error); return 1; }
+            } catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:Gameplay] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 2 && Args[0] == "--gameplay-budget") {
             try {
                 using (var Native = new Runtime.NativeRuntime(Args[1])) GameplayEventBudgetTests.RunNative(Native);
                 return 0;
-            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:GameplayBudget] FAIL: " + Error); return 1; }
+            } catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:GameplayBudget] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 2 && Args[0] == "--gameplay-publication") {
             try {
                 using (var Native = new Runtime.NativeRuntime(Args[1])) GameplayPublicationTests.RunNative(Native);
                 return 0;
-            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:GameplayPublication] FAIL: " + Error); return 1; }
+            } catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:GameplayPublication] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 3 && Args[0] == "--discovery2b") {
             try { DiscoveryPublicTests.Run(Args[1], Args[2]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:DiscoveryPublic] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:DiscoveryPublic] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 3 && Args[0] == "--entity1b") {
             try { EntityReadRuntimeTests.Run(Args[1], Args[2]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:EntityRead] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:EntityRead] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 4 && Args[0] == "--entity1c") {
             try { EntityReadRuntimeTests.Run(Args[1], Args[2], Args[3]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:EntityRead] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:EntityRead] FAIL: " + Error); return 1; }
         }
         if (Args.Length > 0 && (Args[0] == "--persistence1b" || Args[0] == "--persistence1c" || Args[0] == "--persistence2c")) {
             try {
                 Check(Args.Length == 4, "usage: --persistence1b|--persistence1c|--persistence2c <native library> <storage worker> <fixture directory> (from repository root)");
                 PersistencePublicTests.RunStandalone(Args[1], Args[2], Args[3], Args[0] == "--persistence1c", Args[0] == "--persistence2c");
                 return 0;
-            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:Persistence] FAIL: " + Error); return 1; }
+            } catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:Persistence] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 2 && Args[0] == "--release-install") {
             try { ReleaseInstallTests.Run(Args[1]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ReleaseInstall] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ReleaseInstall] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 2 && Args[0] == "--preview-equivalence") {
             try { PreviewEquivalenceTests.Run(Args[1]); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:PreviewEquivalence] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:PreviewEquivalence] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui-only") {
             try { GuiFoundation1ATests.Run(Args.Length > 1 ? Args[1] : null); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 1 && Args[0] == "--entity-publication") {
             try { EntityPublicationWitnessTests.Run(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:EntityPublication] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:EntityPublication] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui1b-only") {
             try { GuiFoundation1BTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui1c-only") {
             try { GuiFoundation1CTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui1d-only") {
             try { GuiFoundation1DTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui1e-only") {
             try { GuiFoundation1ETests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui1f-only") {
             try { GuiFoundation1FTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui2a-only") {
             try { GuiFoundation2ATests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui2b-only") {
             try { GuiFoundation2BTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui2c-only") {
             try { GuiFoundation2CTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui2e-only") {
             try { GuiFoundation2ETests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui2f-only") {
             try { GuiFoundation2FTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui3a-only") {
             try { GuiFoundation3ATests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui3b-only") {
             try { GuiFoundation3BTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui3c-only") {
             try { GuiFoundation3CTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui3d-only") {
             try { GuiFoundation3DTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--gui3e-only") {
             try { GuiFoundation3ETests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--player1c-only") {
             try { PlayerInteractionFoundation1CTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--player1d-only") {
             try { PlayerInteractionFoundation1DTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--player1fa-only") {
             try { PlayerInteractionFoundation1FATests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length >= 1 && Args[0] == "--player1fc-only") {
             try { PlayerInteractionFoundation1FCTests.RunModel(); return 0; }
-            catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         if (Args.Length == 3 && Args[0] == "--gameplayc4") {
             string FixtureRoot = Path.Combine(Path.GetTempPath(), "CarbonLuauC4-" + Guid.NewGuid().ToString("N"));
+            Exception FixturePrimary = null;
             try {
                 string FixtureRid = Runtime.NativeLibraryLoader.GetRid(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
                 string FixtureLibrary = Runtime.NativeLibraryLoader.GetLibraryPath(FixtureRoot, FixtureRid);
@@ -208,8 +210,8 @@ internal static class Program
                     AddonTests.RunMutationPublication(Native);
                 }
                 return 0;
-            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:GameplayC4] FAIL: " + Error); return 1; }
-            finally { if (Directory.Exists(FixtureRoot)) Directory.Delete(FixtureRoot, true); }
+            } catch (Exception Error) { FixturePrimary = Error; TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:GameplayC4] FAIL: " + Error); return 1; }
+            finally { TestDiagnostics.Cleanup(() => { if (Directory.Exists(FixtureRoot)) Directory.Delete(FixtureRoot, true); }, FixturePrimary); }
         }
         if (Args.Length == 2 && Args[0] == "--player1fc-module-boundary") {
             try {
@@ -217,9 +219,10 @@ internal static class Program
                     PlayerInteractionFoundation1FCTests.RunNative(Native, ".");
                 }
                 return 0;
-            } catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+            } catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
         }
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauRuntime-" + Guid.NewGuid().ToString("N"));
+        Exception Primary = null;
         try
         {
             Check(Marshal.SizeOf(typeof(Runtime.NativeResult)) == 6160 && Marshal.SizeOf(typeof(Runtime.VmInfo)) == 24, "ABI layout");
@@ -358,8 +361,8 @@ internal static class Program
             Console.WriteLine("[CarbonLuau:ManagedTest] PASS: real native ABI; configuration; 100 atomic replacements and 200 failed candidates; timeout/memory recovery; ownership/affinity/partial teardown");
             return 0;
         }
-        catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
-        finally { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
+        catch (Exception Error) { Primary = Error; TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:ManagedTest] FAIL: " + Error); return 1; }
+        finally { TestDiagnostics.Cleanup(() => { if (Directory.Exists(Root)) Directory.Delete(Root, true); }, Primary); }
     }
 
     [DllImport("libc", SetLastError = true)]

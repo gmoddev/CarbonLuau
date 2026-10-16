@@ -48,8 +48,9 @@ internal static class GuiFoundation1FTests
         }
     }
 
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("GUI Foundation 1F: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("GUI Foundation 1F: " + Message); }
 
     private static ulong Create(Runtime.FacadeSession Session, string ClassName, ulong Parent = 0)
     { return UInt64.Parse(Session.Gui.Mutate(new[] {"create", Parent == 0 ? "" : Parent.ToString(), ClassName}, () => "1")[0]); }

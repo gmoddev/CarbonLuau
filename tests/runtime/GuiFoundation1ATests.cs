@@ -5,8 +5,9 @@ using Runtime = Carbon.Plugins.CarbonLuau;
 
 internal static class GuiFoundation1ATests
 {
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("GUI Foundation 1A: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("GUI Foundation 1A: " + Message); }
     private static void Reject(Action Action, string Message)
     {
         bool Rejected = false; try { Action(); } catch (InvalidOperationException) { Rejected = true; }

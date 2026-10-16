@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #include "carbonluau_native.h"
 #include <cstring>
 #include <cstdio>
@@ -5,7 +6,8 @@
 #include <string>
 #include <chrono>
 
-static void Check(bool Value, const char* Message) { if (!Value) throw std::runtime_error(Message); }
+static void Check(bool Value, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE()) {
+    if (!Value) TestDiagnostics::Failure(File, Line); if (!Value) throw std::runtime_error(Message); }
 static ClHandle Create(uint32_t Capacity = 4096) {
     ClVmConfig Config{64 * 1024 * 1024}; ClHandle Vm = 0;
     Check(cl_vm_create(&Config, &Vm) == CL_OK, "create");
@@ -18,12 +20,19 @@ static ClStatus Execute(ClHandle Vm, const char* Source, ClResult& Result) {
     ClHandle Thread = 0;
     ClStatus Status = cl_vm_load_source(Vm, "entry", Source, uint32_t(std::strlen(Source)), &Thread, &Result);
     if (Status == CL_OK) Status = cl_thread_resume(Thread, 100000000, &Result);
+    if (Status != CL_OK) TestDiagnostics::Result(Status, CL_OK, Result.Flags);
     if (Thread) Check(cl_thread_destroy(Thread) == ((Result.Flags & 1) ? CL_INVALID_ARGUMENT : CL_OK), "thread cleanup");
     return Status;
 }
-static ClSchedulerInfo Info(ClHandle Vm) { ClSchedulerInfo Value{}; Check(cl_vm_scheduler(Vm, &Value) == CL_OK, "scheduler info"); return Value; }
+static ClSchedulerInfo Info(ClHandle Vm) {
+    ClSchedulerInfo Value{};
+    const ClStatus Status = cl_vm_scheduler(Vm, &Value);
+    TestDiagnostics::Scheduler(Value.NowNs, Value.Sequence, Value.Queued, Value.Modules);
+    Check(Status == CL_OK, "scheduler info"); return Value;
+}
 static ClStatus Run(ClHandle Vm, ClSchedulerInfo Cutoff, ClResult& Result, bool Expected = true) {
     uint32_t Ran = 99; ClStatus Status = cl_vm_callback(Vm, Cutoff.NowNs, Cutoff.Sequence, 3000000, &Ran, &Result);
+    if (Status != CL_OK) TestDiagnostics::Result(Status, CL_OK, Result.Flags);
     Check(Ran == uint32_t(Expected), "attempt count"); return Status;
 }
 static ClHandle Domain(ClHandle Vm, uint32_t Capacity = 4096) {

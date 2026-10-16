@@ -21,8 +21,9 @@ internal static class EntityDestroyedSignalTests
         internal bool Validate()
         { Checks++; if (Throws) throw new InvalidOperationException("synthetic completion failure"); return Removed; }
     }
-    private static void Check(bool Value, string Message)
-    { if (!Value) throw new Exception("EntityDestroyed: " + Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception("EntityDestroyed: " + Message); }
     private const string State = "local S=require('state'); ";
     private const string Entry = State + "S.Count=0; local W=game:GetService('Workspace'); " +
         "S.Connection=W.EntityDestroyed:Connect(function(C) " +

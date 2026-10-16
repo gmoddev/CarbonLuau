@@ -9,8 +9,9 @@ using Host=Carbon.Plugins.CarbonLuau;
 using Queue=Carbon.Plugins.CarbonLuau.StorageQueue;
 partial class ManagedTests
 {
-    static void Check(bool Good, [System.Runtime.CompilerServices.CallerLineNumber] int Line=0)
-    { if (!Good) throw new InvalidOperationException("persistence assertion at source line "+Line); }
+    static void Check(bool Good, [System.Runtime.CompilerServices.CallerLineNumber] int Line=0,
+        [System.Runtime.CompilerServices.CallerFilePath] string File="", [System.Runtime.CompilerServices.CallerArgumentExpression("Good")] string Expression="")
+    { if (!Good) TestDiagnostics.Pass(Good, Expression, File, Line); if (!Good) throw new InvalidOperationException("persistence assertion at source line "+Line); }
     static void Rejected(Action Action) { try { Action(); } catch (InvalidOperationException) { return; } throw new Exception("expected rejection"); }
     static void Rejected(Action Action,uint Status)
     { try { Action(); } catch (Queue.Rejection Error) { Check(Error.Status==Status); return; } throw new Exception("expected storage rejection"); }
@@ -697,6 +698,6 @@ partial class ManagedTests
             if (Args.Length==4) DerivedWorkerTests(Path.GetFullPath(Args[0]),Path.GetFullPath(Args[3]));
             return 0;
         }
-        catch (Exception Error) { Console.Error.WriteLine("[CarbonLuau:Persistence] Test failure: "+Error); return 1; }
+        catch (Exception Error) { TestDiagnostics.ExceptionFailure(Error); Console.Error.WriteLine("[CarbonLuau:Persistence] Test failure: "+Error); return 1; }
     }
 }

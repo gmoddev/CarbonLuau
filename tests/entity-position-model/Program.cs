@@ -7,8 +7,9 @@ internal static class Program
 {
     private static int Checks;
 
-    private static void Check(bool Condition, string Label)
+    private static void Check(bool Condition, string Label, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
     {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line);
         Checks++;
         if (!Condition) throw new Exception(Label);
     }
@@ -244,7 +245,7 @@ internal static class Program
             return 0;
         }
         catch (Exception Error)
-        {
+        { TestDiagnostics.ExceptionFailure(Error);
             Console.Error.WriteLine("[CarbonLuau:EntityPositionModel] FAIL " + Error.Message);
             return 1;
         }

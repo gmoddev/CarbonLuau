@@ -97,8 +97,9 @@ internal static class PlayerInteractionFoundation1FBTests
     }
     private sealed class Registrar : Runtime.ICommandRegistrar
     { public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next) { } }
-    private static void Check(bool Condition, string Message)
-    { if (!Condition) throw new Exception("Player-1F-B: " + Message); }
+    private static void Check(bool Condition, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Condition")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Condition) TestDiagnostics.Pass(Condition, Expression, File, Line); if (!Condition) throw new Exception("Player-1F-B: " + Message); }
     private static string Reject(Action Action)
     { try {Action();} catch (InvalidOperationException Error) {return Error.Message;} throw new Exception("expected grant rejection"); }
     private static bool Execute(Runtime.PlayerGiveItemOperation Operation, Fixture Value, int Amount)

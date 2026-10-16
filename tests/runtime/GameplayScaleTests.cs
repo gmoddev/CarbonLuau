@@ -15,8 +15,9 @@ internal static class GameplayScaleTests
     private const string UserId = "76561190000999777", RootName = "scaleroot";
     private sealed class Registrar : Runtime.ICommandRegistrar
     { public void Publish(Runtime.FacadeSession Previous,Runtime.FacadeSession Next) { } }
-    private static void Check(bool Value,string Message)
-    { if (!Value) throw new InvalidOperationException("Gameplay scale: "+Message); }
+    private static void Check(bool Value,string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new InvalidOperationException("Gameplay scale: "+Message); }
     private static string Entry(string Name,int Listeners=128)
     {
         return "local S=require('state'); S.Calls=0; local P=game:GetService('Players'); " +

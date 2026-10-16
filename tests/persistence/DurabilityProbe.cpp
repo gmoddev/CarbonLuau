@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 // Research fixture: trace the stock SQLite VFS, not a production/custom VFS.
 // A passing observation is NOT a persistence durability qualification.
 #include "sqlite3.h"
@@ -57,8 +58,9 @@ BOOL WINAPI TraceDeleteFile(LPCWSTR Name)
 }
 #endif
 
-void Check(bool Condition, const char* Message)
+void Check(bool Condition, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Condition) TestDiagnostics::Failure(File, Line);
     if (!Condition) throw std::runtime_error(Message);
 }
 

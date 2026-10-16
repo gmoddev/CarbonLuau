@@ -11,6 +11,7 @@ internal static class ReleaseInstallTests
     {
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauInstall-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Root);
+        Exception DiagnosticPrimary = null;
         try {
             ZipFile.ExtractToDirectory(Bundle, Root);
             string Data = Path.Combine(Root, "carbon", "data");
@@ -24,14 +25,14 @@ internal static class ReleaseInstallTests
             using (var Native = new Runtime.NativeRuntime(Data)) {
                 int Count = 0;
                 ulong Vm = Native.Create(new Runtime.RuntimeConfig());
-                try {
+                TestDiagnostics.Run(() => {
                     foreach (string FileName in Directory.GetFiles(Path.Combine(Root, "examples"), "*.luau", SearchOption.AllDirectories)) {
                         // Compile every body without executing host-dependent top-level effects.
                         var Result = Native.Execute(Vm, "bundled-example", "return function(...)\n" + File.ReadAllText(FileName) + "\nend", 100);
                         if (Result.Status != Runtime.RuntimeStatus.OK) throw new Exception(FileName + ": " + Result.Error);
                         Count++;
                     }
-                } finally { Native.Destroy(Vm); }
+                }, () => Native.Destroy(Vm));
                 if (Count == 0) throw new Exception("No bundled examples");
                 GuiFoundation2FTests.RunNative(Native, Root);
                 PlayerInteractionFoundation1FCTests.RunNative(Native, Root);
@@ -42,6 +43,7 @@ internal static class ReleaseInstallTests
                 if (Native.LiveVmCount != 0) throw new Exception("Installed runtime leaked VMs");
                 Console.WriteLine("[CarbonLuau:ReleaseInstall] PASS clean bundle load, compile " + Count + " examples, GUI/Player execution and teardown");
             }
-        } finally { Directory.Delete(Root, true); }
+        } catch (Exception Error) { DiagnosticPrimary = Error; TestDiagnostics.ExceptionFailure(Error); throw; }
+        finally { TestDiagnostics.Cleanup(() => { Directory.Delete(Root, true); }, DiagnosticPrimary); }
     }
 }

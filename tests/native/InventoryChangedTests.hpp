@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #pragma once
 #include "../../native/src/runtime/RuntimeInternal.hpp"
 #include "GameplayPublicationTests.hpp"
@@ -16,8 +17,9 @@ static int64_t InventoryAmount;
 static bool Stale, RejectGate;
 static std::set<std::string> Listeners;
 static std::set<uint64_t> Releases;
-static void Check(bool Good, const char* Message)
+static void Check(bool Good, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Good) TestDiagnostics::Failure(File, Line);
     if (!Good) { std::fprintf(stderr, "[CarbonLuau:InventoryChangedNative] %s\n", Message); std::exit(1); }
 }
 static std::string Pack(const std::vector<std::string>& Fields)

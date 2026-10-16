@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #include "carbonluau_native.h"
 #include <cstdio>
 #include <cstdlib>
@@ -6,8 +7,9 @@
 #include <thread>
 #include <chrono>
 
-static void Check(bool Value, const char* Message)
+static void Check(bool Value, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Value) TestDiagnostics::Failure(File, Line);
     if (!Value) { std::fprintf(stderr, "[CarbonLuau:Test] FAIL: %s\n", Message); std::exit(1); }
 }
 static ClResult Execute(ClHandle Vm, const char* Source, ClStatus Expected, uint64_t Budget = 100000000)
@@ -15,8 +17,10 @@ static ClResult Execute(ClHandle Vm, const char* Source, ClStatus Expected, uint
     ClHandle Thread = 0;
     ClResult Result{};
     ClStatus Status = cl_vm_load_source(Vm, "fixture", Source, static_cast<uint32_t>(std::strlen(Source)), &Thread, &Result);
+    TestDiagnostics::Result(Status, CL_OK, Result.Flags);
     if (Status == CL_OK) {
         Status = cl_thread_resume(Thread, Budget, &Result);
+        TestDiagnostics::Result(Status, Expected, Result.Flags);
         Check(cl_thread_destroy(Thread) == ((Result.Flags & 1) ? CL_INVALID_ARGUMENT : CL_OK), "thread release");
         ClResult StaleResult{};
         Check(cl_thread_resume(Thread, Budget, &StaleResult) == CL_INVALID_ARGUMENT, "stale thread rejected");
@@ -33,7 +37,9 @@ int main()
         ClHandle Vm = 0;
         Check(cl_vm_create(&Config, &Vm) == CL_OK && Vm, "create");
         ClVmInfo Info{};
-        Check(cl_vm_info(Vm, &Info) == CL_OK && Info.MemoryBytes > 0 && Info.MemoryBytes < Info.MemoryLimitBytes, "allocation accounting");
+        const ClStatus InfoStatus = cl_vm_info(Vm, &Info);
+        TestDiagnostics::Resources(InfoStatus, Info.MemoryBytes, Info.MemoryLimitBytes, Info.Ready);
+        Check(InfoStatus == CL_OK && Info.MemoryBytes > 0 && Info.MemoryBytes < Info.MemoryLimitBytes, "allocation accounting");
         Execute(Vm, "return 1 + 2", CL_OK);
         if (Index % 10 == 0) {
             Execute(Vm, "local =", CL_COMPILE_ERROR);

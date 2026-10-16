@@ -16,6 +16,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Verify pinned finite Loot names and deterministic generation
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell auto --step 1 "{0}"
         run: |
           python tools/Generate-LootItems.py --check
           python tools/Test-LootItems.py
@@ -28,12 +29,27 @@ jobs:
           python tools/Test-LootQualification.py
           python tools/Generate-LootQualification.py --check-public
       - name: Verify documentation coverage, canonical rules and fragments
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell auto --step 2 "{0}"
         run: python tools/Test-Documents.py
       - name: Validate API contract schema fixtures
-        shell: pwsh
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell pwsh --step 3 "{0}"
         run: ./tools/Test-ToolingContracts.ps1
       - name: Read-only release audit negative fixtures
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell auto --step 4 "{0}"
         run: python tools/Test-PublishedRelease.py
       - name: Bundle document navigation fixtures
-        shell: pwsh
+        shell: python "${{ github.workspace }}/tools/ci/Run.py" --shell pwsh --step 5 "{0}"
         run: ./tools/Test-ReleaseDocumentLinks.ps1
+      - name: Collect bounded CI diagnostics
+        if: always()
+        env:
+          CARBONLUAU_JOB_STATUS: ${{ job.status }}
+        run: python tools/ci/Run.py --collect
+      - name: Retain bounded CI diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics-${{ github.job }}-${{ runner.os }}
+          path: ${{ runner.temp }}/carbonluau-ci-diagnostics/upload/
+          if-no-files-found: warn
+          retention-days: 14

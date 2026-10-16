@@ -13,12 +13,14 @@ internal static class CatalogMemoryTests
     private sealed class Registrar : Runtime.ICommandRegistrar
     { public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next) { } }
     [DllImport("libc")] private static extern int chmod(string Path, int Mode);
-    private static void Check(bool Value, string Message)
-    { if (!Value) throw new InvalidOperationException("CATALOG-D9 memory: " + Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new InvalidOperationException("CATALOG-D9 memory: " + Message); }
     private static JObject Measure(string Library, string Compiler)
     {
         string DirectoryPath = Path.Combine(Path.GetTempPath(), "CarbonLuauCatalogMemory-" + Guid.NewGuid().ToString("N"));
         var Records = new JArray();
+        Exception DiagnosticPrimary = null;
         try {
             string Rid = Runtime.NativeLibraryLoader.GetRid(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
             string Target = Runtime.NativeLibraryLoader.GetLibraryPath(DirectoryPath, Rid);
@@ -59,7 +61,8 @@ internal static class CatalogMemoryTests
                     Host.Dispose(); Check(!Host.Ready && Host.DomainCount == 0, "complete VM/domain retirement");
                 }
             }
-        } finally { if (Directory.Exists(DirectoryPath)) Directory.Delete(DirectoryPath, true); }
+        } catch (Exception Error) { DiagnosticPrimary = Error; TestDiagnostics.ExceptionFailure(Error); throw; }
+        finally { TestDiagnostics.Cleanup(() => { if (Directory.Exists(DirectoryPath)) Directory.Delete(DirectoryPath, true); }, DiagnosticPrimary); }
         return new JObject { ["LibrarySha256"] = Hash(Library), ["Records"] = Records, ["UnmappedAndFilesRemoved"] = true };
     }
     private static string Hash(string PathName)

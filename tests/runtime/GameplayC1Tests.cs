@@ -10,7 +10,8 @@ internal static class GameplayC1Tests
 {
     [DllImport("libc")] private static extern int chmod(string Path, int Mode);
     private sealed class Registrar : Runtime.ICommandRegistrar { public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next) { } }
-    private static void Check(bool Value, string Reason) { if (!Value) throw new Exception("C1: " + Reason); }
+    private static void Check(bool Value, string Reason, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0) {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception("C1: " + Reason); }
     private static byte[] Package(string Id, string Init, string Api = null, string Required = null)
     {
         using (var Bytes = new MemoryStream()) {
@@ -26,6 +27,7 @@ internal static class GameplayC1Tests
     internal static void Run(string Library, string Compiler)
     {
         string Root = Path.Combine(Path.GetTempPath(), "CarbonLuauC1-"+Guid.NewGuid().ToString("N"));
+        Exception DiagnosticPrimary = null;
         try {
             string Rid = Runtime.NativeLibraryLoader.GetRid(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
             string Target = Runtime.NativeLibraryLoader.GetLibraryPath(Root, Rid);
@@ -94,6 +96,7 @@ internal static class GameplayC1Tests
                 Check(Native.LiveVmCount==0,"native VM cleanup");
             }
             Console.WriteLine("[CarbonLuau:GameplayC1] PASS real VM, shared scanner, acquisition, validation, publication, sharing, connection and recovery");
-        } finally { if (Directory.Exists(Root)) Directory.Delete(Root,true); }
+        } catch (Exception Error) { DiagnosticPrimary = Error; TestDiagnostics.ExceptionFailure(Error); throw; }
+        finally { TestDiagnostics.Cleanup(() => { if (Directory.Exists(Root)) Directory.Delete(Root,true); }, DiagnosticPrimary); }
     }
 }

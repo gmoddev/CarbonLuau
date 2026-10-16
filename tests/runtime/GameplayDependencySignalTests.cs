@@ -14,8 +14,9 @@ internal static class GameplayDependencySignalTests
     private const string UserId="76561190000999666", Dependency="lifecycleprovider";
     private sealed class Registrar : Runtime.ICommandRegistrar
     { public void Publish(Runtime.FacadeSession Previous,Runtime.FacadeSession Next) { } }
-    private static void Check(bool Value,string Message)
-    { if (!Value) throw new InvalidOperationException("Gameplay dependency: "+Message); }
+    private static void Check(bool Value,string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new InvalidOperationException("Gameplay dependency: "+Message); }
     private static void Write(ZipArchive Zip,string Name,string Text)
     { using (Stream Stream=Zip.CreateEntry(Name).Open()) { byte[] Bytes=Encoding.UTF8.GetBytes(Text); Stream.Write(Bytes,0,Bytes.Length); } }
     private static byte[] Archive(string Manifest,string Source,params string[] Modules)

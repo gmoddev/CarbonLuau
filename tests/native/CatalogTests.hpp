@@ -1,3 +1,4 @@
+#include "../shared/NativeDiagnostics.hpp"
 #pragma once
 #include "../../native/src/runtime/RuntimeInternal.hpp"
 #include <chrono>
@@ -7,8 +8,9 @@
 namespace CarbonLuau::CatalogTests {
 namespace {
 #include "../../native/src/runtime/generated/CatalogData.inc"
-void Check(bool Value, const char* Message)
+void Check(bool Value, const char* Message, const char* File = __builtin_FILE(), int Line = __builtin_LINE())
 {
+    if (!Value) TestDiagnostics::Failure(File, Line);
     if (!Value) { std::fprintf(stderr, "[CarbonLuau:CatalogTest] FAIL %s\n", Message); std::exit(1); }
 }
 void Execute(ClHandle Vm, ClHandle Domain, const std::string& Source)

@@ -18,8 +18,9 @@ internal static partial class PersistencePublicTests
         internal int Publications;
         public void Publish(Runtime.FacadeSession Previous, Runtime.FacadeSession Next) { if (Next != null) ++Publications; }
     }
-    private static void Check(bool Value, string Message)
-    { if (!Value) throw new Exception("Persistence-1B: " + Message); }
+    private static void Check(bool Value, string Message, [System.Runtime.CompilerServices.CallerArgumentExpression("Value")] string Expression = "", [System.Runtime.CompilerServices.CallerFilePath] string File = "", [System.Runtime.CompilerServices.CallerLineNumber] int Line = 0)
+    {
+        if (!Value) TestDiagnostics.Pass(Value, Expression, File, Line); if (!Value) throw new Exception("Persistence-1B: " + Message); }
     private sealed class Fixture : IDisposable
     {
         internal readonly Runtime.NativeRuntime Native;
@@ -58,6 +59,9 @@ internal static partial class PersistencePublicTests
             Addons = new Runtime.AddonRegistry(Host, Native.HostLifetimeId);
             var End = Stopwatch.StartNew();
             while (!Queue.Ready && End.ElapsedMilliseconds < 35000) { Worker.Tick(); Thread.Sleep(5); }
+            TestDiagnostics.Observe("persistence.worker.ready", Queue.Ready ? 1 : 0, 1);
+            TestDiagnostics.Observe("persistence.worker.pending", Queue.PendingCount, 0);
+            TestDiagnostics.Observe("persistence.worker.sent", Worker.RequestsSent, 0);
             Check(Queue.Ready, "production worker ready: " + Status);
             WorkerReadyObservedMilliseconds = StartupObservation.Elapsed.TotalMilliseconds;
             if (Initialize) Reload();
