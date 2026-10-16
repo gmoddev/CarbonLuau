@@ -20,7 +20,7 @@ import time
 import uuid
 
 MARKER = b"[CarbonLuau:Diagnostic] "
-CATEGORIES = {"assertion", "operation", "observation", "exception", "timeout", "allocation", "infrastructure", "cleanup"}
+CATEGORIES = {"assertion", "operation", "observation", "exception", "timeout", "allocation", "infrastructure", "cleanup", "sanitizer"}
 NUMBERS = {"schema", "line", "actual", "expected", "status", "flags", "errno", "cutoffNs", "sequence", "queued", "modules"}
 DIGESTS = {"sourceDigest", "evidenceDigest", "typeDigest"}
 
@@ -34,7 +34,7 @@ def Validate(Value):
             Result[Key] = Field
         elif Key in DIGESTS and isinstance(Field, str) and re.fullmatch(r"[a-f0-9]{0,64}", Field):
             Result[Key] = Field
-        elif Key == "source" and isinstance(Field, str) and re.fullmatch(r"[A-Za-z0-9_.-]{0,128}\.(cs|cpp|hpp|py|ps1)", Field):
+        elif Key == "source" and isinstance(Field, str) and re.fullmatch(r"[A-Za-z0-9_.-]{0,128}\.(cs|cpp|hpp|c|h|py|ps1)", Field):
             Result[Key] = Field
         elif Key == "exceptionType" and isinstance(Field, str) and re.fullmatch(r"[A-Za-z0-9_.+`]{1,192}", Field):
             Result[Key] = Field
@@ -116,12 +116,16 @@ def Run(Arguments):
                         Event = {"category": "infrastructure", "status": 28}
                     elif b"std::bad_alloc" in Line:
                         Event = {"category": "allocation"}
+                    elif b"ERROR: AddressSanitizer:" in Line or b"SUMMARY: AddressSanitizer:" in Line or b"ERROR: LeakSanitizer:" in Line:
+                        Event = {"category": "sanitizer"}
+                    elif re.search(rb'\.(?:cpp|hpp|c|h):\d+:\d+: runtime error:', Line):
+                        Event = {"category": "sanitizer"}
                     elif Line.lstrip().startswith(b"AssertionError"):
                         Event = {"category": "assertion"}
                     elif re.search(rb"\berror (?:CS|MSB|C)\d{3,5}\b", Line):
                         Code = re.search(rb"\berror (?:CS|MSB|C)(\d{3,5})\b", Line)
                         Event = {"category": "infrastructure", "status": int(Code[1])}
-                    Frame = re.search(rb'([A-Za-z0-9_.-]+\.(?:cs|cpp|hpp|py|ps1))(?::line |:|\(|\", line )(\d+)', Line)
+                    Frame = re.search(rb'([A-Za-z0-9_.-]+\.(?:cs|cpp|hpp|c|h|py|ps1))(?::line |:|\(|\", line )(\d+)', Line)
                     if Frame:
                         if Event is None:
                             Event = {"category": "infrastructure" if b"error:" in Line else "observation"}

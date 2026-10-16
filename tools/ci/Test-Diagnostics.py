@@ -26,7 +26,7 @@ class DiagnosticsTests(unittest.TestCase):
             Git.touch()
             Bash.touch()
             with patch.object(MODULE.sys, "platform", "win32"), patch.object(MODULE.shutil, "which", return_value=str(Git)):
-                self.assertEqual(Path(MODULE.Bash()), Bash)
+                self.assertEqual(Path(MODULE.Bash()), Bash.resolve())
             Bash.unlink()
             with patch.object(MODULE.sys, "platform", "win32"), patch.object(MODULE.shutil, "which", return_value=str(Git)):
                 with self.assertRaises(FileNotFoundError):
@@ -135,6 +135,15 @@ class DiagnosticsTests(unittest.TestCase):
             self.assertEqual(Summary["classification"], "infrastructure")
             self.assertEqual(Summary["firstFailure"]["status"], 28)
             self.assertTrue(any(Event.get("source") == "Check.py" and Event.get("line") == 47 for Event in Summary["events"]))
+            self.assertNotIn("private-secret", json.dumps(Summary))
+
+    def test_sanitizer_records_keep_bounded_source_frames(self):
+        with tempfile.TemporaryDirectory(prefix="CarbonLuauCiDiagnostics-") as Directory:
+            Code = "print('ERROR: AddressSanitizer: heap-use-after-free private-secret'); print('/private-secret/runtime.cpp:87:4'); raise SystemExit(8)"
+            self.assertEqual(self.Invoke(Path(Directory), [sys.executable, "-c", Code]).returncode, 8)
+            Summary = json.loads(next(Path(Directory).glob("*/summary.json")).read_text())
+            self.assertEqual(Summary["classification"], "sanitizer")
+            self.assertTrue(any(Event.get("source") == "runtime.cpp" and Event.get("line") == 87 for Event in Summary["events"]))
             self.assertNotIn("private-secret", json.dumps(Summary))
 
 
