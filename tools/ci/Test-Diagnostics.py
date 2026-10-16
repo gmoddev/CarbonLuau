@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 import re
+from unittest.mock import patch
 
 RUNNER = Path(__file__).with_name("Run.py")
 SPEC = importlib.util.spec_from_file_location("CiRunner", RUNNER)
@@ -16,6 +17,21 @@ SPEC.loader.exec_module(MODULE)
 
 
 class DiagnosticsTests(unittest.TestCase):
+    def test_windows_bash_uses_git_not_path_wsl(self):
+        with tempfile.TemporaryDirectory(prefix="CarbonLuauBashResolution-") as Directory:
+            Git = Path(Directory) / "Git" / "cmd" / "git.exe"
+            Bash = Git.parent.parent / "bin" / "bash.exe"
+            Git.parent.mkdir(parents=True)
+            Bash.parent.mkdir(parents=True)
+            Git.touch()
+            Bash.touch()
+            with patch.object(MODULE.sys, "platform", "win32"), patch.object(MODULE.shutil, "which", return_value=str(Git)):
+                self.assertEqual(Path(MODULE.Bash()), Bash)
+            Bash.unlink()
+            with patch.object(MODULE.sys, "platform", "win32"), patch.object(MODULE.shutil, "which", return_value=str(Git)):
+                with self.assertRaises(FileNotFoundError):
+                    MODULE.Bash()
+
     def test_workflow_custom_shell_paths(self):
         for Workflow in (RUNNER.parents[2] / ".github" / "workflows").glob("*.yml"):
             Lines = Workflow.read_text().splitlines()

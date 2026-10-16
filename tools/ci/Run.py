@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -44,6 +45,19 @@ def Root():
     return Path(os.environ.get("CARBONLUAU_CI_ROOT", str(Path(os.environ.get("RUNNER_TEMP", tempfile.gettempdir())) / "carbonluau-ci-diagnostics")))
 
 
+def Bash():
+    if sys.platform != "win32":
+        return "bash"
+    # Match Actions' Git Bash choice. PATH's bash.exe may instead launch WSL.
+    Git = shutil.which("git")
+    if Git:
+        Directory = Path(Git).resolve().parent
+        for Candidate in (Directory.parent / "bin" / "bash.exe", Directory / "bash.exe"):
+            if Candidate.is_file():
+                return str(Candidate)
+    raise FileNotFoundError(2, "Git Bash executable unavailable")
+
+
 def Run(Arguments):
     Directory = Root() / uuid.uuid4().hex
     Directory.mkdir(parents=True)
@@ -66,7 +80,7 @@ def Run(Arguments):
                               "\nif (Test-Path -LiteralPath variable:\\LASTEXITCODE) { exit $LASTEXITCODE }\n", encoding="utf-8")
             Command = ["pwsh", "-NoLogo", "-NoProfile", "-NonInteractive", "-File", str(Script)]
         else:
-            Command = ["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", Arguments.script]
+            Command = [Bash(), "--noprofile", "--norc", "-e", "-o", "pipefail", Path(Arguments.script).resolve().as_posix()]
         with subprocess.Popen(Command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=Environment) as Child:
             Pending = b""
             while True:
