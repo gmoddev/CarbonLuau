@@ -11,6 +11,7 @@ import re
 from unittest.mock import patch
 
 RUNNER = Path(__file__).with_name("Run.py")
+sys.dont_write_bytecode = True
 SPEC = importlib.util.spec_from_file_location("CiRunner", RUNNER)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)

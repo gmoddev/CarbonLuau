@@ -79,9 +79,29 @@ assertion exit 19 with exact source/line and actual=false/expected=true.
 Python fixtures cover all categories, missing tool (127), disk-full classification,
 source frames, 2.4 MB noisy output, concurrent isolation, bounded collection and
 exclusion of secret sentinels/forged summary fields. Existing real-VM fault and
-resource assertions keep their deadlines. Final worker/hosted receipts follow
-after execution. No production source, gameplay API, resource ceiling, release
+resource assertions keep their deadlines. No production source, gameplay API, resource ceiling, release
 identity, published tag or asset changes.
+
+## Executed qualification
+
+Windows worker `dockerbox`: full 24-test native suite, six focused native
+regressions after diagnostic additions, managed loader's 100 unload cycles,
+fresh inventory/init faults, eight diagnostic negatives and the complete real-VM
+suite passed. Linux worker `BigKVM`: all 26 native tests, fresh inventory/init,
+eight diagnostic negatives and complete managed/real-VM suite passed. Both full
+suites include the existing 100-addon fairness/resource closure. Linux managed
+persistence used ext4; temporary native fixtures were isolated in container tmpfs.
+No production filesystem qualification is inferred from tmpfs fixtures.
+
+Worker logs, negative attempts, hashes and hosted artifact receipts are indexed in
+[the evidence ledger](qualification/CI-Reliability-Evidence.json). The deliberately
+failed [Windows/Linux hosted qualification](https://github.com/gmoddev/CarbonLuau/actions/runs/38847500133)
+uploaded both artifacts successfully. Downloaded summaries preserved genuine exit
+19, original `System.TimeoutException`, secondary `System.IO.IOException`, failed
+job outcome and source SHA; neither secret sentinel was present. Final-source
+normal workflows and a fresh negative dispatch are required before the completion
+verdict, which reports the final SHA and exact run URLs. These statements do not
+convert the manual red workflow into a green test gate.
 
 ## Retained negative attempts
 
@@ -101,3 +121,20 @@ native fixtures use isolated temporary storage. A later managed attempt rejected
 tmpfs at the production persistence worker filesystem gate; subsequent qualification
 uses the existing explicit fixture-root override on ext4. No filesystem admission
 or assertion is weakened.
+
+Hosted qualification also retained implementation mistakes: workspace expressions
+were rejected in custom-shell fields before any job could start; those workflows
+now use literal paths with a path regression. Windows initially selected the WSL
+`bash.exe`; resolution now explicitly selects installed Git Bash and fails closed
+when absent. Its regression canonicalizes the expected Windows 8.3/long path.
+A newly added startup counter initially dereferenced a null worker in synthetic
+fixtures; the failed Linux run retained recent counters and exact exception type,
+and the observation now handles the optional worker. Original assertions and
+deadlines were unchanged. A disposable Linux closure script also assumed an
+optional NuGet cache existed; the missing-cache command failure is retained in
+the task transcript and the corrected setup restores dependencies normally.
+
+Malformed workflow definitions and abrupt runner loss precede or prevent custom
+collection; GitHub's validation/platform records remain the evidence in those
+cases. The historical inventory HOLD and the two generic disk-pressure negatives'
+unresolved inner attribution remain explicitly preserved.

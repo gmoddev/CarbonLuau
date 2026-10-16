@@ -1,0 +1,78 @@
+{
+  "Schema": 1,
+  "Scope": "CI failure diagnostics and reliability hardening; no production source or API change",
+  "Base": "e293e5be79349f059e906b88dbca94fd979123bd",
+  "ImplementationCommits": [
+    "50e715a8d974da84eae464e37031b81243dff277",
+    "9efa261f8d493372ba0aa957935cbf7f50b713ce",
+    "e25c06567096be030d0195f580b4b5b7dc16a37e",
+    "897678d4f6fb97a7ecf1f0c348b9e5aacf08e203",
+    "f207233d972a8ca6801fb25ec343a45236bea8a2"
+  ],
+  "HistoricalInventoryRun": 38708449523,
+  "HistoricalAttribution": "unresolved; release HOLD unchanged",
+  "Workers": {
+    "Windows": {
+      "Host": "dockerbox",
+      "NativeTests": 24,
+      "AdditionalFocusedNativeTests": 6,
+      "FreshProcessInventoryAndInitialization": "PASS",
+      "CompleteManagedRealVmAnd100AddonFairness": "PASS",
+      "EightDiagnosticNegatives": "PASS; exit 19 each",
+      "Archive": "C:/Sandbox/Codex/CiHardening20261015/Windows-Logs.tar",
+      "ArchiveBytes": 200704,
+      "ArchiveSha256": "5736e153b5bb04d4bdab080beb49566ed3e5260e4d4afc696ff4afe6e34c4952"
+    },
+    "Linux": {
+      "Host": "BigKVM",
+      "ContainerCpuLimit": 2,
+      "ContainerMemoryGiB": 4,
+      "NativeTests": 26,
+      "NativeFixtureStorage": "isolated tmpfs; not new production filesystem qualification",
+      "ManagedPersistenceStorage": "ext4 task-owned bind",
+      "FreshProcessInventoryAndInitialization": "PASS",
+      "CompleteManagedRealVmAnd100AddonFairness": "PASS",
+      "EightDiagnosticNegatives": "PASS; exit 19 each",
+      "Archive": "C:/Sandbox/Codex/CiHardening20261015/Linux-Logs.tar",
+      "ArchiveBytes": 245760,
+      "ArchiveSha256": "90602815773872ec42e6f3caeebbcc2a1c8dcbb9b9066e0110cb5304f59346bf"
+    }
+  },
+  "HostedNegative": {
+    "Run": 38847500133,
+    "Source": "9efa261f8d493372ba0aa957935cbf7f50b713ce",
+    "Conclusion": "failure by design on both OS jobs; both diagnostic upload steps succeeded",
+    "VerifiedExit": 19,
+    "PrimaryException": "System.TimeoutException",
+    "SecondaryException": "System.IO.IOException",
+    "SecretSentinelsAbsent": true,
+    "WindowsArtifactId": 12024326383,
+    "WindowsArtifactDigest": "sha256:03fcdb6b7419da348041c4d1c79d42ba74f35bda034c459a9f25af02d08abb0c",
+    "LinuxArtifactId": 12023199948,
+    "LinuxArtifactDigest": "sha256:5d9a54155f2d77e822f1defd69af5ad2e373ab26652a024e423b18d437d1cce3"
+  },
+  "DiagnosticBounds": {
+    "ConsoleBytesPerInvocation": 1048576,
+    "FirstEvents": 32,
+    "TailEvents": 32,
+    "ManagedRecentObservations": 24,
+    "ManagedOtherRecords": 40,
+    "MaximumSummaryBytes": 65536,
+    "MaximumUploadedSummaries": 256,
+    "RetentionDays": 14
+  },
+  "RetainedNegatives": [
+    "Windows worker execution-policy/redirection setup, incomplete arguments and incorrect cwd",
+    "Linux overlay omitted the already-qualified status correction",
+    "Linux native ENOSPC; three explicit filesystem failures and two generic failures without inner attribution",
+    "Linux production worker rejected tmpfs; ext4 override used afterward",
+    "Diagnostic null-worker observation in synthetic fixture; corrected without changing assertion",
+    "GitHub rejected unsupported workspace expressions in custom shell fields",
+    "Windows PATH selected WSL bash; resolver now selects Git Bash explicitly",
+    "Bash resolver regression compared short and long Windows paths; canonical identity comparison corrected",
+    "Disposable closure script optional NuGet cache assumption corrected before test execution"
+  ],
+  "CleanupReceiptTimestampNote": "The external fixture-cleanup receipt labels local wall time UTC. Its recorded Unix mtime window corresponds to 2026-10-16T03:34:14Z through 03:35:46Z; exact target identities and sizes are unaffected.",
+  "FinalHostedClosure": "Completion requires all four normal workflows and a fresh negative dispatch at the final reported source SHA; final verdict supplies exact run URLs.",
+  "PublishedRelease": "v0.7.0 tag, release identity and all six asset IDs/digests/update times unchanged"
+}
