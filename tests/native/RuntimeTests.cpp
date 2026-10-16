@@ -17,10 +17,10 @@ static ClResult Execute(ClHandle Vm, const char* Source, ClStatus Expected, uint
     ClHandle Thread = 0;
     ClResult Result{};
     ClStatus Status = cl_vm_load_source(Vm, "fixture", Source, static_cast<uint32_t>(std::strlen(Source)), &Thread, &Result);
-    TestDiagnostics::Result(Status, CL_OK, Result.Flags);
+    TestDiagnostics::Result(Status, Status == CL_OK ? CL_OK : Expected, Result.Flags, Status != CL_OK && Status != Expected);
     if (Status == CL_OK) {
         Status = cl_thread_resume(Thread, Budget, &Result);
-        TestDiagnostics::Result(Status, Expected, Result.Flags);
+        TestDiagnostics::Result(Status, Expected, Result.Flags, Status != Expected);
         Check(cl_thread_destroy(Thread) == ((Result.Flags & 1) ? CL_INVALID_ARGUMENT : CL_OK), "thread release");
         ClResult StaleResult{};
         Check(cl_thread_resume(Thread, Budget, &StaleResult) == CL_INVALID_ARGUMENT, "stale thread rejected");

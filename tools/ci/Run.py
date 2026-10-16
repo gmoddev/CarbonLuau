@@ -38,6 +38,8 @@ def Validate(Value):
             Result[Key] = Field
         elif Key == "exceptionType" and isinstance(Field, str) and re.fullmatch(r"[A-Za-z0-9_.+`]{1,192}", Field):
             Result[Key] = Field
+        elif Key == "statusSpace" and Field in ("vm", "persistence", "process"):
+            Result[Key] = Field
     return Result
 
 

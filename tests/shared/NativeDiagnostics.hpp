@@ -17,7 +17,7 @@ inline void PersistenceFailure(unsigned Status)
 {
     // Private persistence Error values, distinct from the VM's ClStatus values.
     const char* Category = Status == 8 ? "timeout" : Status >= 3 && Status <= 7 ? "infrastructure" : "exception";
-    std::fprintf(stderr, "[CarbonLuau:Diagnostic] {\"schema\":1,\"category\":\"%s\",\"status\":%u,\"actual\":%u,\"expected\":0,\"flags\":2}\n", Category, Status, Status);
+    std::fprintf(stderr, "[CarbonLuau:Diagnostic] {\"schema\":1,\"category\":\"%s\",\"statusSpace\":\"persistence\",\"status\":%u,\"actual\":%u,\"expected\":0}\n", Category, Status, Status);
 }
 inline void Resources(unsigned Status, unsigned long long Bytes, unsigned long long Limit, unsigned long long Ready)
 {
@@ -44,10 +44,11 @@ inline void Failure(const char* File, int Line)
     for (const char* P = Source; *P; ++P) if (!((*P >= 'a' && *P <= 'z') || (*P >= 'A' && *P <= 'Z') || (*P >= '0' && *P <= '9') || *P == '.' || *P == '_' || *P == '-')) Safe = false;
     std::fprintf(stderr, "[CarbonLuau:Diagnostic] {\"schema\":1,\"category\":\"assertion\",\"sourceDigest\":\"%llx\",\"source\":\"%s\",\"line\":%d,\"actual\":0,\"expected\":1}\n", Digest, Safe ? Source : "", Line);
 }
-inline void Result(unsigned Actual, unsigned Expected, unsigned Flags)
+inline void Result(unsigned Actual, unsigned Expected, unsigned Flags, bool Primary = false)
 {
     static unsigned Count = 0;
     if (Count++ >= 24 && Actual == Expected) return;
-    std::fprintf(stderr, "[CarbonLuau:Diagnostic] {\"schema\":1,\"category\":\"operation\",\"actual\":%u,\"expected\":%u,\"flags\":%u}\n", Actual, Expected, Flags);
+    const char* Category = !Primary ? "operation" : Actual == 5 ? "timeout" : Actual == 4 ? "allocation" : "exception";
+    std::fprintf(stderr, "[CarbonLuau:Diagnostic] {\"schema\":1,\"category\":\"%s\",\"statusSpace\":\"vm\",\"actual\":%u,\"expected\":%u,\"status\":%u,\"flags\":%u}\n", Category, Actual, Expected, Actual, Flags);
 }
 }

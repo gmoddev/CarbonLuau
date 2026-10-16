@@ -21,8 +21,8 @@ demand, pending, elapsed and live-VM values. Native execution retains load/resum
 status, expected status and retirement flags before cleanup. Native accounting and
 scheduler snapshots retain actual counters. Persistence startup retains ready,
 pending and sent values; derived crash/plan catches retain private error codes.
-VM and persistence status namespaces remain distinct (`flags=2` identifies private
-persistence failure records). A caller location identifies an unsatisfied compound
+VM and persistence status namespaces remain distinct through explicit `statusSpace`
+fields. A caller location identifies an unsatisfied compound
 predicate, not every operand's value; numeric snapshots are deliberately targeted.
 
 First-failure protection covers directory cleanup in inventory initialization and
@@ -75,6 +75,10 @@ diagnostic sink. Checks cover original exception identity/stack, one cleanup,
 24 recent observations, expression/location and secret exclusion. Windows also
 uses a real `FileShare.None` deletion failure. Native qualification requires an
 assertion exit 19 with exact source/line and actual=false/expected=true.
+Native timeout/allocation-plus-cleanup fixtures also require genuine exit 19,
+original status 5/4 and retirement flags before the separate cleanup record. A
+known unexpected execution status is marked primary before thread cleanup; an
+expected compilation rejection is recorded with its actual expected status.
 
 Python fixtures cover all categories, missing tool (127), disk-full classification,
 source frames, 2.4 MB noisy output, concurrent isolation, bounded collection and
